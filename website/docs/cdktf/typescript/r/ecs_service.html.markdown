@@ -213,6 +213,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
+* `availabilityZoneRebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` and `DISABLED`. Defaults to `DISABLED`.
 * `capacityProviderStrategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacityProviderStrategy` blocks to greater than 0, or vice versa. See below. Conflicts with `launchType`.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deploymentCircuitBreaker` - (Optional) Configuration block for deployment circuit breaker. See below.
@@ -222,6 +223,7 @@ The following arguments are optional:
 * `desiredCount` - (Optional) Number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the `DAEMON` scheduling strategy.
 * `enableEcsManagedTags` - (Optional) Whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enableExecuteCommand` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the service.
+* `forceDelete` - (Optional) Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the `REPLICA` scheduling strategy.
 * `forceNewDeployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `orderedPlacementStrategy` and `placementConstraints` updates.
 * `healthCheckGracePeriodSeconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iamRole` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
@@ -239,6 +241,7 @@ The following arguments are optional:
 * `taskDefinition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `plantimestamp()`. See example above.
 * `volumeConfiguration` - (Optional) Configuration for a volume specified in the task definition as a volume that is configured at launch time. Currently, the only supported volume type is an Amazon EBS volume. [See below](#volume_configuration).
+* `vpcLatticeConfigurations` - (Optional) The VPC Lattice configuration for your service that allows Lattice to connect, secure, and monitor your service across multiple accounts and VPCs. [See below](#vpc_lattice_configurations).
 * `waitForSteadyState` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ### alarms
@@ -256,6 +259,14 @@ The `volumeConfiguration` configuration block supports the following:
 * `name` - (Required) Name of the volume.
 * `managedEbsVolume` - (Required) Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. [See below](#managed_ebs_volume).
 
+### vpc_lattice_configurations
+
+`vpcLatticeConfigurations` supports the following:
+
+* `roleArn` - (Required) The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+* `targetGroupArn` - (Required) The full ARN of the target group or groups associated with the VPC Lattice configuration.
+* `portName` - (Required) The name of the port for a target group associated with the VPC Lattice configuration.
+
 ### managed_ebs_volume
 
 The `managedEbsVolume` configuration block supports the following:
@@ -269,6 +280,7 @@ The `managedEbsVolume` configuration block supports the following:
 * `snapshotId` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `sizeInGb` or a `snapshotId`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
 * `volumeType` - (Optional) Volume type.
+* `tagSpecifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
 ### capacity_provider_strategy
 
@@ -403,6 +415,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `dnsName` - (Optional) Name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
 
+### tag_specifications
+
+`tagSpecifications` supports the following:
+
+* `resourceType` - (Required) The type of volume resource. Valid values, `volume`.
+* `propagateTags` - (Optional) Determines whether to propagate the tags from the task definition to the Amazon EBS volume.
+* `tags` - (Optional) The tags applied to this Amazon EBS volume. `AmazonECSCreated` and `AmazonECSManaged` are reserved tags that can't be used.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -450,4 +470,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fa13cb8c58f9038901ec9965d988c52dd0b7ec9ac1fd9d8c34d94878526b3a45 -->
+<!-- cache-key: cdktf-0.20.8 input-e692c5da5fd68ca59f9964d2b8e37837e662fcd85c56a73e44bd9f70fba57fff -->

@@ -20,12 +20,12 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *route53.Client, identifier, resourceType string, optFns ...func(*route53.Options)) (tftags.KeyValueTags, error) {
-	input := &route53.ListTagsForResourceInput{
+	input := route53.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: awstypes.TagResourceType(resourceType),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -99,12 +99,12 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTags creates route53 service tags for new resources.
-func createTags(ctx context.Context, conn *route53.Client, identifier, resourceType string, tags []awstypes.Tag) error {
+func createTags(ctx context.Context, conn *route53.Client, identifier, resourceType string, tags []awstypes.Tag, optFns ...func(*route53.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates route53 service tags.
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *route53.Client, identifier, resourceT
 		return nil
 	}
 
-	input := &route53.ChangeTagsForResourceInput{
+	input := route53.ChangeTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: awstypes.TagResourceType(resourceType),
 	}
@@ -139,7 +139,7 @@ func updateTags(ctx context.Context, conn *route53.Client, identifier, resourceT
 		input.RemoveTagKeys = removedTags.Keys()
 	}
 
-	_, err := conn.ChangeTagsForResource(ctx, input, optFns...)
+	_, err := conn.ChangeTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("tagging resource (%s): %w", identifier, err)

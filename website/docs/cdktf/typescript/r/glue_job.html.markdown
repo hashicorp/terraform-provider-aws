@@ -184,7 +184,9 @@ This resource supports the following arguments:
 * `description` – (Optional) Description of the job.
 * `executionProperty` – (Optional) Execution property of the job. Defined below.
 * `glueVersion` - (Optional) The version of glue to use, for example "1.0". Ray jobs should set this to 4.0 or greater. For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
+* `jobRunQueuingEnabled` - (Optional) Specifies whether job run queuing is enabled for the job runs for this job. A value of true means job run queuing is enabled for the job runs. If false or not populated, the job runs will not be considered for queueing.
 * `executionClass` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `FLEX`, `STANDARD`.
+* `maintenanceWindow` – (Optional) Specifies the day of the week and hour for the maintenance window for streaming jobs.
 * `maxCapacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `numberOfWorkers` and `workerType` arguments instead with `glueVersion` `2.0` and above.
 * `maxRetries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
@@ -254,4 +256,4 @@ Using `terraform import`, import Glue Jobs using `name`. For example:
 % terraform import aws_glue_job.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4bbdbc9cac02a509f56a05d1ece93b034e3bc917c667ad929f52e3d360d20d49 -->
+<!-- cache-key: cdktf-0.20.8 input-fcece4b7aecbbb3197c48e8ab15ec2463c3c86877b777540be3e3af8470e4c6f -->

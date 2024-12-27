@@ -173,9 +173,9 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("api_mapping_selection_expression", output.ApiMappingSelectionExpression)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  "/domainnames/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)

@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_configuration_profile")
+// @SDKDataSource("aws_appconfig_configuration_profile", name="Configuration Profile")
+// @Tags(identifierAttribute="arn")
 func DataSourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationProfileRead,
@@ -107,9 +108,9 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrApplicationID, appId)
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appId, profileId),
 		Service:   "appconfig",
 	}.String()
@@ -124,19 +125,6 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrType, out.Type)
 
 	if err := d.Set("validator", flattenValidators(out.Validators)); err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
-	}
-
-	tags, err := listTags(ctx, conn, arn)
-	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 

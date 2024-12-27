@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,8 +47,11 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "supported_feature_names.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "supported_modes.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexache.MustCompile(`^[0-9]*`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "supports_certificate_rotation_without_restart"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "supports_integrations"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_limitless_database"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "supports_local_write_forwarding"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_parallel_query"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_read_replica"),
@@ -119,9 +122,9 @@ func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.37", "5.7.38", "5.7.39"`, `"8.0.34"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.0.32", "8.0.33", "8.0.34"`, `"8.0.37"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "5.7.39"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.34"),
 				),
 			},
 			{
@@ -168,7 +171,7 @@ func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineMySQL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^5\.7\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0\.`)),
 				),
 			},
 			{
@@ -389,14 +392,14 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		Engine:      aws.String(tfrds.InstanceEngineMySQL),
 		DefaultOnly: aws.Bool(true),
 	}
 
-	_, err := conn.DescribeDBEngineVersionsWithContext(ctx, input)
+	_, err := conn.DescribeDBEngineVersions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

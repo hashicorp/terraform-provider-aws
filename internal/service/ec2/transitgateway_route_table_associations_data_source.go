@@ -52,7 +52,7 @@ func dataSourceTransitGatewayRouteTableAssociationsRead(ctx context.Context, d *
 		input.TransitGatewayRouteTableId = aws.String(v.(string))
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -72,7 +72,7 @@ func dataSourceTransitGatewayRouteTableAssociationsRead(ctx context.Context, d *
 		routeTableAssociationIDs = append(routeTableAssociationIDs, aws.ToString(v.TransitGatewayAttachmentId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, routeTableAssociationIDs)
 
 	return diags

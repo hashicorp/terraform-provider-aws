@@ -6,13 +6,12 @@ package cognitoidp
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -185,99 +184,89 @@ func dataSourceUserPoolClient() *schema.Resource {
 
 func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	clientId := d.Get(names.AttrClientID).(string)
-	d.SetId(clientId)
-
-	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get(names.AttrUserPoolID).(string), d.Id())
+	clientID := d.Get(names.AttrClientID).(string)
+	userPoolClient, err := findUserPoolClientByTwoPartKey(ctx, conn, d.Get(names.AttrUserPoolID).(string), clientID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientId, err)
+		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientID, err)
 	}
 
-	d.Set(names.AttrUserPoolID, userPoolClient.UserPoolId)
-	d.Set(names.AttrName, userPoolClient.ClientName)
-	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
-	d.Set("read_attributes", flex.FlattenStringSet(userPoolClient.ReadAttributes))
-	d.Set("write_attributes", flex.FlattenStringSet(userPoolClient.WriteAttributes))
-	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
+	d.SetId(clientID)
 	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
-	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
-	d.Set(names.AttrClientSecret, userPoolClient.ClientSecret)
-	d.Set("allowed_oauth_flows", flex.FlattenStringSet(userPoolClient.AllowedOAuthFlows))
+	d.Set("allowed_oauth_flows", userPoolClient.AllowedOAuthFlows)
 	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
-	d.Set("allowed_oauth_scopes", flex.FlattenStringSet(userPoolClient.AllowedOAuthScopes))
-	d.Set("callback_urls", flex.FlattenStringSet(userPoolClient.CallbackURLs))
-	d.Set("default_redirect_uri", userPoolClient.DefaultRedirectURI)
-	d.Set("logout_urls", flex.FlattenStringSet(userPoolClient.LogoutURLs))
-	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
-	d.Set("supported_identity_providers", flex.FlattenStringSet(userPoolClient.SupportedIdentityProviders))
-	d.Set("enable_token_revocation", userPoolClient.EnableTokenRevocation)
-	d.Set("enable_propagate_additional_user_context_data", userPoolClient.EnablePropagateAdditionalUserContextData)
-
+	d.Set("allowed_oauth_scopes", userPoolClient.AllowedOAuthScopes)
 	if err := d.Set("analytics_configuration", flattenUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting analytics_configuration: %s", err)
 	}
-
+	d.Set("callback_urls", userPoolClient.CallbackURLs)
+	d.Set(names.AttrClientSecret, userPoolClient.ClientSecret)
+	d.Set("default_redirect_uri", userPoolClient.DefaultRedirectURI)
+	d.Set("enable_propagate_additional_user_context_data", userPoolClient.EnablePropagateAdditionalUserContextData)
+	d.Set("enable_token_revocation", userPoolClient.EnableTokenRevocation)
+	d.Set("explicit_auth_flows", userPoolClient.ExplicitAuthFlows)
+	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
+	d.Set("logout_urls", userPoolClient.LogoutURLs)
+	d.Set(names.AttrName, userPoolClient.ClientName)
+	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
+	d.Set("read_attributes", userPoolClient.ReadAttributes)
+	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
+	d.Set("supported_identity_providers", userPoolClient.SupportedIdentityProviders)
 	if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting token_validity_units: %s", err)
 	}
 
+	d.Set(names.AttrUserPoolID, userPoolClient.UserPoolId)
+	d.Set("write_attributes", userPoolClient.WriteAttributes)
+
 	return diags
 }
 
-func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovider.AnalyticsConfigurationType) []interface{} {
-	if analyticsConfig == nil {
+func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigurationType) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"user_data_shared": aws.BoolValue(analyticsConfig.UserDataShared),
+	tfMap := map[string]interface{}{
+		"user_data_shared": apiObject.UserDataShared,
 	}
 
-	if analyticsConfig.ExternalId != nil {
-		m[names.AttrExternalID] = aws.StringValue(analyticsConfig.ExternalId)
+	if apiObject.ApplicationArn != nil {
+		tfMap["application_arn"] = aws.ToString(apiObject.ApplicationArn)
 	}
 
-	if analyticsConfig.RoleArn != nil {
-		m[names.AttrRoleARN] = aws.StringValue(analyticsConfig.RoleArn)
+	if apiObject.ApplicationId != nil {
+		tfMap[names.AttrApplicationID] = aws.ToString(apiObject.ApplicationId)
 	}
 
-	if analyticsConfig.ApplicationId != nil {
-		m[names.AttrApplicationID] = aws.StringValue(analyticsConfig.ApplicationId)
+	if apiObject.ExternalId != nil {
+		tfMap[names.AttrExternalID] = aws.ToString(apiObject.ExternalId)
 	}
 
-	if analyticsConfig.ApplicationArn != nil {
-		m["application_arn"] = aws.StringValue(analyticsConfig.ApplicationArn)
+	if apiObject.RoleArn != nil {
+		tfMap[names.AttrRoleARN] = aws.ToString(apiObject.RoleArn)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenUserPoolClientTokenValidityUnitsType(tokenValidityConfig *cognitoidentityprovider.TokenValidityUnitsType) []interface{} {
-	if tokenValidityConfig == nil {
+func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidityUnitsType) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	//tokenValidityConfig is never nil and if everything is empty it causes diffs
-	if tokenValidityConfig.IdToken == nil && tokenValidityConfig.AccessToken == nil && tokenValidityConfig.RefreshToken == nil {
+	if apiObject.IdToken == "" && apiObject.AccessToken == "" && apiObject.RefreshToken == "" {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
-	if tokenValidityConfig.IdToken != nil {
-		m["id_token"] = aws.StringValue(tokenValidityConfig.IdToken)
+	tfMap := map[string]interface{}{
+		"access_token":  apiObject.AccessToken,
+		"id_token":      apiObject.IdToken,
+		"refresh_token": apiObject.RefreshToken,
 	}
 
-	if tokenValidityConfig.AccessToken != nil {
-		m["access_token"] = aws.StringValue(tokenValidityConfig.AccessToken)
-	}
-
-	if tokenValidityConfig.RefreshToken != nil {
-		m["refresh_token"] = aws.StringValue(tokenValidityConfig.RefreshToken)
-	}
-
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }

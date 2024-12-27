@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool: Fix `runtime error: index out of range [0] with length 0` panic when adding `lambda_config`
+```

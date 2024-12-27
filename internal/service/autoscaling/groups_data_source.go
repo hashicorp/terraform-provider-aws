@@ -5,7 +5,7 @@ package autoscaling
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -110,10 +110,10 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		nms = append(nms, aws.ToString(group.AutoScalingGroupName))
 	}
 
-	sort.Strings(arns)
-	sort.Strings(nms)
+	slices.Sort(arns)
+	slices.Sort(nms)
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 	d.Set(names.AttrNames, nms)
 

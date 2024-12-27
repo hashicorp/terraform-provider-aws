@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_connection_accepter")
-func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_connection_accepter", name="VPC Endpoint Connection Accepter")
+func resourceVPCEndpointConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointConnectionAccepterCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointConnectionAccepterRead,
@@ -56,13 +56,12 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
-	id := VPCEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID)
+	id := vpcEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID)
 	input := &ec2.AcceptVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
 		VpcEndpointIds: []string{vpcEndpointID},
 	}
 
-	log.Printf("[DEBUG] Accepting VPC Endpoint Connection: %v", input)
 	_, err := conn.AcceptVpcEndpointConnections(ctx, input)
 
 	if err != nil {
@@ -71,10 +70,8 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	_, err = waitVPCEndpointConnectionAccepted(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Connection (%s) to be accepted: %s", d.Id(), err)
+	if _, err := waitVPCEndpointConnectionAccepted(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Connection (%s) accept: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCEndpointConnectionAccepterRead(ctx, d, meta)...)
@@ -84,7 +81,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
+	serviceID, vpcEndpointID, err := vpcEndpointConnectionAccepterParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -92,7 +89,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 	vpcEndpointConnection, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] VPC Endpoint Connection %s not found, removing from state", d.Id())
+		log.Printf("[WARN] VPC Endpoint Connection Accepter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -112,7 +109,7 @@ func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
+	serviceID, vpcEndpointID, err := vpcEndpointConnectionAccepterParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -136,14 +133,14 @@ func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.
 
 const vpcEndpointConnectionAccepterResourceIDSeparator = "_"
 
-func VPCEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID string) string {
+func vpcEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID string) string {
 	parts := []string{serviceID, vpcEndpointID}
 	id := strings.Join(parts, vpcEndpointConnectionAccepterResourceIDSeparator)
 
 	return id
 }
 
-func VPCEndpointConnectionAccepterParseResourceID(id string) (string, string, error) {
+func vpcEndpointConnectionAccepterParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, vpcEndpointConnectionAccepterResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

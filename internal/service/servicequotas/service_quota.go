@@ -7,12 +7,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -188,7 +190,6 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Quota (%s): %s", d.Id(), err)
 	}
@@ -196,6 +197,11 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
 	defaultQuota, err := findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Quota (%s) default value not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
@@ -214,8 +220,15 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
-	if err != nil && !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			tflog.Debug(ctx, "No quota value set", map[string]any{
+				"service_code": serviceCode,
+				"quota_code":   quotaCode,
+			})
+		} else {
+			return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
+		}
 	}
 
 	if err == nil {

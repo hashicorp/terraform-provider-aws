@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_configuration_profiles")
+// @SDKDataSource("aws_appconfig_configuration_profiles", name="Configuration Profiles")
 func DataSourceConfigurationProfiles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationProfilesRead,

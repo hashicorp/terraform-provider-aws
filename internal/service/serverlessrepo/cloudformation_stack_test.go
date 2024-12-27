@@ -9,14 +9,13 @@ import (
 	"log"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -49,15 +48,15 @@ func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, stackName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrApplicationID, "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(resourceName, "semantic_version"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.functionName", fmt.Sprintf("func-%s", stackName)),
 					acctest.CheckResourceAttrRegionalHostnameService(resourceName, "parameters.endpoint", "secretsmanager"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "outputs.RotationLambdaARN"),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -73,7 +72,7 @@ func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCloudFormationStackNameNoPrefixImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -114,7 +113,7 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	const (
-		version1 = "1.1.36"
+		version1 = "1.1.465"
 		version2 = "1.1.88"
 	)
 
@@ -129,7 +128,7 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack1),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version1),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
@@ -145,7 +144,7 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack2),
 					testAccCheckCloudFormationStackNotRecreated(&stack1, &stack2),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version2),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
@@ -157,7 +156,7 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack3),
 					testAccCheckCloudFormationStackNotRecreated(&stack2, &stack3),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version1),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
@@ -173,7 +172,7 @@ func TestAccServerlessRepoCloudFormationStack_paired(t *testing.T) {
 	appARN := testAccCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
-	const version = "1.1.36"
+	const version = "1.1.465"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -186,7 +185,7 @@ func TestAccServerlessRepoCloudFormationStack_paired(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
@@ -212,7 +211,7 @@ func TestAccServerlessRepoCloudFormationStack_tags(t *testing.T) {
 				Config: testAccCloudFormationStackConfig_tags1(stackName, appARN, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -233,7 +232,7 @@ func TestAccServerlessRepoCloudFormationStack_tags(t *testing.T) {
 				Config: testAccCloudFormationStackConfig_tags1(stackName, appARN, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -262,7 +261,7 @@ func TestAccServerlessRepoCloudFormationStack_update(t *testing.T) {
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrApplicationID, "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.functionName", initialName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", names.AttrValue),
 				),
 			},
@@ -271,7 +270,7 @@ func TestAccServerlessRepoCloudFormationStack_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.functionName", updatedName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", names.AttrValue),
 				),
 			},
@@ -315,17 +314,6 @@ func testAccCloudFormationStackNameImportStateIdFunc(resourceName string) resour
 	}
 }
 
-func testAccCloudFormationStackNameNoPrefixImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrName], nil
-	}
-}
-
 func testAccCloudFormationApplicationID() string {
 	arnRegion := endpoints.UsEast1RegionID
 	arnAccountID := "297356227824"
@@ -336,7 +324,7 @@ func testAccCloudFormationApplicationID() string {
 
 	return arn.ARN{
 		Partition: acctest.Partition(),
-		Service:   serverlessrepo.ServiceName,
+		Service:   names.ServerlessRepo,
 		Region:    arnRegion,
 		AccountID: arnAccountID,
 		Resource:  "applications/SecretsManagerRDSPostgreSQLRotationSingleUser",
@@ -551,7 +539,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
 func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ami" {
@@ -561,9 +549,9 @@ func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 			// Try to find the AMI
 			log.Printf("AMI-ID: %s", rs.Primary.ID)
 			DescribeAmiOpts := &ec2.DescribeImagesInput{
-				ImageIds: []*string{aws.String(rs.Primary.ID)},
+				ImageIds: []string{rs.Primary.ID},
 			}
-			resp, err := conn.DescribeImagesWithContext(ctx, DescribeAmiOpts)
+			resp, err := conn.DescribeImages(ctx, DescribeAmiOpts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidAMIID", "NotFound") {
 					log.Printf("[DEBUG] AMI not found, passing")
@@ -574,8 +562,8 @@ func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			if len(resp.Images) > 0 {
 				state := resp.Images[0].State
-				return fmt.Errorf("AMI %s still exists in the state: %s.", aws.StringValue(resp.Images[0].ImageId),
-					aws.StringValue(state))
+				return fmt.Errorf("AMI %s still exists in the state: %s.", aws.ToString(resp.Images[0].ImageId),
+					string(state))
 			}
 		}
 		return nil
@@ -602,7 +590,7 @@ func testAccCheckCloudFormationDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			for _, s := range resp.Stacks {
-				if aws.StringValue(s.StackId) == rs.Primary.ID && s.StackStatus != cloudformationtypes.StackStatusDeleteComplete {
+				if aws.ToString(s.StackId) == rs.Primary.ID && s.StackStatus != cloudformationtypes.StackStatusDeleteComplete {
 					return fmt.Errorf("CloudFormation stack still exists: %q", rs.Primary.ID)
 				}
 			}
@@ -614,7 +602,7 @@ func testAccCheckCloudFormationDestroy(ctx context.Context) resource.TestCheckFu
 
 func testAccCheckCloudFormationStackNotRecreated(i, j *cloudformationtypes.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.StackId) != aws.StringValue(j.StackId) {
+		if aws.ToString(i.StackId) != aws.ToString(j.StackId) {
 			return fmt.Errorf("CloudFormation stack recreated")
 		}
 

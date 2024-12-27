@@ -25,6 +25,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_connect_peer", name="Transit Gateway Connect Peer")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayConnectPeerRead,
@@ -89,7 +90,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 		input.TransitGatewayConnectPeerIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -102,10 +103,10 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 	d.SetId(aws.ToString(transitGatewayConnectPeer.TransitGatewayConnectPeerId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
 	}.String()
 	bgpConfigurations := transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations
@@ -121,7 +122,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayConnectPeer.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_connect_peer_id", transitGatewayConnectPeer.TransitGatewayConnectPeerId)
 
-	setTagsOutV2(ctx, transitGatewayConnectPeer.Tags)
+	setTagsOut(ctx, transitGatewayConnectPeer.Tags)
 
 	return diags
 }

@@ -25,7 +25,7 @@ import (
 // @SDKResource("aws_verifiedaccess_group", name="Verified Access Group")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVerifiedAccessGroup() *schema.Resource {
+func resourceVerifiedAccessGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessGroupCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessGroupRead,
@@ -107,7 +107,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
 		ClientToken:              aws.String(id.UniqueId()),
-		TagSpecifications:        getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessGroup),
+		TagSpecifications:        getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
 
@@ -166,7 +166,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set("verifiedaccess_group_id", group.VerifiedAccessGroupId)
 	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
 
-	setTagsOutV2(ctx, group.Tags)
+	setTagsOut(ctx, group.Tags)
 
 	output, err := findVerifiedAccessGroupPolicyByID(ctx, conn, d.Id())
 

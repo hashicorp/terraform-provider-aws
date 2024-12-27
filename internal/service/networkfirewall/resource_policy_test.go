@@ -9,14 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -200,17 +199,19 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
-			policy, err := tfnetworkfirewall.FindResourcePolicy(ctx, conn, rs.Primary.ID)
-			if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+
+			_, err := tfnetworkfirewall.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
-			if policy != nil {
-				return fmt.Errorf("NetworkFirewall Resource Policy (for resource: %s) still exists", rs.Primary.ID)
-			}
+
+			return fmt.Errorf("NetworkFirewall Resource Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -224,25 +225,15 @@ func testAccCheckResourcePolicyExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No NetworkFirewall Resource Policy ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
-		policy, err := tfnetworkfirewall.FindResourcePolicy(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		_, err := tfnetworkfirewall.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 
-		if policy == nil {
-			return fmt.Errorf("NetworkFirewall Resource Policy (for resource: %s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccResourcePolicyFirewallPolicyBaseConfig(rName string) string {
+func testAccResourcePolicyFirewallPolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -250,6 +241,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
@@ -259,8 +251,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccResourcePolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccResourcePolicyFirewallPolicyBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccResourcePolicyFirewallPolicyConfig_base(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_firewall_policy.test.arn
   # policy's Action element must include all of the following operations
@@ -285,8 +276,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
 }
 
 func testAccResourcePolicyConfig_equivalent(rName string) string {
-	return acctest.ConfigCompose(
-		testAccResourcePolicyFirewallPolicyBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccResourcePolicyFirewallPolicyConfig_base(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_firewall_policy.test.arn
   # policy's Action element must include all of the following operations
@@ -310,7 +300,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
 `)
 }
 
-func testAccResourcePolicyRuleGroupBaseConfig(rName string) string {
+func testAccResourcePolicyConfig_baseRuleGroup(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -318,7 +308,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
   rule_group {
     rules_source {
@@ -334,8 +324,7 @@ resource "aws_networkfirewall_rule_group" "test" {
 }
 
 func testAccResourcePolicyConfig_ruleGroup(rName string) string {
-	return acctest.ConfigCompose(
-		testAccResourcePolicyRuleGroupBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccResourcePolicyConfig_baseRuleGroup(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_rule_group.test.arn
   # policy's Action element must include all of the following operations
@@ -359,8 +348,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
 }
 
 func testAccResourcePolicyConfig_ruleGroupUpdate(rName string) string {
-	return acctest.ConfigCompose(
-		testAccResourcePolicyRuleGroupBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccResourcePolicyConfig_baseRuleGroup(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_rule_group.test.arn
   # policy's Action element must include all of the following operations

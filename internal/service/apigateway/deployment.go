@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,6 +50,7 @@ func resourceDeployment() *schema.Resource {
 			"canary_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -68,6 +70,7 @@ func resourceDeployment() *schema.Resource {
 						},
 					},
 				},
+				Deprecated: `The attribute "canary_settings" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
 			},
 			"execution_arn": {
 				Type:     schema.TypeString,
@@ -83,14 +86,16 @@ func resourceDeployment() *schema.Resource {
 				ForceNew: true,
 			},
 			"stage_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				ForceNew:   true,
+				Deprecated: `The attribute "stage_description" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
 			},
 			"stage_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				ForceNew:   true,
+				Deprecated: `The attribute "stage_name" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
 			},
 			names.AttrTriggers: {
 				Type:     schema.TypeMap,
@@ -120,6 +125,25 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Variables:        flex.ExpandStringValueMap(d.Get("variables").(map[string]interface{})),
 	}
 
+	_, hasStageName := d.GetOk("stage_name")
+
+	if _, ok := d.GetOk("stage_description"); !hasStageName && ok {
+		diags = append(diags, noEffectWithoutWarningDiag(
+			cty.GetAttrPath("stage_description"),
+			cty.GetAttrPath("stage_name"),
+		))
+	}
+
+	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+		if !hasStageName {
+			diags = append(diags, noEffectWithoutWarningDiag(
+				cty.GetAttrPath("canary_settings"),
+				cty.GetAttrPath("stage_name"),
+			))
+		}
+	}
+
 	deployment, err := conn.CreateDeployment(ctx, input)
 
 	if err != nil {
@@ -127,9 +151,6 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(deployment.Id))
-	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
-	}
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
@@ -155,10 +176,10 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, deployment.Description)
 	executionARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("%s/%s", restAPIID, stageName),
 	}.String()
 	d.Set("execution_arn", executionARN)
@@ -236,6 +257,22 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RestApiId:    aws.String(restAPIID),
 	})
 
+	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Active stages with canary settings pointing to this deployment must be moved or deleted") {
+		_, err = conn.DeleteStage(ctx, &apigateway.DeleteStageInput{
+			StageName: aws.String(stageName),
+			RestApiId: aws.String(restAPIID),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Stage (%s): %s", stageName, err)
+		}
+
+		_, err = conn.DeleteDeployment(ctx, &apigateway.DeleteDeploymentInput{
+			DeploymentId: aws.String(d.Id()),
+			RestApiId:    aws.String(restAPIID),
+		})
+	}
+
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
@@ -308,4 +345,15 @@ func expandDeploymentCanarySettings(tfMap map[string]interface{}) *types.Deploym
 	}
 
 	return apiObject
+}
+
+func noEffectWithoutWarningDiag(path, otherPath cty.Path) diag.Diagnostic {
+	return errs.NewAttributeWarningDiagnostic(
+		path,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("Attribute %q has no effect when %q is not set.",
+			errs.PathString(path),
+			errs.PathString(otherPath),
+		),
+	)
 }

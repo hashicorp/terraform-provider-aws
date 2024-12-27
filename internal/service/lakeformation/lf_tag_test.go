@@ -56,11 +56,10 @@ func TestReadLFTagID(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			catalogID, tagKey, err := tflakeformation.ReadLFTagID(test.val)
+			catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(test.val)
 
 			if err == nil && test.expectError {
 				t.Fatal("expected error")
@@ -94,7 +93,7 @@ func testAccLFTag_basic(t *testing.T) {
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", names.AttrValue),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -123,7 +122,7 @@ func testAccLFTag_TagKey_complex(t *testing.T) {
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", names.AttrValue),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},
@@ -171,7 +170,7 @@ func testAccLFTag_Values(t *testing.T) {
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -188,7 +187,7 @@ func testAccLFTag_Values(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value3"),
 					testAccCheckLFTagValuesLen(ctx, resourceName, 2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},
@@ -217,7 +216,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -228,7 +227,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value59"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -238,7 +237,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)-1),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},
@@ -254,7 +253,7 @@ func testAccCheckLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			catalogID, tagKey, err := tflakeformation.ReadLFTagID(rs.Primary.ID)
+			catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
@@ -289,7 +288,7 @@ func testAccCheckLFTagExists(ctx context.Context, name string) resource.TestChec
 			return fmt.Errorf("no ID is set")
 		}
 
-		catalogID, tagKey, err := tflakeformation.ReadLFTagID(rs.Primary.ID)
+		catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -317,7 +316,7 @@ func testAccCheckLFTagValuesLen(ctx context.Context, name string, expectedLength
 			return fmt.Errorf("no ID is set")
 		}
 
-		catalogID, tagKey, err := tflakeformation.ReadLFTagID(rs.Primary.ID)
+		catalogID, tagKey, err := tflakeformation.LFTagParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

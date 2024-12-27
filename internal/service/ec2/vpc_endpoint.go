@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -159,9 +158,37 @@ func resourceVPCEndpoint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"service_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"subnet_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ipv6": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						// subnet_id in subnet_configuration must have a corresponding subnet in subnet_ids attribute
+						names.AttrSubnetID: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
@@ -198,14 +225,14 @@ func resourceVPCEndpoint() *schema.Resource {
 func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		ServiceName:       aws.String(serviceName),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcEndpoint),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
@@ -242,8 +269,16 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("subnet_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		input.SubnetConfigurations = expandSubnetConfigurations(v.(*schema.Set).List())
+	}
+
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("service_region"); ok {
+		input.ServiceRegion = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
@@ -272,8 +307,8 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := getTagsInV2(ctx); input.TagSpecifications == nil && len(tags) > 0 {
-		err := createTagsV2(ctx, conn, d.Id(), tags)
+	if tags := getTagsIn(ctx); input.TagSpecifications == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
@@ -304,15 +339,8 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.ToString(vpce.OwnerId),
-		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
-	}.String()
-	serviceName := aws.ToString(vpce.ServiceName)
-	d.Set(names.AttrARN, arn)
+	ownerID := aws.ToString(vpce.OwnerId)
+	d.Set(names.AttrARN, vpcEndpointARN(ctx, meta.(*conns.AWSClient), ownerID, d.Id()))
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
@@ -325,12 +353,14 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
 	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
-	d.Set(names.AttrOwnerID, vpce.OwnerId)
+	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
+	serviceName := aws.ToString(vpce.ServiceName)
 	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_region", vpce.ServiceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
@@ -352,6 +382,16 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("prefix_list_id", pl.PrefixListId)
 	}
 
+	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s) subnet configurations: %s", d.Id(), err)
+	}
+
+	if err := d.Set("subnet_configuration", flattenSubnetConfigurations(subnetConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting subnet_configuration: %s", err)
+	}
+
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
 
 	if err != nil {
@@ -366,7 +406,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrPolicy, policyToSet)
 
-	setTagsOutV2(ctx, vpce.Tags)
+	setTagsOut(ctx, vpce.Tags)
 
 	return diags
 }
@@ -381,7 +421,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChanges("dns_options", names.AttrIPAddressType, names.AttrPolicy, "private_dns_enabled", names.AttrSecurityGroupIDs, "route_table_ids", names.AttrSubnetIDs) {
+	if d.HasChanges("dns_options", names.AttrIPAddressType, names.AttrPolicy, "private_dns_enabled", names.AttrSecurityGroupIDs, "route_table_ids", "subnet_configuration", names.AttrSubnetIDs) {
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
 		}
@@ -430,6 +470,12 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
+		if d.HasChange("subnet_configuration") {
+			if v, ok := d.GetOk("subnet_configuration"); ok && v.(*schema.Set).Len() > 0 {
+				input.SubnetConfigurations = expandSubnetConfigurations(v.(*schema.Set).List())
+			}
+		}
+
 		_, err := conn.ModifyVpcEndpoint(ctx, input)
 
 		if err != nil {
@@ -454,7 +500,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointNotFound) {
@@ -497,6 +543,32 @@ func vpcEndpointAccept(ctx context.Context, conn *ec2.Client, vpceID, serviceNam
 	return nil
 }
 
+type subnetConfiguration struct {
+	ipv4     *string
+	ipv6     *string
+	subnetID *string
+}
+
+func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec2.Client, networkInterfaceIDs []string) ([]subnetConfiguration, error) {
+	var output []subnetConfiguration
+
+	for _, v := range networkInterfaceIDs {
+		networkInterface, err := findNetworkInterfaceByID(ctx, conn, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, subnetConfiguration{
+			ipv4:     networkInterface.PrivateIpAddress,
+			ipv6:     networkInterface.Ipv6Address,
+			subnetID: networkInterface.SubnetId,
+		})
+	}
+
+	return output, nil
+}
+
 func isAmazonS3VPCEndpoint(serviceName string) bool {
 	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName)
 	return ok
@@ -532,6 +604,54 @@ func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]interface{
 	}
 
 	return apiObject
+}
+
+func expandSubnetConfiguration(tfMap map[string]interface{}) *awstypes.SubnetConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SubnetConfiguration{}
+
+	if v, ok := tfMap["ipv4"].(string); ok && v != "" {
+		apiObject.Ipv4 = aws.String(v)
+	}
+
+	if v, ok := tfMap["ipv6"].(string); ok && v != "" {
+		apiObject.Ipv6 = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
+		apiObject.SubnetId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSubnetConfigurations(tfList []interface{}) []awstypes.SubnetConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.SubnetConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSubnetConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
 }
 
 func flattenDNSEntry(apiObject *awstypes.DnsEntry) map[string]interface{} {
@@ -616,4 +736,44 @@ func flattenAddAndRemoveStringValueLists(d *schema.ResourceData, key string) ([]
 	}
 
 	return add, del
+}
+
+func flattenSubnetConfiguration(apiObject *subnetConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ipv4; v != nil {
+		tfMap["ipv4"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ipv6; v != nil {
+		tfMap["ipv6"] = aws.ToString(v)
+	}
+
+	if v := apiObject.subnetID; v != nil {
+		tfMap[names.AttrSubnetID] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenSubnetConfiguration(&apiObject))
+	}
+
+	return tfList
+}
+
+func vpcEndpointARN(ctx context.Context, c *conns.AWSClient, ownerID, vpceID string) string {
+	return c.RegionalARNWithAccount(ctx, "ec2", ownerID, "vpc-endpoint/"+vpceID)
 }

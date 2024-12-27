@@ -120,9 +120,9 @@ This resource supports the following arguments:
   Specification](#credit-specification) below for more details.
 * `defaultVersion` - (Optional) Default Version of the launch template.
 * `description` - (Optional) Description of the launch template.
-* `disableApiStop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
+* `disableApiStop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-stop-protection.html).
 * `disableApiTermination` - (Optional) If `true`, enables [EC2 Instance
-  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
+  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebsOptimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
 * `elasticGpuSpecifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
@@ -131,7 +131,7 @@ This resource supports the following arguments:
 * `hibernationOptions` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iamInstanceProfile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `imageId` - (Optional) The AMI from which to launch the instance.
+* `imageId` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instanceInitiatedShutdownBehavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instanceMarketOptions` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -233,7 +233,7 @@ Attach an elastic GPU the instance.
 
 The `elasticGpuSpecifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 
@@ -352,6 +352,7 @@ This configuration block supports the following:
       * ssd - solid state drive
     ```
 
+* `maxSpotPriceAsPercentageOfOptimalOnDemandPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spotMaxPricePercentageOverLowestPrice`
 * `memoryGibPerVcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
@@ -368,7 +369,7 @@ This configuration block supports the following:
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `requireHibernateSupport` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-* `spotMaxPricePercentageOverLowestPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+* `spotMaxPricePercentageOverLowestPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `maxSpotPriceAsPercentageOfOptimalOnDemandPrice`
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `totalLocalStorageGb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
@@ -438,11 +439,8 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `networkInterfaces` block supports the following:
 
-* `associateCarrierIpAddress` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface.
-  Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.
-  Boolean value, can be left unset.
-* `associatePublicIpAddress` - (Optional) Associate a public ip address with the network interface.
-  Boolean value, can be left unset.
+* `associateCarrierIpAddress` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value, can be left unset.
+* `associatePublicIpAddress` - (Optional) Associate a public ip address with the network interface. Boolean value, can be left unset.
 * `deleteOnTermination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `deviceIndex` - (Optional) The integer index of the network interface attachment.
@@ -455,6 +453,7 @@ Each `networkInterfaces` block supports the following:
 * `ipv6Prefixes` - (Optional) One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6PrefixCount`
 * `networkInterfaceId` - (Optional) The ID of the network interface to attach.
 * `networkCardIndex` - (Optional) The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
+* `primaryIpv6` - (Optional) Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `privateIpAddress` - (Optional) The primary private IPv4 address.
 * `ipv4AddressCount` - (Optional) The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4Addresses`
 * `ipv4Addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4AddressCount`
@@ -530,4 +529,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f46e7c620bef392fe711cbf2b85d072ca960f48a73b748421452af4fa096fba6 -->
+<!-- cache-key: cdktf-0.20.8 input-d5f5cf3f475aed18197e671b1adb2db9c3270710a8c989074f6c12451f7f2c38 -->

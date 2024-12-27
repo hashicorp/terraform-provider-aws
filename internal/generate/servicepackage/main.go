@@ -7,6 +7,7 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"errors"
 	"fmt"
@@ -15,7 +16,6 @@ import (
 	"go/token"
 	"os"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -26,7 +26,8 @@ import (
 
 func main() {
 	const (
-		filename = `service_package_gen.go`
+		filename                 = `service_package_gen.go`
+		endpointResolverFilename = `service_endpoint_resolver_gen.go`
 	)
 	g := common.NewGenerator()
 
@@ -48,11 +49,16 @@ func main() {
 			continue
 		}
 
+		if l.IsClientSDKV1() && l.GenerateClient() {
+			g.Fatalf("cannot generate AWS SDK for Go v1 client")
+		}
+
 		// Look for Terraform Plugin Framework and SDK resource and data source annotations.
 		// These annotations are implemented as comments on factory functions.
 		v := &visitor{
 			g: g,
 
+			ephemeralResources:   make([]ResourceDatum, 0),
 			frameworkDataSources: make([]ResourceDatum, 0),
 			frameworkResources:   make([]ResourceDatum, 0),
 			sdkDataSources:       make(map[string]ResourceDatum),
@@ -66,37 +72,47 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			SkipClientGenerate:   l.SkipClientGenerate(),
-			GoV1Package:          l.GoV1Package(),
+			GenerateClient:       l.GenerateClient(),
+			ClientSDKV2:          l.IsClientSDKV2(),
 			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
 			ProviderNameUpper:    l.ProviderNameUpper(),
+			EphemeralResources:   v.ephemeralResources,
 			FrameworkDataSources: v.frameworkDataSources,
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
 			SDKResources:         v.sdkResources,
 		}
 
-		s.SDKVersion = l.SDKVersion()
-		if l.ClientSDKV1() {
-			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
-		}
-
-		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
-			return s.FrameworkDataSources[i].FactoryName < s.FrameworkDataSources[j].FactoryName
+		slices.SortStableFunc(s.FrameworkDataSources, func(a, b ResourceDatum) int {
+			return cmp.Compare(a.FactoryName, b.FactoryName)
 		})
-		sort.SliceStable(s.FrameworkResources, func(i, j int) bool {
-			return s.FrameworkResources[i].FactoryName < s.FrameworkResources[j].FactoryName
+		slices.SortStableFunc(s.FrameworkResources, func(a, b ResourceDatum) int {
+			return cmp.Compare(a.FactoryName, b.FactoryName)
 		})
 
 		d := g.NewGoFileDestination(filename)
 
-		if err := d.WriteTemplate("servicepackagedata", tmpl, s); err != nil {
-			g.Fatalf("error generating %s service package data: %s", p, err)
+		if err := d.BufferTemplate("servicepackagedata", tmpl, s); err != nil {
+			g.Fatalf("generating %s service package data: %s", p, err)
 		}
 
 		if err := d.Write(); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
+		}
+
+		if p != "meta" && !l.IsClientSDKV1() {
+			g.Infof("Generating internal/service/%s/%s", servicePackage, endpointResolverFilename)
+
+			d = g.NewGoFileDestination(endpointResolverFilename)
+
+			if err := d.BufferTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
+				g.Fatalf("generating %s endpoint resolver: %s", p, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", endpointResolverFilename, err)
+			}
 		}
 
 		break
@@ -112,21 +128,23 @@ type ResourceDatum struct {
 }
 
 type ServiceDatum struct {
-	SkipClientGenerate   bool
-	SDKVersion           string // AWS SDK for Go version ("1", "2" or "1,2")
-	GoV1Package          string // AWS SDK for Go v1 package name
-	GoV1ClientTypeName   string // AWS SDK for Go v1 client type name
+	GenerateClient       bool
+	ClientSDKV2          bool
 	GoV2Package          string // AWS SDK for Go v2 package name
 	ProviderPackage      string
 	ProviderNameUpper    string
+	EphemeralResources   []ResourceDatum
 	FrameworkDataSources []ResourceDatum
 	FrameworkResources   []ResourceDatum
 	SDKDataSources       map[string]ResourceDatum
 	SDKResources         map[string]ResourceDatum
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string
+
+//go:embed endpoint_resolver.go.gtpl
+var endpointResolverTmpl string
 
 // Annotation processing.
 var (
@@ -141,6 +159,7 @@ type visitor struct {
 	functionName string
 	packageName  string
 
+	ephemeralResources   []ResourceDatum
 	frameworkDataSources []ResourceDatum
 	frameworkResources   []ResourceDatum
 	sdkDataSources       map[string]ResourceDatum
@@ -224,6 +243,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			switch annotationName := m[1]; annotationName {
+			case "EphemeralResource":
+				if slices.ContainsFunc(v.ephemeralResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.ephemeralResources = append(v.ephemeralResources, d)
+				}
 			case "FrameworkDataSource":
 				if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

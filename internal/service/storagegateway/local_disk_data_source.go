@@ -5,14 +5,15 @@ package storagegateway
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -47,46 +48,27 @@ func dataSourceLocalDisk() *schema.Resource {
 
 func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(d.Get("gateway_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway Local Disk: %s", input)
-	output, err := conn.ListLocalDisksWithContext(ctx, input)
+	disk, err := findLocalDisk(ctx, conn, input, func(disk awstypes.Disk) bool {
+		if v, ok := d.GetOk("disk_node"); ok && v.(string) == aws.ToString(disk.DiskNode) {
+			return true
+		}
+		if v, ok := d.GetOk("disk_path"); ok && v.(string) == aws.ToString(disk.DiskPath) {
+			return true
+		}
+		return false
+	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Local Disk: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Storage Gateway Local Disk", err))
 	}
 
-	if output == nil || len(output.Disks) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no results found for query, try adjusting your search criteria")
-	}
-
-	var matchingDisks []*storagegateway.Disk
-
-	for _, disk := range output.Disks {
-		if v, ok := d.GetOk("disk_node"); ok && v.(string) == aws.StringValue(disk.DiskNode) {
-			matchingDisks = append(matchingDisks, disk)
-			continue
-		}
-		if v, ok := d.GetOk("disk_path"); ok && v.(string) == aws.StringValue(disk.DiskPath) {
-			matchingDisks = append(matchingDisks, disk)
-			continue
-		}
-	}
-
-	if len(matchingDisks) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no results found for query, try adjusting your search criteria")
-	}
-
-	if len(matchingDisks) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple results found for query, try adjusting your search criteria")
-	}
-
-	disk := matchingDisks[0]
-
-	d.SetId(aws.StringValue(disk.DiskId))
+	d.SetId(aws.ToString(disk.DiskId))
 	d.Set("disk_id", disk.DiskId)
 	d.Set("disk_node", disk.DiskNode)
 	d.Set("disk_path", disk.DiskPath)

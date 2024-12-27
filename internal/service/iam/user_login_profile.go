@@ -75,8 +75,9 @@ func resourceUserLoginProfile() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrPassword: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 		},
 	}

@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,22 +37,22 @@ func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.*", "aws:drop"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -79,10 +80,10 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:pass"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 				),
 			},
@@ -95,17 +96,17 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 				Config: testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:pass"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 				),
 			},
@@ -113,10 +114,10 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:forward_to_sfe"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:forward_to_sfe"),
 				),
 			},
@@ -140,19 +141,19 @@ func TestAccNetworkFirewallFirewallPolicy_policyVariables(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_policyVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.0.rule_variables.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.0.rule_variables.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.policy_variables.0.rule_variables.*", map[string]string{
 						names.AttrKey:           "HOME_NET",
-						"ip_set.#":              acctest.Ct1,
-						"ip_set.0.definition.#": acctest.Ct2,
+						"ip_set.#":              "1",
+						"ip_set.0.definition.#": "2",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.policy_variables.0.rule_variables.*.ip_set.0.definition.*", "10.0.0.0/16"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.policy_variables.0.rule_variables.*.ip_set.0.definition.*", "10.0.1.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.*", "aws:drop"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 				),
 			},
@@ -165,11 +166,11 @@ func TestAccNetworkFirewallFirewallPolicy_policyVariables(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.*", "aws:drop"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 				),
 			},
@@ -193,8 +194,8 @@ func TestAccNetworkFirewallFirewallPolicy_statefulDefaultActions(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_statefulDefaultActions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.0", "aws:drop_established"),
 				),
 			},
@@ -223,10 +224,11 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOption(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_statefulEngineOptions(rName, "STRICT_ORDER", "DROP"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", networkfirewall.RuleOrderStrictOrder),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", networkfirewall.StreamExceptionPolicyDrop),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", string(awstypes.RuleOrderStrictOrder)),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", string(awstypes.StreamExceptionPolicyDrop)),
 				),
 			},
 			{
@@ -254,10 +256,11 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulEngineOption(t *testing.
 				Config: testAccFirewallPolicyConfig_statefulEngineOptions(rName, "DEFAULT_ACTION_ORDER", "CONTINUE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", networkfirewall.RuleOrderDefaultActionOrder),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", networkfirewall.StreamExceptionPolicyContinue),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", string(awstypes.RuleOrderDefaultActionOrder)),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", string(awstypes.StreamExceptionPolicyContinue)),
 				),
 			},
 			{
@@ -265,7 +268,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulEngineOption(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy1, &firewallPolicy2),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 				),
 			},
 			{
@@ -273,10 +276,11 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulEngineOption(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy3),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy2, &firewallPolicy3),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", networkfirewall.RuleOrderStrictOrder),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", networkfirewall.StreamExceptionPolicyReject),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", string(awstypes.RuleOrderStrictOrder)),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", string(awstypes.StreamExceptionPolicyReject)),
 				),
 			},
 			{
@@ -304,9 +308,10 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsSingle(t *testing
 				Config: testAccFirewallPolicyConfig_ruleOrderOnly(rName, "DEFAULT_ACTION_ORDER"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", networkfirewall.RuleOrderDefaultActionOrder),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", string(awstypes.RuleOrderDefaultActionOrder)),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", ""),
 				),
 			},
@@ -314,16 +319,67 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsSingle(t *testing
 				Config: testAccFirewallPolicyConfig_streamExceptionPolicyOnly(rName, "REJECT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", ""),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", networkfirewall.StreamExceptionPolicyReject),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", string(awstypes.StreamExceptionPolicyReject)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsFlowTimeouts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_statefulEngineOptionsDefaultFlowTimeouts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.0.tcp_idle_timeout_seconds", "350"),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_statefulEngineOptionsFlowTimeouts(rName, "60"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.0.tcp_idle_timeout_seconds", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallPolicyConfig_statefulEngineOptionsNoFlowTimeouts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
+				),
 			},
 		},
 	})
@@ -346,17 +402,18 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -381,9 +438,10 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceManaged(t *t
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -412,8 +470,8 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t *te
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 				),
 			},
@@ -450,8 +508,8 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t 
 				Config: testAccFirewallPolicyConfig_multipleStatefulRuleGroupReferences(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName2, names.AttrARN),
 				),
@@ -460,15 +518,16 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t 
 				Config: testAccFirewallPolicyConfig_singleStatefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -488,12 +547,12 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupPriorityReference(t *
 		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, acctest.Ct1),
+				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 				),
 			},
@@ -511,7 +570,7 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupOverrideActionReferen
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
-	override_action := networkfirewall.OverrideActionDropToAlert
+	overrideAction := string(awstypes.OverrideActionDropToAlert)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -520,16 +579,17 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupOverrideActionReferen
 		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceManagedOverrideAction(rName, override_action),
+				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceManagedOverrideAction(rName, overrideAction),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.override.0.action", override_action),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.override.0.action", overrideAction),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -549,23 +609,23 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupPriorityReferen
 		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, acctest.Ct1),
+				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, acctest.Ct2),
+				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy1, &firewallPolicy2),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 				),
 			},
@@ -595,8 +655,8 @@ func TestAccNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing
 				Config: testAccFirewallPolicyConfig_statelessRuleGroupReference(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						names.AttrPriority: "20",
@@ -607,10 +667,10 @@ func TestAccNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing
 				Config: testAccFirewallPolicyConfig_statelessRuleGroupReference(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
-						names.AttrPriority: acctest.Ct1,
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -646,7 +706,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *t
 				Config: testAccFirewallPolicyConfig_statelessRuleGroupReference(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						names.AttrPriority: "20",
@@ -657,8 +717,8 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *t
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "0"),
 				),
 			},
 			{
@@ -688,15 +748,15 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReferences(t
 				Config: testAccFirewallPolicyConfig_multipleStatelessRuleGroupReferences(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
-						names.AttrPriority: acctest.Ct1,
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName2, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
-						names.AttrPriority: acctest.Ct2,
+						names.AttrPriority: "2",
 					}),
 				),
 			},
@@ -704,10 +764,10 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReferences(t
 				Config: testAccFirewallPolicyConfig_singleStatelessRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
-						names.AttrPriority: acctest.Ct1,
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
 				),
@@ -737,12 +797,12 @@ func TestAccNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_statelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
-						"action_definition.#":                                     acctest.Ct1,
-						"action_definition.0.publish_metric_action.#":             acctest.Ct1,
-						"action_definition.0.publish_metric_action.0.dimension.#": acctest.Ct1,
+						"action_definition.#":                                     "1",
+						"action_definition.0.publish_metric_action.#":             "1",
+						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 						"action_name": "CustomAction",
 					}),
 				),
@@ -779,13 +839,13 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy1, &firewallPolicy2),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
-						"action_definition.#": acctest.Ct1,
-						"action_definition.0.publish_metric_action.#":             acctest.Ct1,
-						"action_definition.0.publish_metric_action.0.dimension.#": acctest.Ct1,
+						"action_definition.#": "1",
+						"action_definition.0.publish_metric_action.#":             "1",
+						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
 				),
 			},
@@ -794,13 +854,13 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy3),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy2, &firewallPolicy3),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "updated",
-						"action_definition.#": acctest.Ct1,
-						"action_definition.0.publish_metric_action.#":             acctest.Ct1,
-						"action_definition.0.publish_metric_action.0.dimension.#": acctest.Ct1,
+						"action_definition.#": "1",
+						"action_definition.0.publish_metric_action.#":             "1",
+						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
 				),
 			},
@@ -809,7 +869,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy4),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy3, &firewallPolicy4),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "0"),
 				),
 			},
 			{
@@ -837,19 +897,19 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *test
 				Config: testAccFirewallPolicyConfig_multipleStatelessCustomActions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
-						"action_definition.#": acctest.Ct1,
-						"action_definition.0.publish_metric_action.#":             acctest.Ct1,
-						"action_definition.0.publish_metric_action.0.dimension.#": acctest.Ct1,
+						"action_definition.#": "1",
+						"action_definition.0.publish_metric_action.#":             "1",
+						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction2",
-						"action_definition.#": acctest.Ct1,
-						"action_definition.0.publish_metric_action.#":             acctest.Ct1,
-						"action_definition.0.publish_metric_action.0.dimension.#": acctest.Ct1,
+						"action_definition.#": "1",
+						"action_definition.0.publish_metric_action.#":             "1",
+						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
 				),
 			},
@@ -858,13 +918,13 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy1, &firewallPolicy2),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
-						"action_definition.#": acctest.Ct1,
-						"action_definition.0.publish_metric_action.#":             acctest.Ct1,
-						"action_definition.0.publish_metric_action.0.dimension.#": acctest.Ct1,
+						"action_definition.#": "1",
+						"action_definition.0.publish_metric_action.#":             "1",
+						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
 				),
 			},
@@ -894,14 +954,14 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceAndStatelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
-						"action_definition.#": acctest.Ct1,
-						"action_definition.0.publish_metric_action.#":             acctest.Ct1,
-						"action_definition.0.publish_metric_action.0.dimension.#": acctest.Ct1,
+						"action_definition.#": "1",
+						"action_definition.0.publish_metric_action.#":             "1",
+						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
 				),
 			},
@@ -909,15 +969,16 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -941,7 +1002,7 @@ func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testi
 				Config: testAccFirewallPolicyConfig_tlsInspectionConfigurationARN(rName, arn1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", arn1),
 				),
 			},
@@ -949,7 +1010,7 @@ func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testi
 				Config: testAccFirewallPolicyConfig_tlsInspectionConfigurationARN(rName, arn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", arn2),
 				),
 			},
@@ -978,7 +1039,7 @@ func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -991,7 +1052,7 @@ func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -1000,7 +1061,7 @@ func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -1039,7 +1100,7 @@ func testAccCheckFirewallPolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 			_, err := tfnetworkfirewall.FindFirewallPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -1065,11 +1126,7 @@ func testAccCheckFirewallPolicyExists(ctx context.Context, n string, v *networkf
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No NetworkFirewall Firewall Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindFirewallPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -1085,7 +1142,7 @@ func testAccCheckFirewallPolicyExists(ctx context.Context, n string, v *networkf
 
 func testAccCheckFirewallPolicyNotRecreated(i, j *networkfirewall.DescribeFirewallPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(i.FirewallPolicyResponse.FirewallPolicyId), aws.StringValue(j.FirewallPolicyResponse.FirewallPolicyId); before != after {
+		if before, after := aws.ToString(i.FirewallPolicyResponse.FirewallPolicyId), aws.ToString(j.FirewallPolicyResponse.FirewallPolicyId); before != after {
 			return fmt.Errorf("NetworkFirewall Firewall Policy was recreated. got: %s, expected: %s", after, before)
 		}
 		return nil
@@ -1094,7 +1151,7 @@ func testAccCheckFirewallPolicyNotRecreated(i, j *networkfirewall.DescribeFirewa
 
 func testAccCheckFirewallPolicyRecreated(i, j *networkfirewall.DescribeFirewallPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(i.FirewallPolicyResponse.FirewallPolicyId), aws.StringValue(j.FirewallPolicyResponse.FirewallPolicyId); before == after {
+		if before, after := aws.ToString(i.FirewallPolicyResponse.FirewallPolicyId), aws.ToString(j.FirewallPolicyResponse.FirewallPolicyId); before == after {
 			return fmt.Errorf("NetworkFirewall Firewall Policy (%s) was not recreated", before)
 		}
 		return nil
@@ -1273,6 +1330,64 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   }
 }
 `, rName, ruleOrder, streamExceptionPolicy)
+}
+
+func testAccFirewallPolicyConfig_statefulEngineOptionsNoFlowTimeouts(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+
+    stateful_engine_options {
+      rule_order              = "STRICT_ORDER"
+      stream_exception_policy = "DROP"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccFirewallPolicyConfig_statefulEngineOptionsDefaultFlowTimeouts(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+
+    stateful_engine_options {
+      flow_timeouts {}
+      rule_order              = "STRICT_ORDER"
+      stream_exception_policy = "DROP"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccFirewallPolicyConfig_statefulEngineOptionsFlowTimeouts(rName, tcpIdleTimeoutSeconds string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+
+    stateful_engine_options {
+      flow_timeouts {
+        tcp_idle_timeout_seconds = %[2]s
+      }
+      rule_order              = "STRICT_ORDER"
+      stream_exception_policy = "DROP"
+    }
+  }
+}
+`, rName, tcpIdleTimeoutSeconds)
 }
 
 func testAccFirewallPolicyConfig_policyVariables(rName string) string {

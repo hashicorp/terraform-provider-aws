@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -188,7 +188,7 @@ func resourceLaunchTemplate() *schema.Resource {
 						"cpu_credits": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(CPUCredits_Values(), false),
+							ValidateFunc: validation.StringInSlice(cpuCredits_Values(), false),
 						},
 					},
 				},
@@ -486,6 +486,12 @@ func resourceLaunchTemplate() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
 							},
 						},
+						"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(1),
+							ConflictsWith: []string{"instance_requirements.0.spot_max_price_percentage_over_lowest_price"},
+						},
 						"memory_gib_per_vcpu": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -572,9 +578,10 @@ func resourceLaunchTemplate() *schema.Resource {
 							Optional: true,
 						},
 						"spot_max_price_percentage_over_lowest_price": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(1),
+							ConflictsWith: []string{"instance_requirements.0.max_spot_price_as_percentage_of_optimal_on_demand_price"},
 						},
 						"total_local_storage_gb": {
 							Type:     schema.TypeList,
@@ -765,7 +772,7 @@ func resourceLaunchTemplate() *schema.Resource {
 						"interface_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"efa", "efa-only", "interface"}, false),
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
@@ -822,6 +829,12 @@ func resourceLaunchTemplate() *schema.Resource {
 						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"primary_ipv6": {
+							Type:             nullable.TypeNullableBool,
+							Optional:         true,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"private_ip_address": {
 							Type:         schema.TypeString,
@@ -987,7 +1000,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
-		TagSpecifications:  getTagSpecificationsInV2(ctx, awstypes.ResourceTypeLaunchTemplate),
+		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -1004,6 +1017,10 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
+	}
+
+	if err := waitLaunchTemplateReady(ctx, conn, name, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Launch Template (%s) to be ready: %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.LaunchTemplate.LaunchTemplateId))
@@ -1027,7 +1044,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	version := strconv.FormatInt(aws.ToInt64(lt.LatestVersionNumber), 10)
+	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
 
 	if err != nil {
@@ -1035,10 +1052,10 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -1052,7 +1069,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	setTagsOutV2(ctx, lt.Tags)
+	setTagsOut(ctx, lt.Tags)
 
 	return diags
 }
@@ -1127,9 +1144,9 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.Get("update_default_version").(bool) {
-			input.DefaultVersion = aws.String(strconv.FormatInt(latestVersion, 10))
+			input.DefaultVersion = flex.Int64ValueToString(latestVersion)
 		} else if d.HasChange("default_version") {
-			input.DefaultVersion = aws.String(strconv.Itoa(d.Get("default_version").(int)))
+			input.DefaultVersion = flex.IntValueToString(d.Get("default_version").(int))
 		}
 
 		_, err := conn.ModifyLaunchTemplate(ctx, input)
@@ -1137,6 +1154,10 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
 		}
+	}
+
+	if err := waitLaunchTemplateReady(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Launch Template (%s) to be ready: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceLaunchTemplateRead(ctx, d, meta)...)
@@ -1160,6 +1181,48 @@ func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+const (
+	LaunchTemplateFound = "Found"
+)
+
+func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIsName bool) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		var output *awstypes.LaunchTemplate
+		var err error
+		if idIsName {
+			output, err = findLaunchTemplateByName(ctx, conn, id)
+		} else {
+			output, err = findLaunchTemplateByID(ctx, conn, id)
+		}
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, LaunchTemplateFound, nil
+	}
+}
+
+func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{""},
+		Target:                    enum.Slice(LaunchTemplateFound),
+		Refresh:                   statusLaunchTemplate(ctx, conn, id, idIsName),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *schema.ResourceData) (*awstypes.RequestLaunchTemplateData, error) {
@@ -1600,6 +1663,10 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *awstypes.I
 		apiObject.LocalStorageTypes = flex.ExpandStringyValueSet[awstypes.LocalStorageType](v)
 	}
 
+	if v, ok := tfMap["max_spot_price_as_percentage_of_optimal_on_demand_price"].(int); ok && v != 0 {
+		apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice = aws.Int32(int32(v))
+	}
+
 	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
 	}
@@ -2008,6 +2075,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.NetworkInterfaceId = aws.String(v)
 	}
 
+	if v, null, _ := nullable.Bool(tfMap["primary_ipv6"].(string)).ValueBool(); !null {
+		apiObject.PrimaryIpv6 = aws.Bool(v)
+	}
+
 	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		for _, v := range v.List() {
 			apiObject.Groups = append(apiObject.Groups, v.(string))
@@ -2109,7 +2180,7 @@ func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[
 
 	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
-			apiObject.Tags = TagsV2(v)
+			apiObject.Tags = Tags(v)
 		}
 	}
 
@@ -2172,7 +2243,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	d.Set("disable_api_stop", apiObject.DisableApiStop)
 	d.Set("disable_api_termination", apiObject.DisableApiTermination)
 	if apiObject.EbsOptimized != nil {
-		d.Set("ebs_optimized", strconv.FormatBool(aws.ToBool(apiObject.EbsOptimized)))
+		d.Set("ebs_optimized", flex.BoolToStringValue(apiObject.EbsOptimized))
 	} else {
 		d.Set("ebs_optimized", "")
 	}
@@ -2330,11 +2401,11 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrDeleteOnTermination] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrEncrypted] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Iops; v != nil {
@@ -2563,6 +2634,10 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 
 	if v := apiObject.LocalStorageTypes; v != nil {
 		tfMap["local_storage_types"] = flex.FlattenStringyValueSet[awstypes.LocalStorageType](v)
+	}
+
+	if v := apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice; v != nil {
+		tfMap["max_spot_price_as_percentage_of_optimal_on_demand_price"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.MemoryGiBPerVCpu; v != nil {
@@ -2864,15 +2939,15 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AssociateCarrierIpAddress; v != nil {
-		tfMap["associate_carrier_ip_address"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap["associate_carrier_ip_address"] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.AssociatePublicIpAddress; v != nil {
-		tfMap["associate_public_ip_address"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap["associate_public_ip_address"] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrDeleteOnTermination] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Description; v != nil {
@@ -2949,6 +3024,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
 		tfMap[names.AttrNetworkInterfaceID] = aws.ToString(v)
+	}
+
+	if v := apiObject.PrimaryIpv6; v != nil {
+		tfMap["primary_ipv6"] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
@@ -3047,7 +3126,7 @@ func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject awstyp
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap[names.AttrTags] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap

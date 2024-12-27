@@ -40,35 +40,55 @@ resource "aws_route53_resolver_rule" "fwd" {
 }
 ```
 
+### IPv6 Forward rule
+
+```terraform
+resource "aws_route53_resolver_rule" "fwd" {
+  domain_name          = "example.com"
+  name                 = "example"
+  rule_type            = "FORWARD"
+  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+
+  target_ip {
+    ipv6 = "2600:1f18:1686:2000:4e60:6e3e:258:da36"
+  }
+
+  tags = {
+    Environment = "Prod"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `domain_name` - (Required) DNS queries for this domain name are forwarded to the IP addresses that are specified using `target_ip`.
-* `rule_type` - (Required) The rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
-* `name` - (Optional) A friendly name that lets you easily find a rule in the Resolver dashboard in the Route 53 console.
-* `resolver_endpoint_id` (Optional) The ID of the outbound resolver endpoint that you want to use to route DNS queries to the IP addresses that you specify using `target_ip`.
+* `rule_type` - (Required) Rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
+* `name` - (Optional) Friendly name that lets you easily find a rule in the Resolver dashboard in the Route 53 console.
+* `resolver_endpoint_id` (Optional) ID of the outbound resolver endpoint that you want to use to route DNS queries to the IP addresses that you specify using `target_ip`.
 This argument should only be specified for `FORWARD` type rules.
 * `target_ip` - (Optional) Configuration block(s) indicating the IPs that you want Resolver to forward DNS queries to (documented below).
 This argument should only be specified for `FORWARD` type rules.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `target_ip` object supports the following:
 
 * `ip` - (Required) One IP address that you want to forward DNS queries to. You can specify only IPv4 addresses.
-* `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`.
-* `protocol` - (Optional) The protocol for the resolver endpoint. Valid values can be found in the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_TargetAddress.html). Default value is `Do53`.
+* `ipv6` - (Optional) One IPv6 address that you want to forward DNS queries to.
+* `port` - (Optional) Port at `ip` that you want to forward DNS queries to. Default value is `53`.
+* `protocol` - (Optional) Protocol for the resolver endpoint. Valid values can be found in the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_TargetAddress.html). Default value is `Do53`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the resolver rule.
-* `arn` - The ARN (Amazon Resource Name) for the resolver rule.
+* `id` - ID of the resolver rule.
+* `arn` - ARN (Amazon Resource Name) for the resolver rule.
 * `owner_id` - When a rule is shared with another AWS account, the account ID of the account that the rule is shared with.
 * `share_status` - Whether the rules is shared and, if so, whether the current account is sharing the rule with another account, or another account is sharing the rule with the current account.
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

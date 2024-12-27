@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
+func testAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -36,8 +36,8 @@ func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/+.`)),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/.+$`)),
 				),
 			},
 		},

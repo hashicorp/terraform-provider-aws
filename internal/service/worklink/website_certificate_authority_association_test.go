@@ -10,9 +10,6 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,10 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
@@ -54,6 +54,8 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 }
 
 func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_displayName(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
@@ -89,6 +91,8 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_displayName(t *testin
 }
 
 func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
@@ -113,25 +117,23 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_disappears(t *testing
 
 func testAccCheckWebsiteCertificateAuthorityAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_worklink_website_certificate_authority_association" {
 				continue
 			}
 
-			_, err := conn.DescribeWebsiteCertificateAuthorityWithContext(ctx, &worklink.DescribeWebsiteCertificateAuthorityInput{
-				FleetArn:    aws.String(rs.Primary.Attributes["fleet_arn"]),
-				WebsiteCaId: aws.String(rs.Primary.ID),
-			})
+			_, err := tfworklink.FindWebsiteCertificateAuthorityByARNAndID(ctx, conn, rs.Primary.Attributes["fleet_arn"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-					return nil
-				}
-
 				return err
 			}
+
 			return fmt.Errorf("Worklink Website Certificate Authority Association(%s) still exists", rs.Primary.ID)
 		}
 
@@ -150,18 +152,16 @@ func testAccCheckWebsiteCertificateAuthorityAssociationDisappears(ctx context.Co
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkClient(ctx)
+
 		fleetArn, websiteCaID, err := tfworklink.DecodeWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &worklink.DisassociateWebsiteCertificateAuthorityInput{
-			FleetArn:    aws.String(fleetArn),
-			WebsiteCaId: aws.String(websiteCaID),
-		}
+		_, err = tfworklink.FindWebsiteCertificateAuthorityByARNAndID(ctx, conn, fleetArn, websiteCaID)
 
-		if _, err := conn.DisassociateWebsiteCertificateAuthorityWithContext(ctx, input); err != nil {
+		if err != nil {
 			return err
 		}
 
@@ -195,16 +195,13 @@ func testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx context.Contex
 			return fmt.Errorf("WorkLink Fleet ARN is missing, should be set.")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkClient(ctx)
 		fleetArn, websiteCaID, err := tfworklink.DecodeWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		_, err = conn.DescribeWebsiteCertificateAuthorityWithContext(ctx, &worklink.DescribeWebsiteCertificateAuthorityInput{
-			FleetArn:    aws.String(fleetArn),
-			WebsiteCaId: aws.String(websiteCaID),
-		})
+		_, err = tfworklink.FindWebsiteCertificateAuthorityByARNAndID(ctx, conn, fleetArn, websiteCaID)
 
 		return err
 	}

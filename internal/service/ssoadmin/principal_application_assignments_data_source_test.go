@@ -35,7 +35,7 @@ func TestAccSSOAdminPrincipalApplicationAssignmentsDataSource_basic(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "principal_id", userResourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "principal_type", "USER"),
-					resource.TestCheckResourceAttr(dataSourceName, "application_assignments.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "application_assignments.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_assignments.0.application_arn", applicationResourceName, "application_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_assignments.0.principal_id", userResourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "application_assignments.0.principal_type", "USER"),

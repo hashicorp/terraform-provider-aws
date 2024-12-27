@@ -19,7 +19,7 @@ resource "aws_lb" "test" {
   subnets            = aws_subnet.test[*].id
 }
 
-// acctest.ConfigVPCWithSubnets(rName, 1)
+# acctest.ConfigVPCWithSubnets(rName, 1)
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -36,7 +36,7 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
-// acctest.ConfigAvailableAZsNoOptInDefaultExclude()
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude()
 data "aws_availability_zones" "available" {
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
@@ -50,6 +50,7 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
+
 resource "null_resource" "test" {}
 
 variable "rName" {

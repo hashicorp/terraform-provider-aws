@@ -6,11 +6,12 @@ package fsx_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,12 +24,12 @@ import (
 
 func TestAccFSxONTAPVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -37,7 +38,7 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
@@ -46,13 +47,13 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_style", ""),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", "1024"),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_virtual_machine_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tiering_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tiering_policy.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "ONTAP"),
 				),
@@ -61,6 +62,10 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -68,12 +73,12 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 
 func TestAccFSxONTAPVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -92,13 +97,13 @@ func TestAccFSxONTAPVolume_disappears(t *testing.T) {
 
 func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	ConstituentsPerAggregate := 10
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -107,29 +112,33 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_aggregate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.0", "aggr1"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.1", "aggr2"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_aggregateConstituents(rName, ConstituentsPerAggregate, ConstituentsPerAggregate*204800),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.0", "aggr1"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.1", "aggr2"),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.total_constituents", fmt.Sprint(ConstituentsPerAggregate*2)),
-					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(ConstituentsPerAggregate*204800)),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.total_constituents", strconv.Itoa(ConstituentsPerAggregate*2)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", strconv.Itoa(ConstituentsPerAggregate*204800)),
 				),
 			},
 		},
@@ -138,12 +147,12 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 
 func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -156,10 +165,14 @@ func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_copyTagsToBackups(rName, false),
@@ -175,14 +188,14 @@ func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 
 func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	jPath1 := "/path1"
 	jPath2 := "/path2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -196,10 +209,14 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_junctionPath(rName, jPath2),
@@ -216,13 +233,13 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 
 func TestAccFSxONTAPVolume_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -235,10 +252,14 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName2),
@@ -254,12 +275,12 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 
 func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -272,10 +293,14 @@ func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -283,12 +308,12 @@ func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 
 func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3 fsx.Volume
+	var volume1, volume2, volume3 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -302,10 +327,14 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_securityStyle(rName, "NTFS"),
@@ -331,7 +360,7 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 
 func TestAccFSxONTAPVolume_size(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3, volume4 fsx.Volume
+	var volume1, volume2, volume3, volume4 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	size1 := 1024
@@ -340,7 +369,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 	size4 := int64(1125899906842623)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -350,14 +379,18 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(size1)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", strconv.Itoa(size1)),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_size(rName, size2),
@@ -365,7 +398,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(size2)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", strconv.Itoa(size2)),
 				),
 			},
 			{
@@ -374,7 +407,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckONTAPVolumeRecreated(&volume2, &volume3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", fmt.Sprint(size3)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", strconv.FormatInt(size3, 10)),
 				),
 			},
 			{
@@ -383,7 +416,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume4),
 					testAccCheckONTAPVolumeNotRecreated(&volume3, &volume4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", fmt.Sprint(size4)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", strconv.FormatInt(size4, 10)),
 				),
 			},
 		},
@@ -392,12 +425,12 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 
 func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1 /*, volume2*/ fsx.Volume
+	var volume1 /*, volume2*/ awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -407,31 +440,35 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.type", "YEARS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.type", "YEARS"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.value", "30"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.type", "YEARS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.snaplock_type", "ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.volume_append_mode_enabled", acctest.CtFalse),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			/*
 				See https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/how-snaplock-works.html#snaplock-audit-log-volume.
@@ -470,14 +507,14 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 
 func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	policy1 := "default"
 	policy2 := "none"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -487,14 +524,18 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy1)),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", policy1),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_snapshotPolicy(rName, policy2),
@@ -502,7 +543,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy2)),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", policy2),
 				),
 			},
 		},
@@ -511,12 +552,12 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 
 func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -530,10 +571,14 @@ func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_storageEfficiency(rName, false),
@@ -550,12 +595,12 @@ func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 
 func TestAccFSxONTAPVolume_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3 fsx.Volume
+	var volume1, volume2, volume3 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -564,22 +609,26 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -589,7 +638,7 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckONTAPVolumeNotRecreated(&volume2, &volume3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -599,12 +648,12 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 
 func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3, volume4 fsx.Volume
+	var volume1, volume2, volume3, volume4 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -618,10 +667,14 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tieringPolicy(rName, "SNAPSHOT_ONLY", 10),
@@ -630,7 +683,7 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "SNAPSHOT_ONLY"),
-					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", "10"),
 				),
 			},
 			{
@@ -658,14 +711,14 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 
 func TestAccFSxONTAPVolume_volumeStyle(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	style1 := "FLEXVOL"
 	style2 := "FLEXGROUP"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -678,10 +731,14 @@ func TestAccFSxONTAPVolume_volumeStyle(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_ontapStyle(rName, style2),
@@ -694,14 +751,52 @@ func TestAccFSxONTAPVolume_volumeStyle(t *testing.T) {
 	})
 }
 
-func testAccCheckONTAPVolumeExists(ctx context.Context, n string, v *fsx.Volume) resource.TestCheckFunc {
+func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var volume awstypes.Volume
+	resourceName := "aws_fsx_ontap_volume.test"
+	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+
+	acctest.SkipIfEnvVarNotSet(t, "AWS_FSX_CREATE_FINAL_BACKUP")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPVolumeConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckONTAPVolumeExists(ctx context.Context, n string, v *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		output, err := tffsx.FindONTAPVolumeByID(ctx, conn, rs.Primary.ID)
 
@@ -717,7 +812,7 @@ func testAccCheckONTAPVolumeExists(ctx context.Context, n string, v *fsx.Volume)
 
 func testAccCheckONTAPVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_ontap_volume" {
@@ -740,20 +835,20 @@ func testAccCheckONTAPVolumeDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckONTAPVolumeNotRecreated(i, j *fsx.Volume) resource.TestCheckFunc {
+func testAccCheckONTAPVolumeNotRecreated(i, j *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.VolumeId) != aws.StringValue(j.VolumeId) {
-			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) recreated", aws.StringValue(i.VolumeId))
+		if aws.ToString(i.VolumeId) != aws.ToString(j.VolumeId) {
+			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) recreated", aws.ToString(i.VolumeId))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckONTAPVolumeRecreated(i, j *fsx.Volume) resource.TestCheckFunc {
+func testAccCheckONTAPVolumeRecreated(i, j *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.VolumeId) == aws.StringValue(j.VolumeId) {
-			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) not recreated", aws.StringValue(i.VolumeId))
+		if aws.ToString(i.VolumeId) == aws.ToString(j.VolumeId) {
+			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) not recreated", aws.ToString(i.VolumeId))
 		}
 
 		return nil
@@ -809,6 +904,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -821,6 +917,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 16 * 102400
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"
@@ -839,6 +936,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = %[3]d
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"
@@ -858,6 +956,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   copy_tags_to_backups       = %[2]t
@@ -870,6 +969,7 @@ func testAccONTAPVolumeConfig_junctionPath(rName, junctionPath string) string {
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = %[2]q
+  skip_final_backup          = true
   size_in_megabytes          = 1024
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
@@ -896,6 +996,7 @@ resource "aws_fsx_ontap_volume" "test" {
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
   security_style             = %[2]q
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -908,6 +1009,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = %[2]d
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -920,6 +1022,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_bytes              = %[2]d
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"
@@ -933,6 +1036,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -952,6 +1056,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/snaplock_audit_log"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -996,6 +1101,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   snapshot_policy            = %[2]q
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
@@ -1009,6 +1115,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = %[2]t
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -1021,6 +1128,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1038,6 +1146,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1054,6 +1163,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1070,6 +1180,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1093,4 +1204,22 @@ resource "aws_fsx_ontap_volume" "test" {
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
 `, rName, style))
+}
+
+func testAccONTAPVolumeConfig_deleteConfig(rName, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2 string) string {
+	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = 1024
+  skip_final_backup          = false
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+
+  final_backup_tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2))
 }

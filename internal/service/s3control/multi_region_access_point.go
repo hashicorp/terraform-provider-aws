@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -155,7 +156,7 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -171,7 +172,7 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 
 	output, err := conn.CreateMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = names.USWest2RegionID
+		o.Region = endpoints.UsWest2RegionID
 	})
 
 	if err != nil {
@@ -210,7 +211,7 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 
 	alias := aws.ToString(accessPoint.Alias)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "s3",
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),
@@ -247,7 +248,7 @@ func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.Resourc
 	log.Printf("[DEBUG] Deleting S3 Multi-Region Access Point: %s", d.Id())
 	output, err := conn.DeleteMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = names.USWest2RegionID
+		o.Region = endpoints.UsWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
@@ -273,7 +274,7 @@ func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 
 	output, err := conn.GetMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = names.USWest2RegionID
+		o.Region = endpoints.UsWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
@@ -302,7 +303,7 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 
 	output, err := conn.DescribeMultiRegionAccessPointOperation(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = names.USWest2RegionID
+		o.Region = endpoints.UsWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAsyncRequest) {

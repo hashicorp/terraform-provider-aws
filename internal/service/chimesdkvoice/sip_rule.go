@@ -122,6 +122,10 @@ func resourceSipRuleRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ChimeSKVoice Sip Rule (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrName, resp.Name)
 	d.Set("disabled", resp.Disabled)
 	d.Set("trigger_type", resp.TriggerType)
