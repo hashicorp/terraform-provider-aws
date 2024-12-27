@@ -5,13 +5,18 @@ package route53
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // @FrameworkDataSource("aws_route53_records", name="Records")
@@ -30,6 +35,10 @@ func (*recordsDataSource) Metadata(_ context.Context, request datasource.Metadat
 func (d *recordsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"name_regex": schema.StringAttribute{
+				CustomType: fwtypes.RegexpType,
+				Optional:   true,
+			},
 			"resource_record_sets": framework.DataSourceComputedListOfObjectAttribute[resourceRecordSetModel](ctx),
 			"zone_id": schema.StringAttribute{
 				Required: true,
@@ -45,19 +54,59 @@ func (d *recordsDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	//conn := d.Meta().Route53Client(ctx)
+	conn := d.Meta().Route53Client(ctx)
+
+	hostedZoneID := fwflex.StringValueFromFramework(ctx, data.ZoneID)
+	input := route53.ListResourceRecordSetsInput{
+		HostedZoneId: aws.String(hostedZoneID),
+	}
+	filter := tfslices.PredicateTrue[*awstypes.ResourceRecordSet]()
+	if !data.NameRegex.IsNull() {
+		filter = func(v *awstypes.ResourceRecordSet) bool {
+			return data.NameRegex.ValueRegexp().MatchString(aws.ToString(v.Name))
+		}
+	}
+
+	output, err := findResourceRecordSets(ctx, conn, &input, tfslices.PredicateTrue[*route53.ListResourceRecordSetsOutput](), filter)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("listing Route 53 Records (%s)", hostedZoneID), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type recordsDataSourceModel struct {
+	NameRegex          fwtypes.Regexp                                          `tfsdk:"name_regex"`
 	ResourceRecordSets fwtypes.ListNestedObjectValueOf[resourceRecordSetModel] `tfsdk:"resource_record_sets"`
 	ZoneID             types.String                                            `tfsdk:"zone_id"`
 }
 
 type resourceRecordSetModel struct {
+	AliasTarget       fwtypes.ObjectValueOf[aliasTargetModel]                `tfsdk:"alias_target"`
+	CIDRRoutingConfig fwtypes.ObjectValueOf[cidrRoutingConfigModel]          `tfsdk:"cidr_routing_config"`
+	Failover          fwtypes.StringEnum[awstypes.ResourceRecordSetFailover] `tfsdk:"failover"`
+
 	Name types.String                        `tfsdk:"name"`
 	Type fwtypes.StringEnum[awstypes.RRType] `tfsdk:"type"`
+}
+
+type aliasTargetModel struct {
+	DNSName              types.String `tfsdk:"dns_name"`
+	EvaluateTargetHealth types.Bool   `tfsdk:"evaluate_target_health"`
+	HostedZoneID         types.String `tfsdk:"hosted_zone_id"`
+}
+
+type cidrRoutingConfigModel struct {
+	CollectionID types.String `tfsdk:"collection_id"`
+	LocationName types.String `tfsdk:"location_name"`
 }
 
 /*
