@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Zones")
+// @FrameworkDataSource("aws_route53_zones", name="Zones")
 func newZonesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &zonesDataSource{}, nil
 }

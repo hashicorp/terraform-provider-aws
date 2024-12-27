@@ -5,6 +5,64 @@ package route53
 
 import (
 	"context"
+
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+)
+
+// @FrameworkDataSource("aws_route53_records", name="Records")
+func newRecordsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &recordsDataSource{}, nil
+}
+
+type recordsDataSource struct {
+	framework.DataSourceWithConfigure
+}
+
+func (*recordsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_route53_records"
+}
+
+func (d *recordsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"resource_record_sets": framework.DataSourceComputedListOfObjectAttribute[resourceRecordSetModel](ctx),
+			"zone_id": schema.StringAttribute{
+				Required: true,
+			},
+		},
+	}
+}
+
+func (d *recordsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data recordsDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	//conn := d.Meta().Route53Client(ctx)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type recordsDataSourceModel struct {
+	ResourceRecordSets fwtypes.ListNestedObjectValueOf[resourceRecordSetModel] `tfsdk:"resource_record_sets"`
+	ZoneID             types.String                                            `tfsdk:"zone_id"`
+}
+
+type resourceRecordSetModel struct {
+	Name types.String                        `tfsdk:"name"`
+	Type fwtypes.StringEnum[awstypes.RRType] `tfsdk:"type"`
+}
+
+/*
+import (
+	"context"
 	"regexp"
 	"strconv"
 
@@ -248,3 +306,4 @@ func flattenAlias(alias *types.AliasTarget) map[string]interface{} {
 	}
 	return c
 }
+*/

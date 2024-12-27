@@ -15,6 +15,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newRecordsDataSource,
+			Name:    "Records",
+		},
+		{
 			Factory: newZonesDataSource,
 			Name:    "Zones",
 		},
@@ -25,9 +29,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newCIDRCollectionResource,
+			Name:    "CIDR Collection",
 		},
 		{
 			Factory: newCIDRLocationResource,
+			Name:    "CIDR Location",
 		},
 	}
 }
@@ -38,11 +44,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceDelegationSet,
 			TypeName: "aws_route53_delegation_set",
 			Name:     "Reusable Delegation Set",
-		},
-		{
-			Factory:  DataSourceRecords,
-			TypeName: "aws_route53_records",
-			Name:     "Record",
 		},
 		{
 			Factory:  dataSourceTrafficPolicyDocument,
