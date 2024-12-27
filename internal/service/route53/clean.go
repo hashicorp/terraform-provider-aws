@@ -49,7 +49,7 @@ func normalizeDomainNameToAPI(input string) string {
 			}) {
 				output.WriteRune(ch)
 				output.WriteString(string(bytes))
-				br.Discard(lenOctalCode)
+				_, _ = br.Discard(lenOctalCode)
 				continue
 			}
 			fallthrough
