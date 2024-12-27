@@ -19,7 +19,6 @@ var (
 	ResourceZone                        = resourceZone
 	ResourceZoneAssociation             = resourceZoneAssociation
 
-	CleanDelegationSetID                        = cleanDelegationSetID
 	CleanZoneID                                 = cleanZoneID
 	ExpandRecordName                            = expandRecordName
 	FindCIDRCollectionByID                      = findCIDRCollectionByID
@@ -35,14 +34,12 @@ var (
 	FindTrafficPolicyInstanceByID               = findTrafficPolicyInstanceByID
 	FindVPCAssociationAuthorizationByTwoPartKey = findVPCAssociationAuthorizationByTwoPartKey
 	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
-	FQDN                                        = fqdn
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
 	RecordParseResourceID                       = recordParseResourceID
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync
-	NormalizeNameIntoAPIRepresentation          = normalizeDomainNameToAPI
 )
 
 type Route53TrafficPolicyDoc = route53TrafficPolicyDoc

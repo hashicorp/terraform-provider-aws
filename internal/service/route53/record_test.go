@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -71,96 +69,6 @@ func TestAccRoute53Record_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
-			},
-		},
-	})
-}
-
-func TestAccRoute53Record_Create_escape_code_slash(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.test"
-
-	zoneName := "0/24." + acctest.RandomDomain()
-	recordName := "0"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccRoute53Record_Create_escape_code_space(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.test"
-
-	zoneName := "a\\040b." + acctest.RandomDomain()
-	recordName := "0\\040to\\0401"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccRoute53Record_Create_escape_code_just_space(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.test"
-
-	// zone name always needs an escape code if any
-	zoneName := "a\\040b." + acctest.RandomDomain()
-
-	// as for record name, r53 API can accept a space as is but will send the escaped version of it back
-	recordName := "0 to 1"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1694,6 +1602,92 @@ func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_escapedSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := "0/24." + acctest.RandomDomain()
+	recordName := "0"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := "a\\040b." + acctest.RandomDomain()
+	recordName := "0\\040to\\0401"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	// zone name always needs an escape code if any
+	zoneName := "a\\040b." + acctest.RandomDomain()
+	// as for record name, r53 API can accept a space as is but will send the escaped version of it back
+	recordName := "0 to 1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // testAccErrorCheckSkip skips Route53 tests that have error messages indicating unsupported features
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
@@ -1778,41 +1772,29 @@ func testAccCheckRecordExists(ctx context.Context, n string, v *awstypes.Resourc
 	}
 }
 
-func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
+func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName, recordName, recordType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
+		rs, ok := s.RootModule().Resources[zoneResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneResourceName)
 		}
 
-		zoneId := zoneResource.Primary.ID
-		en := tfroute53.ExpandRecordName(recordName, zoneResource.Primary.Attributes["zone_id"])
+		zone := rs.Primary.ID
+		recordName := tfroute53.ExpandRecordName(recordName, zone)
 
-		lopts := &route53.ListResourceRecordSetsInput{
-			HostedZoneId: aws.String(tfroute53.CleanZoneID(zoneId)),
+		_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, zone, recordName, recordType, "")
+
+		if tfresource.NotFound(err) {
+			return nil
 		}
 
-		resp, err := conn.ListResourceRecordSets(ctx, lopts)
 		if err != nil {
 			return err
 		}
 
-		found := false
-		for _, rec := range resp.ResourceRecordSets {
-			recName := tfroute53.NormalizeNameIntoAPIRepresentation(*rec.Name)
-			if tfroute53.FQDN(strings.ToLower(recName)) == tfroute53.FQDN(strings.ToLower(en)) && rec.Type == awstypes.RRType(recordType) {
-				found = true
-				break
-			}
-		}
-
-		if found {
-			return fmt.Errorf("Record exists but should not: %s", en)
-		}
-
-		return nil
+		return fmt.Errorf("Route 53 Record %s still exists", recordName)
 	}
 }
 

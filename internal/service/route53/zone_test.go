@@ -70,64 +70,6 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Zone_Create_escape_code_slash(t *testing.T) {
-	ctx := acctest.Context(t)
-	var zone route53.GetHostedZoneOutput
-	resourceName := "aws_route53_zone.test"
-	zoneName := "0/24." + acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccZoneConfig_basic(zoneName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckZoneExists(ctx, resourceName, &zone),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-		},
-	})
-}
-
-func TestAccRoute53Zone_Create_escape_code_space(t *testing.T) {
-	ctx := acctest.Context(t)
-	var zone route53.GetHostedZoneOutput
-	resourceName := "aws_route53_zone.test"
-
-	// double-escape is required for templating the tf resource
-	zoneName := "a\\\\040b." + acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccZoneConfig_basic(zoneName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckZoneExists(ctx, resourceName, &zone),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-		},
-	})
-}
-
 func TestAccRoute53Zone_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
@@ -537,7 +479,63 @@ func TestAccRoute53Zone_classlessDelegation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_escapedSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	zoneName := "0/24." + acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_escapedSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	// double-escape is required for templating the tf resource
+	zoneName := "a\\\\040b." + acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
