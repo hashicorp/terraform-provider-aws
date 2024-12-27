@@ -9105,11 +9105,6 @@ func testAccInstanceConfig_masterWithStoppedInstance(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
-resource "aws_rds_instance_state" "test" {
-  identifier = aws_db_instance.test.identifier
-  state      = "stopped"
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage           = 5
   engine                      = data.aws_rds_orderable_db_instance.test.engine
