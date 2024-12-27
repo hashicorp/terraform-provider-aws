@@ -97,7 +97,7 @@ func resourceRateBasedRule() *schema.Resource {
 func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -157,10 +157,10 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf-regional",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "ratebasedrule/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -178,7 +178,7 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceRateBasedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if d.HasChanges("predicate", "rate_limit") {
 		o, n := d.GetChange("predicate")
@@ -194,7 +194,7 @@ func resourceRateBasedRuleUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceRateBasedRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if oldPredicates := d.Get("predicate").(*schema.Set).List(); len(oldPredicates) > 0 {
 		var newPredicates []interface{}

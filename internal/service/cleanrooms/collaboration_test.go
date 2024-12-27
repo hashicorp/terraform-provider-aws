@@ -49,7 +49,7 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 						"allow_joins_on_columns_with_different_names": acctest.CtTrue,
 						"preserve_nulls": acctest.CtFalse,
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cleanrooms", regexache.MustCompile(`collaboration:*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cleanrooms", regexache.MustCompile(`collaboration:*`)),
 					testCheckCreatorMember(ctx, resourceName),
 					testAccCollaborationTags(ctx, resourceName, map[string]string{
 						"Project": TEST_TAG,
@@ -232,7 +232,7 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 				Config: testAccCollaborationConfig_noDataEncryptionSettings(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationRecreated(resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.#", "0"),
 				),
 			},
 			{
@@ -261,18 +261,18 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 				Config: testAccCollaborationConfig_additionalMember(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "member.0.account_id", "123456789012"),
+					resource.TestCheckResourceAttr(resourceName, "member.0.account_id", acctest.Ct12Digit),
 					resource.TestCheckResourceAttr(resourceName, "member.0.display_name", "OtherMember"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.status", "INVITED"),
-					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", "0"),
 				),
 			},
 			{
 				Config: testAccCollaborationConfig_swapMemberAbilities(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationRecreated(resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "creator_member_abilities.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "creator_member_abilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", "2"),
 				),
 			},
 			{
@@ -402,8 +402,8 @@ func testCheckCreatorMember(ctx context.Context, name string) resource.TestCheck
 			return fmt.Errorf("Expected 1 member but found %d", len(membersOut.MemberSummaries))
 		}
 		member := membersOut.MemberSummaries[0]
-		if *member.AccountId != acctest.AccountID() {
-			return fmt.Errorf("Member account id %s does not match expected value", acctest.AccountID())
+		if *member.AccountId != acctest.AccountID(ctx) {
+			return fmt.Errorf("Member account id %s does not match expected value", acctest.AccountID(ctx))
 		}
 		if member.Status != types.MemberStatusInvited {
 			return fmt.Errorf("Member status: %s does not match expected value", member.Status)

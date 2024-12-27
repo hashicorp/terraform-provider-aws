@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -30,93 +29,81 @@ func RegisterSweepers() {
 func sweepConfigurationSets(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-
 	conn := client.SESV2Client(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &sesv2.ListConfigurationSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = ListConfigurationSetsPages(ctx, conn, input, func(page *sesv2.ListConfigurationSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sesv2.NewListConfigurationSetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SESv2 Configuration Set sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, configurationSet := range page.ConfigurationSets {
-			r := ResourceConfigurationSet()
-			d := r.Data(nil)
+		if err != nil {
+			return fmt.Errorf("error listing SESv2 Configuration Sets (%s): %w", region, err)
+		}
 
-			d.SetId(configurationSet)
+		for _, v := range page.ConfigurationSets {
+			r := resourceConfigurationSet()
+			d := r.Data(nil)
+			d.SetId(v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing Configuration Sets for %s: %w", region, err))
+		return fmt.Errorf("error sweeping SESv2 Configuration Sets (%s): %w", region, err)
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Configuration Sets for %s: %w", region, err))
-	}
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Configuration Sets sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepContactLists(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-
 	conn := client.SESV2Client(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &sesv2.ListContactListsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = ListContactListsPages(ctx, conn, input, func(page *sesv2.ListContactListsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sesv2.NewListContactListsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SESv2 Contact List sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, contactList := range page.ContactLists {
-			r := ResourceContactList()
-			d := r.Data(nil)
+		if err != nil {
+			return fmt.Errorf("error listing SESv2 Contact Lists (%s): %w", region, err)
+		}
 
-			d.SetId(aws.ToString(contactList.ContactListName))
+		for _, v := range page.ContactLists {
+			r := resourceContactList()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ContactListName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing Contact Lists for %s: %w", region, err))
+		return fmt.Errorf("error sweeping SESv2 Contact Lists (%s): %w", region, err)
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Contact Lists for %s: %w", region, err))
-	}
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Contact Lists sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

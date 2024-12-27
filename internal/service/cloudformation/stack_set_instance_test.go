@@ -38,18 +38,18 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackSetInstanceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
-					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, names.AttrName),
 				),
 			},
@@ -151,7 +151,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 				Config: testAccStackSetInstanceConfig_parameterOverrides1(rName, "overridevalue1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1"),
 				),
 			},
@@ -169,7 +169,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance2),
 					testAccCheckStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter2", "overridevalue2"),
 				),
@@ -179,7 +179,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance3),
 					testAccCheckStackSetInstanceNotRecreated(&stackInstance2, &stackInstance3),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1updated"),
 				),
 			},
@@ -188,7 +188,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance4),
 					testAccCheckStackSetInstanceNotRecreated(&stackInstance3, &stackInstance4),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 				),
 			},
 		},
@@ -217,8 +217,11 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.account_filter_type", "INTERSECTION"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
 				),
 			},
 			{
@@ -228,6 +231,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
 					"call_as",
+					"deployment_targets",
 				},
 			},
 			{
@@ -262,8 +266,8 @@ func TestAccCloudFormationStackSetInstance_DeploymentTargets_emptyOU(t *testing.
 				Config: testAccStackSetInstanceConfig_DeploymentTargets_emptyOU(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
 				),
 			},
 			{
@@ -273,6 +277,7 @@ func TestAccCloudFormationStackSetInstance_DeploymentTargets_emptyOU(t *testing.
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
 					"call_as",
+					"deployment_targets",
 				},
 			},
 			{
@@ -305,13 +310,49 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackSetInstanceConfig_operationPreferences(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSetInstance_concurrencyMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstanceSummaries []awstypes.StackInstanceSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_concurrencyMode(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -352,8 +393,8 @@ func TestAccCloudFormationStackSetInstance_delegatedAdministrator(t *testing.T) 
 				Config: testAccStackSetInstanceConfig_delegatedAdministrator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
 				),
 			},
 			{
@@ -812,6 +853,8 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   deployment_targets {
     organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+    account_filter_type     = "INTERSECTION"
+    accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
@@ -846,6 +889,26 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   operation_preferences {
     failure_tolerance_count = 1
     max_concurrent_count    = 10
+  }
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_concurrencyMode(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  operation_preferences {
+    failure_tolerance_count = 1
+    max_concurrent_count    = 10
+    concurrency_mode        = "SOFT_FAILURE_TOLERANCE"
   }
 
   deployment_targets {

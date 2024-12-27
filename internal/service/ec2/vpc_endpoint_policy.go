@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_policy")
-func ResourceVPCEndpointPolicy() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_policy", "VPC Endpoint Policy")
+func resourceVPCEndpointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointPolicyPut,
 		UpdateWithoutTimeout: resourceVPCEndpointPolicyPut,

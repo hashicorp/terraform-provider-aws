@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *drs.Client, identifier string, optFns ...func(*drs.Options)) (tftags.KeyValueTags, error) {
-	input := &drs.ListTagsForResourceInput{
+	input := drs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -80,12 +80,12 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 }
 
 // createTags creates drs service tags for new resources.
-func createTags(ctx context.Context, conn *drs.Client, identifier string, tags map[string]string) error {
+func createTags(ctx context.Context, conn *drs.Client, identifier string, tags map[string]string, optFns ...func(*drs.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, tags)
+	return updateTags(ctx, conn, identifier, nil, tags, optFns...)
 }
 
 // updateTags updates drs service tags.
@@ -100,12 +100,12 @@ func updateTags(ctx context.Context, conn *drs.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DRS)
 	if len(removedTags) > 0 {
-		input := &drs.UntagResourceInput{
+		input := drs.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -115,12 +115,12 @@ func updateTags(ctx context.Context, conn *drs.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DRS)
 	if len(updatedTags) > 0 {
-		input := &drs.TagResourceInput{
+		input := drs.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

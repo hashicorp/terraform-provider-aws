@@ -10,15 +10,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ivs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfivs "github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,14 +27,14 @@ import (
 
 func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var recordingConfiguration ivs.RecordingConfiguration
+	var recordingConfiguration awstypes.RecordingConfiguration
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivs_recording_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
@@ -46,9 +47,9 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`recording-configuration/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivs", regexache.MustCompile(`recording-configuration/.+`)),
 				),
 			},
 			{
@@ -62,7 +63,7 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 
 func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ivs.RecordingConfiguration
+	var v1, v2 awstypes.RecordingConfiguration
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -75,7 +76,7 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
@@ -113,14 +114,14 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 
 func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var recordingconfiguration ivs.RecordingConfiguration
+	var recordingconfiguration awstypes.RecordingConfiguration
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivs_recording_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
@@ -141,7 +142,7 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 
 func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var recordingconfiguration ivs.RecordingConfiguration
+	var recordingconfiguration awstypes.RecordingConfiguration
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parentResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_ivs_recording_configuration.test"
@@ -149,7 +150,7 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
@@ -170,14 +171,14 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 
 func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var recordingConfiguration ivs.RecordingConfiguration
+	var recordingConfiguration awstypes.RecordingConfiguration
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivs_recording_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
@@ -188,7 +189,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -201,7 +202,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags2(bucketName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -210,7 +211,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -220,7 +221,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 
 func testAccCheckRecordingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivs_recording_configuration" {
@@ -230,9 +231,9 @@ func testAccCheckRecordingConfigurationDestroy(ctx context.Context) resource.Tes
 			input := &ivs.GetRecordingConfigurationInput{
 				Arn: aws.String(rs.Primary.ID),
 			}
-			_, err := conn.GetRecordingConfigurationWithContext(ctx, input)
+			_, err := conn.GetRecordingConfiguration(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err
@@ -245,7 +246,7 @@ func testAccCheckRecordingConfigurationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckRecordingConfigurationExists(ctx context.Context, name string, recordingconfiguration *ivs.RecordingConfiguration) resource.TestCheckFunc {
+func testAccCheckRecordingConfigurationExists(ctx context.Context, name string, recordingconfiguration *awstypes.RecordingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -256,7 +257,7 @@ func testAccCheckRecordingConfigurationExists(ctx context.Context, name string, 
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNameRecordingConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSClient(ctx)
 
 		resp, err := tfivs.FindRecordingConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -270,9 +271,9 @@ func testAccCheckRecordingConfigurationExists(ctx context.Context, name string, 
 	}
 }
 
-func testAccCheckRecordingConfigurationRecreated(before, after *ivs.RecordingConfiguration) resource.TestCheckFunc {
+func testAccCheckRecordingConfigurationRecreated(before, after *awstypes.RecordingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.Arn), aws.StringValue(after.Arn); before == after {
+		if before, after := aws.ToString(before.Arn), aws.ToString(after.Arn); before == after {
 			return fmt.Errorf("Expected Recording Configuration IDs to change, %s", before)
 		}
 
@@ -281,10 +282,10 @@ func testAccCheckRecordingConfigurationRecreated(before, after *ivs.RecordingCon
 }
 
 func testAccRecordingConfigurationPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSClient(ctx)
 
 	input := &ivs.ListRecordingConfigurationsInput{}
-	_, err := conn.ListRecordingConfigurationsWithContext(ctx, input)
+	_, err := conn.ListRecordingConfigurations(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

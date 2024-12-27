@@ -51,14 +51,14 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &ec2.DescribeAddressesInput{}
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
-			newCustomFilterListV2(filters.(*schema.Set))...)
+			newCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {
@@ -82,7 +82,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("allocation_ids", allocationIDs)
 	d.Set("public_ips", publicIPs)
 

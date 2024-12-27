@@ -39,7 +39,7 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 				),
 			},
 		},
@@ -140,7 +140,7 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -149,7 +149,7 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -159,7 +159,7 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

@@ -6,8 +6,6 @@ package errs
 import (
 	"errors"
 	"strings"
-
-	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
 // errorMessager is a simple interface for types with ErrorMessage().
@@ -48,23 +46,6 @@ func Contains(err error, needle string) bool {
 	return false
 }
 
-// MessageContains unwraps the error and returns true if the error matches
-// all these conditions:
-//   - err is of type awserr.Error, Error.Code() equals code, and Error.Message() contains message
-//   - OR err if not of type awserr.Error as string contains both code and message
-func MessageContains(err error, code string, message string) bool {
-	var awsErr awserr.Error
-	if AsContains(err, &awsErr, message) {
-		return true
-	}
-
-	if Contains(err, code) && Contains(err, message) {
-		return true
-	}
-
-	return false
-}
-
 // IsA indicates whether an error matches an error type
 func IsA[T error](err error) bool {
 	_, ok := As[T](err)
@@ -78,21 +59,21 @@ func As[T error](err error) (T, bool) {
 	return as, ok
 }
 
-var _ ErrorWithErrorMessage = &ErrorWithMessage{}
+var _ ErrorWithErrorMessage = &MessageError{}
 
-// ErrorWithMessage is a simple error type that implements the errorMessager
-type ErrorWithMessage struct {
+// MessageError is a simple error type that implements the errorMessager
+type MessageError struct {
 	error
 }
 
-func (e *ErrorWithMessage) ErrorMessage() string {
+func (e *MessageError) ErrorMessage() string {
 	if e == nil || e.error == nil {
 		return ""
 	}
 	return e.Error()
 }
 
-// NewErrorWithMessage returns a new ErrorWithMessage
-func NewErrorWithMessage(err error) *ErrorWithMessage {
-	return &ErrorWithMessage{error: err}
+// NewMessageError returns a new MessageError
+func NewMessageError(err error) *MessageError {
+	return &MessageError{error: err}
 }

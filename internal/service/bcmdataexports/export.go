@@ -34,6 +34,8 @@ import (
 
 // @FrameworkResource("aws_bcmdataexports_export",name="Export")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newResourceExport(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExport{}
 
@@ -317,7 +319,7 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		in.ExportArn = aws.String(plan.ID.ValueString())
+		in.ExportArn = plan.ID.ValueStringPointer()
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {
@@ -361,7 +363,7 @@ func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &bcmdataexports.DeleteExportInput{
-		ExportArn: aws.String(state.ID.ValueString()),
+		ExportArn: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteExport(ctx, in)
@@ -461,8 +463,8 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 type resourceExportData struct {
 	Export   fwtypes.ListNestedObjectValueOf[exportData] `tfsdk:"export"`
 	ID       types.String                                `tfsdk:"id"`
-	Tags     types.Map                                   `tfsdk:"tags"`
-	TagsAll  types.Map                                   `tfsdk:"tags_all"`
+	Tags     tftags.Map                                  `tfsdk:"tags"`
+	TagsAll  tftags.Map                                  `tfsdk:"tags_all"`
 	Timeouts timeouts.Value                              `tfsdk:"timeouts"`
 }
 

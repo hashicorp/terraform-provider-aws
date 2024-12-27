@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -17,9 +16,9 @@ import (
 )
 
 func RegisterSweepers() {
-	sweep.Register("aws_lakeformation_permissions", sweepPermissions)
+	awsv2.Register("aws_lakeformation_permissions", sweepPermissions)
 
-	sweep.Register("aws_lakeformation_resource", sweepResource)
+	awsv2.Register("aws_lakeformation_resource", sweepResource)
 }
 
 func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -31,13 +30,6 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	pages := lakeformation.NewListPermissionsPaginator(conn, &lakeformation.ListPermissionsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}
@@ -95,13 +87,6 @@ func sweepResource(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	pages := lakeformation.NewListResourcesPaginator(conn, &lakeformation.ListResourcesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}

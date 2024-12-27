@@ -90,7 +90,7 @@ func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
 				),
 			},
 		},
@@ -155,7 +155,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
 				),
 			},
 			{

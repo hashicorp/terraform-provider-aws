@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_docdb_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterInstance() *schema.Resource {
+func resourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
 		ReadWithoutTimeout:   resourceClusterInstanceRead,

@@ -33,8 +33,8 @@ resource "aws_lightsail_disk" "test" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the Lightsail load balancer.
-* `size_in_gb` - (Required) The instance port the load balancer will connect.
+* `name` - (Required) The name of the disk.
+* `size_in_gb` - (Required) The size of the disk in GB.
 * `availability_zone` - (Required) The Availability Zone in which to create your disk.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -42,9 +42,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the disk  (matches `name`).
-* `arn` - The ARN of the Lightsail load balancer.
-* `created_at` - The timestamp when the load balancer was created.
+* `id` - The name of the disk (matches `name`).
+* `arn` - The ARN of the Lightsail disk.
+* `created_at` - The timestamp when the disk was created.
 * `support_code` - The support code for the disk. Include this code in your email to support when you have questions about a disk in Lightsail. This code enables our support team to look up your Lightsail information more easily.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

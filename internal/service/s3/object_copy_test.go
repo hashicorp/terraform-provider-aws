@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -65,12 +66,12 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "expiration", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "expires"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, names.AttrTarget),
 					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -85,7 +86,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
 					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
 				),
@@ -135,7 +136,7 @@ func TestAccS3ObjectCopy_metadata(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "metadata_directive", "REPLACE"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.mk1", "mv1"),
 				),
 			},
@@ -159,9 +160,9 @@ func TestAccS3ObjectCopy_grant(t *testing.T) {
 				Config: testAccObjectCopyConfig_grant(rName1, names.AttrSource, rName2, names.AttrTarget),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-						"permissions.#": acctest.Ct1,
+						"permissions.#": "1",
 						names.AttrType:  "Group",
 						names.AttrURI:   "http://acs.amazonaws.com/groups/global/AllUsers",
 					}),
@@ -413,15 +414,15 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customer_key_md5", ""),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrExpectedBucketOwner),
 					resource.TestCheckNoResourceAttr(resourceName, "expected_source_bucket_owner"),
-					resource.TestCheckResourceAttr(resourceName, "expiration", ""),
+					resource.TestCheckResourceAttr(resourceName, "expiration", "NotImplemented"),
 					resource.TestCheckNoResourceAttr(resourceName, "expires"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, names.AttrTarget),
 					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -436,7 +437,7 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "EXPRESS_ONEZONE"),
 					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
 				),
@@ -488,12 +489,12 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "expiration", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "expires"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, names.AttrTarget),
 					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -505,10 +506,10 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_algorithm"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key_md5"),
-					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "source_version_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
 					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
 				),
@@ -520,17 +521,18 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_object_copy" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 			if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			var optFns []func(*s3.Options)
-			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 			}
 
@@ -564,7 +566,7 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
@@ -847,7 +849,7 @@ resource "aws_s3_access_point" "target" {
 }
 
 resource "aws_s3_object" "source" {
-  bucket  = aws_s3_bucket.source.bucket
+  bucket  = aws_s3_bucket_versioning.source.bucket
   key     = %[2]q
   content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 }

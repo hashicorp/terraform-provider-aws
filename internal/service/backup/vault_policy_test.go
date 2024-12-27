@@ -178,15 +178,11 @@ func testAccCheckVaultPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckVaultPolicyExists(ctx context.Context, name string, vault *backup.GetBackupVaultAccessPolicyOutput) resource.TestCheckFunc {
+func testAccCheckVaultPolicyExists(ctx context.Context, n string, v *backup.GetBackupVaultAccessPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Vault Policy ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
@@ -197,7 +193,7 @@ func testAccCheckVaultPolicyExists(ctx context.Context, name string, vault *back
 			return err
 		}
 
-		*vault = *output
+		*v = *output
 
 		return nil
 	}
@@ -362,7 +358,7 @@ resource "aws_backup_vault_policy" "test" {
       Sid    = "default"
       Effect = "Allow"
       Principal = {
-        AWS = "${aws_iam_role.test.arn}"
+        AWS = aws_iam_role.test.arn
       }
       Action = [
         "backup:DescribeBackupVault",

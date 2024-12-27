@@ -6,7 +6,6 @@ package auditmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -59,7 +58,7 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 	// Registration is applied per region, so use this as the ID
-	id := r.Meta().Region
+	id := r.Meta().Region(ctx)
 
 	var plan resourceAccountRegistrationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -69,10 +68,10 @@ func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.C
 
 	in := auditmanager.RegisterAccountInput{}
 	if !plan.DelegatedAdminAccount.IsNull() {
-		in.DelegatedAdminAccount = aws.String(plan.DelegatedAdminAccount.ValueString())
+		in.DelegatedAdminAccount = plan.DelegatedAdminAccount.ValueStringPointer()
 	}
 	if !plan.KmsKey.IsNull() {
-		in.KmsKey = aws.String(plan.KmsKey.ValueString())
+		in.KmsKey = plan.KmsKey.ValueStringPointer()
 	}
 	out, err := conn.RegisterAccount(ctx, &in)
 	if err != nil {
@@ -132,10 +131,10 @@ func (r *resourceAccountRegistration) Update(ctx context.Context, req resource.U
 		!plan.KmsKey.Equal(state.KmsKey) {
 		in := auditmanager.RegisterAccountInput{}
 		if !plan.DelegatedAdminAccount.IsNull() {
-			in.DelegatedAdminAccount = aws.String(plan.DelegatedAdminAccount.ValueString())
+			in.DelegatedAdminAccount = plan.DelegatedAdminAccount.ValueStringPointer()
 		}
 		if !plan.KmsKey.IsNull() {
-			in.KmsKey = aws.String(plan.KmsKey.ValueString())
+			in.KmsKey = plan.KmsKey.ValueStringPointer()
 		}
 		out, err := conn.RegisterAccount(ctx, &in)
 		if err != nil {

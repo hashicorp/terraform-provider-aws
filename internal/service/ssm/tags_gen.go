@@ -16,40 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// listTags lists ssm service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *ssm.Client, identifier, resourceType string, optFns ...func(*ssm.Options)) (tftags.KeyValueTags, error) {
-	input := &ssm.ListTagsForResourceInput{
-		ResourceId:   aws.String(identifier),
-		ResourceType: awstypes.ResourceTypeForTagging(resourceType),
-	}
-
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
-	}
-
-	return KeyValueTags(ctx, output.TagList), nil
-}
-
-// ListTags lists ssm service tags and set them in Context.
-// It is called from outside this package.
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).SSMClient(ctx), identifier, resourceType)
-
-	if err != nil {
-		return err
-	}
-
-	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(tags)
-	}
-
-	return nil
-}
-
 // []*SERVICE.Tag handling
 
 // Tags returns ssm service tags.
@@ -99,12 +65,12 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTags creates ssm service tags for new resources.
-func createTags(ctx context.Context, conn *ssm.Client, identifier, resourceType string, tags []awstypes.Tag) error {
+func createTags(ctx context.Context, conn *ssm.Client, identifier, resourceType string, tags []awstypes.Tag, optFns ...func(*ssm.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates ssm service tags.
@@ -119,13 +85,13 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.SSM)
 	if len(removedTags) > 0 {
-		input := &ssm.RemoveTagsFromResourceInput{
+		input := ssm.RemoveTagsFromResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsFromResource(ctx, input, optFns...)
+		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -135,13 +101,13 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.SSM)
 	if len(updatedTags) > 0 {
-		input := &ssm.AddTagsToResourceInput{
+		input := ssm.AddTagsToResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToResource(ctx, input, optFns...)
+		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

@@ -84,12 +84,12 @@ func TestAccSecretsManagerSecretVersionDataSource_versionStage(t *testing.T) {
 
 func testAccSecretVersionCheckDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		resource, ok := s.RootModule().Resources[datasourceName]
+		dataSource, ok := s.RootModule().Resources[datasourceName]
 		if !ok {
-			return fmt.Errorf("root module has no resource called %s", datasourceName)
+			return fmt.Errorf("root module has no data source called %s", datasourceName)
 		}
 
-		dataSource, ok := s.RootModule().Resources[resourceName]
+		resource, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("root module has no resource called %s", resourceName)
 		}

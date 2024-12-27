@@ -192,11 +192,11 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 		input.ClientVpnEndpointIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -212,10 +212,10 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.ToString(ep.ClientVpnEndpointId))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -262,7 +262,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	setTagsOutV2(ctx, ep.Tags)
+	setTagsOut(ctx, ep.Tags)
 
 	return diags
 }

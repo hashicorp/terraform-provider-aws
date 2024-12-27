@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,7 +38,7 @@ func TestAccCloudFrontDistribution_basic(t *testing.T) {
 				Config: testAccDistributionConfig_enabled(false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -91,7 +92,7 @@ func TestAccCloudFrontDistribution_tags(t *testing.T) {
 				Config: testAccDistributionConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -108,7 +109,7 @@ func TestAccCloudFrontDistribution_tags(t *testing.T) {
 				Config: testAccDistributionConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -117,7 +118,7 @@ func TestAccCloudFrontDistribution_tags(t *testing.T) {
 				Config: testAccDistributionConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -294,7 +295,7 @@ func TestAccCloudFrontDistribution_multiOrigin(t *testing.T) {
 				Config: testAccDistributionConfig_multiOrigin(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images1/*.jpg"),
 				),
@@ -337,7 +338,7 @@ func TestAccCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 				Config: testAccDistributionConfig_orderedCacheBehavior(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images1/*.jpg"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.1.default_ttl", "51"),
@@ -523,8 +524,8 @@ func TestAccCloudFrontDistribution_Origin_connectionAttempts(t *testing.T) {
 				Config: testAccDistributionConfig_originItem(rName, `connection_attempts = 2`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_attempts", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_attempts", "2"),
 				),
 			},
 		},
@@ -559,8 +560,8 @@ func TestAccCloudFrontDistribution_Origin_connectionTimeout(t *testing.T) {
 				Config: testAccDistributionConfig_originItem(rName, `connection_timeout = 6`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", `6`),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", "6"),
 				),
 			},
 		},
@@ -599,7 +600,7 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 				Config: testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"us-east-1"`)), //lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.origin_shield_region", "us-east-1"), //lintignore:AWSAT003
 				),
@@ -674,27 +675,27 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 				Config: testAccDistributionConfig_noOptionalItems(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct0),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`distribution/[0-9A-Z]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`distribution/[0-9A-Z]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cached_methods.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cached_methods.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.compress", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.forward", "all"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string_cache_keys.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.lambda_function_association.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.function_association.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string_cache_keys.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.lambda_function_association.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.function_association.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.target_origin_id", "myCustomOrigin"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDomainName, regexache.MustCompile(`^[0-9a-z]+\.cloudfront\.net$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -702,26 +703,29 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
 					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
-						"custom_header.#":                                 acctest.Ct0,
-						"custom_origin_config.#":                          acctest.Ct1,
+						"custom_header.#":                                 "0",
+						"custom_origin_config.#":                          "1",
 						"custom_origin_config.0.http_port":                "80",
 						"custom_origin_config.0.https_port":               "443",
 						"custom_origin_config.0.origin_keepalive_timeout": "5",
 						"custom_origin_config.0.origin_protocol_policy":   "http-only",
 						"custom_origin_config.0.origin_read_timeout":      "30",
-						"custom_origin_config.0.origin_ssl_protocols.#":   acctest.Ct2,
+						"custom_origin_config.0.origin_ssl_protocols.#":   "2",
 						names.AttrDomainName:                              "www.example.com",
+						"origin_shield.#":                                 "0",
+						"s3_origin_config.#":                              "0",
+						"vpc_origin_config.#":                             "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "price_class", "PriceClass_All"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.locations.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.locations.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.restriction_type", "whitelist"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.0.cloudfront_default_certificate", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtTrue),
 				),
@@ -863,10 +867,10 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValuesCookies_wh
 				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "3"),
 				),
 			},
 			{
@@ -882,10 +886,10 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValuesCookies_wh
 				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "2"),
 				),
 			},
 		},
@@ -908,9 +912,9 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t
 				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "3"),
 				),
 			},
 			{
@@ -926,9 +930,9 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t
 				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesHeadersUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "2"),
 				),
 			},
 		},
@@ -953,13 +957,13 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedKeyGroups(t *test
 				Config: testAccDistributionConfig_defaultCacheBehaviorTrustedKeyGroups(retainOnDelete, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "trusted_key_groups.0.items.0.key_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.0.key_pair_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.0.key_pair_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", "1"),
 				),
 			},
 			{
@@ -991,11 +995,11 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedSigners(t *testin
 				Config: testAccDistributionConfig_defaultCacheBehaviorTrustedSignersSelf(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "trusted_signers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.0.aws_account_number", "self"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "1"),
 				),
 			},
 			{
@@ -1029,7 +1033,7 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_realtimeLogARN(t *testin
 				Config: testAccDistributionConfig_defaultCacheBehaviorRealtimeLogARN(rName, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, names.AttrARN),
 				),
 			},
@@ -1064,7 +1068,7 @@ func TestAccCloudFrontDistribution_OrderedCacheBehavior_realtimeLogARN(t *testin
 				Config: testAccDistributionConfig_orderedCacheBehaviorRealtimeLogARN(rName, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "ordered_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, names.AttrARN),
 				),
 			},
@@ -1143,10 +1147,10 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_wh
 				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "3"),
 				),
 			},
 			{
@@ -1162,10 +1166,10 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_wh
 				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "2"),
 				),
 			},
 		},
@@ -1192,9 +1196,9 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t
 				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", "3"),
 				),
 			},
 			{
@@ -1210,9 +1214,9 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t
 				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesHeadersUnordered2(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", "2"),
 				),
 			},
 		},
@@ -1358,9 +1362,9 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 				Config: testAccDistributionConfig_eTagInitial(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Some comment"),
 				),
@@ -1378,9 +1382,9 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 				Config: testAccDistributionConfig_eTagUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", "2"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.1", "updated"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Some comment"),
@@ -1400,9 +1404,9 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 				Config: testAccDistributionConfig_eTagFinal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", "2"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.1", "updated"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comment"),
@@ -1432,12 +1436,12 @@ func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
 				Config: testAccDistributionConfig_originGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin_group.*", map[string]string{
 						"origin_id":                          "groupS3",
-						"failover_criteria.#":                acctest.Ct1,
-						"failover_criteria.0.status_codes.#": acctest.Ct4,
-						"member.#":                           acctest.Ct2,
+						"failover_criteria.#":                "1",
+						"failover_criteria.0.status_codes.#": "4",
+						"member.#":                           "2",
 						"member.0.origin_id":                 "primaryS3",
 						"member.1.origin_id":                 "failoverS3",
 					}),
@@ -1446,6 +1450,49 @@ func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "500"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "502"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_vpcOriginConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_vpcOriginConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_header.#":        "0",
+						"custom_origin_config.#": "0",
+						names.AttrDomainName:     "www.example.com",
+						"origin_id":              "test",
+						"origin_shield.#":        "0",
+						"s3_origin_config.#":     "0",
+						"vpc_origin_config.#":    "1",
+						"vpc_origin_config.0.origin_keepalive_timeout": "5",
+						"vpc_origin_config.0.origin_read_timeout":      "30",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
 			},
 		},
 	})
@@ -1557,10 +1604,10 @@ func testAccDistributionRetainConfig() string {
 // are necessary and overwrites the "aws" provider configuration.
 func testAccRegionProviderConfig() string {
 	switch acctest.Partition() {
-	case names.StandardPartitionID:
-		return acctest.ConfigRegionalProvider(names.USEast1RegionID)
-	case names.ChinaPartitionID:
-		return acctest.ConfigRegionalProvider(names.CNNorthwest1RegionID)
+	case endpoints.AwsPartitionID:
+		return acctest.ConfigRegionalProvider(endpoints.UsEast1RegionID)
+	case endpoints.AwsCnPartitionID:
+		return acctest.ConfigRegionalProvider(endpoints.CnNorthwest1RegionID)
 	default:
 		return acctest.ConfigRegionalProvider(acctest.Region())
 	}
@@ -4469,4 +4516,47 @@ resource "aws_cloudfront_distribution" "test" {
   %[2]s
 }
 `, rName, testAccDistributionRetainConfig(), which))
+}
+
+func testAccDistributionConfig_vpcOriginConfig(rName string) string {
+	return acctest.ConfigCompose(testAccVPCOriginConfig_basic(rName), `
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    vpc_origin_config {
+      vpc_origin_id = aws_cloudfront_vpc_origin.test.id
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`)
 }

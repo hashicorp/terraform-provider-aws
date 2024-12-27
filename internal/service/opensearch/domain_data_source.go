@@ -6,8 +6,8 @@ package opensearch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_opensearch_domain")
-func DataSourceDomain() *schema.Resource {
+// @SDKDataSource("aws_opensearch_domain", name="Domain")
+func dataSourceDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainRead,
 
@@ -213,8 +213,16 @@ func DataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dashboard_endpoint_v2": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"deleted": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"domain_endpoint_v2_hosted_zone_id": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"domain_id": {
@@ -270,6 +278,10 @@ func DataSourceDomain() *schema.Resource {
 				},
 			},
 			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_v2": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -417,19 +429,19 @@ func DataSourceDomain() *schema.Resource {
 
 func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "your query returned no results")
 	}
 
-	reqDescribeDomainConfig := &opensearchservice.DescribeDomainConfigInput{
+	reqDescribeDomainConfig := &opensearch.DescribeDomainConfigInput{
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	}
 
-	respDescribeDomainConfig, err := conn.DescribeDomainConfigWithContext(ctx, reqDescribeDomainConfig)
+	respDescribeDomainConfig, err := conn.DescribeDomainConfig(ctx, reqDescribeDomainConfig)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "querying config for opensearch_domain: %s", err)
 	}
@@ -440,25 +452,26 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dc := respDescribeDomainConfig.DomainConfig
 
-	d.SetId(aws.StringValue(ds.ARN))
+	d.SetId(aws.ToString(ds.ARN))
 
-	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
-		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
+	if ds.AccessPolicies != nil && aws.ToString(ds.AccessPolicies) != "" {
+		policies, err := structure.NormalizeJsonString(aws.ToString(ds.AccessPolicies))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "access policies contain an invalid JSON: %s", err)
 		}
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", flex.FlattenStringMap(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", flex.FlattenStringValueMap(ds.AdvancedOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
 
 	d.Set(names.AttrARN, ds.ARN)
+	d.Set("domain_endpoint_v2_hosted_zone_id", ds.DomainEndpointV2HostedZoneId)
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrEndpoint, ds.Endpoint)
-	d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-	d.Set("kibana_endpoint", getKibanaEndpoint(d))
+	d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+	d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
@@ -499,20 +512,31 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
-		endpoints := flex.FlattenStringMap(ds.Endpoints)
+		endpoints := flex.FlattenStringValueMap(ds.Endpoints)
 		if err := d.Set(names.AttrEndpoint, endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
-		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-		d.Set("kibana_endpoint", getKibanaEndpoint(d))
+		d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+		d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
+		if endpoints["vpcv2"] != nil {
+			d.Set("endpoint_v2", endpoints["vpcv2"])
+			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
+		}
 		if ds.Endpoint != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain in VPC expected to have null Endpoint value", d.Id())
+		}
+		if ds.EndpointV2 != nil {
+			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain in VPC expected to have null EndpointV2 value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set(names.AttrEndpoint, ds.Endpoint)
-			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-			d.Set("kibana_endpoint", getKibanaEndpoint(d))
+			d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+			d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
+		}
+		if ds.EndpointV2 != nil {
+			d.Set("endpoint_v2", ds.EndpointV2)
+			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
 		}
 		if ds.Endpoints != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain not in VPC expected to have null Endpoints value", d.Id())

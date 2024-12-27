@@ -56,7 +56,7 @@ func resourceSpotFleetRequest() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  SpotFleetRequestMigrateState,
+		MigrateState:  spotFleetRequestMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"allocation_strategy": {
@@ -885,7 +885,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
 		InstanceInterruptionBehavior:     awstypes.InstanceInterruptionBehavior(d.Get("instance_interruption_behaviour").(string)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
-		TagSpecifications:                getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSpotFleetRequest),
+		TagSpecifications:                getTagSpecificationsIn(ctx, awstypes.ResourceTypeSpotFleetRequest),
 		TargetCapacity:                   aws.Int32(int32(d.Get("target_capacity").(int))),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		Type:                             awstypes.FleetType(d.Get("fleet_type").(string)),
@@ -1080,7 +1080,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
 
-	setTagsOutV2(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	if err := d.Set("launch_template_config", flattenLaunchTemplateConfigs(config.LaunchTemplateConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template_config: %s", err)
@@ -1286,7 +1286,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	if m, ok := d[names.AttrTags].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]awstypes.SpotFleetTagSpecification, 0)
 
-		tags := TagsV2(tftags.New(ctx, m).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
 
 		spec := awstypes.SpotFleetTagSpecification{
 			ResourceType: awstypes.ResourceTypeInstance,
@@ -1431,7 +1431,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Throughput = aws.Int32(int32(v))
 			}
 
-			if dn, err := FetchRootDeviceName(ctx, conn, d["ami"].(string)); err == nil {
+			if dn, err := findRootDeviceName(ctx, conn, d["ami"].(string)); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -1852,7 +1852,7 @@ func expandSpotCapacityRebalance(l []interface{}) *awstypes.SpotCapacityRebalanc
 func launchSpecsToSet(ctx context.Context, conn *ec2.Client, launchSpecs []awstypes.SpotFleetLaunchSpecification) (*schema.Set, error) {
 	specSet := &schema.Set{F: hashLaunchSpecification}
 	for _, spec := range launchSpecs {
-		rootDeviceName, err := FetchRootDeviceName(ctx, conn, aws.ToString(spec.ImageId))
+		rootDeviceName, err := findRootDeviceName(ctx, conn, aws.ToString(spec.ImageId))
 		if err != nil {
 			return nil, err
 		}
@@ -1936,7 +1936,7 @@ func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecificatio
 		for _, tagSpecs := range l.TagSpecifications {
 			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if tagSpecs.ResourceType == awstypes.ResourceTypeInstance {
-				m[names.AttrTags] = keyValueTagsV2(ctx, tagSpecs.Tags).IgnoreAWS().Map()
+				m[names.AttrTags] = keyValueTags(ctx, tagSpecs.Tags).IgnoreAWS().Map()
 			}
 		}
 	}

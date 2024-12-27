@@ -1,0 +1,3 @@
+```release-note:bug
+many resources: Fixes perpetual diff when tag has a `null` value.
+```

@@ -41,6 +41,12 @@ func resourceCapacityReservation() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -134,7 +140,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 		InstanceCount:     aws.Int32(int32(d.Get(names.AttrInstanceCount).(int))),
 		InstancePlatform:  awstypes.CapacityReservationInstancePlatform(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get(names.AttrInstanceType).(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeCapacityReservation),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
@@ -175,7 +181,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.ToString(output.CapacityReservation.CapacityReservationId))
 
-	if err := waitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCapacityReservationActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) create: %s", d.Id(), err)
 	}
 
@@ -217,7 +223,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)
 
-	setTagsOutV2(ctx, reservation.Tags)
+	setTagsOut(ctx, reservation.Tags)
 
 	return diags
 }
@@ -245,7 +251,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Capacity Reservation (%s): %s", d.Id(), err)
 		}
 
-		if err := waitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+		if _, err := waitCapacityReservationActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -270,7 +276,7 @@ func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Capacity Reservation (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitCapacityReservationDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCapacityReservationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) delete: %s", d.Id(), err)
 	}
 

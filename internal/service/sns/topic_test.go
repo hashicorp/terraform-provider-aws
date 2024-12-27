@@ -52,9 +52,9 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(`terraform-.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(`terraform-.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
@@ -62,22 +62,22 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "firehose_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttr(resourceName, "signature_version", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config", ""),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -133,6 +133,7 @@ func TestAccSNSTopic_name(t *testing.T) {
 				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -162,6 +163,7 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 				Config: testAccTopicConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf(`%s.+$`, rName))),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
@@ -561,7 +563,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sns"),
-					resource.TestCheckResourceAttr(resourceName, "signature_version", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "2"),
 				),
 			},
 			{
@@ -876,7 +878,7 @@ resource "aws_sns_topic" "test" {
       "Sid": "Stmt1445931846145",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::012345678901:role/wooo"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::123456789012:role/wooo"
       },
       "Action": "sns:Publish",
       "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"

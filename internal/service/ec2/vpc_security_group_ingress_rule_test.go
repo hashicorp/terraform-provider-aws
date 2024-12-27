@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,23 +34,22 @@ func TestIPProtocol(t *testing.T) {
 	tests := map[string]testCase{
 		"name, number (equivalent)": {
 			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
-			val2:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct1)},
+			val2:   tfec2.IPProtocol{StringValue: types.StringValue("1")},
 			equals: true,
 		},
 		"number, name (equivalent)": {
-			val1:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct1)},
+			val1:   tfec2.IPProtocol{StringValue: types.StringValue("1")},
 			val2:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
 			equals: true,
 		},
 		"name, number (not equivalent)": {
 			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
-			val2:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct2)},
+			val2:   tfec2.IPProtocol{StringValue: types.StringValue("2")},
 			equals: false,
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -65,7 +64,7 @@ func TestIPProtocol(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.SecurityGroupRule
+	var v awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -103,7 +102,7 @@ func TestAccVPCSecurityGroupIngressRule_basic(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.SecurityGroupRule
+	var v awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -127,7 +126,7 @@ func TestAccVPCSecurityGroupIngressRule_disappears(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_tags_defaultAndIgnoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.SecurityGroupRule
+	var v awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -165,7 +164,7 @@ func TestAccVPCSecurityGroupIngressRule_tags_defaultAndIgnoreTags(t *testing.T) 
 
 func TestAccVPCSecurityGroupIngressRule_tags_ignoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.SecurityGroupRule
+	var v awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -203,7 +202,7 @@ func TestAccVPCSecurityGroupIngressRule_tags_ignoreTags(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.SecurityGroupRule
+	var v1, v2 awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -245,7 +244,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "ip_protocol", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
@@ -259,7 +258,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_cidrIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.SecurityGroupRule
+	var v1, v2 awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -315,7 +314,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv6(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.SecurityGroupRule
+	var v1, v2 awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -351,7 +350,7 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.SecurityGroupRule
+	var v1, v2 awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 	vpcEndpoint1ResourceName := "aws_vpc_endpoint.test1"
@@ -409,7 +408,7 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 
 func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.SecurityGroupRule
+	var v1, v2 awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 	securityGroup1ResourceName := "aws_security_group.test"
@@ -467,7 +466,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID(t *testing.T) 
 
 func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.SecurityGroupRule
+	var v awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -508,7 +507,7 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *tes
 
 func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.SecurityGroupRule
+	var v1, v2 awstypes.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -562,9 +561,9 @@ func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityGroupRuleNotRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRuleNotRecreated(i, j *awstypes.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.SecurityGroupRuleId) != aws.StringValue(j.SecurityGroupRuleId) {
+		if aws.ToString(i.SecurityGroupRuleId) != aws.ToString(j.SecurityGroupRuleId) {
 			return errors.New("VPC Security Group Rule was recreated")
 		}
 
@@ -572,9 +571,9 @@ func testAccCheckSecurityGroupRuleNotRecreated(i, j *ec2.SecurityGroupRule) reso
 	}
 }
 
-func testAccCheckSecurityGroupRuleRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRuleRecreated(i, j *awstypes.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.SecurityGroupRuleId) == aws.StringValue(j.SecurityGroupRuleId) {
+		if aws.ToString(i.SecurityGroupRuleId) == aws.ToString(j.SecurityGroupRuleId) {
 			return errors.New("VPC Security Group Rule was not recreated")
 		}
 
@@ -584,7 +583,7 @@ func testAccCheckSecurityGroupRuleRecreated(i, j *ec2.SecurityGroupRule) resourc
 
 func testAccCheckSecurityGroupIngressRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_security_group_ingress_rule" {
@@ -608,7 +607,7 @@ func testAccCheckSecurityGroupIngressRuleDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckSecurityGroupIngressRuleExists(ctx context.Context, n string, v *ec2.SecurityGroupRule) resource.TestCheckFunc {
+func testAccCheckSecurityGroupIngressRuleExists(ctx context.Context, n string, v *awstypes.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -619,7 +618,7 @@ func testAccCheckSecurityGroupIngressRuleExists(ctx context.Context, n string, v
 			return fmt.Errorf("No VPC Security Group Ingress Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSecurityGroupIngressRuleByID(ctx, conn, rs.Primary.ID)
 
@@ -633,11 +632,11 @@ func testAccCheckSecurityGroupIngressRuleExists(ctx context.Context, n string, v
 	}
 }
 
-func testAccCheckSecurityGroupIngressRuleUpdateTags(ctx context.Context, v *ec2.SecurityGroupRule, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckSecurityGroupIngressRuleUpdateTags(ctx context.Context, v *awstypes.SecurityGroupRule, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.UpdateTags(ctx, conn, aws.StringValue(v.SecurityGroupRuleId), oldTags, newTags)
+		return tfec2.UpdateTags(ctx, conn, aws.ToString(v.SecurityGroupRuleId), oldTags, newTags)
 	}
 }
 

@@ -43,13 +43,13 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 				Config: testAccScraperConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -206,9 +206,9 @@ func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDe
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
-	input := &amp.ListScrapersInput{}
+	input := amp.ListScrapersInput{}
 
-	_, err := conn.ListScrapers(ctx, input)
+	_, err := conn.ListScrapers(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

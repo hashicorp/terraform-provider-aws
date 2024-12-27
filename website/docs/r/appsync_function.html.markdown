@@ -100,28 +100,28 @@ This resource supports the following arguments:
 * `request_mapping_template` - (Optional) Function request mapping template. Functions support only the 2018-05-29 version of the request mapping template.
 * `response_mapping_template` - (Optional) Function response mapping template.
 * `description` - (Optional) Function description.
-* `runtime` - (Optional) Describes a runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [Runtime](#runtime).
-* `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
+* `runtime` - (Optional) Describes a runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [`runtime` Block](#runtime-block) for details.
+* `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [`sync_config` Block](#sync_config-block) for details.
 * `function_version` - (Optional) Version of the request mapping template. Currently the supported value is `2018-05-29`. Does not apply when specifying `code`.
 
-### Runtime
+### `runtime` Block
 
-This argument supports the following arguments:
+The `runtime` configuration block supports the following arguments:
 
 * `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
 * `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
-### Sync Config
+### `sync_config` Block
 
-This argument supports the following arguments:
+The `sync_config` configuration block supports the following arguments:
 
 * `conflict_detection` - (Optional) Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
 * `conflict_handler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
-* `lambda_conflict_handler_config` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
+* `lambda_conflict_handler_config` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [`lambda_conflict_handler_config` Block](#lambda_conflict_handler_config-block) for details.
 
-#### Lambda Conflict Handler Config
+#### `lambda_conflict_handler_config` Block
 
-This argument supports the following arguments:
+The `lambda_conflict_handler_config` configuration block supports the following arguments:
 
 * `lambda_conflict_handler_arn` - (Optional) ARN for the Lambda function to use as the Conflict Handler.
 

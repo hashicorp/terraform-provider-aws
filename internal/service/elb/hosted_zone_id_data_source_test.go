@@ -22,7 +22,7 @@ func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", names.AttrID, tfelb.HostedZoneIdPerRegionMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", names.AttrID, tfelb.HostedZoneIDPerRegionMap[acctest.Region()]),
 				),
 			},
 			{

@@ -20,6 +20,7 @@ var (
 	ResourcePublicKey                   = resourcePublicKey
 	ResourceRealtimeLogConfig           = resourceRealtimeLogConfig
 	ResourceResponseHeadersPolicy       = resourceResponseHeadersPolicy
+	ResourceVPCOrigin                   = newVPCOriginResource
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
@@ -36,5 +37,6 @@ var (
 	FindPublicKeyByID                          = findPublicKeyByID
 	FindRealtimeLogConfigByARN                 = findRealtimeLogConfigByARN
 	FindResponseHeadersPolicyByID              = findResponseHeadersPolicyByID
+	FindVPCOriginByID                          = findVPCOriginByID
 	WaitDistributionDeployed                   = waitDistributionDeployed
 )

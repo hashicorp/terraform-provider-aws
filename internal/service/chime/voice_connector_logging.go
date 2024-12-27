@@ -92,6 +92,10 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Chime Voice Connector logging configuration (%s): %s", d.Id(), err)
+	}
+
 	d.Set("enable_media_metric_logs", resp.EnableMediaMetricLogs)
 	d.Set("enable_sip_logs", resp.EnableSIPLogs)
 	d.Set("voice_connector_id", d.Id())

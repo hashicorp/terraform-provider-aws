@@ -140,8 +140,11 @@ resource "aws_elasticache_cluster" "example" {
 The following arguments are required:
 
 * `cluster_id` – (Required) Group identifier. ElastiCache converts this name to lowercase. Changing this value will re-create the resource.
-* `engine` – (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
-* `node_type` – (Required unless `replication_group_id` is provided) The instance class used. See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html). For Memcached, changing this value will re-create the resource.
+* `engine` – (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` and `redis`.
+* `node_type` – (Required unless `replication_group_id` is provided) The instance class used.
+  See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
+  See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html).
+  For Memcached, changing this value will re-create the resource.
 * `num_cache_nodes` – (Required unless `replication_group_id` is provided) The initial number of cache nodes that the cache cluster will have. For Redis, this value must be 1. For Memcached, this value must be between 1 and 40. If this number is reduced on subsequent runs, the highest numbered nodes will be removed.
 * `parameter_group_name` – (Required unless `replication_group_id` is provided) The name of the parameter group to associate with this cache cluster.
 

@@ -37,19 +37,19 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
-					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
-					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "8"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -106,20 +106,20 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", "SettingsGroup"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
-					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "8"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
-					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
 				),
@@ -161,7 +161,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
 				),
@@ -175,7 +175,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroupUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroupUpdated),
 				),
@@ -189,7 +189,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 				Config: testAccStackConfig_applicationSettings(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
 				),
@@ -220,7 +220,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
 				),
@@ -229,7 +229,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
 				Config: testAccStackConfig_applicationSettingsRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
 				),
@@ -259,7 +259,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromDisabled(t *testing.T) 
 				Config: testAccStackConfig_applicationSettingsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "application_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
 				),
@@ -302,9 +302,9 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 				),
 			},
@@ -335,7 +335,7 @@ func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
 				Config: testAccStackConfig_streamingExperienceSettings(rName, preferredProtocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "TCP"),
 				),
 			},
@@ -343,7 +343,7 @@ func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
 				Config: testAccStackConfig_streamingExperienceSettings(rName, newPreferredProtocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "UDP"),
 				),
 			},
@@ -422,6 +422,10 @@ resource "aws_appstream_stack" "test" {
     connector_type = "HOMEFOLDERS"
   }
 
+  user_settings {
+    action     = "AUTO_TIME_ZONE_REDIRECTION"
+    permission = "DISABLED"
+  }
   user_settings {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"

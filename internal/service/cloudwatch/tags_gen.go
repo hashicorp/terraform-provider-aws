@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *cloudwatch.Client, identifier string, optFns ...func(*cloudwatch.Options)) (tftags.KeyValueTags, error) {
-	input := &cloudwatch.ListTagsForResourceInput{
+	input := cloudwatch.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -98,12 +98,12 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTags creates cloudwatch service tags for new resources.
-func createTags(ctx context.Context, conn *cloudwatch.Client, identifier string, tags []awstypes.Tag) error {
+func createTags(ctx context.Context, conn *cloudwatch.Client, identifier string, tags []awstypes.Tag, optFns ...func(*cloudwatch.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates cloudwatch service tags.
@@ -118,12 +118,12 @@ func updateTags(ctx context.Context, conn *cloudwatch.Client, identifier string,
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.CloudWatch)
 	if len(removedTags) > 0 {
-		input := &cloudwatch.UntagResourceInput{
+		input := cloudwatch.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -133,12 +133,12 @@ func updateTags(ctx context.Context, conn *cloudwatch.Client, identifier string,
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.CloudWatch)
 	if len(updatedTags) > 0 {
-		input := &cloudwatch.TagResourceInput{
+		input := cloudwatch.TagResourceInput{
 			ResourceARN: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

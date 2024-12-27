@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -159,6 +158,12 @@ func resourceVPCEndpoint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"service_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -220,14 +225,14 @@ func resourceVPCEndpoint() *schema.Resource {
 func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		ServiceName:       aws.String(serviceName),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcEndpoint),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
@@ -272,6 +277,10 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("service_region"); ok {
+		input.ServiceRegion = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateVpcEndpoint(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
@@ -298,8 +307,8 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := getTagsInV2(ctx); input.TagSpecifications == nil && len(tags) > 0 {
-		err := createTagsV2(ctx, conn, d.Id(), tags)
+	if tags := getTagsIn(ctx); input.TagSpecifications == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
@@ -330,15 +339,8 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.ToString(vpce.OwnerId),
-		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
-	}.String()
-	serviceName := aws.ToString(vpce.ServiceName)
-	d.Set(names.AttrARN, arn)
+	ownerID := aws.ToString(vpce.OwnerId)
+	d.Set(names.AttrARN, vpcEndpointARN(ctx, meta.(*conns.AWSClient), ownerID, d.Id()))
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
@@ -351,12 +353,14 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
 	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
-	d.Set(names.AttrOwnerID, vpce.OwnerId)
+	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
+	serviceName := aws.ToString(vpce.ServiceName)
 	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_region", vpce.ServiceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
@@ -402,7 +406,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrPolicy, policyToSet)
 
-	setTagsOutV2(ctx, vpce.Tags)
+	setTagsOut(ctx, vpce.Tags)
 
 	return diags
 }
@@ -496,7 +500,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointNotFound) {
@@ -768,4 +772,8 @@ func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []interface{}
 	}
 
 	return tfList
+}
+
+func vpcEndpointARN(ctx context.Context, c *conns.AWSClient, ownerID, vpceID string) string {
+	return c.RegionalARNWithAccount(ctx, "ec2", ownerID, "vpc-endpoint/"+vpceID)
 }

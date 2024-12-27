@@ -10,7 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -45,7 +45,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
 					resource.TestCheckResourceAttr(resourceName, "category", "PRIVATE"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
@@ -62,7 +62,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
 					resource.TestCheckResourceAttr(resourceName, "category", "PRIVATE"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),

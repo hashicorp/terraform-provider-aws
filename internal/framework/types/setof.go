@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
@@ -25,8 +26,17 @@ type setTypeOf[T attr.Value] struct {
 }
 
 var (
+	// SetOfStringType is a custom type used for defining a Set of strings.
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
+
+	// SetOfARNType is a custom type used for defining a Set of ARNs.
+	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}}
 )
+
+// TODO Replace with Go 1.24 generic type alias when available.
+func SetOfStringEnumType[T enum.Valueser[T]]() setTypeOf[StringEnum[T]] {
+	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}}
+}
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
 	return setTypeOf[T]{basetypes.SetType{ElemType: newAttrTypeOf[T](ctx)}}
@@ -96,6 +106,11 @@ func (t setTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 type SetValueOf[T attr.Value] struct {
 	basetypes.SetValue
 }
+
+type (
+	SetOfString = SetValueOf[basetypes.StringValue]
+	SetOfARN    = SetValueOf[ARN]
+)
 
 func (v SetValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(SetValueOf[T])
