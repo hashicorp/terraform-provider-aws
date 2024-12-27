@@ -939,7 +939,7 @@ func TestAccRDSInstance_ErrorOnConvertToManageOnStoppedInstance(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
-					resource.TestCheckResourceAttr("aws_rds_instance_state.test", "state", "stopped"),
+					resource.TestCheckResourceAttr("aws_rds_instance_state.test", names.AttrState, "stopped"),
 				),
 			},
 			{
@@ -9111,12 +9111,12 @@ resource "aws_rds_instance_state" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage   = 5
-  engine              = data.aws_rds_orderable_db_instance.test.engine
-  identifier          = %[1]q
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  allocated_storage           = 5
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
   manage_master_user_password = true
-  skip_final_snapshot = true
+  skip_final_snapshot         = true
 }
 `, rName))
 }
