@@ -30,9 +30,19 @@ func dataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"bandwidth_weightings": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"bare_metal": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"boot_modes": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"burstable_performance_supported": {
 				Type:     schema.TypeBool,
@@ -47,6 +57,10 @@ func dataSourceInstanceType() *schema.Resource {
 				Computed: true,
 			},
 			"default_cores": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"default_network_card_index": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -95,6 +109,14 @@ func dataSourceInstanceType() *schema.Resource {
 				Computed: true,
 			},
 			"efa_supported": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"efa_maximum_interfaces": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"ena_srd_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -179,6 +201,10 @@ func dataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"memory_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -234,16 +260,118 @@ func dataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"media_accelerators": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"manufacturer": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"memory_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"memory_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"network_cards": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"baseline_bandwidth": {
+							Type:     schema.TypeFloat,
+							Computed: true,
+						},
+						"index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"maximum_interfaces": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"performance": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"peak_bandwidth": {
+							Type:     schema.TypeFloat,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"network_performance": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"neuron_devices": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"core_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"core_version": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"memory_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"nitro_enclaves_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"nitro_tpm_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"nitro_tpm_supported_versions": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"phc_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"supported_architectures": {
 				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"supported_cpu_features": {
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -279,7 +407,19 @@ func dataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"total_inference_memory": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"total_instance_storage": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"total_media_memory": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"total_neuron_device_memory": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -310,10 +450,13 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(string(v.InstanceType))
 	d.Set("auto_recovery_supported", v.AutoRecoverySupported)
 	d.Set("bare_metal", v.BareMetal)
+	d.Set("bandwidth_weightings", v.NetworkInfo.BandwidthWeightings)
+	d.Set("boot_modes", v.SupportedBootModes)
 	d.Set("burstable_performance_supported", v.BurstablePerformanceSupported)
 	d.Set("current_generation", v.CurrentGeneration)
 	d.Set("dedicated_hosts_supported", v.DedicatedHostsSupported)
 	d.Set("default_cores", v.VCpuInfo.DefaultCores)
+	d.Set("default_network_card_index", v.NetworkInfo.DefaultNetworkCardIndex)
 	d.Set("default_threads_per_core", v.VCpuInfo.DefaultThreadsPerCore)
 	d.Set("default_vcpus", v.VCpuInfo.DefaultVCpus)
 	d.Set("ebs_encryption_support", v.EbsInfo.EncryptionSupport)
@@ -328,6 +471,10 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("ebs_performance_maximum_iops", v.EbsInfo.EbsOptimizedInfo.MaximumIops)
 	}
 	d.Set("efa_supported", v.NetworkInfo.EfaSupported)
+	if v.NetworkInfo.EfaInfo != nil {
+		d.Set("efa_maximum_interfaces", v.NetworkInfo.EfaInfo.MaximumEfaInterfaces)
+	}
+	d.Set("ena_srd_supported", v.NetworkInfo.EnaSrdSupported)
 	d.Set("ena_support", v.NetworkInfo.EnaSupport)
 	d.Set("encryption_in_transit_supported", v.NetworkInfo.EncryptionInTransitSupported)
 	if v.FpgaInfo != nil {
@@ -361,17 +508,19 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("hibernation_supported", v.HibernationSupported)
 	d.Set("hypervisor", v.Hypervisor)
-	if v.InferenceAcceleratorInfo != nil {
-		acceleratorList := make([]interface{}, len(v.InferenceAcceleratorInfo.Accelerators))
-		for i, accl := range v.InferenceAcceleratorInfo.Accelerators {
+	if info := v.InferenceAcceleratorInfo; info != nil {
+		acceleratorList := make([]interface{}, len(info.Accelerators))
+		for i, accl := range info.Accelerators {
 			accelerator := map[string]interface{}{
 				"count":        aws.ToInt32(accl.Count),
 				"manufacturer": aws.ToString(accl.Manufacturer),
+				"memory_size":  aws.ToInt32(accl.MemoryInfo.SizeInMiB),
 				names.AttrName: aws.ToString(accl.Name),
 			}
 			acceleratorList[i] = accelerator
 		}
 		d.Set("inference_accelerators", acceleratorList)
+		d.Set("total_inference_memory", info.TotalInferenceMemoryInMiB)
 	}
 	if v.InstanceStorageInfo != nil {
 		if v.InstanceStorageInfo.Disks != nil {
@@ -395,9 +544,63 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)
 	d.Set("maximum_network_cards", v.NetworkInfo.MaximumNetworkCards)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
+	if info := v.MediaAcceleratorInfo; info != nil {
+		acceleratorList := make([]interface{}, len(info.Accelerators))
+		for i, accl := range info.Accelerators {
+			accelerator := map[string]interface{}{
+				"count":        aws.ToInt32(accl.Count),
+				"manufacturer": aws.ToString(accl.Manufacturer),
+				"memory_size":  aws.ToInt32(accl.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(accl.Name),
+			}
+			acceleratorList[i] = accelerator
+		}
+		d.Set("media_accelerators", acceleratorList)
+		d.Set("total_media_memory", info.TotalMediaMemoryInMiB)
+	}
 	d.Set("memory_size", v.MemoryInfo.SizeInMiB)
+	if info := v.NeuronInfo; info != nil {
+		deviceList := make([]interface{}, len(info.NeuronDevices))
+		for i, d := range info.NeuronDevices {
+			device := map[string]interface{}{
+				"count":        aws.ToInt32(d.Count),
+				"core_count":   aws.ToInt32(d.CoreInfo.Count),
+				"core_version": aws.ToInt32(d.CoreInfo.Version),
+				"memory_size":  aws.ToInt32(d.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(d.Name),
+			}
+			deviceList[i] = device
+		}
+		d.Set("neuron_devices", deviceList)
+		d.Set("total_neuron_device_memory", info.TotalNeuronDeviceMemoryInMiB)
+	}
+	d.Set("nitro_enclaves_support", v.NitroEnclavesSupport)
+	d.Set("nitro_tpm_support", v.NitroTpmSupport)
+	var nitroTpmSupportedVersions []string
+	if v.NitroTpmInfo != nil {
+		nitroTpmSupportedVersions = v.NitroTpmInfo.SupportedVersions
+	} else {
+		nitroTpmSupportedVersions = []string{}
+	}
+	d.Set("nitro_tpm_supported_versions", nitroTpmSupportedVersions)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)
+	if info := v.NetworkInfo; info != nil {
+		cardList := make([]interface{}, len(info.NetworkCards))
+		for i, c := range info.NetworkCards {
+			card := map[string]interface{}{
+				"baseline_bandwidth": aws.ToFloat64(c.BaselineBandwidthInGbps),
+				"index":              aws.ToInt32(c.NetworkCardIndex),
+				"maximum_interfaces": aws.ToInt32(c.MaximumNetworkInterfaces),
+				"peak_bandwidth":     aws.ToFloat64(c.PeakBandwidthInGbps),
+				"performance":        aws.ToString(c.NetworkPerformance),
+			}
+			cardList[i] = card
+		}
+		d.Set("network_cards", cardList)
+	}
+	d.Set("phc_support", v.PhcSupport)
 	d.Set("supported_architectures", v.ProcessorInfo.SupportedArchitectures)
+	d.Set("supported_cpu_features", v.ProcessorInfo.SupportedFeatures)
 	d.Set("supported_placement_strategies", v.PlacementGroupInfo.SupportedStrategies)
 	d.Set("supported_root_device_types", v.SupportedRootDeviceTypes)
 	d.Set("supported_usages_classes", v.SupportedUsageClasses)
