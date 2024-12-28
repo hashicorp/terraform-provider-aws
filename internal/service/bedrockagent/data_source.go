@@ -152,6 +152,211 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								},
 							},
 						},
+						"salesforce_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[salesforceDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[salesforceSourceConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"auth_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.SalesforceAuthType](),
+												},
+												"credentials_secret_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+												"host_url": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+													},
+												},
+											},
+										},
+									},
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[salesforceCrawlerConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: crawlerFilterConfigurationSchema[crawlFilterConfiguration](ctx),
+									},
+								},
+							},
+						},
+						"share_point_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sharepointDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sharepointSourceConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"auth_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.SharePointAuthType](),
+												},
+												"credentials_secret_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+												"host_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.SharePointHostType](),
+												},
+												"domain": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 50),
+													},
+												},
+												"site_urls": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Required:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 100),
+														setvalidator.ValueStringsAre(
+															stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+														),
+													},
+												},
+												"tenant_id": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(36, 36),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must provide a valid tenant ID"),
+													},
+												},
+											},
+										},
+									},
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sharepointCrawlerConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: crawlerFilterConfigurationSchema[crawlFilterConfiguration](ctx),
+									},
+								},
+							},
+						},
+						"confluence_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[confluenceDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[confluenceSourceConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"auth_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.ConfluenceAuthType](),
+												},
+												"credentials_secret_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+												"host_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.ConfluenceHostType](),
+												},
+												"host_url": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+													},
+												},
+											},
+										},
+									},
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[confluenceCrawlerConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: crawlerFilterConfigurationSchema[crawlFilterConfiguration](ctx),
+									},
+								},
+							},
+						},
+						"web_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[confluenceDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[webSourceConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"url_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[urlConfiguration](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"seed_urls": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[seedURL](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtLeast(1),
+																	listvalidator.SizeAtMost(100),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"url": schema.StringAttribute{
+																			Optional: true,
+																			Validators: []validator.String{
+																				stringvalidator.RegexMatches(regexache.MustCompile(`^https?://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[webCrawlerConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: crawlerFilterConfigurationSchema[webCrawlerConfiguration](ctx),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -703,6 +908,11 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 	return nil, err
 }
 
+func crawlerFilterConfigurationSchema[T crawler](ctx context.Context) schema.NestedBlockObject {
+	t := new(T)
+	return (*t).GetCrawlerSchema(ctx)
+}
+
 type dataSourceResourceModel struct {
 	DataDeletionPolicy                fwtypes.StringEnum[awstypes.DataDeletionPolicy]                         `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
@@ -742,14 +952,38 @@ func (m *dataSourceResourceModel) setID() (string, error) {
 }
 
 type dataSourceConfigurationModel struct {
-	Type            fwtypes.StringEnum[awstypes.DataSourceType]                     `tfsdk:"type"`
-	S3Configuration fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel] `tfsdk:"s3_configuration"`
+	Type                    fwtypes.StringEnum[awstypes.DataSourceType]                             `tfsdk:"type"`
+	S3Configuration         fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]         `tfsdk:"s3_configuration"`
+	SalesforceConfiguration fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel] `tfsdk:"salesforce_configuration"`
+	SharePointConfiguration fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel] `tfsdk:"share_point_configuration"`
+	ConfluenceConfiguration fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel] `tfsdk:"confluence_configuration"`
+	WebConfiguration        fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]        `tfsdk:"web_configuration"`
 }
 
 type s3DataSourceConfigurationModel struct {
 	BucketARN            fwtypes.ARN                      `tfsdk:"bucket_arn"`
 	BucketOwnerAccountID types.String                     `tfsdk:"bucket_owner_account_id"`
 	InclusionPrefixes    fwtypes.SetValueOf[types.String] `tfsdk:"inclusion_prefixes"`
+}
+
+type salesforceDataSourceConfigurationModel struct {
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[salesforceSourceConfiguration]  `tfsdk:"source_configuration"`
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[salesforceCrawlerConfiguration] `tfsdk:"crawler_configuration"`
+}
+
+type sharepointDataSourceConfigurationModel struct {
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[sharepointSourceConfiguration]  `tfsdk:"source_configuration"`
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[sharepointCrawlerConfiguration] `tfsdk:"crawler_configuration"`
+}
+
+type confluenceDataSourceConfigurationModel struct {
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[confluenceSourceConfiguration]  `tfsdk:"source_configuration"`
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[confluenceCrawlerConfiguration] `tfsdk:"crawler_configuration"`
+}
+
+type webDataSourceConfigurationModel struct {
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[webSourceConfiguration]  `tfsdk:"source_configuration"`
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[webCrawlerConfiguration] `tfsdk:"crawler_configuration"`
 }
 
 type serverSideEncryptionConfigurationModel struct {
@@ -800,6 +1034,207 @@ type bedrockFoundationModelConfigurationModel struct {
 
 type parsingPromptModel struct {
 	ParsingPromptText types.String `tfsdk:"parsing_prompt_string"`
+}
+
+type salesforceSourceConfiguration struct {
+	AuthType             fwtypes.StringEnum[awstypes.SalesforceAuthType] `tfsdk:"auth_type"`
+	CredentialsSecretARN fwtypes.ARN                                     `tfsdk:"credentials_secret_arn"`
+	HostURL              types.String                                    `tfsdk:"host_url"`
+}
+
+type sharepointSourceConfiguration struct {
+	AuthType             fwtypes.StringEnum[awstypes.SharePointAuthType] `tfsdk:"auth_type"`
+	CredentialsSecretARN fwtypes.ARN                                     `tfsdk:"credentials_secret_arn"`
+	HostType             fwtypes.StringEnum[awstypes.SharePointHostType] `tfsdk:"host_type"`
+	TenantID             types.String                                    `tfsdk:"tenant_id"`
+	SiteURLs             fwtypes.SetValueOf[types.String]                `tfsdk:"site_urls"`
+	Domain               types.String                                    `tfsdk:"domain"`
+}
+
+type confluenceSourceConfiguration struct {
+	AuthType             fwtypes.StringEnum[awstypes.ConfluenceAuthType] `tfsdk:"auth_type"`
+	CredentialsSecretARN fwtypes.ARN                                     `tfsdk:"credentials_secret_arn"`
+	HostType             fwtypes.StringEnum[awstypes.ConfluenceHostType] `tfsdk:"host_type"`
+	HostURL              types.String                                    `tfsdk:"host_url"`
+}
+
+type webSourceConfiguration struct {
+	URLConfiguration fwtypes.ListNestedObjectValueOf[urlConfiguration] `tfsdk:"url_configuration"`
+}
+
+type urlConfiguration struct {
+	SeedURLs fwtypes.ListNestedObjectValueOf[seedURL] `tfsdk:"seed_urls"`
+}
+
+type seedURL struct {
+	URL types.String `tfsdk:"url"`
+}
+type salesforceCrawlerConfiguration struct {
+	FilterConfiguration fwtypes.ListNestedObjectValueOf[crawlFilterConfiguration] `tfsdk:"filter_configuration"`
+}
+
+type sharepointCrawlerConfiguration struct {
+	FilterConfiguration fwtypes.ListNestedObjectValueOf[crawlFilterConfiguration] `tfsdk:"filter_configuration"`
+}
+
+type confluenceCrawlerConfiguration struct {
+	FilterConfiguration fwtypes.ListNestedObjectValueOf[crawlFilterConfiguration] `tfsdk:"filter_configuration"`
+}
+
+type webCrawlerConfiguration struct {
+	ExclusionFilters fwtypes.SetValueOf[types.String]                  `tfsdk:"exclusion_filters"`
+	InclusionFilters fwtypes.SetValueOf[types.String]                  `tfsdk:"inclusion_filters"`
+	Scope            fwtypes.StringEnum[awstypes.WebScopeType]         `tfsdk:"scope"`
+	UserAgent        types.String                                      `tfsdk:"user_agent"`
+	CrawlerLimits    fwtypes.ListNestedObjectValueOf[webCrawlerLimits] `tfsdk:"crawler_limits"`
+}
+
+type webCrawlerLimits struct {
+	MaxPages  types.Int32 `tfsdk:"max_pages"`
+	RateLimit types.Int32 `tfsdk:"rate_limit"`
+}
+
+func (w webCrawlerConfiguration) GetCrawlerSchema(ctx context.Context) schema.NestedBlockObject {
+	return schema.NestedBlockObject{
+		Attributes: map[string]schema.Attribute{
+			"exclusion_filters": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 25),
+					setvalidator.ValueStringsAre(
+						stringvalidator.LengthBetween(1, 1000),
+					),
+				},
+			},
+			"inclusion_filters": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 25),
+					setvalidator.ValueStringsAre(
+						stringvalidator.LengthBetween(1, 1000),
+					),
+				},
+			},
+			"scope": schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.WebScopeType](),
+			},
+			"user_agent": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(15, 40),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"crawler_limits": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[webCrawlerLimits](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"max_pages": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.AtLeast(1),
+							},
+						},
+						"rate_limit": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 300),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type crawler interface {
+	GetCrawlerSchema(ctx context.Context) schema.NestedBlockObject
+}
+
+type crawlFilterConfiguration struct {
+	Type                types.String                                                      `tfsdk:"type"`
+	PatternObjectFilter fwtypes.ListNestedObjectValueOf[patternObjectFilterConfiguration] `tfsdk:"pattern_object_filter"`
+}
+
+type patternObjectFilterConfiguration struct {
+	Filters fwtypes.ListNestedObjectValueOf[patternObjectFilter] `tfsdk:"filters"`
+}
+
+type patternObjectFilter struct {
+	ObjectType       types.String                     `tfsdk:"object_type"`
+	ExclusionFilters fwtypes.SetValueOf[types.String] `tfsdk:"exclusion_filters"`
+	InclusionFilters fwtypes.SetValueOf[types.String] `tfsdk:"inclusion_filters"`
+}
+
+func (c crawlFilterConfiguration) GetCrawlerSchema(ctx context.Context) schema.NestedBlockObject {
+	return schema.NestedBlockObject{
+		Blocks: map[string]schema.Block{
+			"filter_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[crawlFilterConfiguration](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrType: schema.StringAttribute{
+							Required: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"pattern_object_filter": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterConfiguration](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"filters": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilter](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"object_type": schema.StringAttribute{
+													Required: true,
+												},
+												"exclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+												"inclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 type chunkingConfigurationModel struct {
