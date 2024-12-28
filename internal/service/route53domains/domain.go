@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -82,6 +84,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
+			"billing_contact": framework.ResourceOptionalComputedListOfObjectAttribute[contactDetailModel](ctx),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -182,10 +185,9 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"admin_contact":      contactDetailBlock(ctx, true),
-			"billing_contact":    contactDetailBlock(ctx, false),
-			"registrant_contact": contactDetailBlock(ctx, true),
-			"tech_contact":       contactDetailBlock(ctx, true),
+			"admin_contact":      contactDetailBlock(ctx),
+			"registrant_contact": contactDetailBlock(ctx),
+			"tech_contact":       contactDetailBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -195,7 +197,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 	}
 }
 
-func contactDetailBlock(ctx context.Context, required bool) schema.Block {
+func contactDetailBlock(ctx context.Context) schema.Block {
 	block := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[contactDetailModel](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -282,11 +284,10 @@ func contactDetailBlock(ctx context.Context, required bool) schema.Block {
 			},
 		},
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtLeast(1),
 			listvalidator.SizeAtMost(1),
 		},
-	}
-	if required {
-		block.Validators = append(block.Validators, listvalidator.IsRequired(), listvalidator.SizeAtLeast(1))
 	}
 
 	return block
@@ -377,11 +378,44 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
+	fixupContactDetail(domainDetail.AdminContact)
+	fixupContactDetail(domainDetail.BillingContact)
+	fixupContactDetail(domainDetail.RegistrantContact)
+	fixupContactDetail(domainDetail.TechContact)
+
 	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	tfObject, d := flattenExtraParamsFramework(ctx, data.AdminContact, domainDetail.AdminContact)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AdminContact = tfObject
+
+	tfObject, d = flattenExtraParamsFramework(ctx, data.BillingContact, domainDetail.BillingContact)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.BillingContact = tfObject
+
+	tfObject, d = flattenExtraParamsFramework(ctx, data.RegistrantContact, domainDetail.RegistrantContact)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.RegistrantContact = tfObject
+
+	tfObject, d = flattenExtraParamsFramework(ctx, data.TechContact, domainDetail.TechContact)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.TechContact = tfObject
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -507,4 +541,54 @@ type contactDetailModel struct {
 type nameserverModel struct {
 	GlueIPs fwtypes.SetOfString `tfsdk:"glue_ips"`
 	Name    types.String        `tfsdk:"name"`
+}
+
+// API response empty contact detail strings are converted to nil.
+func fixupContactDetail(apiObject *awstypes.ContactDetail) {
+	if apiObject == nil {
+		return
+	}
+
+	if aws.ToString(apiObject.AddressLine2) == "" {
+		apiObject.AddressLine2 = nil
+	}
+}
+
+func flattenExtraParamsFramework(ctx context.Context, tfObject fwtypes.ListNestedObjectValueOf[contactDetailModel], apiObject *awstypes.ContactDetail) (fwtypes.ListNestedObjectValueOf[contactDetailModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if apiObject == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
+	}
+
+	if len(apiObject.ExtraParams) == 0 {
+		return tfObject, diags
+	}
+
+	data, d := tfObject.ToPtr(ctx)
+	diags = append(diags, d...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
+	}
+
+	elements := make(map[string]attr.Value, len(apiObject.ExtraParams))
+	for _, apiObject := range apiObject.ExtraParams {
+		elements[string(apiObject.Name)] = fwflex.StringToFramework(ctx, apiObject.Value)
+	}
+
+	m, d := fwtypes.NewMapValueOf[types.String](ctx, elements)
+	diags = append(diags, d...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
+	}
+
+	data.ExtraParams = m
+
+	tfObject, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, data)
+	diags = append(diags, d...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
+	}
+
+	return tfObject, diags
 }
