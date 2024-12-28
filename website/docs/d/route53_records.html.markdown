@@ -3,18 +3,18 @@ subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_records"
 description: |-
-  Terraform data source for an AWS Route 53 Record.
+  Get information about a set of Route 53 resource records.
 ---
 
 # Data Source: aws_route53_records
 
-`aws_route53_records` provides details about a records present in Route 53 Hosted Zone.
-
-This data source allows to find a Route53 records given Hosted Zone id and certain search criteria.
+Use this data source to get the details of resource records in a Route 53 hosted zone.
 
 ## Example Usage
 
 ### Basic Usage
+
+Return all records in the zone.
 
 ```terraform
 data "aws_route53_zone" "selected" {
@@ -29,7 +29,7 @@ data "aws_route53_records" "example" {
 
 ### Basic Usage with filter
 
-Filters the records that starts with www
+Return the records that starts with `www`.
 
 ```terraform
 data "aws_route53_zone" "selected" {
@@ -38,37 +38,50 @@ data "aws_route53_zone" "selected" {
 }
 
 data "aws_route53_records" "example" {
-  zone_id        = data.aws_route53_zone.selected.zone_id
-  filter_record  = "^www"
+  zone_id    = data.aws_route53_zone.selected.zone_id
+  name_regex = "^www"
 }
 ```
 
 ## Argument Reference
 
-The argument `filter_record` act as filters for querying the available Route53 records in the Hosted Zone.
+This data source supports the following arguments:
 
-The following arguments are required:
-
-* `zone_id` - (Required) Hosted Zone id of the desired Hosted Zone..
-
-The following arguments are optional:
-
-* `filter_record` - (Optional) A regular expression used to filter the records based on certain criteria.
+* `name_regex` - (Optional) Regex string to apply to the resource record names returned by AWS.
+* `zone_id` - (Required) The ID of the hosted zone that contains the resource record sets that you want to list.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `alias` - The alias name for the record.
-* `failover` - Failover configurations.
-* `geolocation` - Geolocation configurations
-* `geoproximity` - Geoproximity configurations
-* `latency_region` - Latency region
-* `multivalue_answer` - Multivalue answer enabled or disabled.
-* `name` - The name of the record.
-* `routing_policy` - Type of the routing policy for the record.
-* `set_identifier` - Unique identifier to differentiate records with routing policies from one another
-* `ttl` - The TTL of the record.
-* `type` - The record type. Example `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV` and `TXT`.
-* `values` - List of IP address or DNS record name associated with the route53 record.
-* `weight` - The weight of the record.
+* `resource_record_sets` - The resource records sets.
+    * `alias_target` -  Information about the AWS resource traffic is routed to.
+        * `dns_name` - Target DNS name.
+        * `evaluate_target_health` - Whether an alias resource record set inherits the health of the referenced AWS resource.
+        * `hosted_zone_id` - Target hosted zone ID.
+    * `cidr_routing_config` - Information about the CIDR location traffic is routed to.
+        * `collection_id` - The CIDR collection ID.
+        * `location_name` - The CIDR collection location name.
+    * `failover` - `PRIMARY` or `SECONDARY`.
+    * `geolocation` - Information about how Amazon Route 53 responds to DNS queries based on the geographic origin of the query.
+        * `continent_code` - The two-letter code for the continent.
+        * `country_code` - The two-letter code for a country.
+        * `subdivision_code` - The two-letter code for a state of the United States.
+    * `geoproximity_location` - Information about how Amazon Route 53 responds to DNS queries based on the geographic origin of the query.
+        * `aws_region` - The AWS Region the resource you are directing DNS traffic to, is in.
+        * `bias` - The bias increases or decreases the size of the geographic region from which Route 53 routes traffic to a resource.
+        * `coordinates` - Contains the longitude and latitude for a geographic region.
+            * `latitude` - Latitude.
+            * `longitude` - Longitude.
+        * `local_zone_group` - An AWS Local Zone Group.
+    * `health_check_id` - ID of any applicable health check.
+    * `multi_value_answer` - Traffic is routed approximately randomly to multiple resources.
+    * `name` - The name of the record.
+    * `region` - The Amazon EC2 Region of the resource that this resource record set refers to.
+    * `resource_records` - The resource records.
+        * `value` - The DNS record value.
+    * `set_identifier` - An identifier that differentiates among multiple resource record sets that have the same combination of name and type.
+    * `traffic_policy_instance_id` - The ID of any traffic policy instance that Route 53 created this resource record set for.
+    * `ttl` - The resource record cache time to live (TTL), in seconds.
+    * `type` - The DNS record type.
+    * `weight` - Among resource record sets that have the same combination of DNS name and type, a value that determines the proportion of DNS queries that Amazon Route 53 responds to using the current resource record set.
