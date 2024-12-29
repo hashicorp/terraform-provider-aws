@@ -21,10 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/yaml"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -364,13 +366,15 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if body, ok := d.GetOk("body"); ok {
+		body := body.(string)
 		configuredCORSConfiguration := d.Get("cors_configuration")
+		configuredDescription := d.Get(names.AttrDescription).(string)
 		configuredName := d.Get(names.AttrName).(string)
 		configuredVersion := d.Get(names.AttrVersion).(string)
 
 		inputRA := &apigatewayv2.ReimportApiInput{
 			ApiId: aws.String(d.Id()),
-			Body:  aws.String(body.(string)),
+			Body:  aws.String(body),
 		}
 
 		if value, ok := d.GetOk("fail_on_warnings"); ok {
@@ -387,11 +391,33 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.DiagnosticsError(diags)
 		}
 
+		m, err := decodeOpenAPIDefinition(body)
+
+		if err != nil {
+			return fmt.Errorf("decoding API Gateway v2 API (%s) OpenAPI definition: %w", d.Id(), err)
+		}
+
+		// Don't ovewrite the configured values if they are not present in the OpenAPI definition.
+		description := configuredDescription
+		name := configuredName
+		version := configuredVersion
+		if m, ok := m["info"].(map[string]any); ok {
+			if _, ok := m["description"]; ok {
+				description = d.Get(names.AttrDescription).(string)
+			}
+			if _, ok := m["title"]; ok {
+				name = d.Get(names.AttrName).(string)
+			}
+			if _, ok := m["version"]; ok {
+				version = d.Get(names.AttrVersion).(string)
+			}
+		}
+
 		inputUA := &apigatewayv2.UpdateApiInput{
 			ApiId:       aws.String(d.Id()),
-			Name:        aws.String(configuredName),
-			Description: aws.String(d.Get(names.AttrDescription).(string)),
-			Version:     aws.String(configuredVersion),
+			Description: aws.String(description),
+			Name:        aws.String(name),
+			Version:     aws.String(version),
 		}
 
 		if !reflect.DeepEqual(configuredCORSConfiguration, d.Get("cors_configuration")) {
@@ -408,10 +434,6 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			} else {
 				inputUA.CorsConfiguration = expandCORSConfiguration(configuredCORSConfiguration.([]interface{}))
 			}
-		}
-
-		if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), d.Get(names.AttrTagsAll), KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
-			return fmt.Errorf("updating API Gateway v2 API (%s) tags: %w", d.Id(), err)
 		}
 
 		_, err = conn.UpdateApi(ctx, inputUA)
@@ -503,4 +525,20 @@ func apiARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
 
 func apiInvokeARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
 	return c.RegionalARN(ctx, "execute-api", apiID)
+}
+
+func decodeOpenAPIDefinition(v string) (map[string]any, error) {
+	var output map[string]any
+
+	err := json.DecodeFromString(v, &output)
+
+	if err != nil {
+		err = yaml.DecodeFromString(v, &output)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
