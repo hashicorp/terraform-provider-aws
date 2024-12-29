@@ -170,6 +170,7 @@ func ResourceImageBuilder() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							MaxItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
