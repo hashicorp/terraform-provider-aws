@@ -29,6 +29,7 @@ var (
 	FindModelByTwoPartKey                 = findModelByTwoPartKey
 	FindRouteByTwoPartKey                 = findRouteByTwoPartKey
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
+	FindRoutes                            = findRoutes
 	FindStageByTwoPartKey                 = findStageByTwoPartKey
 	FindVPCLinkByID                       = findVPCLinkByID
 )

@@ -377,6 +377,33 @@ func findRoute(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 	return output, nil
 }
 
+func findRoutes(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetRoutesInput) ([]awstypes.Route, error) {
+	var output []awstypes.Route
+
+	err := getRoutesPages(ctx, conn, input, func(page *apigatewayv2.GetRoutesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.ParameterConstraints {
 	if len(tfList) == 0 {
 		return nil
