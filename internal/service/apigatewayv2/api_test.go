@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -554,37 +555,6 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIRoutes(ctx context.Context, v *apigatewayv2.GetApiOutput, routes []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
-
-		resp, err := conn.GetRoutes(ctx, &apigatewayv2.GetRoutesInput{
-			ApiId: v.ApiId,
-		})
-		if err != nil {
-			return err
-		}
-
-		actualRoutePaths := map[string]bool{}
-		for _, route := range resp.Items {
-			actualRoutePaths[*route.RouteKey] = true
-		}
-
-		for _, route := range routes {
-			if _, ok := actualRoutePaths[route]; !ok {
-				return fmt.Errorf("Expected path %v but did not find it in %v", route, actualRoutePaths)
-			}
-			delete(actualRoutePaths, route)
-		}
-
-		if len(actualRoutePaths) > 0 {
-			return fmt.Errorf("Found unexpected paths %v", actualRoutePaths)
-		}
-
-		return nil
-	}
-}
-
 func TestAccAPIGatewayV2API_cors(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetApiOutput
@@ -725,7 +695,7 @@ func TestAccAPIGatewayV2API_quickCreate(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayV2API_name(t *testing.T) {
+func TestAccAPIGatewayV2API_OpenAPI_noTitle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
@@ -738,17 +708,13 @@ func TestAccAPIGatewayV2API_name(t *testing.T) {
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIConfig_open(rName),
+				Config: testAccAPIConfig_openNoTitle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description from import"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 		},
 	})
@@ -796,6 +762,32 @@ func testAccCheckAPIExists(ctx context.Context, n string, v *apigatewayv2.GetApi
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckAPIRoutes(ctx context.Context, v *apigatewayv2.GetApiOutput, expected []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+
+		input := &apigatewayv2.GetRoutesInput{
+			ApiId: v.ApiId,
+		}
+		routes, err := tfapigatewayv2.FindRoutes(ctx, conn, input)
+
+		if err != nil {
+			return err
+		}
+
+		got := tfslices.ApplyToAll(routes, func(v awstypes.Route) string {
+			return aws.ToString(v.RouteKey)
+		})
+		got = tfslices.RemoveAll(got, expected...)
+
+		if len(got) > 0 {
+			return fmt.Errorf("Found unexpected paths %v", got)
+		}
 
 		return nil
 	}
@@ -1300,4 +1292,33 @@ EOF
   %[2]s
 }
 `, rName, failOnWarnings)
+}
+
+func testAccAPIConfig_openNoTitle(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+  body          = <<EOF
+{
+  "openapi": "3.0.1",
+  "info": {
+    "description": "Description from import"
+  },
+  "paths": {
+    "/test": {
+      "get": {
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP_PROXY",
+          "httpMethod": "GET",
+          "payloadFormatVersion": "1.0",
+          "uri": "https://www.google.de"
+        }
+      }
+    }
+  }
+}
+EOF
+}
+`, rName)
 }
