@@ -238,6 +238,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findAPIByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -270,14 +271,16 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
+
 	corsConfigurationDeleted := false
 	if d.HasChange("cors_configuration") {
 		if v := d.Get("cors_configuration"); len(v.([]interface{})) == 0 {
 			corsConfigurationDeleted = true
-
-			_, err := conn.DeleteCorsConfiguration(ctx, &apigatewayv2.DeleteCorsConfigurationInput{
+			input := &apigatewayv2.DeleteCorsConfigurationInput{
 				ApiId: aws.String(d.Id()),
-			})
+			}
+
+			_, err := conn.DeleteCorsConfiguration(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API (%s) CORS configuration: %s", d.Id(), err)
@@ -361,45 +364,49 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if body, ok := d.GetOk("body"); ok {
-		inputR := &apigatewayv2.ReimportApiInput{
+		configuredCORSConfiguration := d.Get("cors_configuration")
+		configuredName := d.Get(names.AttrName).(string)
+		configuredVersion := d.Get(names.AttrVersion).(string)
+
+		inputRA := &apigatewayv2.ReimportApiInput{
 			ApiId: aws.String(d.Id()),
 			Body:  aws.String(body.(string)),
 		}
 
 		if value, ok := d.GetOk("fail_on_warnings"); ok {
-			inputR.FailOnWarnings = aws.Bool(value.(bool))
+			inputRA.FailOnWarnings = aws.Bool(value.(bool))
 		}
 
-		_, err := conn.ReimportApi(ctx, inputR)
+		_, err := conn.ReimportApi(ctx, inputRA)
 
 		if err != nil {
 			return fmt.Errorf("reimporting API Gateway v2 API (%s) OpenAPI definition: %w", d.Id(), err)
 		}
-		corsConfiguration := d.Get("cors_configuration")
-		apiName := d.Get(names.AttrName).(string)
-		versionInput := d.Get(names.AttrVersion).(string)
+
 		if diags := resourceAPIRead(ctx, d, meta); diags.HasError() {
 			return sdkdiag.DiagnosticsError(diags)
 		}
 
-		inputU := &apigatewayv2.UpdateApiInput{
+		inputUA := &apigatewayv2.UpdateApiInput{
 			ApiId:       aws.String(d.Id()),
-			Name:        aws.String(apiName),
+			Name:        aws.String(configuredName),
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-			Version:     aws.String(versionInput),
+			Version:     aws.String(configuredVersion),
 		}
 
-		if !reflect.DeepEqual(corsConfiguration, d.Get("cors_configuration")) {
-			if len(corsConfiguration.([]interface{})) == 0 {
-				_, err := conn.DeleteCorsConfiguration(ctx, &apigatewayv2.DeleteCorsConfigurationInput{
+		if !reflect.DeepEqual(configuredCORSConfiguration, d.Get("cors_configuration")) {
+			if len(configuredCORSConfiguration.([]interface{})) == 0 {
+				input := &apigatewayv2.DeleteCorsConfigurationInput{
 					ApiId: aws.String(d.Id()),
-				})
+				}
+
+				_, err := conn.DeleteCorsConfiguration(ctx, input)
 
 				if err != nil {
 					return fmt.Errorf("deleting API Gateway v2 API (%s) CORS configuration: %w", d.Id(), err)
 				}
 			} else {
-				inputU.CorsConfiguration = expandCORSConfiguration(corsConfiguration.([]interface{}))
+				inputUA.CorsConfiguration = expandCORSConfiguration(configuredCORSConfiguration.([]interface{}))
 			}
 		}
 
@@ -407,7 +414,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			return fmt.Errorf("updating API Gateway v2 API (%s) tags: %w", d.Id(), err)
 		}
 
-		_, err = conn.UpdateApi(ctx, inputU)
+		_, err = conn.UpdateApi(ctx, inputUA)
 
 		if err != nil {
 			return fmt.Errorf("updating API Gateway v2 API (%s): %w", d.Id(), err)
