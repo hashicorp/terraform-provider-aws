@@ -148,6 +148,11 @@ func resourceEventDataStore() *schema.Resource {
 				Default:          types.BillingModeExtendableRetentionPricing,
 				ValidateDiagFunc: enum.Validate[types.BillingMode](),
 			},
+			"suspend": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -294,6 +299,19 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.TerminationProtectionEnabled = aws.Bool(d.Get("termination_protection_enabled").(bool))
 		}
 
+		if d.HasChange("suspend") {
+			if d.Get("suspend").(bool) {
+				if _, err := stopEventDataStoreIngestion(ctx, conn, d.Id()); err != nil {
+					return sdkdiag.AppendErrorf(diags, "error stopping CloudTrail Event Data Store ingestion (%s): %s", d.Id(), err)
+				}
+
+			} else {
+				if _, err := startEventDataStoreIngestion(ctx, conn, d.Id()); err != nil {
+					return sdkdiag.AppendErrorf(diags, "error starting CloudTrail Event Data Store ingestion (%s): %s", d.Id(), err)
+				}
+			}
+		}
+
 		_, err := conn.UpdateEventDataStore(ctx, input)
 
 		if err != nil {
@@ -380,10 +398,38 @@ func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn stri
 	}
 }
 
+func stopEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string) (*cloudtrail.StopEventDataStoreIngestionOutput, error) {
+	input := &cloudtrail.StopEventDataStoreIngestionInput{
+		EventDataStore: aws.String(arn),
+	}
+
+	output, err := conn.StopEventDataStoreIngestion(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func startEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string) (*cloudtrail.StartEventDataStoreIngestionOutput, error) {
+	input := &cloudtrail.StartEventDataStoreIngestionInput{
+		EventDataStore: aws.String(arn),
+	}
+
+	output, err := conn.StartEventDataStoreIngestion(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.EventDataStoreStatusCreated),
-		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
+		Pending: enum.Slice(types.EventDataStoreStatusCreated, types.EventDataStoreStatusStartingIngestion, types.EventDataStoreStatusStoppingIngestion),
+		Target:  enum.Slice(types.EventDataStoreStatusEnabled, types.EventDataStoreStatusStoppedIngestion),
 		Refresh: statusEventDataStore(ctx, conn, arn),
 		Timeout: timeout,
 	}
