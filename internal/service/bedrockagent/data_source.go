@@ -220,7 +220,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required:   true,
 													CustomType: fwtypes.StringEnumType[awstypes.SharePointHostType](),
 												},
-												"domain": schema.StringAttribute{
+												names.AttrDomain: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(1, 50),
@@ -332,7 +332,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 																},
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
-																		"url": schema.StringAttribute{
+																		names.AttrURL: schema.StringAttribute{
 																			Optional: true,
 																			Validators: []validator.String{
 																				stringvalidator.RegexMatches(regexache.MustCompile(`^https?://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
@@ -1119,7 +1119,7 @@ func (w webCrawlerConfiguration) GetCrawlerSchema(ctx context.Context) schema.Ne
 					),
 				},
 			},
-			"scope": schema.StringAttribute{
+			names.AttrScope: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.WebScopeType](),
 			},
