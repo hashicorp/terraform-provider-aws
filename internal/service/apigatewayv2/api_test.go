@@ -741,7 +741,7 @@ func TestAccAPIGatewayV2API_name(t *testing.T) {
 				Config: testAccAPIConfig_open(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
-					testAccCheckAPIName(ctx, resourceName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -787,10 +787,6 @@ func testAccCheckAPIExists(ctx context.Context, n string, v *apigatewayv2.GetApi
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 API ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindAPIByID(ctx, conn, rs.Primary.ID)
@@ -812,27 +808,27 @@ func testAccCheckAPIQuickCreateIntegration(ctx context.Context, n, expectedType,
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 API ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		resp, err := conn.GetIntegrations(ctx, &apigatewayv2.GetIntegrationsInput{
+		input := &apigatewayv2.GetIntegrationsInput{
 			ApiId: aws.String(rs.Primary.ID),
-		})
+		}
+		integrations, err := tfapigatewayv2.FindIntegrations(ctx, conn, input)
+
 		if err != nil {
 			return err
 		}
 
-		if got := len(resp.Items); got != 1 {
-			return fmt.Errorf("Incorrect number of integrations: %d", got)
+		integration, err := tfresource.AssertSingleValueResult(integrations)
+
+		if err != nil {
+			return err
 		}
 
-		if got := string(resp.Items[0].IntegrationType); got != expectedType {
+		if got := string(integration.IntegrationType); got != expectedType {
 			return fmt.Errorf("Incorrect integration type. Expected: %s, got: %s", expectedType, got)
 		}
-		if got := aws.ToString(resp.Items[0].IntegrationUri); got != expectedUri {
+		if got := aws.ToString(integration.IntegrationUri); got != expectedUri {
 			return fmt.Errorf("Incorrect integration URI. Expected: %s, got: %s", expectedUri, got)
 		}
 
@@ -847,24 +843,24 @@ func testAccCheckAPIQuickCreateRoute(ctx context.Context, n, expectedRouteKey st
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 API ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		resp, err := conn.GetRoutes(ctx, &apigatewayv2.GetRoutesInput{
+		input := &apigatewayv2.GetRoutesInput{
 			ApiId: aws.String(rs.Primary.ID),
-		})
+		}
+		routes, err := tfapigatewayv2.FindRoutes(ctx, conn, input)
+
 		if err != nil {
 			return err
 		}
 
-		if got := len(resp.Items); got != 1 {
-			return fmt.Errorf("Incorrect number of routes: %d", got)
+		route, err := tfresource.AssertSingleValueResult(routes)
+
+		if err != nil {
+			return err
 		}
 
-		if got := aws.ToString(resp.Items[0].RouteKey); got != expectedRouteKey {
+		if got := aws.ToString(route.RouteKey); got != expectedRouteKey {
 			return fmt.Errorf("Incorrect route key. Expected: %s, got: %s", expectedRouteKey, got)
 		}
 
@@ -879,24 +875,24 @@ func testAccCheckAPIQuickCreateStage(ctx context.Context, n, expectedName string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 API ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		resp, err := conn.GetStages(ctx, &apigatewayv2.GetStagesInput{
+		input := &apigatewayv2.GetStagesInput{
 			ApiId: aws.String(rs.Primary.ID),
-		})
+		}
+		stages, err := tfapigatewayv2.FindStages(ctx, conn, input)
+
 		if err != nil {
 			return err
 		}
 
-		if got := len(resp.Items); got != 1 {
-			return fmt.Errorf("Incorrect number of stages: %d", got)
+		stage, err := tfresource.AssertSingleValueResult(stages)
+
+		if err != nil {
+			return err
 		}
 
-		if got := aws.ToString(resp.Items[0].StageName); got != expectedName {
+		if got := aws.ToString(stage.StageName); got != expectedName {
 			return fmt.Errorf("Incorrect stage name. Expected: %s, got: %s", expectedName, got)
 		}
 
@@ -904,31 +900,6 @@ func testAccCheckAPIQuickCreateStage(ctx context.Context, n, expectedName string
 	}
 }
 
-func testAccCheckAPIName(ctx context.Context, n, expectedName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 API ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
-
-		output, err := tfapigatewayv2.FindAPIByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		if aws.ToString(output.Name) != expectedName {
-			return fmt.Errorf("Incorrect API name. Expected: %s, got: %s", expectedName, aws.ToString(output.Name))
-		}
-
-		return nil
-	}
-}
 func testAccAPIConfig_basicWebSocket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
