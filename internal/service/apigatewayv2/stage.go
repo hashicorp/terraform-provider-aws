@@ -470,6 +470,33 @@ func findStage(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 	return output, nil
 }
 
+func findStages(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetStagesInput) ([]awstypes.Stage, error) {
+	var output []awstypes.Stage
+
+	err := getStagesPages(ctx, conn, input, func(page *apigatewayv2.GetStagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSettings {
 	settings := &awstypes.AccessLogSettings{}
 

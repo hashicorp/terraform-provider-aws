@@ -31,5 +31,6 @@ var (
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
 	FindRoutes                            = findRoutes
 	FindStageByTwoPartKey                 = findStageByTwoPartKey
+	FindStages                            = findStages
 	FindVPCLinkByID                       = findVPCLinkByID
 )
