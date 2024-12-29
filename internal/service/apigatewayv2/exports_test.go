@@ -25,6 +25,7 @@ var (
 	FindDomainName                        = findDomainName
 	FindIntegrationByTwoPartKey           = findIntegrationByTwoPartKey
 	FindIntegrationResponseByThreePartKey = findIntegrationResponseByThreePartKey
+	FindIntegrations                      = findIntegrations
 	FindModelByTwoPartKey                 = findModelByTwoPartKey
 	FindRouteByTwoPartKey                 = findRouteByTwoPartKey
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey

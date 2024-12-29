@@ -509,6 +509,33 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 	return output, nil
 }
 
+func findIntegrations(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetIntegrationsInput) ([]awstypes.Integration, error) {
+	var output []awstypes.Integration
+
+	err := getIntegrationsPages(ctx, conn, input, func(page *apigatewayv2.GetIntegrationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfigInput {
 	config := &awstypes.TlsConfigInput{}
 
