@@ -612,6 +612,8 @@ func TestAccCognitoIDPUserPool_MFA_emailConfigurationMFA(t *testing.T) {
 	replyTo := acctest.DefaultEmailAddress
 	sourceARN := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_SES_VERIFIED_EMAIL_ARN")
 	emailTo := sourceARN[strings.LastIndex(sourceARN, "/")+1:]
+	updatedSubject := sdkacctest.RandString(50)
+	updatedMessage := sdkacctest.RandomWithPrefix("{####}")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -626,6 +628,15 @@ func TestAccCognitoIDPUserPool_MFA_emailConfigurationMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.message", message),
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.subject", subject),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_mfaEmailConfigurationConfigurationEnabled(rName, true, updatedMessage, updatedSubject, replyTo, sourceARN, emailTo, "DEVELOPER"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.message", updatedMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.subject", updatedSubject),
 				),
 			},
 			{
