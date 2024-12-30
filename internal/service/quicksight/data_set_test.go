@@ -697,8 +697,8 @@ resource "aws_quicksight_data_set" "test" {
         column_name = "Column1"
         tags {
           column_description {
-		        text = "Column1 Description"
-		      }
+            text = "Column1 Description"
+          }
         }
       }
     }
