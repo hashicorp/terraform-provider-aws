@@ -65,6 +65,8 @@ The `salesforce_data_source_configuration` configuration block supports the foll
 * `source_configuration` - (Required) The endpoint information to connect to your Salesforce data source. See [`source_configuration` block](#source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for Salesforce content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
+For more details, see the [Amazon BedrockAgent Salesforce documentation][1].
+
 ### `source_configuration` block
 
 The `source_configuration` configuration block supports the following arguments:
@@ -90,7 +92,13 @@ The `filter_configuration` configuration block supports the following arguments:
 
 The `pattern_object_filter` configuration block supports the following arguments:
 
-* `filters` - (Required) The configuration of specific filters applied to your data source content. 
+* `filters` - (Required) The configuration of specific filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters. 
+
+Each filter object should contain the following configuration:
+
+* `object_type` - (Required) The supported object type or content type of the data source.
+* `exclusion_filters` - (Optional) A list of one or more exclusion regular expression patterns to exclude certain object types that adhere to the pattern.
+* `inclusion_filters` - (Optional) A list of one or more inclusion regular expression patterns to include certain object types that adhere to the pattern.
 
 ### `server_side_encryption_configuration` block
 
@@ -231,3 +239,5 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 ```console
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
+
+[1]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html
