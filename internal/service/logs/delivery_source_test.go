@@ -24,6 +24,10 @@ import (
 )
 
 func TestAccLogsDeliverySource_basic(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
 	ctx := acctest.Context(t)
 	var v awstypes.DeliverySource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -35,7 +39,13 @@ func TestAccLogsDeliverySource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliverySourceConfig_basic(rName),
@@ -52,7 +62,7 @@ func TestAccLogsDeliverySource_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
@@ -124,7 +134,48 @@ func testAccDeliverySourceImportStateIDFunc(n string) resource.ImportStateIdFunc
 	}
 }
 
+func testAccLogDeliverySourceConfig_base(rName string) string {
+	foundationModel := "amazon.titan-embed-text-v1"
+
+	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, foundationModel), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "RDS"
+    rds_configuration {
+      resource_arn           = aws_rds_cluster.test.arn
+      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
+      database_name          = aws_rds_cluster.test.database_name
+      table_name             = "bedrock_integration.bedrock_kb"
+      field_mapping {
+        vector_field      = "embedding"
+        text_field        = "chunks"
+        metadata_field    = "metadata"
+        primary_key_field = "id"
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+}
+`, rName, foundationModel))
+}
+
 func testAccLogDeliverySourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-`, rName)
+	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_source" "test" {
+  name         = %[1]q
+  log_type     = "APPLICATION_LOGS"
+  resource_arn = aws_bedrockagent_knowledge_base.test.arn
+}
+`, rName))
 }
