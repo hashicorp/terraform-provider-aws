@@ -2236,7 +2236,7 @@ resource "aws_ses_configuration_set" "test" {
     tls_policy = "Optional"
   }
 }
-  
+
 resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
