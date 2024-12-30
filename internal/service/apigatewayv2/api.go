@@ -402,13 +402,13 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 		name := configuredName
 		version := configuredVersion
 		if m, ok := m["info"].(map[string]any); ok {
-			if _, ok := m["description"]; ok {
+			if _, ok := m[names.AttrDescription]; ok {
 				description = d.Get(names.AttrDescription).(string)
 			}
 			if _, ok := m["title"]; ok {
 				name = d.Get(names.AttrName).(string)
 			}
-			if _, ok := m["version"]; ok {
+			if _, ok := m[names.AttrVersion]; ok {
 				version = d.Get(names.AttrVersion).(string)
 			}
 		}
