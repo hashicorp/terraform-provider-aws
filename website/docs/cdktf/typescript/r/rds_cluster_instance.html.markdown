@@ -96,7 +96,7 @@ This resource supports the following arguments:
 * `instanceClass` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details. For Aurora Serverless v2 use `db.serverless`.
 * `monitoringInterval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoringRoleArn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
-* `performanceInsightsEnabled` - (Optional) Specifies whether Performance Insights is enabled or not.
+* `performanceInsightsEnabled` - (Optional) Specifies whether Performance Insights is enabled or not. **NOTE:** When Performance Insights is configured at the cluster level through `aws_rds_cluster`, this argument cannot be set to a value that conflicts with the cluster's configuration.
 * `performanceInsightsKmsKeyId` - (Optional) ARN for the KMS key to encrypt Performance Insights data. When specifying `performanceInsightsKmsKeyId`, `performanceInsightsEnabled` needs to be set to true.
 * `performanceInsightsRetentionPeriod` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performanceInsightsRetentionPeriod`, `performanceInsightsEnabled` needs to be set to true. Defaults to '7'.
 * `preferredBackupWindow` - (Optional) Daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00". **NOTE:** If `preferredBackupWindow` is set at the cluster level, this argument **must** be omitted.
@@ -174,4 +174,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-100da29ef7b9ca016689dc7f4bbdc6ede2bfa4d4706bbe84146ceba56e3ee8e7 -->
+<!-- cache-key: cdktf-0.20.8 input-182283cd4262760bcebe5a1b637ff0de68541f8bb581a26a44529df723991211 -->
