@@ -3442,7 +3442,7 @@ resource "aws_dms_endpoint" "test" {
     message_max_bytes              = 500000
     include_null_and_empty         = true
     security_protocol              = "sasl-ssl"
-	sasl_mechanism                 = "plain"
+    sasl_mechanism                 = "plain"
     sasl_username                  = "tftest-new"
     sasl_password                  = "tftest-new"
     no_hex_prefix                  = true
