@@ -92,7 +92,7 @@ The `filter_configuration` configuration block supports the following arguments:
 
 The `pattern_object_filter` configuration block supports the following arguments:
 
-* `filters` - (Required) The configuration of specific filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters. 
+* `filters` - (Required) The configuration of specific filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters.
 
 Each filter object should contain the following configuration:
 
