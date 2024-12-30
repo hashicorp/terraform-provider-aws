@@ -602,6 +602,41 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_MFA_emailConfigurationMFA(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+	subject := sdkacctest.RandString(50)
+	message := sdkacctest.RandomWithPrefix("{####}")
+	replyTo := acctest.DefaultEmailAddress
+	sourceARN := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_SES_VERIFIED_EMAIL_ARN")
+	emailTo := sourceARN[strings.LastIndex(sourceARN, "/")+1:]
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_mfaEmailConfigurationConfigurationEnabled(rName, true, message, subject, replyTo, sourceARN, emailTo, "DEVELOPER"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.message", message),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.subject", subject),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
@@ -2179,6 +2214,48 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccUserPoolConfig_mfaEmailConfigurationConfigurationEnabled(rName string, enabled bool, message, subject, email, arn, from, account string) string {
+	return fmt.Sprintf(`
+
+resource "aws_ses_configuration_set" "test" {
+  name = %[1]q
+
+  delivery_options {
+    tls_policy = "Optional"
+  }
+}
+  
+resource "aws_cognito_user_pool" "test" {
+  mfa_configuration = "ON"
+  name              = %[1]q
+
+  email_configuration {
+    reply_to_email_address = %[5]q
+    source_arn             = %[6]q
+    from_email_address     = %[7]q
+    email_sending_account  = %[8]q
+    configuration_set      = aws_ses_configuration_set.test.name
+  }
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+    recovery_mechanism {
+      name     = "verified_phone_number"
+      priority = 2
+    }
+  }
+
+  email_mfa_configuration {
+	message = %[3]q
+	subject = %[4]q
+  }
+}
+`, rName, enabled, message, subject, email, arn, from, account)
 }
 
 func testAccUserPoolConfig_passwordHistorySize(rName string, passwordHistorySize int) string {
