@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Fix the updating of metadata options when setting http_endpoint to optional
+```
