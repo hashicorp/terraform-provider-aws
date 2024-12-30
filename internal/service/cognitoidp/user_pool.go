@@ -570,6 +570,12 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"user_pool_tier": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
+			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -642,12 +648,6 @@ func resourceUserPool() *schema.Resource {
 						},
 					},
 				},
-			},
-			"user_pool_tier": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.UserPoolTierTypeEssentials,
-				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
 			},
 		},
 
