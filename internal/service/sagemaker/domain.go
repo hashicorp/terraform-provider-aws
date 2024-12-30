@@ -1384,7 +1384,6 @@ func resourceDomain() *schema.Resource {
 						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 3,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
