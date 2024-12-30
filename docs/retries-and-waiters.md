@@ -355,13 +355,13 @@ const (
     ```go
     // internal/service/{service}/{thing}.go
 
-    function ExampleThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func ExampleThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		var diags diag.Diagnostics
     	// ...
     	return append(diags, ExampleThingRead(ctx, d, meta)...)
     }
 
-    function ExampleThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func ExampleThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		var diags diag.Diagnostics
 
     	conn := meta.(*AWSClient).ExampleConn()
@@ -489,7 +489,7 @@ And consumed within the resource update workflow as follows:
 
 === "Terraform Plugin SDK V2"
     ```go
-    function resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diags.Diagnostics {
+    func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diags.Diagnostics {
         // ...
 
     	d.HasChange("attribute") {
