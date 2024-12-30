@@ -24,10 +24,10 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOutpostsLocalGatewayDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^lgw-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "owner_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "state", "available"),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^lgw-`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 				),
 			},
 		},

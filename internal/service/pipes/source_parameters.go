@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func sourceParametersSchema() *schema.Schema {
@@ -106,7 +107,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"arn": {
+										names.AttrARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -161,7 +162,7 @@ func sourceParametersSchema() *schema.Schema {
 					DiffSuppressFunc: suppressEmptyConfigurationBlock("source_parameters.0.filter_criteria"),
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"filter": {
+							names.AttrFilter: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 5,
@@ -205,7 +206,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"arn": {
+										names.AttrARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -444,7 +445,7 @@ func sourceParametersSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"basic_auth": {
 											Type:         schema.TypeString,
-											Required:     true,
+											Optional:     true,
 											ValidateFunc: verifySecretsManagerARN,
 										},
 										"client_certificate_tls_auth": {
@@ -497,7 +498,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"security_groups": {
+										names.AttrSecurityGroups: {
 											Type:     schema.TypeSet,
 											Optional: true,
 											MaxItems: 5,
@@ -509,7 +510,7 @@ func sourceParametersSchema() *schema.Schema {
 												),
 											},
 										},
-										"subnets": {
+										names.AttrSubnets: {
 											Type:     schema.TypeSet,
 											Optional: true,
 											MaxItems: 16,
@@ -655,7 +656,7 @@ func expandFilterCriteria(tfMap map[string]interface{}) *types.FilterCriteria {
 
 	apiObject := &types.FilterCriteria{}
 
-	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 		apiObject.Filters = expandFilters(v)
 	}
 
@@ -855,7 +856,7 @@ func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfi
 
 	apiObject := &types.DeadLetterConfig{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
@@ -1207,11 +1208,11 @@ func expandSelfManagedKafkaAccessConfigurationVPC(tfMap map[string]interface{}) 
 
 	apiObject := &types.SelfManagedKafkaAccessConfigurationVpc{}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroup = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -1304,7 +1305,7 @@ func flattenFilterCriteria(apiObject *types.FilterCriteria) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Filters; v != nil {
-		tfMap["filter"] = flattenFilters(v)
+		tfMap[names.AttrFilter] = flattenFilters(v)
 	}
 
 	return tfMap
@@ -1638,11 +1639,11 @@ func flattenSelfManagedKafkaAccessConfigurationVPC(apiObject *types.SelfManagedK
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroup; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = v
+		tfMap[names.AttrSubnets] = v
 	}
 
 	return tfMap
@@ -1674,7 +1675,7 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	return tfMap

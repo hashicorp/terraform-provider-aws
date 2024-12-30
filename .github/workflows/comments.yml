@@ -1,0 +1,61 @@
+name: Comment Automations
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.comment.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Remove stale and waiting-response Labels on Non-Maintainer Comment
+        env:
+          COMMAND: ${{ github.event.issue.pull_request && 'pr' || 'issue' }}
+          GH_TOKEN: ${{ github.token }}
+        if: |
+          steps.community_check.outputs.maintainer == 'false'
+          && (contains(github.event.issue.labels.*.name, 'stale') || contains(github.event.issue.labels.*.name, 'waiting-response'))
+        run: gh $COMMAND edit ${{ github.event.issue.html_url }} --remove-label stale,waiting-response
+
+      - name: Notify Slack Feed on Maintainer Comment
+        if: |
+          steps.community_check.outputs.maintainer == 'true'
+          && github.actor != 'dependabot[bot]'
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        env:
+          COMMENT_AUTHOR_URL: ${{ github.event.comment.user.html_url }}
+          COMMENT_AUTHOR_LOGIN: ${{ github.event.comment.user.login }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format(':yellingatcat1: <{0}|{1}> <{2}|commented> on <{3}|{4}>', env.COMMENT_AUTHOR_URL, env.COMMENT_AUTHOR_LOGIN, env.COMMENT_URL, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                  }
+                }
+              ]
+            }

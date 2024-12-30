@@ -6,21 +6,22 @@ package dynamodb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name string) (*dynamodb.TableDescription, error) {
+func findTableByName(ctx context.Context, conn *dynamodb.Client, name string, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) {
 	input := &dynamodb.DescribeTableInput{
 		TableName: aws.String(name),
 	}
 
-	output, err := conn.DescribeTableWithContext(ctx, input)
+	output, err := conn.DescribeTable(ctx, input, optFns...)
 
-	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -38,78 +39,80 @@ func FindTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name string) 
 	return output.Table, nil
 }
 
-func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
-	table, err := FindTableByName(ctx, conn, tableName)
+func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) (*awstypes.GlobalSecondaryIndexDescription, error) {
+	table, err := findTableByName(ctx, conn, tableName)
 
 	if err != nil {
 		return nil, err
 	}
 
 	for _, v := range table.GlobalSecondaryIndexes {
-		if aws.StringValue(v.IndexName) == indexName {
-			return v, nil
+		if aws.ToString(v.IndexName) == indexName {
+			return &v, nil
 		}
 	}
 
 	return nil, &retry.NotFoundError{}
 }
 
-func findPITRDescriptionByTableName(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) (*dynamodb.PointInTimeRecoveryDescription, error) {
+func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) (*awstypes.PointInTimeRecoveryDescription, error) {
 	input := &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	}
 
-	output, err := conn.DescribeContinuousBackupsWithContext(ctx, input)
+	output, err := conn.DescribeContinuousBackups(ctx, input, optFns...)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
-	}
-
-	if output.ContinuousBackupsDescription == nil || output.ContinuousBackupsDescription.PointInTimeRecoveryDescription == nil {
-		return nil, nil
+	if output == nil || output.ContinuousBackupsDescription == nil || output.ContinuousBackupsDescription.PointInTimeRecoveryDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.ContinuousBackupsDescription.PointInTimeRecoveryDescription, nil
 }
 
-func findTTLRDescriptionByTableName(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TimeToLiveDescription, error) {
+func findTTLByTableName(ctx context.Context, conn *dynamodb.Client, tableName string) (*awstypes.TimeToLiveDescription, error) {
 	input := &dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(tableName),
 	}
 
-	output, err := conn.DescribeTimeToLiveWithContext(ctx, input)
+	output, err := conn.DescribeTimeToLive(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
-	}
-
-	if output.TimeToLiveDescription == nil {
-		return nil, nil
+	if output == nil || output.TimeToLiveDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.TimeToLiveDescription, nil
 }
 
-func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	input := &dynamodb.DescribeContributorInsightsInput{
-		TableName: aws.String(tableName),
+func findImportByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*awstypes.ImportTableDescription, error) {
+	input := &dynamodb.DescribeImportInput{
+		ImportArn: aws.String(arn),
 	}
 
-	if indexName != "" {
-		input.IndexName = aws.String(indexName)
-	}
+	output, err := conn.DescribeImport(ctx, input)
 
-	output, err := conn.DescribeContributorInsightsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -120,37 +123,9 @@ func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, table
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.ContributorInsightsStatus); status == dynamodb.ContributorInsightsStatusDisabled {
-		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil {
+	if output == nil || output.ImportTableDescription == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
-}
-
-func FindTableExportByID(ctx context.Context, conn *dynamodb.DynamoDB, id string) (*dynamodb.DescribeExportOutput, error) {
-	input := &dynamodb.DescribeExportInput{
-		ExportArn: aws.String(id),
-	}
-
-	out, err := conn.DescribeExportWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if out == nil || out.ExportDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return out, nil
+	return output.ImportTableDescription, nil
 }

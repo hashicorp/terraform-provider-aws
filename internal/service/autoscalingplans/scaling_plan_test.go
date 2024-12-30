@@ -6,7 +6,7 @@ package autoscalingplans_test
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -39,7 +39,7 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -49,11 +49,11 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
-						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           "3",
+						"disable_dynamic_scaling":                acctest.CtFalse,
+						names.AttrMaxCapacity:                    "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "0",
-						"resource_id":                            fmt.Sprintf("autoScalingGroup/%s", rName),
+						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                     "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":         "KeepExternalPolicies",
 						"service_namespace":                      "autoscaling",
@@ -61,7 +61,7 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                "0",
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                "1",
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -99,7 +99,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicPredictiveScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -109,14 +109,14 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
-						"disable_dynamic_scaling":                "true",
-						"max_capacity":                           "3",
+						"disable_dynamic_scaling":                acctest.CtTrue,
+						names.AttrMaxCapacity:                    "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "1",
 						"predefined_load_metric_specification.0.predefined_load_metric_type": "ASGTotalCPUUtilization",
 						"predictive_scaling_max_capacity_behavior":                           "SetForecastCapacityToMaxCapacity",
 						"predictive_scaling_mode":                                            "ForecastOnly",
-						"resource_id":                                                        fmt.Sprintf("autoScalingGroup/%s", rName),
+						names.AttrResourceID:                                                 fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                                                 "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":                                     "KeepExternalPolicies",
 						"service_namespace":                                                  "autoscaling",
@@ -124,7 +124,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                "0",
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                "1",
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -163,7 +163,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -173,11 +173,11 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
-						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           "3",
+						"disable_dynamic_scaling":                acctest.CtFalse,
+						names.AttrMaxCapacity:                    "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "0",
-						"resource_id":                            fmt.Sprintf("autoScalingGroup/%s", rName),
+						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                     "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":         "KeepExternalPolicies",
 						"service_namespace":                      "autoscaling",
@@ -185,7 +185,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                "0",
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                "1",
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -196,7 +196,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicPredictiveScaling(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -206,14 +206,14 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
-						"disable_dynamic_scaling":                "true",
-						"max_capacity":                           "3",
+						"disable_dynamic_scaling":                acctest.CtTrue,
+						names.AttrMaxCapacity:                    "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "1",
 						"predefined_load_metric_specification.0.predefined_load_metric_type": "ASGTotalCPUUtilization",
 						"predictive_scaling_max_capacity_behavior":                           "SetForecastCapacityToMaxCapacity",
 						"predictive_scaling_mode":                                            "ForecastOnly",
-						"resource_id":                                                        fmt.Sprintf("autoScalingGroup/%s", rName),
+						names.AttrResourceID:                                                 fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                                                 "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":                                     "KeepExternalPolicies",
 						"service_namespace":                                                  "autoscaling",
@@ -221,7 +221,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                "0",
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                "1",
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -280,7 +280,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 				Config: testAccScalingPlanConfig_dynamicScalingCustomizedScalingMetricSpecification(rName, rName, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -290,11 +290,11 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
-						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           "3",
+						"disable_dynamic_scaling":                acctest.CtFalse,
+						names.AttrMaxCapacity:                    "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "0",
-						"resource_id":                            fmt.Sprintf("autoScalingGroup/%s", rName),
+						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                     "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":         "KeepExternalPolicies",
 						"service_namespace":                      "autoscaling",
@@ -309,7 +309,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 						"customized_scaling_metric_specification.0.namespace":                       "test",
 						"customized_scaling_metric_specification.0.statistic":                       "Average",
 						"customized_scaling_metric_specification.0.unit":                            "",
-						"disable_scale_in":                          "false",
+						"disable_scale_in":                          acctest.CtFalse,
 						"predefined_scaling_metric_specification.#": "0",
 						"target_value":                              "90",
 					}),
@@ -319,7 +319,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 				Config: testAccScalingPlanConfig_dynamicScalingCustomizedScalingMetricSpecification(rName, rName, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -329,11 +329,11 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
-						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           "3",
+						"disable_dynamic_scaling":                acctest.CtFalse,
+						names.AttrMaxCapacity:                    "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "0",
-						"resource_id":                            fmt.Sprintf("autoScalingGroup/%s", rName),
+						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                     "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":         "KeepExternalPolicies",
 						"service_namespace":                      "autoscaling",
@@ -348,7 +348,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 						"customized_scaling_metric_specification.0.namespace":                       "test",
 						"customized_scaling_metric_specification.0.statistic":                       "Average",
 						"customized_scaling_metric_specification.0.unit":                            "",
-						"disable_scale_in":                          "false",
+						"disable_scale_in":                          acctest.CtFalse,
 						"predefined_scaling_metric_specification.#": "0",
 						"target_value":                              "75",
 					}),
@@ -381,7 +381,7 @@ func testAccCheckScalingPlanDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			_, err = tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+			_, err = tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes[names.AttrName], scalingPlanVersion)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -413,7 +413,7 @@ func testAccCheckScalingPlanExists(ctx context.Context, name string, v *awstypes
 			return err
 		}
 
-		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes[names.AttrName], scalingPlanVersion)
 
 		if err != nil {
 			return err
@@ -436,8 +436,8 @@ func testAccCheckApplicationSourceTags(scalingPlan *awstypes.ScalingPlan, expect
 				return fmt.Errorf("Scaling plan application source tag filter key %q not expected", key)
 			}
 
-			sort.Strings(values)
-			sort.Strings(expectedValues)
+			slices.Sort(values)
+			slices.Sort(expectedValues)
 			if !cmp.Equal(values, expectedValues) {
 				return fmt.Errorf("Scaling plan application source tag filter values %q, expected %q", values, expectedValues)
 			}

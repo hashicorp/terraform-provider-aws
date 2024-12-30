@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 * `email` - (Required) The email address of the user that you want to register.
 * `identity_type` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`. If `IAM` is specified, the `iam_arn` must also be specified.
-* `user_role` - (Required) The Amazon QuickSight role of the user. The user role can be one of the following: `READER`, `AUTHOR`, or `ADMIN`
+* `user_role` - (Required) The Amazon QuickSight role of the user. The user role can be one of the following: `READER`, `AUTHOR`, `ADMIN`, `READER_PRO`, `AUTHOR_PRO` or `ADMIN_PRO`.
 * `user_name` - (Optional) The Amazon QuickSight user name that you want to create for the user you are registering. Only valid for registering a user with `identity_type` set to `QUICKSIGHT`.
 * `aws_account_id` - (Optional) The ID for the AWS account that the user is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
 * `iam_arn` - (Optional) The ARN of the IAM user or role that you are registering with Amazon QuickSight.
@@ -59,4 +59,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.1 input-9dc8c87fc6da12d6f8933cfaeb31b94be75e8878bade439becdab1a05ff17eaa -->
+<!-- cache-key: cdktf-0.20.8 input-605820138023c56f8d78a12f88807cb816f0b5467b49edc2ce47e4cd18414d4c -->

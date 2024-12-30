@@ -45,12 +45,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_ssoadmin_application_assignment_configuration.example
-  id = "arn:aws:sso::012345678901:application/id-12345678"
+  id = "arn:aws:sso::123456789012:application/id-12345678"
 }
 ```
 
 Using `terraform import`, import SSO Admin Application Assignment Configuration using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application_assignment_configuration.example arn:aws:sso::012345678901:application/id-12345678
+% terraform import aws_ssoadmin_application_assignment_configuration.example arn:aws:sso::123456789012:application/id-12345678
 ```

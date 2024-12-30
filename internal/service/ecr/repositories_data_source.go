@@ -38,7 +38,7 @@ func (d *repositoriesDataSource) Schema(ctx context.Context, request datasource.
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"names": schema.SetAttribute{
+			names.AttrNames: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
@@ -63,7 +63,7 @@ func (d *repositoriesDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region)
+	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region(ctx))
 	data.Names.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, tfslices.ApplyToAll(output, func(v awstypes.Repository) string {
 		return aws.ToString(v.RepositoryName)
 	}))

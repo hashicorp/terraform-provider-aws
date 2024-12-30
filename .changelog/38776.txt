@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iot_thing_group: Fix crash when empty `attribute_payload` block is configured
+```

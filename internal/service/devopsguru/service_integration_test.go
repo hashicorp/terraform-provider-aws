@@ -84,7 +84,7 @@ func testAccServiceIntegration_kms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_server_side_encryption.0.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_server_side_encryption.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.opt_in_status", string(types.OptInStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.type", string(types.ServerSideEncryptionTypeCustomerManagedKey)),
 				),

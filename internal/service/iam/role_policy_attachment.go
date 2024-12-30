@@ -22,6 +22,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_role_policy_attachment", name="Role Policy Attachment")
@@ -42,7 +43,7 @@ func resourceRolePolicyAttachment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,7 +56,7 @@ func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	role := d.Get("role").(string)
+	role := d.Get(names.AttrRole).(string)
 	policyARN := d.Get("policy_arn").(string)
 
 	if err := attachPolicyToRole(ctx, conn, role, policyARN); err != nil {
@@ -72,7 +73,7 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	role := d.Get("role").(string)
+	role := d.Get(names.AttrRole).(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", role, policyARN)
@@ -98,7 +99,7 @@ func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if err := detachPolicyFromRole(ctx, conn, d.Get("role").(string), d.Get("policy_arn").(string)); err != nil {
+	if err := detachPolicyFromRole(ctx, conn, d.Get(names.AttrRole).(string), d.Get("policy_arn").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -114,7 +115,7 @@ func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 	roleName := idParts[0]
 	policyARN := idParts[1]
 
-	d.Set("role", roleName)
+	d.Set(names.AttrRole, roleName)
 	d.Set("policy_arn", policyARN)
 	d.SetId(fmt.Sprintf("%s-%s", roleName, policyARN))
 

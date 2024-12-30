@@ -14,20 +14,21 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
+	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed resource.tmpl
+//go:embed resource.gtpl
 var resourceTmpl string
 
-//go:embed resourcefw.tmpl
+//go:embed resourcefw.gtpl
 var resourceFrameworkTmpl string
 
-//go:embed resourcetest.tmpl
+//go:embed resourcetest.gtpl
 var resourceTestTmpl string
 
-//go:embed websitedoc.tmpl
+//go:embed websitedoc.gtpl
 var websiteTmpl string
 
 type TemplateData struct {
@@ -37,41 +38,17 @@ type TemplateData struct {
 	HumanFriendlyService string
 	IncludeComments      bool
 	IncludeTags          bool
+	SDKPackage           string
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	AWSGoSDKV2           bool
 	PluginFramework      bool
 	HumanResourceName    string
 	ProviderResourceName string
 }
 
-func ToSnakeCase(upper string, snakeName string) string {
-	if snakeName != "" {
-		return snakeName
-	}
-
-	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1}_${2}`)
-
-	re2 := regexache.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
-}
-
-func HumanResName(upper string) string {
-	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1} ${2}`)
-
-	re2 := regexache.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
-}
-
-func ProviderResourceName(servicePackage, snakeName string) string {
-	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
-}
-
-func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
+func Create(resName, snakeName string, comments, force, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -91,38 +68,30 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = ToSnakeCase(resName, snakeName)
-
-	s, err := names.ProviderNameUpper(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting service connection name: %w", err)
+	if snakeName == "" {
+		snakeName = names.ToSnakeCase(resName)
 	}
 
-	sn, err := names.FullHumanFriendly(servicePackage)
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
-		return fmt.Errorf("error getting AWS service name: %w", err)
-	}
-
-	hf, err := names.HumanFriendly(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting human-friendly name: %w", err)
+		return fmt.Errorf("error looking up service package data for %q: %w", servicePackage, err)
 	}
 
 	templateData := TemplateData{
 		Resource:             resName,
 		ResourceLower:        strings.ToLower(resName),
 		ResourceSnake:        snakeName,
-		HumanFriendlyService: hf,
+		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
 		IncludeTags:          tags,
+		SDKPackage:           service.GoV2Package(),
 		ServicePackage:       servicePackage,
-		Service:              s,
-		ServiceLower:         strings.ToLower(s),
-		AWSServiceName:       sn,
-		AWSGoSDKV2:           v2,
+		Service:              service.ProviderNameUpper(),
+		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
+		AWSServiceName:       service.FullHumanFriendly(),
 		PluginFramework:      pluginFramework,
-		HumanResourceName:    HumanResName(resName),
-		ProviderResourceName: ProviderResourceName(servicePackage, snakeName),
+		HumanResourceName:    convert.ToHumanResName(resName),
+		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := resourceTmpl

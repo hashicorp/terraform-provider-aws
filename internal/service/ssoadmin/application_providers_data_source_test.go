@@ -28,7 +28,7 @@ func TestAccSSOAdminApplicationProvidersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccApplicationProvidersDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
 					// Verify a known application provider is included in the output
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "application_providers.*", map[string]string{
 						"application_provider_arn": "arn:aws:sso::aws:applicationProvider/custom", //lintignore:AWSAT005

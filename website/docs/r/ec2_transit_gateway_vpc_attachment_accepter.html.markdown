@@ -47,6 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `appliance_mode_support` - Whether Appliance Mode support is enabled. Valid values: `disable`, `enable`.
 * `dns_support` - Whether DNS support is enabled. Valid values: `disable`, `enable`.
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`.
 * `ipv6_support` - Whether IPv6 support is enabled. Valid values: `disable`, `enable`.
 * `subnet_ids` - Identifiers of EC2 Subnets.
 * `transit_gateway_id` - Identifier of EC2 Transit Gateway.

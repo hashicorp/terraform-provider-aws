@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -162,6 +162,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ssmParamResourceName := "aws_ssm_parameter.result_key1"
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
@@ -179,19 +180,23 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_dependency(rName, resourceName),
 					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, acctest.CtValue1),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_dependency(rName, resourceName),
 					testAccInvocationConfig_invocation(inputJSON2, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON2),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, "valueB"),
 				),
 			},
 		},
@@ -372,8 +377,8 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 		if ok {
 			return fmt.Errorf("Still found resource in state: %s", name)
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
-		res, err := conn.GetParameterWithContext(ctx, &ssm.GetParameterInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		res, err := conn.GetParameter(ctx, &ssm.GetParameterInput{
 			Name:           aws.String(ssmParameterName),
 			WithDecryption: aws.Bool(true),
 		})
@@ -394,8 +399,27 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 	}
 }
 
-func removeSSMParameter(ctx context.Context, conn *ssm.SSM, name string) error {
-	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
+func testAccCheckInvocationResultUpdatedSSMParam(name, expectedValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("SSM parameter %s not created", name)
+		}
+
+		value, ok := rs.Primary.Attributes[names.AttrValue]
+		if !ok {
+			return fmt.Errorf("SSM parameter attribute 'value' is empty, expected: %s", expectedValue)
+		}
+
+		if value != expectedValue {
+			return fmt.Errorf("%s: Attribute 'value' expected %s, got %s", name, expectedValue, value)
+		}
+		return nil
+	}
+}
+
+func removeSSMParameter(ctx context.Context, conn *ssm.Client, name string) error {
+	_, err := conn.DeleteParameter(ctx, &ssm.DeleteParameterInput{
 		Name: aws.String(name),
 	})
 	return err
@@ -553,4 +577,14 @@ resource "aws_lambda_invocation" "test" {
   })
 }
 `)
+}
+
+func testAccInvocationConfig_dependency(rName, resourceName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "result_key1" {
+  name  = "/tf-test/CRUD/%[1]s/key1"
+  type  = "String"
+  value = try(jsondecode(%[2]s.result).key1, "")
+}
+`, rName, resourceName)
 }

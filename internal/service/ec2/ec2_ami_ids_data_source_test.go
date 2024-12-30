@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -35,25 +36,28 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami_ids.test"
 
+	date := time.Now().UTC().AddDate(0, -2, 0)
+	creationDate := fmt.Sprintf("%d-%02d-*", date.Year(), date.Month())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMIIDsDataSourceConfig_sorted(false),
+				Config: testAccAMIIDsDataSourceConfig_sorted(false, creationDate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test2", "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test1", "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test1", names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test2", names.AttrID),
 				),
 			},
 			{
-				Config: testAccAMIIDsDataSourceConfig_sorted(true),
+				Config: testAccAMIIDsDataSourceConfig_sorted(true, creationDate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test1", "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test2", "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test2", names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test1", names.AttrID),
 				),
 			},
 		},
@@ -85,28 +89,35 @@ data "aws_ami_ids" "test" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/ubuntu-*-*-amd64-server-*"]
+    values = ["ubuntu/images/hvm-instance/ubuntu-*"]
   }
 }
 `
 
-func testAccAMIIDsDataSourceConfig_sorted(sortAscending bool) string {
+func testAccAMIIDsDataSourceConfig_sorted(sortAscending bool, creationDate string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test1" {
-  owners = ["amazon"]
+  owners      = ["amazon"]
+  most_recent = true
 
   filter {
     name   = "name"
-    values = ["amzn-ami-hvm-2018.03.0.20221018.0-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 
 data "aws_ami" "test2" {
-  owners = ["amazon"]
+  owners      = ["amazon"]
+  most_recent = true
 
   filter {
     name   = "name"
-    values = ["amzn-ami-hvm-2018.03.0.20221209.1-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+
+  filter {
+    name   = "creation-date"
+    values = [%[2]q]
   }
 }
 
@@ -120,7 +131,7 @@ data "aws_ami_ids" "test" {
 
   sort_ascending = %[1]t
 }
-`, sortAscending)
+`, sortAscending, creationDate)
 }
 
 func testAccAMIIDsDataSourceConfig_includeDeprecated(includeDeprecated bool) string {
@@ -131,7 +142,7 @@ data "aws_ami_ids" "test" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/ubuntu-*-*-amd64-server-*"]
+    values = ["ubuntu/images/hvm-instance/ubuntu-*"]
   }
 }
 `, includeDeprecated)

@@ -22,6 +22,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -36,7 +37,7 @@ func resourcePermission() *schema.Resource {
 		DeleteWithoutTimeout: resourcePermissionDelete,
 
 		Schema: map[string]*schema.Schema{
-			"actions": {
+			names.AttrActions: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -51,11 +52,11 @@ func resourcePermission() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -78,11 +79,15 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	caARN := d.Get("certificate_authority_arn").(string)
-	principal := d.Get("principal").(string)
+	principal := d.Get(names.AttrPrincipal).(string)
 	sourceAccount := d.Get("source_account").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true))
-	input := &acmpca.CreatePermissionInput{
-		Actions:                 expandPermissionActions(d.Get("actions").(*schema.Set)),
+	id, err := flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := acmpca.CreatePermissionInput{
+		Actions:                 expandPermissionActions(d.Get(names.AttrActions).(*schema.Set)),
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
 	}
@@ -91,9 +96,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SourceAccount = aws.String(sourceAccount)
 	}
 
-	_, err := conn.CreatePermission(ctx, input)
-
-	if err != nil {
+	if _, err := conn.CreatePermission(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Permission (%s): %s", id, err)
 	}
 
@@ -124,10 +127,10 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Permission (%s): %s", d.Id(), err)
 	}
 
-	d.Set("actions", flattenPermissionActions(permission.Actions))
+	d.Set(names.AttrActions, flattenPermissionActions(permission.Actions))
 	d.Set("certificate_authority_arn", permission.CertificateAuthorityArn)
-	d.Set("policy", permission.Policy)
-	d.Set("principal", permission.Principal)
+	d.Set(names.AttrPolicy, permission.Policy)
+	d.Set(names.AttrPrincipal, permission.Principal)
 	d.Set("source_account", permission.SourceAccount)
 
 	return diags
@@ -143,7 +146,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	caARN, principal, sourceAccount := parts[0], parts[1], parts[2]
-	input := &acmpca.DeletePermissionInput{
+	input := acmpca.DeletePermissionInput{
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
 	}
@@ -153,7 +156,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())
-	_, err = conn.DeletePermission(ctx, input)
+	_, err = conn.DeletePermission(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -167,11 +170,11 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findPermissionByThreePartKey(ctx context.Context, conn *acmpca.Client, certificateAuthorityARN, principal, sourceAccount string) (*types.Permission, error) {
-	input := &acmpca.ListPermissionsInput{
+	input := acmpca.ListPermissionsInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	return findPermission(ctx, conn, input, func(v *types.Permission) bool {
+	return findPermission(ctx, conn, &input, func(v *types.Permission) bool {
 		return aws.ToString(v.Principal) == principal && (sourceAccount == "" || aws.ToString(v.SourceAccount) == sourceAccount)
 	})
 }

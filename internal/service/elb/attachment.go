@@ -7,11 +7,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -21,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_elb_attachment")
-func ResourceAttachment() *schema.Resource {
+// @SDKResource("aws_elb_attachment", name="Attachment")
+func resourceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentCreate,
 		ReadWithoutTimeout:   resourceAttachmentRead,
@@ -34,7 +35,6 @@ func ResourceAttachment() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-
 			"instance": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -46,84 +46,48 @@ func ResourceAttachment() *schema.Resource {
 
 func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
-	elbName := d.Get("elb").(string)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
+	lbName := d.Get("elb").(string)
 	instance := d.Get("instance").(string)
-
-	registerInstancesOpts := elb.RegisterInstancesWithLoadBalancerInput{
-		LoadBalancerName: aws.String(elbName),
-		Instances:        []*elb.Instance{{InstanceId: aws.String(instance)}},
+	input := &elasticloadbalancing.RegisterInstancesWithLoadBalancerInput{
+		Instances:        expandInstances([]interface{}{instance}),
+		LoadBalancerName: aws.String(lbName),
 	}
 
-	log.Printf("[INFO] registering instance %s with ELB %s", instance, elbName)
+	const (
+		timeout = 10 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+		return conn.RegisterInstancesWithLoadBalancer(ctx, input)
+	}, errCodeInvalidTarget)
 
-	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
-		_, err := conn.RegisterInstancesWithLoadBalancerWithContext(ctx, &registerInstancesOpts)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
-			return retry.RetryableError(fmt.Errorf("attaching instance to ELB, retrying: %s", err))
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.RegisterInstancesWithLoadBalancerWithContext(ctx, &registerInstancesOpts)
-	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Failure registering instances with ELB: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Attachment (%s/%s): %s", lbName, instance, err)
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", elbName)))
+	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", lbName)))
 
 	return diags
 }
 
 func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
-	elbName := d.Get("elb").(string)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	// only add the instance that was previously defined for this resource
-	expected := d.Get("instance").(string)
+	lbName := d.Get("elb").(string)
+	instance := d.Get("instance").(string)
+	err := findLoadBalancerAttachmentByTwoPartKey(ctx, conn, lbName, instance)
 
-	// Retrieve the ELB properties to get a list of attachments
-	describeElbOpts := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: []*string{aws.String(elbName)},
-	}
-
-	resp, err := conn.DescribeLoadBalancersWithContext(ctx, describeElbOpts)
-	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
-			log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "retrieving ELB Classic LB (%s): %s", elbName, err)
-	}
-	if !d.IsNewResource() && len(resp.LoadBalancerDescriptions) != 1 {
-		log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELB Classic Attachment (%s/%s) not found, removing from state", lbName, instance)
 		d.SetId("")
 		return diags
 	}
 
-	// only set the instance Id that this resource manages
-	found := false
-	for _, i := range resp.LoadBalancerDescriptions[0].Instances {
-		if expected == aws.StringValue(i.InstanceId) {
-			d.Set("instance", expected)
-			found = true
-		}
-	}
-
-	if !d.IsNewResource() && !found {
-		log.Printf("[WARN] instance %s not found in elb attachments", expected)
-		d.SetId("")
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Attachment (%s/%s): %s", lbName, instance, err)
 	}
 
 	return diags
@@ -131,22 +95,39 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
-	elbName := d.Get("elb").(string)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
+	lbName := d.Get("elb").(string)
 	instance := d.Get("instance").(string)
-
-	log.Printf("[INFO] Deleting Attachment %s from: %s", instance, elbName)
-
-	deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
-		LoadBalancerName: aws.String(elbName),
-		Instances:        []*elb.Instance{{InstanceId: aws.String(instance)}},
+	input := &elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
+		Instances:        expandInstances([]interface{}{instance}),
+		LoadBalancerName: aws.String(lbName),
 	}
 
-	_, err := conn.DeregisterInstancesFromLoadBalancerWithContext(ctx, &deRegisterInstancesOpts)
+	log.Printf("[DEBUG] Deleting ELB Classic Attachment: %s", d.Id())
+	_, err := conn.DeregisterInstancesFromLoadBalancer(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Failure deregistering instances from ELB: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Attachment (%s/%s): %s", lbName, instance, err)
 	}
 
 	return diags
+}
+
+func findLoadBalancerAttachmentByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName, instance string) error {
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
+
+	if err != nil {
+		return err
+	}
+
+	attached := slices.ContainsFunc(lb.Instances, func(v awstypes.Instance) bool {
+		return aws.ToString(v.InstanceId) == instance
+	})
+
+	if !attached {
+		return &retry.NotFoundError{}
+	}
+
+	return nil
 }

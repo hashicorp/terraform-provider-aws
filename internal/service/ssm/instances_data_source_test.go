@@ -43,7 +43,7 @@ func TestAccSSMInstancesDataSource_filter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					registrationSleep(),
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resourceName, names.AttrID),
 				),
 			},
 		},
