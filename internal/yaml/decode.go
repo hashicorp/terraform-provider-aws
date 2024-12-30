@@ -21,7 +21,7 @@ func DecodeFromReader(r io.Reader, to any) error {
 	dec := yaml.NewDecoder(r)
 
 	for {
-		if err := dec.Decode(to); err == io.EOF {
+		if err := dec.Decode(to); err == io.EOF { //nolint:errorlint // io.EOF is returned unwrapped
 			break
 		} else if err != nil {
 			return err
