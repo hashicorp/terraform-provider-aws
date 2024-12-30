@@ -1974,13 +1974,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input := &ec2.ModifyInstanceMetadataOptionsInput{
 					HttpEndpoint: awstypes.InstanceMetadataEndpointState(tfMap["http_endpoint"].(string)),
 					InstanceId:   aws.String(d.Id()),
+					HttpTokens:   awstypes.HttpTokensState(tfMap["http_tokens"].(string)),
 				}
 
 				if tfMap["http_endpoint"].(string) == string(awstypes.InstanceMetadataEndpointStateEnabled) {
 					// These parameters are not allowed unless HttpEndpoint is enabled.
 					input.HttpProtocolIpv6 = awstypes.InstanceMetadataProtocolState(tfMap["http_protocol_ipv6"].(string))
 					input.HttpPutResponseHopLimit = aws.Int32(int32(tfMap["http_put_response_hop_limit"].(int)))
-					input.HttpTokens = awstypes.HttpTokensState(tfMap["http_tokens"].(string))
 					input.InstanceMetadataTags = awstypes.InstanceMetadataTagsState(tfMap["instance_metadata_tags"].(string))
 				}
 
