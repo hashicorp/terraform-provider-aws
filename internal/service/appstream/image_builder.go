@@ -167,7 +167,7 @@ func ResourceImageBuilder() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
@@ -347,8 +347,8 @@ func expandImageBuilderVPCConfig(tfList []interface{}) *awstypes.VpcConfig {
 	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap[names.AttrSubnetIDs].([]interface{}); ok && len(v) > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
