@@ -52,7 +52,7 @@ Affected Resource(s):
 
 Issue: [#40373](https://github.com/hashicorp/terraform-provider-aws/issues/40373)
 
-[Amazon EKS: Auto Mode](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-eks-auto-mode/) a new feature that fully automates compute, storage, and networking management for Kubernetes clusters. Amazon EKS Auto Mode simplifies running Kubernetes by offloading cluster operations to AWS, improves the performance and security of your applications, and helps optimize compute costs. 
+[Amazon EKS: Auto Mode](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-eks-auto-mode/) a new feature that fully automates compute, storage, and networking management for Kubernetes clusters. Amazon EKS Auto Mode simplifies running Kubernetes by offloading cluster operations to AWS, improves the performance and security of your applications, and helps optimize compute costs.
 
 ### Amazon ECS: Availability Zone Rebalancing
 
