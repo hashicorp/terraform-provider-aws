@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -47,10 +48,13 @@ func resourceBucketVersioning() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"bucket": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile(`^arn:aws:s3-outposts:[a-z0-9-]+:[0-9]{12}:outpost/[^/]+/bucket/[^/]+$`), "Invalid ARN format for S3 Outposts bucket"),
+				),
 			},
 			"versioning_configuration": {
 				Type:     schema.TypeList,
@@ -69,16 +73,25 @@ func resourceBucketVersioning() *schema.Resource {
 		},
 	}
 }
+
 func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
-   
+
 	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 
 	bucket := d.Get("bucket").(string)
+	if strings.HasPrefix(bucket, "arn:") {
+		parts := strings.Split(bucket, "/")
+		if len(parts) < 6 {
+			return diag.Errorf("Invalid ARN format for S3 Outposts bucket")
+		}
+		bucket = parts[5]
+	}
+
 	input := &s3control.PutBucketVersioningInput{
 		AccountId:               aws.String(accountID),
 		Bucket:                  aws.String(bucket),
@@ -94,6 +107,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 
 	return append(diags, resourceBucketVersioningRead(ctx, d, meta)...)
 }
+
 func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
@@ -229,8 +243,6 @@ func flattenVersioningConfiguration(output *s3control.GetBucketVersioningOutput)
 
 	return []interface{}{m}
 }
-
-// findBucketVersioning retrieves the versioning configuration for an S3 bucket
 func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
 	input := &s3.GetBucketVersioningInput{
 		Bucket: aws.String(bucket),
@@ -259,7 +271,6 @@ func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expected
 	return output, nil
 }
 
-// statusBucketVersioning is a StateRefreshFunc that returns the current versioning status
 func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
@@ -280,7 +291,6 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 	}
 }
 
-// waitForBucketVersioningStatus waits for a bucket to reach the specified versioning status
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{""},
@@ -305,7 +315,6 @@ const (
 	bucketVersioningStatusDisabled = "Disabled"
 )
 
-// bucketVersioningStatus_Values returns all possible versioning status values
 func bucketVersioningStatus_Values() []string {
 	return tfslices.AppendUnique(enum.Values[types.BucketVersioningStatus](), bucketVersioningStatusDisabled)
 }
