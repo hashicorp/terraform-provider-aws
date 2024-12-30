@@ -438,7 +438,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Domain Name (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDomainNameUpdated(ctx, conn, d.Id(), domainNameID); err != nil {
+		if _, err := waitDomainNameUpdated(ctx, conn, domainName, domainNameID); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Domain Name (%s) update: %s", d.Id(), err)
 		}
 	}

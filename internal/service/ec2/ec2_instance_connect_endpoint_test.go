@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,7 +40,6 @@ func TestAccEC2InstanceConnectEndpoint_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance-connect-endpoint/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
-					resource.TestCheckResourceAttrSet(resourceName, "fips_dns_name"),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "network_interface_ids.#", 1),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", acctest.CtTrue),
@@ -148,7 +148,6 @@ func TestAccEC2InstanceConnectEndpoint_securityGroupIDs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance-connect-endpoint/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
-					resource.TestCheckResourceAttrSet(resourceName, "fips_dns_name"),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "network_interface_ids.#", 1),
 					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
@@ -158,6 +157,60 @@ func TestAccEC2InstanceConnectEndpoint_securityGroupIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2InstanceConnectEndpoint_fipsRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_instance_connect_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceConnectEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConnectEndpointConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "fips_dns_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2InstanceConnectEndpoint_nonFIPSRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_instance_connect_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.ApNortheast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceConnectEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConnectEndpointConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "fips_dns_name", ""),
 				),
 			},
 			{

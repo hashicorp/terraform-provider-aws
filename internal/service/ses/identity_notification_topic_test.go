@@ -59,6 +59,33 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/36275.
+func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T) {
+	ctx := acctest.Context(t)
+	domain := acctest.RandomDomainName()
+	resourceName := "aws_ses_identity_notification_topic.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityNotificationTopicConfig_basic(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
