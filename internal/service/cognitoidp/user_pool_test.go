@@ -2229,7 +2229,6 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_mfaEmailConfigurationConfigurationEnabled(rName string, enabled bool, message, subject, email, arn, from, account string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
 
