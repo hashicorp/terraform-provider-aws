@@ -2262,7 +2262,7 @@ resource "aws_cognito_user_pool" "test" {
 
   email_mfa_configuration {
     message = %[3]q
-	subject = %[4]q
+    subject = %[4]q
   }
 }
 `, rName, enabled, message, subject, email, arn, from, account)
