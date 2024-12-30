@@ -5389,7 +5389,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHttpEndPoint(rName),
+				Config: testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHTTPEndPoint(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
@@ -9023,7 +9023,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHttpEndPoint(rName string) string {
+func testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHTTPEndPoint(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceVPCConfig(rName, false, 0),
