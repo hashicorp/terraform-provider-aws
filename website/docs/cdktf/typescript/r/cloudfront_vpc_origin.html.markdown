@@ -104,7 +104,7 @@ class MyConvertedCode extends TerraformStack {
     CloudfrontVpcOrigin.generateConfigForImport(
       this,
       "origin",
-      "${vo_JQEa410sssUFoY6wMkx69j}"
+      "vo_JQEa410sssUFoY6wMkx69j"
     );
   }
 }
@@ -117,4 +117,4 @@ Using `terraform import`, import Cloudfront VPC origins using the `id`. For exam
 % terraform import aws_cloudfront_vpc_origin vo_JQEa410sssUFoY6wMkx69j
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bcdef97f0333b63cec31ab48f7045d350e36fcd0107ae9fb57377649137876dc -->
+<!-- cache-key: cdktf-0.20.8 input-187cf38c97ac211aea4b679f94d3c76f36282959a1becf8fe51ae560fd45e2b4 -->

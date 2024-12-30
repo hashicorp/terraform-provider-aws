@@ -251,7 +251,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `enabled` (Required) - Whether the distribution is enabled to accept end user requests for content.
 * `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
 * `http_version` (Optional) - Maximum HTTP version to support on the distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is `http2`.
-* `logging_config` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one).
+* `logging_config` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one). AWS provides two versions of access logs for CloudFront: Legacy and v2. This argument configures legacy version standard logs.
 * `ordered_cache_behavior` (Optional) - Ordered list of [cache behaviors](#cache-behavior-arguments) resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
 * `origin` (Required) - One or more [origins](#origin-arguments) for this distribution (multiples allowed).
 * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this distribution (multiples allowed).
@@ -408,7 +408,7 @@ argument should not be specified.
 
 #### Logging Config Arguments
 
-* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`.
+* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
 * `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`).
 * `prefix` (Optional) - Prefix to the access log filenames for this distribution, for example, `myprefix/`.
 
@@ -539,4 +539,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1c68fd08598394f5af5331fd4800f38c4625aa36f9d44a979afd3169ac54f312 -->
+<!-- cache-key: cdktf-0.20.8 input-016f5dbc9c21b429c56166e27cf76bcc384dee8b54d767c742e1c29c528c8899 -->
