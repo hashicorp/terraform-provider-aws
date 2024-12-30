@@ -810,7 +810,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v := d.Get("email_mfa_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
-			input.EmailMfaConfiguration = expandEmailMfaConfiguration(v)
+			input.EmailMfaConfiguration = expandEmailMFAConfiguration(v)
 		}
 
 		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
@@ -945,7 +945,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		mfaConfiguration := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string))
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
 			MfaConfiguration:              mfaConfiguration,
-			EmailMfaConfiguration:         expandEmailMfaConfiguration(d.Get("email_mfa_configuration").([]interface{})),
+			EmailMfaConfiguration:         expandEmailMFAConfiguration(d.Get("email_mfa_configuration").([]interface{})),
 			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
 			UserPoolId:                    aws.String(d.Id()),
 		}
@@ -1255,7 +1255,7 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	return output, nil
 }
 
-func expandEmailMfaConfiguration(tfList []interface{}) *awstypes.EmailMfaConfigType {
+func expandEmailMFAConfiguration(tfList []interface{}) *awstypes.EmailMfaConfigType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1263,7 +1263,7 @@ func expandEmailMfaConfiguration(tfList []interface{}) *awstypes.EmailMfaConfigT
 	tfMap := tfList[0].(map[string]interface{})
 	apiObject := &awstypes.EmailMfaConfigType{}
 
-	if v, ok := tfMap["message"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMessage].(string); ok && v != "" {
 		apiObject.Message = aws.String(v)
 	}
 
@@ -1341,7 +1341,7 @@ func flattenEmailMFAConfigurationType(apiObject *awstypes.EmailMfaConfigType) []
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Message; v != nil {
-		tfMap["message"] = aws.ToString(v)
+		tfMap[names.AttrMessage] = aws.ToString(v)
 	}
 
 	if v := apiObject.Subject; v != nil {
