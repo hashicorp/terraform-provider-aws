@@ -648,7 +648,7 @@ func resourceUserPool() *schema.Resource {
 				Optional:         true,
 				Default:          awstypes.UserPoolTierTypeEssentials,
 				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
-			}
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -773,7 +773,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if v := awstypes.UserPoolMfaType(d.Get("user_pool_tier").(string)); v != awstypes.UserPoolTierTypeEssentials {
+	if v := awstypes.UserPoolTierType(d.Get("user_pool_tier").(string)); v != awstypes.UserPoolTierTypeEssentials {
 		input.UserPoolTier = v
 	}
 
@@ -891,6 +891,8 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting verification_message_template: %s", err)
 	}
 
+	d.Set("user_pool_tier", userPool.UserPoolTier)
+
 	setTagsOut(ctx, userPool.UserPoolTags)
 
 	output, err := findUserPoolMFAConfigByID(ctx, conn, d.Id())
@@ -903,8 +905,6 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("software_token_mfa_configuration", flattenSoftwareTokenMFAConfigType(output.SoftwareTokenMfaConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting software_token_mfa_configuration: %s", err)
 	}
-
-	d.Set("user_pool_tier", output.UserPoolTier)
 
 	return diags
 }
