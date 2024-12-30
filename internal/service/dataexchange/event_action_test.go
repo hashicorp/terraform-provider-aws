@@ -7,8 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"os"
 	"strconv"
 	"testing"
@@ -16,17 +14,19 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataExchangeEventAction_basic(t *testing.T) {
@@ -60,7 +60,7 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 		return
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
@@ -74,7 +74,7 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId, *identity.Account),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
@@ -119,7 +119,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 		return
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
@@ -133,7 +133,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId, *identity.Account),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
@@ -147,7 +147,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 				Config: testAccEventActionConfig_encryption(bucketName, dataSetId, *identity.Account),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.s3_encryption_type", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
 				),
 			},
 		},
@@ -185,7 +185,7 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 		return
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
@@ -241,7 +241,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId, *identity.Account),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
 			},
@@ -283,7 +283,7 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 				Config: testAccEventActionConfig_encryption(bucketName, dataSetId, *identity.Account),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.s3_encryption_type", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
 			},
@@ -325,7 +325,7 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 				Config: testAccEventActionConfig_kmsKeyEncryption(bucketName, dataSetId, *identity.Account),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.s3_encryption_type", "aws:kms"),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "aws:kms"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
 			},
@@ -357,11 +357,9 @@ func testAccCheckEventActionDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.GetEventAction(ctx, &dataexchange.GetEventActionInput{
-				EventActionId: aws.String(rs.Primary.ID),
-			})
+			_, err := tfdataexchange.FindEventActionByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if errs.IsA[*retry.NotFoundError](err) {
 				return nil
 			}
 
@@ -388,9 +386,7 @@ func testAccCheckEventActionExists(ctx context.Context, n string, v *dataexchang
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
-		output, err := conn.GetEventAction(ctx, &dataexchange.GetEventActionInput{
-			EventActionId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfdataexchange.FindEventActionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -404,7 +400,7 @@ func testAccCheckEventActionExists(ctx context.Context, n string, v *dataexchang
 	}
 }
 
-func testAccEventActionConfig_basic(bucketName, dataSetId, accountId string) string {
+func s3BucketConfig(bucketName, accountId string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "%s"
@@ -442,10 +438,18 @@ data "aws_iam_policy_document" "test" {
     }
   }
 }
+`, bucketName, accountId)
+}
 
+func testAccEventActionConfig_basic(bucketName, dataSetId, accountId string) string {
+	return acctest.ConfigCompose(
+		s3BucketConfig(bucketName, accountId),
+		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3  {
-    bucket = aws_s3_bucket.test.id
+    revision_destination {
+      bucket = aws_s3_bucket.test.id
+    }
   }
 
   event_revision_published {
@@ -454,53 +458,23 @@ resource "aws_dataexchange_event_action" "test" {
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`, bucketName, accountId, dataSetId)
+`, dataSetId),
+	)
 }
 
 func testAccEventActionConfig_keyPattern(bucketName, dataSetId, accountId string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "%s"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-  policy = data.aws_iam_policy_document.test.json
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    principals {
-      type        = "Service"
-      identifiers = ["dataexchange.amazonaws.com"]
-    }
-
-    actions = [
-      "s3:PutObject",
-      "s3:PutObjectAcl",
-    ]
-
-    resources = [
-      "${aws_s3_bucket.test.arn}/*",
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-
-      values = [
-        "%s"
-      ]
-    }
-  }
-}
-
+	return acctest.ConfigCompose(
+		s3BucketConfig(bucketName, accountId),
+		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3  {
-    s3_encryption_type = "AES256"
-    bucket = aws_s3_bucket.test.id
-    key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+    encryption {
+      type = "AES256"
+    }
+    revision_destination {
+      bucket = aws_s3_bucket.test.id
+      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+    }
   }
 
   event_revision_published  {
@@ -509,53 +483,23 @@ resource "aws_dataexchange_event_action" "test" {
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`, bucketName, accountId, dataSetId)
+`, dataSetId),
+	)
 }
 
 func testAccEventActionConfig_encryption(bucketName, dataSetId, accountId string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "%s"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-  policy = data.aws_iam_policy_document.test.json
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    principals {
-      type        = "Service"
-      identifiers = ["dataexchange.amazonaws.com"]
-    }
-
-    actions = [
-      "s3:PutObject",
-      "s3:PutObjectAcl",
-    ]
-
-    resources = [
-      "${aws_s3_bucket.test.arn}/*",
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-
-      values = [
-        "%s"
-      ]
-    }
-  }
-}
-
+	return acctest.ConfigCompose(
+		s3BucketConfig(bucketName, accountId),
+		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3  {
-    s3_encryption_type = "AES256"
-    bucket = aws_s3_bucket.test.id
-    key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+    encryption {
+      type = "AES256"
+    }
+    revision_destination {
+      bucket = aws_s3_bucket.test.id
+      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+    }
   }
 
   event_revision_published  {
@@ -564,57 +508,27 @@ resource "aws_dataexchange_event_action" "test" {
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`, bucketName, accountId, dataSetId)
+`, dataSetId),
+	)
 }
 
 func testAccEventActionConfig_kmsKeyEncryption(bucketName, dataSetId, accountId string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "%s"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-  policy = data.aws_iam_policy_document.test.json
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    principals {
-      type        = "Service"
-      identifiers = ["dataexchange.amazonaws.com"]
-    }
-
-    actions = [
-      "s3:PutObject",
-      "s3:PutObjectAcl",
-    ]
-
-    resources = [
-      "${aws_s3_bucket.test.arn}/*",
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-
-      values = [
-        "%s"
-      ]
-    }
-  }
-}
-
+	return acctest.ConfigCompose(
+		s3BucketConfig(bucketName, accountId),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
 }
 
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3  {
-    s3_encryption_type = "aws:kms"
-    s3_encryption_kms_key_arn = aws_kms_key.test.arn
-    bucket = aws_s3_bucket.test.id
-    key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+    encryption {
+      type = "aws:kms"
+      kms_key_arn = aws_kms_key.test.arn
+    }
+    revision_destination {
+      bucket = aws_s3_bucket.test.id
+      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+    }
   }
 
   event_revision_published  {
@@ -623,7 +537,8 @@ resource "aws_dataexchange_event_action" "test" {
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`, bucketName, accountId, dataSetId)
+`, dataSetId),
+	)
 }
 
 func helperAccEventActionGetReceivedDataSet(ctx context.Context, assetType awstypes.AssetType) (string, error) {
