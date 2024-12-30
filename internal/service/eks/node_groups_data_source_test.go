@@ -50,7 +50,7 @@ data "aws_eks_node_groups" "test" {
 }
 
 func testAccNodeGroupsDataSourceConfig_namesBasic(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test_a" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = "%[1]s-test-a"

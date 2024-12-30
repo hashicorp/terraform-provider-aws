@@ -4,7 +4,10 @@
 package sdkv2
 
 import (
+	"sync"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Adapted from https://github.com/hashicorp/terraform-provider-google/google/datasource_helpers.go. Thanks!
@@ -60,4 +63,23 @@ func DataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string
 	}
 
 	return ds
+}
+
+// JSONDocumentSchemaRequired returns the standard schema for a required JSON document.
+var JSONDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentJSONDocuments))
+
+// IAMPolicyDocumentSchemaRequired returns the standard schema for a required IAM policy JSON document.
+var IAMPolicyDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentIAMPolicyDocuments))
+
+func jsonDocumentSchemaRequiredFunc(diffSuppressFunc schema.SchemaDiffSuppressFunc) func() *schema.Schema {
+	return func() *schema.Schema {
+		return &schema.Schema{
+			Type:                  schema.TypeString,
+			Required:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      diffSuppressFunc,
+			DiffSuppressOnRefresh: true,
+			StateFunc:             NormalizeJsonStringSchemaStateFunc,
+		}
+	}
 }

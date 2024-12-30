@@ -807,6 +807,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
+	resourceName := "aws_db_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -815,11 +816,17 @@ func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBParameterGroupConfig_namePrefix,
+				Config: testAccDBParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, "aws_db_parameter_group.test", &v),
-					resource.TestMatchResourceAttr("aws_db_parameter_group.test", names.AttrName, regexache.MustCompile("^tf-test-")),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1956,9 +1963,10 @@ resource "aws_db_parameter_group" "test" {
 `, rName, paramName)
 }
 
-const testAccDBParameterGroupConfig_namePrefix = `
+func testAccDBParameterGroupConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name_prefix = "tf-test-"
+  name_prefix = %[1]q
   family      = "mysql5.6"
 
   parameter {
@@ -1966,7 +1974,8 @@ resource "aws_db_parameter_group" "test" {
     value = 0
   }
 }
-`
+`, namePrefix)
+}
 
 const testAccDBParameterGroupConfig_generatedName = `
 resource "aws_db_parameter_group" "test" {

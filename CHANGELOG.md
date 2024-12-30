@@ -1,4 +1,48 @@
-## 5.82.0 (Unreleased)
+## 5.83.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_api_gateway_domain_name_access_association: Deprecates `id` in favor of `arn`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
+* resource/aws_route53_cidr_location: Deprecates `id`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
+* resource/aws_s3_directory_bucket: Deprecates `id` in favor of `bucket`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudwatch_event_buses` ([#40662](https://github.com/hashicorp/terraform-provider-aws/issues/40662))
+* **New Data Source:** `aws_ecs_clusters` ([#40638](https://github.com/hashicorp/terraform-provider-aws/issues/40638))
+* **New Resource:** `aws_cloudwatch_log_index_policy` ([#40594](https://github.com/hashicorp/terraform-provider-aws/issues/40594))
+
+ENHANCEMENTS:
+
+* data-source/aws_rds_certificate: Add `default_for_new_launches` attribute ([#40536](https://github.com/hashicorp/terraform-provider-aws/issues/40536))
+* data-source/aws_rds_engine_version: Add `supports_certificate_rotation_without_restart`, `supports_integrations`, and `supports_local_write_forwarding` attributes ([#40700](https://github.com/hashicorp/terraform-provider-aws/issues/40700))
+* resource/aws_eks_node_group: Add `node_repair_config` configuration block ([#40698](https://github.com/hashicorp/terraform-provider-aws/issues/40698))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_domain_name: Fixed error when adding policy to existing private domain name ([#40708](https://github.com/hashicorp/terraform-provider-aws/issues/40708))
+* resource/aws_ec2_instance_connect_endpoint: Set `fips_dns_name` to an empty value (`""`) when no value is returned from the EC2 API. This fixes known-after-apply loops in Regions that don't support FIPS endpoints ([#37939](https://github.com/hashicorp/terraform-provider-aws/issues/37939))
+* resource/aws_rds_instance Fix `manage_master_user_password` being updated in state when update errors ([#40538](https://github.com/hashicorp/terraform-provider-aws/issues/40538))
+* resource/aws_ses_identity_notification_topic: Prevent destroy failure when resource is already deleted outside of Terraform ([#40684](https://github.com/hashicorp/terraform-provider-aws/issues/40684))
+* resource/aws_sesv2_configuration_set: Fix handling of `delivery_options.max_delivery_seconds` when not configured ([#40670](https://github.com/hashicorp/terraform-provider-aws/issues/40670))
+
+## 5.82.2 (December 20, 2024)
+
+BUG FIXES:
+
+* data-source/aws_lb_listener: Add `mutual_authentication.advertise_trust_store_ca_names` attribute. This fixes a regression introduced in [v5.82.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5820-december-19-2024) causing `setting mutual_authentication: Invalid address to set: []string{"mutual_authentication", "0", "advertise_trust_store_ca_names"}` errors ([#40658](https://github.com/hashicorp/terraform-provider-aws/issues/40658))
+
+## 5.82.1 (December 19, 2024)
+
+ENHANCEMENTS:
+
+* resource/aws_autoscaling_group: Add `availability_zone_distribution` argument ([#40634](https://github.com/hashicorp/terraform-provider-aws/issues/40634))
+
+BUG FIXES:
+
+* data-source/aws_iam_policy_document: Reverts plan-time validation for `statement` `sid` ([#40639](https://github.com/hashicorp/terraform-provider-aws/issues/40639))
+
+## 5.82.0 (December 19, 2024)
 
 NOTES:
 
@@ -20,8 +64,10 @@ ENHANCEMENTS:
 * data-source/aws_vpc_endpoint: Add `service_region` attribute ([#40583](https://github.com/hashicorp/terraform-provider-aws/issues/40583))
 * resource/aws_bedrockagent_agent: Add `agent_collaboration` attribute to configure agent collaboration role ([#40543](https://github.com/hashicorp/terraform-provider-aws/issues/40543))
 * resource/aws_cloudfront_distribution: Add `origin.vpc_origin_config` argument ([#40239](https://github.com/hashicorp/terraform-provider-aws/issues/40239))
+* resource/aws_db_parameter_group: Support import of `name_prefix` argument ([#40622](https://github.com/hashicorp/terraform-provider-aws/issues/40622))
 * resource/aws_dx_gateway: Add `arn` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 * resource/aws_fsx_lustre_file_system: Add `efa_enabled` argument ([#40381](https://github.com/hashicorp/terraform-provider-aws/issues/40381))
+* resource/aws_lb_listener: Add `advertise_trust_store_ca_names` attribute to the `mutual_authentication` configuration block ([#40550](https://github.com/hashicorp/terraform-provider-aws/issues/40550))
 * resource/aws_memorydb_cluster: Add `multi_region_cluster_name` argument ([#40376](https://github.com/hashicorp/terraform-provider-aws/issues/40376))
 * resource/aws_networkmanager_attachment_accepter: Add `edge_locations` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 * resource/aws_resourcegroups_resource: Add import support ([#40579](https://github.com/hashicorp/terraform-provider-aws/issues/40579))
@@ -46,6 +92,8 @@ BUG FIXES:
 * resource/aws_medialive_channel: Added missing `teletext_destination_settings`. ([#33797](https://github.com/hashicorp/terraform-provider-aws/issues/33797))
 * resource/aws_rds_cluster: Fix issue with waiter when modifying `allocated_storage` ([#40601](https://github.com/hashicorp/terraform-provider-aws/issues/40601))
 * resource/aws_resourcegroups_resource: Fix crash when parsing certain ARN formats ([#40579](https://github.com/hashicorp/terraform-provider-aws/issues/40579))
+* resource/aws_s3_bucket: Destroying a bucket with `force_destroy = true` can now delete objects with non-XML-safe keys ([#40537](https://github.com/hashicorp/terraform-provider-aws/issues/40537))
+* resource/aws_s3_directory_bucket: Destroying a directory bucket with `force_destroy = true` can now delete objects with non-XML-safe keys ([#40537](https://github.com/hashicorp/terraform-provider-aws/issues/40537))
 * resource/aws_secretsmanager_secret_rotation: Fix bug where `automatically_after_days` was not being set properly when `schedule_expression` had been set previously ([#34295](https://github.com/hashicorp/terraform-provider-aws/issues/34295))
 * resource/aws_secretsmanager_secret_rotation: Retry rotation in case it has not yet propagated when previously an error would occur: `InvalidRequestException: A previous rotation isn't complete. That rotation will be reattempted.` ([#34295](https://github.com/hashicorp/terraform-provider-aws/issues/34295))
 * resource/aws_sqs_queue_redrive_allow_policy: Fix perpetual `redrive_allow_policy` diffs ([#40604](https://github.com/hashicorp/terraform-provider-aws/issues/40604))

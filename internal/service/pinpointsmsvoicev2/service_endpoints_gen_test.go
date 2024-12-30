@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribePhoneNumbers(ctx, &pinpointsmsvoicev2.DescribePhoneNumbersInput{},
+	input := pinpointsmsvoicev2.DescribePhoneNumbersInput{}
+	_, err := client.DescribePhoneNumbers(ctx, &input,
 		func(opts *pinpointsmsvoicev2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -323,7 +323,7 @@ resource "aws_s3_directory_bucket" "test" {
 }
 
 resource "aws_s3_bucket_inventory" "test" {
-  bucket = aws_s3_directory_bucket.test.id
+  bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
 
   included_object_versions = "All"

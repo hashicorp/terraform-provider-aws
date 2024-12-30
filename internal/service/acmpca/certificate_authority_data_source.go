@@ -136,11 +136,11 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get(names.AttrARN).(string)
-	input := &acmpca.DescribeCertificateAuthorityInput{
+	input := acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	certificateAuthority, err := findCertificateAuthority(ctx, conn, input)
+	certificateAuthority, err := findCertificateAuthority(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
@@ -159,9 +159,10 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrType, certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
-	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
+	getCACertInput := acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &getCACertInput)
 
 	// Returned when in PENDING_CERTIFICATE status
 	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
@@ -177,9 +178,10 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Attempt to get the CSR (if permitted).
-	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
+	getCACSRInput := acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &getCACSRInput)
 
 	switch {
 	case tfawserr.ErrCodeEquals(err, "AccessDeniedException"):

@@ -118,7 +118,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 
 	name, serviceNamespace, resourceID := d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string)
 	id := strings.Join([]string{name, serviceNamespace, resourceID}, "-")
-	input := &applicationautoscaling.PutScheduledActionInput{
+	input := applicationautoscaling.PutScheduledActionInput{
 		ResourceId:          aws.String(resourceID),
 		ScalableDimension:   awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ScheduledActionName: aws.String(name),
@@ -161,7 +161,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 		timeout = 5 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsA[*awstypes.ObjectNotFoundException](ctx, timeout, func() (interface{}, error) {
-		return conn.PutScheduledAction(ctx, input)
+		return conn.PutScheduledAction(ctx, &input)
 	})
 
 	if err != nil {
@@ -212,12 +212,13 @@ func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Application Auto Scaling Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledAction(ctx, &applicationautoscaling.DeleteScheduledActionInput{
+	input := applicationautoscaling.DeleteScheduledActionInput{
 		ResourceId:          aws.String(d.Get(names.AttrResourceID).(string)),
 		ScalableDimension:   awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ScheduledActionName: aws.String(d.Get(names.AttrName).(string)),
 		ServiceNamespace:    awstypes.ServiceNamespace(d.Get("service_namespace").(string)),
-	})
+	}
+	_, err := conn.DeleteScheduledAction(ctx, &input)
 
 	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
 		return diags
@@ -231,14 +232,14 @@ func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findScheduledActionByFourPartKey(ctx context.Context, conn *applicationautoscaling.Client, name, serviceNamespace, resourceID, scalableDimension string) (*awstypes.ScheduledAction, error) {
-	input := &applicationautoscaling.DescribeScheduledActionsInput{
+	input := applicationautoscaling.DescribeScheduledActionsInput{
 		ResourceId:           aws.String(resourceID),
 		ScalableDimension:    awstypes.ScalableDimension(scalableDimension),
 		ScheduledActionNames: []string{name},
 		ServiceNamespace:     awstypes.ServiceNamespace(serviceNamespace),
 	}
 
-	return findScheduledAction(ctx, conn, input, func(v awstypes.ScheduledAction) bool {
+	return findScheduledAction(ctx, conn, &input, func(v awstypes.ScheduledAction) bool {
 		return aws.ToString(v.ScheduledActionName) == name && string(v.ScalableDimension) == scalableDimension
 	})
 }

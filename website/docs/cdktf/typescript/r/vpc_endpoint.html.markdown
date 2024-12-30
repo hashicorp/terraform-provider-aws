@@ -233,6 +233,7 @@ Defaults to `false`.
 * `dnsOptions` - (Optional) The DNS options for the endpoint. See dns_options below.
 * `ipAddressType` - (Optional) The IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.
 * `routeTableIds` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
+* `serviceRegion` - (Optional) - The AWS region of the VPC Endpoint Service. If specified, the VPC endpoint will connect to the service in the provided region. Applicable for endpoints of type `Interface`.
 * `subnetConfiguration` - (Optional) Subnet configuration for the endpoint, used to select specific IPv4 and/or IPv6 addresses to the endpoint. See subnet_configuration below.
 * `subnetIds` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`. Interface type endpoints cannot function without being assigned to a subnet.
 * `securityGroupIds` - (Optional) The ID of one or more security groups to associate with the network interface. Applicable for endpoints of type `Interface`.
@@ -307,4 +308,4 @@ Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For 
 % terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-509be0efa7afefdd1eb3652782d8ed2c0d5f800e5b3e529426832448821df518 -->
+<!-- cache-key: cdktf-0.20.8 input-9d3b6b80d38a38295674990a09b743dd3906080e1ef1d1f3f3314f629681bb74 -->

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListRooms(ctx, &ivschat.ListRoomsInput{},
+	input := ivschat.ListRoomsInput{}
+	_, err := client.ListRooms(ctx, &input,
 		func(opts *ivschat.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

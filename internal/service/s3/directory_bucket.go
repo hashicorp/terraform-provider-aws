@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -85,7 +86,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrBucket)),
 			names.AttrType: schema.StringAttribute{
 				CustomType: bucketTypeType,
 				Optional:   true,
