@@ -71,7 +71,7 @@ This resource supports the following arguments:
 * `endpoint_type` - (Required) Endpoint type. Valid values: `REGIONAL`.
 * `hosted_zone_id` - (Computed) Amazon Route 53 Hosted Zone ID of the endpoint.
 * `ownership_verification_certificate_arn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
-* `security_policy` - (Required) Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2`.
+* `security_policy` - (Required) Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2` and `TLS_1_0`.
 * `target_domain_name` - (Computed) Target domain name.
 
 ### `mutual_tls_authentication`
