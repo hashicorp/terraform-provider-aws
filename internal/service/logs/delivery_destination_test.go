@@ -181,7 +181,7 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_outputFormat(rName, "json"),
+				Config: testAccLogDeliveryDestinationConfig_outputFormat(rName, "w3c"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -191,7 +191,7 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("output_format"), knownvalue.StringExact("json")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("output_format"), knownvalue.StringExact("w3c")),
 				},
 			},
 			{
