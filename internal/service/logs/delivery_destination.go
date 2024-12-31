@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -35,6 +36,7 @@ import (
 // @Testing(tagsTest=false)
 func newDeliveryDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliveryDestinationResource{}
+
 	return r, nil
 }
 
@@ -86,6 +88,9 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 						"destination_resource_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplaceIf(requiresReplaceIfARNServiceChanges, "", ""),
+							},
 						},
 					},
 				},
@@ -263,6 +268,24 @@ func findDeliveryDestination(ctx context.Context, conn *cloudwatchlogs.Client, i
 	}
 
 	return output.DeliveryDestination, nil
+}
+
+// requiresReplaceIfARNServiceChanges forces a new resource if and ARN attribute's service changes.
+// If the new value is unknown, force a new resource.
+func requiresReplaceIfARNServiceChanges(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	requiresReplace := false
+
+	if request.PlanValue.IsUnknown() {
+		requiresReplace = true
+	} else {
+		new, _ := arn.Parse(fwflex.StringValueFromFramework(ctx, request.PlanValue))
+		old, _ := arn.Parse(fwflex.StringValueFromFramework(ctx, request.StateValue))
+		if new.Service != old.Service {
+			requiresReplace = true
+		}
+	}
+
+	response.RequiresReplace = requiresReplace
 }
 
 type deliveryDestinationResourceModel struct {

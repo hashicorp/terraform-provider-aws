@@ -219,7 +219,7 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 	})
 }
 
-func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfiguration(t *testing.T) {
+func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationSameType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DeliveryDestination
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -234,7 +234,7 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfiguration(t *te
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_basic(rName),
+				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -255,13 +255,66 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfiguration(t *te
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccLogDeliveryDestinationConfig_outputFormat(rName, "w3c"),
+				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("CWL")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationDifferentType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DeliveryDestination
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery_destination.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("CWL")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationS3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -403,4 +456,57 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
   }
 }
 `, rName, outputFormat)
+}
+
+func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test1" {
+  name = "%[1]s-1"
+}
+
+resource "aws_cloudwatch_log_group" "test2" {
+  name = "%[1]s-2"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName)
+}
+
+func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName string) string {
+	return acctest.ConfigCompose(testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name = %[1]q
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.test1.arn
+  }
+}
+`, rName))
+}
+
+func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL2(rName string) string {
+	return acctest.ConfigCompose(testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name = %[1]q
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.test2.arn
+  }
+}
+`, rName))
+}
+
+func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationS3(rName string) string {
+	return acctest.ConfigCompose(testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name = %[1]q
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.test.arn
+  }
+}
+`, rName))
 }
