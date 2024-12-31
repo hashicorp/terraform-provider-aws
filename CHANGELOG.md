@@ -26,6 +26,7 @@ BUG FIXES:
 * resource/aws_rds_instance Fix `manage_master_user_password` being updated in state when update errors ([#40538](https://github.com/hashicorp/terraform-provider-aws/issues/40538))
 * resource/aws_ses_identity_notification_topic: Prevent destroy failure when resource is already deleted outside of Terraform ([#40684](https://github.com/hashicorp/terraform-provider-aws/issues/40684))
 * resource/aws_sesv2_configuration_set: Fix handling of `delivery_options.max_delivery_seconds` when not configured ([#40670](https://github.com/hashicorp/terraform-provider-aws/issues/40670))
+* resource/aws_sagemaker_domain: Allow change of security groups without recreating the domain ([#40600](https://github.com/hashicorp/terraform-provider-aws/issues/40600))
 
 ## 5.82.2 (December 20, 2024)
 
