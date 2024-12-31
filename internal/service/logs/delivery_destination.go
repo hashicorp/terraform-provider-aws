@@ -155,7 +155,8 @@ func (r *deliveryDestinationResource) Read(ctx context.Context, request resource
 	}
 
 	// Additional fields.
-	setTagsOut(ctx, output.Tags)
+	// Delivery Destination tags aren't set in the Get response.
+	// setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

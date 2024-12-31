@@ -144,7 +144,6 @@ func (r *deliverySourceResource) Read(ctx context.Context, request resource.Read
 	if len(output.ResourceArns) > 0 {
 		data.ResourceARN = fwtypes.ARNValue(output.ResourceArns[0])
 	}
-
 	// Delivery Source tags aren't set in the Get response.
 	// setTagsOut(ctx, output.Tags)
 
