@@ -8,6 +8,7 @@ var (
 	ResourceAccountPolicy        = resourceAccountPolicy
 	ResourceAnomalyDetector      = newAnomalyDetectorResource
 	ResourceDataProtectionPolicy = resourceDataProtectionPolicy
+	ResourceDeliveryDestination  = newDeliveryDestinationResource
 	ResourceDeliverySource       = newDeliverySourceResource
 	ResourceDestination          = resourceDestination
 	ResourceDestinationPolicy    = resourceDestinationPolicy
@@ -21,6 +22,7 @@ var (
 
 	FindAccountPolicyByTwoPartKey          = findAccountPolicyByTwoPartKey
 	FindDataProtectionPolicyByLogGroupName = findDataProtectionPolicyByLogGroupName
+	FindDeliveryDestinationByName          = findDeliveryDestinationByName
 	FindDeliverySourceByName               = findDeliverySourceByName
 	FindDestinationByName                  = findDestinationByName
 	FindDestinationPolicyByName            = findDestinationPolicyByName
