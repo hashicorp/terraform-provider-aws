@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsDeliverySource_basic(t *testing.T) {
+func testAccDeliverySource_basic(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
@@ -33,7 +33,7 @@ func TestAccLogsDeliverySource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -71,6 +71,42 @@ func TestAccLogsDeliverySource_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccDeliverySourceImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+		},
+	})
+}
+
+func testAccDeliverySource_disappears(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
+	ctx := acctest.Context(t)
+	var v awstypes.DeliverySource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogDeliverySourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliverySource, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
