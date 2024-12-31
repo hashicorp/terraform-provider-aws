@@ -910,6 +910,13 @@ func resourceInstance() *schema.Resource {
 				// Set public_dns and public_ip to newly computed if the instance will be stopped and started
 				// as part of Update and there is already a public_ip value in state.
 				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
+					// user_data is stored in state as a hash.
+					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
+						if o, n := diff.GetChange("user_data"); userDataHashSum(n.(string)) == o.(string) {
+							return nil
+						}
+					}
+
 					if diff.Get("public_ip").(string) != "" {
 						diff.SetNewComputed("public_dns")
 						diff.SetNewComputed("public_ip")
