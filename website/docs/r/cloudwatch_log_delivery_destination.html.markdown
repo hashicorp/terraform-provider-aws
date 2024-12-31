@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS CloudWatch Logs Delivery Destination.
 ---
 
-# Resource: aws_cloudwatch_log_delivery_source
+# Resource: aws_cloudwatch_log_delivery_destination
 
 Terraform resource for managing an AWS CloudWatch Logs Delivery Destination.
 
