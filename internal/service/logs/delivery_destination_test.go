@@ -208,7 +208,7 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{

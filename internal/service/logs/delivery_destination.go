@@ -66,6 +66,9 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 			"output_format": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.OutputFormat](),
 				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
