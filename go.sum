@@ -616,8 +616,8 @@ github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.59 h1:j5ZrYJbLfZLJ9X5Bnp43z+
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.59/go.mod h1:jZEzCETkIzEinF749zPXsqpPmsA9P0fbMqRyoBh5UNo=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.60 h1:WKatQsyE5ik+US0P3yCc5mDxg4HiMZcBUZBULLnXFqM=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.60/go.mod h1:8sryF6nAn0RYRHMH9Rp6DSLu5rdP8A1C+XB/YB/K1qo=
-github.com/hashicorp/awspolicyequivalence v1.6.0 h1:7aadmkalbc5ewStC6g3rljx1iNvP4QyAhg2KsHx8bU8=
-github.com/hashicorp/awspolicyequivalence v1.6.0/go.mod h1:9IOaIHx+a7C0NfUNk1A93M7kHd5rJ19aoUx37LZGC14=
+github.com/hashicorp/awspolicyequivalence v1.7.0 h1:HxwPEw2/31BqQa73PinGciTfG2uJ/ATelvDG8X1gScU=
+github.com/hashicorp/awspolicyequivalence v1.7.0/go.mod h1:+oCTxQEYt+GcRalqrqTCBcJf100SQYiWQ4aENNYxYe0=
 github.com/hashicorp/cli v1.1.6 h1:CMOV+/LJfL1tXCOKrgAX0uRKnzjj/mpmqNXloRSy2K8=
 github.com/hashicorp/cli v1.1.6/go.mod h1:MPon5QYlgjjo0BSoAiN0ESeT5fRzDjVRp+uioJ0piz4=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
