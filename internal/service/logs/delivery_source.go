@@ -34,11 +34,13 @@ import (
 // @Testing(tagsTest=false)
 func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliverySourceResource{}
+
 	return r, nil
 }
 
 type deliverySourceResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[deliverySourceResourceModel]
 }
 
 func (*deliverySourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -54,6 +56,9 @@ func (r *deliverySourceResource) Schema(ctx context.Context, request resource.Sc
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -67,6 +72,9 @@ func (r *deliverySourceResource) Schema(ctx context.Context, request resource.Sc
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"service": schema.StringAttribute{
 				Computed: true,
@@ -148,46 +156,6 @@ func (r *deliverySourceResource) Read(ctx context.Context, request resource.Read
 	// setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *deliverySourceResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new deliverySourceResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().LogsClient(ctx)
-
-	if !new.LogType.Equal(old.LogType) || !new.ResourceARN.Equal(old.ResourceARN) {
-		input := cloudwatchlogs.PutDeliverySourceInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		// Additional fields.
-		input.Tags = getTagsIn(ctx)
-
-		output, err := conn.PutDeliverySource(ctx, &input)
-
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery Source (%s)", new.Name.ValueString()), err.Error())
-
-			return
-		}
-
-		// Set values for unknowns.
-		new.Service = fwflex.StringToFramework(ctx, output.DeliverySource.Service)
-	} else {
-		new.Service = old.Service
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *deliverySourceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
