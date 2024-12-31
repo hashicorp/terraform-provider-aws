@@ -623,7 +623,9 @@ resource "aws_subnet" "test" {
 }
 
 func ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model string) string {
-	return ConfigCompose(ConfigVPCWithSubnetsEnableDNSHostnames(rName, 2), fmt.Sprintf(`
+	return ConfigCompose(
+		ConfigVPCWithSubnetsEnableDNSHostnames(rName, 2), //nolint:mnd // 2 subnets required
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
