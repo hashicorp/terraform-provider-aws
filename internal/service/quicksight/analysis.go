@@ -10,6 +10,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
@@ -29,6 +30,51 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// Helper function to normalize QuickSight text content
+func normalizeQuickSightTextContent(content string) string {
+	lines := strings.Split(content, "\n")
+
+	// Process each line
+	for i, line := range lines {
+		// Preserve indentation by only trimming trailing spaces
+		lines[i] = strings.TrimRightFunc(line, unicode.IsSpace)
+	}
+
+	// Join lines back together
+	normalized := strings.Join(lines, "\n")
+
+	// Ensure consistent line endings
+	normalized = strings.ReplaceAll(normalized, "\r\n", "\n")
+
+	return normalized
+}
+
+// Recursive function to normalize content in the definition
+func normalizeQuickSightContent(content interface{}) interface{} {
+	switch v := content.(type) {
+	case map[string]interface{}:
+		result := make(map[string]interface{})
+		for key, value := range v {
+			result[key] = normalizeQuickSightContent(value)
+		}
+		return result
+	case []interface{}:
+		result := make([]interface{}, len(v))
+		for i, value := range v {
+			result[i] = normalizeQuickSightContent(value)
+		}
+		return result
+	case string:
+		// Only normalize specific content fields
+		if strings.HasSuffix(v, "\n") {
+			return normalizeQuickSightTextContent(v)
+		}
+		return v
+	default:
+		return v
+	}
+}
 
 // @SDKResource("aws_quicksight_analysis", name="Analysis")
 // @Tags(identifierAttribute="arn")
@@ -137,7 +183,8 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]interface{}))
+		definition := normalizeQuickSightContent(v)
+		input.Definition = quicksightschema.ExpandAnalysisDefinition(definition.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
