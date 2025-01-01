@@ -53,7 +53,7 @@ func (d *dataSourceClusterVersions) Schema(ctx context.Context, req datasource.S
 				Optional:   true,
 				CustomType: fwtypes.ListOfStringType,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.ClusterVersionStatus](),
 			},
