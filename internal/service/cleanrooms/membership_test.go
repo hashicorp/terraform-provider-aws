@@ -35,7 +35,6 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
@@ -60,7 +59,6 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "member_abilities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "member_abilities.0", "CAN_RECEIVE_RESULTS"),
-					resource.TestCheckResourceAttr(resourceName, "payment_configuration.0.query_compute.0.is_responsible", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", TEST_TAG),

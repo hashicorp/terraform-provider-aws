@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -55,17 +56,24 @@ func (r *resourceMembership) Metadata(_ context.Context, _ resource.MetadataRequ
 func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collaboration_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"collaboration_creator_account_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"collaboration_creator_display_name": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"collaboration_id": schema.StringAttribute{
 				Required: true,
@@ -75,15 +83,24 @@ func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaReques
 			},
 			"collaboration_name": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrCreateTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			"member_abilities": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"query_log_status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.MembershipQueryLogStatus](),
@@ -91,12 +108,18 @@ func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaReques
 			},
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"update_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -168,42 +191,6 @@ func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaReques
 								},
 							},
 						},
-						"machine_learning": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[machineLearningData](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"model_inference": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[modelInference](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"is_responsible": schema.BoolAttribute{
-													Required: true,
-												},
-											},
-										},
-									},
-									"model_training": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[modelTraining](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"is_responsible": schema.BoolAttribute{
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
 					},
 				},
 			},
@@ -242,7 +229,7 @@ func (r *resourceMembership) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &data, fwflex.WithIgnoredFieldNamesAppend("PaymentConfiguration"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -276,10 +263,12 @@ func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &data, fwflex.WithIgnoredFieldNamesAppend("PaymentConfiguration"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.CollaborationIdentifier = fwflex.StringToFramework(ctx, output.Membership.CollaborationId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -320,7 +309,7 @@ func (r *resourceMembership) Update(ctx context.Context, request resource.Update
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &plan)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &plan, fwflex.WithIgnoredFieldNamesAppend("PaymentConfiguration"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -338,7 +327,7 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 		return
 	}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
+	tflog.Debug(ctx, "deleting CleanRooms Membership", map[string]interface{}{
 		names.AttrID: data.ID.ValueString(),
 	})
 
@@ -387,24 +376,10 @@ type defaultResultConfiguration struct {
 }
 
 type paymentConfiguration struct {
-	QueryCompute    fwtypes.ListNestedObjectValueOf[queryComputeData]    `tfsdk:"query_compute"`
-	MachineLearning fwtypes.ListNestedObjectValueOf[machineLearningData] `tfsdk:"machine_learning"`
+	QueryCompute fwtypes.ListNestedObjectValueOf[queryComputeData] `tfsdk:"query_compute"`
 }
 
 type queryComputeData struct {
-	IsResponsible types.Bool `tfsdk:"is_responsible"`
-}
-
-type machineLearningData struct {
-	ModelInterface fwtypes.ListNestedObjectValueOf[modelInference] `tfsdk:"model_interface"`
-	ModelTraining  fwtypes.ListNestedObjectValueOf[modelTraining]  `tfsdk:"model_training"`
-}
-
-type modelInference struct {
-	IsResponsible types.Bool `tfsdk:"is_responsible"`
-}
-
-type modelTraining struct {
 	IsResponsible types.Bool `tfsdk:"is_responsible"`
 }
 
@@ -433,7 +408,7 @@ func (m outputConfiguration) Expand(ctx context.Context) (result any, diags diag
 		}
 
 		var s awstypes.MembershipProtectedQueryOutputConfigurationMemberS3
-		diags.Append(fwflex.Expand(ctx, s3Data, &s)...)
+		diags.Append(fwflex.Expand(ctx, s3Data, &s.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -446,7 +421,7 @@ func (m outputConfiguration) Expand(ctx context.Context) (result any, diags diag
 
 func (m *outputConfiguration) Flatten(ctx context.Context, input any) (diags diag.Diagnostics) {
 	switch t := input.(type) {
-	case *awstypes.MembershipProtectedQueryOutputConfigurationMemberS3:
+	case awstypes.MembershipProtectedQueryOutputConfigurationMemberS3:
 		var model s3ModelData
 		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
 		if diags.HasError() {
