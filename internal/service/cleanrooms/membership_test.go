@@ -29,7 +29,7 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	acctest.AccountID()
+	acctest.AccountID(ctx)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -38,7 +38,7 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,27 +54,26 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "collaboration_id"),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_name", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_result_configuration.0.output_configuration.0.s3.*", map[string]string{
-						"bucket":        rName,
-						"result_format": TEST_RESULT_FORMAT,
-						"key_prefix":    TEST_KEY_PREFIX,
+						names.AttrBucket: rName,
+						"result_format":  TEST_RESULT_FORMAT,
+						"key_prefix":     TEST_KEY_PREFIX,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "member_abilities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "member_abilities.0", "CAN_RECEIVE_RESULTS"),
-					resource.TestCheckResourceAttr(resourceName, "payment_configuration.0.query_compute.0.is_responsible", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "payment_configuration.0.query_compute.0.is_responsible", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", TEST_TAG),
 					acctest.MatchResourceAttrAccountID(resourceName, "collaboration_creator_account_id"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "default_result_configuration.0.role_arn", "iam", regexache.MustCompile("role/"+rName)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "default_result_configuration.0.role_arn", "iam", regexache.MustCompile("role/"+rName)),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "collaboration_arn", "cleanrooms", "collaboration"),
 				),
 			},
 			{
-				Config:                  testAccMembershipConfig_basic(rName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				Config:            testAccMembershipConfig_basic(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -94,7 +93,7 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,12 +104,8 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 				Config: testAccMembershipConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMembershipExists(ctx, resourceName, &membership),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceMembership(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceMembership, resourceName),
 				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -133,7 +128,7 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -152,9 +147,9 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 					testAccCheckMembershipIsTheSame(resourceName, &membership),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", "ENABLED"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_result_configuration.0.output_configuration.0.s3.*", map[string]string{
-						"bucket":        rNameSecond,
-						"result_format": "PARQUET",
-						"key_prefix":    "updated-prefix",
+						names.AttrBucket: rNameSecond,
+						"result_format":  "PARQUET",
+						"key_prefix":     "updated-prefix",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", "updated tag"),
 				),
@@ -178,7 +173,7 @@ func TestAccCleanRoomsMembership_defaultOutputConfigurationWithEmptyAdditionalPa
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -207,7 +202,7 @@ func TestAccCleanRoomsMembership_withoutDefaultOutputConfiguration(t *testing.T)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -236,7 +231,7 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -251,8 +246,8 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMembershipExists(ctx, resourceName, &membership),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_result_configuration.0.output_configuration.0.s3.*", map[string]string{
-						"bucket":        rName,
-						"result_format": TEST_RESULT_FORMAT,
+						names.AttrBucket: rName,
+						"result_format":  TEST_RESULT_FORMAT,
 					}),
 				),
 			},
