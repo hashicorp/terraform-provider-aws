@@ -4,11 +4,9 @@
 package batch
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -32,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -541,27 +538,4 @@ type jobStateTimeLimitActionModel struct {
 	MaxTimeSeconds types.Int64                                                 `tfsdk:"max_time_seconds"`
 	Reason         types.String                                                `tfsdk:"reason"`
 	State          fwtypes.StringEnum[awstypes.JobStateTimeLimitActionsState]  `tfsdk:"state"`
-}
-
-func expandComputeEnvironments(ctx context.Context, tfList types.List) []awstypes.ComputeEnvironmentOrder {
-	var apiObjects []awstypes.ComputeEnvironmentOrder
-
-	for i, env := range fwflex.ExpandFrameworkStringList(ctx, tfList) {
-		apiObjects = append(apiObjects, awstypes.ComputeEnvironmentOrder{
-			ComputeEnvironment: env,
-			Order:              aws.Int32(int32(i)),
-		})
-	}
-
-	return apiObjects
-}
-
-func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.ComputeEnvironmentOrder) types.List {
-	slices.SortFunc(apiObjects, func(a, b awstypes.ComputeEnvironmentOrder) int {
-		return cmp.Compare(aws.ToInt32(a.Order), aws.ToInt32(b.Order))
-	})
-
-	return fwflex.FlattenFrameworkStringListLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {
-		return v.ComputeEnvironment
-	}))
 }

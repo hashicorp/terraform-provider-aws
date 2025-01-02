@@ -15,7 +15,6 @@ import (
 )
 
 func TestAccBatchJobQueue_migrateFromComputeEnvironments(t *testing.T) {
-
 	ctx := acctest.Context(t)
 	var jobQueue1 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
