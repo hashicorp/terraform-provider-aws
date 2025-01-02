@@ -39,6 +39,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_glue_catalog_table",
 		},
 		{
+			Factory:  DataSourceCatalogTables,
+			TypeName: "aws_glue_catalog_tables",
+		},
+		{
 			Factory:  DataSourceConnection,
 			TypeName: "aws_glue_connection",
 		},
