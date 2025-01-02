@@ -51,7 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `compute_configuration` - (Optional) The compute configuration of the compute fleet. This is only required if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`.
+* `compute_configuration` - (Optional) The compute configuration of the compute fleet. This is only required if `compute_type` is set to `ATTRIBUTE_BASED_COMPUTE`.
 * `fleet_service_role` - (Optional) The service role associated with the compute fleet.
 * `image_id` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
 * `overflow_behavior` - (Optional) Overflow behavior for compute fleet. Valid values: `ON_DEMAND`, `QUEUE`.
