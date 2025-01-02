@@ -27,7 +27,7 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,10 +35,10 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 				Config: testAccObservabilityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ObservabilityConfigurationStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ObservabilityConfigurationStatusActive)),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,10 +65,10 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 				Config: testAccObservabilityConfigurationConfig_traceConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ObservabilityConfigurationStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ObservabilityConfigurationStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, "trace_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor", "AWSXRAY"),
 				),
@@ -89,7 +89,7 @@ func TestAccAppRunnerObservabilityConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,51 +100,6 @@ func TestAccAppRunnerObservabilityConfiguration_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceObservabilityConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_apprunner_observability_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccObservabilityConfigurationConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccObservabilityConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccObservabilityConfigurationConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -212,29 +167,4 @@ resource "aws_apprunner_observability_configuration" "test" {
   }
 }
 `, rName)
-}
-
-func testAccObservabilityConfigurationConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_apprunner_observability_configuration" "test" {
-  observability_configuration_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccObservabilityConfigurationConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_apprunner_observability_configuration" "test" {
-  observability_configuration_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

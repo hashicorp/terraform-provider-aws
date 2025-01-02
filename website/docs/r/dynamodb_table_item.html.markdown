@@ -48,7 +48,7 @@ resource "aws_dynamodb_table" "example" {
 
 ~> **Note:** Names included in `item` are represented internally with everything but letters removed. There is the possibility of collisions if two names, once filtered, are the same. For example, the names `your-name-here` and `yournamehere` will overlap and cause an error.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `hash_key` - (Required) Hash key to use for lookups and identification of the item
 * `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute. Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.

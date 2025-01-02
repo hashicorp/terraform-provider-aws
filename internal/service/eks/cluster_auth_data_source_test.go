@@ -20,13 +20,13 @@ func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterAuthDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceResourceName, names.AttrName, "foobar"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
 					testAccCheckClusterAuthToken(dataSourceResourceName),
 				),
@@ -46,7 +46,7 @@ func testAccCheckClusterAuthToken(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		name := rs.Primary.Attributes["name"]
+		name := rs.Primary.Attributes[names.AttrName]
 		tok := rs.Primary.Attributes["token"]
 		verifier := tfeks.NewVerifier(name)
 		identity, err := verifier.Verify(tok)

@@ -6,6 +6,8 @@ package docdb
 import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidIdentifier(t *testing.T) {
@@ -18,7 +20,7 @@ func TestValidIdentifier(t *testing.T) {
 		strings.Repeat("w", 63),
 	}
 	for _, v := range validNames {
-		_, errors := validIdentifier(v, "name")
+		_, errors := validIdentifier(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid DocumentDB Identifier: %q", v, errors)
 		}
@@ -36,7 +38,7 @@ func TestValidIdentifier(t *testing.T) {
 		strings.Repeat("W", 64),
 	}
 	for _, v := range invalidNames {
-		_, errors := validIdentifier(v, "name")
+		_, errors := validIdentifier(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid DocumentDB Identifier", v)
 		}

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecs_service: Add `availability_zone_rebalancing` attribute
+```
+
+```release-note:enhancement
+data-source/aws_ecs_service: Add `availability_zone_rebalancing` attribute
+```

@@ -8,17 +8,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_availability_zone")
-func DataSourceAvailabilityZone() *schema.Resource {
+// @SDKDataSource("aws_availability_zone", name="Availability Zone")
+func dataSourceAvailabilityZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAvailabilityZoneRead,
 
@@ -31,12 +32,12 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"group_name": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -61,11 +62,11 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -85,7 +86,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 
 func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeAvailabilityZonesInput{}
 
@@ -94,21 +95,21 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("zone_id"); ok {
-		input.ZoneIds = aws.StringSlice([]string{v.(string)})
+		input.ZoneIds = []string{v.(string)}
 	}
 
-	if v, ok := d.GetOk("name"); ok {
-		input.ZoneNames = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrName); ok {
+		input.ZoneNames = []string{v.(string)}
 	}
 
-	input.Filters = BuildAttributeFilterList(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
-			"state": d.Get("state").(string),
+			names.AttrState: d.Get(names.AttrState).(string),
 		},
 	)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -116,7 +117,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.Filters = nil
 	}
 
-	az, err := FindAvailabilityZone(ctx, conn, input)
+	az, err := findAvailabilityZone(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Availability Zone", err))
@@ -126,20 +127,20 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	// the AZ suffix alone, without the region name.
 	// This can be used e.g. to create lookup tables by AZ letter that
 	// work regardless of region.
-	nameSuffix := aws.StringValue(az.ZoneName)[len(aws.StringValue(az.RegionName)):]
+	nameSuffix := aws.ToString(az.ZoneName)[len(aws.ToString(az.RegionName)):]
 	// For Local and Wavelength zones, remove any leading "-".
 	nameSuffix = strings.TrimLeft(nameSuffix, "-")
 
-	d.SetId(aws.StringValue(az.ZoneName))
-	d.Set("group_name", az.GroupName)
-	d.Set("name", az.ZoneName)
+	d.SetId(aws.ToString(az.ZoneName))
+	d.Set(names.AttrGroupName, az.GroupName)
+	d.Set(names.AttrName, az.ZoneName)
 	d.Set("name_suffix", nameSuffix)
 	d.Set("network_border_group", az.NetworkBorderGroup)
 	d.Set("opt_in_status", az.OptInStatus)
 	d.Set("parent_zone_id", az.ParentZoneId)
 	d.Set("parent_zone_name", az.ParentZoneName)
-	d.Set("region", az.RegionName)
-	d.Set("state", az.State)
+	d.Set(names.AttrRegion, az.RegionName)
+	d.Set(names.AttrState, az.State)
 	d.Set("zone_id", az.ZoneId)
 	d.Set("zone_type", az.ZoneType)
 

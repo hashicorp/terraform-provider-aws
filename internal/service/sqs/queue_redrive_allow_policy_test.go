@@ -24,7 +24,7 @@ func TestAccSQSQueueRedriveAllowPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -60,7 +60,7 @@ func TestAccSQSQueueRedriveAllowPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccSQSQueueRedriveAllowPolicy_Disappears_queue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +109,7 @@ func TestAccSQSQueueRedriveAllowPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,6 +130,23 @@ func TestAccSQSQueueRedriveAllowPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSQSQueueRedriveAllowPolicy_byQueue(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueRedriveAllowPolicyConfig_byQueue(rName),
 			},
 		},
 	})
@@ -180,4 +197,24 @@ resource "aws_sqs_queue_redrive_allow_policy" "test" {
   })
 }
 `, rName)
+}
+
+func testAccQueueRedriveAllowPolicyConfig_byQueue(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+}
+
+resource "aws_sqs_queue" "test_src" {
+  name = "%[1]s_src"
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.test.arn
+    maxReceiveCount     = 4
+  })
+}
+
+resource "aws_sqs_queue_redrive_allow_policy" "test" {
+  queue_url            = aws_sqs_queue.test.id
+  redrive_allow_policy = "{\"redrivePermission\": \"byQueue\", \"sourceQueueArns\": [\"${aws_sqs_queue.test_src.arn}\"]}"
+}`, rName)
 }

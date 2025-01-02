@@ -7,19 +7,17 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
-	SDKVersion         string
-	GoV1Package        string
-	GoV1ClientTypeName string
-	GoV2Package        string
-	ProviderNameUpper  string
+	GoPackage         string
+	ProviderNameUpper string
 }
 
 type TemplateData struct {
@@ -35,7 +33,6 @@ func main() {
 	g.Infof("Generating internal/conns/%s", filename)
 
 	data, err := data.ReadAllServiceData()
-
 	if err != nil {
 		g.Fatalf("error reading service data: %s", err)
 	}
@@ -47,38 +44,29 @@ func main() {
 			continue
 		}
 
-		if l.NotImplemented() {
+		if l.NotImplemented() && !l.EndpointOnly() {
+			continue
+		}
+
+		if l.IsClientSDKV1() {
 			continue
 		}
 
 		s := ServiceDatum{
 			ProviderNameUpper: l.ProviderNameUpper(),
-			GoV1Package:       l.GoV1Package(),
-			GoV2Package:       l.GoV2Package(),
-		}
-
-		if l.ClientSDKV1() != "" {
-			s.SDKVersion = "1"
-			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
-		}
-		if l.ClientSDKV2() != "" {
-			if l.ClientSDKV1() != "" {
-				s.SDKVersion = "1,2"
-			} else {
-				s.SDKVersion = "2"
-			}
+			GoPackage:         l.GoPackageName(),
 		}
 
 		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("awsclient", tmpl, td); err != nil {
+	if err := d.BufferTemplate("awsclient", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -87,5 +75,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

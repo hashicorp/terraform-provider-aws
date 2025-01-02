@@ -1,0 +1,41 @@
+rules:
+  - id: error-check-service-id
+    languages: [go]
+    message: Use the corresponding `names.<service>ServiceID` instead of the endpoint ID
+    patterns:
+      - pattern-either:
+          - pattern: |
+              acctest.ErrorCheck($T, $SVCV1.EndpointsID)
+          - patterns:
+              - pattern: |
+                  acctest.ErrorCheck($T, names.$ENDPOINTID)
+              - metavariable-regex:
+                  metavariable: $ENDPOINTID
+                  regex: ^\w+EndpointID$
+    severity: ERROR
+
+  - id: register-error-check-service-id
+    languages: [go]
+    message: Use the corresponding `names.<service>ServiceID` instead of the endpoint ID
+    patterns:
+      - pattern-either:
+          - pattern: |
+              acctest.RegisterServiceErrorCheckFunc($SVCV1.EndpointsID, ...)
+          - patterns:
+              - pattern: |
+                  acctest.RegisterServiceErrorCheckFunc(names.$ENDPOINTID, ...)
+              - metavariable-regex:
+                  metavariable: $ENDPOINTID
+                  regex: ^\w+EndpointID$
+    severity: ERROR
+
+  - id: partition-has-service-endpoint-id
+    languages: [go]
+    message: Use the corresponding `names.<service>EndpointID` instead of the service ID
+    patterns:
+      - pattern: |
+          acctest.PreCheckPartitionHasService($T, names.$SERVICEID)
+      - metavariable-regex:
+          metavariable: $SERVICEID
+          regex: ^\w+ServiceID$
+    severity: ERROR

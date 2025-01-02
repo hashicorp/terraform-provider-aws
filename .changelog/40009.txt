@@ -1,0 +1,11 @@
+```release-note:new-ephemeral
+aws_secretsmanager_secret_version
+```
+
+```release-note:new-ephemeral
+aws_kms_secrets
+```
+
+```release-note:note
+New [ephemeral resources](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral) `aws_kms_secrets`, `aws_lambda_invocation`, and `aws_secretsmanager_secret_version` now support [ephemeral values](https://developer.hashicorp.com/terraform/language/v1.10.x/values/variables#exclude-values-from-state).
+```

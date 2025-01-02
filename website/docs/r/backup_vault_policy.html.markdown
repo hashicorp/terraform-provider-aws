@@ -13,6 +13,8 @@ Provides an AWS Backup vault policy resource.
 ## Example Usage
 
 ```terraform
+data "aws_caller_identity" "current" {}
+
 resource "aws_backup_vault" "example" {
   name = "example"
 }
@@ -23,7 +25,7 @@ data "aws_iam_policy_document" "example" {
 
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = [data.aws_caller_identity.current.account_id]
     }
 
     actions = [

@@ -26,7 +26,7 @@ resource "aws_quicksight_account_subscription" "subscription" {
 The following arguments are required:
 
 * `account_name` - (Required) Name of your Amazon QuickSight account. This name is unique over all of AWS, and it appears only when users sign in.
-* `authentication_method` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `IAM_AND_QUICKSIGHT`, `IAM_ONLY`, and `ACTIVE_DIRECTORY`.
+* `authentication_method` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `IAM_AND_QUICKSIGHT`, `IAM_ONLY`, `IAM_IDENTITY_CENTER`, and `ACTIVE_DIRECTORY`.
 * `edition` - (Required) Edition of Amazon QuickSight that you want your account to have. Currently, you can choose from `STANDARD`, `ENTERPRISE` or `ENTERPRISE_AND_Q`.
 * `notification_email` - (Required) Email address that you want Amazon QuickSight to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.
 
@@ -40,6 +40,7 @@ The following arguments are optional:
 * `directory_id` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
 * `email_address` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `first_name` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `iam_identity_center_instance_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM Identity Center instance.
 * `last_name` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `reader_group` - (Optional) Reader group associated with your Active Direcrtory.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.

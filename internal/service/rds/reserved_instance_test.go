@@ -10,45 +10,45 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSReservedInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := "RUN_RDS_RESERVED_INSTANCE_TESTS"
 	vifId := os.Getenv(key)
-	if vifId != "true" {
+	if vifId != acctest.CtTrue {
 		t.Skipf("Environment variable %s is not set to true", key)
 	}
 
-	var reservation rds.ReservedDBInstance
+	var reservation types.ReservedDBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_reserved_instance.test"
 	dataSourceName := "data.aws_rds_reserved_instance_offering.test"
-	instanceCount := "1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReservedInstanceConfig_basic(rName, instanceCount),
+				Config: testAccReservedInstanceConfig_basic(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`ri:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`ri:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "currency_code", resourceName, "currency_code"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "duration", resourceName, "duration"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
-					resource.TestCheckResourceAttr(resourceName, "instance_count", instanceCount),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "lease_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "offering_id"),
@@ -56,8 +56,8 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_description", resourceName, "product_description"),
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_id", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttrSet(resourceName, "usage_price"),
 				),
 			},
@@ -65,29 +65,22 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 	})
 }
 
-func testAccReservedInstanceExists(ctx context.Context, n string, reservation *rds.ReservedDBInstance) resource.TestCheckFunc {
+func testAccReservedInstanceExists(ctx context.Context, n string, v *types.ReservedDBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Reserved Instance reservation id is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		resp, err := tfrds.FindReservedDBInstanceByID(ctx, conn, rs.Primary.ID)
+		output, err := tfrds.FindReservedDBInstanceByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("RDS Reserved Instance %q does not exist", rs.Primary.ID)
-		}
-
-		*reservation = *resp
+		*v = *output
 
 		return nil
 	}

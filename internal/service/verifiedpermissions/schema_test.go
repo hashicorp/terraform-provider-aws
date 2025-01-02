@@ -35,7 +35,7 @@ func TestAccVerifiedPermissionsSchema_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,9 +47,10 @@ func TestAccVerifiedPermissionsSchema_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"definition.value"}, // JSON is semantically correct but can be set in state in a different order
 			},
 		},
 	})
@@ -70,7 +71,7 @@ func TestAccVerifiedPermissionsSchema_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func TestAccVerifiedPermissionsSchema_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{

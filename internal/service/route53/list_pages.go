@@ -6,20 +6,19 @@ package route53
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
 )
 
 // Custom Route 53 service lister functions using the same format as generated code.
 
-func listTrafficPolicyInstancesPages(ctx context.Context, conn *route53.Route53, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error {
+func listTrafficPolicyInstancesPages(ctx context.Context, conn *route53.Client, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error {
 	for {
-		output, err := conn.ListTrafficPolicyInstancesWithContext(ctx, input)
+		output, err := conn.ListTrafficPolicyInstances(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := !aws.BoolValue(output.IsTruncated)
+		lastPage := !output.IsTruncated
 		if !fn(output, lastPage) || lastPage {
 			break
 		}

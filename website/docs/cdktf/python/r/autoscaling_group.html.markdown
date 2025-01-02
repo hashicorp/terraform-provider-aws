@@ -502,6 +502,7 @@ This resource supports the following arguments:
 - `min_size` - (Required) Minimum size of the Auto Scaling Group.
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 - `availability_zones` - (Optional) A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the `vpc_zone_identifier` attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with `vpc_zone_identifier`.
+- `availability_zone_distribution` (Optional) The instance capacity distribution across Availability Zones. See [Availability Zone Distribution](#availability_zone_distribution) below for more details.
 - `capacity_rebalance` - (Optional) Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 - `context` - (Optional) Reserved.
 - `default_cooldown` - (Optional) Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
@@ -568,6 +569,10 @@ This resource supports the following arguments:
 - `warm_pool` - (Optional) If this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
   to the specified Auto Scaling group. Defined [below](#warm_pool)
 - `force_delete_warm_pool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
+
+### availability_zone_distribution
+
+- `capacity_distribution_strategy` - (Required) The strategy to use for distributing capacity across the Availability Zones. Valid values are `balanced-only` and `balanced-best-effort`. Default is `balanced-best-effort`.
 
 ### launch_template
 
@@ -708,6 +713,7 @@ This configuration block supports the following:
     * ssd - solid state drive
   ```
 
+- `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spot_max_price_percentage_over_lowest_price`
 - `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
@@ -725,7 +731,7 @@ This configuration block supports the following:
   If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 
 - `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-- `spot_max_price_percentage_over_lowest_price` - (Optional) Price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+- `spot_max_price_percentage_over_lowest_price` - (Optional) Price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `max_spot_price_as_percentage_of_optimal_on_demand_price`
 
   If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 
@@ -758,9 +764,12 @@ This configuration block supports the following:
     - `checkpoint_delay` - (Optional) Number of seconds to wait after a checkpoint. Defaults to `3600`.
     - `checkpoint_percentages` - (Optional) List of percentages for each checkpoint. Values must be unique and in ascending order. To replace all instances, the final number must be `100`.
     - `instance_warmup` - (Optional) Number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
+    - `max_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that can be in service and healthy, or pending, to support your workload when an instance refresh is in place, as a percentage of the desired capacity of the Auto Scaling group. Values must be between `100` and `200`, defaults to `100`.
     - `min_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
     - `skip_matching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
     - `auto_rollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launch_template` or `mixed_instances_policy`.
+    - `alarm_specification` - (Optional) Alarm Specification for Instance Refresh.
+        - `alarms` - (Required) List of Cloudwatch alarms. If any of these alarms goes into ALARM state, Instance Refresh is failed.
     - `scale_in_protected_instances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `Refresh`, `Ignore`, and `Wait`. Default is `Ignore`.
     - `standby_instances` - (Optional) Behavior when encountering instances in the `Standby` state in are found. Available behaviors are `Terminate`, `Ignore`, and `Wait`. Default is `Ignore`.
 - `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
@@ -913,9 +922,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.autoscaling_group import AutoscalingGroup
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        AutoscalingGroup.generate_config_for_import(self, "web", "web-asg")
 ```
 
 Using `terraform import`, import Auto Scaling Groups using the `name`. For example:
@@ -924,4 +939,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-7ef5c88a0b3150992e9093055b45e7bdeeb666a8a46ee3371462b8b1b84aaf9d -->
+<!-- cache-key: cdktf-0.20.8 input-21f5299d25ae04839c346d7d0a5013fcf19c4d24a82449631f3586dda584cbde -->

@@ -506,6 +506,9 @@ The `rate_based_statement` block supports the following arguments:
 
 * `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `CONSTANT`, `CUSTOM_KEYS`, `FORWARDED_IP` or `IP`. Default: `IP`.
 * `custom_key` - (Optional) Aggregate the request counts using one or more web request components as the aggregate keys. See [`custom_key`](#custom_key-block) below for details.
+* `evaluation_window_sec` - (Optional) The amount of time, in seconds, that AWS WAF should include in its request counts, looking back from the current time. Valid values are `60`, `120`, `300`, and `600`. Defaults to `300` (5 minutes).
+
+  **NOTE:** This setting doesn't determine how often AWS WAF checks the rate, but how far back it looks each time it checks. AWS WAF checks the rate about every 10 seconds.
 * `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
 * `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details. If `aggregate_key_type` is set to `CONSTANT`, this block is required.
@@ -555,6 +558,7 @@ An SQL injection match condition identifies the part of web requests, such as th
 The `sqli_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `sensitivity_level` - (Optional) Sensitivity that you want AWS WAF to use to inspect for SQL injection attacks. Valid values include: `LOW`, `HIGH`.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -576,12 +580,13 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
+* `header_order` - (Optional) Inspect the request headers. See [Header Order](#header-order) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
@@ -610,6 +615,14 @@ The `ip_set_forwarded_ip_config` block supports the following arguments:
 * `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
 * `header_name` - (Required) - The name of the HTTP header to use for the IP address.
 * `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
+
+### Header Order
+
+Inspect a string containing the list of the request's header names, ordered as they appear in the web request that AWS WAF receives for inspection. AWS WAF generates the string and then uses that as the field to match component in its inspection. AWS WAF separates the header names in the string using colons and no added spaces, for example `host:user-agent:accept:authorization:referer`.
+
+The `header_order` block supports the following arguments:
+
+* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
 ### Headers
 

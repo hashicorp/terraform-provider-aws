@@ -7,24 +7,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECSClusterCapacityProviders_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster ecs.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,11 +34,11 @@ func TestAccECSClusterCapacityProviders_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capacity_providers.*", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "1",
-						"weight":            "100",
+						names.AttrWeight:    "100",
 						"capacity_provider": "FARGATE",
 					}),
 				),
@@ -54,13 +54,13 @@ func TestAccECSClusterCapacityProviders_basic(t *testing.T) {
 
 func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster ecs.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceClusterCapacityProviders(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,13 +78,13 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 
 func TestAccECSClusterCapacityProviders_defaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster ecs.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccECSClusterCapacityProviders_defaults(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
 				),
 			},
@@ -114,12 +114,12 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 	//
 	// If we were configuring capacity providers directly on the cluster, the
 	// test would fail with a timeout error.
-	var cluster ecs.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -128,7 +128,7 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
 					func(s *terraform.State) error {
-						if got, want := int(aws.Int64Value(cluster.RegisteredContainerInstancesCount)), 2; got != want {
+						if got, want := int(cluster.RegisteredContainerInstancesCount), 2; got != want {
 							return fmt.Errorf("RegisteredContainerInstancesCount = %v, want %v", got, want)
 						}
 
@@ -145,13 +145,13 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 
 func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster ecs.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -213,13 +213,13 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 
 func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster ecs.Cluster
+	var cluster awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,7 +230,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "1",
-						"weight":            "100",
+						names.AttrWeight:    "100",
 						"capacity_provider": "FARGATE",
 					}),
 				),
@@ -247,12 +247,12 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "1",
-						"weight":            "50",
+						names.AttrWeight:    "50",
 						"capacity_provider": "FARGATE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "",
-						"weight":            "50",
+						names.AttrWeight:    "50",
 						"capacity_provider": "FARGATE_SPOT",
 					}),
 				),
@@ -269,12 +269,12 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "2",
-						"weight":            "25",
+						names.AttrWeight:    "25",
 						"capacity_provider": "FARGATE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "",
-						"weight":            "75",
+						names.AttrWeight:    "75",
 						"capacity_provider": "FARGATE_SPOT",
 					}),
 				),

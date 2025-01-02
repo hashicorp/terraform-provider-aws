@@ -24,10 +24,12 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 	var r types.ListGroupResourcesItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
+	groupResourceName := "aws_resourcegroups_group.test"
+	hostResourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,9 +37,53 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &r),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", "AWS::EC2::Host"),
-					resource.TestCheckResourceAttrSet(resourceName, "group_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Host"),
+					resource.TestCheckResourceAttrPair(resourceName, "group_arn", groupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, hostResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Verify the change to the id attribute formatting introduced in v5.82.0
+// do not errors in existing configurations
+func TestAccResourceGroupsResource_v5_82_0_upgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r types.ListGroupResourcesItem
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resourcegroups_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
+		CheckDestroy: testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.81.0",
+					},
+				},
+				Config: testAccResourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &r),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccResourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &r),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
 		},
@@ -53,7 +99,7 @@ func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
+			_, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes[names.AttrResourceARN])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -79,7 +125,7 @@ func testAccCheckResourceExists(ctx context.Context, n string, v *types.ListGrou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
 
-		output, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
+		output, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes[names.AttrResourceARN])
 
 		if err != nil {
 			return err

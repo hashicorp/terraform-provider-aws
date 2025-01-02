@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftServerlessResourcePolicy_basic(t *testing.T) {
@@ -28,7 +28,7 @@ func TestAccRedshiftServerlessResourcePolicy_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,7 +36,7 @@ func TestAccRedshiftServerlessResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_snapshot.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_redshiftserverless_snapshot.test", names.AttrARN),
 				),
 			},
 			{
@@ -58,7 +58,7 @@ func TestAccRedshiftServerlessResourcePolicy_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func TestAccRedshiftServerlessResourcePolicy_disappears(t *testing.T) {
 
 func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_resource_policy" {
@@ -110,7 +110,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Redshift Serverless Resource Policy is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 

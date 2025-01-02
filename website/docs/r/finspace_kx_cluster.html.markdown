@@ -78,6 +78,7 @@ The following arguments are required:
     * RDB - Realtime Database. This type of database captures all the data from a ticker plant and stores it in memory until the end of day, after which it writes all of its data to a disk and reloads the HDB. This cluster type requires local storage for temporary storage of data during the savedown process. If you specify this field in your request, you must provide the `savedownStorageConfiguration` parameter.
     * GATEWAY - A gateway cluster allows you to access data across processes in kdb systems. It allows you to create your own routing logic using the initialization scripts and custom code. This type of cluster does not require a  writable local storage.
     * GP - A general purpose cluster allows you to quickly iterate on code during development by granting greater access to system commands and enabling a fast reload of custom code. This cluster type can optionally mount databases including cache and savedown storage. For this cluster type, the node count is fixed at 1. It does not support autoscaling and supports only `SINGLE` AZ mode.
+    * Tickerplant – A tickerplant cluster allows you to subscribe to feed handlers based on IAM permissions. It can publish to RDBs, other Tickerplants, and real-time subscribers (RTS). Tickerplants can persist messages to log, which is readable by any RDB environment. It supports only single-node that is only one kdb process.
 * `vpc_configuration` - (Required) Configuration details about the network where the Privatelink endpoint of the cluster resides. See [vpc_configuration](#vpc_configuration).
 
 The following arguments are optional:
@@ -179,6 +180,8 @@ The vpc_configuration block supports the following arguments:
 * `ip_address_type` - (Required) IP address type for cluster network configuration parameters. The following type is available: IP_V4 - IP address version 4.
 
 ### scaling_group_configuration
+
+The scaling_group_configuration block supports the following arguments:
 
 * `scaling_group_name` - (Required) A unique identifier for the kdb scaling group.
 * `memory_reservation` - (Required) A reservation of the minimum amount of memory that should be available on the scaling group for a kdb cluster to be successfully placed in a scaling group.

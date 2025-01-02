@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
@@ -38,11 +39,11 @@ func (d *dataSourceFramework) Metadata(_ context.Context, request datasource.Met
 func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"framework_type": schema.StringAttribute{
@@ -51,18 +52,18 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 					enum.FrameworkValidate[awstypes.FrameworkType](),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"control_sets": schema.SetNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"id": framework.IDAttribute(),
-						"name": schema.StringAttribute{
+						names.AttrID: framework.IDAttribute(),
+						names.AttrName: schema.StringAttribute{
 							Computed: true,
 						},
 					},
@@ -70,7 +71,7 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 						"controls": schema.SetNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
+									names.AttrID: schema.StringAttribute{
 										Computed: true,
 									},
 								},
@@ -142,7 +143,7 @@ type dataSourceFrameworkData struct {
 	FrameworkType  types.String `tfsdk:"framework_type"`
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
-	Tags           types.Map    `tfsdk:"tags"`
+	Tags           tftags.Map   `tfsdk:"tags"`
 }
 
 // refreshFromOutput writes state data from an AWS response object
@@ -164,9 +165,9 @@ func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *
 	rd.FrameworkType = flex.StringValueToFramework(ctx, out.Type)
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
-	ignoreTagsConfig := meta.IgnoreTagsConfig
+	ignoreTagsConfig := meta.IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	return diags
 }

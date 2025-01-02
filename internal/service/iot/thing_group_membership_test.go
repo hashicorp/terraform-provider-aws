@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTThingGroupMembership_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccIoTThingGroupMembership_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +56,7 @@ func TestAccIoTThingGroupMembership_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +81,7 @@ func TestAccIoTThingGroupMembership_disappears_Thing(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,7 +106,7 @@ func TestAccIoTThingGroupMembership_disappears_ThingGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccIoTThingGroupMembership_overrideDynamicGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +138,7 @@ func TestAccIoTThingGroupMembership_overrideDynamicGroup(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_overrideDynamic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "override_dynamic_group", "true"),
+					resource.TestCheckResourceAttr(resourceName, "override_dynamic_group", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "thing_name", rName2),
 				),
@@ -160,38 +160,24 @@ func testAccCheckThingGroupMembershipExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IoT Thing Group Membership ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		thingGroupName, thingName, err := tfiot.ThingGroupMembershipParseResourceID(rs.Primary.ID)
+		_, err := tfiot.FindThingGroupMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing_group_name"], rs.Primary.Attributes["thing_name"])
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
-
-		return tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+		return err
 	}
 }
 
 func testAccCheckThingGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing_group_membership" {
 				continue
 			}
 
-			thingGroupName, thingName, err := tfiot.ThingGroupMembershipParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			err = tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+			_, err := tfiot.FindThingGroupMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing_group_name"], rs.Primary.Attributes["thing_name"])
 
 			if tfresource.NotFound(err) {
 				continue

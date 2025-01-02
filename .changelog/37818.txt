@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_kms_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource
+```
+
+```release-note:bug
+resource/aws_kms_external_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource
+```
+
+```release-note:bug
+resource/aws_kms_replica_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource
+```
+
+```release-note:bug
+resource/aws_kms_replica_external_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource
+```

@@ -9,14 +9,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMUserGroupMembership_basic(t *testing.T) {
@@ -29,7 +32,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +120,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 
 func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type == "aws_iam_user_group_membership" {
@@ -125,14 +128,14 @@ func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCh
 					UserName: aws.String(rs.Primary.Attributes["user"]),
 				}
 				foundGroups := 0
-				err := conn.ListGroupsForUserPagesWithContext(ctx, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+				err := tfiam.ListGroupsForUserPages(ctx, conn, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 					if len(page.Groups) > 0 {
 						foundGroups = foundGroups + len(page.Groups)
 					}
 					return !lastPage
 				})
 				if err != nil {
-					if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+					if errs.IsA[*awstypes.NoSuchEntityException](err) {
 						continue
 					}
 					return err
@@ -149,10 +152,10 @@ func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCh
 
 func testAccUserGroupMembershipCheckGroupListForUser(ctx context.Context, userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		// get list of groups for user
-		userGroupList, err := conn.ListGroupsForUserWithContext(ctx, &iam.ListGroupsForUserInput{
+		userGroupList, err := conn.ListGroupsForUser(ctx, &iam.ListGroupsForUserInput{
 			UserName: &userName,
 		})
 		if err != nil {

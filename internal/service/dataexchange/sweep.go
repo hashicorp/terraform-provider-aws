@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dataexchange"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -25,46 +24,40 @@ func RegisterSweepers() {
 func sweepDataSets(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.DataExchangeConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
+	conn := client.DataExchangeClient(ctx)
 	input := &dataexchange.ListDataSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDataSetsPagesWithContext(ctx, input, func(page *dataexchange.ListDataSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := dataexchange.NewListDataSetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DataExchange DataSet sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, dataSet := range page.DataSets {
+		if err != nil {
+			return fmt.Errorf("error listing DataExchange DataSets (%s): %w", region, err)
+		}
+
+		for _, v := range page.DataSets {
 			r := ResourceDataSet()
 			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(dataSet.Id))
+			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing DataExchange DataSet for %s: %w", region, err))
+		return fmt.Errorf("error sweeping DataExchange DataSets (%s): %w", region, err)
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping DataExchange DataSet for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping DataExchange DataSet sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

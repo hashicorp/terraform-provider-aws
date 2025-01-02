@@ -39,15 +39,15 @@ func ResourceSegment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -57,7 +57,7 @@ func ResourceSegment() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func ResourceSegment() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -101,14 +101,14 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &evidently.CreateSegmentInput{
 		Name:    aws.String(name),
 		Pattern: aws.String(d.Get("pattern").(string)),
 		Tags:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -140,13 +140,13 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Evidently Segment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", segment.Arn)
-	d.Set("created_time", aws.ToTime(segment.CreatedTime).Format(time.RFC3339))
-	d.Set("description", segment.Description)
+	d.Set(names.AttrARN, segment.Arn)
+	d.Set(names.AttrCreatedTime, aws.ToTime(segment.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, segment.Description)
 	d.Set("experiment_count", segment.ExperimentCount)
-	d.Set("last_updated_time", aws.ToTime(segment.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(segment.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("launch_count", segment.LaunchCount)
-	d.Set("name", segment.Name)
+	d.Set(names.AttrName, segment.Name)
 	d.Set("pattern", segment.Pattern)
 
 	setTagsOut(ctx, segment.Tags)

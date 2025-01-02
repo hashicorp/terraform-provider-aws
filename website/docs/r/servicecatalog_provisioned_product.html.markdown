@@ -56,24 +56,24 @@ The following arguments are optional:
 * `product_name` - (Optional) Name of the product. You must provide `product_id` or `product_name`, but not both.
 * `provisioning_artifact_id` - (Optional) Identifier of the provisioning artifact. For example, `pa-4abcdjnxjj6ne`. You must provide the `provisioning_artifact_id` or `provisioning_artifact_name`, but not both.
 * `provisioning_artifact_name` - (Optional) Name of the provisioning artifact. You must provide the `provisioning_artifact_id` or `provisioning_artifact_name`, but not both.
-* `provisioning_parameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See details below.
+* `provisioning_parameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See [`provisioning_parameters` Block](#provisioning_parameters-block) for details.
 * `retain_physical_resources` - (Optional) _Only applies to deleting._ Whether to delete the Service Catalog provisioned product but leave the CloudFormation stack, stack set, or the underlying resources of the deleted provisioned product. The default value is `false`.
-* `stack_set_provisioning_preferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See details below.
+* `stack_set_provisioning_preferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See [`stack_set_provisioning_preferences` Block](#stack_set_provisioning_preferences-block) for details.
 * `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### provisioning_parameters
+### `provisioning_parameters` Block
 
-This argument supports the following arguments:
+The `provisioning_parameters` configuration block supports the following arguments:
 
 * `key` - (Required) Parameter key.
 * `use_previous_value` - (Optional) Whether to ignore `value` and keep the previous parameter value. Ignored when initially provisioning a product.
 * `value` - (Optional) Parameter value.
 
-### stack_set_provisioning_preferences
+### `stack_set_provisioning_preferences` Block
 
 All of the `stack_set_provisioning_preferences` are only applicable to a `CFN_STACKSET` provisioned product type.
 
-This argument supports the following arguments:
+The `stack_set_provisioning_preferences` configuration block supports the following arguments:
 
 * `accounts` - (Optional) One or more AWS accounts that will have access to the provisioned product. The AWS accounts specified should be within the list of accounts in the STACKSET constraint. To get the list of accounts in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all accounts from the STACKSET constraint.
 * `failure_tolerance_count` - (Optional) Number of accounts, per region, for which this operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. You must specify either `failure_tolerance_count` or `failure_tolerance_percentage`, but not both. The default value is 0 if no value is specified.

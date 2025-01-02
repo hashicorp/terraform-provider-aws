@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_signer_signing_job")
@@ -29,7 +30,7 @@ func DataSourceSigningJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,11 +96,11 @@ func DataSourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -109,7 +110,7 @@ func DataSourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -119,15 +120,15 @@ func DataSourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -137,11 +138,11 @@ func DataSourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -166,7 +167,7 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job completed at: %s", err)
 	}
 
-	if err := d.Set("created_at", aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreatedAt, aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job created at: %s", err)
 	}
 
@@ -214,15 +215,15 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job signed object: %s", err)
 	}
 
-	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
-	if err := d.Set("status", describeSigningJobOutput.Status); err != nil {
+	if err := d.Set(names.AttrStatus, describeSigningJobOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status: %s", err)
 	}
 
-	if err := d.Set("status_reason", describeSigningJobOutput.StatusReason); err != nil {
+	if err := d.Set(names.AttrStatusReason, describeSigningJobOutput.StatusReason); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status reason: %s", err)
 	}
 

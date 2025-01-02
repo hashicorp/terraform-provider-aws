@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/aws/aws-sdk-go/service/sagemaker/sagemakeriface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,24 +19,32 @@ import (
 // listTags lists sagemaker service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &sagemaker.ListTagsInput{
+func listTags(ctx context.Context, conn *sagemaker.Client, identifier string, optFns ...func(*sagemaker.Options)) (tftags.KeyValueTags, error) {
+	input := sagemaker.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
+	var output []awstypes.Tag
 
-	output, err := conn.ListTagsWithContext(ctx, input)
+	pages := sagemaker.NewListTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.Tags {
+			output = append(output, v)
+		}
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists sagemaker service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).SageMakerConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).SageMakerClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -52,11 +60,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns sagemaker service tags.
-func Tags(tags tftags.KeyValueTags) []*sagemaker.Tag {
-	result := make([]*sagemaker.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &sagemaker.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -68,11 +76,11 @@ func Tags(tags tftags.KeyValueTags) []*sagemaker.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from sagemaker service tags.
-func KeyValueTags(ctx context.Context, tags []*sagemaker.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -80,7 +88,7 @@ func KeyValueTags(ctx context.Context, tags []*sagemaker.Tag) tftags.KeyValueTag
 
 // getTagsIn returns sagemaker service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*sagemaker.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -91,7 +99,7 @@ func getTagsIn(ctx context.Context) []*sagemaker.Tag {
 }
 
 // setTagsOut sets sagemaker service tags in Context.
-func setTagsOut(ctx context.Context, tags []*sagemaker.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -100,7 +108,7 @@ func setTagsOut(ctx context.Context, tags []*sagemaker.Tag) {
 // updateTags updates sagemaker service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *sagemaker.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*sagemaker.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -109,12 +117,12 @@ func updateTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifie
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.SageMaker)
 	if len(removedTags) > 0 {
-		input := &sagemaker.DeleteTagsInput{
+		input := sagemaker.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.DeleteTagsWithContext(ctx, input)
+		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +132,12 @@ func updateTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifie
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.SageMaker)
 	if len(updatedTags) > 0 {
-		input := &sagemaker.AddTagsInput{
+		input := sagemaker.AddTagsInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsWithContext(ctx, input)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -142,5 +150,5 @@ func updateTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifie
 // UpdateTags updates sagemaker service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).SageMakerConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).SageMakerClient(ctx), identifier, oldTags, newTags)
 }
