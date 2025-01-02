@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
     const awsS3TablesTableExample = new S3TablesTable(this, "example_2", {
       format: "ICEBERG",
       name: "example-table",
-      namespace: awsS3TablesNamespaceExample,
+      namespace: awsS3TablesNamespaceExample.namespace,
       tableBucketArn: Token.asString(
         awsS3TablesNamespaceExample.tableBucketArn
       ),
