@@ -1,423 +1,462 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
+
 package cleanrooms
 
-//
-//import (
-//	"context"
-//	"errors"
-//	"log"
-//	"time"
-//
-//	"github.com/aws/aws-sdk-go-v2/aws"
-//	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
-//	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-//	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-//	"github.com/hashicorp/terraform-provider-aws/internal/create"
-//	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-//	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-//	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-//	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-//	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-//	"github.com/hashicorp/terraform-provider-aws/names"
-//)
-//
-//// @SDKResource("aws_cleanrooms_membership")
-//// @Tags(identifierAttribute="arn")
-//func ResourceMembership() *schema.Resource {
-//	return &schema.Resource{
-//		CreateWithoutTimeout: resourceMembershipCreate,
-//		ReadWithoutTimeout:   resourceMembershipRead,
-//		UpdateWithoutTimeout: resourceMembershipUpdate,
-//		DeleteWithoutTimeout: resourceMembershipDelete,
-//
-//		Importer: &schema.ResourceImporter{
-//			StateContext: schema.ImportStatePassthroughContext,
-//		},
-//
-//		Timeouts: &schema.ResourceTimeout{
-//			Create: schema.DefaultTimeout(1 * time.Minute),
-//			Update: schema.DefaultTimeout(1 * time.Minute),
-//			Delete: schema.DefaultTimeout(1 * time.Minute),
-//		},
-//
-//		Schema: map[string]*schema.Schema{
-//			names.AttrARN: {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"collaboration_arn": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"collaboration_creator_account_id": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"collaboration_creator_display_name": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"collaboration_id": {
-//				Type:     schema.TypeString,
-//				Required: true,
-//				ForceNew: true,
-//			},
-//			"collaboration_name": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			names.AttrCreateTime: {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"default_result_configuration": {
-//				Type:     schema.TypeList,
-//				Optional: true,
-//				MaxItems: 1,
-//				Elem: &schema.Resource{
-//					Schema: map[string]*schema.Schema{
-//						names.AttrRoleARN: {
-//							Type:         schema.TypeString,
-//							Optional:     true,
-//							ValidateFunc: verify.ValidARN,
-//						},
-//						"output_configuration": {
-//							Type:     schema.TypeList,
-//							Required: true,
-//							MaxItems: 1,
-//							Elem: &schema.Resource{
-//								Schema: map[string]*schema.Schema{
-//									"s3": {
-//										Type:     schema.TypeList,
-//										Required: true,
-//										MaxItems: 1,
-//										Elem: &schema.Resource{
-//											Schema: map[string]*schema.Schema{
-//												names.AttrBucket: {
-//													Type:     schema.TypeString,
-//													Required: true,
-//												},
-//												"result_format": {
-//													Type:     schema.TypeString,
-//													Required: true,
-//												},
-//												"key_prefix": {
-//													Type:     schema.TypeString,
-//													Optional: true,
-//												},
-//											},
-//										},
-//									},
-//								},
-//							},
-//						},
-//					},
-//				},
-//			},
-//			names.AttrID: {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"member_abilities": {
-//				Type:     schema.TypeList,
-//				Computed: true,
-//				Elem:     &schema.Schema{Type: schema.TypeString},
-//			},
-//			"payment_configuration": {
-//				Type:     schema.TypeList,
-//				Computed: true,
-//				Elem: &schema.Resource{
-//					Schema: map[string]*schema.Schema{
-//						"query_compute": {
-//							Type:     schema.TypeList,
-//							Computed: true,
-//							Elem: &schema.Resource{
-//								Schema: map[string]*schema.Schema{
-//									"is_responsible": {
-//										Type:     schema.TypeBool,
-//										Computed: true,
-//									},
-//								},
-//							},
-//						},
-//					},
-//				},
-//			},
-//			names.AttrStatus: {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"query_log_status": {
-//				Type:     schema.TypeString,
-//				Required: true,
-//			},
-//			names.AttrTags:    tftags.TagsSchema(),
-//			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-//			"update_time": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//		},
-//		CustomizeDiff: verify.SetTagsDiff,
-//	}
-//}
-//
-////const (
-////	ResNameMembership = "Membership"
-////)
-//
-//func resourceMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//
-//	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
-//
-//	input := &cleanrooms.CreateMembershipInput{
-//		CollaborationIdentifier: aws.String(d.Get("collaboration_id").(string)),
-//		Tags:                    getTagsIn(ctx),
-//	}
-//
-//	queryLogStatus, err := expandMembershipQueryLogStatus(d.Get("query_log_status").(string))
-//	if err != nil {
-//		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
-//	}
-//	input.QueryLogStatus = queryLogStatus
-//
-//	if v, ok := d.GetOk("default_result_configuration"); ok {
-//		defaultResultConfiguration, err := expandDefaultResultConfiguration(v.([]interface{})[0].(map[string]interface{}))
-//		if err != nil {
-//			return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameMembership, d.Get("collaboration_id").(string), err)
-//		}
-//		input.DefaultResultConfiguration = defaultResultConfiguration
-//	}
-//
-//	out, err := conn.CreateMembership(ctx, input)
-//	if err != nil {
-//		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameMembership, d.Get("collaboration_id").(string), err)
-//	}
-//
-//	if out == nil || out.Membership == nil {
-//		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameMembership, d.Get("collaboration_id").(string), errors.New("empty output"))
-//	}
-//	d.SetId(aws.ToString(out.Membership.Id))
-//
-//	return append(diags, resourceMembershipRead(ctx, d, meta)...)
-//}
-//
-//func resourceMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//
-//	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
-//	out, err := findMembershipByID(ctx, conn, d.Id())
-//
-//	if !d.IsNewResource() && tfresource.NotFound(err) {
-//		log.Printf("[WARN] Clean Rooms Membership (%s) not found, removing from state", d.Id())
-//		d.SetId("")
-//		return diags
-//	}
-//
-//	if err != nil {
-//		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameMembership, d.Id(), err)
-//	}
-//
-//	membership := out.Membership
-//	d.Set(names.AttrARN, membership.Arn)
-//	d.Set("collaboration_arn", membership.CollaborationArn)
-//	d.Set("collaboration_creator_account_id", membership.CollaborationCreatorAccountId)
-//	d.Set("collaboration_creator_display_name", membership.CollaborationCreatorDisplayName)
-//	d.Set("collaboration_id", membership.CollaborationId)
-//	d.Set("collaboration_name", membership.CollaborationName)
-//	d.Set(names.AttrCreateTime, membership.CreateTime.String())
-//	d.Set("member_abilities", flattenMemberAbilities(membership.MemberAbilities))
-//	d.Set("update_time", membership.UpdateTime.String())
-//	d.Set(names.AttrStatus, membership.Status)
-//	d.Set("query_log_status", membership.QueryLogStatus)
-//
-//	if err := d.Set("default_result_configuration", flattenDefaultResultConfiguration(membership.DefaultResultConfiguration)); err != nil {
-//		return sdkdiag.AppendErrorf(diags, "setting default_result_configuration: %s", err)
-//	}
-//
-//	if err := d.Set("payment_configuration", flattenPaymentConfiguration(membership.PaymentConfiguration)); err != nil {
-//		return sdkdiag.AppendErrorf(diags, "setting payment_configuration: %s", err)
-//	}
-//
-//	return diags
-//}
-//
-//func resourceMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
-//
-//	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-//		input := &cleanrooms.UpdateMembershipInput{
-//			MembershipIdentifier: aws.String(d.Id()),
-//		}
-//
-//		if d.HasChanges("query_log_status") {
-//			queryLogStatus, err := expandMembershipQueryLogStatus(d.Get("query_log_status").(string))
-//			if err != nil {
-//				return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameMembership, d.Id(), err)
-//			}
-//			input.QueryLogStatus = queryLogStatus
-//		}
-//
-//		if d.HasChanges("default_result_configuration") {
-//			defaultResultConfiguration, err := expandDefaultResultConfiguration(d.Get("default_result_configuration").([]interface{})[0].(map[string]interface{}))
-//			if err != nil {
-//				return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameMembership, d.Id(), err)
-//			}
-//			input.DefaultResultConfiguration = defaultResultConfiguration
-//		}
-//
-//		_, err := conn.UpdateMembership(ctx, input)
-//		if err != nil {
-//			return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionUpdating, ResNameMembership, d.Id(), err)
-//		}
-//	}
-//
-//	return append(diags, resourceMembershipRead(ctx, d, meta)...)
-//}
-//
-//func resourceMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//
-//	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
-//
-//	log.Printf("[INFO] Deleting CleanRooms Membership %s", d.Id())
-//	_, err := conn.DeleteMembership(ctx, &cleanrooms.DeleteMembershipInput{
-//		MembershipIdentifier: aws.String(d.Id()),
-//	})
-//
-//	if err != nil {
-//		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameMembership, d.Id(), err)
-//	}
-//
-//	return diags
-//}
-//
-//func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetMembershipOutput, error) {
-//	in := &cleanrooms.GetMembershipInput{
-//		MembershipIdentifier: aws.String(id),
-//	}
-//
-//	out, err := conn.GetMembership(ctx, in)
-//
-//	if errs.IsA[*types.ResourceNotFoundException](err) {
-//		return nil, &retry.NotFoundError{
-//			LastError:   err,
-//			LastRequest: in,
-//		}
-//	}
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if out == nil || out.Membership == nil {
-//		return nil, tfresource.NewEmptyResultError(in)
-//	}
-//
-//	return out, nil
-//}
-//
-//func expandMembershipQueryLogStatus(queryLogStatus string) (types.MembershipQueryLogStatus, error) {
-//	switch queryLogStatus {
-//	case "ENABLED":
-//		return types.MembershipQueryLogStatusEnabled, nil
-//	case "DISABLED":
-//		return types.MembershipQueryLogStatusDisabled, nil
-//	default:
-//		return types.MembershipQueryLogStatusDisabled, errors.New("invalid query_log_status - only ENABLED and DISABLED are supported")
-//	}
-//}
-//
-//func expandDefaultResultConfiguration(data map[string]interface{}) (*types.MembershipProtectedQueryResultConfiguration, error) {
-//	defaultResultConfiguration := &types.MembershipProtectedQueryResultConfiguration{}
-//	defaultResultConfiguration.RoleArn = aws.String(data[names.AttrRoleARN].(string))
-//
-//	if aws.ToString(defaultResultConfiguration.RoleArn) == "" {
-//		defaultResultConfiguration.RoleArn = nil
-//	}
-//
-//	outputConfiguration := data["output_configuration"].([]interface{})[0].(map[string]interface{})
-//	for destination, configuration := range outputConfiguration {
-//		configurationMap := configuration.([]interface{})[0].(map[string]interface{})
-//		switch destination {
-//		case "s3":
-//			resultFormat, err := expandResultFormat(configurationMap["result_format"].(string))
-//			if err != nil {
-//				return nil, err
-//			}
-//
-//			defaultResultConfiguration.OutputConfiguration = &types.MembershipProtectedQueryOutputConfigurationMemberS3{
-//				Value: types.ProtectedQueryS3OutputConfiguration{
-//					Bucket:       aws.String(configurationMap[names.AttrBucket].(string)),
-//					ResultFormat: resultFormat,
-//					KeyPrefix:    aws.String(configurationMap["key_prefix"].(string)),
-//				},
-//			}
-//		default:
-//			return nil, errors.New("invalid default_result_configuration - unsupported destination")
-//		}
-//	}
-//
-//	return defaultResultConfiguration, nil
-//}
-//
-//func expandResultFormat(resultFormat string) (types.ResultFormat, error) {
-//	switch resultFormat {
-//	case "CSV":
-//		return types.ResultFormatCsv, nil
-//	case "PARQUET":
-//		return types.ResultFormatParquet, nil
-//	default:
-//		return types.ResultFormatParquet, errors.New("invalid result_format - only CSV and PARQUET are supported")
-//	}
-//}
-//
-//func flattenDefaultResultConfiguration(defaultResultConfiguration *types.MembershipProtectedQueryResultConfiguration) []interface{} {
-//	if defaultResultConfiguration == nil {
-//		return nil
-//	}
-//
-//	m := map[string]interface{}{}
-//
-//	if defaultResultConfiguration.RoleArn != nil {
-//		m[names.AttrRoleARN] = aws.ToString(defaultResultConfiguration.RoleArn)
-//	}
-//
-//	switch v := defaultResultConfiguration.OutputConfiguration.(type) {
-//	case *types.MembershipProtectedQueryOutputConfigurationMemberS3:
-//		outputConfiguration := map[string]interface{}{
-//			"s3": []interface{}{map[string]interface{}{
-//				names.AttrBucket:        v.Value.Bucket,
-//				"result_format": v.Value.ResultFormat,
-//				"key_prefix":    v.Value.KeyPrefix,
-//			}},
-//		}
-//		m["output_configuration"] = []interface{}{outputConfiguration}
-//	default:
-//		return nil
-//	}
-//
-//	return []interface{}{m}
-//}
-//
-//func flattenPaymentConfiguration(paymentConfiguration *types.MembershipPaymentConfiguration) []interface{} {
-//	if paymentConfiguration == nil {
-//		return nil
-//	}
-//
-//	m := map[string]interface{}{}
-//
-//	queryCompute := map[string]interface{}{
-//		"is_responsible": aws.Bool(*paymentConfiguration.QueryCompute.IsResponsible),
-//	}
-//
-//	m["query_compute"] = []interface{}{queryCompute}
-//
-//	return []interface{}{m}
-//}
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	ResNameMembership = "Membership"
+)
+
+// @FrameworkResource("aws_cleanrooms_membership",name="Membership")
+// @Tags(identifierAttribute="arn")
+func newResourceMembership(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceMembership{}
+
+	return r, nil
+}
+
+type resourceMembership struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+}
+
+func (r *resourceMembership) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_cleanrooms_membership"
+}
+
+func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"collaboration_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"collaboration_creator_account_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"collaboration_creator_display_name": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"collaboration_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"collaboration_name": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrCreateTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
+			"member_abilities": schema.ListAttribute{
+				CustomType: fwtypes.ListOfStringType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"query_log_status": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.MembershipQueryLogStatus](),
+				Required:   true,
+			},
+			names.AttrStatus: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"update_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"default_result_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[defaultResultConfiguration](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrRoleARN: schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"output_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[outputConfiguration](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"s3": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[s3ModelData](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrBucket: schema.StringAttribute{
+													Required: true,
+												},
+												"key_prefix": schema.StringAttribute{
+													Optional: true,
+												},
+												"result_format": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"payment_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[paymentConfiguration](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"query_compute": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[queryComputeData](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"is_responsible": schema.BoolAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	response.Schema = s
+}
+
+func (r *resourceMembership) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceMembershipData
+	conn := r.Meta().CleanRoomsClient(ctx)
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input := cleanrooms.CreateMembershipInput{
+		Tags: getTagsIn(ctx),
+	}
+
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := conn.CreateMembership(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CleanRooms, create.ErrActionCreating, ResNameMembership, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &data, fwflex.WithIgnoredFieldNamesAppend("PaymentConfiguration"))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceMembershipData
+	conn := r.Meta().CleanRoomsClient(ctx)
+
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := findMembershipByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CleanRooms, create.ErrActionReading, ResNameMembership, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &data, fwflex.WithIgnoredFieldNamesAppend("PaymentConfiguration"))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.CollaborationIdentifier = fwflex.StringToFramework(ctx, output.Membership.CollaborationId)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourceMembership) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan, state resourceMembershipData
+	conn := r.Meta().CleanRoomsClient(ctx)
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := fwflex.Calculate(ctx, plan, state)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := cleanrooms.UpdateMembershipInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, diff, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		output, err := conn.UpdateMembership(ctx, &input)
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CleanRooms, create.ErrActionUpdating, ResNameMembership, state.ID.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output.Membership, &plan, fwflex.WithIgnoredFieldNamesAppend("PaymentConfiguration"))...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceMembership) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourceMembershipData
+	conn := r.Meta().CleanRoomsClient(ctx)
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "deleting CleanRooms Membership", map[string]interface{}{
+		names.AttrID: data.ID.ValueString(),
+	})
+
+	_, err := conn.DeleteMembership(ctx, &cleanrooms.DeleteMembershipInput{
+		MembershipIdentifier: data.ID.ValueStringPointer(),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CleanRooms, create.ErrActionDeleting, ResNameMembership, data.ID.String(), err),
+			err.Error(),
+		)
+	}
+}
+
+func (r *resourceMembership) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+type resourceMembershipData struct {
+	ARN                             types.String                                                `tfsdk:"arn"`
+	CollaborationARN                types.String                                                `tfsdk:"collaboration_arn"`
+	CollaborationCreatorAccountID   types.String                                                `tfsdk:"collaboration_creator_account_id"`
+	CollaborationCreatorDisplayName types.String                                                `tfsdk:"collaboration_creator_display_name"`
+	CollaborationIdentifier         types.String                                                `tfsdk:"collaboration_id"`
+	CollaborationName               types.String                                                `tfsdk:"collaboration_name"`
+	CreateTime                      timetypes.RFC3339                                           `tfsdk:"create_time"`
+	DefaultResultConfiguration      fwtypes.ListNestedObjectValueOf[defaultResultConfiguration] `tfsdk:"default_result_configuration"`
+	ID                              types.String                                                `tfsdk:"id"`
+	MemberAbilities                 fwtypes.ListValueOf[types.String]                           `tfsdk:"member_abilities"`
+	PaymentConfiguration            fwtypes.ListNestedObjectValueOf[paymentConfiguration]       `tfsdk:"payment_configuration"`
+	QueryLogStatus                  fwtypes.StringEnum[awstypes.MembershipQueryLogStatus]       `tfsdk:"query_log_status"`
+	Status                          types.String                                                `tfsdk:"status"`
+	Tags                            tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll                         tftags.Map                                                  `tfsdk:"tags_all"`
+	UpdateTime                      timetypes.RFC3339                                           `tfsdk:"update_time"`
+}
+
+type defaultResultConfiguration struct {
+	OutputConfiguration fwtypes.ListNestedObjectValueOf[outputConfiguration] `tfsdk:"output_configuration"`
+	RoleARN             fwtypes.ARN                                          `tfsdk:"role_arn"`
+}
+
+type paymentConfiguration struct {
+	QueryCompute fwtypes.ListNestedObjectValueOf[queryComputeData] `tfsdk:"query_compute"`
+}
+
+type queryComputeData struct {
+	IsResponsible types.Bool `tfsdk:"is_responsible"`
+}
+
+type s3ModelData struct {
+	Bucket       types.String `tfsdk:"bucket"`
+	KeyPrefix    types.String `tfsdk:"key_prefix"`
+	ResultFormat types.String `tfsdk:"result_format"`
+}
+
+var (
+	_ fwflex.Expander  = outputConfiguration{}
+	_ fwflex.Flattener = (*outputConfiguration)(nil)
+)
+
+type outputConfiguration struct {
+	S3 fwtypes.ListNestedObjectValueOf[s3ModelData] `tfsdk:"s3"`
+}
+
+func (m outputConfiguration) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.S3.IsNull():
+		s3Data, d := m.S3.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var s awstypes.MembershipProtectedQueryOutputConfigurationMemberS3
+		diags.Append(fwflex.Expand(ctx, s3Data, &s.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &s, diags
+	}
+
+	return nil, diags
+}
+
+func (m *outputConfiguration) Flatten(ctx context.Context, input any) (diags diag.Diagnostics) {
+	switch t := input.(type) {
+	case awstypes.MembershipProtectedQueryOutputConfigurationMemberS3:
+		var model s3ModelData
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+	}
+
+	return diags
+}
+
+func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetMembershipOutput, error) {
+	in := &cleanrooms.GetMembershipInput{
+		MembershipIdentifier: aws.String(id),
+	}
+
+	out, err := conn.GetMembership(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Membership == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
