@@ -56,6 +56,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Fleet.
 * `base_capacity` - Number of machines allocated to the ﬂeet.
+* `compute_configuration` - The compute configuration of the compute fleet.
+    * `disk` - The amount of disk space of the instance type included in your fleet.
+    * `machine_type` - The machine type of the instance type included in your fleet.
+    * `memory` - The amount of memory of the instance type included in your fleet.
+    * `vcpu` - The number of vCPUs of the instance type included in your fleet.
 * `compute_type` - Compute resources the compute fleet uses.
 * `created` - Creation time of the fleet.
 * `environment_type` - Environment type of the compute fleet.
