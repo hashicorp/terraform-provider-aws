@@ -63,6 +63,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2016"),
+					resource.TestCheckResourceAttr(resourceName, "server_sdk_version", "5.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
@@ -83,6 +84,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2016"),
+					resource.TestCheckResourceAttr(resourceName, "server_sdk_version", "5.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
@@ -278,8 +280,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccBuildConfig_basic(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name             = %[1]q
-  operating_system = "WINDOWS_2016"
+  name               = %[1]q
+  operating_system   = "WINDOWS_2016"
+  server_sdk_version = "5.0.0"
 
   storage_location {
     bucket   = %[2]q
@@ -293,8 +296,10 @@ resource "aws_gamelift_build" "test" {
 func testAccBuildConfig_basicTags1(buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name             = %[1]q
-  operating_system = "WINDOWS_2016"
+  name               = %[1]q
+  operating_system   = "WINDOWS_2016"
+  server_sdk_version = "5.0.0"
+
 
   storage_location {
     bucket   = %[2]q
@@ -312,8 +317,9 @@ resource "aws_gamelift_build" "test" {
 func testAccBuildConfig_basicTags2(buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name             = %[1]q
-  operating_system = "WINDOWS_2016"
+  name               = %[1]q
+  operating_system   = "WINDOWS_2016"
+  server_sdk_version = "5.0.0"
 
   storage_location {
     bucket   = %[2]q

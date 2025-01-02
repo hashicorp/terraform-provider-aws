@@ -43,6 +43,7 @@ This resource supports the following arguments:
 
 * `name` - (Required) Name of the build
 * `operating_system` - (Required) Operating system that the game server binaries are built to run on. Valid values: `WINDOWS_2012`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `WINDOWS_2016`, `AMAZON_LINUX_2023`.
+* `server_sdk_version` - (Optional) The server SDK version you used when integrating your game server build with Amazon GameLift. Format: (`X.X.X`). By default Amazon GameLift sets this value to `4.0.2`.
 * `storage_location` - (Required) Information indicating where your game build files are stored. See below.
 * `version` - (Optional) Version that is associated with this build.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

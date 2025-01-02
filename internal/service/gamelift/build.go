@@ -8,6 +8,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
@@ -53,6 +54,18 @@ func resourceBuild() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+			},
+			"server_sdk_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(5, 128),
+					validation.StringMatch(
+						regexache.MustCompile(`^\d+\.\d+\.\d+$`),
+						"must be in the format x.x.x (e.g. 5.0.0)",
+					),
+				),
 			},
 			"storage_location": {
 				Type:     schema.TypeList,
@@ -104,10 +117,11 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := d.Get(names.AttrName).(string)
 	input := &gamelift.CreateBuildInput{
-		Name:            aws.String(name),
-		OperatingSystem: awstypes.OperatingSystem(d.Get("operating_system").(string)),
-		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
-		Tags:            getTagsIn(ctx),
+		Name:             aws.String(name),
+		OperatingSystem:  awstypes.OperatingSystem(d.Get("operating_system").(string)),
+		ServerSdkVersion: aws.String(d.Get("server_sdk_version").(string)),
+		StorageLocation:  expandStorageLocation(d.Get("storage_location").([]interface{})),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
@@ -160,6 +174,7 @@ func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, build.BuildArn)
 	d.Set(names.AttrName, build.Name)
 	d.Set("operating_system", build.OperatingSystem)
+	d.Set("server_sdk_version", build.ServerSdkVersion)
 	d.Set(names.AttrVersion, build.Version)
 
 	return diags
