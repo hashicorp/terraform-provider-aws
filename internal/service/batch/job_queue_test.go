@@ -21,18 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ComputeEnvironments has been deprecated. The Import step of tests that use ComputeEnvironments
-// need to ignore
-var ignoreDeprecatedCEOForImports = []string{
-	"compute_environment_order",
-	"compute_environment_order.#",
-	"compute_environment_order.0.%",
-	"compute_environment_order.0.compute_environment",
-	"compute_environment_order.0.order",
-	"compute_environments.#",
-	"compute_environments.0",
-}
-
 func TestAccBatchJobQueue_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jobQueue1 awstypes.JobQueueDetail
@@ -50,8 +38,8 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
@@ -60,44 +48,9 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBatchJobQueue_basicCEO(t *testing.T) {
-	ctx := acctest.Context(t)
-	var jobQueue1 awstypes.JobQueueDetail
-	resourceName := "aws_batch_job_queue.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobQueueConfig_stateCEO(rName, string(awstypes.JQStateEnabled)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.JQStateEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: ignoreDeprecatedCEOForImports,
+				ResourceName: resourceName,
+				RefreshState: true,
+				PlanOnly:     true,
 			},
 		},
 	})
@@ -127,65 +80,6 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_disappearsCEO(t *testing.T) {
-	ctx := acctest.Context(t)
-	var jobQueue1 awstypes.JobQueueDetail
-	resourceName := "aws_batch_job_queue.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobQueueConfig_stateCEO(rName, string(awstypes.JQStateEnabled)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobQueue, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccBatchJobQueue_MigrateFromPluginSDK(t *testing.T) {
-	ctx := acctest.Context(t)
-	var jobQueue1 awstypes.JobQueueDetail
-	resourceName := "aws_batch_job_queue.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.13.1",
-					},
-				},
-				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-				),
-			},
-		},
-	})
-}
-
 func TestAccBatchJobQueue_ComputeEnvironments_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jobQueue1 awstypes.JobQueueDetail
@@ -202,10 +96,10 @@ func TestAccBatchJobQueue_ComputeEnvironments_multiple(t *testing.T) {
 				Config: testAccJobQueueConfig_ComputeEnvironments_multiple(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.1", "aws_batch_compute_environment.more.0", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.2", "aws_batch_compute_environment.more.1", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
 				),
 			},
 			{
@@ -217,10 +111,10 @@ func TestAccBatchJobQueue_ComputeEnvironments_multiple(t *testing.T) {
 				Config: testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.more.0", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.1", "aws_batch_compute_environment.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.2", "aws_batch_compute_environment.more.1", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
 				),
 			},
 			{
@@ -473,7 +367,6 @@ func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
-
 			_, err := tfbatch.FindJobQueueByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
@@ -509,8 +402,8 @@ func testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx context.Context, jobQ
 			return fmt.Errorf("expected one ComputeEnvironmentOrder in Batch Job Queue (%s)", name)
 		}
 
-		if aws.ToInt32(input.ComputeEnvironmentOrder[0].Order) != 0 {
-			return fmt.Errorf("expected first ComputeEnvironmentOrder in Batch Job Queue (%s) to have existing Order value of 0", name)
+		if aws.ToInt32(input.ComputeEnvironmentOrder[0].Order) != 1 {
+			return fmt.Errorf("expected first ComputeEnvironmentOrder in Batch Job Queue (%s) to have existing Order value of 1", name)
 		}
 
 		input.ComputeEnvironmentOrder[0].Order = aws.Int32(1)
@@ -632,10 +525,13 @@ func testAccJobQueueConfig_priority(rName string, priority int) string {
 		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-  name                 = %[1]q
-  priority             = %[2]d
-  state                = "ENABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+  name     = %[1]q
+  priority = %[2]d
+  state    = "ENABLED"
 }
 `, rName, priority))
 }
@@ -682,7 +578,10 @@ locals {
 }
 
 resource "aws_batch_job_queue" "test" {
-  compute_environments  = [aws_batch_compute_environment.test.arn]
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
   name                  = %[1]q
   priority              = 1
   scheduling_policy_arn = local.select_scheduling_policy == "first" ? aws_batch_scheduling_policy.test1.arn : aws_batch_scheduling_policy.test2.arn
@@ -692,20 +591,6 @@ resource "aws_batch_job_queue" "test" {
 }
 
 func testAccJobQueueConfig_state(rName string, state string) string {
-	return acctest.ConfigCompose(
-		testAccJobQueueConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-
-  name     = %[1]q
-  priority = 1
-  state    = %[2]q
-}
-`, rName, state))
-}
-
-func testAccJobQueueConfig_stateCEO(rName string, state string) string {
 	return acctest.ConfigCompose(
 		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
@@ -727,10 +612,16 @@ func testAccJobQueueConfig_ComputeEnvironments_multiple(rName string, state stri
 		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = concat(
-    [aws_batch_compute_environment.test.arn],
-    aws_batch_compute_environment.more[*].arn,
-  )
+  dynamic "compute_environment_order" {
+    for_each = concat(
+      [aws_batch_compute_environment.test.arn],
+      aws_batch_compute_environment.more[*].arn,
+    )
+    content {
+      compute_environment = compute_environment_order.value
+      order               = compute_environment_order.key + 1
+    }
+  }
   name     = %[1]q
   priority = 1
   state    = %[2]q
@@ -810,11 +701,18 @@ func testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName string, sta
 		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [
-    aws_batch_compute_environment.more[0].arn,
-    aws_batch_compute_environment.test.arn,
-    aws_batch_compute_environment.more[1].arn,
-  ]
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.more[0].arn
+    order               = 1
+  }
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 2
+  }
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.more[1].arn
+    order               = 3
+  }
   name     = %[1]q
   priority = 1
   state    = %[2]q
@@ -847,10 +745,14 @@ func testAccJobQueueConfig_jobStateTimeLimitAction(rName string) string {
 		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-  name                 = %[1]q
-  priority             = 1
-  state                = "DISABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
+  name     = %[1]q
+  priority = 1
+  state    = "DISABLED"
   job_state_time_limit_action {
     action           = "CANCEL"
     max_time_seconds = 600
@@ -872,10 +774,13 @@ func testAccJobQueueConfig_jobStateTimeLimitActionUpdated(rName string) string {
 		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-  name                 = %[1]q
-  priority             = 1
-  state                = "DISABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+  name     = %[1]q
+  priority = 1
+  state    = "DISABLED"
   job_state_time_limit_action {
     action           = "CANCEL"
     max_time_seconds = 610

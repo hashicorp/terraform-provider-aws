@@ -3262,10 +3262,14 @@ resource "aws_batch_compute_environment" "target" {
 }
 
 resource "aws_batch_job_queue" "target" {
-  compute_environments = [aws_batch_compute_environment.target.arn]
-  name                 = "%[1]s-target"
-  priority             = 1
-  state                = "ENABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.target.arn
+    order               = 1
+  }
+
+  name     = "%[1]s-target"
+  priority = 1
+  state    = "ENABLED"
 }
 
 resource "aws_batch_job_definition" "target" {

@@ -2335,10 +2335,14 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 resource "aws_batch_job_queue" "test" {
-  name                 = "%[1]s"
-  state                = "ENABLED"
-  priority             = 1
-  compute_environments = [aws_batch_compute_environment.test.arn]
+  name     = "%[1]s"
+  state    = "ENABLED"
+  priority = 1
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
 }
 
 resource "aws_batch_job_definition" "test" {

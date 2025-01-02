@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -64,15 +63,10 @@ func (*jobQueueResource) Metadata(_ context.Context, request resource.MetadataRe
 
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
-		Version: 1,
+		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"compute_environments": schema.ListAttribute{
-				ElementType:        fwtypes.ARNType,
-				Optional:           true,
-				DeprecationMessage: "This parameter will be replaced by `compute_environment_order`.",
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID:  framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -169,8 +163,6 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		if response.Diagnostics.HasError() {
 			return
 		}
-	} else {
-		input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, data.ComputeEnvironments)
 	}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
 	if response.Diagnostics.HasError() {
@@ -233,27 +225,12 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	// Set attributes for import.
-	if !data.ComputeEnvironmentOrder.IsNull() {
-		response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-	} else {
-		data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
-	}
-
-	data.JobQueueARN = fwflex.StringToFrameworkLegacy(ctx, jobQueue.JobQueueArn)
-	data.JobQueueName = fwflex.StringToFramework(ctx, jobQueue.JobQueueName)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue.JobStateTimeLimitActions, &data.JobStateTimeLimitActions)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.Priority = fwflex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
-	data.SchedulingPolicyARN = fwflex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
-	data.State = fwflex.StringValueToFramework(ctx, jobQueue.State)
 
 	setTagsOut(ctx, jobQueue.Tags)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -281,11 +258,6 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 		update = true
-	} else {
-		if !new.ComputeEnvironments.Equal(old.ComputeEnvironments) {
-			input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, new.ComputeEnvironments)
-			update = true
-		}
 	}
 
 	if !new.JobStateTimeLimitActions.Equal(old.JobStateTimeLimitActions) {
@@ -392,22 +364,18 @@ func (r *jobQueueResource) ModifyPlan(ctx context.Context, request resource.Modi
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *jobQueueResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("compute_environments"),
-			path.MatchRoot("compute_environment_order"),
-		),
-	}
-}
-
 func (r *jobQueueResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := jobQueueSchema0(ctx)
+	schemaV1 := jobQueueSchema1(ctx)
 
 	return map[int64]resource.StateUpgrader{
 		0: {
 			PriorSchema:   &schemaV0,
 			StateUpgrader: upgradeJobQueueResourceStateV0toV1,
+		},
+		1: {
+			PriorSchema:   &schemaV1,
+			StateUpgrader: upgradeJobQueueResourceStateV1toV2,
 		},
 	}
 }
@@ -540,7 +508,6 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 type jobQueueResourceModel struct {
-	ComputeEnvironments      types.List                                                    `tfsdk:"compute_environments"`
 	ComputeEnvironmentOrder  fwtypes.ListNestedObjectValueOf[computeEnvironmentOrderModel] `tfsdk:"compute_environment_order"`
 	ID                       types.String                                                  `tfsdk:"id"`
 	JobQueueARN              types.String                                                  `tfsdk:"arn"`
