@@ -1,0 +1,3 @@
+```release-note:bug
+resource/route53_traffic_policy: Create new version of policy instead of recreating on `document` change.
+```
