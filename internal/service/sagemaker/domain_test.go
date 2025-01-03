@@ -1584,6 +1584,53 @@ func testAccDomain_studioWebPortalSettings_hiddenMlTools(t *testing.T) {
 	})
 }
 
+func testAccDomain_studioWebPortalSettings_hiddenImageVersionAliases(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenImageAliasesfunc(rName, "sagemaker_distribution", []string{"1.9", "1.10"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.0.sagemaker_image_name", "sagemaker_distribution"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.0.version_aliases.*", "1.9"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.0.version_aliases.*", "1.10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenImageAliasesfunc(rName, "sagemaker_distribution", []string{"1.9", "1.10", "1.11"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.0.sagemaker_image_name", "sagemaker_distribution"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.0.version_aliases.*", "1.9"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.0.version_aliases.*", "1.10"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_sagemaker_image_version_aliases.0.version_aliases.*", "1.11"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDomain_spaceSettingsJupyterLabAppSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -3316,4 +3363,38 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName, efsName))
+}
+
+func testAccDomainConfig_studioWebPortalSettings_hiddenImageAliasesfunc(rName string, sagemakerName string, hiddenImageAliases []string) string {
+	var hiddenImageAliasesString string
+	for i, image := range hiddenImageAliases {
+		if i > 0 {
+			hiddenImageAliasesString += ", "
+		}
+		hiddenImageAliasesString += fmt.Sprintf("%q", image)
+	}
+
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    studio_web_portal_settings {
+      hidden_sagemaker_image_version_aliases {
+        sagemaker_image_name = "%[3]s"
+        version_aliases      = [%[2]s]
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, hiddenImageAliasesString, sagemakerName))
 }
