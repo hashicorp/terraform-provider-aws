@@ -90,8 +90,7 @@ func resourceUser() *schema.Resource {
 			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"REDIS"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"REDIS", "VALKEY"}, false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.EqualFold(old, new)
 				},
@@ -247,6 +246,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if d.HasChange("no_password_required") {
 			input.NoPasswordRequired = aws.Bool(d.Get("no_password_required").(bool))
+		}
+
+		if d.HasChange(names.AttrEngine) {
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 		}
 
 		if d.HasChange("passwords") {
