@@ -284,7 +284,7 @@ resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
   user_name     = "default"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "VALKEY"
   passwords     = ["password123456789"]
 }
 
