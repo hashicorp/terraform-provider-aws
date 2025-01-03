@@ -10,8 +10,6 @@ provider "aws" {
   }
 }
 
-data "aws_caller_identity" "test" {}
-
 resource "aws_cleanrooms_collaboration" "test" {
   name                     = var.rName
   creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS"]
