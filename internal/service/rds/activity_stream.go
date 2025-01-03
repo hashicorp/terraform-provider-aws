@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rds_cluster_activity_stream", name="Cluster Activity Stream")
-func resourceClusterActivityStream() *schema.Resource {
+// @SDKResource("aws_db_activity_stream", name="Activity Stream")
+func resourceActivityStream() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceClusterActivityStreamCreate,
-		ReadWithoutTimeout:   resourceClusterActivityStreamRead,
-		DeleteWithoutTimeout: resourceClusterActivityStreamDelete,
+		CreateWithoutTimeout: resourceActivityStreamCreate,
+		ReadWithoutTimeout:   resourceActivityStreamRead,
+		DeleteWithoutTimeout: resourceActivityStreamDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -60,13 +60,13 @@ func resourceClusterActivityStream() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.ValidARNCheck(validDBClusterARN),
+				ValidateFunc: verify.ValidARNCheck(validDBInstanceARN),
 			},
 		},
 	}
 }
 
-func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -82,70 +82,70 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 	_, err := conn.StartActivityStream(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Activity Stream (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "creating DB Activity Stream (%s): %s", arn, err)
 	}
 
 	d.SetId(arn)
 
-	if _, err := waitClusterActivityStreamStarted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Activity Stream (%s) start: %s", d.Id(), err)
+	if _, err := waitActivityStreamStarted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DB Activity Stream (%s) start: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceClusterActivityStreamRead(ctx, d, meta)...)
+	return append(diags, resourceActivityStreamRead(ctx, d, meta)...)
 }
 
-func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	output, err := findDBClusterWithActivityStream(ctx, conn, d.Id())
+	output, err := findDBInstanceWithActivityStream(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS Cluster Activity Stream (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DB Activity Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Activity Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DB Activity Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("engine_native_audit_fields_included", false) // Not applicable to Aurora DB clusters, hence always false
+	d.Set("engine_native_audit_fields_included", output.ActivityStreamEngineNativeAuditFieldsIncluded)
 	d.Set("kinesis_stream_name", output.ActivityStreamKinesisStreamName)
 	d.Set(names.AttrKMSKeyID, output.ActivityStreamKmsKeyId)
 	d.Set(names.AttrMode, output.ActivityStreamMode)
-	d.Set(names.AttrResourceARN, output.DBClusterArn)
+	d.Set(names.AttrResourceARN, output.DBInstanceArn)
 
 	return diags
 }
 
-func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	log.Printf("[DEBUG] Deleting RDS Cluster Activity Stream: %s", d.Id())
+	log.Printf("[DEBUG] Deleting DB Activity Stream: %s", d.Id())
 	_, err := conn.StopActivityStream(ctx, &rds.StopActivityStreamInput{
 		ApplyImmediately: aws.Bool(true),
 		ResourceArn:      aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "Activity Streams feature expected to be started, but is stopped") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "Activity Streams feature expected to be STARTED, but is STOPPED") {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "stopping RDS Cluster Activity Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "stopping DB Activity Stream (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitClusterActivityStreamStopped(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Activity Stream (%s) stop: %s", d.Id(), err)
+	if _, err := waitActivityStreamStopped(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DB Activity Stream (%s) stop: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn string) (*types.DBCluster, error) {
-	output, err := findDBClusterByID(ctx, conn, arn)
+func findDBInstanceWithActivityStream(ctx context.Context, conn *rds.Client, arn string) (*types.DBInstance, error) {
+	output, err := findDBInstanceByID(ctx, conn, arn)
 
 	if err != nil {
 		return nil, err
@@ -160,9 +160,9 @@ func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn 
 	return output, nil
 }
 
-func statusClusterActivityStream(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
+func statusActivityStream(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDBClusterByID(ctx, conn, arn)
+		output, err := findDBInstanceByID(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -176,14 +176,14 @@ func statusClusterActivityStream(ctx context.Context, conn *rds.Client, arn stri
 	}
 }
 
-func waitClusterActivityStreamStarted(ctx context.Context, conn *rds.Client, arn string) (*types.DBCluster, error) {
+func waitActivityStreamStarted(ctx context.Context, conn *rds.Client, arn string) (*types.DBInstance, error) {
 	const (
 		timeout = 30 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStarting),
 		Target:     enum.Slice(types.ActivityStreamStatusStarted),
-		Refresh:    statusClusterActivityStream(ctx, conn, arn),
+		Refresh:    statusActivityStream(ctx, conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -191,21 +191,21 @@ func waitClusterActivityStreamStarted(ctx context.Context, conn *rds.Client, arn
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.DBCluster); ok {
+	if output, ok := outputRaw.(*types.DBInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitClusterActivityStreamStopped(ctx context.Context, conn *rds.Client, arn string) (*types.DBCluster, error) {
+func waitActivityStreamStopped(ctx context.Context, conn *rds.Client, arn string) (*types.DBInstance, error) {
 	const (
 		timeout = 30 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStopping),
 		Target:     enum.Slice(types.ActivityStreamStatusStopped),
-		Refresh:    statusClusterActivityStream(ctx, conn, arn),
+		Refresh:    statusActivityStream(ctx, conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -213,7 +213,7 @@ func waitClusterActivityStreamStopped(ctx context.Context, conn *rds.Client, arn
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.DBCluster); ok {
+	if output, ok := outputRaw.(*types.DBInstance); ok {
 		return output, err
 	}
 
