@@ -74,6 +74,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "estimated_number_of_users", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "ESSENTIALS"),
 				),
 			},
 			{
@@ -1848,6 +1849,41 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_userPoolTier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_userPoolTier(rName, "PLUS"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "PLUS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_userPoolTier(rName, "LITE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "LITE"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
@@ -2955,4 +2991,13 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, name, attr)
+}
+
+func testAccUserPoolConfig_userPoolTier(rName, userPoolTier string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = %[2]q
+}
+`, rName, userPoolTier)
 }
