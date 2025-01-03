@@ -745,17 +745,21 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("password_policy"); ok {
 		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-			input.Policies = &awstypes.UserPoolPolicyType{
-				PasswordPolicy: expandPasswordPolicyType(v),
+			passwordPolicy := expandPasswordPolicyType(v)
+			if input.Policies == nil {
+				input.Policies = &awstypes.UserPoolPolicyType{}
 			}
+			input.Policies.PasswordPolicy = passwordPolicy
 		}
 	}
 
 	if v, ok := d.GetOk("sign_in_policy"); ok {
 		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-			input.Policies = &awstypes.UserPoolPolicyType{
-				SignInPolicy: expandSignInPolicyType(v),
+			signInPolicy := expandSignInPolicyType(v)
+			if input.Policies == nil {
+				input.Policies = &awstypes.UserPoolPolicyType{}
 			}
+			input.Policies.SignInPolicy = signInPolicy
 		}
 	}
 
@@ -1095,18 +1099,21 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("password_policy"); ok {
 			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-				input.Policies = &awstypes.UserPoolPolicyType{
-					PasswordPolicy: expandPasswordPolicyType(v),
+				passwordPolicy := expandPasswordPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
 				}
+				input.Policies.PasswordPolicy = passwordPolicy
 			}
 		}
 
-		// TODO: If password policy is set then merge these
 		if v, ok := d.GetOk("sign_in_policy"); ok {
 			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-				input.Policies = &awstypes.UserPoolPolicyType{
-					SignInPolicy: expandSignInPolicyType(v),
+				signInPolicy := expandSignInPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
 				}
+				input.Policies.SignInPolicy = signInPolicy
 			}
 		}
 
