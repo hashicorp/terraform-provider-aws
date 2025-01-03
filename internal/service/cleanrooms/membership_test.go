@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -88,7 +87,6 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
@@ -116,14 +114,12 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 	var membership cleanrooms.GetMembershipOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameSecond := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cleanrooms_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
@@ -161,14 +157,12 @@ func TestAccCleanRoomsMembership_defaultOutputConfigurationWithEmptyAdditionalPa
 
 	var membership cleanrooms.GetMembershipOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cleanrooms_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
@@ -190,14 +184,12 @@ func TestAccCleanRoomsMembership_withoutDefaultOutputConfiguration(t *testing.T)
 
 	var membership cleanrooms.GetMembershipOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cleanrooms_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
@@ -226,7 +218,6 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
@@ -264,10 +255,8 @@ func testAccCheckMembershipExists(ctx context.Context, name string, membership *
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameMembership, name, errors.New("not set"))
 		}
 
-		client := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
-		resp, err := client.GetMembership(ctx, &cleanrooms.GetMembershipInput{
-			MembershipIdentifier: aws.String(rs.Primary.ID),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		resp, err := tfcleanrooms.FindMembershipByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, err)
@@ -284,13 +273,11 @@ func testAccCheckMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != tfcleanrooms.ResNameMembership {
+			if rs.Type != "aws_cleanrooms_membership" {
 				continue
 			}
 
-			_, err := conn.GetMembership(ctx, &cleanrooms.GetMembershipInput{
-				MembershipIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfcleanrooms.FindMembershipByID(ctx, conn, rs.Primary.ID)
 
 			if err == nil {
 				return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameMembership, rs.Primary.ID, errors.New("not destroyed"))

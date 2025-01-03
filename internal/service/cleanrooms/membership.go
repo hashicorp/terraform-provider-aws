@@ -211,7 +211,8 @@ func (r *resourceMembership) Create(ctx context.Context, request resource.Create
 	}
 
 	input := cleanrooms.CreateMembershipInput{
-		Tags: getTagsIn(ctx),
+		CollaborationIdentifier: data.CollaborationID.ValueStringPointer(),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
@@ -268,8 +269,6 @@ func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	data.CollaborationIdentifier = fwflex.StringToFramework(ctx, output.Membership.CollaborationId)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -294,8 +293,11 @@ func (r *resourceMembership) Update(ctx context.Context, request resource.Update
 	}
 
 	if diff.HasChanges() {
-		input := cleanrooms.UpdateMembershipInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, diff, &input)...)
+		input := cleanrooms.UpdateMembershipInput{
+			MembershipIdentifier: plan.ID.ValueStringPointer(),
+		}
+
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -356,7 +358,7 @@ type resourceMembershipData struct {
 	CollaborationARN                types.String                                                `tfsdk:"collaboration_arn"`
 	CollaborationCreatorAccountID   types.String                                                `tfsdk:"collaboration_creator_account_id"`
 	CollaborationCreatorDisplayName types.String                                                `tfsdk:"collaboration_creator_display_name"`
-	CollaborationIdentifier         types.String                                                `tfsdk:"collaboration_id"`
+	CollaborationID                 types.String                                                `tfsdk:"collaboration_id"`
 	CollaborationName               types.String                                                `tfsdk:"collaboration_name"`
 	CreateTime                      timetypes.RFC3339                                           `tfsdk:"create_time"`
 	DefaultResultConfiguration      fwtypes.ListNestedObjectValueOf[defaultResultConfiguration] `tfsdk:"default_result_configuration"`
