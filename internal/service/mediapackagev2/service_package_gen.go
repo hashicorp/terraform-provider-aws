@@ -27,7 +27,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceChannelGroup,
+			TypeName: "aws_media_packagev2_channel_group",
+			Name:     "Channel Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
