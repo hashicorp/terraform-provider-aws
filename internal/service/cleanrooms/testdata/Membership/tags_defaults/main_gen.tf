@@ -11,7 +11,7 @@ data "aws_caller_identity" "test" {}
 
 resource "aws_cleanrooms_collaboration" "test" {
   name                     = var.rName
-  creator_member_abilities = ["CAN_QUERY","CAN_RECEIVE_RESULTS"]
+  creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS"]
   creator_display_name     = "Creator"
   description              = var.rName
   query_log_status         = "DISABLED"
