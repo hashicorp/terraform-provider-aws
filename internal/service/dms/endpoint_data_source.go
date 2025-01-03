@@ -119,6 +119,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"sasl_mechanism": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"sasl_password": {
 							Type:     schema.TypeString,
 							Computed: true,
