@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCognitoIdentityCognitoIdentityOpenIDTokenDataSource_basic(t *testing.T) {
+func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -46,7 +46,7 @@ func TestAccCognitoIdentityCognitoIdentityOpenIDTokenDataSource_basic(t *testing
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCognitoIdentityOpenIDTokenEphemeralResourceConfig_basic(rName, developerProviderName, uuid),
+				Config: testAccOpenIDTokenForDeveloperIdentityEphemeralConfig_basic(rName, developerProviderName, uuid),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("token"), knownvalue.NotNull()),
 				},
@@ -55,7 +55,7 @@ func TestAccCognitoIdentityCognitoIdentityOpenIDTokenDataSource_basic(t *testing
 	})
 }
 
-func testAccCognitoIdentityOpenIDTokenEphemeralResourceConfig_basic(rName, developerProviderName, uuid string) string {
+func testAccOpenIDTokenForDeveloperIdentityEphemeralConfig_basic(rName, developerProviderName, uuid string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_cognito_identity_openid_token_for_developer_identity.test"),
 		testAccPoolConfig_developerProviderName(rName, developerProviderName),

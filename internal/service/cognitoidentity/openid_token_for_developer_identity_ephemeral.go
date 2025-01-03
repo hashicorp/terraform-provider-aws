@@ -24,23 +24,23 @@ import (
 )
 
 // @EphemeralResource("aws_cognito_identity_openid_token_for_developer_identity", name="Cognito Identity Open ID Token for Developer Identity")
-func newEphemeralCognitoIdentityOpenIDTokenForDeveloperIdentity(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity{}, nil
+func newEphemeralOpenIDTokenForDeveloperIdentity(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &ephemeralOpenIDTokenForDeveloperIdentity{}, nil
 }
 
 const (
-	EPNameCognitoIdentityOpenIDToken = "Cognito Identity Open ID Token for Developer Identity Ephemeral Resource"
+	EPNameOpenIDForDeveloperIdentityToken = "Open ID Token for Developer Identity Ephemeral Resource"
 )
 
-type ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity struct {
+type ephemeralOpenIDTokenForDeveloperIdentity struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (e *ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity) Metadata(_ context.Context, req ephemeral.MetadataRequest, resp *ephemeral.MetadataResponse) {
+func (e *ephemeralOpenIDTokenForDeveloperIdentity) Metadata(_ context.Context, req ephemeral.MetadataRequest, resp *ephemeral.MetadataResponse) {
 	resp.TypeName = "aws_cognito_identity_openid_token_for_developer_identity"
 }
 
-func (e *ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
+func (e *ephemeralOpenIDTokenForDeveloperIdentity) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"identity_id": schema.StringAttribute{
@@ -99,10 +99,10 @@ func (e *ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity) Schema(ctx con
 	}
 }
 
-func (e *ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
+func (e *ephemeralOpenIDTokenForDeveloperIdentity) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
 	conn := e.Meta().CognitoIdentityClient(ctx)
 
-	var data ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentityModel
+	var data ephemeralOpenIDTokenForDeveloperIdentityModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,7 +114,7 @@ func (e *ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity) Open(ctx conte
 	out, err := conn.GetOpenIdTokenForDeveloperIdentity(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIdentity, create.ErrActionReading, EPNameCognitoIdentityOpenIDToken, data.IdentityId.String(), err),
+			create.ProblemStandardMessage(names.CognitoIdentity, create.ErrActionReading, EPNameOpenIDForDeveloperIdentityToken, data.IdentityId.String(), err),
 			err.Error(),
 		)
 		return
@@ -128,7 +128,7 @@ func (e *ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentity) Open(ctx conte
 	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
 }
 
-type ephemeralCognitoIdentityOpenIDTokenForDeveloperIdentityModel struct {
+type ephemeralOpenIDTokenForDeveloperIdentityModel struct {
 	IdentityId     types.String                     `tfsdk:"identity_id"`
 	IdentityPoolId types.String                     `tfsdk:"identity_pool_id"`
 	ID             types.String                     `tfsdk:"id"`
