@@ -66,14 +66,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - The status of the membership.
 * `update_time` - The date and time the membership was last updated.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `1m`)
-- `update` - (Default `1m`)
-- `delete` - (Default `1m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cleanrooms_membership` using the `id`. For example:
