@@ -132,6 +132,19 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"grpc_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
 						"forwarded_values": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -365,6 +378,19 @@ func resourceDistribution() *schema.Resource {
 						"field_level_encryption_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"grpc_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
 						},
 						"forwarded_values": {
 							Type:     schema.TypeList,
@@ -1408,6 +1434,10 @@ func expandCacheBehavior(tfMap map[string]interface{}) *awstypes.CacheBehavior {
 		apiObject.TrustedSigners = expandTrustedSigners([]interface{}{})
 	}
 
+	if grpcConfigFlat, ok := tfMap["grpc_config"].([]interface{}); ok && len(grpcConfigFlat) == 1 {
+		apiObject.GrpcConfig = expandGRPConfig(tfMap["grpc_config"].([]interface{})[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -1492,6 +1522,10 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]interfac
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
+	if apiObject.GrpcConfig != nil {
+		tfMap["grpc_config"] = []interface{}{flattenGRPCConfig(apiObject.GrpcConfig)}
+	}
+
 	return tfMap
 }
 
@@ -1570,6 +1604,10 @@ func expandDefaultCacheBehavior(tfMap map[string]interface{}) *awstypes.DefaultC
 		apiObject.TrustedSigners = expandTrustedSigners([]interface{}{})
 	}
 
+	if grpcConfigFlat, ok := tfMap["grpc_config"].([]interface{}); ok && len(grpcConfigFlat) == 1 {
+		apiObject.GrpcConfig = expandGRPConfig(tfMap["grpc_config"].([]interface{})[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -1628,6 +1666,10 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 
 	if len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
+	}
+
+	if apiObject.GrpcConfig != nil {
+		tfMap["grpc_config"] = []interface{}{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
 	return tfMap
@@ -1856,6 +1898,30 @@ func expandForwardedValues(tfMap map[string]interface{}) *awstypes.ForwardedValu
 	}
 
 	return apiObject
+}
+
+func expandGRPConfig(tfMap map[string]interface{}) *awstypes.GrpcConfig {
+	if len(tfMap) < 1 {
+		return nil
+	}
+
+	apiObject := &awstypes.GrpcConfig{
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+	}
+
+	return apiObject
+}
+
+func flattenGRPCConfig(apiObject *awstypes.GrpcConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	tfMap[names.AttrEnabled] = aws.ToBool(apiObject.Enabled)
+
+	return tfMap
 }
 
 func flattenForwardedValues(apiObject *awstypes.ForwardedValues) map[string]interface{} {
