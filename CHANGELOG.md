@@ -22,6 +22,7 @@ BUG FIXES:
 
 * resource/aws_api_gateway_domain_name: Fixed error when adding policy to existing private domain name ([#40708](https://github.com/hashicorp/terraform-provider-aws/issues/40708))
 * resource/aws_ec2_instance_connect_endpoint: Set `fips_dns_name` to an empty value (`""`) when no value is returned from the EC2 API. This fixes known-after-apply loops in Regions that don't support FIPS endpoints ([#37939](https://github.com/hashicorp/terraform-provider-aws/issues/37939))
+* resource/aws_glue_catalog_database: Fix crash when expanding `create_table_default_permission` with a nil `principal` block ([#40761](https://github.com/hashicorp/terraform-provider-aws/issues/40761))
 * resource/aws_instance: Set new computed value for `public_dns` and `public_ip` attributes when changing `instance_type`, `user_data`, or `user_data_base64` ([#40710](https://github.com/hashicorp/terraform-provider-aws/issues/40710))
 * resource/aws_rds_instance Fix `manage_master_user_password` being updated in state when update errors ([#40538](https://github.com/hashicorp/terraform-provider-aws/issues/40538))
 * resource/aws_ses_identity_notification_topic: Prevent destroy failure when resource is already deleted outside of Terraform ([#40684](https://github.com/hashicorp/terraform-provider-aws/issues/40684))
