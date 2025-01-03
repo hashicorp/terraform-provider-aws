@@ -38,6 +38,8 @@ const (
 
 // @FrameworkResource("aws_cleanrooms_membership",name="Membership")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetMembershipOutput")
+// @Testing(checkDestroyNoop=true)
 func newResourceMembership(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceMembership{}
 
@@ -338,6 +340,12 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	// Occurs when the membership was created with the same account as the collaboration.
+	// There is no way to force delete the membership as it is default to the collaboration itself.
+	if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Cannot delete membership for the creator of the collaboration while their membership is still ACTIVE") {
 		return
 	}
 
