@@ -9,7 +9,6 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,7 +68,7 @@ func testAccClusterVersionsDataSourceConfig_clusterType(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), `
 data "aws_eks_cluster_versions" "test" {
   cluster_type = "eks"
-  depends_on = [aws_eks_cluster.test]
+  depends_on   = [aws_eks_cluster.test]
 }
 `)
 }

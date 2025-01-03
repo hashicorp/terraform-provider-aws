@@ -6,13 +6,10 @@ package eks
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -74,10 +71,10 @@ func (d *dataSourceClusterVersions) Read(ctx context.Context, req datasource.Rea
 	input := &eks.DescribeClusterVersionsInput{}
 
 	if data.ClusterType.String() != "" {
-		input.ClusterType = aws.String(data.ClusterType.ValueString())
+		input.ClusterType = data.ClusterType.ValueStringPointer()
 	}
 
-	input.DefaultOnly = aws.Bool(data.DefaultOnly.ValueBool())
+	input.DefaultOnly = data.DefaultOnly.ValueBoolPointer()
 
 	if len(data.ClusterVersionsOnly.Elements()) > 0 && !data.ClusterVersions.IsNull() {
 		clVersions := make([]string, 0, len(data.ClusterVersionsOnly.Elements()))
@@ -114,9 +111,6 @@ func (d *dataSourceClusterVersions) Read(ctx context.Context, req datasource.Rea
 func findClusterVersions(ctx context.Context, conn *eks.Client, input *eks.DescribeClusterVersionsInput) ([]awstypes.ClusterVersionInformation, error) {
 	output := make([]awstypes.ClusterVersionInformation, 0)
 
-	fmt.Printf("Finding cluster versions\n %v %v %v", input.ClusterVersions, aws.ToString(input.ClusterType), input.Status)
-	tflog.Debug(ctx, "Finding cluster versions", map[string]interface{}{"input": input})
-
 	pages := eks.NewDescribeClusterVersionsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -126,9 +120,6 @@ func findClusterVersions(ctx context.Context, conn *eks.Client, input *eks.Descr
 
 		output = append(output, page.ClusterVersions...)
 	}
-
-	fmt.Printf("Found cluster versions %v", output)
-	tflog.Debug(ctx, "Found cluster versions", map[string]interface{}{"output": output})
 
 	return output, nil
 }
