@@ -31,8 +31,6 @@ nav:
       - How We Prioritize: prioritization.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
-      - AWS SDK for Go Versions: aws-go-sdk-versions.md
-      - AWS SDK for Go Migrations: aws-go-sdk-migrations.md
       - AWS SDK Go Base: aws-sdk-go-base.md
       - Core Services: core-services.md
       - Data Handling and Conversion: data-handling-and-conversion.md
