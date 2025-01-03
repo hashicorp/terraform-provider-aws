@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	github.com/YakDriver/tfproviderdocs v0.17.0
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.63.1
+	github.com/golangci/golangci-lint v1.63.3
 	github.com/hashicorp/copywrite v0.19.0
 	github.com/hashicorp/go-changelog v0.0.0-20241111140550-beb7aaabfbd1
 	github.com/katbyte/terrafmt v0.5.4
@@ -197,11 +197,11 @@ require (
 	github.com/kunwardeep/paralleltest v1.0.10 // indirect
 	github.com/kyoh86/exportloopref v0.1.11 // indirect
 	github.com/lasiar/canonicalheader v1.1.2 // indirect
-	github.com/ldez/exptostd v0.3.0 // indirect
+	github.com/ldez/exptostd v0.3.1 // indirect
 	github.com/ldez/gomoddirectives v0.6.0 // indirect
 	github.com/ldez/grignotin v0.7.0 // indirect
 	github.com/ldez/tagliatelle v0.7.1 // indirect
-	github.com/ldez/usetesting v0.4.1 // indirect
+	github.com/ldez/usetesting v0.4.2 // indirect
 	github.com/leonklingele/grouper v1.1.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/macabu/inamedparam v0.1.3 // indirect
