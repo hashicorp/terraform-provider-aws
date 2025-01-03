@@ -661,6 +661,24 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"web_authn_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relying_party_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"user_verification": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.UserVerificationType](),
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -803,11 +821,18 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(outputRaw.(*cognitoidentityprovider.CreateUserPoolOutput).UserPool.Id))
 
-	if v := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string)); v != awstypes.UserPoolMfaTypeOff {
+	if mfaConfig := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string)); mfaConfig != awstypes.UserPoolMfaTypeOff || len(d.Get("web_authn_configuration").([]interface{})) > 0 {
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-			MfaConfiguration:              v,
-			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
-			UserPoolId:                    aws.String(d.Id()),
+			UserPoolId: aws.String(d.Id()),
+		}
+
+		if mfaConfig != awstypes.UserPoolMfaTypeOff {
+			input.MfaConfiguration = mfaConfig
+			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{}))
+		}
+
+		if webAuthnConfig := d.Get("web_authn_configuration").([]interface{}); len(webAuthnConfig) > 0 {
+			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
 		}
 
 		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
@@ -923,6 +948,10 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting software_token_mfa_configuration: %s", err)
 	}
 
+	if err := d.Set("web_authn_configuration", flattenWebAuthnConfigType(output.WebAuthnConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting web_authn_configuration: %s", err)
+	}
+
 	return diags
 }
 
@@ -936,12 +965,14 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"sms_authentication_message",
 		"sms_configuration",
 		"software_token_mfa_configuration",
+		"web_authn_configuration",
 	) {
 		mfaConfiguration := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string))
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
 			MfaConfiguration:              mfaConfiguration,
 			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
 			UserPoolId:                    aws.String(d.Id()),
+			WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]interface{})),
 		}
 
 		// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
@@ -1297,6 +1328,26 @@ func expandSoftwareTokenMFAConfigType(tfList []interface{}) *awstypes.SoftwareTo
 	return apiObject
 }
 
+func expandWebAuthnConfigurationConfigType(tfList []interface{}) *awstypes.WebAuthnConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &awstypes.WebAuthnConfigurationType{}
+
+	if v, ok := tfMap["relying_party_id"].(string); ok && v != "" {
+		apiObject.RelyingPartyId = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_verification"].(string); ok && v != "" {
+		apiObject.UserVerification = awstypes.UserVerificationType(v)
+	}
+
+	return apiObject
+}
+
 func flattenSMSConfigurationType(apiObject *awstypes.SmsConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1326,6 +1377,22 @@ func flattenSoftwareTokenMFAConfigType(apiObject *awstypes.SoftwareTokenMfaConfi
 
 	tfMap := map[string]interface{}{
 		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWebAuthnConfigType(apiObject *awstypes.WebAuthnConfigurationType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"user_verification": apiObject.UserVerification,
+	}
+
+	if v := apiObject.RelyingPartyId; v != nil {
+		tfMap["relying_party_id"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
