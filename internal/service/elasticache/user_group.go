@@ -50,8 +50,7 @@ func resourceUserGroup() *schema.Resource {
 			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"REDIS"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"REDIS", "VALKEY"}, false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.EqualFold(old, new)
 				},
@@ -155,6 +154,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyUserGroupInput{
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
+			Engine:      aws.String(d.Get(names.AttrEngine).(string)),
 		}
 
 		if d.HasChange("user_ids") {

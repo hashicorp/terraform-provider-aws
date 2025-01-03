@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_elasticache_user: Add `VALKEY` as supported value for 'engine' argument.
+resource/aws_elasticache_user_group: Add `VALKEY` as supported value for 'engine' argument.
+```
