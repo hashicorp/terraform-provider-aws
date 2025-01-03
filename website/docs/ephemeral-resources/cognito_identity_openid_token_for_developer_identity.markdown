@@ -23,7 +23,7 @@ data "aws_cognito_identity_pool" "example" {
 ephemeral "aws_cognito_identity_openid_token_for_developer_identity" "example" {
   identity_pool_id = data.aws_cognito_identity_pool.example.id
   logins = {
-	  "login.mycompany.myapp": "USER_IDENTIFIER"
+    "login.mycompany.myapp" : "USER_IDENTIFIER"
   }
 }
 ```
@@ -49,5 +49,3 @@ The following arguments are optional:
 This ephemeral resource exports the following attributes in addition to the arguments above:
 
 * `token` - An OpenID token.
-
-
