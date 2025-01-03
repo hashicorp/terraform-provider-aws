@@ -486,6 +486,24 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"sign_in_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allowed_first_auth_factors": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.AuthFactorType](),
+							},
+						},
+					},
+				},
+			},
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -715,6 +733,14 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if v, ok := d.GetOk("sign_in_policy"); ok {
+		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+			input.Policies = &awstypes.UserPoolPolicyType{
+				SignInPolicy: expandSignInPolicyType(v),
+			}
+		}
+	}
+
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		input.Schema = expandSchemaAttributeTypes(v.(*schema.Set).List())
 	}
@@ -855,6 +881,9 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("password_policy", flattenPasswordPolicyType(userPool.Policies.PasswordPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting password_policy: %s", err)
 	}
+	if err := d.Set("sign_in_policy", flattenSignInPolicyType(userPool.Policies.SignInPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sign_in_policy: %s", err)
+	}
 	var configuredSchema []interface{}
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		configuredSchema = v.(*schema.Set).List()
@@ -952,6 +981,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"email_verification_subject",
 		"lambda_config",
 		"password_policy",
+		"sign_in_policy",
 		"sms_authentication_message",
 		"sms_configuration",
 		"sms_verification_message",
@@ -1036,6 +1066,15 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
 				input.Policies = &awstypes.UserPoolPolicyType{
 					PasswordPolicy: expandPasswordPolicyType(v),
+				}
+			}
+		}
+
+		// TODO: If password policy is set then merge these
+		if v, ok := d.GetOk("sign_in_policy"); ok {
+			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+				input.Policies = &awstypes.UserPoolPolicyType{
+					SignInPolicy: expandSignInPolicyType(v),
 				}
 			}
 		}
@@ -1628,6 +1667,16 @@ func expandPasswordPolicyType(tfMap map[string]interface{}) *awstypes.PasswordPo
 	return apiObject
 }
 
+func expandSignInPolicyType(tfMap map[string]interface{}) *awstypes.SignInPolicyType {
+	apiObject := &awstypes.SignInPolicyType{}
+
+	if v, ok := tfMap["allowed_first_auth_factors"]; ok {
+		apiObject.AllowedFirstAuthFactors = flex.ExpandStringyValueSet[awstypes.AuthFactorType](v.(*schema.Set))
+	}
+
+	return apiObject
+}
+
 func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []interface{} {
 	if apiObject == nil {
 		return []interface{}{}
@@ -1908,6 +1957,22 @@ func flattenPasswordPolicyType(apiObject *awstypes.PasswordPolicyType) []interfa
 
 	if apiObject.PasswordHistorySize != nil {
 		tfMap["password_history_size"] = aws.ToInt32(apiObject.PasswordHistorySize)
+	}
+
+	if len(tfMap) > 0 {
+		return []interface{}{tfMap}
+	}
+
+	return []interface{}{}
+}
+
+func flattenSignInPolicyType(apiObject *awstypes.SignInPolicyType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"allowed_first_auth_factors": apiObject.AllowedFirstAuthFactors,
 	}
 
 	if len(tfMap) > 0 {
