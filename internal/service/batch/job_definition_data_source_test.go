@@ -174,12 +174,12 @@ data "aws_batch_job_definition" "test" {
 func testAccJobDefinitionDataSourceConfig_container(rName string, increment string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-  container_properties = jsonencode({
+  container_properties {
     command = ["echo", "test%[2]s"]
     image   = "busybox"
     memory  = 128
     vcpus   = 1
-  })
+  }
   name = %[1]q
   type = "container"
   retry_strategy {

@@ -1,0 +1,6 @@
+```release-note:breaking-change
+resource/batch_job_definition: replace `container_properties`, `ecs_properties`, and `node_properties` json-encoded attributes with terraform blocks.
+```
+```release-note:enhancement
+resource/batch_job_definition: allow passing `task_role_arn` to `.ecs_properties.task_properties`
+```
