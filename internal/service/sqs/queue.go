@@ -368,6 +368,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	fifoQueue := diff.Get("fifo_queue").(bool)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
+	sqsManagedSSEEnabled := diff.Get("sqs_managed_sse_enabled").(bool)
 
 	if diff.Id() == "" {
 		// Create.
@@ -382,6 +383,20 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 
 		if !re.MatchString(name) {
 			return fmt.Errorf("invalid queue name: %s", name)
+		}
+
+		if sqsManagedSSEEnabled {
+			// KmsDataKeyReusePeriodSeconds is only valid for SqsManagedSseEnabled queues.
+			if err := diff.SetNew("kms_data_key_reuse_period_seconds", nil); err != nil {
+				return err
+			}
+		}
+	} else {
+		// Update.
+		if sqsManagedSSEEnabled {
+			if err := diff.Clear("kms_data_key_reuse_period_seconds"); err != nil {
+				return err
+			}
 		}
 	}
 
