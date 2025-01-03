@@ -253,8 +253,8 @@ github.com/OpenPeeDeeP/depguard/v2 v2.2.0 h1:vDfG60vDtIuf0MEOhmLlLLSzqaRM8EMcgJP
 github.com/OpenPeeDeeP/depguard/v2 v2.2.0/go.mod h1:CIzddKRvLBC4Au5aYP/i3nyaWQ+ClszLIuVocRiCYFQ=
 github.com/ProtonMail/go-crypto v1.1.3 h1:nRBOetoydLeUb4nHajyO2bKqMLfWQ/ZPwkXqXxPxCFk=
 github.com/ProtonMail/go-crypto v1.1.3/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
-github.com/YakDriver/tfproviderdocs v0.16.6 h1:EhQadmELeYVkzWKjZEUIjKnIuSpsKZltiBqjfztIW7Q=
-github.com/YakDriver/tfproviderdocs v0.16.6/go.mod h1:ekcDgisoo/IsupI4M5rueUj9mZBNbuh87rcccfKKf+8=
+github.com/YakDriver/tfproviderdocs v0.17.0 h1:kbcKvgCOipdDgCTHlHN9w/yKt2y7+J/Tq6OPvhZVmFI=
+github.com/YakDriver/tfproviderdocs v0.17.0/go.mod h1:IPycFvz05HzIdyBwlmg+PHTunBKkgiUunSonKj87lEY=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
@@ -751,8 +751,8 @@ github.com/hashicorp/memberlist v0.3.0/go.mod h1:MS2lj3INKhZjWNqd3N0m3J+Jxf3DAOn
 github.com/hashicorp/serf v0.9.6/go.mod h1:TXZNMjZQijwlDvp+r0b63xZ45H7JmCmgg4gpTwn9UV4=
 github.com/hashicorp/terraform-exec v0.21.0 h1:uNkLAe95ey5Uux6KJdua6+cv8asgILFVWkd/RG0D2XQ=
 github.com/hashicorp/terraform-exec v0.21.0/go.mod h1:1PPeMYou+KDUSSeRE9szMZ/oHf4fYUmB923Wzbq1ICg=
-github.com/hashicorp/terraform-json v0.23.0 h1:sniCkExU4iKtTADReHzACkk8fnpQXrdD2xoR+lppBkI=
-github.com/hashicorp/terraform-json v0.23.0/go.mod h1:MHdXbBAbSg0GvzuWazEGKAn/cyNfIB7mN6y7KJN6y2c=
+github.com/hashicorp/terraform-json v0.24.0 h1:rUiyF+x1kYawXeRth6fKFm/MdfBS6+lW4NbeATsYz8Q=
+github.com/hashicorp/terraform-json v0.24.0/go.mod h1:Nfj5ubo9xbu9uiAoZVBsNOjvNKB66Oyrvtit74kC7ow=
 github.com/hashicorp/terraform-registry-address v0.2.3 h1:2TAiKJ1A3MAkZlH1YI/aTVcLZRu7JseiXNRHbOAyoTI=
 github.com/hashicorp/terraform-registry-address v0.2.3/go.mod h1:lFHA76T8jfQteVfT7caREqguFrW3c4MFSPhZB7HHgUM=
 github.com/hashicorp/terraform-svchost v0.1.1 h1:EZZimZ1GxdqFRinZ1tpJwVxxt49xc/S52uzrw4x0jKQ=
@@ -1129,8 +1129,8 @@ github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasO
 github.com/spf13/afero v1.11.0 h1:WJQKhtpdm3v2IzqG8VMqrr6Rf3UYpEF239Jy9wNepM8=
 github.com/spf13/afero v1.11.0/go.mod h1:GH9Y3pIexgf1MTIWtNGyogA5MwRIDXGUr+hbWNoBjkY=
 github.com/spf13/cast v1.3.1/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
-github.com/spf13/cast v1.7.0 h1:ntdiHjuueXFgm5nzDRdOS4yfT43P5Fnud6DH50rz/7w=
-github.com/spf13/cast v1.7.0/go.mod h1:ancEpBxwJDODSW/UG4rDrAqiKolqNNh2DX3mk86cAdo=
+github.com/spf13/cast v1.7.1 h1:cuNEagBQEHWN1FnbGEjCXL2szYEXqfJPbP2HNUaca9Y=
+github.com/spf13/cast v1.7.1/go.mod h1:ancEpBxwJDODSW/UG4rDrAqiKolqNNh2DX3mk86cAdo=
 github.com/spf13/cobra v1.8.1 h1:e5/vxKd/rZsfSJMUX1agtjeTDf+qv1/JdBF8gg5k9ZM=
 github.com/spf13/cobra v1.8.1/go.mod h1:wHxEcudfqmLYa8iTfL+OuZPbBZkmvliBWKIezN3kD9Y=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
@@ -1311,8 +1311,8 @@ golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5y
 golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
 golang.org/x/crypto v0.13.0/go.mod h1:y6Z2r+Rw4iayiXXAIxJIDAJ1zMW4yaTpebo8fPOliYc=
 golang.org/x/crypto v0.14.0/go.mod h1:MVFd36DqK4CsrnJYDkBA3VC4m2GkXAM0PvzMCn4JQf4=
-golang.org/x/crypto v0.30.0 h1:RwoQn3GkWiMkzlX562cLB7OxWvjH1L8xutO2WoJcRoY=
-golang.org/x/crypto v0.30.0/go.mod h1:kDsLvtWBEx7MV9tJOj9bnXsPbxwJQ6csT/x4KIN4Ssk=
+golang.org/x/crypto v0.31.0 h1:ihbySMvVjLAeSH1IbfcRTkD/iNscyz8rGzjF/E5hV6U=
+golang.org/x/crypto v0.31.0/go.mod h1:kDsLvtWBEx7MV9tJOj9bnXsPbxwJQ6csT/x4KIN4Ssk=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522/go.mod h1:ZjyILWgesfNpC6sMxTJOJm9Kp84zZh5NQWvqDGG3Qr8=
