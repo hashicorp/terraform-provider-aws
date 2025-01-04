@@ -339,6 +339,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("scaling_configuration") {
 		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.ScalingConfiguration = &types.ScalingConfigurationInput{}
 		}
 	}
 
