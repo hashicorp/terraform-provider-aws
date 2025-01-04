@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eip_association: Add `association_id` attribute
+```
