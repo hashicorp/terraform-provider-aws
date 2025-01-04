@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -133,6 +135,77 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"embedding_model_configuration": schema.ListNestedBlock{
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(0),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"bedrock_embedding_model_configuration": schema.ListNestedBlock{
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(0),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"dimensions": schema.Int64Attribute{
+																Optional: true,
+															},
+															"embedding_data_type": schema.StringAttribute{
+																Optional: true,
+																Validators: []validator.String{
+																	stringvalidator.OneOf("FLOAT32", "BINARY"),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"supplemental_data_storage_configuration": schema.ListNestedBlock{
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(0),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"storage_location": schema.ListNestedBlock{
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"type": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.OneOf("S3"),
+																},
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"s3_location": schema.SingleNestedBlock{
+																Attributes: map[string]schema.Attribute{
+																	"uri": schema.StringAttribute{
+																		Required: true,
+																		Validators: []validator.String{
+																			stringvalidator.RegexMatches(
+																				regexp.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
+																				"must be a valid S3 URI",
+																			),
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -720,7 +793,27 @@ type knowledgeBaseConfigurationModel struct {
 }
 
 type vectorKnowledgeBaseConfigurationModel struct {
-	EmbeddingModelARN fwtypes.ARN `tfsdk:"embedding_model_arn"`
+	EmbeddingModelARN                    fwtypes.ARN                                                                `tfsdk:"embedding_model_arn"`
+	EmbeddingModelConfiguration          fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]          `tfsdk:"embedding_model_configuration"`
+	SupplementalDataStorageConfiguration fwtypes.ListNestedObjectValueOf[supplementalDataStorageConfigurationModel] `tfsdk:"supplemental_data_storage_configuration"`
+}
+
+type embeddingModelConfigurationModel struct {
+	BedrockEmbeddingModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockEmbeddingModelConfigurationModel] `tfsdk:"bedrock_embedding_model_configuration"`
+}
+
+type bedrockEmbeddingModelConfigurationModel struct {
+	Dimensions        types.Int64  `tfsdk:"dimensions"`
+	EmbeddingDataType types.String `tfsdk:"embedding_data_type"`
+}
+
+type supplementalDataStorageConfigurationModel struct {
+	StorageLocation fwtypes.ListNestedObjectValueOf[storageLocationModel] `tfsdk:"storage_location"`
+}
+
+type storageLocationModel struct {
+	Type       types.String                           `tfsdk:"type"`
+	S3Location fwtypes.ObjectValueOf[s3LocationModel] `tfsdk:"s3_location"` // Use a pointer to denote optional nested block
 }
 
 type storageConfigurationModel struct {
