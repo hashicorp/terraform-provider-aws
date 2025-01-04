@@ -35,6 +35,7 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 				Config: testAccEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAssociationID, resourceName, names.AttrID),
 				),
 			},
 			{
