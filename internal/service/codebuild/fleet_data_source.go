@@ -31,6 +31,30 @@ func dataSourceFleet() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"compute_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"disk": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"machine_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"memory": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"vcpu": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"compute_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -170,6 +194,13 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(aws.ToString(fleet.Arn))
 	d.Set(names.AttrARN, fleet.Arn)
 	d.Set("base_capacity", fleet.BaseCapacity)
+
+	if fleet.ComputeConfiguration != nil {
+		if err := d.Set("compute_configuration", []interface{}{flattenComputeConfiguration(fleet.ComputeConfiguration)}); err != nil {
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
+		}
+	}
+
 	d.Set("compute_type", fleet.ComputeType)
 	d.Set("created", aws.ToTime(fleet.Created).Format(time.RFC3339))
 	d.Set("environment_type", fleet.EnvironmentType)
@@ -178,16 +209,19 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("last_modified", aws.ToTime(fleet.LastModified).Format(time.RFC3339))
 	d.Set(names.AttrName, fleet.Name)
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
+
 	if fleet.ScalingConfiguration != nil {
 		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 		}
 	}
+
 	if fleet.Status != nil {
 		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 		}
 	}
+
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(fleet.VpcConfig)); err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 	}
