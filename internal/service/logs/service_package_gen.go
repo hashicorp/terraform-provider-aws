@@ -28,6 +28,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newDeliveryDestinationPolicyResource,
+			Name:    "Delivery Destination Policy",
+		},
+		{
+			Factory: newDeliveryDestinationResource,
+			Name:    "Delivery Destination",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newDeliverySourceResource,
+			Name:    "Delivery Source",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory: newIndexPolicyResource,
 			Name:    "Index Policy",
 		},

@@ -160,6 +160,7 @@ func (r *anomalyDetectorResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
+	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
