@@ -489,7 +489,6 @@ func resourceUserPool() *schema.Resource {
 			"sign_in_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -664,7 +663,7 @@ func resourceUserPool() *schema.Resource {
 			"web_authn_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"relying_party_id": {
