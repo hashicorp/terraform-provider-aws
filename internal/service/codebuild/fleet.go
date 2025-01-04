@@ -280,13 +280,11 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("last_modified", aws.ToTime(fleet.LastModified).Format(time.RFC3339))
 	d.Set(names.AttrName, fleet.Name)
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
-	if fleet.ScalingConfiguration != nil {
-		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
-		}
-	} else {
-		d.Set("scaling_configuration", nil)
+
+	if err := d.Set("scaling_configuration", flattenScalingConfiguration(fleet.ScalingConfiguration)); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 	}
+
 	if fleet.Status != nil {
 		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
@@ -586,7 +584,7 @@ func expandTargetTrackingScalingConfig(tfMap map[string]interface{}) *types.Targ
 	return apiObject
 }
 
-func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) map[string]interface{} {
+func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -609,7 +607,11 @@ func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) ma
 		tfMap["target_tracking_scaling_configs"] = flattenTargetTrackingScalingConfigs(v)
 	}
 
-	return tfMap
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenTargetTrackingScalingConfigs(apiObjects []types.TargetTrackingScalingConfiguration) []interface{} {
