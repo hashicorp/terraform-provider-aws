@@ -112,7 +112,7 @@ The `health_check_config` configuration block supports the following arguments:
 
 The `health_check_custom_config` configuration block supports the following arguments:
 
-* `failure_threshold` - (Optional, Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
+* `failure_threshold` - (Optional, **Deprecated** Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
 
 ## Attribute Reference
 
