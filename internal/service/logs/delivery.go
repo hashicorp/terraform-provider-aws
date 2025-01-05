@@ -12,8 +12,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -77,35 +79,19 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 			"record_fields": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 				Validators: []validator.List{
 					listvalidator.SizeBetween(0, 128),
 					listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 64)),
 				},
-			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-		},
-		Blocks: map[string]schema.Block{
-			"s3_delivery_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[s3DeliveryConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"enable_hive_compatible_path": schema.BoolAttribute{
-							Optional: true,
-						},
-						"suffix_path": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 256),
-							},
-						},
-					},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectAttribute[s3DeliveryConfigurationModel](ctx),
+			names.AttrTags:              tftags.TagsAttribute(),
+			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -137,8 +123,22 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	// Set values for unknowns.
-	data.ARN = fwflex.StringToFramework(ctx, output.Delivery.Arn)
 	data.ID = fwflex.StringToFramework(ctx, output.Delivery.Id)
+
+	delivery, err := findDeliveryByID(ctx, conn, data.ID.ValueString())
+
+	if err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, delivery, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -174,7 +174,7 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	// Additional fields.
-	// Delivery Destination tags aren't set in the Get response.
+	// Delivery tags aren't set in the Get response.
 	// setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
