@@ -272,13 +272,13 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `cached_methods` (Required) - Controls whether CloudFront caches the response to requests using the specified HTTP methods.
 * `cache_policy_id` (Optional) - Unique identifier of the cache policy that is attached to the cache behavior. If configuring the `default_cache_behavior` either `cache_policy_id` or `forwarded_values` must be set.
 * `compress` (Optional) - Whether you want CloudFront to automatically compress content for web requests that include `Accept-Encoding: gzip` in the request header (default: `false`).
-* `default_ttl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `Expires` header.
+* `default_ttl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `Expires` header. The TTL defined in Cache Policy overrides this configuration.
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID.
 * `forwarded_values` (Optional, **Deprecated** use `cache_policy_id` or `origin_request_policy_id ` instead) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront handles query strings, cookies and headers (maximum one).
 * `lambda_function_association` (Optional) - A [config block](#lambda-function-association) that triggers a lambda function with specific actions (maximum 4).
 * `function_association` (Optional) - A [config block](#function-association) that triggers a cloudfront function with specific actions (maximum 2).
-* `max_ttl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers.
-* `min_ttl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds.
+* `max_ttl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers. The TTL defined in Cache Policy overrides this configuration.
+* `min_ttl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds. The TTL defined in Cache Policy overrides this configuration.
 * `origin_request_policy_id` (Optional) - Unique identifier of the origin request policy that is attached to the behavior.
 * `path_pattern` (Required) - Pattern (for example, `images/*.jpg`) that specifies which requests you want this cache behavior to apply to.
 * `realtime_log_config_arn` (Optional) - ARN of the [real-time log configuration](cloudfront_realtime_log_config.html) that is attached to this cache behavior.
