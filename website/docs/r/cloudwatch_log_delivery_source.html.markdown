@@ -24,7 +24,7 @@ resource "aws_cloudwatch_log_delivery_source" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `log_type` - (Required) The type of log that the source is sending. For Amazon Bedrock, the valid value is `APPLICATION_LOGS`. For Amazon CodeWhisperer, the valid value is `EVENT_LOGS`. For IAM Identity Center, the valid value is `ERROR_LOGS`. For Amazon WorkMail, the valid values are `ACCESS_CONTROL_LOGS`, `AUTHENTICATION_LOGS`, `WORKMAIL_AVAILABILITY_PROVIDER_LOGS`, and `WORKMAIL_MAILBOX_ACCESS_LOGS`.
 * `name` - (Required) The name for this delivery source.

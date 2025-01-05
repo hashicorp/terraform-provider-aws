@@ -39,6 +39,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newDeliveryResource,
+			Name:    "Delivery",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory: newDeliverySourceResource,
 			Name:    "Delivery Source",
 			Tags: &types.ServicePackageResourceTags{

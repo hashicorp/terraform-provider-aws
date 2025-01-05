@@ -26,7 +26,7 @@ resource "aws_cloudwatch_log_delivery_destination" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `delivery_destination_configuration` - (Required) The AWS resource that will receive the logs.
     * `destination_resource_arn` - (Required) The ARN of the AWS destination that this delivery destination represents.

@@ -23,7 +23,7 @@ resource "aws_cloudwatch_log_delivery_destination_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `delivery_destination_name` - (Required) The name of the delivery destination to assign this policy to.
 * `delivery_destination_policy` - (Required) The contents of the policy.
