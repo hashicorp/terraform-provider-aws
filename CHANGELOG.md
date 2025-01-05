@@ -10,12 +10,18 @@ FEATURES:
 
 * **New Data Source:** `aws_cloudwatch_event_buses` ([#40662](https://github.com/hashicorp/terraform-provider-aws/issues/40662))
 * **New Data Source:** `aws_ecs_clusters` ([#40638](https://github.com/hashicorp/terraform-provider-aws/issues/40638))
+* **New Resource:** `aws_cleanrooms_membership` ([#35165](https://github.com/hashicorp/terraform-provider-aws/issues/35165))
 * **New Resource:** `aws_cloudwatch_log_index_policy` ([#40594](https://github.com/hashicorp/terraform-provider-aws/issues/40594))
 
 ENHANCEMENTS:
 
+* data-source/aws_codebuild_fleet: Add `compute_configuration` attribute ([#40752](https://github.com/hashicorp/terraform-provider-aws/issues/40752))
+* data-source/aws_dms_endpoint: Add `kafka_settings.sasl_mechanism` attribute ([#36918](https://github.com/hashicorp/terraform-provider-aws/issues/36918))
 * data-source/aws_rds_certificate: Add `default_for_new_launches` attribute ([#40536](https://github.com/hashicorp/terraform-provider-aws/issues/40536))
 * data-source/aws_rds_engine_version: Add `supports_certificate_rotation_without_restart`, `supports_integrations`, and `supports_local_write_forwarding` attributes ([#40700](https://github.com/hashicorp/terraform-provider-aws/issues/40700))
+* resource/aws_codebuild_fleet: Add `compute_configuration` argument ([#40752](https://github.com/hashicorp/terraform-provider-aws/issues/40752))
+* resource/aws_cognito_user_pool: Add `user_pool_tier` argument ([#40633](https://github.com/hashicorp/terraform-provider-aws/issues/40633))
+* resource/aws_dms_endpoint: Add `kafka_settings.sasl_mechanism` argument ([#36918](https://github.com/hashicorp/terraform-provider-aws/issues/36918))
 * resource/aws_eks_node_group: Add `node_repair_config` configuration block ([#40698](https://github.com/hashicorp/terraform-provider-aws/issues/40698))
 
 BUG FIXES:
@@ -24,9 +30,13 @@ BUG FIXES:
 * resource/aws_ec2_instance_connect_endpoint: Set `fips_dns_name` to an empty value (`""`) when no value is returned from the EC2 API. This fixes known-after-apply loops in Regions that don't support FIPS endpoints ([#37939](https://github.com/hashicorp/terraform-provider-aws/issues/37939))
 * resource/aws_glue_catalog_database: Fix crash when expanding `create_table_default_permission` with a nil `principal` block ([#40761](https://github.com/hashicorp/terraform-provider-aws/issues/40761))
 * resource/aws_instance: Set new computed value for `public_dns` and `public_ip` attributes when changing `instance_type`, `user_data`, or `user_data_base64` ([#40710](https://github.com/hashicorp/terraform-provider-aws/issues/40710))
+* resource/aws_quicksight_data_set: Correctly expand `logical_table_map.tag_column_operation.tags.column_description` ([#40713](https://github.com/hashicorp/terraform-provider-aws/issues/40713))
 * resource/aws_rds_instance Fix `manage_master_user_password` being updated in state when update errors ([#40538](https://github.com/hashicorp/terraform-provider-aws/issues/40538))
+* resource/aws_route53_record: Fix perpetual diff if `alias.name` contains characters that the [Route 53 API escapes](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DomainNameFormat.html#domain-name-format-hosted-zones) ([#40154](https://github.com/hashicorp/terraform-provider-aws/issues/40154))
+* resource/aws_route53_zone: Fix perpetual diff if `name` contains characters that the [Route 53 API escapes](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DomainNameFormat.html#domain-name-format-hosted-zones) ([#40154](https://github.com/hashicorp/terraform-provider-aws/issues/40154))
 * resource/aws_ses_identity_notification_topic: Prevent destroy failure when resource is already deleted outside of Terraform ([#40684](https://github.com/hashicorp/terraform-provider-aws/issues/40684))
 * resource/aws_sesv2_configuration_set: Fix handling of `delivery_options.max_delivery_seconds` when not configured ([#40670](https://github.com/hashicorp/terraform-provider-aws/issues/40670))
+* resource/aws_sqs_queue: Fix timeout error on creation if `sqs_managed_sse_enabled=true` and `kms_data_key_reuse_period_seconds` is configured ([#40729](https://github.com/hashicorp/terraform-provider-aws/issues/40729))
 
 ## 5.82.2 (December 20, 2024)
 
