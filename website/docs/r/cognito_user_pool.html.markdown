@@ -171,9 +171,11 @@ The following arguments are optional:
 * `temporary_password_validity_days` - (Optional) In the password policy you have set, refers to the number of days a temporary password is valid. If the user does not sign-in during this time, their password will need to be reset by an administrator.
 
 ### sign_in_policy
-* `allowed_first_auth_factors` (Optional) The sign in methods your user pool supports as the first factor. This is a list of strings, allowed values are `PASSWORD`, `EMAIL_OTP`, `SMS_OTP`, and `WEB_AUTHN`. 
+
+* `allowed_first_auth_factors` (Optional) The sign in methods your user pool supports as the first factor. This is a list of strings, allowed values are `PASSWORD`, `EMAIL_OTP`, `SMS_OTP`, and `WEB_AUTHN`.
 
 ### web_authn_configuration
+
 * `relying_party_id` - (Optional) The authentication domain that passkeys providers use as a relying party.
 * `user_verification` - (Optional) If your user pool should require a passkey. Must be one of `required` or `preferred`.
 
