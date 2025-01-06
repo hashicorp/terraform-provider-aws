@@ -190,6 +190,75 @@ func testAccDelivery_tags(t *testing.T) {
 	})
 }
 
+func testAccDelivery_update(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
+	ctx := acctest.Context(t)
+	var v awstypes.Delivery
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogDeliveryConfig_allAttributes(rName, " ", "{region}/{yyyy}/{MM}/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_delimiter"), knownvalue.StringExact(" ")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_fields"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("object_identifier"),
+						knownvalue.StringExact("event_identifier"),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLogDeliveryConfig_allAttributes(rName, ",", "{region}/{yyyy}/{MM}/{dd}/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_delimiter"), knownvalue.StringExact(",")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_fields"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("object_identifier"),
+						knownvalue.StringExact("event_identifier"),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
@@ -271,4 +340,36 @@ resource "aws_cloudwatch_log_delivery" "test" {
   }
 }
 `, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccLogDeliveryConfig_allAttributes(rName, fieldDelimiter, suffixPath string) string {
+	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_basic(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name          = %[1]q
+  output_format = "w3c"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.test.arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "test" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
+
+  field_delimiter = %[2]q
+
+  record_fields = ["object_identifier", "event_identifier"]
+
+  s3_delivery_configuration {
+    enable_hive_compatible_path = false
+    suffix_path                 = %[3]q
+  }
+}
+`, rName, fieldDelimiter, suffixPath))
 }

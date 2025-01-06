@@ -17,7 +17,7 @@ func TestAccLogs_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDelivery_basic,
 			acctest.CtDisappears: testAccDelivery_disappears,
 			"tags":               testAccDelivery_tags,
-			// "update":               testAccDelivery_update,
+			"update":             testAccDelivery_update,
 		},
 		"DeliverySource": {
 			acctest.CtBasic:      testAccDeliverySource_basic,
