@@ -196,6 +196,21 @@ func resourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"grpc_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"lambda_function_association": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -425,6 +440,21 @@ func resourceDistribution() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"grpc_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -1380,6 +1410,10 @@ func expandCacheBehavior(tfMap map[string]interface{}) *awstypes.CacheBehavior {
 		apiObject.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
 	}
 
+	if v, ok := tfMap["grpc_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.GrpcConfig = expandGRPCConfig(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["lambda_function_association"]; ok {
 		apiObject.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
 	}
@@ -1468,6 +1502,10 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]interfac
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
+	if apiObject.GrpcConfig != nil {
+		tfMap["grpc_config"] = []interface{}{flattenGRPCConfig(apiObject.GrpcConfig)}
+	}
+
 	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
 		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
@@ -1538,12 +1576,16 @@ func expandDefaultCacheBehavior(tfMap map[string]interface{}) *awstypes.DefaultC
 		apiObject.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set).List())
 	}
 
-	if forwardedValuesFlat, ok := tfMap["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
-		apiObject.ForwardedValues = expandForwardedValues(tfMap["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["forwarded_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ForwardedValues = expandForwardedValues(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["function_association"]; ok {
 		apiObject.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
+	}
+
+	if v, ok := tfMap["grpc_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.GrpcConfig = expandGRPCConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["lambda_function_association"]; ok {
@@ -1608,6 +1650,10 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 
 	if len(apiObject.FunctionAssociations.Items) > 0 {
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
+	}
+
+	if apiObject.GrpcConfig != nil {
+		tfMap["grpc_config"] = []interface{}{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
 	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
@@ -1953,6 +1999,30 @@ func flattenCookiePreferenceCookieNames(apiObject *awstypes.CookieNames) []inter
 	}
 
 	return []interface{}{}
+}
+
+func expandGRPCConfig(tfMap map[string]interface{}) *awstypes.GrpcConfig {
+	if len(tfMap) < 1 {
+		return nil
+	}
+
+	apiObject := &awstypes.GrpcConfig{
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+	}
+
+	return apiObject
+}
+
+func flattenGRPCConfig(apiObject *awstypes.GrpcConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return tfMap
 }
 
 func expandAllowedMethods(tfList []interface{}) *awstypes.AllowedMethods {

@@ -288,6 +288,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `trusted_key_groups` (Optional) - List of key group IDs that CloudFront can use to validate signed URLs or signed cookies. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `viewer_protocol_policy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
+* `grpc_config` (Optional) - A [config block](#grpc-config-arguments) that sets the grpc config.
 
 ##### Forwarded Values Arguments
 
@@ -351,6 +352,10 @@ resource "aws_cloudfront_distribution" "example" {
 
 * `event_type` (Required) - Specific event to trigger this function. Valid values: `viewer-request` or `viewer-response`.
 * `function_arn` (Required) - ARN of the CloudFront function.
+
+##### GRPC config arguments
+
+* `enabled` (Required) - Whether Grpc requests are enabled.
 
 ##### Cookies Arguments
 
