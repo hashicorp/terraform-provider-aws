@@ -224,7 +224,7 @@ const (
 	exportableLogTypeSlowQuery      = "slowquery"
 	exportableLogTypeTrace          = "trace"
 	exportableLogTypeUpgrade        = "upgrade"
-	exportableLogTypeIAMDbAuthError = "iam-db-auth-error"
+	exportableLogTypeIAMDBAuthError = "iam-db-auth-error"
 )
 
 func clusterExportableLogType_Values() []string {
@@ -235,7 +235,7 @@ func clusterExportableLogType_Values() []string {
 		exportableLogTypePostgreSQL,
 		exportableLogTypeSlowQuery,
 		exportableLogTypeUpgrade,
-		exportableLogTypeIAMDbAuthError,
+		exportableLogTypeIAMDBAuthError,
 	}
 }
 

@@ -1222,6 +1222,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_aurora_postgresql(t *testing
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "upgrade"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "iam-db-auth-error"),
 				),
 			},
@@ -4059,7 +4060,7 @@ func testAccClusterConfig_enabledCloudWatchLogsExportsAuroraPostgreSQL(rName, en
 
 data "aws_rds_engine_version" "test" {
   engine = "aurora-postgresql"
-	latest = true
+  latest = true
 }
 
 resource "aws_rds_cluster" "test" {
