@@ -759,6 +759,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if v, ok := d.GetOk(names.AttrSchema); ok {
+		input.Schema = expandSchemaAttributeTypes(v.(*schema.Set).List())
+	}
+
 	if v, ok := d.GetOk("sign_in_policy"); ok {
 		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
 			signInPolicy := expandSignInPolicyType(v)
@@ -767,10 +771,6 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 			input.Policies.SignInPolicy = signInPolicy
 		}
-	}
-
-	if v, ok := d.GetOk(names.AttrSchema); ok {
-		input.Schema = expandSchemaAttributeTypes(v.(*schema.Set).List())
 	}
 
 	// For backwards compatibility, include this outside of MFA configuration
@@ -845,10 +845,6 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{}))
 		}
 
-		if webAuthnConfig := d.Get("web_authn_configuration").([]interface{}); len(webAuthnConfig) > 0 {
-			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
-		}
-
 		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
 			input.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
 				SmsConfiguration: expandSMSConfigurationType(v),
@@ -857,6 +853,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 			if v, ok := d.GetOk("sms_authentication_message"); ok {
 				input.SmsMfaConfiguration.SmsAuthenticationMessage = aws.String(v.(string))
 			}
+		}
+
+		if webAuthnConfig := d.Get("web_authn_configuration").([]interface{}); len(webAuthnConfig) > 0 {
+			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
@@ -920,12 +920,12 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("password_policy", flattenPasswordPolicyType(userPool.Policies.PasswordPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting password_policy: %s", err)
 	}
-	if err := d.Set("sign_in_policy", flattenSignInPolicyType(userPool.Policies.SignInPolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting sign_in_policy: %s", err)
-	}
 	var configuredSchema []interface{}
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		configuredSchema = v.(*schema.Set).List()
+	}
+	if err := d.Set("sign_in_policy", flattenSignInPolicyType(userPool.Policies.SignInPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sign_in_policy: %s", err)
 	}
 	if err := d.Set(names.AttrSchema, flattenSchemaAttributeTypes(expandSchemaAttributeTypes(configuredSchema), userPool.SchemaAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
@@ -941,6 +941,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("user_pool_add_ons", flattenUserPoolAddOnsType(userPool.UserPoolAddOns)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user_pool_add_ons: %s", err)
 	}
+	d.Set("user_pool_tier", userPool.UserPoolTier)
 	d.Set("username_attributes", userPool.UsernameAttributes)
 	if err := d.Set("username_configuration", flattenUsernameConfigurationType(userPool.UsernameConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting username_configuration: %s", err)
@@ -948,8 +949,6 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("verification_message_template", flattenVerificationMessageTemplateType(userPool.VerificationMessageTemplate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting verification_message_template: %s", err)
 	}
-
-	d.Set("user_pool_tier", userPool.UserPoolTier)
 
 	setTagsOut(ctx, userPool.UserPoolTags)
 
@@ -1035,8 +1034,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// names.AttrTagsAll,
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
-		"verification_message_template",
 		"user_pool_tier",
+		"verification_message_template",
 	) {
 		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
 		// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
