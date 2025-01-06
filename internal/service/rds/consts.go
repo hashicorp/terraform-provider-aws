@@ -217,6 +217,7 @@ const (
 	exportableLogTypeDiagLog        = "diag.log"
 	exportableLogTypeError          = "error"
 	exportableLogTypeGeneral        = "general"
+	exportableLogTypeIAMDBAuthError = "iam-db-auth-error"
 	exportableLogTypeListener       = "listener"
 	exportableLogTypeNotifyLog      = "notify.log"
 	exportableLogTypeOEMAgent       = "oemagent"
@@ -224,7 +225,6 @@ const (
 	exportableLogTypeSlowQuery      = "slowquery"
 	exportableLogTypeTrace          = "trace"
 	exportableLogTypeUpgrade        = "upgrade"
-	exportableLogTypeIAMDBAuthError = "iam-db-auth-error"
 )
 
 func clusterExportableLogType_Values() []string {
@@ -232,10 +232,10 @@ func clusterExportableLogType_Values() []string {
 		exportableLogTypeAudit,
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
+		exportableLogTypeIAMDBAuthError,
 		exportableLogTypePostgreSQL,
 		exportableLogTypeSlowQuery,
 		exportableLogTypeUpgrade,
-		exportableLogTypeIAMDBAuthError,
 	}
 }
 
