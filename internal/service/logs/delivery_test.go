@@ -238,7 +238,7 @@ func testAccDelivery_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLogDeliveryConfig_allAttributes(rName, ",", "{region}/{yyyy}/{MM}/{dd}/"),
+				Config: testAccLogDeliveryConfig_allAttributes(rName, "", "{region}/{yyyy}/{MM}/{dd}/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryExists(ctx, resourceName, &v),
 				),
@@ -248,7 +248,7 @@ func testAccDelivery_update(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_delimiter"), knownvalue.StringExact(",")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_delimiter"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_fields"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.StringExact("event_timestamp"),
 						knownvalue.StringExact("event"),
