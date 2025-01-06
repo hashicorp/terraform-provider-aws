@@ -859,7 +859,7 @@ resource "aws_s3_object_copy" "test" {
     Key3 = "CCC"
   }
 
-  tagging_directive="REPLACE"
+  tagging_directive = "REPLACE"
 }
 `, targetKey))
 }
@@ -877,7 +877,7 @@ resource "aws_s3_object_copy" "test" {
     Key3 = "CCC"
   }
 
-  tagging_directive="REPLACE"
+  tagging_directive = "REPLACE"
 
   override_provider {
     default_tags {
@@ -902,7 +902,7 @@ resource "aws_s3_object_copy" "test" {
     Key5 = "E:/"
   }
 
-  tagging_directive="REPLACE"
+  tagging_directive = "REPLACE"
 }
 `, targetKey))
 }
@@ -921,7 +921,7 @@ resource "aws_s3_object_copy" "test" {
     Key5 = "E:/"
   }
 
-  tagging_directive="REPLACE"
+  tagging_directive = "REPLACE"
 
   override_provider {
     default_tags {
