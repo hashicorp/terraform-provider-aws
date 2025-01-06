@@ -41,7 +41,6 @@ resource "aws_s3_object_copy" "test" {
       tags = {}
     }
   }
-
 }
 ```
 
