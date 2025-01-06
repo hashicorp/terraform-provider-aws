@@ -31,12 +31,10 @@ This resource supports the following arguments:
 
 * `delivery_destination_arn` - (Required) The ARN of the delivery destination to use for this delivery.
 * `delivery_source_name` - (Required) The name of the delivery source to use for this delivery.
-* `field_delimiter` - (Optional) The field delimiter to use between record fields when the final output format of a 
-delivery is in `plain`, `w3c`, or `raw` format.
+* `field_delimiter` - (Optional) The field delimiter to use between record fields when the final output format of a delivery is in `plain`, `w3c`, or `raw` format.
 * `record_fields` - (Optional) The list of record fields to be delivered to the destination, in order.
 * `s3_delivery_configuration` - (Optional) Parameters that are valid only when the delivery's delivery destination is an S3 bucket.
-    * `enable_hive_compatible_path` - (Optional) This parameter causes the S3 objects that contain delivered logs to 
-    use a prefix structure that allows for integration with Apache Hive.
+    * `enable_hive_compatible_path` - (Optional) This parameter causes the S3 objects that contain delivered logs to use a prefix structure that allows for integration with Apache Hive.
     * `suffix_path` - (Optional) This string allows re-configuring the S3 object prefix to contain either static or variable sections. The valid variables to use in the suffix path will vary by each log source.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
