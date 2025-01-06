@@ -6,10 +6,12 @@ package finspace
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -41,12 +43,12 @@ func ResourceKxDataview() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(4 * time.Hour),
+			Update: schema.DefaultTimeout(4 * time.Hour),
+			Delete: schema.DefaultTimeout(4 * time.Hour),
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,13 +76,13 @@ func ResourceKxDataview() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -95,7 +97,7 @@ func ResourceKxDataview() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -116,13 +118,25 @@ func ResourceKxDataview() *schema.Resource {
 							},
 							Required: true,
 						},
+						"on_demand": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							ForceNew: true,
+							Optional: true,
+						},
 					},
 				},
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"read_write": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				ForceNew: true,
+				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -140,29 +154,32 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	idParts := []string{
-		d.Get("environment_id").(string),
-		d.Get("database_name").(string),
-		d.Get("name").(string),
-	}
+	environmentID := d.Get("environment_id").(string)
+	databaseName := d.Get(names.AttrDatabaseName).(string)
+	name := d.Get(names.AttrName).(string)
 
+	idParts := []string{
+		environmentID,
+		databaseName,
+		name,
+	}
 	rId, err := flex.FlattenResourceId(idParts, kxDataviewIdPartCount, false)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDataview, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDataview, d.Get(names.AttrName).(string), err)
 	}
 	d.SetId(rId)
 
 	in := &finspace.CreateKxDataviewInput{
-		DatabaseName:  aws.String(d.Get("database_name").(string)),
-		DataviewName:  aws.String(d.Get("name").(string)),
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
+		DatabaseName:  aws.String(databaseName),
+		DataviewName:  aws.String(name),
+		EnvironmentId: aws.String(environmentID),
 		AutoUpdate:    d.Get("auto_update").(bool),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
@@ -178,15 +195,20 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 		in.SegmentConfigurations = expandSegmentConfigurations(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("read_write"); ok {
+		in.ReadWrite = v.(bool)
+	}
+
 	out, err := conn.CreateKxDataview(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get(names.AttrName).(string), err)
 	}
 	if out == nil || out.DataviewName == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
+
 	if _, err := waitKxDataviewCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxDataview, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxDataview, d.Get(names.AttrName).(string), err)
 	}
 
 	return append(diags, resourceKxDataviewRead(ctx, d, meta)...)
@@ -206,20 +228,34 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)
 	}
-	d.Set("name", out.DataviewName)
-	d.Set("description", out.Description)
+	d.Set(names.AttrName, out.DataviewName)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("auto_update", out.AutoUpdate)
 	d.Set("changeset_id", out.ChangesetId)
 	d.Set("availability_zone_id", out.AvailabilityZoneId)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set("database_name", out.DatabaseName)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("environment_id", out.EnvironmentId)
 	d.Set("az_mode", out.AzMode)
+	d.Set("read_write", out.ReadWrite)
 	if err := d.Set("segment_configurations", flattenSegmentConfigurations(out.SegmentConfigurations)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)
 	}
+
+	// Manually construct the dataview ARN, which is not returned from the
+	// Create or Describe APIs.
+	//
+	// Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonfinspace.html#amazonfinspace-resources-for-iam-policies
+	dataviewARN := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Service:   names.FinSpace,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("kxEnvironment/%s/kxDatabase/%s/kxDataview/%s", aws.ToString(out.EnvironmentId), aws.ToString(out.DatabaseName), aws.ToString(out.DataviewName)),
+	}.String()
+	d.Set(names.AttrARN, dataviewARN)
 
 	return diags
 }
@@ -229,8 +265,8 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 	in := &finspace.UpdateKxDataviewInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		DatabaseName:  aws.String(d.Get("database_name").(string)),
-		DataviewName:  aws.String(d.Get("name").(string)),
+		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
+		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 	}
 
@@ -243,11 +279,11 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if _, err := conn.UpdateKxDataview(ctx, in); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxDataview, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxDataview, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitKxDataviewUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForUpdate, ResNameKxDataview, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForUpdate, ResNameKxDataview, d.Get(names.AttrName).(string), err)
 	}
 
 	return append(diags, resourceKxDataviewRead(ctx, d, meta)...)
@@ -259,8 +295,8 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.DeleteKxDataview(ctx, &finspace.DeleteKxDataviewInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		DatabaseName:  aws.String(d.Get("database_name").(string)),
-		DataviewName:  aws.String(d.Get("name").(string)),
+		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
+		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 	})
 
@@ -269,7 +305,7 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 		if errors.As(err, &nfe) {
 			return diags
 		}
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxDataview, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxDataview, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitKxDataviewDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil && !tfresource.NotFound(err) {
@@ -395,6 +431,7 @@ func expandSegmentConfigurations(tfList []interface{}) []types.KxDataviewSegment
 		s = append(s, types.KxDataviewSegmentConfiguration{
 			VolumeName: aws.String(m["volume_name"].(string)),
 			DbPaths:    expandDBPath(m["db_paths"].([]interface{})),
+			OnDemand:   (m["on_demand"]).(bool),
 		})
 	}
 
@@ -410,6 +447,9 @@ func flattenSegmentConfiguration(apiObject *types.KxDataviewSegmentConfiguration
 	}
 	if v := apiObject.DbPaths; v != nil {
 		m["db_paths"] = v
+	}
+	if v := apiObject.OnDemand; v {
+		m["on_demand"] = v
 	}
 	return m
 }

@@ -6,16 +6,16 @@ package secretsmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_secretsmanager_secret_rotation")
-func DataSourceSecretRotation() *schema.Resource {
+// @SDKDataSource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
+func dataSourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRotationRead,
 
@@ -37,11 +37,11 @@ func DataSourceSecretRotation() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"duration": {
+						names.AttrDuration: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -49,9 +49,8 @@ func DataSourceSecretRotation() *schema.Resource {
 				},
 			},
 			"secret_id": {
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -59,16 +58,16 @@ func DataSourceSecretRotation() *schema.Resource {
 
 func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	secretID := d.Get("secret_id").(string)
-	output, err := FindSecretByID(ctx, conn, secretID)
+	output, err := findSecretByID(ctx, conn, secretID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", secretID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ARN))
+	d.SetId(aws.ToString(output.ARN))
 	d.Set("rotation_enabled", output.RotationEnabled)
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {

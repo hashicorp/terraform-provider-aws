@@ -51,6 +51,7 @@ This resource supports the following arguments:
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `schedule_expression_timezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
 * `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
 * `start_window` - (Optional) The amount of time in minutes before beginning a backup.
 * `completion_window` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.
@@ -64,6 +65,7 @@ This resource supports the following arguments:
 
 * `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `delete_after` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
+* `opt_in_to_archive_for_supported_resources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
 
 ### Copy Action Arguments
 

@@ -40,13 +40,13 @@ func ResourceKxScalingGroup() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(45 * time.Minute),
+			Create: schema.DefaultTimeout(4 * time.Hour),
 			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(4 * time.Hour),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func ResourceKxScalingGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 32),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,11 +88,11 @@ func ResourceKxScalingGroup() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,14 +113,14 @@ func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	environmentId := d.Get("environment_id").(string)
-	scalingGroupName := d.Get("name").(string)
+	scalingGroupName := d.Get(names.AttrName).(string)
 	idParts := []string{
 		environmentId,
 		scalingGroupName,
 	}
 	rID, err := flex.FlattenResourceId(idParts, kxScalingGroupIDPartCount, false)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxScalingGroup, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxScalingGroup, d.Get(names.AttrName).(string), err)
 	}
 	d.SetId(rID)
 
@@ -134,11 +134,11 @@ func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := conn.CreateKxScalingGroup(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	if _, err := waitKxScalingGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -162,12 +162,12 @@ func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxScalingGroup, d.Id(), err)
 	}
-	d.Set("arn", out.ScalingGroupArn)
-	d.Set("status", out.Status)
-	d.Set("status_reason", out.StatusReason)
+	d.Set(names.AttrARN, out.ScalingGroupArn)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrStatusReason, out.StatusReason)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set("name", out.ScalingGroupName)
+	d.Set(names.AttrName, out.ScalingGroupName)
 	d.Set("availability_zone_id", out.AvailabilityZoneId)
 	d.Set("host_type", out.HostType)
 	d.Set("clusters", out.Clusters)
@@ -193,7 +193,7 @@ func resourceKxScalingGroupDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Deleting FinSpace KxScalingGroup %s", d.Id())
 	_, err := conn.DeleteKxScalingGroup(ctx, &finspace.DeleteKxScalingGroupInput{
-		ScalingGroupName: aws.String(d.Get("name").(string)),
+		ScalingGroupName: aws.String(d.Get(names.AttrName).(string)),
 		EnvironmentId:    aws.String(d.Get("environment_id").(string)),
 	})
 	if err != nil {

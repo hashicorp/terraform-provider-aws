@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_group: Allow import of user groups with names containing `/`
+```

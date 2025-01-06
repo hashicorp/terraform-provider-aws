@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
@@ -23,20 +23,20 @@ func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayDataSourceConfig_filter(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "device_name", dataSourceName, "device_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDeviceName, dataSourceName, names.AttrDeviceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIPAddress, dataSourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 				),
 			},
 		},
@@ -53,20 +53,20 @@ func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayDataSourceConfig_id(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "device_name", dataSourceName, "device_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDeviceName, dataSourceName, names.AttrDeviceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIPAddress, dataSourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 				),
 			},
 		},

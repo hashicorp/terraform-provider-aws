@@ -36,7 +36,7 @@ func ResourcePlan() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -45,7 +45,7 @@ func ResourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -99,10 +99,11 @@ const (
 )
 
 func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	contactId := d.Get("contact_id").(string)
-	stages := expandStages(d.Get("stage").([]interface{}))
+	stages := expandStages(d.Get(names.AttrStage).([]interface{}))
 	plan := &types.Plan{
 		Stages: stages,
 	}
@@ -114,21 +115,20 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	_, err := conn.UpdateContact(ctx, in)
 	if err != nil {
-		return create.DiagError(
-			names.SSMContacts,
+		return create.AppendDiagError(diags, names.SSMContacts,
 			create.ErrActionCreating,
 			ResNamePlan,
 			contactId,
-			err,
-		)
+			err)
 	}
 
 	d.SetId(contactId)
 
-	return resourcePlanRead(ctx, d, meta)
+	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
 func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactByID(ctx, conn, d.Id())
@@ -136,21 +136,22 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSMContacts Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionReading, ResNamePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, ResNamePlan, d.Id(), err)
 	}
 
 	if err := setPlanResourceData(d, out); err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionReading, ResNamePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, ResNamePlan, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	update := false
@@ -159,8 +160,8 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		ContactId: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("stage") {
-		stages := expandStages(d.Get("stage").([]interface{}))
+	if d.HasChanges(names.AttrStage) {
+		stages := expandStages(d.Get(names.AttrStage).([]interface{}))
 		in.Plan = &types.Plan{
 			Stages: stages,
 		}
@@ -168,19 +169,20 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating SSMContacts Plan (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateContact(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionUpdating, ResNamePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionUpdating, ResNamePlan, d.Id(), err)
 	}
 
-	return resourcePlanRead(ctx, d, meta)
+	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
 func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMContacts Plan %s", d.Id())
@@ -193,8 +195,8 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionDeleting, ResNamePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionDeleting, ResNamePlan, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

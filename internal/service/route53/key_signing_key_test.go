@@ -9,18 +9,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-// add sweeper to delete resources
 
 func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -32,7 +30,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,14 +44,14 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "dnskey_record", regexache.MustCompile(`^257 [0-9]+ [0-9]+ [0-9A-Za-z+/]+={0,3}$`)),
 					resource.TestMatchResourceAttr(resourceName, "ds_record", regexache.MustCompile(`^[0-9]+ [0-9]+ [0-9]+ [0-9A-F]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "flag", "257"),
-					resource.TestCheckResourceAttrPair(resourceName, "hosted_zone_id", route53ZoneResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_management_service_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrHostedZoneID, route53ZoneResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "key_management_service_arn", kmsKeyResourceName, names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "key_tag", regexache.MustCompile(`^[0-9]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestMatchResourceAttr(resourceName, "public_key", regexache.MustCompile(`^[0-9A-Za-z+/]+={0,3}$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPublicKey, regexache.MustCompile(`^[0-9A-Za-z+/]+={0,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm_mnemonic", "ECDSAP256SHA256"),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm_type", "13"),
-					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusActive),
 				),
 			},
 			{
@@ -73,7 +71,7 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +95,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +103,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusInactive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusInactive),
 				),
 			},
 			{
@@ -117,14 +115,14 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusActive),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusActive),
 				),
 			},
 			{
 				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusInactive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusInactive),
 				),
 			},
 		},
@@ -133,61 +131,42 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 
 func testAccCheckKeySigningKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_key_signing_key" {
 				continue
 			}
 
-			keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(ctx, conn, rs.Primary.ID)
+			_, err := tfroute53.FindKeySigningKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrHostedZoneID], rs.Primary.Attributes[names.AttrName])
 
-			if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-				continue
-			}
-
-			if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchKeySigningKey) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if keySigningKey != nil {
-				return fmt.Errorf("Route 53 Key Signing Key (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Route 53 Key Signing Key %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccKeySigningKeyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccKeySigningKeyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource %s not found", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource %s has not set its id", resourceName)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		_, err := tfroute53.FindKeySigningKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrHostedZoneID], rs.Primary.Attributes[names.AttrName])
 
-		keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
-		}
-
-		if keySigningKey == nil {
-			return fmt.Errorf("Route 53 Key Signing Key (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

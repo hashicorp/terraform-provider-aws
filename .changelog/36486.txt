@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_finspace_kx_dataview: Add `read_write` and `segment_configuration.on_demand` arguments
+```

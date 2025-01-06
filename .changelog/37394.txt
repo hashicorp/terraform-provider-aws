@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_opensearch_domain: Wait for `auto_tune_options` to be applied during creation
+```
+```release-note:bug
+resource/aws_opensearch_domain: Fix handling of unset `auto_tune_options.rollback_on_disable` argument
+```
+```release-note:bug
+resource/aws_elasticsearch_domain: Fix handling of unset `auto_tune_options.rollback_on_disable` argument
+```

@@ -4,10 +4,6 @@
 package cloudwatch
 
 const (
-	ResNameDashboard = "Dashboard"
-)
-
-const (
 	lowSampleCountPercentilesEvaluate          = "evaluate"
 	lowSampleCountPercentilesmissingDataIgnore = "ignore"
 )

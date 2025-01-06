@@ -130,7 +130,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The unique identifier (ID) of the macie classification job.
 * `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
-* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
+* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be canceled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
 
 ## Import
 

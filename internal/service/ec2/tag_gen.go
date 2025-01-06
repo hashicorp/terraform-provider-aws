@@ -6,17 +6,17 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_tag")
-func ResourceTag() *schema.Resource {
+// @SDKResource("aws_ec2_tag", name="EC2 Resource Tag")
+func resourceTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagCreate,
 		ReadWithoutTimeout:   resourceTagRead,
@@ -28,17 +28,17 @@ func ResourceTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -46,15 +46,16 @@ func ResourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	identifier := d.Get("resource_id").(string)
-	key := d.Get("key").(string)
-	value := d.Get("value").(string)
+	identifier := d.Get(names.AttrResourceID).(string)
+	key := d.Get(names.AttrKey).(string)
+	value := d.Get(names.AttrValue).(string)
 
 	if err := createTags(ctx, conn, identifier, Tags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
+		return sdkdiag.AppendErrorf(diags, "creating %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
 	d.SetId(tftags.SetResourceID(identifier, key))
@@ -62,58 +63,61 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	identifier, key, err := tftags.GetResourceID(d.Id())
+func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
+	identifier, key, err := tftags.GetResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	value, err := GetTag(ctx, conn, identifier, key)
+	value, err := findTag(ctx, conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", ec2.ServiceID, identifier, key)
+		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", names.EC2, identifier, key)
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
+		return sdkdiag.AppendErrorf(diags, "reading %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
-	d.Set("resource_id", identifier)
-	d.Set("key", key)
-	d.Set("value", value)
+	d.Set(names.AttrResourceID, identifier)
+	d.Set(names.AttrKey, key)
+	d.Set(names.AttrValue, value)
 
 	return diags
 }
 
-func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	identifier, key, err := tftags.GetResourceID(d.Id())
+func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
+	identifier, key, err := tftags.GetResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
+	if err := updateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get(names.AttrValue).(string)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
 	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	identifier, key, err := tftags.GetResourceID(d.Id())
+func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
+	identifier, key, err := tftags.GetResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTags(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
+	if err := updateTags(ctx, conn, identifier, map[string]string{key: d.Get(names.AttrValue).(string)}, nil); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
 	return diags

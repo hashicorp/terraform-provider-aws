@@ -251,6 +251,7 @@ The following arguments are optional:
 * `skip_destroy` - (Optional) Whether to retain the old revision when the resource is destroyed or replacement is necessary. Default is `false`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `track_latest` - (Optional) Whether should track latest `ACTIVE` task definition on AWS or the one created with the resource stored in state. Default is `false`. Useful in the event the task definition is modified outside of this resource.
 * `volume` - (Optional) Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
 
 ### volume
@@ -259,6 +260,7 @@ The following arguments are optional:
 * `efs_volume_configuration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
 * `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `configure_at_launch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
 

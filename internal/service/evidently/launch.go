@@ -48,15 +48,15 @@ func ResourceLaunch() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 160),
@@ -84,7 +84,7 @@ func ResourceLaunch() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 160),
@@ -97,7 +97,7 @@ func ResourceLaunch() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 							),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -116,7 +116,7 @@ func ResourceLaunch() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +151,7 @@ func ResourceLaunch() *schema.Resource {
 											return json
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -172,7 +172,7 @@ func ResourceLaunch() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -201,7 +201,7 @@ func ResourceLaunch() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 127),
 				// Default: set to the launch name if not specified
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == d.Get("name").(string) && new == ""
+					return old == d.Get(names.AttrName).(string) && new == ""
 				},
 			},
 			"scheduled_splits_config": {
@@ -268,7 +268,7 @@ func ResourceLaunch() *schema.Resource {
 											},
 										},
 									},
-									"start_time": {
+									names.AttrStartTime: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidUTCTimestamp,
@@ -279,17 +279,17 @@ func ResourceLaunch() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -303,7 +303,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	project := d.Get("project").(string)
 	input := &evidently.CreateLaunchInput{
 		Name:    aws.String(name),
@@ -312,7 +312,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -384,16 +384,16 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting scheduled_splits_config: %s", err)
 	}
 
-	d.Set("arn", launch.Arn)
-	d.Set("created_time", aws.ToTime(launch.CreatedTime).Format(time.RFC3339))
-	d.Set("description", launch.Description)
-	d.Set("last_updated_time", aws.ToTime(launch.LastUpdatedTime).Format(time.RFC3339))
-	d.Set("name", launch.Name)
+	d.Set(names.AttrARN, launch.Arn)
+	d.Set(names.AttrCreatedTime, aws.ToTime(launch.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, launch.Description)
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(launch.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrName, launch.Name)
 	d.Set("project", launch.Project)
 	d.Set("randomization_salt", launch.RandomizationSalt)
-	d.Set("status", launch.Status)
-	d.Set("status_reason", launch.StatusReason)
-	d.Set("type", launch.Type)
+	d.Set(names.AttrStatus, launch.Status)
+	d.Set(names.AttrStatusReason, launch.StatusReason)
+	d.Set(names.AttrType, launch.Type)
 
 	setTagsOut(ctx, launch.Tags)
 
@@ -405,12 +405,12 @@ func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	if d.HasChanges("description", "groups", "metric_monitors", "randomization_salt", "scheduled_splits_config") {
-		name := d.Get("name").(string)
+	if d.HasChanges(names.AttrDescription, "groups", "metric_monitors", "randomization_salt", "scheduled_splits_config") {
+		name := d.Get(names.AttrName).(string)
 		project := d.Get("project").(string)
 
 		input := &evidently.UpdateLaunchInput{
-			Description:           aws.String(d.Get("description").(string)),
+			Description:           aws.String(d.Get(names.AttrDescription).(string)),
 			Groups:                expandGroups(d.Get("groups").([]interface{})),
 			Launch:                aws.String(name),
 			Project:               aws.String(project),
@@ -438,7 +438,7 @@ func resourceLaunchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	project := d.Get("project").(string)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Launch: %s", d.Id())
@@ -485,11 +485,11 @@ func expandGroups(tfMaps []interface{}) []awstypes.LaunchGroupConfig {
 func expandGroup(tfMap map[string]interface{}) awstypes.LaunchGroupConfig {
 	apiObject := awstypes.LaunchGroupConfig{
 		Feature:   aws.String(tfMap["feature"].(string)),
-		Name:      aws.String(tfMap["name"].(string)),
+		Name:      aws.String(tfMap[names.AttrName].(string)),
 		Variation: aws.String(tfMap["variation"].(string)),
 	}
 
-	if v, ok := tfMap["description"]; ok {
+	if v, ok := tfMap[names.AttrDescription]; ok {
 		apiObject.Description = aws.String(v.(string))
 	}
 
@@ -523,7 +523,7 @@ func expandMetricDefinition(tfList []interface{}) *awstypes.MetricDefinitionConf
 
 	apiObject := &awstypes.MetricDefinitionConfig{
 		EntityIdKey: aws.String(tfMap["entity_id_key"].(string)),
-		Name:        aws.String(tfMap["name"].(string)),
+		Name:        aws.String(tfMap[names.AttrName].(string)),
 		ValueKey:    aws.String(tfMap["value_key"].(string)),
 	}
 
@@ -563,7 +563,7 @@ func expandSteps(tfMaps []interface{}) []awstypes.ScheduledSplitConfig {
 }
 
 func expandStep(tfMap map[string]interface{}) awstypes.ScheduledSplitConfig {
-	t, _ := time.Parse(time.RFC3339, tfMap["start_time"].(string))
+	t, _ := time.Parse(time.RFC3339, tfMap[names.AttrStartTime].(string))
 	startTime := aws.Time(t)
 
 	apiObject := awstypes.ScheduledSplitConfig{
@@ -637,7 +637,7 @@ func flattenGroup(apiObject awstypes.LaunchGroup) map[string]interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"name": aws.ToString(apiObject.Name),
+		names.AttrName: aws.ToString(apiObject.Name),
 	}
 
 	for feature, variation := range apiObject.FeatureVariations {
@@ -646,7 +646,7 @@ func flattenGroup(apiObject awstypes.LaunchGroup) map[string]interface{} {
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -689,7 +689,7 @@ func flattenMetricMonitorDefinition(apiObject *awstypes.MetricDefinition) []inte
 
 	tfMap := map[string]interface{}{
 		"entity_id_key": aws.ToString(apiObject.EntityIdKey),
-		"name":          aws.ToString(apiObject.Name),
+		names.AttrName:  aws.ToString(apiObject.Name),
 		"value_key":     aws.ToString(apiObject.ValueKey),
 	}
 
@@ -740,8 +740,8 @@ func flattenStep(apiObject awstypes.ScheduledSplit) map[string]interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"group_weights": apiObject.GroupWeights,
-		"start_time":    aws.ToTime(apiObject.StartTime).Format(time.RFC3339),
+		"group_weights":     apiObject.GroupWeights,
+		names.AttrStartTime: aws.ToTime(apiObject.StartTime).Format(time.RFC3339),
 	}
 
 	if v := apiObject.SegmentOverrides; v != nil {

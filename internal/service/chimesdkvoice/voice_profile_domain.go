@@ -78,7 +78,7 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -111,11 +111,11 @@ func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceDat
 
 	out, err := conn.CreateVoiceProfileDomain(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.VoiceProfileDomain == nil {
-		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VoiceProfileDomain.VoiceProfileDomainId))
@@ -229,7 +229,7 @@ func flattenServerSideEncryptionConfiguration(apiObject *awstypes.ServerSideEncr
 	}
 
 	return []interface{}{map[string]interface{}{
-		"kms_key_arn": apiObject.KmsKeyArn,
+		names.AttrKMSKeyARN: apiObject.KmsKeyArn,
 	}}
 }
 
@@ -238,6 +238,6 @@ func expandServerSideEncryptionConfiguration(tfList []interface{}) *awstypes.Ser
 		return nil
 	}
 	return &awstypes.ServerSideEncryptionConfiguration{
-		KmsKeyArn: aws.String(tfList[0].(map[string]interface{})["kms_key_arn"].(string)),
+		KmsKeyArn: aws.String(tfList[0].(map[string]interface{})[names.AttrKMSKeyARN].(string)),
 	}
 }

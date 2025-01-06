@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lb_target_group: Fix diff on `stickiness.cookie_name` when `stickiness.type` is `lb_cookie`
+```
+
+```release-note:bug
+data-source/aws_lb_target_group: Change `deregistration_delay` from `TypeInt` to `TypeString`
+```

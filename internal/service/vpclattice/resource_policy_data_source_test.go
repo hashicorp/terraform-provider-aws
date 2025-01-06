@@ -26,15 +26,15 @@ func TestAccVPCLatticeResourcePolicyDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "policy", regexache.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_arn", "aws_vpclattice_service_network.test", "arn"),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrPolicy, regexache.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceARN, "aws_vpclattice_service_network.test", names.AttrARN),
 				),
 			},
 		},

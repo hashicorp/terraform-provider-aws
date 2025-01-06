@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKendraFaqDataSource_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccKendraFaqDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -36,22 +36,22 @@ func TestAccKendraFaqDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFaqDataSourceConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "created_at", resourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreatedAt, resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "faq_id", resourceName, "faq_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "file_format", resourceName, "file_format"),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_id", resourceName, "index_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "language_code", resourceName, "language_code"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "role_arn", resourceName, "role_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrLanguageCode, resourceName, names.AttrLanguageCode),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "s3_path.#", resourceName, "s3_path.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "s3_path.0.bucket", resourceName, "s3_path.0.bucket"),
 					resource.TestCheckResourceAttrPair(datasourceName, "s3_path.0.key", resourceName, "s3_path.0.key"),
-					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(datasourceName, "updated_at", resourceName, "updated_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1")),
 			},
 		},

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSiteVPNGatewayRoutePropagation_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccSiteVPNGatewayRoutePropagation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,7 +46,7 @@ func TestAccSiteVPNGatewayRoutePropagation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func testAccCheckVPNGatewayRoutePropagationExists(ctx context.Context, n string)
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		return tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 	}
@@ -98,7 +98,7 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource
 				return err
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 			err = tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 

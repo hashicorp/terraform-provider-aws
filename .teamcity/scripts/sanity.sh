@@ -65,7 +65,7 @@ if [ ! -f "logssanity.test" ]; then
 fi
 
 if [ ! -f "ec2sanity.test" ]; then
-    tester "ec2" 'TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic'
+    tester "ec2" 'TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_egressMode|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic'
     touch ec2sanity.test
     exit 0
 fi

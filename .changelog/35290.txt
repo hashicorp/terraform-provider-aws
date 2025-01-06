@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_grafana_license_association: Fix missing `workspace_id` attribute after import
+```

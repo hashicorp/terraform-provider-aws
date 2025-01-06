@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSEndpointDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccDMSEndpointDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -30,9 +30,9 @@ func TestAccDMSEndpointDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint_id", resourceName, "endpoint_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint_type", resourceName, "endpoint_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEndpointType, resourceName, names.AttrEndpointType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_name", resourceName, "engine_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_name", resourceName, "server_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ssl_mode", resourceName, "ssl_mode"),
 				),

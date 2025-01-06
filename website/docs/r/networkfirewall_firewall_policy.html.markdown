@@ -23,6 +23,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
       priority     = 1
       resource_arn = aws_networkfirewall_rule_group.example.arn
     }
+    tls_inspection_configuration_arn = "arn:aws:network-firewall:REGION:ACCT:tls-configuration/example"
   }
 
   tags = {
@@ -129,6 +130,8 @@ In addition, you can specify custom actions that are compatible with your standa
 
 * `stateless_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [Stateless Rule Group Reference](#stateless-rule-group-reference) below for details.
 
+* `tls_inspection_configuration_arn` - (Optional) The (ARN) of the TLS Inspection policy to attach to the FW Policy.  This must be added at creation of the resource per AWS documentation. "You can only add a TLS inspection configuration to a new policy, not to an existing policy."  This cannot be removed from a FW Policy.
+
 ### Rule Variables
 
 The `rule_variables` block supports the following arguments:
@@ -149,9 +152,17 @@ The `stateful_engine_options` block supports the following argument:
 
 ~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this firewall policy can only reference stateful rule groups that utilize `STRICT_ORDER`.
 
+* `flow_timeouts` - (Optional) Amount of time that can pass without any traffic sent through the firewall before the firewall determines that the connection is idle.
+
 * `rule_order` - Indicates how to manage the order of stateful rule evaluation for the policy. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
 
 * `stream_exception_policy` - Describes how to treat traffic which has broken midstream. Default value: `DROP`. Valid values: `DROP`, `CONTINUE`, `REJECT`.
+
+### Flow Timeouts
+
+The `flow_timeouts` block supports the following argument:
+
+* `tcp_idle_timeout_seconds` - Number of seconds that can pass without any TCP traffic sent through the firewall before the firewall determines that the connection is idle. After the idle timeout passes, data packets are dropped, however, the next TCP SYN packet is considered a new flow and is processed by the firewall. Clients or targets can use TCP keepalive packets to reset the idle timeout. Default value: `350`.
 
 ### Stateful Rule Group Reference
 

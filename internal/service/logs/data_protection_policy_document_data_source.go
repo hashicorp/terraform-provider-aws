@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_log_data_protection_policy_document")
@@ -22,20 +23,20 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "2021-06-01",
@@ -73,7 +74,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"cloudwatch_logs": {
+															names.AttrCloudWatchLogs: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -107,7 +108,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"bucket": {
+																		names.AttrBucket: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: validation.StringIsNotEmpty,
@@ -160,9 +161,9 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 	var diags diag.Diagnostics
 
 	document := DataProtectionPolicyDocument{
-		Description: d.Get("description").(string),
-		Name:        d.Get("name").(string),
-		Version:     d.Get("version").(string),
+		Description: d.Get(names.AttrDescription).(string),
+		Name:        d.Get(names.AttrName).(string),
+		Version:     d.Get(names.AttrVersion).(string),
 	}
 
 	// unwrap expects m to be a configuration block -- a TypeList schema
@@ -217,7 +218,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 					findingsDestination := &DataProtectionPolicyStatementOperationAuditFindingsDestination{}
 					audit.FindingsDestination = findingsDestination
 
-					if m, ok := unwrap(m["cloudwatch_logs"]); ok {
+					if m, ok := unwrap(m[names.AttrCloudWatchLogs]); ok {
 						findingsDestination.CloudWatchLogs = &DataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs{
 							LogGroup: m["log_group"].(string),
 						}
@@ -231,7 +232,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 
 					if m, ok := unwrap(m["s3"]); ok {
 						findingsDestination.S3 = &DataProtectionPolicyStatementOperationAuditFindingsDestinationS3{
-							Bucket: m["bucket"].(string),
+							Bucket: m[names.AttrBucket].(string),
 						}
 					}
 				}
@@ -269,7 +270,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 
 	jsonString := string(jsonBytes)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags

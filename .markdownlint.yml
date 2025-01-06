@@ -14,6 +14,12 @@ ul-indent:
 no-hard-tabs:
   code_blocks: false
 
+# MD033
+no-inline-html:
+  allowed_elements:
+    - br
+    - sup
+
 # Disabled Rules
 # https://github.com/DavidAnson/markdownlint/blob/master/doc/Rules.md
 

@@ -43,8 +43,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `configuration` - (Optional) A block that specifies the configuration of the analyzer. [Documented below](#configuration-argument-reference)
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT` or `ORGANIZATION`. Defaults to `ACCOUNT`.
+* `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT`, `ORGANIZATION`, `ACCOUNT_UNUSED_ACCESS `, `ORGANIZATION_UNUSED_ACCESS`. Defaults to `ACCOUNT`.
+
+### `configuration` Argument Reference
+
+* `unused_access` - A block that specifies the configuration of an unused access analyzer for an AWS organization or account. [Documented below](#unused_access-argument-reference)
+
+### `unused_access` Argument Reference
+
+* `unused_access_age` - The specified access age in days for which to generate findings for unused access.
 
 ## Attribute Reference
 

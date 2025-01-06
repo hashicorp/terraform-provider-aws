@@ -7,12 +7,13 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
@@ -25,48 +26,43 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `../../../website/allowed-subcategories.txt`
-		namesDataFile = "../../../names/names_data.csv"
+		filename = `../../../website/allowed-subcategories.txt`
 	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() && !l.AllowedSubcategory() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
-			continue
-		}
-
-		if l[names.ColNotImplemented] != "" {
+		if l.NotImplemented() {
 			continue
 		}
 
 		sd := ServiceDatum{
-			HumanFriendly: l[names.ColHumanFriendly],
+			HumanFriendly: l.HumanFriendly(),
 		}
 
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].HumanFriendly < td.Services[j].HumanFriendly
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.HumanFriendly, b.HumanFriendly)
 	})
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("allowsubcats", tmpl, td); err != nil {
+	if err := d.BufferTemplate("allowsubcats", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

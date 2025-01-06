@@ -39,28 +39,28 @@ func resourceDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -87,14 +87,14 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
 		Tags:                                   getTagsIn(ctx),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -106,7 +106,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 
-	return resourceDomainRead(ctx, d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -118,7 +118,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SWF Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -126,10 +126,10 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := aws.ToString(output.DomainInfo.Arn)
-	d.Set("arn", arn)
-	d.Set("description", output.DomainInfo.Description)
-	d.Set("name", output.DomainInfo.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.DomainInfo.Name)))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.DomainInfo.Description)
+	d.Set(names.AttrName, output.DomainInfo.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.DomainInfo.Name)))
 	d.Set("workflow_execution_retention_period_in_days", output.Configuration.WorkflowExecutionRetentionPeriodInDays)
 
 	return diags
@@ -145,7 +145,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
 	_, err := conn.DeprecateDomain(ctx, &swf.DeprecateDomainInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*types.DomainDeprecatedFault](err) || errs.IsA[*types.UnknownResourceFault](err) {

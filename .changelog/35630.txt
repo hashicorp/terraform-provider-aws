@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Ensure that `replica`s are always set on Read
+```

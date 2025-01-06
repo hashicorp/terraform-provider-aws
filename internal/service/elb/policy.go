@@ -7,20 +7,25 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_load_balancer_policy")
-func ResourcePolicy() *schema.Resource {
+// @SDKResource("aws_load_balancer_policy", name="Load Balancer Policy")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -42,11 +47,11 @@ func ResourcePolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -73,22 +78,22 @@ func ResourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName := d.Get("load_balancer_name").(string)
 	policyName := d.Get("policy_name").(string)
-	id := PolicyCreateResourceID(lbName, policyName)
-	input := &elb.CreateLoadBalancerPolicyInput{
+	id := policyCreateResourceID(lbName, policyName)
+	input := &elasticloadbalancing.CreateLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 		PolicyTypeName:   aws.String(d.Get("policy_type_name").(string)),
 	}
 
 	if v, ok := d.GetOk("policy_attribute"); ok && v.(*schema.Set).Len() > 0 {
-		input.PolicyAttributes = ExpandPolicyAttributes(v.(*schema.Set).List())
+		input.PolicyAttributes = expandPolicyAttributes(v.(*schema.Set).List())
 	}
 
-	_, err := conn.CreateLoadBalancerPolicyWithContext(ctx, input)
+	_, err := conn.CreateLoadBalancerPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer Policy (%s): %s", id, err)
@@ -101,15 +106,14 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, policyName, err := PolicyParseResourceID(d.Id())
-
+	lbName, policyName, err := policyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
+	policy, err := findLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer Policy (%s) not found, removing from state", d.Id())
@@ -122,7 +126,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("load_balancer_name", lbName)
-	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policy.PolicyAttributeDescriptions)); err != nil {
+	if err := d.Set("policy_attribute", flattenPolicyAttributeDescriptions(policy.PolicyAttributeDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy_attribute: %s", err)
 	}
 	d.Set("policy_name", policyName)
@@ -133,50 +137,59 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
-	reassignments := Reassignment{}
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, policyName, err := PolicyParseResourceID(d.Id())
-
+	lbName, policyName, err := policyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	assigned, err := resourcePolicyAssigned(ctx, policyName, lbName, conn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "determining assignment status of Load Balancer Policy %s: %s", policyName, err)
-	}
+	reassignments := &policyReassignments{}
 
-	if assigned {
-		reassignments, err = resourcePolicyUnassign(ctx, policyName, lbName, conn)
+	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
+	switch {
+	case tfresource.NotFound(err):
+		// Policy not attached.
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
+	default:
+		reassignments, err = unassignPolicy(ctx, conn, lbName, policyName)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "unassigning Load Balancer Policy %s: %s", policyName, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	request := &elb.DeleteLoadBalancerPolicyInput{
+	input := &elasticloadbalancing.DeleteLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	}
 
-	if _, err := conn.DeleteLoadBalancerPolicyWithContext(ctx, request); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Load Balancer Policy %s: %s", d.Id(), err)
+	_, err = conn.DeleteLoadBalancerPolicy(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer Policy (%s): %s", d.Id(), err)
 	}
 
 	diags = append(diags, sdkdiag.WrapDiagsf(resourcePolicyCreate(ctx, d, meta), "updating ELB Classic Policy (%s)", d.Id())...)
+
 	if diags.HasError() {
 		return diags
 	}
 
-	for _, listenerAssignment := range reassignments.listenerPolicies {
-		if _, err := conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, listenerAssignment); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting LoadBalancerPoliciesOfListener: %s", err)
+	for _, input := range reassignments.listenerPolicies {
+		_, err := conn.SetLoadBalancerPoliciesOfListener(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ELB Classic Listener Policy (%s): %s", lbName, err)
 		}
 	}
 
-	for _, backendServerAssignment := range reassignments.backendServerPolicies {
-		if _, err := conn.SetLoadBalancerPoliciesForBackendServerWithContext(ctx, backendServerAssignment); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting LoadBalancerPoliciesForBackendServer: %s", err)
+	for _, input := range reassignments.backendServerPolicies {
+		_, err := conn.SetLoadBalancerPoliciesForBackendServer(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", lbName, err)
 		}
 	}
 
@@ -185,166 +198,134 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, policyName, err := PolicyParseResourceID(d.Id())
-
+	lbName, policyName, err := policyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	assigned, err := resourcePolicyAssigned(ctx, policyName, lbName, conn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "determining assignment status of Load Balancer Policy %s: %s", policyName, err)
-	}
-
-	if assigned {
-		_, err := resourcePolicyUnassign(ctx, policyName, lbName, conn)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "unassigning Load Balancer Policy %s: %s", policyName, err)
+	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
+	switch {
+	case tfresource.NotFound(err):
+		// Policy not attached.
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
+	default:
+		if _, err := unassignPolicy(ctx, conn, lbName, policyName); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	request := &elb.DeleteLoadBalancerPolicyInput{
+	log.Printf("[DEBUG] Deleting ELB Classic Load Balancer Policy: %s", d.Id())
+	_, err = conn.DeleteLoadBalancerPolicy(ctx, &elasticloadbalancing.DeleteLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+		return diags
 	}
 
-	if _, err := conn.DeleteLoadBalancerPolicyWithContext(ctx, request); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourcePolicyAssigned(ctx context.Context, policyName, loadBalancerName string, conn *elb.ELB) (bool, error) {
-	describeElbOpts := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
-	}
-
-	describeResp, err := conn.DescribeLoadBalancersWithContext(ctx, describeElbOpts)
-
-	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
-		return false, nil
-	}
+func findPolicyAttachmentByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName, policyName string) error {
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
-		return false, fmt.Errorf("retrieving ELB description: %s", err)
+		return err
 	}
 
-	if len(describeResp.LoadBalancerDescriptions) != 1 {
-		return false, fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
+	attached := slices.ContainsFunc(lb.BackendServerDescriptions, func(v awstypes.BackendServerDescription) bool {
+		return slices.Contains(v.PolicyNames, policyName)
+	})
+
+	if attached {
+		return nil
 	}
 
-	lb := describeResp.LoadBalancerDescriptions[0]
-	assigned := false
-	for _, backendServer := range lb.BackendServerDescriptions {
-		for _, name := range backendServer.PolicyNames {
-			if policyName == aws.StringValue(name) {
-				assigned = true
-				break
-			}
-		}
+	attached = slices.ContainsFunc(lb.ListenerDescriptions, func(v awstypes.ListenerDescription) bool {
+		return slices.Contains(v.PolicyNames, policyName)
+	})
+
+	if attached {
+		return nil
 	}
 
-	for _, listener := range lb.ListenerDescriptions {
-		for _, name := range listener.PolicyNames {
-			if policyName == aws.StringValue(name) {
-				assigned = true
-				break
-			}
-		}
-	}
-
-	return assigned, nil
+	return &retry.NotFoundError{}
 }
 
-type Reassignment struct {
-	backendServerPolicies []*elb.SetLoadBalancerPoliciesForBackendServerInput
-	listenerPolicies      []*elb.SetLoadBalancerPoliciesOfListenerInput
+type policyReassignments struct {
+	backendServerPolicies []*elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput
+	listenerPolicies      []*elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput
 }
 
-func resourcePolicyUnassign(ctx context.Context, policyName, loadBalancerName string, conn *elb.ELB) (Reassignment, error) {
-	reassignments := Reassignment{}
+func unassignPolicy(ctx context.Context, conn *elasticloadbalancing.Client, lbName, policyName string) (*policyReassignments, error) {
+	reassignments := &policyReassignments{}
 
-	describeElbOpts := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
-	}
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
-	describeResp, err := conn.DescribeLoadBalancersWithContext(ctx, describeElbOpts)
-
-	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+	if tfresource.NotFound(err) {
 		return reassignments, nil
 	}
 
 	if err != nil {
-		return reassignments, fmt.Errorf("retrieving ELB description: %s", err)
+		return nil, err
 	}
 
-	if len(describeResp.LoadBalancerDescriptions) != 1 {
-		return reassignments, fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
-	}
+	for _, v := range lb.BackendServerDescriptions {
+		policies := tfslices.Filter(v.PolicyNames, func(v string) bool {
+			return v != policyName
+		})
 
-	lb := describeResp.LoadBalancerDescriptions[0]
+		if len(v.PolicyNames) != len(policies) {
+			reassignments.backendServerPolicies = append(reassignments.backendServerPolicies, &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+				InstancePort:     v.InstancePort,
+				LoadBalancerName: aws.String(lbName),
+				PolicyNames:      v.PolicyNames,
+			})
 
-	for _, backendServer := range lb.BackendServerDescriptions {
-		policies := []*string{}
-
-		for _, name := range backendServer.PolicyNames {
-			if policyName != aws.StringValue(name) {
-				policies = append(policies, name)
-			}
-		}
-
-		if len(backendServer.PolicyNames) != len(policies) {
-			setOpts := &elb.SetLoadBalancerPoliciesForBackendServerInput{
-				LoadBalancerName: aws.String(loadBalancerName),
-				InstancePort:     aws.Int64(*backendServer.InstancePort),
+			input := &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+				InstancePort:     v.InstancePort,
+				LoadBalancerName: aws.String(lbName),
 				PolicyNames:      policies,
 			}
 
-			reassignOpts := &elb.SetLoadBalancerPoliciesForBackendServerInput{
-				LoadBalancerName: aws.String(loadBalancerName),
-				InstancePort:     aws.Int64(*backendServer.InstancePort),
-				PolicyNames:      backendServer.PolicyNames,
-			}
+			_, err = conn.SetLoadBalancerPoliciesForBackendServer(ctx, input)
 
-			reassignments.backendServerPolicies = append(reassignments.backendServerPolicies, reassignOpts)
-
-			_, err = conn.SetLoadBalancerPoliciesForBackendServerWithContext(ctx, setOpts)
 			if err != nil {
-				return reassignments, fmt.Errorf("Setting Load Balancer Policies for Backend Server: %s", err)
+				return nil, fmt.Errorf("setting ELB Classic Backend Server Policy (%s): %w", lbName, err)
 			}
 		}
 	}
 
-	for _, listener := range lb.ListenerDescriptions {
-		policies := []*string{}
+	for _, v := range lb.ListenerDescriptions {
+		policies := tfslices.Filter(v.PolicyNames, func(v string) bool {
+			return v != policyName
+		})
 
-		for _, name := range listener.PolicyNames {
-			if policyName != aws.StringValue(name) {
-				policies = append(policies, name)
-			}
-		}
+		if len(v.PolicyNames) != len(policies) {
+			reassignments.listenerPolicies = append(reassignments.listenerPolicies, &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
+				LoadBalancerName: aws.String(lbName),
+				LoadBalancerPort: v.Listener.LoadBalancerPort,
+				PolicyNames:      v.PolicyNames,
+			})
 
-		if len(listener.PolicyNames) != len(policies) {
-			setOpts := &elb.SetLoadBalancerPoliciesOfListenerInput{
-				LoadBalancerName: aws.String(loadBalancerName),
-				LoadBalancerPort: aws.Int64(*listener.Listener.LoadBalancerPort),
+			input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
+				LoadBalancerName: aws.String(lbName),
+				LoadBalancerPort: v.Listener.LoadBalancerPort,
 				PolicyNames:      policies,
 			}
 
-			reassignOpts := &elb.SetLoadBalancerPoliciesOfListenerInput{
-				LoadBalancerName: aws.String(loadBalancerName),
-				LoadBalancerPort: aws.Int64(*listener.Listener.LoadBalancerPort),
-				PolicyNames:      listener.PolicyNames,
-			}
+			_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, input)
 
-			reassignments.listenerPolicies = append(reassignments.listenerPolicies, reassignOpts)
-
-			_, err = conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, setOpts)
 			if err != nil {
-				return reassignments, fmt.Errorf("Setting Load Balancer Policies of Listener: %s", err)
+				return reassignments, fmt.Errorf("setting ELB Classic Listener Policy (%s): %w", lbName, err)
 			}
 		}
 	}
@@ -373,14 +354,14 @@ func suppressPolicyAttributeDiffs(k, old, new string, d *schema.ResourceData) bo
 
 const policyResourceIDSeparator = ":"
 
-func PolicyCreateResourceID(lbName, policyName string) string {
+func policyCreateResourceID(lbName, policyName string) string {
 	parts := []string{lbName, policyName}
 	id := strings.Join(parts, policyResourceIDSeparator)
 
 	return id
 }
 
-func PolicyParseResourceID(id string) (string, string, error) {
+func policyParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, backendServerPolicyResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

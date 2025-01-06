@@ -8,18 +8,19 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_security_group_association")
-func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_security_group_association", name="VPC Endpoint Security Group Association")
+func resourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSecurityGroupAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSecurityGroupAssociationRead,
@@ -37,7 +38,7 @@ func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -48,29 +49,29 @@ func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 
 func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
+	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
 	securityGroupID := d.Get("security_group_id").(string)
 	replaceDefaultAssociation := d.Get("replace_default_association").(bool)
 
 	defaultSecurityGroupID := ""
 	if replaceDefaultAssociation {
-		vpcEndpoint, err := FindVPCEndpointByID(ctx, conn, vpcEndpointID)
+		vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)
 		}
 
-		vpcID := aws.StringValue(vpcEndpoint.VpcId)
+		vpcID := aws.ToString(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(ctx, conn, vpcID)
+		defaultSecurityGroup, err := findVPCDefaultSecurityGroup(ctx, conn, vpcID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) default Security Group: %s", vpcID, err)
 		}
 
-		defaultSecurityGroupID = aws.StringValue(defaultSecurityGroup.GroupId)
+		defaultSecurityGroupID = aws.ToString(defaultSecurityGroup.GroupId)
 
 		if defaultSecurityGroupID == securityGroupID {
 			return sdkdiag.AppendErrorf(diags, "%s is the default Security Group for EC2 VPC (%s)", securityGroupID, vpcID)
@@ -79,7 +80,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 		foundDefaultAssociation := false
 
 		for _, group := range vpcEndpoint.Groups {
-			if aws.StringValue(group.GroupId) == defaultSecurityGroupID {
+			if aws.ToString(group.GroupId) == defaultSecurityGroupID {
 				foundDefaultAssociation = true
 				break
 			}
@@ -96,7 +97,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(VPCEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID))
+	d.SetId(vpcEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID))
 
 	if replaceDefaultAssociation {
 		// Delete the existing VPC endpoint/default security group association.
@@ -110,14 +111,14 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 
 func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
+	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
 	securityGroupID := d.Get("security_group_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", vpcEndpointID, securityGroupID)
 
-	err := FindVPCEndpointSecurityGroupAssociationExists(ctx, conn, vpcEndpointID, securityGroupID)
+	err := findVPCEndpointSecurityGroupAssociationExists(ctx, conn, vpcEndpointID, securityGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Security Group Association (%s) not found, removing from state", id)
@@ -134,29 +135,29 @@ func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *sch
 
 func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
+	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
 	securityGroupID := d.Get("security_group_id").(string)
 	replaceDefaultAssociation := d.Get("replace_default_association").(bool)
 
 	if replaceDefaultAssociation {
-		vpcEndpoint, err := FindVPCEndpointByID(ctx, conn, vpcEndpointID)
+		vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)
 		}
 
-		vpcID := aws.StringValue(vpcEndpoint.VpcId)
+		vpcID := aws.ToString(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(ctx, conn, vpcID)
+		defaultSecurityGroup, err := findVPCDefaultSecurityGroup(ctx, conn, vpcID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) default Security Group: %s", vpcID, err)
 		}
 
 		// Add back the VPC endpoint/default security group association.
-		err = createVPCEndpointSecurityGroupAssociation(ctx, conn, vpcEndpointID, aws.StringValue(defaultSecurityGroup.GroupId))
+		err = createVPCEndpointSecurityGroupAssociation(ctx, conn, vpcEndpointID, aws.ToString(defaultSecurityGroup.GroupId))
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -170,14 +171,14 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *s
 }
 
 // createVPCEndpointSecurityGroupAssociation creates the specified VPC endpoint/security group association.
-func createVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.EC2, vpcEndpointID, securityGroupID string) error {
+func createVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, securityGroupID string) error {
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:       aws.String(vpcEndpointID),
-		AddSecurityGroupIds: aws.StringSlice([]string{securityGroupID}),
+		AddSecurityGroupIds: []string{securityGroupID},
 	}
 
-	log.Printf("[DEBUG] Creating VPC Endpoint Security Group Association: %s", input)
-	_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating VPC Endpoint Security Group Association: %v", input)
+	_, err := conn.ModifyVpcEndpoint(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("creating VPC Endpoint (%s) Security Group (%s) Association: %w", vpcEndpointID, securityGroupID, err)
@@ -187,14 +188,14 @@ func createVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.EC
 }
 
 // deleteVPCEndpointSecurityGroupAssociation deletes the specified VPC endpoint/security group association.
-func deleteVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.EC2, vpcEndpointID, securityGroupID string) error {
+func deleteVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, securityGroupID string) error {
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:          aws.String(vpcEndpointID),
-		RemoveSecurityGroupIds: aws.StringSlice([]string{securityGroupID}),
+		RemoveSecurityGroupIds: []string{securityGroupID},
 	}
 
-	log.Printf("[DEBUG] Deleting VPC Endpoint Security Group Association: %s", input)
-	_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
+	log.Printf("[DEBUG] Deleting VPC Endpoint Security Group Association: %v", input)
+	_, err := conn.ModifyVpcEndpoint(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound, errCodeInvalidGroupNotFound, errCodeInvalidParameter) {
 		return nil

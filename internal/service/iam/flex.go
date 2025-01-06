@@ -4,7 +4,7 @@
 package iam
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
 func expandStringListKeepEmpty(configured []interface{}) []*string {

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_space: Add `ownership_settings`, `space_sharing_settings`, `space_settings.app_type`, `space_settings.code_editor_app_settings`, `space_settings.custom_file_system`, `space_settings.jupyter_lab_app_settings`, and `space_settings.space_storage_settings` arguments
+```

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *cloudwatchlogs.Client, identifier string, optFns ...func(*cloudwatchlogs.Options)) (tftags.KeyValueTags, error) {
-	input := &cloudwatchlogs.ListTagsForResourceInput{
+	input := cloudwatchlogs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -42,7 +42,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -75,17 +75,17 @@ func getTagsIn(ctx context.Context) map[string]string {
 // setTagsOut sets logs service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
 // createTags creates logs service tags for new resources.
-func createTags(ctx context.Context, conn *cloudwatchlogs.Client, identifier string, tags map[string]string) error {
+func createTags(ctx context.Context, conn *cloudwatchlogs.Client, identifier string, tags map[string]string, optFns ...func(*cloudwatchlogs.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, tags)
+	return updateTags(ctx, conn, identifier, nil, tags, optFns...)
 }
 
 // updateTags updates logs service tags.
@@ -100,12 +100,12 @@ func updateTags(ctx context.Context, conn *cloudwatchlogs.Client, identifier str
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Logs)
 	if len(removedTags) > 0 {
-		input := &cloudwatchlogs.UntagResourceInput{
+		input := cloudwatchlogs.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -115,12 +115,12 @@ func updateTags(ctx context.Context, conn *cloudwatchlogs.Client, identifier str
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Logs)
 	if len(updatedTags) > 0 {
-		input := &cloudwatchlogs.TagResourceInput{
+		input := cloudwatchlogs.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

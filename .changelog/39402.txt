@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_connect_instance: Add `tags` argument and `tags_all` attribute
+```
+
+```release-note:enhancement
+data-source/aws_connect_instance: Add `tags` attribute
+```

@@ -133,15 +133,15 @@ The following arguments are optional:
 
 ### Encoder Settings
 
-* `audio_descriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 * `output_groups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecode_config` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `video_descriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
+* `audio_descriptions` - (Optional) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
+* `avail_blanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 * `caption_descriptions` - (Optional) Caption Descriptions. See [Caption Descriptions](#caption-descriptions) for more details.
 * `global_configuration` - (Optional) Configuration settings that apply to the event as a whole. See [Global Configuration](#global-configuration) for more details.
 * `motion_graphics_configuration` - (Optional) Settings for motion graphics. See [Motion Graphics Configuration](#motion-graphics-configuration) for more details.
 * `nielsen_configuration` - (Optional) Nielsen configuration settings. See [Nielsen Configuration](#nielsen-configuration) for more details.
-* `avail_blanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 
 ### Input Attachments
 
@@ -152,8 +152,8 @@ The following arguments are optional:
 
 ### Input Settings
 
-* `audio_selectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
-* `caption_selectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `audio_selector` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `caption_selector` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
 * `deblock_filter` - (Optional) Enable or disable the deblock filter when filtering.
 * `denoise_filter` - (Optional) Enable or disable the denoise filter when filtering.
 * `filter_strength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
@@ -272,10 +272,10 @@ The following arguments are optional:
 
 * `secondary_input_id` - (Required) The input ID of the secondary input in the automatic input failover pair.
 * `error_clear_time_msec` - (Optional) This clear time defines the requirement a recovered input must meet to be considered healthy. The input must have no failover conditions for this length of time. Enter a time in milliseconds. This value is particularly important if the input\_preference for the failover pair is set to PRIMARY\_INPUT\_PREFERRED, because after this time, MediaLive will switch back to the primary input.
-* `failover_conditions` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Conditions](#failover-conditions) for more details.
+* `failover_condition` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Condition Block](#failover-condition-block) for more details.
 * `input_preference` - (Optional) Input preference when deciding which input to make active when a previously failed input has recovered.
 
-### Failover Conditions
+### Failover Condition Block
 
 * `failover_condition_settings` - (Optional) Failover condition type-specific settings. See [Failover Condition Settings](#failover-condition-settings) for more details.
 
@@ -517,7 +517,10 @@ The following arguments are optional:
 * `level` - (Optional) H265 level.
 * `look_ahead_rate_control` - (Optional) Amount of lookahead.
 * `max_bitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `min_interval` - (Optional) Min interval.
+* `min_i_interval` - (Optional) Min interval.
+* `min_qp` - (Optional) Set the minimum QP.
+* `mv_over_picture_boundaries` - (Optional) Enables or disables motion vector over picture boundaries.
+* `mv_temporal_predictor`- (Optional) Enables or disables the motion vector temporal predictor.
 * `par_denominator` - (Optional) Pixel Aspect Ratio denominator.
 * `par_numerator` - (Optional) Pixel Aspect Ratio numerator.
 * `profile` - (Optional) H265 profile.
@@ -527,8 +530,12 @@ The following arguments are optional:
 * `scene_change_detect` - (Optional) Scene change detection.
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
+* `tile_height` - (Optional) Sets the height of tiles.
+* `tile_padding` - (Optional) Enables or disables padding of tiles.
+* `tile_width` - (Optional) Sets the width of tiles.
 * `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
 * `timecode_insertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `treeblock_size` - (Optional) Sets the size of the treeblock.
 
 ### H265 Color Space Settings
 
@@ -794,9 +801,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.medialive_channel import MedialiveChannel
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        MedialiveChannel.generate_config_for_import(self, "example", "1234567")
 ```
 
 Using `terraform import`, import MediaLive Channel using the `channel_id`. For example:
@@ -805,4 +818,4 @@ Using `terraform import`, import MediaLive Channel using the `channel_id`. For e
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d3f7e093a01633975d88f239894e4bccf4a8cd3abaf84dcdf67f0af047ec3f42 -->
+<!-- cache-key: cdktf-0.20.8 input-c84c1696c92bb7fbbfe2c2b1e571168787b06ce8a2f99e9e0569e5c41f0f223d -->

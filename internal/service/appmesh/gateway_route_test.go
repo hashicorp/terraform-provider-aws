@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccGatewayRoute_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsResourceName := "aws_appmesh_virtual_service.test.0"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -28,8 +29,8 @@ func testAccGatewayRoute_basic(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,8 +39,8 @@ func testAccGatewayRoute_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -47,7 +48,7 @@ func testAccGatewayRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "0"),
@@ -57,11 +58,11 @@ func testAccGatewayRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -76,15 +77,15 @@ func testAccGatewayRoute_basic(t *testing.T) {
 
 func testAccGatewayRoute_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +103,7 @@ func testAccGatewayRoute_disappears(t *testing.T) {
 
 func testAccGatewayRoute_grpcRoute(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
@@ -111,8 +112,8 @@ func testAccGatewayRoute_grpcRoute(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -121,25 +122,25 @@ func testAccGatewayRoute_grpcRoute(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "test1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "7"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -147,25 +148,25 @@ func testAccGatewayRoute_grpcRoute(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "77"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -180,7 +181,7 @@ func testAccGatewayRoute_grpcRoute(t *testing.T) {
 
 func testAccGatewayRoute_grpcRouteWithPort(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
@@ -189,8 +190,8 @@ func testAccGatewayRoute_grpcRouteWithPort(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -199,25 +200,25 @@ func testAccGatewayRoute_grpcRouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "test1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -225,25 +226,25 @@ func testAccGatewayRoute_grpcRouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -258,7 +259,7 @@ func testAccGatewayRoute_grpcRouteWithPort(t *testing.T) {
 
 func testAccGatewayRoute_grpcRouteTargetPort(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsMultiResourceName := "aws_appmesh_virtual_service.multi_test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -266,8 +267,8 @@ func testAccGatewayRoute_grpcRouteTargetPort(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,25 +277,25 @@ func testAccGatewayRoute_grpcRouteTargetPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "multi-test"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -302,25 +303,25 @@ func testAccGatewayRoute_grpcRouteTargetPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "multi-test"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -335,7 +336,7 @@ func testAccGatewayRoute_grpcRouteTargetPort(t *testing.T) {
 
 func testAccGatewayRoute_httpRoute(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
@@ -344,8 +345,8 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -354,8 +355,8 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -363,7 +364,7 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "0"),
@@ -372,11 +373,11 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -384,8 +385,8 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -393,7 +394,7 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "0"),
@@ -402,11 +403,11 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -414,8 +415,8 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -423,16 +424,16 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.0.exact", "test.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -440,8 +441,8 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -449,7 +450,7 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.hostname.0.default_target_hostname", "DISABLED"),
@@ -458,11 +459,11 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -470,8 +471,8 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -479,7 +480,7 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.hostname.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.prefix.#", "0"),
@@ -489,11 +490,11 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.path.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.path.0.exact", "/match_path"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -508,7 +509,7 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 
 func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsMultiResourceName := "aws_appmesh_virtual_service.multi_test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -516,8 +517,8 @@ func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -526,8 +527,8 @@ func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -536,15 +537,15 @@ func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -552,8 +553,8 @@ func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -562,15 +563,15 @@ func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -585,7 +586,7 @@ func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 
 func testAccGatewayRoute_httpRouteWithPath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsResourceName := "aws_appmesh_virtual_service.test.0"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -593,8 +594,8 @@ func testAccGatewayRoute_httpRouteWithPath(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -603,8 +604,8 @@ func testAccGatewayRoute_httpRouteWithPath(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -612,7 +613,7 @@ func testAccGatewayRoute_httpRouteWithPath(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "0"),
@@ -623,11 +624,11 @@ func testAccGatewayRoute_httpRouteWithPath(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -642,7 +643,7 @@ func testAccGatewayRoute_httpRouteWithPath(t *testing.T) {
 
 func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
@@ -651,8 +652,8 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -661,8 +662,8 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -670,16 +671,16 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -687,8 +688,8 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -696,16 +697,16 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -713,8 +714,8 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -722,16 +723,16 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.0.exact", "test.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -739,8 +740,8 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -748,7 +749,7 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.hostname.0.default_target_hostname", "DISABLED"),
@@ -757,11 +758,11 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -769,8 +770,8 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
@@ -778,7 +779,7 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.hostname.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.prefix.#", "0"),
@@ -788,11 +789,11 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.path.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.path.0.exact", "/match_path"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -807,7 +808,7 @@ func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 
 func testAccGatewayRoute_http2Route(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
@@ -816,8 +817,8 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -826,21 +827,21 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
-						"invert":  "false",
-						"match.#": "0",
-						"name":    "X-Testing1",
+						"invert":       acctest.CtFalse,
+						"match.#":      "0",
+						names.AttrName: "X-Testing1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.#", "0"),
@@ -849,11 +850,11 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -861,29 +862,29 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
-						"invert":  "true",
-						"match.#": "0",
-						"name":    "X-Testing1",
+						"invert":       acctest.CtTrue,
+						"match.#":      "0",
+						names.AttrName: "X-Testing1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
-						"invert":                "false",
+						"invert":                acctest.CtFalse,
 						"match.#":               "1",
 						"match.0.range.#":       "1",
 						"match.0.range.0.end":   "7",
 						"match.0.range.0.start": "2",
-						"name":                  "X-Testing2",
+						names.AttrName:          "X-Testing2",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.#", "0"),
@@ -892,11 +893,11 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -904,25 +905,25 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.0.exact", "test.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -930,15 +931,15 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.hostname.0.default_target_hostname", "DISABLED"),
@@ -948,11 +949,11 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -960,15 +961,15 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.hostname.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.prefix.#", "0"),
@@ -979,11 +980,11 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.0.exact", "/match_path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -998,7 +999,7 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 
 func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsMultiResourceName := "aws_appmesh_virtual_service.multi_test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1006,8 +1007,8 @@ func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1016,8 +1017,8 @@ func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
@@ -1026,15 +1027,15 @@ func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1042,8 +1043,8 @@ func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
@@ -1052,15 +1053,15 @@ func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1075,7 +1076,7 @@ func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 
 func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
@@ -1084,8 +1085,8 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1094,25 +1095,25 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1120,25 +1121,25 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1146,25 +1147,25 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.0.exact", "test.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1172,15 +1173,15 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.hostname.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.hostname.0.default_target_hostname", "DISABLED"),
@@ -1190,11 +1191,11 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1202,15 +1203,15 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.hostname.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.rewrite.0.prefix.#", "0"),
@@ -1221,11 +1222,11 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.0.exact", "/match_path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1240,7 +1241,7 @@ func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 
 func testAccGatewayRoute_http2RouteWithQueryParameter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
+	var v awstypes.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsResourceName := "aws_appmesh_virtual_service.test.0"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1248,8 +1249,8 @@ func testAccGatewayRoute_http2RouteWithQueryParameter(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1258,15 +1259,15 @@ func testAccGatewayRoute_http2RouteWithQueryParameter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.#", "0"),
@@ -1277,15 +1278,15 @@ func testAccGatewayRoute_http2RouteWithQueryParameter(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.query_parameter.*", map[string]string{
 						"match.#":       "1",
 						"match.0.exact": "xact",
-						"name":          "param1",
+						names.AttrName:  "param1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1293,55 +1294,6 @@ func testAccGatewayRoute_http2RouteWithQueryParameter(t *testing.T) {
 				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccGatewayRoute_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v appmesh.GatewayRouteData
-	resourceName := "aws_appmesh_gateway_route.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayRouteConfig_tags1(meshName, vgName, grName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccGatewayRouteConfig_tags2(meshName, vgName, grName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccGatewayRouteConfig_tags1(meshName, vgName, grName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -1354,20 +1306,20 @@ func testAccGatewayRouteImportStateIdFunc(resourceName string) resource.ImportSt
 			return "", fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 
 func testAccCheckGatewayRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appmesh_gateway_route" {
 				continue
 			}
 
-			_, err := tfappmesh.FindGatewayRouteByFourPartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"])
+			_, err := tfappmesh.FindGatewayRouteByFourPartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1384,9 +1336,9 @@ func testAccCheckGatewayRouteDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckGatewayRouteExists(ctx context.Context, n string, v *appmesh.GatewayRouteData) resource.TestCheckFunc {
+func testAccCheckGatewayRouteExists(ctx context.Context, n string, v *awstypes.GatewayRouteData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1397,7 +1349,7 @@ func testAccCheckGatewayRouteExists(ctx context.Context, n string, v *appmesh.Ga
 			return fmt.Errorf("No App Mesh Gateway Route ID is set")
 		}
 
-		output, err := tfappmesh.FindGatewayRouteByFourPartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"])
+		output, err := tfappmesh.FindGatewayRouteByFourPartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -2257,65 +2209,4 @@ resource "aws_appmesh_gateway_route" "test" {
   }
 }
 `, grName))
-}
-
-func testAccGatewayRouteConfig_tags1(meshName, vgName, grName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccGatewayRouteConfig_base(meshName, vgName, "http"), fmt.Sprintf(`
-resource "aws_appmesh_gateway_route" "test" {
-  name                 = %[1]q
-  mesh_name            = aws_appmesh_mesh.test.name
-  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
-
-  spec {
-    http_route {
-      action {
-        target {
-          virtual_service {
-            virtual_service_name = aws_appmesh_virtual_service.test[0].name
-          }
-        }
-      }
-
-      match {
-        prefix = "/"
-      }
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, grName, tagKey1, tagValue1))
-}
-
-func testAccGatewayRouteConfig_tags2(meshName, vgName, grName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccGatewayRouteConfig_base(meshName, vgName, "http"), fmt.Sprintf(`
-resource "aws_appmesh_gateway_route" "test" {
-  name                 = %[1]q
-  mesh_name            = aws_appmesh_mesh.test.name
-  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
-
-  spec {
-    http_route {
-      action {
-        target {
-          virtual_service {
-            virtual_service_name = aws_appmesh_virtual_service.test[0].name
-          }
-        }
-      }
-
-      match {
-        prefix = "/"
-      }
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, grName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

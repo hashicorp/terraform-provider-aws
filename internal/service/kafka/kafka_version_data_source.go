@@ -6,106 +6,102 @@ package kafka
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_msk_kafka_version")
-func DataSourceVersion() *schema.Resource {
+// @SDKDataSource("aws_msk_kafka_version", name="Kafka Version")
+func dataSourceKafkaVersion() *schema.Resource { // nosemgrep:ci.kafka-in-func-name
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceVersionRead,
+		ReadWithoutTimeout: dataSourceKafkaVersionRead,
 
 		Schema: map[string]*schema.Schema{
 			"preferred_versions": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				ExactlyOneOf: []string{"version", "preferred_versions"},
+				ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"version", "preferred_versions"},
+				ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
 			},
 		},
 	}
 }
 
-func findVersion(preferredVersions []interface{}, versions []*kafka.KafkaVersion) *kafka.KafkaVersion {
-	var found *kafka.KafkaVersion
+func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.kafka-in-func-name
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	for _, v := range preferredVersions {
-		preferredVersion, ok := v.(string)
-
-		if !ok {
-			continue
-		}
-
-		for _, kafkaVersion := range versions {
-			if preferredVersion == aws.StringValue(kafkaVersion.Version) {
-				found = kafkaVersion
-
-				break
-			}
-		}
-
-		if found != nil {
-			break
-		}
+	var preferredVersions []string
+	if v, ok := d.GetOk("preferred_versions"); ok && len(v.([]interface{})) > 0 {
+		preferredVersions = flex.ExpandStringValueList(v.([]interface{}))
+	} else if v, ok := d.GetOk(names.AttrVersion); ok {
+		preferredVersions = []string{v.(string)}
 	}
 
-	return found
-}
-
-func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
-
-	var kafkaVersions []*kafka.KafkaVersion
-
-	err := conn.ListKafkaVersionsPagesWithContext(ctx, &kafka.ListKafkaVersionsInput{}, func(page *kafka.ListKafkaVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		kafkaVersions = append(kafkaVersions, page.KafkaVersions...)
-
-		return !lastPage
-	})
+	kafkaVersion, err := findKafkaVersion(ctx, conn, preferredVersions)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Kafka versions: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Kafka Version", err))
 	}
 
-	if len(kafkaVersions) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no Kafka versions found")
-	}
-
-	var found *kafka.KafkaVersion
-
-	if v, ok := d.GetOk("preferred_versions"); ok {
-		found = findVersion(v.([]interface{}), kafkaVersions)
-	} else if v, ok := d.GetOk("version"); ok {
-		found = findVersion([]interface{}{v}, kafkaVersions)
-	}
-
-	if found == nil {
-		return sdkdiag.AppendErrorf(diags, "no Kafka versions match the criteria")
-	}
-
-	d.SetId(aws.StringValue(found.Version))
-
-	d.Set("status", found.Status)
-	d.Set("version", found.Version)
+	version := aws.ToString(kafkaVersion.Version)
+	d.SetId(version)
+	d.Set(names.AttrStatus, kafkaVersion.Status)
+	d.Set(names.AttrVersion, version)
 
 	return diags
+}
+
+func findKafkaVersion(ctx context.Context, conn *kafka.Client, preferredVersions []string) (*types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
+	input := &kafka.ListKafkaVersionsInput{}
+	output, err := findKafkaVersions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var kafkaVersions []types.KafkaVersion
+	for _, preferredVersion := range preferredVersions {
+		for _, kafkaVersion := range output {
+			if preferredVersion == aws.ToString(kafkaVersion.Version) {
+				kafkaVersions = append(kafkaVersions, kafkaVersion)
+			}
+		}
+	}
+
+	return tfresource.AssertFirstValueResult(kafkaVersions)
+}
+
+func findKafkaVersions(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput) ([]types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
+	var output []types.KafkaVersion
+
+	pages := kafka.NewListKafkaVersionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.KafkaVersions...)
+	}
+
+	return output, nil
 }

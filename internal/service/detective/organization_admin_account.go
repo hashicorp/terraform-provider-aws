@@ -8,17 +8,19 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/detective"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_detective_organization_admin_account")
@@ -33,7 +35,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -46,14 +48,14 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	input := &detective.EnableOrganizationAdminAccountInput{
 		AccountId: aws.String(accountID),
 	}
 
-	_, err := conn.EnableOrganizationAdminAccountWithContext(ctx, input)
+	_, err := conn.EnableOrganizationAdminAccount(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Detective Organization Admin Account (%s): %s", accountID, err)
@@ -75,7 +77,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	administrator, err := FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 
@@ -89,7 +91,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", administrator.AccountId)
+	d.Set(names.AttrAccountID, administrator.AccountId)
 
 	return diags
 }
@@ -97,11 +99,11 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, &detective.DisableOrganizationAdminAccountInput{})
+	_, err := conn.DisableOrganizationAdminAccount(ctx, &detective.DisableOrganizationAdminAccountInput{})
 
-	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -120,50 +122,48 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func FindOrganizationAdminAccountByAccountID(ctx context.Context, conn *detective.Detective, accountID string) (*detective.Administrator, error) {
+func FindOrganizationAdminAccountByAccountID(ctx context.Context, conn *detective.Client, accountID string) (*awstypes.Administrator, error) {
 	input := &detective.ListOrganizationAdminAccountsInput{}
 
-	return findOrganizationAdminAccount(ctx, conn, input, func(v *detective.Administrator) bool {
-		return aws.StringValue(v.AccountId) == accountID
+	return findOrganizationAdminAccount(ctx, conn, input, func(v awstypes.Administrator) bool {
+		return aws.ToString(v.AccountId) == accountID
 	})
 }
 
-func findOrganizationAdminAccount(ctx context.Context, conn *detective.Detective, input *detective.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*detective.Administrator]) (*detective.Administrator, error) {
+func findOrganizationAdminAccount(ctx context.Context, conn *detective.Client, input *detective.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[awstypes.Administrator]) (*awstypes.Administrator, error) {
 	output, err := findOrganizationAdminAccounts(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findOrganizationAdminAccounts(ctx context.Context, conn *detective.Detective, input *detective.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*detective.Administrator]) ([]*detective.Administrator, error) {
-	var output []*detective.Administrator
+func findOrganizationAdminAccounts(ctx context.Context, conn *detective.Client, input *detective.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[awstypes.Administrator]) ([]awstypes.Administrator, error) {
+	var output []awstypes.Administrator
 
-	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, input, func(page *detective.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := detective.NewListOrganizationAdminAccountsPaginator(conn, input)
 
-		for _, v := range page.Administrators {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "account is not a member of an organization") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, detective.ErrCodeValidationException, "account is not a member of an organization") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.Administrators {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

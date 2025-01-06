@@ -21,7 +21,7 @@ resource "aws_detective_graph" "example" {
 
 resource "aws_detective_organization_configuration" "example" {
   auto_enable = true
-  graph_arn   = aws_detective_graph.example.id
+  graph_arn   = aws_detective_graph.example.graph_arn
 }
 ```
 
@@ -40,17 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_organization_admin_account` using the Detective Graph ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_organization_admin_account` using the behavior graph ARN. For example:
 
 ```terraform
 import {
   to = aws_detective_organization_configuration.example
-  id = "00b00fd5aecc0ab60a708659477e9617"
+  id = "arn:aws:detective:us-east-1:123456789012:graph:00b00fd5aecc0ab60a708659477e9617"
 }
 ```
 
-Using `terraform import`, import `aws_detective_organization_admin_account` using the Detective Graph ID. For example:
+Using `terraform import`, import `aws_detective_organization_admin_account` using the behavior graph ARN. For example:
 
 ```console
-% terraform import aws_detective_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
+% terraform import aws_detective_organization_configuration.example arn:aws:detective:us-east-1:123456789012:graph:00b00fd5aecc0ab60a708659477e9617
 ```

@@ -35,13 +35,13 @@ The following arguments are required:
 The following arguments are optional:
 
 * `aws_account_id` - (Optional) AWS account ID.
-* `identities` - (Optional) Amazon QuickSight users, groups, or both to assign the policy to. See [`identities`](#identities).
+* `identities` - (Optional) Amazon QuickSight users, groups, or both to assign the policy to. See [`identities` block](#identities-block).
 * `namespace` - (Optional) Namespace that contains the assignment. Defaults to `default`.
 * `policy_arn` - (Optional) ARN of the IAM policy to apply to the Amazon QuickSight users and groups specified in this assignment.
 
-### identities
+### `identities` block
 
-* `groups` - (Optional) Array of Quicksight group names to assign the policy to.
+* `group` - (Optional) Array of Quicksight group names to assign the policy to.
 * `user` - (Optional) Array of Quicksight user names to assign the policy to.
 
 ## Attribute Reference

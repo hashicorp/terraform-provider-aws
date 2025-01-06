@@ -5,20 +5,23 @@ package ec2
 
 import (
 	"context"
-	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_local_gateway")
-func DataSourceLocalGateway() *schema.Resource {
+// @SDKDataSource("aws_ec2_local_gateway", name="Local Gateway")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceLocalGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayRead,
 
@@ -27,88 +30,73 @@ func DataSourceLocalGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
+			names.AttrFilter: customFiltersSchema(),
 			"outpost_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"filter": CustomFiltersSchema(),
-
-			"state": {
+			names.AttrOwnerID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchemaComputed(),
-
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	req := &ec2.DescribeLocalGatewaysInput{}
+	input := &ec2.DescribeLocalGatewaysInput{}
 
-	if v, ok := d.GetOk("id"); ok {
-		req.LocalGatewayIds = []*string{aws.String(v.(string))}
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.LocalGatewayIds = []string{v.(string)}
 	}
 
-	req.Filters = BuildAttributeFilterList(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
-			"state": d.Get("state").(string),
+			names.AttrState: d.Get(names.AttrState).(string),
 		},
 	)
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
-	if len(req.Filters) == 0 {
+
+	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading AWS LOCAL GATEWAY: %s", req)
-	resp, err := conn.DescribeLocalGatewaysWithContext(ctx, req)
+	localGateway, err := findLocalGateway(ctx, conn, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing EC2 Local Gateways: %s", err)
-	}
-	if resp == nil || len(resp.LocalGateways) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no matching Local Gateway found")
-	}
-	if len(resp.LocalGateways) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple Local Gateways matched; use additional constraints to reduce matches to a single Local Gateway")
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Local Gateway", err))
 	}
 
-	localGateway := resp.LocalGateways[0]
-
-	d.SetId(aws.StringValue(localGateway.LocalGatewayId))
+	d.SetId(aws.ToString(localGateway.LocalGatewayId))
 	d.Set("outpost_arn", localGateway.OutpostArn)
-	d.Set("owner_id", localGateway.OwnerId)
-	d.Set("state", localGateway.State)
+	d.Set(names.AttrOwnerID, localGateway.OwnerId)
+	d.Set(names.AttrState, localGateway.State)
 
-	if err := d.Set("tags", KeyValueTags(ctx, localGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, localGateway.Tags)
 
 	return diags
 }

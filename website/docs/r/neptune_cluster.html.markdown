@@ -57,6 +57,7 @@ This resource supports the following arguments:
 * `neptune_subnet_group_name` - (Optional) A Neptune subnet group to associate with this Neptune instance.
 * `neptune_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `neptune_instance_parameter_group_name` - (Optional) The name of the DB parameter group to apply to all instances of the DB cluster.
+* `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
 * `port` - (Optional) The port on which the Neptune accepts connections. Default is `8182`.

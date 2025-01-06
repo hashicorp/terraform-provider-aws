@@ -7,13 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -24,7 +26,7 @@ import (
 
 // @SDKResource("aws_devicefarm_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceInstanceProfile() *schema.Resource {
+func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
@@ -36,11 +38,11 @@ func ResourceInstanceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
@@ -50,7 +52,7 @@ func ResourceInstanceProfile() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -73,19 +75,19 @@ func ResourceInstanceProfile() *schema.Resource {
 
 func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &devicefarm.CreateInstanceProfileInput{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("exclude_app_packages_from_cleanup"); ok && v.(*schema.Set).Len() > 0 {
-		input.ExcludeAppPackagesFromCleanup = flex.ExpandStringSet(v.(*schema.Set))
+		input.ExcludeAppPackagesFromCleanup = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("package_cleanup"); ok {
@@ -96,13 +98,13 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		input.RebootAfterUse = aws.Bool(v.(bool))
 	}
 
-	output, err := conn.CreateInstanceProfileWithContext(ctx, input)
+	output, err := conn.CreateInstanceProfile(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Instance Profile (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.InstanceProfile.Arn))
+	d.SetId(aws.ToString(output.InstanceProfile.Arn))
 
 	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Instance Profile (%s) tags: %s", d.Id(), err)
@@ -113,9 +115,9 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	instaceProf, err := FindInstanceProfileByARN(ctx, conn, d.Id())
+	instanceProf, err := findInstanceProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Instance Profile (%s) not found, removing from state", d.Id())
@@ -127,36 +129,36 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Instance Profile (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(instaceProf.Arn)
-	d.Set("arn", arn)
-	d.Set("name", instaceProf.Name)
-	d.Set("description", instaceProf.Description)
-	d.Set("exclude_app_packages_from_cleanup", flex.FlattenStringSet(instaceProf.ExcludeAppPackagesFromCleanup))
-	d.Set("package_cleanup", instaceProf.PackageCleanup)
-	d.Set("reboot_after_use", instaceProf.RebootAfterUse)
+	arn := aws.ToString(instanceProf.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, instanceProf.Name)
+	d.Set(names.AttrDescription, instanceProf.Description)
+	d.Set("exclude_app_packages_from_cleanup", flex.FlattenStringValueSet(instanceProf.ExcludeAppPackagesFromCleanup))
+	d.Set("package_cleanup", instanceProf.PackageCleanup)
+	d.Set("reboot_after_use", instanceProf.RebootAfterUse)
 
 	return diags
 }
 
 func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &devicefarm.UpdateInstanceProfileInput{
 			Arn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("exclude_app_packages_from_cleanup") {
-			input.ExcludeAppPackagesFromCleanup = flex.ExpandStringSet(d.Get("exclude_app_packages_from_cleanup").(*schema.Set))
+			input.ExcludeAppPackagesFromCleanup = flex.ExpandStringValueSet(d.Get("exclude_app_packages_from_cleanup").(*schema.Set))
 		}
 
 		if d.HasChange("package_cleanup") {
@@ -167,7 +169,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.RebootAfterUse = aws.Bool(d.Get("reboot_after_use").(bool))
 		}
 
-		_, err := conn.UpdateInstanceProfileWithContext(ctx, input)
+		_, err := conn.UpdateInstanceProfile(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Instance Profile (%s): %s", d.Id(), err)
@@ -179,14 +181,14 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
-	_, err := conn.DeleteInstanceProfileWithContext(ctx, &devicefarm.DeleteInstanceProfileInput{
+	_, err := conn.DeleteInstanceProfile(ctx, &devicefarm.DeleteInstanceProfileInput{
 		Arn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -195,4 +197,28 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func findInstanceProfileByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.InstanceProfile, error) {
+	input := &devicefarm.GetInstanceProfileInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetInstanceProfile(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InstanceProfile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InstanceProfile, nil
 }

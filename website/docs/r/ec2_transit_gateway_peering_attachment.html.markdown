@@ -65,8 +65,15 @@ This resource supports the following arguments:
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peer_transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway to peer with.
+* `options` - (Optional) Describes whether dynamic routing is enabled or disabled for the transit gateway peering request. See [options](#options) below for more details!
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
+
+### options
+
+The `options` block supports the following:
+
+* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled.. Supports `enable` and `disable`.
 
 ## Attribute Reference
 

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_emr_cluster: Properly normalize `launch_specifications.on_demand_specification.allocation_strategy` and `launch_specifications.spot_specification.allocation_strategy` values to fix perpetual state differences
+```

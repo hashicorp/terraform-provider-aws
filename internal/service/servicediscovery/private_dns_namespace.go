@@ -9,12 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,7 +26,7 @@ import (
 
 // @SDKResource("aws_service_discovery_private_dns_namespace", name="Private DNS Namespace")
 // @Tags(identifierAttribute="arn")
-func ResourcePrivateDNSNamespace() *schema.Resource {
+func resourcePrivateDNSNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrivateDNSNamespaceCreate,
 		ReadWithoutTimeout:   resourcePrivateDNSNamespaceRead,
@@ -43,11 +46,11 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -55,7 +58,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -75,9 +78,10 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 }
 
 func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreatePrivateDnsNamespaceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
@@ -85,106 +89,107 @@ func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDa
 		Vpc:              aws.String(d.Get("vpc").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreatePrivateDnsNamespaceWithContext(ctx, input)
+	output, err := conn.CreatePrivateDnsNamespace(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Service Discovery Private DNS Namespace (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Discovery Private DNS Namespace (%s): %s", name, err)
 	}
 
-	operation, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId))
+	operation, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId))
 
 	if err != nil {
-		return diag.Errorf("waiting for Service Discovery Private DNS Namespace (%s) create: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Private DNS Namespace (%s) create: %s", name, err)
 	}
 
-	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
+	d.SetId(operation.Targets[string(awstypes.OperationTargetTypeNamespace)])
 
-	if !ok {
-		return diag.Errorf("creating Service Discovery Private DNS Namespace (%s): operation response missing Namespace ID", name)
-	}
-
-	d.SetId(aws.StringValue(namespaceID))
-
-	return resourcePrivateDNSNamespaceRead(ctx, d, meta)
+	return append(diags, resourcePrivateDNSNamespaceRead(ctx, d, meta)...)
 }
 
 func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
-	ns, err := FindNamespaceByID(ctx, conn, d.Id())
+	ns, err := findNamespaceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Private DNS Namespace %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery Private DNS Namespace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery Private DNS Namespace (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(ns.Arn)
-	d.Set("arn", arn)
-	d.Set("description", ns.Description)
+	arn := aws.ToString(ns.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
 		d.Set("hosted_zone", ns.Properties.DnsProperties.HostedZoneId)
 	} else {
 		d.Set("hosted_zone", nil)
 	}
-	d.Set("name", ns.Name)
+	d.Set(names.AttrName, ns.Name)
 
-	return nil
+	return diags
 }
 
 func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &servicediscovery.UpdatePrivateDnsNamespaceInput{
 			Id: aws.String(d.Id()),
-			Namespace: &servicediscovery.PrivateDnsNamespaceChange{
-				Description: aws.String(d.Get("description").(string)),
+			Namespace: &awstypes.PrivateDnsNamespaceChange{
+				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
 			UpdaterRequestId: aws.String(id.UniqueId()),
 		}
 
-		output, err := conn.UpdatePrivateDnsNamespaceWithContext(ctx, input)
+		output, err := conn.UpdatePrivateDnsNamespace(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Service Discovery Private DNS Namespace (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Service Discovery Private DNS Namespace (%s): %s", d.Id(), err)
 		}
 
 		if output != nil && output.OperationId != nil {
-			if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
-				return diag.Errorf("waiting for Service Discovery Private DNS Namespace (%s) update: %s", d.Id(), err)
+			if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Private DNS Namespace (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourcePrivateDNSNamespaceRead(ctx, d, meta)
+	return append(diags, resourcePrivateDNSNamespaceRead(ctx, d, meta)...)
 }
 
 func resourcePrivateDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	log.Printf("[INFO] Deleting Service Discovery Private DNS Namespace: %s", d.Id())
-	output, err := conn.DeleteNamespaceWithContext(ctx, &servicediscovery.DeleteNamespaceInput{
+	output, err := conn.DeleteNamespace(ctx, &servicediscovery.DeleteNamespaceInput{
 		Id: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.NamespaceNotFound](err) {
+		return diags
+	}
+
 	if err != nil {
-		return diag.Errorf("deleting Service Discovery Private DNS Namespace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Service Discovery Private DNS Namespace (%s): %s", d.Id(), err)
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
-			return diag.Errorf("waiting for Service Discovery Private DNS Namespace (%s) delete: %s", d.Id(), err)
+		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Private DNS Namespace (%s) delete: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }

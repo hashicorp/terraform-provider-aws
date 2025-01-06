@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_event_subscription: Mark `source_ids` as Optional. This fixes a regression introduced in [v5.31.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5310-december-15-2023)
+```

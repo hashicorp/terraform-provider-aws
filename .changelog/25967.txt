@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_iam_policy_document: When using multiple principals, sort them to avoid differences based only on order
+```

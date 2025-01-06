@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecs_service: Add `volume_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_ecs_task_definition: Add `configure_at_launch` parameter in `volume` argument
+```

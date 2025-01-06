@@ -5,28 +5,33 @@ package cloudfront
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudfront_public_key")
-func ResourcePublicKey() *schema.Resource {
+// @SDKResource("aws_cloudfront_public_key", name="Public Key")
+func resourcePublicKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicKeyCreate,
 		ReadWithoutTimeout:   resourcePublicKeyRead,
 		UpdateWithoutTimeout: resourcePublicKeyUpdate,
 		DeleteWithoutTimeout: resourcePublicKeyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -36,7 +41,7 @@ func ResourcePublicKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -49,20 +54,20 @@ func ResourcePublicKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validPublicKeyName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPublicKeyNamePrefix,
 			},
 		},
@@ -71,15 +76,15 @@ func ResourcePublicKey() *schema.Resource {
 
 func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &cloudfront.CreatePublicKeyInput{
-		PublicKeyConfig: &cloudfront.PublicKeyConfig{
+		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
 			Name:       aws.String(name),
 		},
@@ -91,24 +96,24 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		input.PublicKeyConfig.Comment = aws.String(v.(string))
 	}
 
-	output, err := conn.CreatePublicKeyWithContext(ctx, input)
+	output, err := conn.CreatePublicKey(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Public Key (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.PublicKey.Id))
+	d.SetId(aws.ToString(output.PublicKey.Id))
 
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
 func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	output, err := findPublicKeyByID(ctx, conn, d.Id())
 
@@ -124,25 +129,25 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig
 	d.Set("caller_reference", publicKeyConfig.CallerReference)
-	d.Set("comment", publicKeyConfig.Comment)
+	d.Set(names.AttrComment, publicKeyConfig.Comment)
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("etag", output.ETag)
-	d.Set("name", publicKeyConfig.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(publicKeyConfig.Name)))
+	d.Set(names.AttrName, publicKeyConfig.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(publicKeyConfig.Name)))
 
 	return diags
 }
 
 func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	input := &cloudfront.UpdatePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-		PublicKeyConfig: &cloudfront.PublicKeyConfig{
+		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
-			Name:       aws.String(d.Get("name").(string)),
+			Name:       aws.String(d.Get(names.AttrName).(string)),
 		},
 	}
 
@@ -152,11 +157,11 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		input.PublicKeyConfig.Comment = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdatePublicKeyWithContext(ctx, input)
+	_, err := conn.UpdatePublicKey(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CloudFront Public Key (%s): %s", d.Id(), err)
@@ -167,15 +172,15 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
-	_, err := conn.DeletePublicKeyWithContext(ctx, &cloudfront.DeletePublicKeyInput{
+	_, err := conn.DeletePublicKey(ctx, &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return diags
 	}
 
@@ -186,14 +191,14 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func findPublicKeyByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetPublicKeyOutput, error) {
+func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetPublicKeyOutput, error) {
 	input := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetPublicKeyWithContext(ctx, input)
+	output, err := conn.GetPublicKey(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -209,4 +214,31 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.CloudFront, id stri
 	}
 
 	return output, nil
+}
+
+func validPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 128 characters", k))
+	}
+	return
+}
+
+func validPublicKeyNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	prefixMaxLength := 128 - id.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
 }

@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sfn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSFNAliasDataSource_basic(t *testing.T) {
@@ -23,16 +23,16 @@ func TestAccSFNAliasDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasDataSourceConfig_basic(stateMachineName, aliasName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreationDate, dataSourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 				),
 			},
 		},

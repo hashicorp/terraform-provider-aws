@@ -12,6 +12,8 @@ description: |-
 
 Manages an Image Builder Image Pipeline.
 
+~> **NOTE:** Starting with version `5.74.0`, lifecycle meta-argument [`replace_triggered_by`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) must be used in order to prevent a dependency error on destroy.
+
 ## Example Usage
 
 ```typescript
@@ -23,19 +25,64 @@ import { Token, TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { ImagebuilderImagePipeline } from "./.gen/providers/aws/imagebuilder-image-pipeline";
+import { ImagebuilderImageRecipe } from "./.gen/providers/aws/imagebuilder-image-recipe";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    new ImagebuilderImagePipeline(this, "example", {
-      imageRecipeArn: Token.asString(awsImagebuilderImageRecipeExample.arn),
-      infrastructureConfigurationArn: Token.asString(
-        awsImagebuilderInfrastructureConfigurationExample.arn
-      ),
+    const example = new ImagebuilderImageRecipe(this, "example", {
+      blockDeviceMapping: [
+        {
+          deviceName: "/dev/xvdb",
+          ebs: {
+            deleteOnTermination: Token.asString(true),
+            volumeSize: 100,
+            volumeType: "gp2",
+          },
+        },
+      ],
+      component: [
+        {
+          componentArn: Token.asString(awsImagebuilderComponentExample.arn),
+          parameter: [
+            {
+              name: "Parameter1",
+              value: "Value1",
+            },
+            {
+              name: "Parameter2",
+              value: "Value2",
+            },
+          ],
+        },
+      ],
       name: "example",
-      schedule: {
-        scheduleExpression: "cron(0 0 * * ? *)",
-      },
+      parentImage:
+        "arn:${" +
+        current.partition +
+        "}:imagebuilder:${" +
+        dataAwsRegionCurrent.name +
+        "}:aws:image/amazon-linux-2-x86/x.x.x",
+      version: "1.0.0",
     });
+    const awsImagebuilderImagePipelineExample = new ImagebuilderImagePipeline(
+      this,
+      "example_1",
+      {
+        imageRecipeArn: example.arn,
+        infrastructureConfigurationArn: Token.asString(
+          awsImagebuilderInfrastructureConfigurationExample.arn
+        ),
+        lifecycle: {
+          replaceTriggeredBy: [example],
+        },
+        name: "example",
+        schedule: {
+          scheduleExpression: "cron(0 0 * * ? *)",
+        },
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsImagebuilderImagePipelineExample.overrideLogicalId("example");
   }
 }
 
@@ -54,12 +101,14 @@ The following arguments are optional:
 * `description` - (Optional) Description of the image pipeline.
 * `distributionConfigurationArn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhancedImageMetadataEnabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
+* `executionRole` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
 * `imageRecipeArn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `imageScanningConfiguration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `imageTestsConfiguration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.
 * `status` - (Optional) Status of the image pipeline. Valid values are `DISABLED` and `ENABLED`. Defaults to `ENABLED`.
-* `tags` - (Optional) Key-value map of resource tags for the image pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
+* `tags` - (Optional) Key-value map of resource tags for the image pipeline. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_scanning_configuration
 
@@ -94,6 +143,25 @@ The following arguments are optional:
 
 * `timezone` - (Optional) The timezone that applies to the scheduling expression. For example, "Etc/UTC", "America/Los_Angeles" in the [IANA timezone format](https://www.joda.org/joda-time/timezones.html). If not specified this defaults to UTC.
 
+### workflow
+
+The following arguments are required:
+
+* `workflowArn` - (Required) Amazon Resource Name (ARN) of the Image Builder Workflow.
+
+The following arguments are optional:
+
+* `onFailure` - (Optional) The action to take if the workflow fails. Must be one of `CONTINUE` or `ABORT`.
+* `parallelGroup` - (Optional) The parallel group in which to run a test Workflow.
+* `parameter` - (Optional) Configuration block for the workflow parameters. Detailed below.
+
+### parameter
+
+The following arguments are required:
+
+* `name` - (Required) The name of the Workflow parameter.
+* `value` - (Required) The value of the Workflow parameter.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -104,28 +172,38 @@ This resource exports the following attributes in addition to the arguments abov
 * `dateNextRun` - Date the image pipeline will run next.
 * `dateUpdated` - Date the image pipeline was updated.
 * `platform` - Platform of the image pipeline.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsImagebuilderImagePipeline` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ImagebuilderImagePipeline } from "./.gen/providers/aws/imagebuilder-image-pipeline";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ImagebuilderImagePipeline.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsImagebuilderImagePipeline` resources using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
 
 ```console
 % terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-13e924ec569b627a02963bf24503600d1c77afb7d92500fcb19f3ff11c58c554 -->
+<!-- cache-key: cdktf-0.20.8 input-6213af573a56cb0f3b9043ae13ef4ad5e4c1a341ec024c98d73e66df0f125edf -->

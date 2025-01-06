@@ -178,7 +178,7 @@ To redact a single header, provide the name of the header to be redacted. For ex
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to redact. This setting must be provided in lowercase characters.
+* `name` - (Required) Name of the query header to redact. This setting must be provided in lowercase characters.
 
 ## Attribute Reference
 

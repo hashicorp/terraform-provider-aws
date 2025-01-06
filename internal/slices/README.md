@@ -1,3 +1,3 @@
 # Generic Slice Functions
 
-Complements golang.org/x/exp/slices.
+Complements Go standard library [`slices` package](https://pkg.go.dev/slices@master).

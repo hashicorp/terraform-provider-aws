@@ -6,7 +6,7 @@ package s3
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_website_region_endpoints.
@@ -22,7 +22,9 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.ApSoutheast2RegionID: "Z1WCIGYICN2BYD",
 	endpoints.ApSoutheast3RegionID: "Z01846753K324LI26A3VV",
 	endpoints.ApSoutheast4RegionID: "Z0312387243XT5FE14WFO",
+	endpoints.ApSoutheast5RegionID: "Z08660063OXLMA7F1FJHU",
 	endpoints.CaCentral1RegionID:   "Z1QDHH18159H29",
+	endpoints.CaWest1RegionID:      "Z03565811Z33SLEZTHOUL",
 	endpoints.CnNorth1RegionID:     "Z5CN8UMXT92WN",
 	endpoints.CnNorthwest1RegionID: "Z282HJ1KT0DH03",
 	endpoints.EuCentral1RegionID:   "Z21DNDUVLTQW6Q",
@@ -45,11 +47,11 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.UsWest2RegionID:      "Z3BJ6K6RIION7M",
 }
 
-// Returns the hosted zone ID for an S3 website endpoint region. This can be
-// used as input to the aws_route53_record resource's zone_id argument.
-func HostedZoneIDForRegion(region string) (string, error) {
+// hostedZoneIDForRegion returns the Route 53 hosted zone ID for an S3 website endpoint Region.
+// This can be used as input to the aws_route53_record resource's zone_id argument.
+func hostedZoneIDForRegion(region string) (string, error) {
 	if v, ok := hostedZoneIDsMap[region]; ok {
 		return v, nil
 	}
-	return "", fmt.Errorf("S3 hosted zone ID not found for region: %s", region)
+	return "", fmt.Errorf("S3 website Route 53 hosted zone ID not found for Region (%s)", region)
 }

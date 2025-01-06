@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -21,15 +22,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"golang.org/x/exp/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_lifecycle_configuration")
-func ResourceBucketLifecycleConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
+func resourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,
@@ -46,19 +49,19 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -100,7 +103,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							// If neither the filter block nor the prefix parameter in the rule are specified,
@@ -127,11 +130,11 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"tags": tftags.TagsSchema(),
+												names.AttrTags: tftags.TagsSchema(),
 											},
 										},
 									},
@@ -143,7 +146,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										Type:     nullable.TypeNullableInt,
 										Optional: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -153,11 +156,11 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -167,7 +170,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -206,7 +209,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -214,12 +217,12 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:       schema.TypeString,
 							Optional:   true,
 							Deprecated: "Use filter instead",
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(lifecycleRuleStatus_Values(), false),
@@ -239,7 +242,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -250,16 +253,26 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"transition_default_minimum_object_size": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.TransitionDefaultMinimumObjectSize](),
+			},
 		},
 	}
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
@@ -270,7 +283,11 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	if v, ok := d.GetOk("transition_default_minimum_object_size"); ok {
+		input.TransitionDefaultMinimumObjectSize = types.TransitionDefaultMinimumObjectSize(v.(string))
+	}
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -279,40 +296,43 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		diag.Errorf("waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
+	if _, err := waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	const (
 		lifecycleConfigurationExtraRetryDelay    = 5 * time.Second
 		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 	)
-	var lastOutput, output []types.LifecycleRule
+	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
 
 	err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
 		var err error
 
 		time.Sleep(lifecycleConfigurationExtraRetryDelay)
 
-		output, err = findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 		if d.IsNewResource() && tfresource.NotFound(err) {
 			return retry.RetryableError(err)
@@ -322,7 +342,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 			return retry.NonRetryableError(err)
 		}
 
-		if lastOutput == nil || !lifecycleRulesEqual(lastOutput, output) {
+		if lastOutput == nil || !lifecycleRulesEqual(lastOutput.Rules, output.Rules) {
 			lastOutput = output
 			return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", d.Id()))
 		}
@@ -331,37 +351,43 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Lifecycle Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", flattenLifecycleRules(ctx, output)); err != nil {
-		return diag.Errorf("setting rule: %s", err)
+	d.Set(names.AttrBucket, bucket)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
+	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output.Rules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
+	d.Set("transition_default_minimum_object_size", output.TransitionDefaultMinimumObjectSize)
 
-	return nil
+	return diags
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
@@ -372,29 +398,36 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	if v, ok := d.GetOk("transition_default_minimum_object_size"); ok {
+		input.TransitionDefaultMinimumObjectSize = types.TransitionDefaultMinimumObjectSize(v.(string))
+	}
+
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, input)
 	}, errCodeNoSuchLifecycleConfiguration)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		diag.Errorf("waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
+	if _, err := waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.DeleteBucketLifecycleInput{
@@ -407,22 +440,22 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	_, err = conn.DeleteBucketLifecycle(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
-		return findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Lifecyle Configuration (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecyle Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted
@@ -448,7 +481,7 @@ func suppressMissingFilterConfigurationBlock(k, old, new string, d *schema.Resou
 	return false
 }
 
-func findLifecycleRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.LifecycleRule, error) {
+func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketLifecycleConfigurationOutput, error) {
 	input := &s3.GetBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
@@ -473,7 +506,7 @@ func findLifecycleRules(ctx context.Context, conn *s3.Client, bucket, expectedBu
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.Rules, nil
+	return output, nil
 }
 
 func lifecycleRulesEqual(rules1, rules2 []types.LifecycleRule) bool {
@@ -495,7 +528,7 @@ func lifecycleRulesEqual(rules1, rules2 []types.LifecycleRule) bool {
 
 func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []types.LifecycleRule) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -505,7 +538,7 @@ func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, ex
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(lifecycleRulesEqual(output, rules)), nil
+		return output, strconv.FormatBool(lifecycleRulesEqual(output.Rules, rules)), nil
 	}
 }
 
@@ -540,516 +573,516 @@ func lifecycleRuleStatus_Values() []string {
 	}
 }
 
-func expandLifecycleRules(ctx context.Context, l []interface{}) []types.LifecycleRule {
-	if len(l) == 0 || l[0] == nil {
+func expandLifecycleRules(ctx context.Context, tfList []interface{}) []types.LifecycleRule {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	var results []types.LifecycleRule
+	var apiObjects []types.LifecycleRule
 
-	for _, tfMapRaw := range l {
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
-		result := types.LifecycleRule{}
+		apiObject := types.LifecycleRule{}
 
 		if v, ok := tfMap["abort_incomplete_multipart_upload"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			result.AbortIncompleteMultipartUpload = expandLifecycleRuleAbortIncompleteMultipartUpload(v[0].(map[string]interface{}))
+			apiObject.AbortIncompleteMultipartUpload = expandAbortIncompleteMultipartUpload(v[0].(map[string]interface{}))
 		}
 
 		if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
-			result.Expiration = expandLifecycleRuleExpiration(v)
+			apiObject.Expiration = expandLifecycleExpiration(v)
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
-			result.Filter = expandLifecycleRuleFilter(ctx, v)
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
+			apiObject.Filter = expandLifecycleRuleFilter(ctx, v)
 		}
 
-		if v, ok := tfMap["prefix"].(string); ok && result.Filter == nil {
+		if v, ok := tfMap[names.AttrPrefix].(string); ok && apiObject.Filter == nil {
 			// If neither the filter block nor the prefix are specified,
 			// apply the Default behavior from v3.x of the provider;
 			// otherwise, set the prefix as specified in Terraform.
 			if v == "" {
-				result.Filter = &types.LifecycleRuleFilterMemberPrefix{
-					Value: v,
+				apiObject.Filter = &types.LifecycleRuleFilter{
+					Prefix: aws.String(v),
 				}
 			} else {
-				result.Prefix = aws.String(v)
+				apiObject.Prefix = aws.String(v)
 			}
 		}
 
-		if v, ok := tfMap["id"].(string); ok {
-			result.ID = aws.String(v)
+		if v, ok := tfMap[names.AttrID].(string); ok {
+			apiObject.ID = aws.String(v)
 		}
 
 		if v, ok := tfMap["noncurrent_version_expiration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			result.NoncurrentVersionExpiration = expandLifecycleRuleNoncurrentVersionExpiration(v[0].(map[string]interface{}))
+			apiObject.NoncurrentVersionExpiration = expandNoncurrentVersionExpiration(v[0].(map[string]interface{}))
 		}
 
 		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.NoncurrentVersionTransitions = expandLifecycleRuleNoncurrentVersionTransitions(v.List())
+			apiObject.NoncurrentVersionTransitions = expandNoncurrentVersionTransitions(v.List())
 		}
 
-		if v, ok := tfMap["status"].(string); ok && v != "" {
-			result.Status = types.ExpirationStatus(v)
+		if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+			apiObject.Status = types.ExpirationStatus(v)
 		}
 
 		if v, ok := tfMap["transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.Transitions = expandLifecycleRuleTransitions(v.List())
+			apiObject.Transitions = expandTransitions(v.List())
 		}
 
-		results = append(results, result)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return results
+	return apiObjects
 }
 
-func expandLifecycleRuleAbortIncompleteMultipartUpload(m map[string]interface{}) *types.AbortIncompleteMultipartUpload {
-	if len(m) == 0 {
+func expandAbortIncompleteMultipartUpload(tfMap map[string]interface{}) *types.AbortIncompleteMultipartUpload {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
 	result := &types.AbortIncompleteMultipartUpload{}
 
-	if v, ok := m["days_after_initiation"].(int); ok {
+	if v, ok := tfMap["days_after_initiation"].(int); ok {
 		result.DaysAfterInitiation = aws.Int32(int32(v))
 	}
 
 	return result
 }
 
-func expandLifecycleRuleExpiration(l []interface{}) *types.LifecycleExpiration {
-	if len(l) == 0 {
+func expandLifecycleExpiration(tfList []interface{}) *types.LifecycleExpiration {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	result := &types.LifecycleExpiration{}
+	apiObject := &types.LifecycleExpiration{}
 
-	if l[0] == nil {
-		return result
+	if tfList[0] == nil {
+		return apiObject
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := m["date"].(string); ok && v != "" {
+	if v, ok := tfMap["date"].(string); ok && v != "" {
 		t, _ := time.Parse(time.RFC3339, v)
-		result.Date = aws.Time(t)
+		apiObject.Date = aws.Time(t)
 	}
 
-	if v, ok := m["days"].(int); ok && v > 0 {
-		result.Days = aws.Int32(int32(v))
+	if v, ok := tfMap["days"].(int); ok && v > 0 {
+		apiObject.Days = aws.Int32(int32(v))
 	}
 
-	// This cannot be specified with Days or Date
-	if v, ok := m["expired_object_delete_marker"].(bool); ok && result.Date == nil && aws.ToInt32(result.Days) == 0 {
-		result.ExpiredObjectDeleteMarker = aws.Bool(v)
+	// This cannot be specified with Days or Date.
+	if v, ok := tfMap["expired_object_delete_marker"].(bool); ok && apiObject.Date == nil && aws.ToInt32(apiObject.Days) == 0 {
+		apiObject.ExpiredObjectDeleteMarker = aws.Bool(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandLifecycleRuleFilter(ctx context.Context, l []interface{}) types.LifecycleRuleFilter {
-	if len(l) == 0 {
+func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *types.LifecycleRuleFilter {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	var result types.LifecycleRuleFilter
+	var apiObject *types.LifecycleRuleFilter
 
-	if l[0] == nil {
-		return result
-	}
+	tfMap := tfList[0].(map[string]interface{})
 
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["and"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result = expandLifecycleRuleFilterMemberAnd(ctx, v[0].(map[string]interface{}))
-	}
-
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v >= 0 {
-		result = &types.LifecycleRuleFilterMemberObjectSizeGreaterThan{
-			Value: v,
+	if v, ok := tfMap["and"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject = &types.LifecycleRuleFilter{
+			And: expandLifecycleRuleAndOperator(ctx, v[0].(map[string]interface{})),
 		}
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).Value(); !null && v > 0 {
-		result = &types.LifecycleRuleFilterMemberObjectSizeLessThan{
-			Value: v,
+	if v, null, _ := nullable.Int(tfMap["object_size_greater_than"].(string)).ValueInt64(); !null && v >= 0 {
+		apiObject = &types.LifecycleRuleFilter{
+			ObjectSizeGreaterThan: aws.Int64(v),
 		}
 	}
 
-	if v, ok := m["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result = expandLifecycleRuleFilterMemberTag(v[0].(map[string]interface{}))
+	if v, null, _ := nullable.Int(tfMap["object_size_less_than"].(string)).ValueInt64(); !null && v > 0 {
+		apiObject = &types.LifecycleRuleFilter{
+			ObjectSizeLessThan: aws.Int64(v),
+		}
+	}
+
+	if v, ok := tfMap["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject = &types.LifecycleRuleFilter{
+			Tag: expandTag(v[0].(map[string]interface{})),
+		}
 	}
 
 	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
 	// Specifying more than one of the listed parameters results in a MalformedXML error.
 	// In practice, this also includes ObjectSizeGreaterThan and ObjectSizeLessThan.
-	if v, ok := m["prefix"].(string); ok && result == nil {
-		result = &types.LifecycleRuleFilterMemberPrefix{
-			Value: v,
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && apiObject == nil {
+		apiObject = &types.LifecycleRuleFilter{
+			Prefix: aws.String(v),
 		}
 	}
 
-	return result
+	return apiObject
 }
 
-func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interface{}) *types.LifecycleRuleFilterMemberAnd {
-	if len(m) == 0 {
+func expandLifecycleRuleAndOperator(ctx context.Context, tfMap map[string]interface{}) *types.LifecycleRuleAndOperator {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
-	result := &types.LifecycleRuleFilterMemberAnd{
-		Value: types.LifecycleRuleAndOperator{},
+	apiObject := &types.LifecycleRuleAndOperator{}
+
+	if v, ok := tfMap["object_size_greater_than"].(int); ok && v > 0 {
+		apiObject.ObjectSizeGreaterThan = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["object_size_greater_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeGreaterThan = aws.Int64(int64(v))
+	if v, ok := tfMap["object_size_less_than"].(int); ok && v > 0 {
+		apiObject.ObjectSizeLessThan = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["object_size_less_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeLessThan = aws.Int64(int64(v))
+	if v, ok := tfMap[names.AttrPrefix].(string); ok {
+		apiObject.Prefix = aws.String(v)
 	}
 
-	if v, ok := m["prefix"].(string); ok {
-		result.Value.Prefix = aws.String(v)
-	}
-
-	if v, ok := m["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		tags := tagsV2(tftags.New(ctx, v).IgnoreAWS())
-		if len(tags) > 0 {
-			result.Value.Tags = tags
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
+		if tags := Tags(tftags.New(ctx, v).IgnoreAWS()); len(tags) > 0 {
+			apiObject.Tags = tags
 		}
 	}
 
-	return result
+	return apiObject
 }
 
-func expandLifecycleRuleFilterMemberTag(m map[string]interface{}) *types.LifecycleRuleFilterMemberTag {
-	if len(m) == 0 {
+func expandTag(tfMap map[string]interface{}) *types.Tag {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
-	result := &types.LifecycleRuleFilterMemberTag{
-		Value: types.Tag{},
+	apiObject := &types.Tag{}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok {
+		apiObject.Key = aws.String(v)
 	}
 
-	if key, ok := m["key"].(string); ok {
-		result.Value.Key = aws.String(key)
+	if v, ok := tfMap[names.AttrValue].(string); ok {
+		apiObject.Value = aws.String(v)
 	}
 
-	if value, ok := m["value"].(string); ok {
-		result.Value.Value = aws.String(value)
-	}
-
-	return result
+	return apiObject
 }
 
-func expandLifecycleRuleNoncurrentVersionExpiration(m map[string]interface{}) *types.NoncurrentVersionExpiration {
-	if len(m) == 0 {
+func expandNoncurrentVersionExpiration(tfMap map[string]interface{}) *types.NoncurrentVersionExpiration {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
-	result := &types.NoncurrentVersionExpiration{}
+	apiObject := &types.NoncurrentVersionExpiration{}
 
-	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
-		result.NewerNoncurrentVersions = aws.Int32(int32(v))
+	if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
+		apiObject.NewerNoncurrentVersions = aws.Int32(v)
 	}
 
-	if v, ok := m["noncurrent_days"].(int); ok {
-		result.NoncurrentDays = aws.Int32(int32(v))
+	if v, ok := tfMap["noncurrent_days"].(int); ok {
+		apiObject.NoncurrentDays = aws.Int32(int32(v))
 	}
 
-	return result
+	return apiObject
 }
 
-func expandLifecycleRuleNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersionTransition {
-	if len(l) == 0 || l[0] == nil {
+func expandNoncurrentVersionTransitions(tfList []interface{}) []types.NoncurrentVersionTransition {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	var results []types.NoncurrentVersionTransition
+	var apiObjects []types.NoncurrentVersionTransition
 
-	for _, tfMapRaw := range l {
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
-		transition := types.NoncurrentVersionTransition{}
+		apiObject := types.NoncurrentVersionTransition{}
 
-		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
-			transition.NewerNoncurrentVersions = aws.Int32(int32(v))
+		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
+			apiObject.NewerNoncurrentVersions = aws.Int32(v)
 		}
 
 		if v, ok := tfMap["noncurrent_days"].(int); ok {
-			transition.NoncurrentDays = aws.Int32(int32(v))
+			apiObject.NoncurrentDays = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
-			transition.StorageClass = types.TransitionStorageClass(v)
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
+			apiObject.StorageClass = types.TransitionStorageClass(v)
 		}
 
-		results = append(results, transition)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return results
+	return apiObjects
 }
 
-func expandLifecycleRuleTransitions(l []interface{}) []types.Transition {
-	if len(l) == 0 || l[0] == nil {
+func expandTransitions(tfList []interface{}) []types.Transition {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	var results []types.Transition
+	var apiObjects []types.Transition
 
-	for _, tfMapRaw := range l {
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
-		transition := types.Transition{}
+		apiObject := types.Transition{}
 
 		if v, ok := tfMap["date"].(string); ok && v != "" {
 			t, _ := time.Parse(time.RFC3339, v)
-			transition.Date = aws.Time(t)
+			apiObject.Date = aws.Time(t)
 		}
 
 		// Only one of "date" and "days" can be configured
 		// so only set the transition.Days value when transition.Date is nil
 		// By default, tfMap["days"] = 0 if not explicitly configured in terraform.
-		if v, ok := tfMap["days"].(int); ok && v >= 0 && transition.Date == nil {
-			transition.Days = aws.Int32(int32(v))
+		if v, ok := tfMap["days"].(int); ok && v >= 0 && apiObject.Date == nil {
+			apiObject.Days = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
-			transition.StorageClass = types.TransitionStorageClass(v)
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
+			apiObject.StorageClass = types.TransitionStorageClass(v)
 		}
 
-		results = append(results, transition)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return results
+	return apiObjects
 }
 
-func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []interface{} {
-	if len(rules) == 0 {
+func flattenLifecycleRules(ctx context.Context, apiObjects []types.LifecycleRule) []interface{} {
+	if len(apiObjects) == 0 {
 		return []interface{}{}
 	}
 
-	var results []interface{}
+	var tfList []interface{}
 
-	for _, rule := range rules {
-		m := map[string]interface{}{
-			"status": rule.Status,
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrStatus: apiObject.Status,
 		}
 
-		if rule.AbortIncompleteMultipartUpload != nil {
-			m["abort_incomplete_multipart_upload"] = flattenLifecycleRuleAbortIncompleteMultipartUpload(rule.AbortIncompleteMultipartUpload)
+		if apiObject.AbortIncompleteMultipartUpload != nil {
+			tfMap["abort_incomplete_multipart_upload"] = flattenAbortIncompleteMultipartUpload(apiObject.AbortIncompleteMultipartUpload)
 		}
 
-		if rule.Expiration != nil {
-			m["expiration"] = flattenLifecycleRuleExpiration(rule.Expiration)
+		if apiObject.Expiration != nil {
+			tfMap["expiration"] = flattenLifecycleExpiration(apiObject.Expiration)
 		}
 
-		if rule.Filter != nil {
-			m["filter"] = flattenLifecycleRuleFilter(ctx, rule.Filter)
+		if apiObject.Filter != nil {
+			tfMap[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, apiObject.Filter)
 		}
 
-		if rule.ID != nil {
-			m["id"] = aws.ToString(rule.ID)
+		if apiObject.ID != nil {
+			tfMap[names.AttrID] = aws.ToString(apiObject.ID)
 		}
 
-		if rule.NoncurrentVersionExpiration != nil {
-			m["noncurrent_version_expiration"] = flattenLifecycleRuleNoncurrentVersionExpiration(rule.NoncurrentVersionExpiration)
+		if apiObject.NoncurrentVersionExpiration != nil {
+			tfMap["noncurrent_version_expiration"] = flattenNoncurrentVersionExpiration(apiObject.NoncurrentVersionExpiration)
 		}
 
-		if rule.NoncurrentVersionTransitions != nil {
-			m["noncurrent_version_transition"] = flattenLifecycleRuleNoncurrentVersionTransitions(rule.NoncurrentVersionTransitions)
+		if apiObject.NoncurrentVersionTransitions != nil {
+			tfMap["noncurrent_version_transition"] = flattenNoncurrentVersionTransitions(apiObject.NoncurrentVersionTransitions)
 		}
 
-		if rule.Prefix != nil {
-			m["prefix"] = aws.ToString(rule.Prefix)
+		if apiObject.Prefix != nil {
+			tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
 		}
 
-		if rule.Transitions != nil {
-			m["transition"] = flattenLifecycleRuleTransitions(rule.Transitions)
+		if apiObject.Transitions != nil {
+			tfMap["transition"] = flattenTransitions(apiObject.Transitions)
 		}
 
-		results = append(results, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return results
+	return tfList
 }
 
-func flattenLifecycleRuleAbortIncompleteMultipartUpload(u *types.AbortIncompleteMultipartUpload) []interface{} {
-	if u == nil {
+func flattenAbortIncompleteMultipartUpload(apiObject *types.AbortIncompleteMultipartUpload) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{})
+	tfMap := make(map[string]interface{})
 
-	if u.DaysAfterInitiation != nil {
-		m["days_after_initiation"] = int(aws.ToInt32(u.DaysAfterInitiation))
+	if apiObject.DaysAfterInitiation != nil {
+		tfMap["days_after_initiation"] = aws.ToInt32(apiObject.DaysAfterInitiation)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenLifecycleRuleExpiration(expiration *types.LifecycleExpiration) []interface{} {
-	if expiration == nil {
+func flattenLifecycleExpiration(apiObject *types.LifecycleExpiration) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{})
+	tfMap := make(map[string]interface{})
 
-	if expiration.Date != nil {
-		m["date"] = expiration.Date.Format(time.RFC3339)
+	if apiObject.Date != nil {
+		tfMap["date"] = apiObject.Date.Format(time.RFC3339)
 	}
 
-	if expiration.Days != nil {
-		m["days"] = int(aws.ToInt32(expiration.Days))
+	if apiObject.Days != nil {
+		tfMap["days"] = aws.ToInt32(apiObject.Days)
 	}
 
-	if expiration.ExpiredObjectDeleteMarker != nil {
-		m["expired_object_delete_marker"] = aws.ToBool(expiration.ExpiredObjectDeleteMarker)
+	if apiObject.ExpiredObjectDeleteMarker != nil {
+		tfMap["expired_object_delete_marker"] = aws.ToBool(apiObject.ExpiredObjectDeleteMarker)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenLifecycleRuleFilter(ctx context.Context, filter types.LifecycleRuleFilter) []interface{} {
-	if filter == nil {
+func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleRuleFilter) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := make(map[string]interface{})
+	tfMap := make(map[string]interface{})
 
-	switch v := filter.(type) {
-	case *types.LifecycleRuleFilterMemberAnd:
-		m["and"] = flattenLifecycleRuleFilterMemberAnd(ctx, v)
-	case *types.LifecycleRuleFilterMemberObjectSizeGreaterThan:
-		m["object_size_greater_than"] = strconv.FormatInt(v.Value, 10)
-	case *types.LifecycleRuleFilterMemberObjectSizeLessThan:
-		m["object_size_less_than"] = strconv.FormatInt(v.Value, 10)
-	case *types.LifecycleRuleFilterMemberPrefix:
-		m["prefix"] = v.Value
-	case *types.LifecycleRuleFilterMemberTag:
-		m["tag"] = flattenLifecycleRuleFilterMemberTag(v)
-	default:
+	if v := apiObject.And; v != nil {
+		tfMap["and"] = flattenLifecycleRuleAndOperator(ctx, v)
+	}
+
+	if v := apiObject.ObjectSizeGreaterThan; v != nil {
+		tfMap["object_size_greater_than"] = flex.Int64ToStringValue(v)
+	}
+
+	if v := apiObject.ObjectSizeLessThan; v != nil {
+		tfMap["object_size_less_than"] = flex.Int64ToStringValue(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tag; v != nil {
+		tfMap["tag"] = flattenTag(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLifecycleRuleAndOperator(ctx context.Context, apiObject *types.LifecycleRuleAndOperator) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"object_size_greater_than": aws.ToInt64(apiObject.ObjectSizeGreaterThan),
+		"object_size_less_than":    aws.ToInt64(apiObject.ObjectSizeLessThan),
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tags; v != nil {
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTag(apiObject *types.Tag) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	return []interface{}{m}
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Key; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
 }
 
-func flattenLifecycleRuleFilterMemberAnd(ctx context.Context, andOp *types.LifecycleRuleFilterMemberAnd) []interface{} {
-	if andOp == nil {
+func flattenNoncurrentVersionExpiration(apiObject *types.NoncurrentVersionExpiration) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"object_size_greater_than": andOp.Value.ObjectSizeGreaterThan,
-		"object_size_less_than":    andOp.Value.ObjectSizeLessThan,
+	tfMap := make(map[string]interface{})
+
+	if apiObject.NewerNoncurrentVersions != nil {
+		tfMap["newer_noncurrent_versions"] = flex.Int32ToStringValue(apiObject.NewerNoncurrentVersions)
 	}
 
-	if v := andOp.Value.Prefix; v != nil {
-		m["prefix"] = aws.ToString(v)
+	if apiObject.NoncurrentDays != nil {
+		tfMap["noncurrent_days"] = aws.ToInt32(apiObject.NoncurrentDays)
 	}
 
-	if v := andOp.Value.Tags; v != nil {
-		m["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
-	}
-
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenLifecycleRuleFilterMemberTag(op *types.LifecycleRuleFilterMemberTag) []interface{} {
-	if op == nil {
-		return nil
-	}
-
-	m := make(map[string]interface{})
-
-	if v := op.Value.Key; v != nil {
-		m["key"] = aws.ToString(v)
-	}
-
-	if v := op.Value.Value; v != nil {
-		m["value"] = aws.ToString(v)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenLifecycleRuleNoncurrentVersionExpiration(expiration *types.NoncurrentVersionExpiration) []interface{} {
-	if expiration == nil {
+func flattenNoncurrentVersionTransitions(apiObjects []types.NoncurrentVersionTransition) []interface{} {
+	if len(apiObjects) == 0 {
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{})
+	var tfList []interface{}
 
-	if expiration.NewerNoncurrentVersions != nil {
-		m["newer_noncurrent_versions"] = strconv.FormatInt(int64(aws.ToInt32(expiration.NewerNoncurrentVersions)), 10)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrStorageClass: apiObject.StorageClass,
+		}
+
+		if apiObject.NewerNoncurrentVersions != nil {
+			tfMap["newer_noncurrent_versions"] = flex.Int32ToStringValue(apiObject.NewerNoncurrentVersions)
+		}
+
+		if apiObject.NoncurrentDays != nil {
+			tfMap["noncurrent_days"] = aws.ToInt32(apiObject.NoncurrentDays)
+		}
+
+		tfList = append(tfList, tfMap)
 	}
 
-	if expiration.NoncurrentDays != nil {
-		m["noncurrent_days"] = int(aws.ToInt32(expiration.NoncurrentDays))
-	}
-
-	return []interface{}{m}
+	return tfList
 }
 
-func flattenLifecycleRuleNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTransition) []interface{} {
-	if len(transitions) == 0 {
+func flattenTransitions(apiObjects []types.Transition) []interface{} {
+	if len(apiObjects) == 0 {
 		return []interface{}{}
 	}
 
-	var results []interface{}
+	var tfList []interface{}
 
-	for _, transition := range transitions {
-		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrStorageClass: apiObject.StorageClass,
 		}
 
-		if transition.NewerNoncurrentVersions != nil {
-			m["newer_noncurrent_versions"] = strconv.FormatInt(int64(aws.ToInt32(transition.NewerNoncurrentVersions)), 10)
+		if apiObject.Date != nil {
+			tfMap["date"] = apiObject.Date.Format(time.RFC3339)
 		}
 
-		if transition.NoncurrentDays != nil {
-			m["noncurrent_days"] = int(aws.ToInt32(transition.NoncurrentDays))
+		if apiObject.Days != nil {
+			tfMap["days"] = aws.ToInt32(apiObject.Days)
 		}
 
-		results = append(results, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return results
-}
-
-func flattenLifecycleRuleTransitions(transitions []types.Transition) []interface{} {
-	if len(transitions) == 0 {
-		return []interface{}{}
-	}
-
-	var results []interface{}
-
-	for _, transition := range transitions {
-		m := map[string]interface{}{
-			"days":          transition.Days,
-			"storage_class": transition.StorageClass,
-		}
-
-		if transition.Date != nil {
-			m["date"] = transition.Date.Format(time.RFC3339)
-		}
-
-		results = append(results, m)
-	}
-
-	return results
+	return tfList
 }

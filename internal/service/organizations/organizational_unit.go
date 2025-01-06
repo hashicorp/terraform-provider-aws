@@ -6,17 +6,17 @@ package organizations
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_organizations_organizational_unit", name="Organizational Unit")
 // @Tags(identifierAttribute="id")
-func ResourceOrganizationalUnit() *schema.Resource {
+func resourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationalUnitCreate,
 		ReadWithoutTimeout:   resourceOrganizationalUnitRead,
@@ -43,30 +43,30 @@ func ResourceOrganizationalUnit() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
@@ -87,31 +87,31 @@ func ResourceOrganizationalUnit() *schema.Resource {
 
 func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(name),
 		ParentId: aws.String(d.Get("parent_id").(string)),
 		Tags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
-		return conn.CreateOrganizationalUnitWithContext(ctx, input)
-	}, organizations.ErrCodeFinalizingOrganizationException)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (interface{}, error) {
+		return conn.CreateOrganizationalUnit(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Organizations Organizational Unit (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*organizations.CreateOrganizationalUnitOutput).OrganizationalUnit.Id))
+	d.SetId(aws.ToString(outputRaw.(*organizations.CreateOrganizationalUnitOutput).OrganizationalUnit.Id))
 
 	return append(diags, resourceOrganizationalUnitRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	ou, err := findOrganizationalUnitByID(ctx, conn, d.Id())
 
@@ -131,7 +131,7 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Unit (%s) parents: %s", d.Id(), err)
 	}
 
-	accounts, err := findAccountsForParent(ctx, conn, d.Id())
+	accounts, err := findAccountsForParentByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Organizations Accounts for parent (%s): %s", d.Id(), err)
@@ -140,8 +140,8 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("accounts", flattenOrganizationalUnitAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-	d.Set("arn", ou.Arn)
-	d.Set("name", ou.Name)
+	d.Set(names.AttrARN, ou.Arn)
+	d.Set(names.AttrName, ou.Name)
 	d.Set("parent_id", parentAccountID)
 
 	return diags
@@ -149,15 +149,15 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		input := &organizations.UpdateOrganizationalUnitInput{
-			Name:                 aws.String(d.Get("name").(string)),
+			Name:                 aws.String(d.Get(names.AttrName).(string)),
 			OrganizationalUnitId: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateOrganizationalUnitWithContext(ctx, input)
+		_, err := conn.UpdateOrganizationalUnit(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Organizations Organizational Unit (%s): %s", d.Id(), err)
@@ -169,14 +169,14 @@ func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Organizations Organizational Unit: %s", d.Id())
-	_, err := conn.DeleteOrganizationalUnitWithContext(ctx, &organizations.DeleteOrganizationalUnitInput{
+	_, err := conn.DeleteOrganizationalUnit(ctx, &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeOrganizationalUnitNotFoundException) {
+	if errs.IsA[*awstypes.OrganizationalUnitNotFoundException](err) {
 		return diags
 	}
 
@@ -187,7 +187,7 @@ func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func findOrganizationalUnitByID(ctx context.Context, conn *organizations.Organizations, id string) (*organizations.OrganizationalUnit, error) {
+func findOrganizationalUnitByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.OrganizationalUnit, error) {
 	input := &organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(id),
 	}
@@ -195,10 +195,10 @@ func findOrganizationalUnitByID(ctx context.Context, conn *organizations.Organiz
 	return findOrganizationalUnit(ctx, conn, input)
 }
 
-func findOrganizationalUnit(ctx context.Context, conn *organizations.Organizations, input *organizations.DescribeOrganizationalUnitInput) (*organizations.OrganizationalUnit, error) {
-	output, err := conn.DescribeOrganizationalUnitWithContext(ctx, input)
+func findOrganizationalUnit(ctx context.Context, conn *organizations.Client, input *organizations.DescribeOrganizationalUnitInput) (*awstypes.OrganizationalUnit, error) {
+	output, err := conn.DescribeOrganizationalUnit(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException, organizations.ErrCodeOrganizationalUnitNotFoundException) {
+	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.OrganizationalUnitNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -216,21 +216,21 @@ func findOrganizationalUnit(ctx context.Context, conn *organizations.Organizatio
 	return output.OrganizationalUnit, nil
 }
 
-func flattenOrganizationalUnitAccounts(accounts []*organizations.Account) []map[string]interface{} {
-	if len(accounts) == 0 {
+func flattenOrganizationalUnitAccounts(apiObjects []awstypes.Account) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var result []map[string]interface{}
+	var tfList []interface{}
 
-	for _, account := range accounts {
-		result = append(result, map[string]interface{}{
-			"arn":   aws.StringValue(account.Arn),
-			"email": aws.StringValue(account.Email),
-			"id":    aws.StringValue(account.Id),
-			"name":  aws.StringValue(account.Name),
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			names.AttrARN:   aws.ToString(apiObject.Arn),
+			names.AttrEmail: aws.ToString(apiObject.Email),
+			names.AttrID:    aws.ToString(apiObject.Id),
+			names.AttrName:  aws.ToString(apiObject.Name),
 		})
 	}
 
-	return result
+	return tfList
 }

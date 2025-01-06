@@ -6,8 +6,8 @@ package detective
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/detective"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/detective"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,15 +45,15 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	graphARN := d.Get("graph_arn").(string)
 	input := &detective.UpdateOrganizationConfigurationInput{
-		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
+		AutoEnable: d.Get("auto_enable").(bool),
 		GraphArn:   aws.String(graphARN),
 	}
 
-	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
+	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Detective Organization Configuration (%s): %s", graphARN, err)
@@ -69,13 +69,13 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	input := &detective.DescribeOrganizationConfigurationInput{
 		GraphArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Detective Organization Configuration (%s): %s", d.Id(), err)

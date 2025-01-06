@@ -3,7 +3,9 @@
 
 package slices
 
-import "golang.org/x/exp/slices"
+import (
+	"slices"
+)
 
 // Reverse returns a reversed copy of the slice `s`.
 func Reverse[S ~[]E, E any](s S) S {
@@ -41,10 +43,24 @@ func ApplyToAll[S ~[]E1, E1, E2 any](s S, f func(E1) E2) []E2 {
 	return v
 }
 
-// ToPointers returns a new slice containing pointers to each element of the original slice `s`.
-func ToPointers[S ~[]E, E any](s S) []*E {
-	return ApplyToAll(s, func(e E) *E {
-		return &e
+func ApplyToAllWithError[S ~[]E1, E1, E2 any](s S, f func(E1) (E2, error)) ([]E2, error) {
+	v := make([]E2, len(s))
+
+	for i, e1 := range s {
+		e2, err := f(e1)
+		if err != nil {
+			return nil, err
+		}
+		v[i] = e2
+	}
+
+	return v, nil
+}
+
+// Values returns a new slice containing values from the pointers in each element of the original slice `s`.
+func Values[S ~[]*E, E any](s S) []E {
+	return ApplyToAll(s, func(e *E) E {
+		return *e
 	})
 }
 
@@ -64,7 +80,7 @@ func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
 	return slices.Clip(v)
 }
 
-// All returns `true` if the filter function `f` retruns `true` for all items in slice `s`.
+// All returns `true` if the filter function `f` returns `true` for all items in slice `s`.
 func All[S ~[]E, E any](s S, f Predicate[E]) bool {
 	for _, e := range s {
 		if !f(e) {
@@ -74,7 +90,7 @@ func All[S ~[]E, E any](s S, f Predicate[E]) bool {
 	return true
 }
 
-// Any returns `true` if the filter function `f` retruns `true` for any item in slice `s`.
+// Any returns `true` if the filter function `f` returns `true` for any item in slice `s`.
 func Any[S ~[]E, E any](s S, f Predicate[E]) bool {
 	for _, e := range s {
 		if f(e) {
@@ -82,23 +98,6 @@ func Any[S ~[]E, E any](s S, f Predicate[E]) bool {
 		}
 	}
 	return false
-}
-
-// Chunks returns a slice of S, each of the specified size (or less).
-func Chunks[S ~[]E, E any](s S, size int) []S {
-	chunks := make([]S, 0)
-
-	for i := 0; i < len(s); i += size {
-		end := i + size
-
-		if end > len(s) {
-			end = len(s)
-		}
-
-		chunks = append(chunks, s[i:end])
-	}
-
-	return chunks
 }
 
 // AppendUnique appends unique (not already in the slice) values to a slice.
@@ -131,4 +130,34 @@ func IndexOf[S ~[]any, E comparable](s S, v E) int {
 		}
 	}
 	return -1
+}
+
+type signed interface {
+	~int | ~int32 | ~int64
+}
+
+// Range returns a slice of integers from `start` to `stop` (exclusive) using the specified `step`.
+func Range[T signed](start, stop, step T) []T {
+	v := make([]T, 0)
+
+	switch {
+	case step > 0:
+		if start >= stop {
+			return nil
+		}
+		for i := start; i < stop; i += step {
+			v = append(v, i)
+		}
+	case step < 0:
+		if start <= stop {
+			return nil
+		}
+		for i := start; i > stop; i += step {
+			v = append(v, i)
+		}
+	default:
+		return nil
+	}
+
+	return v
 }

@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +20,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
@@ -31,7 +33,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +81,7 @@ func TestAccIAMGroupPolicyAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +99,7 @@ func TestAccIAMGroupPolicyAttachment_disappears(t *testing.T) {
 
 func testAccCheckGroupPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_policy_attachment" {
@@ -128,7 +130,7 @@ func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		_, err := tfiam.FindAttachedGroupPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["group"], rs.Primary.Attributes["policy_arn"])
 
@@ -138,12 +140,12 @@ func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string) reso
 
 func testAccCheckGroupPolicyAttachmentCount(ctx context.Context, groupName string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		input := &iam.ListAttachedGroupPoliciesInput{
 			GroupName: aws.String(groupName),
 		}
-		output, err := tfiam.FindAttachedGroupPolicies(ctx, conn, input, tfslices.PredicateTrue[*iam.AttachedPolicy]())
+		output, err := tfiam.FindAttachedGroupPolicies(ctx, conn, input, tfslices.PredicateTrue[awstypes.AttachedPolicy]())
 
 		if err != nil {
 			return err

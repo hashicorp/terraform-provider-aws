@@ -60,6 +60,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### storage_descriptor
 
+* `additional_locations` - List of locations that point to the path where a Delta table is located
 * `bucket_columns` - List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - Whether the data in the table is compressed.
@@ -115,3 +116,4 @@ This data source exports the following attributes in addition to the arguments a
 * `catalog_id` - ID of the Data Catalog in which the table resides.
 * `database_name` - Name of the catalog database that contains the target table.
 * `name` - Name of the target table.
+* `region` - Region of the target table.

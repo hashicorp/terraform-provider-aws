@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 * `cidr` - (Required) CIDR block of this entry.
 * `description` - (Optional) Description of this entry. Please note that due to API limitations, updating only the description of an entry will require recreating the entry.
-* `prefix_list_id` - (Required) CIDR block of this entry.
+* `prefix_list_id` - (Required) The ID of the prefix list.
 
 ## Attribute Reference
 

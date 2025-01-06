@@ -7,17 +7,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_instance_type_offering")
-func DataSourceInstanceTypeOffering() *schema.Resource {
+// @SDKDataSource("aws_ec2_instance_type_offering", name="Instance Type Offering")
+func dataSourceInstanceTypeOffering() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceTypeOfferingRead,
 
@@ -26,15 +27,15 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
-			"instance_type": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"location_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ec2.LocationType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LocationType](),
 			},
 			"preferred_instance_types": {
 				Type:     schema.TypeList,
@@ -47,19 +48,19 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 
 func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildCustomFilterList(v.(*schema.Set))
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("location_type"); ok {
-		input.LocationType = aws.String(v.(string))
+		input.LocationType = awstypes.LocationType(v.(string))
 	}
 
-	instanceTypeOfferings, err := FindInstanceTypeOfferings(ctx, conn, input)
+	instanceTypeOfferings, err := findInstanceTypeOfferings(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type Offerings: %s", err)
@@ -72,7 +73,7 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 	var foundInstanceTypes []string
 
 	for _, instanceTypeOffering := range instanceTypeOfferings {
-		foundInstanceTypes = append(foundInstanceTypes, aws.StringValue(instanceTypeOffering.InstanceType))
+		foundInstanceTypes = append(foundInstanceTypes, string(instanceTypeOffering.InstanceType))
 	}
 
 	var resultInstanceType string
@@ -109,7 +110,7 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(resultInstanceType)
-	d.Set("instance_type", resultInstanceType)
+	d.Set(names.AttrInstanceType, resultInstanceType)
 
 	return diags
 }

@@ -9,12 +9,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -51,26 +53,32 @@ func RegisterSweepers() {
 	})
 
 	resource.AddTestSweepers("aws_iot_thing", &resource.Sweeper{
-		Name:         "aws_iot_thing",
-		F:            sweepThings,
-		Dependencies: []string{"aws_iot_thing_principal_attachment"},
+		Name: "aws_iot_thing",
+		F:    sweepThings,
+		Dependencies: []string{
+			"aws_iot_thing_principal_attachment",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_thing_group", &resource.Sweeper{
-		Name: "aws_iot_policy_attachment",
+		Name: "aws_iot_thing_group",
 		F:    sweepThingGroups,
 	})
 
 	resource.AddTestSweepers("aws_iot_thing_type", &resource.Sweeper{
-		Name:         "aws_iot_thing_type",
-		F:            sweepThingTypes,
-		Dependencies: []string{"aws_iot_thing"},
+		Name: "aws_iot_thing_type",
+		F:    sweepThingTypes,
+		Dependencies: []string{
+			"aws_iot_thing",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_topic_rule", &resource.Sweeper{
-		Name:         "aws_iot_topic_rule",
-		F:            sweepTopicRules,
-		Dependencies: []string{"aws_iot_topic_rule_destination"},
+		Name: "aws_iot_topic_rule",
+		F:    sweepTopicRules,
+		Dependencies: []string{
+			"aws_iot_topic_rule_destination",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_topic_rule_destination", &resource.Sweeper{
@@ -79,9 +87,11 @@ func RegisterSweepers() {
 	})
 
 	resource.AddTestSweepers("aws_iot_authorizer", &resource.Sweeper{
-		Name:         "aws_iot_authorizer",
-		F:            sweepAuthorizers,
-		Dependencies: []string{"aws_iot_domain_configuration"},
+		Name: "aws_iot_authorizer",
+		F:    sweepAuthorizers,
+		Dependencies: []string{
+			"aws_iot_domain_configuration",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_domain_configuration", &resource.Sweeper{
@@ -104,34 +114,31 @@ func sweepCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListCertificatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListCertificatesPagesWithContext(ctx, input, func(page *iot.ListCertificatesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListCertificatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Certificate sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Certificates (%s): %w", region, err)
 		}
 
 		for _, v := range page.Certificates {
-			r := ResourceCertificate()
+			r := resourceCertificate()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.CertificateId))
+			d.SetId(aws.ToString(v.CertificateId))
 			d.Set("active", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Certificate sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Certificates (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -149,59 +156,53 @@ func sweepPolicyAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListPoliciesPagesWithContext(ctx, input, func(page *iot.ListPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Policy Attachment sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Policies (%s): %w", region, err))
 		}
 
 		for _, v := range page.Policies {
-			policyName := aws.StringValue(v.PolicyName)
+			policyName := v.PolicyName
 			input := &iot.ListTargetsForPolicyInput{
-				PolicyName: aws.String(policyName),
+				PolicyName: policyName,
 			}
 
-			err := conn.ListTargetsForPolicyPagesWithContext(ctx, input, func(page *iot.ListTargetsForPolicyOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
+			pages := iot.NewListTargetsForPolicyPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
 
 				for _, v := range page.Targets {
-					r := ResourcePolicyAttachment()
+					r := resourcePolicyAttachment()
 					d := r.Data(nil)
-					d.SetId(fmt.Sprintf("%s|%s", policyName, aws.StringValue(v)))
-					d.Set("policy", policyName)
-					d.Set("target", v)
+					d.SetId(fmt.Sprintf("%s|%s", aws.ToString(policyName), v))
+					d.Set(names.AttrPolicy, policyName)
+					d.Set(names.AttrTarget, v)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
 
-				return !lastPage
-			})
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
 
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Targets For Policy (%s): %w", region, err))
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Targets For Policy (%s): %w", region, err))
+				}
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Policy Attachment sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Policies (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -219,33 +220,30 @@ func sweepPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListPoliciesPagesWithContext(ctx, input, func(page *iot.ListPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Policy sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Policies (%s): %w", region, err)
 		}
 
 		for _, v := range page.Policies {
-			r := ResourcePolicy()
+			r := resourcePolicy()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.PolicyName))
+			d.SetId(aws.ToString(v.PolicyName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Policy sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Policies (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -263,33 +261,30 @@ func sweepRoleAliases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListRoleAliasesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListRoleAliasesPagesWithContext(ctx, input, func(page *iot.ListRoleAliasesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListRoleAliasesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Role Alias sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Role Aliases (%s): %w", region, err)
 		}
 
 		for _, v := range page.RoleAliases {
 			r := ResourceRoleAlias()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v))
+			d.SetId(v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Role Alias sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Role Aliases (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -307,59 +302,53 @@ func sweepThingPrincipalAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListThingsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListThingsPagesWithContext(ctx, input, func(page *iot.ListThingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListThingsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Thing Principal Attachment sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Things (%s): %w", region, err))
 		}
 
 		for _, v := range page.Things {
-			thingName := aws.StringValue(v.ThingName)
+			thingName := aws.ToString(v.ThingName)
 			input := &iot.ListThingPrincipalsInput{
 				ThingName: aws.String(thingName),
 			}
 
-			err := conn.ListThingPrincipalsPagesWithContext(ctx, input, func(page *iot.ListThingPrincipalsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := iot.NewListThingPrincipalsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Thing Principals (%s): %w", region, err))
 				}
 
 				for _, v := range page.Principals {
-					r := ResourceThingPrincipalAttachment()
+					r := resourceThingPrincipalAttachment()
 					d := r.Data(nil)
-					d.SetId(fmt.Sprintf("%s|%s", thingName, aws.StringValue(v)))
-					d.Set("principal", v)
+					d.SetId(fmt.Sprintf("%s|%s", thingName, v))
+					d.Set(names.AttrPrincipal, v)
 					d.Set("thing", thingName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Thing Principals (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Thing Principal Attachment sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Things (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -377,33 +366,30 @@ func sweepThings(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListThingsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListThingsPagesWithContext(ctx, input, func(page *iot.ListThingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListThingsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Thing sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Things (%s): %w", region, err)
 		}
 
 		for _, v := range page.Things {
-			r := ResourceThing()
+			r := resourceThing()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ThingName))
+			d.SetId(aws.ToString(v.ThingName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Thing sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Things (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -421,33 +407,30 @@ func sweepThingTypes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListThingTypesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListThingTypesPagesWithContext(ctx, input, func(page *iot.ListThingTypesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListThingTypesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Thing Type sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Thing Types (%s): %w", region, err)
 		}
 
 		for _, v := range page.ThingTypes {
-			r := ResourceThingType()
+			r := resourceThingType()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ThingTypeName))
+			d.SetId(aws.ToString(v.ThingTypeName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Thing Type sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Thing Types (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -465,33 +448,30 @@ func sweepTopicRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListTopicRulesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTopicRulesPagesWithContext(ctx, input, func(page *iot.ListTopicRulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListTopicRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Topic Rule sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Topic Rules (%s): %w", region, err)
 		}
 
 		for _, v := range page.Rules {
-			r := ResourceTopicRule()
+			r := resourceTopicRule()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.RuleName))
+			d.SetId(aws.ToString(v.RuleName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Topic Rule sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Topic Rules (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -509,33 +489,30 @@ func sweepThingGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListThingGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListThingGroupsPagesWithContext(ctx, input, func(page *iot.ListThingGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListThingGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Thing Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Thing Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.ThingGroups {
-			r := ResourceThingGroup()
+			r := resourceThingGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.GroupName))
+			d.SetId(aws.ToString(v.GroupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Thing Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Thing Groups (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -553,33 +530,30 @@ func sweepTopicRuleDestinations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListTopicRuleDestinationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTopicRuleDestinationsPagesWithContext(ctx, input, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListTopicRuleDestinationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Topic Rule Destination sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Topic Rule Destinations (%s): %w", region, err)
 		}
 
 		for _, v := range page.DestinationSummaries {
-			r := ResourceTopicRuleDestination()
+			r := resourceTopicRuleDestination()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Arn))
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Topic Rule Destination sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Topic Rule Destinations (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -597,34 +571,31 @@ func sweepAuthorizers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListAuthorizersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAuthorizersPagesWithContext(ctx, input, func(page *iot.ListAuthorizersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListAuthorizersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Authorizer sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Authorizers (%s): %w", region, err)
 		}
 
 		for _, v := range page.Authorizers {
-			r := ResourceAuthorizer()
+			r := resourceAuthorizer()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.AuthorizerName))
-			d.Set("status", iot.AuthorizerStatusActive)
+			d.SetId(aws.ToString(v.AuthorizerName))
+			d.Set(names.AttrStatus, awstypes.AuthorizerStatusActive)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Authorizer sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Authorizers (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -642,31 +613,39 @@ func sweepDomainConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListDomainConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDomainConfigurationsPagesWithContext(ctx, input, func(page *iot.ListDomainConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListDomainConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Domain Configuration sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT Domain Configurations (%s): %w", region, err)
 		}
 
 		for _, v := range page.DomainConfigurations {
-			name := aws.StringValue(v.DomainConfigurationName)
+			name := aws.ToString(v.DomainConfigurationName)
 
 			if strings.HasPrefix(name, "iot:") {
 				log.Printf("[INFO] Skipping IoT Domain Configuration %s", name)
 				continue
 			}
 
-			output, err := FindDomainConfigurationByName(ctx, conn, name)
+			output, err := findDomainConfigurationByName(ctx, conn, name)
 
 			if err != nil {
 				log.Printf("[WARN] IoT Domain Configuration (%s): %s", name, err)
 				continue
 			}
 
-			if aws.StringValue(output.DomainType) == iot.DomainTypeAwsManaged && aws.StringValue(output.DomainConfigurationStatus) == iot.DomainConfigurationStatusDisabled {
+			if output.DomainType == awstypes.DomainTypeAwsManaged && output.DomainConfigurationStatus == awstypes.DomainConfigurationStatusDisabled {
 				// AWS Managed Domain Configuration must be disabled for at least 7 days before it can be deleted.
 				if output.LastStatusChangeDate.After(time.Now().AddDate(0, 0, -7)) {
 					log.Printf("[INFO] Skipping IoT Domain Configuration %s", name)
@@ -674,24 +653,13 @@ func sweepDomainConfigurations(region string) error {
 				}
 			}
 
-			r := ResourceDomainConfiguration()
+			r := resourceDomainConfiguration()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set("status", output.DomainConfigurationStatus)
+			d.Set(names.AttrStatus, output.DomainConfigurationStatus)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT Domain Configuration sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Domain Configurations (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -709,34 +677,31 @@ func sweepCACertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.IoTConn(ctx)
+	conn := client.IoTClient(ctx)
 	input := &iot.ListCACertificatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListCACertificatesPagesWithContext(ctx, input, func(page *iot.ListCACertificatesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iot.NewListCACertificatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT CA Certificate sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IoT CA Certificates (%s): %w", region, err)
 		}
 
 		for _, v := range page.Certificates {
-			r := ResourceCACertificate()
+			r := resourceCACertificate()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.CertificateId))
+			d.SetId(aws.ToString(v.CertificateId))
 			d.Set("active", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IoT CA Certificate sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT CA Certificates (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

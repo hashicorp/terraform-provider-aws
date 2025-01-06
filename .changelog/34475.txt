@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecr_pull_through_cache_rule: Add `credential_arn` argument
+```
+
+```release-note:enhancement
+data-source/aws_ecr_pull_through_cache_rule: Add `credential_arn` attribute
+```

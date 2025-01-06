@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,18 +16,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.ResolverConfig
+	var v awstypes.ResolverConfig
 	resourceName := "aws_route53_resolver_config.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -35,9 +36,9 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 				Config: testAccConfigConfig_basic(rName, "DISABLE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", "DISABLE"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", string(awstypes.AutodefinedReverseFlagDisable)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcResourceName, names.AttrID),
 				),
 			},
 			{
@@ -49,9 +50,9 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 				Config: testAccConfigConfig_basic(rName, "ENABLE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", "ENABLE"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", string(awstypes.AutodefinedReverseFlagEnable)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcResourceName, names.AttrID),
 				),
 			},
 		},
@@ -60,14 +61,14 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 
 func TestAccRoute53ResolverConfig_Disappears_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.ResolverConfig
+	var v awstypes.ResolverConfig
 	resourceName := "aws_route53_resolver_config.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func TestAccRoute53ResolverConfig_Disappears_vpc(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigExists(ctx context.Context, n string, v *route53resolver.ResolverConfig) resource.TestCheckFunc {
+func testAccCheckConfigExists(ctx context.Context, n string, v *awstypes.ResolverConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -94,7 +95,7 @@ func testAccCheckConfigExists(ctx context.Context, n string, v *route53resolver.
 			return fmt.Errorf("No Route53 Resolver Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		output, err := tfroute53resolver.FindResolverConfigByID(ctx, conn, rs.Primary.ID)
 

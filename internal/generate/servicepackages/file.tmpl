@@ -4,12 +4,12 @@ package {{ .PackageName }}
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 {{- range .Services }}
 	"github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
 {{- end }}
-	"golang.org/x/exp/slices"
 )
 
 func servicePackages(ctx context.Context) []conns.ServicePackage {

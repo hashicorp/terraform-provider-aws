@@ -25,7 +25,7 @@ resource "aws_ec2_network_insights_path" "test" {
 The following arguments are required:
 
 * `source` - (Required) ID or ARN of the resource which is the source of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
-* `destination` - (Required) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
+* `destination` - (Optional) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
 * `protocol` - (Required) Protocol to use for analysis. Valid options are `tcp` or `udp`.
 
 The following arguments are optional:

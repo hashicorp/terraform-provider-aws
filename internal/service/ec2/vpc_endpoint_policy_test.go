@@ -7,23 +7,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -50,13 +51,13 @@ func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 
 func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,13 +75,13 @@ func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 
 func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +135,8 @@ const policy2 = `
 func testAccVPCEndpointPolicyConfig_basic(rName, policy string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
-  service = "dynamodb"
+  service      = "dynamodb"
+  service_type = "Gateway"
 }
 
 resource "aws_vpc" "test" {

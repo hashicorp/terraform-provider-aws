@@ -178,7 +178,7 @@ resource "aws_s3_bucket" "example" {
 
 ~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
@@ -191,7 +191,7 @@ This argument supports the following arguments:
 * `transit_gateway_id` - (Optional) Transit Gateway ID to attach to
 * `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to
 * `vpc_id` - (Optional) VPC ID to attach to
-* `log_format` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
+* `log_format` - (Optional) The fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
 * `max_aggregation_interval` - (Optional) The maximum interval of time
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10

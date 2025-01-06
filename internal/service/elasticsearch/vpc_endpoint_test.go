@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestVPCEndpointErrorsNotFound(t *testing.T) {
@@ -24,28 +25,24 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		apiObjects []*elasticsearchservice.VpcEndpointError
+		apiObjects []awstypes.VpcEndpointError
 		notFound   bool
 	}{
 		{
 			name: "nil input",
 		},
 		{
-			name:       "slice of nil input",
-			apiObjects: []*elasticsearchservice.VpcEndpointError{nil, nil},
-		},
-		{
 			name: "single SERVER_ERROR",
-			apiObjects: []*elasticsearchservice.VpcEndpointError{{
-				ErrorCode:     aws.String(elasticsearchservice.VpcEndpointErrorCodeServerError),
+			apiObjects: []awstypes.VpcEndpointError{{
+				ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 				ErrorMessage:  aws.String("fail"),
 				VpcEndpointId: aws.String("aos-12345678"),
 			}},
 		},
 		{
 			name: "single ENDPOINT_NOT_FOUND",
-			apiObjects: []*elasticsearchservice.VpcEndpointError{{
-				ErrorCode:     aws.String(elasticsearchservice.VpcEndpointErrorCodeEndpointNotFound),
+			apiObjects: []awstypes.VpcEndpointError{{
+				ErrorCode:     awstypes.VpcEndpointErrorCodeEndpointNotFound,
 				ErrorMessage:  aws.String("Endpoint does not exist"),
 				VpcEndpointId: aws.String("aos-12345678"),
 			}},
@@ -53,14 +50,14 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "no ENDPOINT_NOT_FOUND in many",
-			apiObjects: []*elasticsearchservice.VpcEndpointError{
+			apiObjects: []awstypes.VpcEndpointError{
 				{
-					ErrorCode:     aws.String(elasticsearchservice.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
 				{
-					ErrorCode:     aws.String(elasticsearchservice.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("crash"),
 					VpcEndpointId: aws.String("aos-12345678"),
 				},
@@ -68,14 +65,14 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "single ENDPOINT_NOT_FOUND in many",
-			apiObjects: []*elasticsearchservice.VpcEndpointError{
+			apiObjects: []awstypes.VpcEndpointError{
 				{
-					ErrorCode:     aws.String(elasticsearchservice.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
 				{
-					ErrorCode:     aws.String(elasticsearchservice.VpcEndpointErrorCodeEndpointNotFound),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeEndpointNotFound,
 					ErrorMessage:  aws.String("Endpoint does not exist"),
 					VpcEndpointId: aws.String("aos-12345678"),
 				},
@@ -85,7 +82,6 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -102,14 +98,14 @@ func TestAccElasticsearchVPCEndpoint_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v elasticsearchservice.VpcEndpoint
+	var v awstypes.VpcEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +113,7 @@ func TestAccElasticsearchVPCEndpoint_basic(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -140,14 +136,14 @@ func TestAccElasticsearchVPCEndpoint_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v elasticsearchservice.VpcEndpoint
+	var v awstypes.VpcEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,14 +165,14 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v elasticsearchservice.VpcEndpoint
+	var v awstypes.VpcEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +180,7 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -196,7 +192,7 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 				Config: testAccVPCEndpointConfig_updated(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "2"),
@@ -208,14 +204,14 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *elasticsearchservice.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
 
 		output, err := tfelasticsearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -236,7 +232,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
 
 			_, err := tfelasticsearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 

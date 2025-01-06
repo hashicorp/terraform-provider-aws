@@ -77,7 +77,7 @@ resource "aws_lb_target_group_attachment" "example" {
   # object as the value.
   for_each = {
     for k, v in aws_instance.example :
-    v.id => v
+    k => v
   }
 
   target_group_arn = aws_lb_target_group.example.arn

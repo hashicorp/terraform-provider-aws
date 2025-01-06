@@ -14,8 +14,8 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Directory": {
-			"basic":                       testAccDirectory_basic,
-			"disappears":                  testAccDirectory_disappears,
+			acctest.CtBasic:               testAccDirectory_basic,
+			acctest.CtDisappears:          testAccDirectory_disappears,
 			"ipGroupIds":                  testAccDirectory_ipGroupIDs,
 			"selfServicePermissions":      testAccDirectory_selfServicePermissions,
 			"subnetIDs":                   testAccDirectory_subnetIDs,
@@ -23,15 +23,16 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"workspaceAccessProperties":   testAccDirectory_workspaceAccessProperties,
 			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
+			"workspaceSamlProperties":                                     testAccDirectory_SamlProperties,
 		},
 		"IpGroup": {
-			"basic":               testAccIPGroup_basic,
-			"disappears":          testAccIPGroup_disappears,
+			acctest.CtBasic:       testAccIPGroup_basic,
+			acctest.CtDisappears:  testAccIPGroup_disappears,
 			"multipleDirectories": testAccIPGroup_MultipleDirectories,
 			"tags":                testAccIPGroup_tags,
 		},
 		"Workspace": {
-			"basic":                  testAccWorkspace_basic,
+			acctest.CtBasic:          testAccWorkspace_basic,
 			"recreate":               testAccWorkspace_recreate,
 			"tags":                   testAccWorkspace_tags,
 			"timeout":                testAccWorkspace_timeout,

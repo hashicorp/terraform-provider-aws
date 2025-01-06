@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codepipeline"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -28,33 +28,30 @@ func sweepPipelines(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &codepipeline.ListPipelinesInput{}
-	conn := client.CodePipelineConn(ctx)
+	conn := client.CodePipelineClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListPipelinesPagesWithContext(ctx, input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := codepipeline.NewListPipelinesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Codepipeline Pipelines (%s): %w", region, err)
 		}
 
 		for _, v := range page.Pipelines {
-			r := ResourcePipeline()
+			r := resourcePipeline()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Codepipeline Pipelines (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

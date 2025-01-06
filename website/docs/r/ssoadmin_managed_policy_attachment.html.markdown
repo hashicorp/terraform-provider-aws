@@ -44,12 +44,12 @@ resource "aws_ssoadmin_permission_set" "example" {
 }
 
 resource "aws_identitystore_group" "example" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.sso_instance.identity_store_ids)[0]
+  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
   display_name      = "Admin"
   description       = "Admin Group"
 }
 
-resource "aws_ssoadmin_account_assignment" "account_assignment" {
+resource "aws_ssoadmin_account_assignment" "example" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 

@@ -31,7 +31,7 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,15 +39,15 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 				Config: testAccCollectionDataSourceConfig_basic(rName, "encryption"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, dataSourceName, &collection),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_endpoint", resourceName, "collection_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dashboard_endpoint", resourceName, "dashboard_endpoint"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_arn", resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyARN, resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 				),
 			},
 		},
@@ -71,7 +71,7 @@ func TestAccOpenSearchServerlessCollectionDataSource_name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,14 +79,14 @@ func TestAccOpenSearchServerlessCollectionDataSource_name(t *testing.T) {
 				Config: testAccCollectionDataSourceConfig_name(rName, "encryption"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, dataSourceName, &collection),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_endpoint", resourceName, "collection_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dashboard_endpoint", resourceName, "dashboard_endpoint"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_arn", resourceName, "kms_key_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyARN, resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 				),
 			},
 		},

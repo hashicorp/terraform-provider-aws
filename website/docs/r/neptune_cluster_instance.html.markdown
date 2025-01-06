@@ -59,6 +59,7 @@ This resource supports the following arguments:
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default is `false`.
+* `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB instance is deleted.
 * `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -72,6 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Instance identifier
 * `kms_key_arn` - The ARN for the KMS encryption key if one is set to the neptune cluster.
 * `storage_encrypted` - Specifies whether the neptune cluster is encrypted.
+* `storage_type` - Storage type associated with the cluster `standard/iopt1`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 

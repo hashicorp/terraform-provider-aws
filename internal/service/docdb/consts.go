@@ -69,3 +69,15 @@ func storageType_Values() []string {
 		storageTypeStandard,
 	}
 }
+
+const (
+	restoreTypeCopyOnWrite = "copy-on-write"
+	restoreTypeFullCopy    = "full-copy"
+)
+
+func restoreType_Values() []string {
+	return []string{
+		restoreTypeCopyOnWrite,
+		restoreTypeFullCopy,
+	}
+}

@@ -72,7 +72,7 @@ resource "aws_cloudfront_distribution" "example" {
 Note that the AWS API may translate the `s3_canonical_user_id` `CanonicalUser`
 principal into an `AWS` IAM ARN principal when supplied in an
 [`aws_s3_bucket`][4] bucket policy, causing spurious diffs in Terraform. If
-you see this behaviour, use the `iam_arn` instead:
+you see this behavior, use the `iam_arn` instead:
 
 ```terraform
 data "aws_iam_policy_document" "s3_policy" {

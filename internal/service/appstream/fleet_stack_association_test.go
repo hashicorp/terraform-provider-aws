@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appstream"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
@@ -30,7 +30,7 @@ func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),
@@ -61,7 +61,7 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),
@@ -82,7 +82,7 @@ func testAccCheckFleetStackAssociationExists(ctx context.Context, resourceName s
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
 		if err != nil {
@@ -101,7 +101,7 @@ func testAccCheckFleetStackAssociationExists(ctx context.Context, resourceName s
 
 func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet_stack_association" {
