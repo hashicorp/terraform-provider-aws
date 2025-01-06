@@ -938,7 +938,6 @@ resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = %[1]q
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
-
 }
 `, targetKey))
 }
