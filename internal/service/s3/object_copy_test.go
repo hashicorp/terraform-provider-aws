@@ -848,81 +848,88 @@ resource "aws_s3_object_copy" "test" {
 
 func testAccObjectCopyConfig_tags(sourceBucket, sourceKey, targetBucket, targetKey string) string {
 	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
-	resource "aws_s3_object_copy" "test" {
-	  bucket = aws_s3_bucket.target.bucket
-	  key    = %[1]q
-	  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
-	  tags = {
-		Key1 = "A@AA"
-		Key2 = "BBB"
-		Key3 = "CCC"
-	  }
-	  tagging_directive="REPLACE"
-	
-	}
-	`, targetKey))
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  tags = {
+    Key1 = "A@AA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+
+  tagging_directive="REPLACE"
+}
+`, targetKey))
 }
 
 func testAccObjectCopyConfig_tagsWithOverride(sourceBucket, sourceKey, targetBucket, targetKey string) string {
 	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
-	resource "aws_s3_object_copy" "test" {
-	  bucket = aws_s3_bucket.target.bucket
-	  key    = %[1]q
-	  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
-	  tags = {
-		Key1 = "A@AA"
-		Key2 = "BBB"
-		Key3 = "CCC"
-	  }
-	  tagging_directive="REPLACE"
-	  override_provider {
-		default_tags {
-		  tags = {}
-		}
-	  }
-	
-	}
-	`, targetKey))
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  tags = {
+    Key1 = "A@AA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+
+  tagging_directive="REPLACE"
+
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
+}
+`, targetKey))
 }
 
 func testAccObjectCopyConfig_updatedTags(sourceBucket, sourceKey, targetBucket, targetKey string) string {
 	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
-	resource "aws_s3_object_copy" "test" {
-	  bucket = aws_s3_bucket.target.bucket
-	  key    = %[1]q
-	  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
-	  tags = {
-		Key2 = "B@BB"
-		Key3 = "X X"
-		Key4 = "DDD"
-		Key5 = "E:/"
-	  }
-	  tagging_directive="REPLACE"
-	
-	}
-	`, targetKey))
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  tags = {
+    Key2 = "B@BB"
+    Key3 = "X X"
+    Key4 = "DDD"
+    Key5 = "E:/"
+  }
+
+  tagging_directive="REPLACE"
+}
+`, targetKey))
 }
 
 func testAccObjectCopyConfig_updatedTagsOverride(sourceBucket, sourceKey, targetBucket, targetKey string) string {
 	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
-	resource "aws_s3_object_copy" "test" {
-	  bucket = aws_s3_bucket.target.bucket
-	  key    = %[1]q
-	  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
-	  tags = {
-		Key2 = "B@BB"
-		Key3 = "X X"
-		Key4 = "DDD"
-		Key5 = "E:/"
-	  }
-	  tagging_directive="REPLACE"
-	  override_provider {
-		default_tags {
-		  tags = {}
-		}
-	  }
-	}
-	`, targetKey))
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  tags = {
+    Key2 = "B@BB"
+    Key3 = "X X"
+    Key4 = "DDD"
+    Key5 = "E:/"
+  }
+
+  tagging_directive="REPLACE"
+
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
+}
+`, targetKey))
 }
 
 func testAccObjectCopyConfig_simple(sourceBucket, sourceKey, targetBucket, targetKey string) string {
