@@ -211,19 +211,20 @@ func engineLifecycleSupport_Values() []string {
 }
 
 const (
-	exportableLogTypeAgent      = "agent"
-	exportableLogTypeAlert      = "alert"
-	exportableLogTypeAudit      = "audit"
-	exportableLogTypeDiagLog    = "diag.log"
-	exportableLogTypeError      = "error"
-	exportableLogTypeGeneral    = "general"
-	exportableLogTypeListener   = "listener"
-	exportableLogTypeNotifyLog  = "notify.log"
-	exportableLogTypeOEMAgent   = "oemagent"
-	exportableLogTypePostgreSQL = "postgresql"
-	exportableLogTypeSlowQuery  = "slowquery"
-	exportableLogTypeTrace      = "trace"
-	exportableLogTypeUpgrade    = "upgrade"
+	exportableLogTypeAgent          = "agent"
+	exportableLogTypeAlert          = "alert"
+	exportableLogTypeAudit          = "audit"
+	exportableLogTypeDiagLog        = "diag.log"
+	exportableLogTypeError          = "error"
+	exportableLogTypeGeneral        = "general"
+	exportableLogTypeListener       = "listener"
+	exportableLogTypeNotifyLog      = "notify.log"
+	exportableLogTypeOEMAgent       = "oemagent"
+	exportableLogTypePostgreSQL     = "postgresql"
+	exportableLogTypeSlowQuery      = "slowquery"
+	exportableLogTypeTrace          = "trace"
+	exportableLogTypeUpgrade        = "upgrade"
+	exportableLogTypeIAMDbAuthError = "iam-db-auth-error"
 )
 
 func clusterExportableLogType_Values() []string {
@@ -234,6 +235,7 @@ func clusterExportableLogType_Values() []string {
 		exportableLogTypePostgreSQL,
 		exportableLogTypeSlowQuery,
 		exportableLogTypeUpgrade,
+		exportableLogTypeIAMDbAuthError,
 	}
 }
 
