@@ -41,18 +41,24 @@ resource "aws_eip" "example" {
 
 This resource supports the following arguments:
 
-* `allocation_id` - (Optional, Forces new resource) Allocation ID. This argument is required despite being optional at the resource level due to legacy support for EC2-Classic networking.
-* `allow_reassociation` - (Optional, Forces new resource) Whether to allow an Elastic IP address to be re-associated. Defaults to `true`.
-* `instance_id` - (Optional, Forces new resource) ID of the instance. The instance must have exactly one attached network interface. You can specify either the instance ID or the network interface ID, but not both.
-* `network_interface_id` - (Optional, Forces new resource) ID of the network interface. If the instance has more than one network interface, you must specify a network interface ID. You can specify either the instance ID or the network interface ID, but not both.
-* `private_ip_address` - (Optional, Forces new resource) Primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
-* `public_ip` - (Optional, Forces new resource, **Deprecated** since [EC2-Classic netwworking has retired](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/)) The Elastic IP address.
+* `allocation_id` - (Optional, Forces new resource) ID of the associated Elastic IP.
+  This argument is required despite being optional at the resource level due to legacy support for EC2-Classic networking.
+* `allow_reassociation` - (Optional, Forces new resource) Whether to allow an Elastic IP address to be re-associated.
+  Defaults to `true`.
+* `instance_id` - (Optional, Forces new resource) ID of the instance.
+  The instance must have exactly one attached network interface.
+  You can specify either the instance ID or the network interface ID, but not both.
+* `network_interface_id` - (Optional, Forces new resource) ID of the network interface.
+  If the instance has more than one network interface, you must specify a network interface ID.
+  You can specify either the instance ID or the network interface ID, but not both.
+* `private_ip_address` - (Optional, Forces new resource) Primary or secondary private IP address to associate with the Elastic IP address.
+  If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
+* `public_ip` - (Optional, Forces new resource, **Deprecated** since [EC2-Classic netwworking has retired](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/)) Address of the associated Elastic IP.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `association_id` - ID that represents the association of the Elastic IP address with an instance.
 * `id` - ID that represents the association of the Elastic IP address with an instance.
 
 ## Import
