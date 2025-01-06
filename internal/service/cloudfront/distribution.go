@@ -199,12 +199,14 @@ func resourceDistribution() *schema.Resource {
 						"grpc_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
-										Required: true,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -445,12 +447,14 @@ func resourceDistribution() *schema.Resource {
 						"grpc_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
-										Required: true,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},
