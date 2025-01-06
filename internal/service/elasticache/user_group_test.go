@@ -89,7 +89,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserGroupConfig_engine_valkey(rName),
+				Config: testAccUserGroupConfig_engineValkey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
@@ -274,13 +274,13 @@ resource "aws_elasticache_user_group" "test" {
 `, rName))
 }
 
-func testAccUserGroupConfig_engine_valkey(rName string) string {
+func testAccUserGroupConfig_engineValkey(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
   user_name     = "default"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "VALKEY"
+  engine        = "REDIS"
   passwords     = ["password123456789"]
 }
 
