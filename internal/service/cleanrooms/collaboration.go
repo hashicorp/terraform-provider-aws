@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_cleanrooms_collaboration")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceCollaboration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCollaborationCreate,

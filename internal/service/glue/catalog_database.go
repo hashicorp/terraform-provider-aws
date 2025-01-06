@@ -454,7 +454,7 @@ func expandDatabasePrincipalPermission(tfMap map[string]interface{}) awstypes.Pr
 		apiObject.Permissions = flex.ExpandStringyValueSet[awstypes.Permission](v)
 	}
 
-	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]interface{}))
 	}
 
