@@ -78,6 +78,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sign_in_policy.0.allowed_first_auth_factors.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "sign_in_policy.0.allowed_first_auth_factors.*", "PASSWORD"),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "ESSENTIALS"),
 				),
 			},
 			{
@@ -1733,7 +1734,7 @@ func TestAccCognitoIDPUserPool_webAuthnConfiguration(t *testing.T) {
 	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
-	relyingPartyId := "123456789"
+	relyingPartyID := "123456789"
 	userVerification := awstypes.UserVerificationTypePreferred
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1743,11 +1744,11 @@ func TestAccCognitoIDPUserPool_webAuthnConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_webAuthnConfiguration(rName, relyingPartyId, userVerification),
+				Config: testAccUserPoolConfig_webAuthnConfiguration(rName, relyingPartyID, userVerification),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.relying_party_id", relyingPartyId),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.relying_party_id", relyingPartyID),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.user_verification", string(userVerification)),
 				),
 			},
@@ -1899,6 +1900,41 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPool_userPoolTier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_userPoolTier(rName, "PLUS"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "PLUS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_userPoolTier(rName, "LITE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "LITE"),
 				),
 			},
 		},
@@ -2267,9 +2303,10 @@ resource "aws_cognito_user_pool" "test" {
 func testAccUserPoolConfig_signInPolicyAllowedFirstAuthFactors(rName string, allowedFirstAuthFactors string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name                       = %[1]q
+  name = %[1]q
+
   sign_in_policy {
-    allowed_first_auth_factors = ["%[2]s"]
+    allowed_first_auth_factors = [%[2]q]
   }
 }
 `, rName, allowedFirstAuthFactors)
@@ -2921,16 +2958,17 @@ resource "aws_cognito_user_pool" "test" {
 `, name, emailVerificationMessage, emailVerificationSubject, smsVerificationMessage)
 }
 
-func testAccUserPoolConfig_webAuthnConfiguration(rName string, relyingPartyId string, userVerification awstypes.UserVerificationType) string {
+func testAccUserPoolConfig_webAuthnConfiguration(rName, relyingPartyID string, userVerification awstypes.UserVerificationType) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name                       = %[1]q
+  name = %[1]q
+
   web_authn_configuration {
-    relying_party_id = %[2]q
+    relying_party_id  = %[2]q
     user_verification = %[3]q
   }
 }
-`, rName, relyingPartyId, userVerification)
+`, rName, relyingPartyID, userVerification)
 }
 
 func testAccUserPoolConfig_update(name string, mfaconfig, smsAuthMsg string) string {
@@ -3035,4 +3073,13 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, name, attr)
+}
+
+func testAccUserPoolConfig_userPoolTier(rName, userPoolTier string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = %[2]q
+}
+`, rName, userPoolTier)
 }

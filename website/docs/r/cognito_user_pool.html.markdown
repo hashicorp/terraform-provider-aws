@@ -90,6 +90,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_attribute_update_settings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `user_pool_add_ons` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
+* `user_pool_tier` - (Optional) The user pool [feature plan](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-sign-in-feature-plans.html), or tier. Valid values: `LITE`, `ESSENTIALS`, `PLUS`.
 * `username_attributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
 * `verification_message_template` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
