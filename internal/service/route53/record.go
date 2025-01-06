@@ -78,7 +78,7 @@ func resourceRecord() *schema.Resource {
 						names.AttrName: {
 							Type:             schema.TypeString,
 							Required:         true,
-							StateFunc:        normalizeAliasName,
+							StateFunc:        normalizeAliasDomainName,
 							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 							ValidateFunc:     validation.StringLenBetween(1, 1024),
 						},
@@ -415,7 +415,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if alias := record.AliasTarget; alias != nil {
 		tfList := []interface{}{map[string]interface{}{
 			"evaluate_target_health": alias.EvaluateTargetHealth,
-			names.AttrName:           normalizeAliasName(aws.ToString(alias.DNSName)),
+			names.AttrName:           normalizeAliasDomainName(aws.ToString(alias.DNSName)),
 			"zone_id":                aws.ToString(alias.HostedZoneId),
 		}}
 
@@ -791,7 +791,7 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 	}
 
 	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
-	recordName = fqdn(strings.ToLower(name))
+	recordName = fqdn(name)
 	rrType := awstypes.RRType(strings.ToUpper(recordType))
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(zoneID),
@@ -804,7 +804,7 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 		input.MaxItems = aws.Int32(100)
 	}
 	output, err := findResourceRecordSet(ctx, conn, input, resourceRecordsFor(recordName, rrType), func(v *awstypes.ResourceRecordSet) bool {
-		if recordName != strings.ToLower(cleanRecordName(aws.ToString(v.Name))) {
+		if recordName != strings.ToLower(aws.ToString(v.Name)) {
 			return false
 		}
 		if recordType != strings.ToUpper(string(v.Type)) {
@@ -869,7 +869,7 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 func resourceRecordsFor(recordName string, recordType awstypes.RRType) tfslices.Predicate[*route53.ListResourceRecordSetsOutput] {
 	return func(page *route53.ListResourceRecordSetsOutput) bool {
 		if page.IsTruncated {
-			if strings.ToLower(cleanRecordName(aws.ToString(page.NextRecordName))) != recordName {
+			if strings.ToLower(aws.ToString(page.NextRecordName)) != recordName {
 				return false
 			}
 
@@ -988,7 +988,7 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 // If it does not, add the zone name to form a fully qualified name
 // and keep AWS happy.
 func expandRecordName(name, zone string) string {
-	rn := normalizeZoneName(name)
+	rn := normalizeDomainName(name)
 	zone = strings.TrimSuffix(zone, ".")
 	if !strings.HasSuffix(rn, zone) {
 		if len(name) == 0 {

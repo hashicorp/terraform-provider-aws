@@ -1,4 +1,4 @@
-# Roadmap:  Feb 2024 - Apr 2024
+# Roadmap:  Nov 2024 - Jan 2024
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -10,77 +10,65 @@ This roadmap does not describe all the work that will be included within this ti
 
 In the period spanning Nov to Jan 2024 the AWS Provider added support for the following (among many others):
 
-- Amazon S3 Express
-- Amazon S3 Access Controls
-- Amazon DocDB Elastic Cluster
-- Amazon EBS Fast Snapshot Restore
+- AWS Chatbot
 - Amazon Bedrock
+- Amazon Route 53 Profiles & Zones
+- Amazon Bedrock Agents
+- Completed the migration to Amazon GO SDK v2
 
-From Feb - April 2024, we will be prioritizing the following areas of work:
+From Nov - Jan 2024, we will be prioritizing the following areas of work:
 
 ## New Services
 
-### AWS Resource Explorer Search
+### Amazon S3 Tables
 
-Issue: [#36033](https://github.com/hashicorp/terraform-provider-aws/issues/36033)
+Issue: [#40407](https://github.com/hashicorp/terraform-provider-aws/issues/40407)
 
-[Resource Explorer](https://aws.amazon.com/resourceexplorer/) Use AWS Resource Explorer to more easily search for and discover your resources across AWS Regions and accounts, such as Amazon Elastic Compute Cloud (Amazon EC2) instances, Amazon Kinesis streams, and Amazon DynamoDB tables.
+[Amazon S3 Tables](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-s3-tables-apache-iceberg-tables-analytics-workloads/) Amazon S3 Tables deliver the first cloud object store with built-in Apache Iceberg support and the easiest way to store tabular data at scale. S3 Tables are specifically optimized for analytics workloads, resulting in up to 3x faster query throughput and up to 10x higher transactions per second than self-managed tables.
 
-Support for additional Resource explorer resources may include:
-
-New Resource(s):
-
-- `aws_resourceexplorer2_search`
-
-### Amazon Verified Permissions
-
-Issue: [#32158](https://github.com/hashicorp/terraform-provider-aws/issues/32158)
-
-[Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) helps developers build more secure applications faster by externalizing authorization and centralizing policy management. They can also align application access with Zero Trust principles.
-
-Support for Amazon Verified Permissions may include:
+Support for additional S3 resources may include:
 
 New Resource(s):
 
-- `aws_verifiedpermissions_policy`
-- `aws_verifiedpermissions_identity_source`
+- `aws_s3tables_table_bucket`
+- `aws_s3tables_table_bucket_policy`
+- `aws_s3tables_table`
+- `aws_s3tables_table_policy`
+- `aws_s3tables_namespace`
 
-### Amazon Security Lake
+### Amazon S3 Express Bucket Lifecycle Configuration
 
-Issue: [#29376](https://github.com/hashicorp/terraform-provider-aws/issues/29376)
+Issue: [#40261](https://github.com/hashicorp/terraform-provider-aws/issues/40261)
 
-[Amazon Security Lake](https://aws.amazon.com/security-lake/) automatically centralizes security data from AWS environments, SaaS providers, on premises, and cloud sources into a purpose-built data lake stored in your account. With Security Lake, you can get a more complete understanding of your security data across your entire organization. You can also improve the protection of your workloads, applications, and data.
+[Amazon S3 Express Bucket Lifecycle Configuration](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-s3-express-one-zone-s3-lifecycle-expirations/) Amazon S3 Express One Zone, a high-performance S3 storage class for latency-sensitive applications, now supports object expiration using S3 Lifecycle. S3 Lifecycle can expire objects based on age to help you automatically optimize storage costs.
 
-Support for Amazon Security Lake may include:
+Support for Amazon S3 Express resources may include:
 
-New Resource(s):
+Affected Resource(s):
 
-- `aws_security_lake_aws_log_source`
-- `aws_security_lake_custom_log_source`
-- `aws_security_lake_subscriber`
+- `aws_s3_bucket_lifecycle_configuration`
 
-### Amazon DevOps Guru
+### Amazon EKS: Auto Mode
 
-Issue: [#17919](https://github.com/hashicorp/terraform-provider-aws/issues/17919)
+Issue: [#40373](https://github.com/hashicorp/terraform-provider-aws/issues/40373)
 
-[Amazon DevOps Guru](https://aws.amazon.com/security-lake/) uses ML to detect abnormal operating patterns so you can identify operational issues before they impact your customers.
+[Amazon EKS: Auto Mode](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-eks-auto-mode/) a new feature that fully automates compute, storage, and networking management for Kubernetes clusters. Amazon EKS Auto Mode simplifies running Kubernetes by offloading cluster operations to AWS, improves the performance and security of your applications, and helps optimize compute costs.
 
-Support for Amazon DevOps Guru may include:
+### Amazon ECS: Availability Zone Rebalancing
 
-New Resource(s):
+Issue: [#40221](https://github.com/hashicorp/terraform-provider-aws/issues/40221)
 
-- `aws_devopsguru_notification_channel`
-- `aws_devopsguru_resource_collection`
+[ECS: Availability Zone Rebalancing](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-ecs-az-rebalancing-speeds-mean-time-recovery-event/) a new feature that automatically redistributes containerized workloads across AZs. This capability helps reduce the mean time to recovery after infrastructure events, enabling applications to maintain high availability without requiring manual intervention.
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Add in Security Hub Automation Rules](https://github.com/hashicorp/terraform-provider-aws/issues/32210)
-- [aws rds modify-certificates](https://github.com/hashicorp/terraform-provider-aws/issues/33196)
-- [Add EKS cluster IAM access management API resources](https://github.com/hashicorp/terraform-provider-aws/issues/34982)
-- [Support for AWS Shield Advance Subscriptions](https://github.com/hashicorp/terraform-provider-aws/issues/21430)
-- [Add resources for ComputeOptimizer Recommendation Preferences](https://github.com/hashicorp/terraform-provider-aws/issues/23945)
+- [Enable Deletion Protection for DynamoDB Table Replicas](https://github.com/hashicorp/terraform-provider-aws/issues/30213)
+- [WAFv2 update rules shared with Firewall Manager](https://github.com/hashicorp/terraform-provider-aws/issues/36941)
+- [Add support for enabling primary ipv6 address on EC2 instance](https://github.com/hashicorp/terraform-provider-aws/pull/36425)
+- [Timestream Scheduled Query](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
+- [Log Anomaly Detector](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
 
 ## Disclosures
 

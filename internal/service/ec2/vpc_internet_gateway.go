@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -163,7 +164,12 @@ func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 
 	// Detach if it is attached.
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
-		if err := detachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		err := detachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutDelete))
+
+		switch {
+		case tfresource.NotFound(err):
+			return diags
+		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}
 	}
@@ -223,8 +229,11 @@ func detachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 		return conn.DetachInternetGateway(ctx, input)
 	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, errCodeGatewayNotAttached) {
-		return nil
+	if tfawserr.ErrCodeEquals(err, errCodeGatewayNotAttached, errCodeInvalidInternetGatewayIDNotFound) {
+		return &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
 	if err != nil {
