@@ -26,6 +26,7 @@ ENHANCEMENTS:
 * resource/aws_dms_endpoint: Add `kafka_settings.sasl_mechanism` argument ([#36918](https://github.com/hashicorp/terraform-provider-aws/issues/36918))
 * resource/aws_ecr_account_setting: Add valid values for registry policy scope to `name` and `value` arguments ([#40772](https://github.com/hashicorp/terraform-provider-aws/issues/40772))
 * resource/aws_eks_node_group: Add `node_repair_config` configuration block ([#40698](https://github.com/hashicorp/terraform-provider-aws/issues/40698))
+* resource/aws_emr_studio: Add `encryption_key_arn` argument ([#40771](https://github.com/hashicorp/terraform-provider-aws/issues/40771))
 * resource/aws_quicksight_user: Add `user_invitation_url` attribute ([#40775](https://github.com/hashicorp/terraform-provider-aws/issues/40775))
 
 BUG FIXES:
@@ -33,6 +34,7 @@ BUG FIXES:
 * resource/aws_api_gateway_domain_name: Fixed error when adding policy to existing private domain name ([#40708](https://github.com/hashicorp/terraform-provider-aws/issues/40708))
 * resource/aws_apigatewayv2_api: Don't overwrite the configured values of `description`, `name` or `version` if they are not present in the OpenAPI definition `body` ([#40707](https://github.com/hashicorp/terraform-provider-aws/issues/40707))
 * resource/aws_ec2_instance_connect_endpoint: Set `fips_dns_name` to an empty value (`""`) when no value is returned from the EC2 API. This fixes known-after-apply loops in Regions that don't support FIPS endpoints ([#37939](https://github.com/hashicorp/terraform-provider-aws/issues/37939))
+* resource/aws_emr_studio: Fix issue with IAM/KMS policy eventual consistency handling not working ([#40771](https://github.com/hashicorp/terraform-provider-aws/issues/40771))
 * resource/aws_glue_catalog_database: Fix crash when expanding `create_table_default_permission` with a nil `principal` block ([#40761](https://github.com/hashicorp/terraform-provider-aws/issues/40761))
 * resource/aws_instance: Always set `http_tokens` when `metadata_options` is updated ([#40727](https://github.com/hashicorp/terraform-provider-aws/issues/40727))
 * resource/aws_instance: Set new computed value for `public_dns` and `public_ip` attributes when changing `instance_type`, `user_data`, or `user_data_base64` ([#40710](https://github.com/hashicorp/terraform-provider-aws/issues/40710))
