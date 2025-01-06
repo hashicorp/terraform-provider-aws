@@ -306,7 +306,7 @@ require (
 	golang.org/x/text v0.21.0
 	golang.org/x/tools v0.28.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.2.1
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	syreclabs.com/go/faker v1.2.3
 )
 
@@ -378,7 +378,6 @@ require (
 	google.golang.org/grpc v1.68.1 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
