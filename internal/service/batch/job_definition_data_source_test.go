@@ -5,7 +5,6 @@ package batch_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -208,8 +207,6 @@ data "aws_batch_job_definition" "test" {
 }
 
 func TestAccJobDefinitionDataSourceConfig_basicARN_ContainerProperties(t *testing.T) {
-	env := os.Getenv("TF_ACC")
-	fmt.Println(env)
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"

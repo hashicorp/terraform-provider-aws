@@ -197,17 +197,18 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 
 	if cProps := jd.ContainerProperties; cProps != nil {
 		// HACK: populate .ResourceRequirements using the .Memory and .Vcpus fields.
-		// Currently, findJobDefinition() returns the deprecated fields and doesn't
-		// populate the preferred .ResourceRequirements field.
+		// Currently, the AWS SDK returns the deprecated `.memory` and `.vcpus` fields
+		// but doesn't populate the preferred `.resourceRequirements` array.
+		// see: https://docs.aws.amazon.com/batch/latest/APIReference/API_ContainerProperties.html#Batch-Type-ContainerProperties-memory
+		// see: https://docs.aws.amazon.com/batch/latest/APIReference/API_ContainerProperties.html#Batch-Type-ContainerProperties-vcpus
+
+		resourceRequirements := map[awstypes.ResourceType]*string{}
+		for _, r := range cProps.ResourceRequirements {
+			resourceRequirements[r.Type] = r.Value
+		}
+
 		if cProps.Memory != nil {
-			found := false
-			for _, r := range cProps.ResourceRequirements {
-				if r.Type == awstypes.ResourceTypeMemory {
-					found = true
-					break
-				}
-			}
-			if !found {
+			if _, found := resourceRequirements[awstypes.ResourceTypeMemory]; !found {
 				val := fmt.Sprintf("%d", aws.ToInt32(cProps.Memory))
 				cProps.ResourceRequirements = append(cProps.ResourceRequirements, awstypes.ResourceRequirement{
 					Type:  awstypes.ResourceTypeMemory,
@@ -216,14 +217,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			}
 		}
 		if cProps.Vcpus != nil {
-			found := false
-			for _, r := range cProps.ResourceRequirements {
-				if r.Type == awstypes.ResourceTypeVcpu {
-					found = true
-					break
-				}
-			}
-			if !found {
+			if _, found := resourceRequirements[awstypes.ResourceTypeVcpu]; !found {
 				val := fmt.Sprintf("%d", aws.ToInt32(cProps.Vcpus))
 				cProps.ResourceRequirements = append(cProps.ResourceRequirements, awstypes.ResourceRequirement{
 					Type:  awstypes.ResourceTypeVcpu,
