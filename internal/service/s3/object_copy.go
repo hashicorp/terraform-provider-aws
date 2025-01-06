@@ -282,7 +282,7 @@ func resourceObjectCopy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"tags": {
+									names.AttrTags: {
 										Type:             schema.TypeMap,
 										Optional:         true,
 										Elem:             &schema.Schema{Type: schema.TypeString},
@@ -678,7 +678,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
+	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
 	if ignoreProviderDefaultTags(ctx, d) {
 		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
 	} else {
