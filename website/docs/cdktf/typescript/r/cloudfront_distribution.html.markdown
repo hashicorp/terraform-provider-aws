@@ -288,7 +288,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `enabled` (Required) - Whether the distribution is enabled to accept end user requests for content.
 * `isIpv6Enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
 * `httpVersion` (Optional) - Maximum HTTP version to support on the distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is `http2`.
-* `loggingConfig` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one).
+* `loggingConfig` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one). AWS provides two versions of access logs for CloudFront: Legacy and v2. This argument configures legacy version standard logs.
 * `orderedCacheBehavior` (Optional) - Ordered list of [cache behaviors](#cache-behavior-arguments) resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
 * `origin` (Required) - One or more [origins](#origin-arguments) for this distribution (multiples allowed).
 * `originGroup` (Optional) - One or more [origin_group](#origin-group-arguments) for this distribution (multiples allowed).
@@ -479,7 +479,7 @@ argument should not be specified.
 
 #### Logging Config Arguments
 
-* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`.
+* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
 * `includeCookies` (Optional) - Whether to include cookies in access logs (default: `false`).
 * `prefix` (Optional) - Prefix to the access log filenames for this distribution, for example, `myprefix/`.
 
@@ -495,6 +495,7 @@ argument should not be specified.
 * `originPath` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `originShield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
 * `s3OriginConfig` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `customOriginConfig` instead.
+* `vpcOriginConfig` - (Optional) The VPC origin configuration.
 
 ##### Custom Origin Config Arguments
 
@@ -513,6 +514,12 @@ argument should not be specified.
 ##### S3 Origin Config Arguments
 
 * `originAccessIdentity` (Required) - The [CloudFront origin access identity][5] to associate with the origin.
+
+##### VPC Origin Config Arguments
+
+* `originKeepaliveTimeout` - (Optional) Specifies how long, in seconds, CloudFront persists its connection to the origin. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `5`.
+* `originReadTimeout` - (Optional) Specifies how long, in seconds, CloudFront waits for a response from the origin. This is also known as the _origin response timeout_. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `30`.
+* `vpcOriginId` (Required) - The VPC origin ID.
 
 #### Origin Group Arguments
 
@@ -610,4 +617,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ed382f1a0711034c7e89e360fe36178a0cddf9710e602c08afb5dd7214599f77 -->
+<!-- cache-key: cdktf-0.20.8 input-016f5dbc9c21b429c56166e27cf76bcc384dee8b54d767c742e1c29c528c8899 -->

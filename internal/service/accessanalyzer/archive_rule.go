@@ -97,7 +97,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	analyzerName := d.Get("analyzer_name").(string)
 	ruleName := d.Get("rule_name").(string)
 	id := archiveRuleCreateResourceID(analyzerName, ruleName)
-	input := &accessanalyzer.CreateArchiveRuleInput{
+	input := accessanalyzer.CreateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
@@ -107,7 +107,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Filter = expandFilter(v.(*schema.Set))
 	}
 
-	_, err := conn.CreateArchiveRule(ctx, input)
+	_, err := conn.CreateArchiveRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Access Analyzer Archive Rule (%s): %s", id, err)
@@ -159,7 +159,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &accessanalyzer.UpdateArchiveRuleInput{
+	input := accessanalyzer.UpdateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
@@ -169,7 +169,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.Filter = expandFilter(d.Get(names.AttrFilter).(*schema.Set))
 	}
 
-	_, err = conn.UpdateArchiveRule(ctx, input)
+	_, err = conn.UpdateArchiveRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating AWS IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
@@ -190,11 +190,12 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting IAM Access Analyzer Archive Rule: %s", d.Id())
-	_, err = conn.DeleteArchiveRule(ctx, &accessanalyzer.DeleteArchiveRuleInput{
+	input := accessanalyzer.DeleteArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
-	})
+	}
+	_, err = conn.DeleteArchiveRule(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -208,12 +209,12 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Client, analyzerName, ruleName string) (*types.ArchiveRuleSummary, error) {
-	input := &accessanalyzer.GetArchiveRuleInput{
+	input := accessanalyzer.GetArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		RuleName:     aws.String(ruleName),
 	}
 
-	output, err := conn.GetArchiveRule(ctx, input)
+	output, err := conn.GetArchiveRule(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

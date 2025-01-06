@@ -431,7 +431,7 @@ func TestAccBedrockAgentAgent_kms(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAgent_collaboration(t *testing.T) {
+func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -444,7 +444,7 @@ func TestAccBedrockAgentAgent_collaboration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_collaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -462,7 +462,7 @@ func TestAccBedrockAgentAgent_collaboration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check", "prepare_agent"},
 			},
 			{
-				Config: testAccAgentConfig_collaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -878,7 +878,7 @@ resource "aws_kms_key" "test_agent" {
 `, rName, model, description, timeout))
 }
 
-func testAccAgentConfig_collaboration(rName, model, description, collaboration string) string {
+func testAccAgentConfig_agentCollaboration(rName, model, description, collaboration string) string {
 	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_collaboration         = %[4]q

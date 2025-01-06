@@ -236,6 +236,7 @@ provider "aws" {
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
+|Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
@@ -316,6 +317,7 @@ provider "aws" {
 |CloudWatch Synthetics|`synthetics`|`AWS_ENDPOINT_URL_SYNTHETICS`|`synthetics`|
 |Tax Settings|`taxsettings`|`AWS_ENDPOINT_URL_TAXSETTINGS`|`taxsettings`|
 |Timestream for InfluxDB|`timestreaminfluxdb`|`AWS_ENDPOINT_URL_TIMESTREAM_INFLUXDB`|`timestream_influxdb`|
+|Timestream Query|`timestreamquery`|`AWS_ENDPOINT_URL_TIMESTREAM_QUERY`|`timestream_query`|
 |Timestream Write|`timestreamwrite`|`AWS_ENDPOINT_URL_TIMESTREAM_WRITE`|`timestream_write`|
 |Transcribe|`transcribe`(or `transcribeservice`)|`AWS_ENDPOINT_URL_TRANSCRIBE`|`transcribe`|
 |Transfer Family|`transfer`|`AWS_ENDPOINT_URL_TRANSFER`|`transfer`|

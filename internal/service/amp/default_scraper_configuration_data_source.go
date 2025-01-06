@@ -62,8 +62,8 @@ func (d *defaultScraperConfigurationDataSource) Read(ctx context.Context, reques
 }
 
 func findDefaultScraperConfiguration(ctx context.Context, conn *amp.Client) ([]byte, error) {
-	input := &amp.GetDefaultScraperConfigurationInput{}
-	output, err := conn.GetDefaultScraperConfiguration(ctx, input)
+	input := amp.GetDefaultScraperConfigurationInput{}
+	output, err := conn.GetDefaultScraperConfiguration(ctx, &input)
 
 	if err != nil {
 		return nil, err

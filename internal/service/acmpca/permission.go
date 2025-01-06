@@ -86,7 +86,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &acmpca.CreatePermissionInput{
+	input := acmpca.CreatePermissionInput{
 		Actions:                 expandPermissionActions(d.Get(names.AttrActions).(*schema.Set)),
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
@@ -96,7 +96,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SourceAccount = aws.String(sourceAccount)
 	}
 
-	if _, err := conn.CreatePermission(ctx, input); err != nil {
+	if _, err := conn.CreatePermission(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Permission (%s): %s", id, err)
 	}
 
@@ -146,7 +146,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	caARN, principal, sourceAccount := parts[0], parts[1], parts[2]
-	input := &acmpca.DeletePermissionInput{
+	input := acmpca.DeletePermissionInput{
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
 	}
@@ -156,7 +156,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())
-	_, err = conn.DeletePermission(ctx, input)
+	_, err = conn.DeletePermission(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -170,11 +170,11 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findPermissionByThreePartKey(ctx context.Context, conn *acmpca.Client, certificateAuthorityARN, principal, sourceAccount string) (*types.Permission, error) {
-	input := &acmpca.ListPermissionsInput{
+	input := acmpca.ListPermissionsInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	return findPermission(ctx, conn, input, func(v *types.Permission) bool {
+	return findPermission(ctx, conn, &input, func(v *types.Permission) bool {
 		return aws.ToString(v.Principal) == principal && (sourceAccount == "" || aws.ToString(v.SourceAccount) == sourceAccount)
 	})
 }
