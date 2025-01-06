@@ -21,7 +21,7 @@ resource "aws_cloudwatch_log_delivery" "example" {
 
   field_delimiter = ","
 
-  record_fields = ["source_ip", "destination_ip"]
+  record_fields = ["event_timestamp", "event"]
 }
 ```
 

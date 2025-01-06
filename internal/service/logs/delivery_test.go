@@ -227,8 +227,8 @@ func testAccDelivery_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_delimiter"), knownvalue.StringExact(" ")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_fields"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.StringExact("object_identifier"),
-						knownvalue.StringExact("event_identifier"),
+						knownvalue.StringExact("event_timestamp"),
+						knownvalue.StringExact("event"),
 					})),
 				},
 			},
@@ -244,14 +244,14 @@ func testAccDelivery_update(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_delimiter"), knownvalue.StringExact(",")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_fields"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.StringExact("object_identifier"),
-						knownvalue.StringExact("event_identifier"),
+						knownvalue.StringExact("event_timestamp"),
+						knownvalue.StringExact("event"),
 					})),
 				},
 			},
@@ -364,7 +364,7 @@ resource "aws_cloudwatch_log_delivery" "test" {
 
   field_delimiter = %[2]q
 
-  record_fields = ["object_identifier", "event_identifier"]
+  record_fields = ["event_timestamp", "event"]
 
   s3_delivery_configuration {
     enable_hive_compatible_path = false
