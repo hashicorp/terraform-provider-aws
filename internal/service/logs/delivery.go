@@ -134,6 +134,11 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
+	// Normalize FieldDelimiter.
+	if aws.ToString(delivery.FieldDelimiter) == "" && data.FieldDelimiter.IsNull() {
+		delivery.FieldDelimiter = nil
+	}
+
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, delivery, &data)...)
 	if response.Diagnostics.HasError() {
@@ -165,6 +170,11 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery (%s)", data.ID.ValueString()), err.Error())
 
 		return
+	}
+
+	// Normalize FieldDelimiter.
+	if aws.ToString(output.FieldDelimiter) == "" && data.FieldDelimiter.IsNull() {
+		output.FieldDelimiter = nil
 	}
 
 	// Set attributes for import.
