@@ -6,7 +6,6 @@ package elasticache
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -88,12 +88,10 @@ func resourceUser() *schema.Resource {
 				},
 			},
 			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"REDIS", "VALKEY"}, false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validation.StringInSlice([]string{"REDIS", "VALKEY"}, false),
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			"no_password_required": {
 				Type:     schema.TypeBool,
@@ -244,12 +242,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 		}
 
-		if d.HasChange("no_password_required") {
-			input.NoPasswordRequired = aws.Bool(d.Get("no_password_required").(bool))
-		}
-
 		if d.HasChange(names.AttrEngine) {
 			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+		}
+
+		if d.HasChange("no_password_required") {
+			input.NoPasswordRequired = aws.Bool(d.Get("no_password_required").(bool))
 		}
 
 		if d.HasChange("passwords") {

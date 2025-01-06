@@ -208,10 +208,6 @@ func testAccCheckUserGroupExists(ctx context.Context, n string, v *awstypes.User
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache User Group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindUserGroupByID(ctx, conn, rs.Primary.ID)

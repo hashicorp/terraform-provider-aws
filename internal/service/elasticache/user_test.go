@@ -56,7 +56,7 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
+func TestAccElastiCacheUser_passwordAuthMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -95,7 +95,7 @@ func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_iam_auth_mode(t *testing.T) {
+func TestAccElastiCacheUser_iamAuthMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -167,7 +167,7 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_update_engine(t *testing.T) {
+func TestAccElastiCacheUser_updateEngine(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -206,7 +206,7 @@ func TestAccElastiCacheUser_update_engine(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
+func TestAccElastiCacheUser_updatePasswordAuthMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -418,10 +418,6 @@ func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) res
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache User ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
