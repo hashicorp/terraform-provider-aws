@@ -43,10 +43,6 @@ func resourceEIPAssociation() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrAssociationID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -111,9 +107,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP Association: %s", err)
 	}
 
-	association_id := aws.ToString(output.AssociationId)
-	d.Set(names.AttrAssociationID, association_id)
-	d.SetId(association_id)
+	d.SetId(aws.ToString(output.AssociationId))
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
@@ -162,7 +156,6 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("allocation_id", address.AllocationId)
 	d.Set(names.AttrInstanceID, address.InstanceId)
-	d.Set(names.AttrAssociationID, address.AssociationId)
 	d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 	d.Set("private_ip_address", address.PrivateIpAddress)
 	d.Set("public_ip", address.PublicIp)

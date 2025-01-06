@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +36,7 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 				Config: testAccEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAssociationID, resourceName, names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 				),
 			},
 			{
