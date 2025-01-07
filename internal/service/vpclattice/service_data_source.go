@@ -136,7 +136,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
+	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err := listTags(ctx, conn, serviceARN)
 
 		if err != nil {

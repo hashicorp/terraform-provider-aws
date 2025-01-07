@@ -67,6 +67,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the application.
+* `tags` - (Optional) A map of tags assigned to the Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -75,6 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `application_tag` - A map with a single tag key-value pair used to associate resources with the application. This attribute can be passed directly into the `tags` argument of another resource, or merged into a map of existing tags.
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `id` - Identifier of the application.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -101,4 +103,4 @@ Using `terraform import`, import AWS Service Catalog AppRegistry Application usi
 % terraform import aws_servicecatalogappregistry_application.example application-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-0e72d2a6bda89576ef42e709c381a50e666f8d77a87e41cf5f591793d904a0e9 -->
+<!-- cache-key: cdktf-0.20.8 input-f0c92694572270bb5029249cae9c161a665b8f56a076a6d38b4ae4b80fa8213d -->

@@ -529,7 +529,10 @@ The following arguments are optional:
 * `level` - (Optional) H265 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `min_interval` - (Optional) Min interval.
+* `minIInterval` - (Optional) Min interval.
+* `minQp` - (Optional) Set the minimum QP.
+* `mvOverPictureBoundaries` - (Optional) Enables or disables motion vector over picture boundaries.
+* `mvTemporalPredictor`- (Optional) Enables or disables the motion vector temporal predictor.
 * `parDenominator` - (Optional) Pixel Aspect Ratio denominator.
 * `parNumerator` - (Optional) Pixel Aspect Ratio numerator.
 * `profile` - (Optional) H265 profile.
@@ -539,8 +542,12 @@ The following arguments are optional:
 * `sceneChangeDetect` - (Optional) Scene change detection.
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
+* `tileHeight` - (Optional) Sets the height of tiles.
+* `tilePadding` - (Optional) Enables or disables padding of tiles.
+* `tileWidth` - (Optional) Sets the width of tiles.
 * `timecodeBurninSettings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
 * `timecodeInsertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `treeblockSize` - (Optional) Sets the size of the treeblock.
 
 ### H265 Color Space Settings
 
@@ -826,4 +833,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-6f35c6a1bbf589049ab28f3a0305defb739be70f1415e2fba48e986109eecf3e -->
+<!-- cache-key: cdktf-0.20.8 input-c84c1696c92bb7fbbfe2c2b1e571168787b06ce8a2f99e9e0569e5c41f0f223d -->

@@ -9,99 +9,9 @@ import (
 	"io/fs"
 	"os"
 	"testing"
+
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
-
-func TestDNSSuffixForPartition(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "China",
-			input:    ChinaPartitionID,
-			expected: "amazonaws.com.cn",
-		},
-		{
-			name:     "GovCloud",
-			input:    USGovCloudPartitionID,
-			expected: "amazonaws.com",
-		},
-		{
-			name:     "standard",
-			input:    StandardPartitionID,
-			expected: "amazonaws.com",
-		},
-		{
-			name:     "default",
-			input:    "custom",
-			expected: "amazonaws.com",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got, want := DNSSuffixForPartition(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %s, expected: %s", got, want)
-			}
-		})
-	}
-}
-
-func TestIsOptInRegion(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: false,
-		},
-		{
-			name:     "China",
-			input:    CNNorth1RegionID,
-			expected: false,
-		},
-		{
-			name:     "GovCloud",
-			input:    USGovWest1RegionID,
-			expected: false,
-		},
-		{
-			name:     "standard opt-in",
-			input:    CAWest1RegionID,
-			expected: true,
-		},
-		{
-			name:     "standard not opt-in",
-			input:    CACentral1RegionID,
-			expected: false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got, want := IsOptInRegion(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %t, expected: %t", got, want)
-			}
-		})
-	}
-}
 
 func TestPartitionForRegion(t *testing.T) {
 	t.Parallel()
@@ -118,23 +28,23 @@ func TestPartitionForRegion(t *testing.T) {
 		},
 		{
 			name:     "China",
-			input:    CNNorth1RegionID,
-			expected: ChinaPartitionID,
+			input:    endpoints.CnNorth1RegionID,
+			expected: endpoints.AwsCnPartitionID,
 		},
 		{
 			name:     "GovCloud",
-			input:    USGovWest1RegionID,
-			expected: USGovCloudPartitionID,
+			input:    endpoints.UsGovWest1RegionID,
+			expected: endpoints.AwsUsGovPartitionID,
 		},
 		{
 			name:     "standard",
-			input:    USWest2RegionID,
-			expected: StandardPartitionID,
+			input:    endpoints.UsWest2RegionID,
+			expected: endpoints.AwsPartitionID,
 		},
 		{
 			name:     "default",
 			input:    "custom",
-			expected: StandardPartitionID,
+			expected: endpoints.AwsPartitionID,
 		},
 	}
 
@@ -142,53 +52,7 @@ func TestPartitionForRegion(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := PartitionForRegion(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %s, expected: %s", got, want)
-			}
-		})
-	}
-}
-
-func TestReverseDNS(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "amazonaws.com",
-			input:    "amazonaws.com",
-			expected: "com.amazonaws",
-		},
-		{
-			name:     "amazonaws.com.cn",
-			input:    "amazonaws.com.cn",
-			expected: "cn.com.amazonaws",
-		},
-		{
-			name:     "sc2s.sgov.gov",
-			input:    "sc2s.sgov.gov",
-			expected: "gov.sgov.sc2s",
-		},
-		{
-			name:     "c2s.ic.gov",
-			input:    "c2s.ic.gov",
-			expected: "gov.ic.c2s",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got, want := ReverseDNS(testCase.input), testCase.expected; got != want {
+			if got, want := PartitionForRegion(testCase.input).ID(), testCase.expected; got != want {
 				t.Errorf("got: %s, expected: %s", got, want)
 			}
 		})

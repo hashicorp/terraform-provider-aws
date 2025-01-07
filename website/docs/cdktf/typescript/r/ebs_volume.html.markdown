@@ -64,7 +64,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The volume ID (e.g., vol-59fcb34e).
-* `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
+* `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -73,7 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `5m`)
 - `update` - (Default `5m`)
-- `delete` - (Default `5m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -103,4 +103,4 @@ Using `terraform import`, import EBS Volumes using the `id`. For example:
 % terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-92ec3ce7171663c1078ea136c38ae14a9544f626bf400bd2be9fd052c9a938d8 -->
+<!-- cache-key: cdktf-0.20.8 input-ec1c6e4f96f3370b2c8b835a9af608f8b75f06eda9fc4422c9dfd7d15d1b92eb -->

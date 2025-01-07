@@ -121,7 +121,7 @@ func (r *instanceMetadataDefaultsResource) Create(ctx context.Context, request r
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().AccountID)
+	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }

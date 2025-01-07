@@ -749,11 +749,12 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 
 func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable, awstypes.VolumeLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusVolume(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
+		Pending:      enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable, awstypes.VolumeLifecycleDeleting),
+		Target:       []string{},
+		Refresh:      statusVolume(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        30 * time.Second,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

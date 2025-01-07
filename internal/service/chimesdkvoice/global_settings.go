@@ -89,7 +89,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionReading, ResNameGlobalSettings, d.Id(), err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	d.Set("voice_connector", flattenVoiceConnectorSettings(out.VoiceConnector))
 
 	return diags
@@ -109,7 +109,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 			return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionUpdating, ResNameGlobalSettings, d.Id(), err)
 		}
 	}
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)
 }

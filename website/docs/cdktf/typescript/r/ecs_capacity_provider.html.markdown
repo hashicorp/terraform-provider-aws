@@ -125,4 +125,4 @@ Using `terraform import`, import ECS Capacity Providers using the `name`. For ex
 % terraform import aws_ecs_capacity_provider.example example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-797abb55245071d6007ea74149db3030c3a05e7af10104cb97fc827aed66cbc8 -->
+<!-- cache-key: cdktf-0.20.8 input-797abb55245071d6007ea74149db3030c3a05e7af10104cb97fc827aed66cbc8 -->

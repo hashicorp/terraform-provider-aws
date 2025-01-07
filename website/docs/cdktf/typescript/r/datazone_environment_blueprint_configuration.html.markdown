@@ -113,4 +113,4 @@ Using `terraform import`, import DataZone Environment Blueprint Configuration us
 % terraform import aws_datazone_environment_blueprint_configuration.example domain-id-12345/environment-blueprint-id-54321
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-3e0ffe371fc360928d17178e6bc3d0d45c08acb1be8281d759dccf490fe1fd2f -->
+<!-- cache-key: cdktf-0.20.8 input-3e0ffe371fc360928d17178e6bc3d0d45c08acb1be8281d759dccf490fe1fd2f -->

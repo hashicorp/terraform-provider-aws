@@ -57,7 +57,7 @@ func TestAccSecretsManagerSecretVersionsDataSource_emptyVer(t *testing.T) {
 			{
 				Config: testAccSecretVersionsDataSourceConfig_emptyVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "versions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "versions.#", "0"),
 				),
 			},
 		},

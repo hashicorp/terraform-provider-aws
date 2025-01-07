@@ -69,6 +69,8 @@ var (
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
+	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
+	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -98,6 +100,8 @@ var (
 	ResourceTransitGatewayRouteTablePropagation           = resourceTransitGatewayRouteTablePropagation
 	ResourceTransitGatewayVPCAttachment                   = resourceTransitGatewayVPCAttachment
 	ResourceTransitGatewayVPCAttachmentAccepter           = resourceTransitGatewayVPCAttachmentAccepter
+	ResourceVPCBlockPublicAccessExclusion                 = newVPCBlockPublicAccessExclusionResource
+	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
@@ -122,6 +126,7 @@ var (
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
+	CheckMostRecentAndMissingFilters                           = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                        = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
@@ -216,6 +221,7 @@ var (
 	FindTransitGatewayRouteTablePropagationByTwoPartKey        = findTransitGatewayRouteTablePropagationByTwoPartKey
 	FindTransitGatewayStaticRoute                              = findTransitGatewayStaticRoute
 	FindTransitGatewayVPCAttachmentByID                        = findTransitGatewayVPCAttachmentByID
+	FindVPCBlockPublicAccessExclusionByID                      = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                            = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                              = findVPCDHCPOptionsAssociation
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID       = findVPCEndpointConnectionByServiceIDAndVPCEndpointID

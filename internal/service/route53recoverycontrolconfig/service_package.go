@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -17,20 +18,20 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return r53rcc.NewFromConfig(cfg,
-		r53rcc.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		r53rcc.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *r53rcc.Options) {
 			// Always override the service region
 			switch config["partition"].(string) {
-			case names.StandardPartitionID:
+			case endpoints.AwsPartitionID:
 				// https://docs.aws.amazon.com/general/latest/gr/r53arc.html Setting default to us-west-2.
-				if cfg.Region != names.USWest2RegionID {
+				if cfg.Region != endpoints.UsWest2RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
-						"override_region": names.USWest2RegionID,
+						"override_region": endpoints.UsWest2RegionID,
 					})
 				}
-				o.Region = names.USWest2RegionID
+				o.Region = endpoints.UsWest2RegionID
 			}
 		},
 	), nil

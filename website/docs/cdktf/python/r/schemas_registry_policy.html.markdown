@@ -38,7 +38,7 @@ class MyConvertedCode(TerraformStack):
                     type="AWS"
                 )
                 ],
-                resources=["arn:aws:schemas:us-east-1:012345678901:registry/example", "arn:aws:schemas:us-east-1:012345678901:schema/example*"
+                resources=["arn:aws:schemas:us-east-1:123456789012:registry/example", "arn:aws:schemas:us-east-1:123456789012:schema/example*"
                 ],
                 sid="example"
             )
@@ -96,4 +96,4 @@ Using `terraform import`, import EventBridge Schema Registry Policy using the `r
 % terraform import aws_schemas_registry_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-9012f6db2847612db1042a8a2bfd8eded85a88882cdbccfc86d64bfed094f01b -->
+<!-- cache-key: cdktf-0.20.8 input-62f22e7b540422b32e9ccd82d0528f6eb0fb7caef34af87d1e13ddbc71adefb5 -->

@@ -242,7 +242,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Configure tags.
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := keyValueTags(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 

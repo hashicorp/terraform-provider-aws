@@ -145,6 +145,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 
 	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
+	// main control flow
 	tTo := valTo.Type(ctx)
 	switch k := vFrom.Kind(); k {
 	case reflect.Bool:
@@ -168,6 +169,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.String:
+		// []byte (or []uint8) is also handled like string but in flattener.slice()
 		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo, fieldOpts)...)
 		return diags
 
@@ -684,6 +686,8 @@ func (flattener autoFlattener) struct_(ctx context.Context, sourcePath path.Path
 		return diags
 	}
 
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+
 	return diags
 }
 
@@ -737,6 +741,17 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			// []string -> types.Set(OfString).
 			//
 			diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, elementType, attrValueFromReflectValue, fieldOpts)...)
+			return diags
+		}
+
+	case reflect.Uint8:
+		switch tTo := tTo.(type) {
+		case basetypes.StringTypable:
+			//
+			// []byte (or []uint8) -> types.String.
+			//
+			vFrom = reflect.ValueOf(string(vFrom.Bytes()))
+			diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo, fieldOpts)...)
 			return diags
 		}
 

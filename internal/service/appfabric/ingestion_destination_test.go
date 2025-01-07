@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +32,7 @@ func testAccIngestionDestination_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -44,19 +45,19 @@ func testAccIngestionDestination_basic(t *testing.T) {
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
 					resource.TestCheckResourceAttrSet(resourceName, "app_bundle_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix"),
 					resource.TestCheckResourceAttrSet(resourceName, "ingestion_arn"),
-					resource.TestCheckResourceAttr(resourceName, "processing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.0.format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.0.schema", "raw"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -80,7 +81,7 @@ func testAccIngestionDestination_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -111,7 +112,7 @@ func testAccIngestionDestination_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -122,7 +123,7 @@ func testAccIngestionDestination_tags(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -135,7 +136,7 @@ func testAccIngestionDestination_tags(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_tags2(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -144,7 +145,7 @@ func testAccIngestionDestination_tags(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -164,7 +165,7 @@ func testAccIngestionDestination_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -175,11 +176,11 @@ func testAccIngestionDestination_update(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix"),
 				),
@@ -193,11 +194,11 @@ func testAccIngestionDestination_update(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_s3Prefix(rName, tenantID, serviceAccountToken, "testing"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix", "testing"),
 				),
@@ -218,7 +219,7 @@ func testAccIngestionDestination_firehose(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -229,12 +230,12 @@ func testAccIngestionDestination_firehose(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_firehose(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "0"),
 				),
 			},
 			{

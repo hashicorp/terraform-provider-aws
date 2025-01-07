@@ -37,11 +37,11 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "3"),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),
 					resource.TestCheckResourceAttr(resourceName, "service_namespace", "ecs"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 
@@ -50,8 +50,8 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "8"),
-					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -170,14 +170,14 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(writeResourceName, "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr(writeResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(writeResourceName, "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
-					resource.TestCheckResourceAttr(writeResourceName, "min_capacity", acctest.Ct1),
-					resource.TestCheckResourceAttr(writeResourceName, names.AttrMaxCapacity, acctest.Ct10),
+					resource.TestCheckResourceAttr(writeResourceName, "min_capacity", "1"),
+					resource.TestCheckResourceAttr(writeResourceName, names.AttrMaxCapacity, "10"),
 
 					testAccCheckTargetExists(ctx, readResourceName, &readTarget),
 					resource.TestCheckResourceAttr(readResourceName, "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr(readResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(readResourceName, "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
-					resource.TestCheckResourceAttr(readResourceName, "min_capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(readResourceName, "min_capacity", "2"),
 					resource.TestCheckResourceAttr(readResourceName, names.AttrMaxCapacity, "15"),
 				),
 			},
@@ -201,7 +201,7 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 				Config: testAccTargetConfig_optionalRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &readTarget),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"),
 				),
 			},
 		},
@@ -267,7 +267,7 @@ func TestAccAppAutoScalingTarget_suspendedState_maintainsExisting(t *testing.T) 
 				Config: testAccTargetConfig_sansSuspendedState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &readTarget),
-					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtTrue),
@@ -277,7 +277,7 @@ func TestAccAppAutoScalingTarget_suspendedState_maintainsExisting(t *testing.T) 
 				Config: testAccTargetConfig_suspendedState(rName, false, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &readTarget),
-					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtFalse),
@@ -287,7 +287,7 @@ func TestAccAppAutoScalingTarget_suspendedState_maintainsExisting(t *testing.T) 
 				Config: testAccTargetConfig_sansSuspendedState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &readTarget),
-					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suspended_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_in_suspended", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.dynamic_scaling_out_suspended", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "suspended_state.0.scheduled_scaling_suspended", acctest.CtFalse),

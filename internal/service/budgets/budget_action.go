@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_budgets_budget_action")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
@@ -236,7 +237,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	input := &budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
@@ -300,9 +301,9 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("action_type", output.ActionType)
 	d.Set("approval_model", output.ApprovalModel)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
 	d.Set(names.AttrARN, arn.String())

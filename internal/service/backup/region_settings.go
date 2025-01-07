@@ -65,7 +65,7 @@ func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	return append(diags, resourceRegionSettingsRead(ctx, d, meta)...)

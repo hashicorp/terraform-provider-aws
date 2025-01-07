@@ -54,7 +54,7 @@ func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(id)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "delegationset/" + d.Id(),
 	}.String()

@@ -36,8 +36,8 @@ func testAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/.+$`)),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/.+$`)),
 				),
 			},
 		},

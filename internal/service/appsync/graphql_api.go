@@ -337,7 +337,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if v, ok := d.GetOk("api_type"); ok {
@@ -377,7 +377,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
-		input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -468,7 +468,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("additional_authentication_provider"); ok {
-			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("enhanced_metrics_config"); ok {
@@ -504,7 +504,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("user_pool_config"); ok {
-			input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("xray_enabled"); ok {

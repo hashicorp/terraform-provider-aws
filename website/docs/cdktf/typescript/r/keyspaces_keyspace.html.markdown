@@ -44,6 +44,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `replicationSpecification` - (Optional) The replication specification of the keyspace.
+    * `regionList` - (Optional) Replication regions. If `replicationStrategy` is `MULTI_REGION`, `regionList` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
+    * `replicationStrategy` - (Required) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -89,4 +92,4 @@ Using `terraform import`, import a keyspace using the `name`. For example:
 % terraform import aws_keyspaces_keyspace.example my_keyspace
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-45356374226b4001cb8f4913ce874bd4156dabd51b8ab1e4fe9896d2e554989a -->
+<!-- cache-key: cdktf-0.20.8 input-942a0ad45b13d481c598f1c37b3a8d0a11a9970cd14134de8a9095e677ec6acf -->

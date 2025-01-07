@@ -95,7 +95,7 @@ class MyConvertedCode extends TerraformStack {
     ChatbotSlackChannelConfiguration.generateConfigForImport(
       this,
       "example",
-      "arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal"
+      "arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal"
     );
   }
 }
@@ -105,7 +105,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Chatbot Slack Channel Configuration using the `chatConfigurationArn`. For example:
 
 ```console
-% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal
+% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-d07ae7b961314cae21a6f83a4b9eccb7336518081785d4347a33144d3e3f04d9 -->
+<!-- cache-key: cdktf-0.20.8 input-55f71e83ec08ad6db07519e15d4c2534832af953654a4c90f49f251aade5d408 -->

@@ -13,6 +13,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"iter"
 	"os"
 	"path"
 	"path/filepath"
@@ -93,6 +94,17 @@ func main() {
 		g.Fatalf("%s", err.Error())
 	}
 
+	for di, datasource := range v.taggedResources {
+		if !datasource.IsDataSource {
+			continue
+		}
+		if ri := slices.IndexFunc(v.taggedResources, func(r ResourceDatum) bool {
+			return r.TypeName == datasource.TypeName && !r.IsDataSource
+		}); ri != -1 {
+			v.taggedResources[di].DataSourceResourceImplementation = v.taggedResources[ri].Implementation
+		}
+	}
+
 	for _, resource := range v.taggedResources {
 		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
@@ -107,7 +119,7 @@ func main() {
 		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
 		resource.ProviderPackage = servicePackage
 
-		if !resource.DataSource {
+		if !resource.IsDataSource {
 			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
 			d := g.NewGoFileDestination(filename)
@@ -116,7 +128,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			if err := d.WriteTemplateSet(templates, resource); err != nil {
+			if err := d.BufferTemplateSet(templates, resource); err != nil {
 				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 			}
 
@@ -132,7 +144,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			if err := d.WriteTemplateSet(templates, resource); err != nil {
+			if err := d.BufferTemplateSet(templates, resource); err != nil {
 				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 			}
 
@@ -141,7 +153,7 @@ func main() {
 			}
 		}
 
-		if !resource.DataSource {
+		if !resource.IsDataSource {
 			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
@@ -245,7 +257,41 @@ func main() {
 				}
 
 				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "data.tags", true, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "data.tags_ignore", false, tfTemplates, common)
 			}
+		}
+	}
+
+	filename := "tags_gen_test.go"
+
+	d := g.NewGoFileDestination(filename)
+	templates, err := template.New("taggingtests").Parse(tagsCheckTmpl)
+	if err != nil {
+		g.Fatalf("parsing base Go test template: %w", err)
+	}
+
+	if len(v.taggedResources) > 0 {
+		datum := struct {
+			ProviderPackage string
+			ResourceCount   int
+			DataSourceCount int
+		}{
+			ProviderPackage: servicePackage,
+			ResourceCount: count(slices.Values(v.taggedResources), func(v ResourceDatum) bool {
+				return !v.IsDataSource
+			}),
+			DataSourceCount: count(slices.Values(v.taggedResources), func(v ResourceDatum) bool {
+				return v.IsDataSource
+			}),
+		}
+
+		if err := d.BufferTemplateSet(templates, datum); err != nil {
+			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+		}
+
+		if err := d.Write(); err != nil {
+			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
@@ -313,41 +359,63 @@ const (
 )
 
 type ResourceDatum struct {
-	ProviderPackage           string
-	ResourceProviderNameUpper string
-	PackageProviderNameUpper  string
-	Name                      string
-	TypeName                  string
-	DestroyTakesT             bool
-	ExistsTypeName            string
-	ExistsTakesT              bool
-	FileName                  string
-	Generator                 string
-	NoImport                  bool
-	ImportStateID             string
-	ImportStateIDFunc         string
-	ImportIgnore              []string
-	Implementation            implementation
-	Serialize                 bool
-	SerializeDelay            bool
-	PreCheck                  bool
-	SkipEmptyTags             bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
-	SkipNullTags              bool
-	NoRemoveTags              bool
-	GoImports                 []goImport
-	GenerateConfig            bool
-	InitCodeBlocks            []codeBlock
-	additionalTfVars          map[string]string
-	AlternateRegionProvider   bool
-	TagsUpdateForceNew        bool
-	CheckDestroyNoop          bool
-	DataSource                bool
+	ProviderPackage                  string
+	ResourceProviderNameUpper        string
+	PackageProviderNameUpper         string
+	Name                             string
+	TypeName                         string
+	DestroyTakesT                    bool
+	ExistsTypeName                   string
+	ExistsTakesT                     bool
+	FileName                         string
+	Generator                        string
+	NoImport                         bool
+	ImportStateID                    string
+	importStateIDAttribute           string
+	ImportStateIDFunc                string
+	ImportIgnore                     []string
+	Implementation                   implementation
+	Serialize                        bool
+	SerializeDelay                   bool
+	SerializeParallelTests           bool
+	PreCheck                         bool
+	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	SkipNullTags                     bool
+	NoRemoveTags                     bool
+	GoImports                        []goImport
+	GenerateConfig                   bool
+	InitCodeBlocks                   []codeBlock
+	additionalTfVars                 map[string]string
+	AlternateRegionProvider          bool
+	TagsUpdateForceNew               bool
+	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
+	CheckDestroyNoop                 bool
+	IsDataSource                     bool
+	DataSourceResourceImplementation implementation
+	overrideIdentifierAttribute      string
+	OverrideResourceType             string
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+func (d ResourceDatum) HasImportStateIDAttribute() bool {
+	return d.importStateIDAttribute != ""
+}
+
+func (d ResourceDatum) ImportStateIDAttribute() string {
+	return namesgen.ConstOrQuote(d.importStateIDAttribute)
+}
+
+func (d ResourceDatum) OverrideIdentifier() bool {
+	return d.overrideIdentifierAttribute != ""
+}
+
+func (d ResourceDatum) OverrideIdentifierAttribute() string {
+	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
 }
 
 type goImport struct {
@@ -380,6 +448,9 @@ var dataSourceTestGoTmpl string
 
 //go:embed test.tf.gtpl
 var testTfTmpl string
+
+//go:embed tags_check.go.gtpl
+var tagsCheckTmpl string
 
 // Annotation processing.
 var (
@@ -450,6 +521,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	generatorSeen := false
 	tlsKey := false
 	var tlsKeyCN string
+	hasIdentifierAttribute := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -457,7 +529,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkDataSource":
-				d.DataSource = true
+				d.IsDataSource = true
 				fallthrough
 
 			case "FrameworkResource":
@@ -475,7 +547,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKDataSource":
-				d.DataSource = true
+				d.IsDataSource = true
 				fallthrough
 
 			case "SDKResource":
@@ -490,7 +562,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["name"]; ok {
 					attr = strings.ReplaceAll(attr, " ", "")
 					d.Name = strings.ReplaceAll(attr, "-", "")
-				} else if d.DataSource {
+				} else if d.IsDataSource {
 					m := sdkNameRegexp.FindStringSubmatch(v.functionName)
 					if m == nil {
 						v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -501,6 +573,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Tags":
 				tagged = true
+				args := common.ParseArgs(m[3])
+				if _, ok := args.Keyword["identifierAttribute"]; ok {
+					hasIdentifierAttribute = true
+				}
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
@@ -577,6 +653,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["importStateId"]; ok {
 					d.ImportStateID = attr
 				}
+				if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
+					d.importStateIDAttribute = attr
+				}
 				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
 					d.ImportStateIDFunc = attr
 				}
@@ -607,6 +686,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.Serialize = b
 					}
 				}
+				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serializeParallelTests value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SerializeParallelTests = b
+					}
+				}
 				if attr, ok := args.Keyword["serializeDelay"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -614,6 +701,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.SerializeDelay = b
 					}
+				}
+				if attr, ok := args.Keyword["tagsIdentifierAttribute"]; ok {
+					d.overrideIdentifierAttribute = attr
+				}
+				if attr, ok := args.Keyword["tagsResourceType"]; ok {
+					d.OverrideResourceType = attr
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
 					switch attr {
@@ -637,6 +730,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.TagsUpdateForceNew = b
+					}
+				}
+				if attr, ok := args.Keyword["tagsUpdateGetTagsIn"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsUpdateGetTagsIn value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.TagsUpdateGetTagsIn = b
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
@@ -697,6 +798,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tagged {
 		if !skip {
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				return
+			}
+			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				return
+			}
 			if !generatorSeen {
 				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
@@ -745,7 +854,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 		ComputedTag:     (test == "tagsComputed"),
 		commonConfig:    common,
 	}
-	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
+	if err := tf.BufferTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)
 	}
 
@@ -795,4 +904,13 @@ func generateDurationStatement(d time.Duration) string {
 	}
 
 	return buf.String()
+}
+
+func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
+	for v := range s {
+		if f(v) {
+			c++
+		}
+	}
+	return c
 }

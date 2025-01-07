@@ -54,7 +54,7 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "setting SageMaker Servicecatalog Portfolio Status: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceServicecatalogPortfolioStatusRead(ctx, d, meta)...)
 }

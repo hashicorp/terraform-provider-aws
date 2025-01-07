@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         RedshiftDataShareConsumerAssociation(self, "example",
             associate_entire_account=True,
-            data_share_arn="arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
+            data_share_arn="arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
         )
 ```
 
@@ -49,7 +49,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         RedshiftDataShareConsumerAssociation(self, "example",
             consumer_region="us-west-2",
-            data_share_arn="arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
+            data_share_arn="arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
         )
 ```
 
@@ -90,13 +90,13 @@ from imports.aws.redshift_data_share_consumer_association import RedshiftDataSha
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        RedshiftDataShareConsumerAssociation.generate_config_for_import(self, "example", "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2")
+        RedshiftDataShareConsumerAssociation.generate_config_for_import(self, "example", "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2")
 ```
 
 Using `terraform import`, import Redshift Data Share Consumer Association using the `id`. For example:
 
 ```console
-% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
+% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-c33946aa25940255e66f441f2fbc61c5d7177e0f8ab3a902439c289ff8337aa8 -->
+<!-- cache-key: cdktf-0.20.8 input-05170dbded7a840a44136f651895110c0d440531e138d9457fd4ed97cc5cce0c -->

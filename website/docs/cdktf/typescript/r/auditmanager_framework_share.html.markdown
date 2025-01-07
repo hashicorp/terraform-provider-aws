@@ -29,7 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new AuditmanagerFrameworkShare(this, "example", {
-      destinationAccount: "012345678901",
+      destinationAccount: "123456789012",
       destinationRegion: "us-east-1",
       frameworkId: Token.asString(awsAuditmanagerFrameworkExample.id),
     });
@@ -89,4 +89,4 @@ Using `terraform import`, import Audit Manager Framework Share using the `id`. F
 % terraform import aws_auditmanager_framework_share.example abcdef-123456
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-14d7a2ed97dee3206ec0e19704aeaa2d131932ec24b406ef4fff013eeb7c1aba -->
+<!-- cache-key: cdktf-0.20.8 input-42c9dd2a57c9eab7b67d4ec5e6b61d93e0a4c2c04e03cccef7a678c35942ad70 -->

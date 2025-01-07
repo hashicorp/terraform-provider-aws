@@ -74,7 +74,7 @@ func (d *standardsControlAssociationsDataSource) Read(ctx context.Context, reque
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data.StandardsControlAssociations)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

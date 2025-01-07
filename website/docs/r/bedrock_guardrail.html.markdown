@@ -86,7 +86,8 @@ The following arguments are optional:
 
 The `content_policy_config` configuration block supports the following arguments:
 
-* `filters_config` - (Optional) List of content filter configs in content policy. See [Filters Config](#content-filters-config) for more information.
+* `filters_config` - (Optional) Set of content filter configs in content policy.
+  See [Filters Config](#content-filters-config) for more information.
 
 #### Content Filters Config
 

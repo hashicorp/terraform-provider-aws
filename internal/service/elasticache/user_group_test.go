@@ -35,7 +35,7 @@ func TestAccElastiCacheUserGroup_basic(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
@@ -65,7 +65,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
@@ -74,7 +74,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 				Config: testAccUserGroupConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
@@ -83,7 +83,25 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+			},
+			{
+				Config: testAccUserGroupConfig_engineValkey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+				),
+			},
+			{
+				Config: testAccUserGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
@@ -108,7 +126,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				Config: testAccUserGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -116,7 +134,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				Config: testAccUserGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -125,7 +143,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				Config: testAccUserGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -190,10 +208,6 @@ func testAccCheckUserGroupExists(ctx context.Context, n string, v *awstypes.User
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache User Group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindUserGroupByID(ctx, conn, rs.Primary.ID)
@@ -256,6 +270,24 @@ resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
   engine        = "REDIS"
   user_ids      = [aws_elasticache_user.test1.user_id, aws_elasticache_user.test2.user_id]
+}
+`, rName))
+}
+
+func testAccUserGroupConfig_engineValkey(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[1]q
+  engine        = "VALKEY"
+  user_ids      = [aws_elasticache_user.test1.user_id]
 }
 `, rName))
 }

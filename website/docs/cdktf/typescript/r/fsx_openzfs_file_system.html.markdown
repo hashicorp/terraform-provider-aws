@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `deploymentType` - (Required) The filesystem deployment type. Valid values: `SINGLE_AZ_1`, `SINGLE_AZ_2` and `MULTI_AZ_1`.
+* `deploymentType` - (Required) Filesystem deployment type. See the [AWS API documentation](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileSystemOpenZFSConfiguration.html#FSx-Type-CreateFileSystemOpenZFSConfiguration-DeploymentType) for a list of valid values.
 * `storageCapacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
 * `subnetIds` - (Required) A list of IDs for the subnets that the file system will be accessible from.
 * `throughputCapacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deploymentType`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `SINGLE_AZ_1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `SINGLE_AZ_2`.
@@ -194,4 +194,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-ead07c5a51409d6865de56af2f23af356f99f1ccc00dcccfb4cee601285b9122 -->
+<!-- cache-key: cdktf-0.20.8 input-67a663675d69054fe474ba406dfee59b4e50902da7ac5e76ba4e62668071d3cf -->

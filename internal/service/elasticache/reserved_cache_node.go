@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -68,11 +69,11 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				},
 			},
 			"cache_node_type": schema.StringAttribute{
-				CustomType: fwtypes.RFC3339DurationType,
-				Computed:   true,
+				Computed: true,
 			},
 			names.AttrDuration: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.RFC3339DurationType,
+				Computed:   true,
 			},
 			"fixed_price": schema.Float64Attribute{
 				Computed: true,
@@ -105,7 +106,8 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				},
 			},
 			names.AttrStartTime: schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
@@ -222,7 +224,7 @@ func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
 }
 
 type resourceReservedCacheNodeModel struct {
-	ARN                          types.String                                          `tfsdk:"arn"`
+	ReservationARN               types.String                                          `tfsdk:"arn"`
 	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
 	Duration                     fwtypes.RFC3339Duration                               `tfsdk:"duration" autoflex:",noflatten"`
@@ -232,7 +234,7 @@ type resourceReservedCacheNodeModel struct {
 	OfferingType                 types.String                                          `tfsdk:"offering_type"`
 	ProductDescription           types.String                                          `tfsdk:"product_description"`
 	RecurringCharges             fwtypes.ListNestedObjectValueOf[recurringChargeModel] `tfsdk:"recurring_charges"`
-	StartTime                    types.String                                          `tfsdk:"start_time"`
+	StartTime                    timetypes.RFC3339                                     `tfsdk:"start_time"`
 	State                        types.String                                          `tfsdk:"state"`
 	Tags                         tftags.Map                                            `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                            `tfsdk:"tags_all"`

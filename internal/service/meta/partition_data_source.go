@@ -57,8 +57,8 @@ func (d *partitionDataSource) Read(ctx context.Context, request datasource.ReadR
 	}
 
 	data.DNSSuffix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().DNSSuffix(ctx))
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
-	data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
+	data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
 	data.ReverseDNSPrefix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().ReverseDNSPrefix(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

@@ -76,6 +76,11 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"enable_primary_ipv6": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"interface_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -237,6 +242,10 @@ func resourceNetworkInterface() *schema.Resource {
 					return false
 				}
 			}),
+			customdiff.ForceNewIf("enable_primary_ipv6", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				o, n := diff.GetChange("enable_primary_ipv6")
+				return o.(bool) && !n.(bool) // can be enabled but not disabled without recreate
+			}),
 			customdiff.ForceNewIf("private_ip_list", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				privateIPListEnabled := d.Get("private_ip_list_enabled").(bool)
 				if !privateIPListEnabled {
@@ -349,6 +358,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("enable_primary_ipv6"); ok {
+		input.EnablePrimaryIpv6 = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("interface_type"); ok {
@@ -511,9 +524,9 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 
 	ownerID := aws.ToString(eni.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  "network-interface/" + d.Id(),
 	}.String()
@@ -532,6 +545,11 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
 	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
+	if len(eni.Ipv6Addresses) > 0 {
+		if err := d.Set("enable_primary_ipv6", eni.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
+		}
+	}
 	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6 address list: %s", err)
 	}
@@ -800,6 +818,18 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("enable_primary_ipv6") {
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+			EnablePrimaryIpv6:  aws.Bool(d.Get("enable_primary_ipv6").(bool)),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) enable primary IPv6: %s", d.Id(), err)
 		}
 	}
 
@@ -1077,7 +1107,9 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 }
 
 func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID string) error {
-	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
+	tflog.Info(ctx, "Deleting EC2 Network Interface", map[string]any{
+		names.AttrNetworkInterfaceID: networkInterfaceID,
+	})
 	_, err := conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	})
@@ -1094,7 +1126,9 @@ func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 }
 
 func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, attachmentID string, timeout time.Duration) error {
-	log.Printf("[INFO] Detaching EC2 Network Interface: %s", networkInterfaceID)
+	tflog.Info(ctx, "Detaching EC2 Network Interface", map[string]any{
+		names.AttrNetworkInterfaceID: networkInterfaceID,
+	})
 	_, err := conn.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),

@@ -234,7 +234,7 @@ The `serviceConnectDefaults` configuration block supports the following argument
 The `setting` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
-* `value` -  (Required) Value to assign to the setting. Valid values: `enabled`, `disabled`.
+* `value` -  (Required) Value to assign to the setting. Valid values: `enhanced`, `enabled`, `disabled`.
 
 ## Attribute Reference
 
@@ -272,4 +272,4 @@ Using `terraform import`, import ECS clusters using the cluster name. For exampl
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-5a1f09418ccf39300c804f4ebc1b140373e9d8f20f6c67a88c7ee5454f47f0f2 -->
+<!-- cache-key: cdktf-0.20.8 input-eb369f3378f4ec15c9415352837de55fe8e8dd9a1953726d45bed6355a9336be -->

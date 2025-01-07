@@ -38,6 +38,7 @@ import (
 
 // @FrameworkResource("aws_backup_logically_air_gapped_vault", name="Logically Air Gapped Vault")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newLogicallyAirGappedVaultResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &logicallyAirGappedVaultResource{}
 

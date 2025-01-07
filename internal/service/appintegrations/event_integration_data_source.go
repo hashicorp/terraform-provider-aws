@@ -18,7 +18,8 @@ import (
 
 // @SDKDataSource("aws_appintegrations_event_integration", name="Event Integration")
 // @Tags
-func DataSourceEventIntegration() *schema.Resource {
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEventIntegrationRead,
 

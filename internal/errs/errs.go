@@ -59,21 +59,21 @@ func As[T error](err error) (T, bool) {
 	return as, ok
 }
 
-var _ ErrorWithErrorMessage = &ErrorWithMessage{}
+var _ ErrorWithErrorMessage = &MessageError{}
 
-// ErrorWithMessage is a simple error type that implements the errorMessager
-type ErrorWithMessage struct {
+// MessageError is a simple error type that implements the errorMessager
+type MessageError struct {
 	error
 }
 
-func (e *ErrorWithMessage) ErrorMessage() string {
+func (e *MessageError) ErrorMessage() string {
 	if e == nil || e.error == nil {
 		return ""
 	}
 	return e.Error()
 }
 
-// NewErrorWithMessage returns a new ErrorWithMessage
-func NewErrorWithMessage(err error) *ErrorWithMessage {
-	return &ErrorWithMessage{error: err}
+// NewMessageError returns a new MessageError
+func NewMessageError(err error) *MessageError {
+	return &MessageError{error: err}
 }

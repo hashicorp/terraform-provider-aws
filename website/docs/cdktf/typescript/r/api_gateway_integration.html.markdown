@@ -267,7 +267,7 @@ This resource supports the following arguments:
 * `connectionId` - (Optional) ID of the VpcLink used for the integration. **Required** if `connectionType` is `VPC_LINK`
 * `uri` - (Optional) Input's URI. **Required** if `type` is `AWS`, `AWS_PROXY`, `HTTP` or `HTTP_PROXY`.
   For HTTP integrations, the URI must be a fully formed, encoded HTTP(S) URL according to the RFC-3986 specification . For AWS integrations, the URI should be of the form `arn:aws:apigateway:{region}:{subdomain.service|service}:{path|action}/{service_api}`. `region`, `subdomain` and `service` are used to determine the right endpoint.
-  e.g., `arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:012345678901:function:my-func/invocations`. For private integrations, the URI parameter is not used for routing requests to your endpoint, but is used for setting the Host header and for certificate validation.
+  e.g., `arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:123456789012:function:my-func/invocations`. For private integrations, the URI parameter is not used for routing requests to your endpoint, but is used for setting the Host header and for certificate validation.
 * `credentials` - (Optional) Credentials required for the integration. For `AWS` integrations, 2 options are available. To specify an IAM Role for Amazon API Gateway to assume, use the role's ARN. To require that the caller's identity be passed through from the request, specify the string `arn:aws:iam::\*:user/\*`.
 * `requestTemplates` - (Optional) Map of the integration's request templates.
 * `requestParameters` - (Optional) Map of request query string parameters and headers that should be passed to the backend responder.
@@ -321,4 +321,4 @@ Using `terraform import`, import `aws_api_gateway_integration` using `REST-API-I
 % terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-460026c382945845558d8fe0d14937725abcc7db6f7b3678d3ac9f1bc7aaf4c0 -->
+<!-- cache-key: cdktf-0.20.8 input-bc7ce168e5f206707f3ac0e18ef22fa4e655b9662df33006be631825290f60ac -->

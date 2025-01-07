@@ -6,12 +6,14 @@ package memorydb
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -37,8 +39,8 @@ func resourceSnapshot() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(snapshotAvailableTimeout),
-			Delete: schema.DefaultTimeout(snapshotDeletedTimeout),
+			Create: schema.DefaultTimeout(120 * time.Minute),
+			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -54,6 +56,10 @@ func resourceSnapshot() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrDescription: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrEngine: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -151,7 +157,6 @@ func resourceSnapshot() *schema.Resource {
 
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
@@ -165,33 +170,26 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Snapshot: %+v", input)
 	_, err := conn.CreateSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Snapshot (%s): %s", name, err)
 	}
 
-	if err := waitSnapshotAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) to be created: %s", name, err)
-	}
-
 	d.SetId(name)
+
+	if _, err := waitSnapshotAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) create: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
-	return resourceSnapshotRead(ctx, d, meta)
-}
-
 func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	snapshot, err := FindSnapshotByName(ctx, conn, d.Id())
+	snapshot, err := findSnapshotByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Snapshot (%s) not found, removing from state", d.Id())
@@ -205,7 +203,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, snapshot.ARN)
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_configuration: %s", err)
 	}
 	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
@@ -216,9 +214,13 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
+func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Tags only.
+	return resourceSnapshotRead(ctx, d, meta)
+}
+
 func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Snapshot: (%s)", d.Id())
@@ -234,33 +236,126 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
-	if err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func flattenClusterConfiguration(v *awstypes.ClusterConfiguration) []interface{} {
-	if v == nil {
+func findSnapshotByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Snapshot, error) {
+	input := &memorydb.DescribeSnapshotsInput{
+		SnapshotName: aws.String(name),
+	}
+
+	return findSnapshot(ctx, conn, input)
+}
+
+func findSnapshot(ctx context.Context, conn *memorydb.Client, input *memorydb.DescribeSnapshotsInput) (*awstypes.Snapshot, error) {
+	output, err := findSnapshots(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.DescribeSnapshotsInput) ([]awstypes.Snapshot, error) {
+	var output []awstypes.Snapshot
+
+	pages := memorydb.NewDescribeSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Snapshots...)
+	}
+
+	return output, nil
+}
+
+func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSnapshotByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), nil
+	}
+}
+
+func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{snapshotStatusCreating},
+		Target:  []string{snapshotStatusAvailable},
+		Refresh: statusSnapshot(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{snapshotStatusDeleting},
+		Target:  []string{},
+		Refresh: statusSnapshot(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		names.AttrDescription:        aws.ToString(v.Description),
-		names.AttrEngineVersion:      aws.ToString(v.EngineVersion),
-		"maintenance_window":         aws.ToString(v.MaintenanceWindow),
-		names.AttrName:               aws.ToString(v.Name),
-		"node_type":                  aws.ToString(v.NodeType),
-		"num_shards":                 aws.ToInt32(v.NumShards),
-		names.AttrParameterGroupName: aws.ToString(v.ParameterGroupName),
-		names.AttrPort:               aws.ToInt32(v.Port),
-		"snapshot_retention_limit":   aws.ToInt32(v.SnapshotRetentionLimit),
-		"snapshot_window":            aws.ToString(v.SnapshotWindow),
-		"subnet_group_name":          aws.ToString(v.SubnetGroupName),
-		names.AttrTopicARN:           aws.ToString(v.TopicArn),
-		names.AttrVPCID:              aws.ToString(v.VpcId),
+	tfMap := map[string]interface{}{
+		names.AttrDescription:        aws.ToString(apiObject.Description),
+		names.AttrEngine:             aws.ToString(apiObject.Engine),
+		names.AttrEngineVersion:      aws.ToString(apiObject.EngineVersion),
+		"maintenance_window":         aws.ToString(apiObject.MaintenanceWindow),
+		names.AttrName:               aws.ToString(apiObject.Name),
+		"node_type":                  aws.ToString(apiObject.NodeType),
+		"num_shards":                 aws.ToInt32(apiObject.NumShards),
+		names.AttrParameterGroupName: aws.ToString(apiObject.ParameterGroupName),
+		names.AttrPort:               aws.ToInt32(apiObject.Port),
+		"snapshot_retention_limit":   aws.ToInt32(apiObject.SnapshotRetentionLimit),
+		"snapshot_window":            aws.ToString(apiObject.SnapshotWindow),
+		"subnet_group_name":          aws.ToString(apiObject.SubnetGroupName),
+		names.AttrTopicARN:           aws.ToString(apiObject.TopicArn),
+		names.AttrVPCID:              aws.ToString(apiObject.VpcId),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }

@@ -159,4 +159,4 @@ Using `terraform import`, import S3 bucket analytics configurations using `bucke
 % terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-ac9272d084b98ae18a21c15ccd5706b2f6fd6234153ee5a0769b2eaad3cad4f6 -->
+<!-- cache-key: cdktf-0.20.8 input-ac9272d084b98ae18a21c15ccd5706b2f6fd6234153ee5a0769b2eaad3cad4f6 -->

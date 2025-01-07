@@ -12,7 +12,7 @@ description: |-
 
 Provides a settings of an API Gateway Account. Settings is applied region-wide per `provider` block.
 
--> **Note:** As there is no API method for deleting account settings or resetting it to defaults, destroying this resource will keep your account settings intact
+-> **Note:** By default, destroying this resource will keep your account settings intact. Set `reset_on_delete` to `true` to reset the account setttings to default. In a future major version of the provider, destroying the resource will reset account settings.
 
 ## Example Usage
 
@@ -88,6 +88,9 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `cloudwatchRoleArn` - (Optional) ARN of an IAM role for CloudWatch (to allow logging & monitoring). See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console). Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
+* `reset_on_delete` - (Optional) If `true`, destroying the resource will reset account settings to default, otherwise account settings are not modified.
+  Defaults to `false`.
+  Will be removed in a future major version of the provider.
 
 ## Attribute Reference
 
@@ -134,4 +137,4 @@ Using `terraform import`, import API Gateway Accounts using the word `api-gatewa
 % terraform import aws_api_gateway_account.demo api-gateway-account
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-2c3031685ea1cacb5723c6c52399155d732bc5bb2d7fcfa71a3cc55a2bf24db5 -->
+<!-- cache-key: cdktf-0.20.8 input-4edc0deec8869009c0b14d3ada8155ea1edfcc0ff4a43c20016995c93a486a55 -->

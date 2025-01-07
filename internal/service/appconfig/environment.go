@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -84,13 +83,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed:           true,
-				DeprecationMessage: "This attribute is unused and will be removed in a future version of the provider",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -337,7 +330,7 @@ func (d *resourceEnvironmentData) refreshFromCreateOutput(ctx context.Context, m
 	envID := aws.ToString(out.Id)
 
 	d.ApplicationID = types.StringValue(appID)
-	d.ARN = types.StringValue(environmentARN(meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)).String())
+	d.ARN = types.StringValue(environmentARN(ctx, meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)))
 	d.Description = flex.StringToFrameworkLegacy(ctx, out.Description)
 	d.EnvironmentID = types.StringValue(envID)
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
@@ -359,7 +352,7 @@ func (d *resourceEnvironmentData) refreshFromGetOutput(ctx context.Context, meta
 	envID := aws.ToString(out.Id)
 
 	d.ApplicationID = types.StringValue(appID)
-	d.ARN = types.StringValue(environmentARN(meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)).String())
+	d.ARN = types.StringValue(environmentARN(ctx, meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)))
 	d.Description = flex.StringToFrameworkLegacy(ctx, out.Description)
 	d.EnvironmentID = types.StringValue(envID)
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
@@ -381,7 +374,7 @@ func (d *resourceEnvironmentData) refreshFromUpdateOutput(ctx context.Context, m
 	envID := aws.ToString(out.Id)
 
 	d.ApplicationID = types.StringValue(appID)
-	d.ARN = types.StringValue(environmentARN(meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)).String())
+	d.ARN = types.StringValue(environmentARN(ctx, meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)))
 	d.Description = flex.StringToFrameworkLegacy(ctx, out.Description)
 	d.EnvironmentID = types.StringValue(envID)
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
@@ -413,14 +406,8 @@ func (d *resourceEnvironmentData) deleteEnvironmentInput() *appconfig.DeleteEnvi
 	}
 }
 
-func environmentARN(meta *conns.AWSClient, appID, envID string) arn.ARN {
-	return arn.ARN{
-		AccountID: meta.AccountID,
-		Partition: meta.Partition,
-		Region:    meta.Region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s", appID, envID),
-		Service:   "appconfig",
-	}
+func environmentARN(ctx context.Context, c *conns.AWSClient, appID, envID string) string {
+	return c.RegionalARN(ctx, "appconfig", fmt.Sprintf("application/%s/environment/%s", appID, envID))
 }
 
 func expandMonitors(l []monitorData) []awstypes.Monitor {

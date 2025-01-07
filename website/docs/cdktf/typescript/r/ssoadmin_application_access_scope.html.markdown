@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
           awsSsoadminApplicationExample.applicationArn
         ),
         authorizedTargets: [
-          "arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901",
+          "arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012",
         ],
         scope: "sso:account:access",
       });
@@ -96,7 +96,7 @@ class MyConvertedCode extends TerraformStack {
     SsoadminApplicationAccessScope.generateConfigForImport(
       this,
       "example",
-      "arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901,sso:account:access"
+      "arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012,sso:account:access"
     );
   }
 }
@@ -106,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SSO Admin Application Access Scope using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901,sso:account:access
+% terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012,sso:account:access
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-cf505dadf134c69cd6c7c26ff4c81d309a119192ad2e48ef73877664e79abeb0 -->
+<!-- cache-key: cdktf-0.20.8 input-6163465404b21df1061530d2b8116e366a185ed1d519058b4f3d40995e99a363 -->

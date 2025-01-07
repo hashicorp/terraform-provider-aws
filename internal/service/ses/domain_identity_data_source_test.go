@@ -26,7 +26,7 @@ func TestAccSESDomainIdentityDataSource_basic(t *testing.T) {
 				Config: testAccDomainIdentityDataSourceConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, "aws_ses_domain_identity.test"),
-					testAccCheckDomainIdentityARN("data.aws_ses_domain_identity.test", domain),
+					testAccCheckDomainIdentityARN(ctx, "data.aws_ses_domain_identity.test", domain),
 				),
 			},
 		},

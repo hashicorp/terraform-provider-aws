@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -126,7 +125,7 @@ func (d *ipRangesDataSource) Read(ctx context.Context, request datasource.ReadRe
 			ipv4Prefixes = append(ipv4Prefixes, v.Prefix)
 		}
 	}
-	sort.Strings(ipv4Prefixes)
+	slices.Sort(ipv4Prefixes)
 
 	var ipv6Prefixes []string
 	for _, v := range ipRanges.IPv6Prefixes {
@@ -134,7 +133,7 @@ func (d *ipRangesDataSource) Read(ctx context.Context, request datasource.ReadRe
 			ipv6Prefixes = append(ipv6Prefixes, v.Prefix)
 		}
 	}
-	sort.Strings(ipv6Prefixes)
+	slices.Sort(ipv6Prefixes)
 
 	data.CreateDate = fwflex.StringValueToFrameworkLegacy(ctx, ipRanges.CreateDate)
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, ipRanges.SyncToken)

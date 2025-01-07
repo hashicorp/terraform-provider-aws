@@ -13,6 +13,8 @@ Terraform resource for maintaining exclusive management of inline policies assig
 
 !> This resource takes exclusive ownership over inline policies assigned to a role. This includes removal of inline policies which are not explicitly configured. To prevent persistent drift, ensure any `aws_iam_role_policy` resources managed alongside this resource are included in the `policy_names` argument.
 
+~> Destruction of this resource means Terraform will no longer manage reconciliation of the configured inline policy assignments. It __will not__ delete the configured policies from the role.
+
 ## Example Usage
 
 ### Basic Usage
@@ -95,4 +97,4 @@ Using `terraform import`, import exclusive management of inline policy assignmen
 % terraform import aws_iam_role_policies_exclusive.example MyRole
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-af4714fc40de0883cb9733ceeae612d225ed8fa5bb074eaeae7e48e346d16a99 -->
+<!-- cache-key: cdktf-0.20.8 input-799d781656d27e350f72003d25ef25fe16df7fd00d772ab82ff638fda27109c8 -->

@@ -67,7 +67,7 @@ class MyConvertedCode extends TerraformStack {
     ServicequotasTemplateAssociation.generateConfigForImport(
       this,
       "example",
-      "012345678901"
+      "123456789012"
     );
   }
 }
@@ -77,7 +77,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Service Quotas Template Association using the `id`. For example:
 
 ```console
-% terraform import aws_servicequotas_template_association.example 012345678901 
+% terraform import aws_servicequotas_template_association.example 123456789012 
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-8b8e59c370e620276f97759018b5888fafc9a67c14a6d02dd3c783bc716035e3 -->
+<!-- cache-key: cdktf-0.20.8 input-f94a009bbd3a3e9726ce0840ffffe95cefff8559aa05f1a8aae489d0ff8b638c -->

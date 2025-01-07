@@ -59,7 +59,7 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Services (%s): %s", accountID, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	if err = d.Set("delegated_services", flattenDelegatedServices(output)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting delegated_services: %s", err)
 	}

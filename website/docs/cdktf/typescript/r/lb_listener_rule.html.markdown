@@ -257,7 +257,7 @@ Action Blocks (for `action`) support the following:
 
 Forward Blocks (for `forward`) support the following:
 
-* `targetGroup` - (Required) One or more target groups block.
+* `targetGroup` - (Required) One or more target group blocks.
 * `stickiness` - (Optional) The target group stickiness for the rule.
 
 Target Group Blocks (for `targetGroup`) supports the following:
@@ -390,4 +390,4 @@ Using `terraform import`, import rules using their ARN. For example:
 % terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-cbd617f4b3a03ad14c1f71b3912c93fb6d97fddee02da2aaec8e62c4c5648dcf -->
+<!-- cache-key: cdktf-0.20.8 input-34b6a09aa1d41d1465378d2d1ff857a42668d7de9ab2cbf1e4e203962db4e19e -->

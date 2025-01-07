@@ -76,14 +76,14 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 				Optional:     true,
 				Default:      25,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"min_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,

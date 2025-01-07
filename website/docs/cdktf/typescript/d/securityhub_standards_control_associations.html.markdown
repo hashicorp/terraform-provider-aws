@@ -67,4 +67,4 @@ See [`standardsControlAssociations`](#standards_control_associations-attribute-r
 * `updatedAt` - Last time that a control's enablement status in a specified standard was updated.
 * `updatedReason` - Reason for updating a control's enablement status in a specified standard.
 
-<!-- cache-key: cdktf-0.20.9 input-c00380a89860eece1814ac9de7eefbb73fb280e1bf0a1078f9a81c54f1e95d9b -->
+<!-- cache-key: cdktf-0.20.8 input-c00380a89860eece1814ac9de7eefbb73fb280e1bf0a1078f9a81c54f1e95d9b -->

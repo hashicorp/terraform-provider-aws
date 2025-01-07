@@ -43,7 +43,7 @@ func dataSourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Serial Console Access: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrEnabled, output.SerialConsoleAccessEnabled)
 
 	return diags

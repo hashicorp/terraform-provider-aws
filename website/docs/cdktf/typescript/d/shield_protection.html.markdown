@@ -52,7 +52,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new DataAwsShieldProtection(this, "example", {
       resourceArn:
-        "arn:aws:globalaccelerator::012345678901:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh",
+        "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh",
     });
   }
 }
@@ -75,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the protection.
 * `protectionArn` - ARN of the protection.
 
-<!-- cache-key: cdktf-0.20.9 input-75d9f856f14ca87d032548d9404cb36b20ed94a40ec416924f4ee0c3392a6e12 -->
+<!-- cache-key: cdktf-0.20.8 input-59de3a79156bc1c7c56349a69033dc1dcd795ab4a1f865d892748664811bc987 -->

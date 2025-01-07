@@ -16,6 +16,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Migration (Mgn)
 Application Signals
 Athena
 Audit Manager
@@ -161,7 +162,7 @@ Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
-MemoryDB for Redis
+MemoryDB
 Meta Data Sources
 Neptune
 Neptune Analytics
@@ -203,6 +204,7 @@ Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
 S3 Glacier
+S3 Tables
 S3 on Outposts
 SDB (SimpleDB)
 SES (Simple Email)
@@ -230,6 +232,8 @@ Shield
 Signer
 Storage Gateway
 Systems Manager for SAP
+Tax Settings
+Timestream Query
 Timestream Write
 Timestream for InfluxDB
 Transcribe

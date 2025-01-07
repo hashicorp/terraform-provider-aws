@@ -5,8 +5,8 @@ package logs
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,7 +19,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAnomalyDetectorResource,
+			Name:    "Anomaly Detector",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newIndexPolicyResource,
+			Name:    "Index Policy",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -39,6 +51,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceGroups,
 			TypeName: "aws_cloudwatch_log_groups",
+			Name:     "Log Groups",
 		},
 	}
 }
@@ -53,6 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDataProtectionPolicy,
 			TypeName: "aws_cloudwatch_log_data_protection_policy",
+			Name:     "Data Protection Policy",
 		},
 		{
 			Factory:  resourceDestination,
@@ -65,6 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDestinationPolicy,
 			TypeName: "aws_cloudwatch_log_destination_policy",
+			Name:     "Destination Policy",
 		},
 		{
 			Factory:  resourceGroup,
@@ -77,22 +92,27 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceMetricFilter,
 			TypeName: "aws_cloudwatch_log_metric_filter",
+			Name:     "Metric Filter",
 		},
 		{
 			Factory:  resourceResourcePolicy,
 			TypeName: "aws_cloudwatch_log_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
 			Factory:  resourceStream,
 			TypeName: "aws_cloudwatch_log_stream",
+			Name:     "Log Stream",
 		},
 		{
 			Factory:  resourceSubscriptionFilter,
 			TypeName: "aws_cloudwatch_log_subscription_filter",
+			Name:     "Subscription Filter",
 		},
 		{
 			Factory:  resourceQueryDefinition,
 			TypeName: "aws_cloudwatch_query_definition",
+			Name:     "Query Definition",
 		},
 	}
 }
@@ -102,11 +122,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudwatchlogs_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudwatchlogs.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return cloudwatchlogs_sdkv2.NewFromConfig(cfg,
-		cloudwatchlogs_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return cloudwatchlogs.NewFromConfig(cfg,
+		cloudwatchlogs.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

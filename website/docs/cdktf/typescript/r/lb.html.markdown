@@ -171,6 +171,7 @@ This resource supports the following arguments:
 * `enableTlsVersionAndCipherSuiteHeaders` - (Optional) Whether the two headers (`x-amzn-tls-version` and `x-amzn-tls-cipher-suite`), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. Only valid for Load Balancers of type `application`. Defaults to `false`
 * `enableXffClientPort` - (Optional) Whether the X-Forwarded-For header should preserve the source port that the client used to connect to the load balancer in `application` load balancers. Defaults to `false`.
 * `enableWafFailOpen` - (Optional) Whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF. Defaults to `false`.
+* `enableZonalShift` - (Optional) Whether zonal shift is enabled. Defaults to `false`.
 * `enforceSecurityGroupInboundRulesOnPrivateLinkTraffic` - (Optional) Whether inbound security group rules are enforced for traffic originating from a PrivateLink. Only valid for Load Balancers of type `network`. The possible values are `on` and `off`.
 * `idleTimeout` - (Optional) Time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type `application`. Default: 60.
 * `internal` - (Optional) If true, the LB will be internal. Defaults to `false`.
@@ -256,4 +257,4 @@ Using `terraform import`, import LBs using their ARN. For example:
 % terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-45fe3924afbfab1cd6888154fab4006646467bb8e03eaad41c257e0ae509cfcc -->
+<!-- cache-key: cdktf-0.20.8 input-9c78dadcde2db51bc30bb76d213499d27210db0689a739f5d196d50dc2eb7ce0 -->

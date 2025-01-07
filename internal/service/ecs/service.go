@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -553,6 +554,12 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"availability_zone_rebalancing": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
+				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
+			},
 			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1081,6 +1088,33 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"vpc_lattice_configurations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRoleARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_group_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"port_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 64),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase letters, numbers, underscores and hyphens"),
+								validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot begin with a hyphen"),
+							),
+						},
+					},
+				},
+			},
 		},
 
 		SchemaVersion: 1,
@@ -1126,7 +1160,7 @@ func resourceService() *schema.Resource {
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
@@ -1143,10 +1177,15 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		SchedulingStrategy:       schedulingStrategy,
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
+		VpcLatticeConfigurations: expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+		input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -1288,6 +1327,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(service.ServiceArn))
+	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
@@ -1342,6 +1382,15 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
+
+	for _, deployment := range service.Deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
+			}
+		}
+	}
+
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
 	}
@@ -1394,6 +1443,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("availability_zone_rebalancing") {
+			if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+				input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 			}
 		}
 
@@ -1514,6 +1569,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VolumeConfigurations = expandVolumeConfigurations(ctx, d.Get("volume_configuration").([]interface{}))
 		}
 
+		if d.HasChange("vpc_lattice_configurations") {
+			input.VpcLatticeConfigurations = expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set))
+		}
+
 		// Retry due to IAM eventual consistency.
 		const (
 			serviceUpdateTimeout = 2 * time.Minute
@@ -1632,10 +1691,10 @@ func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(name)
 	clusterArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "ecs",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster/%s", cluster),
 	}.String()
 	d.Set("cluster", clusterArn)
@@ -2094,6 +2153,48 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 	}
 
 	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
+}
+
+func expandVPCLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
+	tfList := tfSet.List()
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.VpcLatticeConfiguration, 0)
+
+	for _, tfMapRaw := range tfSet.List() {
+		config := tfMapRaw.(map[string]interface{})
+
+		apiObject := awstypes.VpcLatticeConfiguration{
+			RoleArn:        aws.String(config[names.AttrRoleARN].(string)),
+			TargetGroupArn: aws.String(config["target_group_arn"].(string)),
+			PortName:       aws.String(config["port_name"].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenVPCLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrRoleARN:  aws.ToString(apiObject.RoleArn),
+			"target_group_arn": aws.ToString(apiObject.TargetGroupArn),
+			"port_name":        aws.ToString(apiObject.PortName),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConstraint, error) {

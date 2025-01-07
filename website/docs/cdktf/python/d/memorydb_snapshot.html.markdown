@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_snapshot"
 description: |-
@@ -45,7 +45,8 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the snapshot.
 * `cluster_configuration` - The configuration of the cluster from which the snapshot was taken.
     * `description` - Description for the cluster.
-    * `engine_version` - Version number of the Redis engine used by the cluster.
+    * `engine` - The engine that will run on cluster nodes.
+    * `engine_version` - Version number of the engine used by the cluster.
     * `maintenance_window` - The weekly time range during which maintenance on the cluster is performed.
     * `name` - Name of the cluster.
     * `node_type` - Compute and memory capacity of the nodes in the cluster.
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `source` - Whether the snapshot is from an automatic backup (`automated`) or was created manually (`manual`).
 * `tags` - Map of tags assigned to the snapshot.
 
-<!-- cache-key: cdktf-0.20.9 input-62f791c7099ad6e3e06f89ea492109f2285d5d4a23f2005bec9ce21b57cd5349 -->
+<!-- cache-key: cdktf-0.20.8 input-e94ab6cd7345a255089c20a61c035ebc77a7df9ba99fcf8adb275d33809caa41 -->

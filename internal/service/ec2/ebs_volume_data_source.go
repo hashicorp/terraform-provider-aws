@@ -6,7 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -135,10 +135,10 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(aws.ToString(volume.VolumeId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -159,18 +159,8 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-type volumeSort []awstypes.Volume
-
-func (a volumeSort) Len() int      { return len(a) }
-func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a volumeSort) Less(i, j int) bool {
-	itime := aws.ToTime(a[i].CreateTime)
-	jtime := aws.ToTime(a[j].CreateTime)
-	return itime.Unix() < jtime.Unix()
-}
-
 func mostRecentVolume(volumes []awstypes.Volume) awstypes.Volume {
-	sortedVolumes := volumes
-	sort.Sort(volumeSort(sortedVolumes))
-	return sortedVolumes[len(sortedVolumes)-1]
+	return slices.MaxFunc(volumes, func(a, b awstypes.Volume) int {
+		return a.CreateTime.Compare(aws.ToTime(b.CreateTime))
+	})
 }

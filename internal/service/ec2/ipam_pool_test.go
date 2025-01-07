@@ -39,7 +39,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_max_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_min_netmask_length"),
-					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
@@ -48,7 +48,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "create-complete"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -64,8 +64,8 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allocation_default_netmask_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_max_netmask_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_min_netmask_length", "32"),
-					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.test", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.test", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
@@ -74,7 +74,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "modify-complete"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -120,6 +120,36 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIPAMPool_ipv6PublicIPAmazon(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.IpamPool
+	resourceName := "aws_vpc_ipam_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolConfig_ipv6PublicIPAmazon,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip_source", "amazon"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service", "ec2"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", acctest.CtFalse),
 				),
 			},
@@ -204,7 +234,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -217,7 +247,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -226,7 +256,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -365,6 +395,16 @@ resource "aws_vpc_ipam_pool" "test" {
   ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
   locale                = data.aws_region.current.name
   publicly_advertisable = false
+}
+`)
+
+var testAccIPAMPoolConfig_ipv6PublicIPAmazon = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
+resource "aws_vpc_ipam_pool" "test" {
+  address_family   = "ipv6"
+  ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
+  locale           = data.aws_region.current.name
+  public_ip_source = "amazon"
+  aws_service      = "ec2"
 }
 `)
 

@@ -17,7 +17,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @FrameworkDataSource(name="Inference Profiles")
+// @FrameworkDataSource("aws_bedrock_inference_profiles", name="Inference Profiles")
 func newInferenceProfilesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &inferenceProfilesDataSource{}, nil
 }

@@ -381,7 +381,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(ctx, dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_repository_association: %s", err)
 	}

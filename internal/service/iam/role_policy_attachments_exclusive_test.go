@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -50,7 +51,7 @@ func TestAccIAMRolePolicyAttachmentsExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccRolePolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "role_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "role_name",
 			},
@@ -157,7 +158,7 @@ func TestAccIAMRolePolicyAttachmentsExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccRolePolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "role_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "role_name",
 			},
@@ -195,7 +196,7 @@ func TestAccIAMRolePolicyAttachmentsExclusive_empty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "0"),
 				),
 				// The empty `policy_arns` argument in the exclusive lock will remove the
 				// managed policy defined in this configuration, so a diff is expected
@@ -240,7 +241,7 @@ func TestAccIAMRolePolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},
@@ -278,7 +279,7 @@ func TestAccIAMRolePolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 					testAccCheckRoleExists(ctx, roleResourceName, &role),
 					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},
@@ -329,22 +330,11 @@ func testAccCheckRolePolicyAttachmentsExclusiveExists(ctx context.Context, name 
 		}
 
 		policyCount := rs.Primary.Attributes["policy_arns.#"]
-		if policyCount != fmt.Sprint(len(out)) {
+		if policyCount != strconv.Itoa(len(out)) {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameRolePolicyAttachmentsExclusive, roleName, errors.New("unexpected policy_arns count"))
 		}
 
 		return nil
-	}
-}
-
-func testAccRolePolicyAttachmentsExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["role_name"], nil
 	}
 }
 

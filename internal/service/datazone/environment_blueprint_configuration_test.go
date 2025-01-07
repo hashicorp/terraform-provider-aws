@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -42,7 +43,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "0"),
 				),
 			},
 			{
@@ -101,12 +102,12 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, names.USEast1RegionID),
+				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, endpoints.UsEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", names.USEast1RegionID),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", endpoints.UsEast1RegionID),
 				),
 			},
 			{
@@ -117,12 +118,12 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
 			},
 			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, names.APSoutheast2RegionID),
+				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, endpoints.ApSoutheast2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", names.APSoutheast2RegionID),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", endpoints.ApSoutheast2RegionID),
 				),
 			},
 		},
@@ -243,13 +244,13 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, names.USWest2RegionID, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", names.USWest2RegionID), acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.key1", names.USWest2RegionID), acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", endpoints.UsWest2RegionID), "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.key1", endpoints.UsWest2RegionID), acctest.CtValue1),
 				),
 			},
 			{
@@ -260,13 +261,13 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
 			},
 			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, names.USWest2RegionID, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", names.USWest2RegionID), acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.key2", names.USWest2RegionID), acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", endpoints.UsWest2RegionID), "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.key2", endpoints.UsWest2RegionID), acctest.CtValue2),
 				),
 			},
 		},

@@ -17,6 +17,7 @@ import (
 
 // @SDKDataSource("aws_batch_compute_environment", name="Compute Environment")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,

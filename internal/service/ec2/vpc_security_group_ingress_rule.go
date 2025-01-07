@@ -296,7 +296,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.Description = fwflex.StringToFramework(ctx, output.Description)
 	data.IPProtocol = fwflex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID)
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
@@ -413,8 +413,8 @@ func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource
 	}
 }
 
-func (r *securityGroupRuleResource) securityGroupRuleARN(_ context.Context, id string) types.String {
-	return types.StringValue(r.RegionalARN(names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
+func (r *securityGroupRuleResource) securityGroupRuleARN(ctx context.Context, id string) types.String {
+	return types.StringValue(r.Meta().RegionalARN(ctx, names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
 }
 
 func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.ReferencedSecurityGroup, accountID string) types.String {

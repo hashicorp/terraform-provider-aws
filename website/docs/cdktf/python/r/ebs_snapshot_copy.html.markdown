@@ -62,6 +62,7 @@ This resource supports the following arguments:
 * `storage_tier` - (Optional) The name of the storage tier. Valid values are `archive` and `standard`. Default value is `standard`.
 * `permanent_restore` - (Optional) Indicates whether to permanently restore an archived snapshot.
 * `temporary_restore_days` - (Optional) Specifies the number of days for which to temporarily restore an archived snapshot. Required for temporary restores only. The snapshot will be automatically re-archived after this period.
+* `completion_duration_minutes` - (Optional) Specifies a completion duration to initiate a time-based snapshot copy. Time-based snapshot copy operations complete within the specified duration.  Value must be between 15 and 2880 minutes, in 15 minute increments only.
 * `tags` - A map of tags for the snapshot. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -83,4 +84,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.20.9 input-6584e150a20694a655473ad745eb449af2bb52af49f6c18028f8aa482965ddc1 -->
+<!-- cache-key: cdktf-0.20.8 input-cc52e21d26a308769ce570150ef272202eac3fdcf39d45642d8f474294a657b4 -->

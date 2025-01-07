@@ -60,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `guardrail_identifier` - Unique identifier of the guardrail.
 * `guardrail_version` - Version of the guardrail.
 
-<!-- cache-key: cdktf-0.20.9 input-e8636da2e6a3484a7889e96812691570a2397695de11688fd63667f1878a7793 -->
+<!-- cache-key: cdktf-0.20.8 input-e8636da2e6a3484a7889e96812691570a2397695de11688fd63667f1878a7793 -->

@@ -155,11 +155,6 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	scopeID := d.Get("ipam_scope_id").(string)
-	scope, err := findIPAMScopeByID(ctx, conn, scopeID)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IPAM Scope (%s): %s", scopeID, err)
-	}
 
 	addressFamily := awstypes.AddressFamily(d.Get("address_family").(string))
 	input := &ec2.CreateIpamPoolInput{
@@ -204,9 +199,15 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("public_ip_source"); ok {
 		input.PublicIpSource = awstypes.IpamPoolPublicIpSource(v.(string))
 	}
-	// PubliclyAdvertisable must be set if if the AddressFamily is IPv6 and PublicIpSource is byoip.
-	// The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip.
-	if addressFamily == awstypes.AddressFamilyIpv6 && scope.IpamScopeType == awstypes.IpamScopeTypePublic {
+
+	scope, err := findIPAMScopeByID(ctx, conn, scopeID)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Scope (%s): %s", scopeID, err)
+	}
+
+	// PubliclyAdvertisable must be set if if the AddressFamily is IPv6 and PublicIpSource is byoip (either '' or 'byoip').
+	// The request can't contain PubliclyAdvertisable if PublicIpSource is 'amazon'.
+	if addressFamily == awstypes.AddressFamilyIpv6 && scope.IpamScopeType == awstypes.IpamScopeTypePublic && input.PublicIpSource != awstypes.IpamPoolPublicIpSourceAmazon {
 		input.PubliclyAdvertisable = aws.Bool(d.Get("publicly_advertisable").(bool))
 	}
 

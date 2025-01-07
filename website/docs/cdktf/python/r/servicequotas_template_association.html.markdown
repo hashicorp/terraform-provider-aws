@@ -61,13 +61,13 @@ from imports.aws.servicequotas_template_association import ServicequotasTemplate
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        ServicequotasTemplateAssociation.generate_config_for_import(self, "example", "012345678901")
+        ServicequotasTemplateAssociation.generate_config_for_import(self, "example", "123456789012")
 ```
 
 Using `terraform import`, import Service Quotas Template Association using the `id`. For example:
 
 ```console
-% terraform import aws_servicequotas_template_association.example 012345678901 
+% terraform import aws_servicequotas_template_association.example 123456789012 
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-8b8e59c370e620276f97759018b5888fafc9a67c14a6d02dd3c783bc716035e3 -->
+<!-- cache-key: cdktf-0.20.8 input-f94a009bbd3a3e9726ce0840ffffe95cefff8559aa05f1a8aae489d0ff8b638c -->

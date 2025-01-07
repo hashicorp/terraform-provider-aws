@@ -41,7 +41,7 @@ This resource supports the following arguments:
 
 * `dbClusterIdentifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `dbClusterSnapshotIdentifier` - (Required) The Identifier for the snapshot.
-* `sharedAccounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
+* `sharedAccounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -101,4 +101,4 @@ Using `terraform import`, import `aws_db_cluster_snapshot` using the cluster sna
 % terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-045a88e8d45fb91c8f6bdd2ec66e16ba6b0181babf91868a0b18c493913fc802 -->
+<!-- cache-key: cdktf-0.20.8 input-2d79729594e2ee44aedd9fc92ffa463a6de54138756327a15a1ba8e2ad7a7bc0 -->

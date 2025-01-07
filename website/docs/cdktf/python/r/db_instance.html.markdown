@@ -385,13 +385,12 @@ Defaults to true.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `custom_iam_instance_profile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
-* `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
-be created in the VPC associated with the DB subnet group. If unspecified, will
-be created in the `default` VPC, or in EC2 Classic, if available. When working
-with read replicas, it should be specified only if the source database
-specifies an instance in another AWS Region. See [DBSubnetGroupName in API
-action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica constraints.
+* `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
+  DB instance will be created in the VPC associated with the DB subnet group.
+  If unspecified, will be created in the `default` Subnet Group.
+  When working with read replicas created in the same region, defaults to the Subnet Group Name of the source DB.
+  When working with read replicas created in a different region, defaults to the `default` Subnet Group.
+  See [DBSubnetGroupName in API action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html) for additional read replica constraints.
 * `dedicated_log_volume` - (Optional, boolean) Use a dedicated log volume (DLV) for the DB instance. Requires Provisioned IOPS. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIOPS.StorageTypes.html#USER_PIOPS.dlv) for more details.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
@@ -459,26 +458,25 @@ logs, and it will be stored in the state file. Cannot be set if `manage_master_u
 accessible. Default is `false`.
 * `replica_mode` - (Optional) Specifies whether the replica is in either `mounted` or `open-read-only` mode. This attribute
 is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
-* `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
-database, and to use this value as the source database. This correlates to the
-`identifier` of another Amazon RDS Database to replicate (if replicating within
-a single region) or ARN of the Amazon RDS Database to replicate (if replicating
-cross-region). Note that if you are
-creating a cross-region replica of an encrypted database you will also need to
-specify a `kms_key_id`. See [DB Instance Replication][instance-replication] and [Working with
-PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
-for more information on using Replication.
-* `upgrade_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the read replica. Can only be set with `replicate_source_db`.
-* `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
+* `replicate_source_db` - (Optional) Specifies that this resource is a Replica database, and to use this value as the source database.
+  If replicating an Amazon RDS Database Instance in the same region, use the `identifier` of the source DB, unless also specifying the `db_subnet_group_name`.
+  If specifying the `db_subnet_group_name` in the same region, use the `arn` of the source DB.
+  If replicating an Instance in a different region, use the `arn` of the source DB.
+  Note that if you are creating a cross-region replica of an encrypted database you will also need to specify a `kms_key_id`.
+  See [DB Instance Replication][instance-replication] and [Working with PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html) for more information on using Replication.
+* `upgrade_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the read replica.
+  Can only be set with `replicate_source_db`.
+* `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time.
+  Requires the `identifier` argument to be set with the name of the new DB instance to be created.
+  See [Restore To Point In Time](#restore-to-point-in-time) below for details.
 * `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is
 created before the DB instance is deleted. If true is specified, no DBSnapshot
 is created. If false is specified, a DB snapshot is created before the DB
 instance is deleted, using the value from `final_snapshot_identifier`. Default
 is `false`.
-* `snapshot_identifier` - (Optional) Specifies whether or not to create this
-database from a snapshot. This correlates to the snapshot ID you'd find in the
-RDS console, e.g: rds:production-2015-06-26-06-05.
+* `snapshot_identifier` - (Optional) Specifies whether or not to create this database from a snapshot.
+  This corresponds to the snapshot ID you'd find in the RDS console, e.g: rds:production-2015-06-26-06-05.
 * `storage_encrypted` - (Optional) Specifies whether the DB instance is
 encrypted. Note that if you are creating a cross-region read replica this field
 is ignored and you should instead declare `kms_key_id` with a valid ARN. The
@@ -655,4 +653,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-4580e974a5e4576dfe92805deffe381a3f8e065605c18948d5b6feb61c2f3c35 -->
+<!-- cache-key: cdktf-0.20.8 input-4a73d395cca86db28f6cec85c0b39295ff84bb301f2f565f7dc3008cc42ded33 -->

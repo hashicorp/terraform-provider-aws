@@ -227,7 +227,7 @@ The following arguments are optional:
 
 The `approvalRule` block supports:
 
-* `approveAfterDays` - (Optional) Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 100. Conflicts with `approveUntilDate`.
+* `approveAfterDays` - (Optional) Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 360. Conflicts with `approveUntilDate`.
 * `approveUntilDate` - (Optional) Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically. Date is formatted as `YYYY-MM-DD`. Conflicts with `approveAfterDays`
 * `complianceLevel` - (Optional) Compliance level for patches approved by this rule. Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, and `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `enableNonSecurity` - (Optional) Boolean enabling the application of non-security updates. The default value is `false`. Valid for Linux instances only.
@@ -278,4 +278,4 @@ Using `terraform import`, import SSM Patch Baselines using their baseline ID. Fo
 % terraform import aws_ssm_patch_baseline.example pb-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-3403922bc06ff4f62f3ffe3bf7e9d76ae029bc21b0161947d37ec181e0694f39 -->
+<!-- cache-key: cdktf-0.20.8 input-d90cddc19e640746352069e28b90513d24cc39745f4e804b35c6c7f4eebc1dbe -->

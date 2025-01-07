@@ -37,7 +37,6 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new AmiCopy(this, "example", {
-      description: "A copy of ami-xxxxxxxx",
       name: "terraform-example",
       sourceAmiId: "ami-xxxxxxxx",
       sourceAmiRegion: "us-west-1",
@@ -86,4 +85,4 @@ configuration.
 * `update` - (Default `40m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.9 input-24f70ab5d03ce5421bd9ce27fd5b5602c0ac4eedfab0b82ddfc7fec0c10806cf -->
+<!-- cache-key: cdktf-0.20.8 input-d5fcd6011bb66e5d779ef5d7339819041b38b36d03570590f8e5ea6b0b071e1a -->

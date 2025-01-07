@@ -28,7 +28,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new DataAwsConnectInstanceStorageConfig(this, "example", {
       associationId:
-        "1234567890123456789012345678901234567890123456789012345678901234",
+        "1234567891234567890122345678912345678901223456789123456789012234",
       instanceId: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
       resourceType: "CONTACT_TRACE_RECORDS",
     });
@@ -97,4 +97,4 @@ The `encryptionConfig` configuration block supports the following arguments:
 * `encryptionType` - The type of encryption. Valid Values: `KMS`.
 * `keyId` - The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-<!-- cache-key: cdktf-0.20.9 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->
+<!-- cache-key: cdktf-0.20.8 input-4f7f214db93fe3d98efd4b191b797a2b8d71b31f53ac2b9324e32c7a91225b12 -->

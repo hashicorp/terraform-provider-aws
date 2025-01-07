@@ -17,7 +17,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newDomainNameAccessAssociationResource,
+			Name:    "Domain Name Access Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newResourceAccount,
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -76,11 +87,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  resourceAccount,
-			TypeName: "aws_api_gateway_account",
-			Name:     "Account",
-		},
 		{
 			Factory:  resourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",

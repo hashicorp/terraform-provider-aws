@@ -111,7 +111,7 @@ class MyConvertedCode extends TerraformStack {
     SsoadminTrustedTokenIssuer.generateConfigForImport(
       this,
       "example",
-      "arn:aws:sso::012345678901:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002"
+      "arn:aws:sso::123456789012:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002"
     );
   }
 }
@@ -121,7 +121,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SSO Admin Trusted Token Issuer using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_trusted_token_issuer.example arn:aws:sso::012345678901:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002
+% terraform import aws_ssoadmin_trusted_token_issuer.example arn:aws:sso::123456789012:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-0900500b852bcc2cdb7068eab61e167d32b79c14f63d21b8cf4c9f90010fe17b -->
+<!-- cache-key: cdktf-0.20.8 input-592172194ecc9eca04f581d60dec1bcc1b2ca4bb1d6297df14214cca4674ec1a -->

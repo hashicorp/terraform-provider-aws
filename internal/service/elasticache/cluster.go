@@ -4,11 +4,12 @@
 package elasticache
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -141,7 +142,7 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice(engine_Values(), false),
+				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -349,7 +350,7 @@ func resourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	input := &elasticache.CreateCacheClusterInput{
@@ -624,6 +625,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				inactive := "inactive"
 				input.NotificationTopicStatus = &inactive
 			}
+			requestUpdate = true
+		}
+
+		if d.HasChange(names.AttrEngine) {
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 			requestUpdate = true
 		}
 
@@ -939,9 +945,9 @@ func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []strin
 }
 
 func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
-	sortedCacheNodes := make([]awstypes.CacheNode, len(c.CacheNodes))
-	copy(sortedCacheNodes, c.CacheNodes)
-	sort.Sort(byCacheNodeId(sortedCacheNodes))
+	sortedCacheNodes := slices.SortedFunc(slices.Values(c.CacheNodes), func(a, b awstypes.CacheNode) int {
+		return cmp.Compare(aws.ToString(a.CacheNodeId), aws.ToString(b.CacheNodeId))
+	})
 
 	cacheNodeData := make([]map[string]interface{}, 0, len(sortedCacheNodes))
 
@@ -961,24 +967,21 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 	return d.Set("cache_nodes", cacheNodeData)
 }
 
-type byCacheNodeId []awstypes.CacheNode
-
-func (b byCacheNodeId) Len() int      { return len(b) }
-func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-func (b byCacheNodeId) Less(i, j int) bool {
-	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
-		aws.ToString(b[i].CacheNodeId) < aws.ToString(b[j].CacheNodeId)
-}
-
 func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 	d.Set("node_type", c.CacheNodeType)
 
-	d.Set(names.AttrEngine, c.Engine)
-	if aws.ToString(c.Engine) == engineRedis {
+	engine := aws.ToString(c.Engine)
+	d.Set(names.AttrEngine, engine)
+	switch engine {
+	case engineValkey:
+		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
+			return err // nosemgrep:ci.bare-error-returns
+		}
+	case engineRedis:
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
-	} else {
+	default:
 		setEngineVersionMemcached(d, c.EngineVersion)
 	}
 	d.Set(names.AttrAutoMinorVersionUpgrade, strconv.FormatBool(aws.ToBool(c.AutoMinorVersionUpgrade)))
@@ -1010,13 +1013,14 @@ func clusterValidateAZMode(_ context.Context, diff *schema.ResourceDiff, v inter
 
 // clusterValidateNumCacheNodes validates that `num_cache_nodes` is 1 when `engine` is "redis"
 func clusterValidateNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineMemcached {
+	engine, ok := diff.GetOk(names.AttrEngine)
+	if !ok || engine.(string) == engineMemcached {
 		return nil
 	}
 	if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
 		return nil
 	}
-	return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
+	return fmt.Errorf(`engine "%s" does not support num_cache_nodes > 1`, engine.(string))
 }
 
 // clusterForceNewOnMemcachedNodeTypeChange causes re-creation when `node_type` is changed and `engine` is "memcached"
@@ -1026,7 +1030,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 	if diff.Id() == "" || !diff.HasChange("node_type") {
 		return nil
 	}
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
 		return nil
 	}
 	return diff.ForceNew("node_type")
@@ -1034,7 +1038,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 
 // clusterValidateMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
 func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
 		return nil
 	}
 	if _, ok := diff.GetOk(names.AttrFinalSnapshotIdentifier); !ok {

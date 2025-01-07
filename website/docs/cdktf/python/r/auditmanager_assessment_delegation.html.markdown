@@ -73,13 +73,13 @@ from imports.aws.auditmanager_assessment_delegation import AuditmanagerAssessmen
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        AuditmanagerAssessmentDelegation.generate_config_for_import(self, "example", "abcdef-123456,arn:aws:iam::012345678901:role/example,example")
+        AuditmanagerAssessmentDelegation.generate_config_for_import(self, "example", "abcdef-123456,arn:aws:iam::123456789012:role/example,example")
 ```
 
 Using `terraform import`, import Audit Manager Assessment Delegation using the `id`. For example:
 
 ```console
-% terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example
+% terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::123456789012:role/example,example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-a28cb94ff95d8ebfec7195b030654929667d5f4188784ab4f4a6c94229437e4d -->
+<!-- cache-key: cdktf-0.20.8 input-fd3b129286f1bc848d127f535a852afa2e810a58675210b867713a7b4f7f40f4 -->

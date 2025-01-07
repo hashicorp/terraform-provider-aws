@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +35,7 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 				Config: testAccDomainIdentityConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, resourceName),
-					testAccCheckDomainIdentityARN("aws_ses_domain_identity.test", domain),
+					testAccCheckDomainIdentityARN(ctx, resourceName, domain),
 				),
 			},
 		},
@@ -127,20 +126,12 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 	}
 }
 
-func testAccCheckDomainIdentityARN(n string, domain string) resource.TestCheckFunc {
+func testAccCheckDomainIdentityARN(ctx context.Context, n string, domain string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		expected := acctest.Provider.Meta().(*conns.AWSClient).RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", strings.TrimSuffix(domain, ".")))
 
-		expected := arn.ARN{
-			AccountID: awsClient.AccountID,
-			Partition: awsClient.Partition,
-			Region:    awsClient.Region,
-			Resource:  fmt.Sprintf("identity/%s", strings.TrimSuffix(domain, ".")),
-			Service:   "ses",
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] != expected.String() {
+		if rs.Primary.Attributes[names.AttrARN] != expected {
 			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes[names.AttrARN])
 		}
 

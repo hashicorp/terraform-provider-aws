@@ -1,13 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package logs
+package logs_test
 
 import (
 	"strings"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,7 +25,7 @@ func TestValidLogGroupName(t *testing.T) {
 		strings.Repeat("W", 512),
 	}
 	for _, v := range validNames {
-		_, errors := validLogGroupName(v, names.AttrName)
+		_, errors := tflogs.ValidLogGroupName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Log Group name: %q", v, errors)
 		}
@@ -41,7 +42,7 @@ func TestValidLogGroupName(t *testing.T) {
 		strings.Repeat("W", 513),
 	}
 	for _, v := range invalidNames {
-		_, errors := validLogGroupName(v, names.AttrName)
+		_, errors := tflogs.ValidLogGroupName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Log Group name", v)
 		}
@@ -61,7 +62,7 @@ func TestValidLogGroupNamePrefix(t *testing.T) {
 		strings.Repeat("W", 483),
 	}
 	for _, v := range validNames {
-		_, errors := validLogGroupNamePrefix(v, names.AttrNamePrefix)
+		_, errors := tflogs.ValidLogGroupNamePrefix(v, names.AttrNamePrefix)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Log Group name prefix: %q", v, errors)
 		}
@@ -78,7 +79,7 @@ func TestValidLogGroupNamePrefix(t *testing.T) {
 		strings.Repeat("W", 484),
 	}
 	for _, v := range invalidNames {
-		_, errors := validLogGroupNamePrefix(v, names.AttrNamePrefix)
+		_, errors := tflogs.ValidLogGroupNamePrefix(v, names.AttrNamePrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Log Group name prefix", v)
 		}
@@ -96,7 +97,7 @@ func TestValidLogMetricFilterName(t *testing.T) {
 		strings.Repeat("W", 512),
 	}
 	for _, v := range validNames {
-		_, errors := validLogMetricFilterName(v, names.AttrName)
+		_, errors := tflogs.ValidLogMetricFilterName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Log Metric Filter Name: %q", v, errors)
 		}
@@ -110,7 +111,7 @@ func TestValidLogMetricFilterName(t *testing.T) {
 		strings.Repeat("W", 513),
 	}
 	for _, v := range invalidNames {
-		_, errors := validLogMetricFilterName(v, names.AttrName)
+		_, errors := tflogs.ValidLogMetricFilterName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Log Metric Filter Name", v)
 		}
@@ -129,7 +130,7 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 		strings.Repeat("W", 255),
 	}
 	for _, v := range validNames {
-		_, errors := validLogMetricFilterTransformationName(v, names.AttrName)
+		_, errors := tflogs.ValidLogMetricFilterTransformationName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Log Metric Filter Transformation Name: %q", v, errors)
 		}
@@ -144,14 +145,14 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 		strings.Repeat("W", 256),
 	}
 	for _, v := range invalidNames {
-		_, errors := validLogMetricFilterTransformationName(v, names.AttrName)
+		_, errors := tflogs.ValidLogMetricFilterTransformationName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Log Metric Filter Transformation Name", v)
 		}
 	}
 }
 
-func TestValidStreamName(t *testing.T) {
+func TestValidLogStreamName(t *testing.T) {
 	t.Parallel()
 
 	validNames := []string{
@@ -161,7 +162,7 @@ func TestValidStreamName(t *testing.T) {
 		"logstream/1234",
 	}
 	for _, v := range validNames {
-		_, errors := validStreamName(v, names.AttrName)
+		_, errors := tflogs.ValidLogStreamName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CloudWatch LogStream name: %q", v, errors)
 		}
@@ -173,7 +174,7 @@ func TestValidStreamName(t *testing.T) {
 		"stringwith:colon",
 	}
 	for _, v := range invalidNames {
-		_, errors := validStreamName(v, names.AttrName)
+		_, errors := tflogs.ValidLogStreamName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CloudWatch LogStream name", v)
 		}

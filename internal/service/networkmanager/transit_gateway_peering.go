@@ -140,9 +140,9 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 
 	p := transitGatewayPeering.Peering
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "networkmanager",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("peering/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

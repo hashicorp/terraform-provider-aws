@@ -11,6 +11,8 @@ description: |-
 
 Terraform resource for managing an AWS EC2 Image Builder Workflow.
 
+-> Image Builder manages the workflows for the distribution stage. Therefore, using the DISTRIBUTION workflow type results in an error.
+
 ## Example Usage
 
 ### Basic Usage
@@ -40,7 +42,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `name` - (Required) Name of the workflow.
-* `type` - (Required) Type of the workflow. Valid values: `BUILD`, `TEST`, `DISTRIBUTION`.
+* `type` - (Required) Type of the workflow. Valid values: `BUILD`, `TEST`.
 * `version` - (Required) Version of the workflow.
 
 The following arguments are optional:
@@ -87,4 +89,4 @@ Using `terraform import`, import EC2 Image Builder Workflow using the `example_i
 
 Certain resource arguments, such as `uri`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.9 input-df3dca53e5a160bb4c9e269233107f9f1b21a2706fb1eb2429250d7eac61aa1f -->
+<!-- cache-key: cdktf-0.20.8 input-175b9ce33cd4b9bc0e8e753b4c79c33c079653b357cae7ce42826018f4ea958a -->

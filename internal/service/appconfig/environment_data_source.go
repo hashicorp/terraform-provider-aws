@@ -92,20 +92,16 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(ID)
-
 	d.Set(names.AttrApplicationID, appID)
-	d.Set("environment_id", envID)
+	d.Set(names.AttrARN, environmentARN(ctx, meta.(*conns.AWSClient), appID, envID))
 	d.Set(names.AttrDescription, out.Description)
+	d.Set("environment_id", envID)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrState, out.State)
 
 	if err := d.Set("monitor", flattenEnvironmentMonitors(out.Monitors)); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
 	}
-
-	arn := environmentARN(meta.(*conns.AWSClient), appID, envID).String()
-
-	d.Set(names.AttrARN, arn)
 
 	return diags
 }

@@ -50,5 +50,6 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `description` - Description of the application.
 * `name` - Name of the application.
+* `tags` - A map of tags assigned to the Application. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-<!-- cache-key: cdktf-0.20.9 input-75cbbaecdeee27c857c1ee36fbb9ce5c75b84633b90c483d1b2c5c9db9db58e2 -->
+<!-- cache-key: cdktf-0.20.8 input-e90a7bb492f843485e67c59f83d9b9f5491efaa061cef1d2ad549f2215ca30fd -->

@@ -61,7 +61,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	connectionID := d.Get(names.AttrConnectionID).(string)

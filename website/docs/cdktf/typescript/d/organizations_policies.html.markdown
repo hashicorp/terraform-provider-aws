@@ -58,7 +58,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `filter` - (Required) The type of policies to be returned in the response. Valid values are `SERVICE_CONTROL_POLICY | TAG_POLICY | BACKUP_POLICY | AISERVICES_OPT_OUT_POLICY`
+* `filter` - (Required) The type of policies to be returned in the response. Valid values are `AISERVICES_OPT_OUT_POLICY | BACKUP_POLICY | RESOURCE_CONTROL_POLICY | SERVICE_CONTROL_POLICY | TAG_POLICY`
 
 ## Attribute Reference
 
@@ -66,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all the policy ids found.
 
-<!-- cache-key: cdktf-0.20.9 input-bbb6107986f3a23baa5c573e84c2c0fd4ada189187325e46cc5d67b60df963bd -->
+<!-- cache-key: cdktf-0.20.8 input-3ab4270f54c1c17fbe383d62aa3e9fdfcfc2557743daf88d275029dff3b153c9 -->

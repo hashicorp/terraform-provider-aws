@@ -83,7 +83,7 @@ func dataSourceInstanceTypeOfferingsRead(ctx context.Context, d *schema.Resource
 		locationTypes = append(locationTypes, string(instanceTypeOffering.LocationType))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("instance_types", instanceTypes)
 	d.Set("locations", locations)
 	d.Set("location_types", locationTypes)

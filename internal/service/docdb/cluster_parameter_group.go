@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"slices"
 	"time"
 
@@ -24,13 +23,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_docdb_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterParameterGroup() *schema.Resource {
+func resourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
 		ReadWithoutTimeout:   resourceClusterParameterGroupRead,
@@ -291,7 +291,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			if !reflect.ValueOf(v).IsZero() {
+			if !itypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -319,7 +319,7 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *doc
 		}
 
 		for _, v := range page.Parameters {
-			if !reflect.ValueOf(v).IsZero() {
+			if !itypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

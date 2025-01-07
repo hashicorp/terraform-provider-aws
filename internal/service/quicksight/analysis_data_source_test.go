@@ -33,7 +33,7 @@ func TestAccQuickSightAnalysisDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "theme_arn", themeArn),
-					resource.TestCheckResourceAttr(dataSourceName, "definition.0.data_set_identifiers_declarations.0.identifier", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "definition.0.data_set_identifiers_declarations.0.identifier", "1"),
 				),
 			},
 		},

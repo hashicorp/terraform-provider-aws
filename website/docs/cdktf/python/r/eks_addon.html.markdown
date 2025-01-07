@@ -204,6 +204,7 @@ The following arguments are optional:
 * `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE`, `OVERWRITE`, and `PRESERVE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
 * `resolve_conflicts` - (**Deprecated** use the `resolve_conflicts_on_create` and `resolve_conflicts_on_update` attributes instead) Define how to resolve parameter value conflicts when migrating an existing add-on to an Amazon EKS add-on or when applying version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. Note that `PRESERVE` is only valid on addon update, not for initial addon creation. If you need to set this to `PRESERVE`, use the `resolve_conflicts_on_create` and `resolve_conflicts_on_update` attributes instead. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `pod_identity_association` - (Optional) Configuration block with EKS Pod Identity association settings. See [`pod_identity_association`](#pod-identity-association) below for details.
 * `preserve` - (Optional) Indicates if you want to preserve the created resources when deleting the EKS add-on.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
   existing IAM role to bind to the add-on's service account. The role must be
@@ -216,6 +217,11 @@ The following arguments are optional:
   provider created for your cluster. For more information, [see Enabling IAM roles
   for service accounts on your cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
   in the Amazon EKS User Guide.
+
+### pod_identity_association
+
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
+* `service_account` - (Required) The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
 
 ## Attribute Reference
 
@@ -261,4 +267,4 @@ Using `terraform import`, import EKS add-on using the `cluster_name` and `addon_
 % terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-f990813915cf558cc207cc42936ded374795b5a1aa6e17740c4cc59c4b537db3 -->
+<!-- cache-key: cdktf-0.20.8 input-7774431d27849e2f1b388ea54f95d3d4594f0dd4ec2b6ecf7377ee7a82ba6ed0 -->

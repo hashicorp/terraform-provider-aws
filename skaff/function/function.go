@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
@@ -43,7 +44,9 @@ func Create(name, snakeName, description string, comments, force bool) error {
 		return fmt.Errorf("snake name should be all lower case with underscores, if needed (e.g., arn_build)")
 	}
 
-	snakeName = convert.ToSnakeCase(name, snakeName)
+	if snakeName == "" {
+		snakeName = names.ToSnakeCase(name)
+	}
 
 	templateData := TemplateData{
 		Function:        name,

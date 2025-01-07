@@ -37,7 +37,7 @@ func TestAccSSMDocument_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("document/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("document/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
@@ -175,14 +175,14 @@ func TestAccSSMDocument_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "2.0"),
-					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "latest_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_version", acctest.Ct1),
-					resource.TestCheckOutput("default_version", acctest.Ct1),
-					resource.TestCheckOutput("document_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckOutput("default_version", "1"),
+					resource.TestCheckOutput("document_version", "1"),
 					resource.TestCheckOutput("hash", "1a200df3fefa0e7f8814829781d6295e616474945a239a956561876b4c820cde"),
-					resource.TestCheckOutput("latest_version", acctest.Ct1),
-					resource.TestCheckOutput("parameter_len", acctest.Ct0),
+					resource.TestCheckOutput("latest_version", "1"),
+					resource.TestCheckOutput("parameter_len", "0"),
 				),
 			},
 			{
@@ -194,14 +194,14 @@ func TestAccSSMDocument_update(t *testing.T) {
 				Config: testAccDocumentConfig_20Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "latest_version", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "default_version", acctest.Ct2),
-					resource.TestCheckOutput("default_version", acctest.Ct2),
-					resource.TestCheckOutput("document_version", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "document_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
+					resource.TestCheckOutput("default_version", "2"),
+					resource.TestCheckOutput("document_version", "2"),
 					resource.TestCheckOutput("hash", "214c51d87f98ae07b868a63cd866955578c1ef41c3ab8c36f80039dfd9565f53"),
-					resource.TestCheckOutput("latest_version", acctest.Ct2),
-					resource.TestCheckOutput("parameter_len", acctest.Ct1),
+					resource.TestCheckOutput("latest_version", "2"),
+					resource.TestCheckOutput("parameter_len", "1"),
 				),
 			},
 		},
@@ -240,7 +240,7 @@ func TestAccSSMDocument_Permission_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
-	ids := "123456789012"
+	ids := acctest.Ct12Digit
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -297,7 +297,7 @@ func TestAccSSMDocument_Permission_change(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 	idsInitial := "123456789012,123456789013"
-	idsRemove := "123456789012"
+	idsRemove := acctest.Ct12Digit
 	idsAdd := "123456789012,123456789014"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -387,7 +387,7 @@ func TestAccSSMDocument_automation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Automation"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("automation-definition/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("automation-definition/%s", rName)),
 				),
 			},
 			{

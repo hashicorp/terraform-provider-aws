@@ -13,6 +13,8 @@ Terraform resource for maintaining exclusive management of inline policies assig
 
 !> This resource takes exclusive ownership over inline policies assigned to a group. This includes removal of inline policies which are not explicitly configured. To prevent persistent drift, ensure any `aws_iam_group_policy` resources managed alongside this resource are included in the `policy_names` argument.
 
+~> Destruction of this resource means Terraform will no longer manage reconciliation of the configured inline policy assignments. It __will not__ delete the configured policies from the group.
+
 ## Example Usage
 
 ### Basic Usage
@@ -95,4 +97,4 @@ Using `terraform import`, import exclusive management of inline policy assignmen
 % terraform import aws_iam_group_policies_exclusive.example MyGroup
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-54baa3091cab13fdbc0920800092af6147364ae112533e2847287bfb5647d2ff -->
+<!-- cache-key: cdktf-0.20.8 input-6d54235023a98a7e42e32eb54bff87275a9863c025f3cbd76e2eea91b5953669 -->

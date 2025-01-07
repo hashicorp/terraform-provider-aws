@@ -121,4 +121,4 @@ Using `terraform import`, import Shield DRT access role ARN association using th
 % terraform import aws_shield_drt_access_role_arn_association.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-64153c99f6109f71d2f116c2ff3e7fcfe38fd4c4748e5390b47d3d064e3cbc4b -->
+<!-- cache-key: cdktf-0.20.8 input-64153c99f6109f71d2f116c2ff3e7fcfe38fd4c4748e5390b47d3d064e3cbc4b -->

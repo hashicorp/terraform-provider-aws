@@ -517,7 +517,10 @@ The following arguments are optional:
 * `level` - (Optional) H265 level.
 * `look_ahead_rate_control` - (Optional) Amount of lookahead.
 * `max_bitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `min_interval` - (Optional) Min interval.
+* `min_i_interval` - (Optional) Min interval.
+* `min_qp` - (Optional) Set the minimum QP.
+* `mv_over_picture_boundaries` - (Optional) Enables or disables motion vector over picture boundaries.
+* `mv_temporal_predictor`- (Optional) Enables or disables the motion vector temporal predictor.
 * `par_denominator` - (Optional) Pixel Aspect Ratio denominator.
 * `par_numerator` - (Optional) Pixel Aspect Ratio numerator.
 * `profile` - (Optional) H265 profile.
@@ -527,8 +530,12 @@ The following arguments are optional:
 * `scene_change_detect` - (Optional) Scene change detection.
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
+* `tile_height` - (Optional) Sets the height of tiles.
+* `tile_padding` - (Optional) Enables or disables padding of tiles.
+* `tile_width` - (Optional) Sets the width of tiles.
 * `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
 * `timecode_insertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `treeblock_size` - (Optional) Sets the size of the treeblock.
 
 ### H265 Color Space Settings
 
@@ -811,4 +818,4 @@ Using `terraform import`, import MediaLive Channel using the `channel_id`. For e
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-6f35c6a1bbf589049ab28f3a0305defb739be70f1415e2fba48e986109eecf3e -->
+<!-- cache-key: cdktf-0.20.8 input-c84c1696c92bb7fbbfe2c2b1e571168787b06ce8a2f99e9e0569e5c41f0f223d -->

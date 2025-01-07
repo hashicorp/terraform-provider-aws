@@ -34,13 +34,13 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
-					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
 						"266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"),
-					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -53,13 +53,129 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
-					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
 						"266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"),
-					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.0", "cf23df2207d99a74fbe169e3eba035e633b65d94"),
 					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.1", "c784713d6f9cb67b55dd84f4e4af7832d42b8f55"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
+	ctx := acctest.Context(t)
+	url := "accounts.google.com"
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.Test(t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_withoutThumbprints(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
+						"266362248691-342342xasdasdasda-apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
+	ctx := acctest.Context(t)
+	url := "accounts.google.com"
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.Test(t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_thumbprint(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
+						"266362248691-342342xasdasdasda-apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.0", "cf23df2207d99a74fbe169e3eba035e633b65d94"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_withoutThumbprints(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
+						"266362248691-342342xasdasdasda-apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
+					// This is a bug: the thumbprint should be the AWS provided for the top intermediate CA of the OIDC IdP
+					// See https://github.com/hashicorp/terraform-provider-aws/issues/40509
+					//resource.TestCheckResourceAttr(resourceName, "thumbprint_list.0", "08745487e891c19e3078c1f2a07e452950ef36f6"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
+	ctx := acctest.Context(t)
+	url := "accounts.google.com"
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.Test(t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_withoutThumbprints(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
+						"266362248691-342342xasdasdasda-apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.0", "08745487e891c19e3078c1f2a07e452950ef36f6"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_thumbprint(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
+						"266362248691-342342xasdasdasda-apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.0", "cf23df2207d99a74fbe169e3eba035e633b65d94"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -144,7 +260,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_clientIDList_add(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "abc.testle.com"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.3", "xyz.testle.com"),
 				),
@@ -158,7 +274,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_clientIDList_remove(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "def.testle.com"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.2", "xyz.testle.com"),
 				),
@@ -238,6 +354,32 @@ resource "aws_iam_openid_connect_provider" "test" {
   thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94", "c784713d6f9cb67b55dd84f4e4af7832d42b8f55"]
 }
 `, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_thumbprint() string {
+	return `
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.google.com"
+
+  client_id_list = [
+    "266362248691-342342xasdasdasda-apps.googleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+}
+`
+}
+
+func testAccOpenIDConnectProviderConfig_withoutThumbprints() string {
+	return `
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.google.com"
+
+  client_id_list = [
+    "266362248691-342342xasdasdasda-apps.googleusercontent.com",
+  ]
+}
+`
 }
 
 func testAccOpenIDConnectProviderConfig_clientIDList_first(rName string) string {

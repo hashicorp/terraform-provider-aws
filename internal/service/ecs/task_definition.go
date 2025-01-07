@@ -463,7 +463,7 @@ func resourceTaskDefinition() *schema.Resource {
 func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	definitions, err := expandContainerDefinitions(d.Get("container_definitions").(string))
 	if err != nil {

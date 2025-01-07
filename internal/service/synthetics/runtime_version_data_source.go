@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,7 +61,7 @@ func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.Sc
 			"latest": schema.BoolAttribute{
 				Optional: true,
 				Validators: []validator.Bool{
-					fwvalidators.BoolEquals(true),
+					boolvalidator.Equals(true),
 					boolvalidator.ExactlyOneOf(path.Expressions{
 						path.MatchRoot("latest"),
 						path.MatchRoot(names.AttrVersion),

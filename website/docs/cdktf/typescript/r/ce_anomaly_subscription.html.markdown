@@ -266,8 +266,8 @@ The following arguments are required:
 * `and` - (Optional) Return results that match both [Dimension](#dimension) objects.
 * `costCategory` - (Optional) Configuration block for the filter that's based on  values. See [Cost Category](#cost-category) below.
 * `dimension` - (Optional) Configuration block for the specific [Dimension](#dimension) to use for.
-* `not` - (Optional) Return results that match both [Dimension](#dimension) object.
-* `or` - (Optional) Return results that match both [Dimension](#dimension) object.
+* `not` - (Optional) Return results that do not match the [Dimension](#dimension) object.
+* `or` - (Optional) Return results that match either [Dimension](#dimension) object.
 * `tags` - (Optional) Configuration block for the specific Tag to use for. See [Tags](#tags) below.
 
 ### Cost Category
@@ -328,4 +328,4 @@ Using `terraform import`, import `aws_ce_anomaly_subscription` using the `id`. F
 % terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-2104ba4f8073cdd07506ce63a6f6f442efb8b20273edbd90f98ba5dd9cbef5cf -->
+<!-- cache-key: cdktf-0.20.8 input-63ec9cc6bec0513ad1339c3379640be986b78ea317d466c40cff0931f5a83aff -->

@@ -82,13 +82,13 @@ from imports.aws.sns_topic_data_protection_policy import SnsTopicDataProtectionP
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SnsTopicDataProtectionPolicy.generate_config_for_import(self, "example", "arn:aws:sns:us-west-2:0123456789012:example")
+        SnsTopicDataProtectionPolicy.generate_config_for_import(self, "example", "arn:aws:sns:us-west-2:123456789012:example")
 ```
 
 Using `terraform import`, import SNS Data Protection Topic Policy using the topic ARN. For example:
 
 ```console
-% terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:0123456789012:example
+% terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-9873cc188a9eeb3e1e9911705d4e32ec2577e6f0a3d25c0c52f1bdca092cd422 -->
+<!-- cache-key: cdktf-0.20.8 input-451e4286e0b857b4d59c301bbaebb3b1b5ebeb8f11950844d90d7191c3d499eb -->

@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,29 +41,29 @@ func testAccApp_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckNoResourceAttr(resourceName, "access_token"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
-					resource.TestCheckResourceAttr(resourceName, "cache_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
-					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "default_domain", regexache.MustCompile(`\.amplifyapp\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_branch_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_build", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_deletion", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_service_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "oauth_token"),
 					resource.TestCheckResourceAttr(resourceName, "platform", "WEB"),
-					resource.TestCheckResourceAttr(resourceName, "production_branch.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "production_branch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -116,18 +117,18 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 				Config: testAccAppConfig_autoBranchCreationNoAutoBranchCreation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.build_spec", ""),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_auto_build", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_performance_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_pull_request_preview", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.framework", ""),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.pull_request_environment_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.stage", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.0", "*"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.1", "*/**"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_branch_creation", acctest.CtTrue),
@@ -137,19 +138,19 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 				Config: testAccAppConfig_autoBranchCreationAutoBranchCreation(rName, credentials),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.basic_auth_credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.build_spec", "version: 0.1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_auto_build", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_performance_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_pull_request_preview", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.ENVVAR1", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.ENVVAR1", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.pull_request_environment_name", "test1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.stage", "DEVELOPMENT"),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.0", "feature/*"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_branch_creation", acctest.CtTrue),
 				),
@@ -163,7 +164,7 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 				Config: testAccAppConfig_autoBranchCreationAutoBranchCreationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "1"),
 					// Clearing basic_auth_credentials not reflected in API.
 					// resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.build_spec", "version: 0.2"),
@@ -171,11 +172,11 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_performance_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_pull_request_preview", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.pull_request_environment_name", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.stage", "EXPERIMENTAL"),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.0", "feature/*"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_branch_creation", acctest.CtTrue),
 				),
@@ -302,7 +303,7 @@ func testAccApp_CacheConfig(t *testing.T) {
 				Config: testAccAppConfig_cacheConfig(rName, "AMPLIFY_MANAGED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "cache_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED"),
 				),
 			},
@@ -315,7 +316,7 @@ func testAccApp_CacheConfig(t *testing.T) {
 				Config: testAccAppConfig_cacheConfig(rName, "AMPLIFY_MANAGED_NO_COOKIES"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "cache_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED_NO_COOKIES"),
 				),
 			},
@@ -339,7 +340,7 @@ func testAccApp_CustomRules(t *testing.T) {
 				Config: testAccAppConfig_customRules(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.source", "/<*>"),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.status", "404"),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.target", "/index.html"),
@@ -353,7 +354,7 @@ func testAccApp_CustomRules(t *testing.T) {
 			{
 				Config: testAccAppConfig_customRulesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.condition", "<US>"),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.source", "/documents"),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.status", "302"),
@@ -367,7 +368,7 @@ func testAccApp_CustomRules(t *testing.T) {
 				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
 				),
 			},
 		},
@@ -434,8 +435,8 @@ func testAccApp_EnvironmentVariables(t *testing.T) {
 				Config: testAccAppConfig_environmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
 				),
 			},
 			{
@@ -447,16 +448,16 @@ func testAccApp_EnvironmentVariables(t *testing.T) {
 				Config: testAccAppConfig_environmentVariablesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", "2"),
 				),
 			},
 			{
 				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 				),
 			},
 		},
@@ -640,7 +641,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+	acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 }
 
 func testAccCheckAppNotRecreated(before, after *types.App) resource.TestCheckFunc {

@@ -6,6 +6,7 @@ package pricing
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -84,7 +85,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "Pricing product query not precise enough. Returned %d elements", numberOfElements)
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(fmt.Sprintf("%#v", input))))
 	d.Set("result", output.PriceList[0])
 
 	return diags

@@ -63,7 +63,7 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 		poolIDs = append(poolIDs, aws.ToString(v.PoolId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("pool_ids", poolIDs)
 
 	return diags

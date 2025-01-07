@@ -77,7 +77,7 @@ func (d *regionsDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
 	names := tfslices.ApplyToAll(output.Regions, func(v awstypes.Region) string {
 		return aws.ToString(v.RegionName)
 	})

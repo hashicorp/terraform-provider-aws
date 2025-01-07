@@ -17,7 +17,7 @@ func TestAccBedrock_serial(t *testing.T) {
 		"CustomModel": {
 			acctest.CtBasic:                         testAccCustomModel_basic,
 			acctest.CtDisappears:                    testAccCustomModel_disappears,
-			"tags":                                  testAccCustomModel_tags,
+			"tags":                                  testAccBedrockCustomModel_tagsSerial,
 			"kmsKey":                                testAccCustomModel_kmsKey,
 			"validationDataConfig":                  testAccCustomModel_validationDataConfig,
 			"validationDataConfigWaitForCompletion": testAccCustomModel_validationDataConfigWaitForCompletion,

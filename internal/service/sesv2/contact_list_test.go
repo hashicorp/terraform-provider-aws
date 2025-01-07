@@ -51,7 +51,7 @@ func testAccContactList_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func testAccContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_IN"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic1"),
@@ -128,7 +128,7 @@ func testAccContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_OUT"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic2"),

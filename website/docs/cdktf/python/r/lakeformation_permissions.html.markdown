@@ -116,6 +116,21 @@ The resulting permissions depend on whether the table had `IAMAllowedPrincipals`
 | ---- | ---- |
 | `SELECT` column wildcard (i.e., all columns) | `SELECT` on `"event"` (as expected) |
 
+## `ALLIAMPrincipals` group
+
+AllIAMPrincipals is a pseudo-entity group that acts like a Lake Formation principal. The group includes all IAMs in the account that is defined.
+
+resource "aws_lakeformation_permissions" "example" {
+  permissions = ["SELECT"]
+  principal   = "123456789012:IAMPrincipals"
+
+  table_with_columns {
+    database_name = aws_glue_catalog_table.example.database_name
+    name          = aws_glue_catalog_table.example.name
+    column_names  = ["event"]
+  }
+}
+
 ## Using Lake Formation Permissions
 
 Lake Formation grants implicit permissions to data lake administrators, database creators, and table creators. These implicit permissions cannot be revoked _per se_. If this resource reads implicit permissions, it will attempt to revoke them, which causes an error when the resource is destroyed.
@@ -209,7 +224,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `permissions` – (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `ASSOCIATE`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
-* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, Federated Users, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 
 ~> **NOTE:** We highly recommend that the `principal` _NOT_ be a Lake Formation administrator (granted using `aws_lakeformation_data_lake_settings`). The entity (e.g., IAM role) running Terraform will most likely need to be a Lake Formation administrator. As such, the entity will have implicit permissions and does not need permissions granted through this resource.
 
@@ -313,4 +328,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.9 input-5c0a207897d25881935b64503ff30f4b662505e097086bf925a9adce1a9584b7 -->
+<!-- cache-key: cdktf-0.20.8 input-c4ec9eee67276999eb4eb1ad594989decfd27d65748db6a12b41c26b84ab5081 -->

@@ -201,7 +201,7 @@ func (rd *dataSourceControlData) refreshFromOutput(ctx context.Context, meta *co
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 	rd.Type = types.StringValue(string(out.Type))
 
-	ignoreTagsConfig := meta.IgnoreTagsConfig
+	ignoreTagsConfig := meta.IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 

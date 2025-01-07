@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_iam_policy", name="Policy")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn", tagsResourceType="Policy")
 func dataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,

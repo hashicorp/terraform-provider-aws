@@ -126,7 +126,7 @@ class MyConvertedCode extends TerraformStack {
     EcrRegistryScanningConfiguration.generateConfigForImport(
       this,
       "example",
-      "012345678901"
+      "123456789012"
     );
   }
 }
@@ -136,7 +136,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import ECR Scanning Configurations using the `registryId`. For example:
 
 ```console
-% terraform import aws_ecr_registry_scanning_configuration.example 012345678901
+% terraform import aws_ecr_registry_scanning_configuration.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-878f43063e7870789fdafbc4e35da8eca405013c513258165088a92488bbfa61 -->
+<!-- cache-key: cdktf-0.20.8 input-77b7a95ee014db4c3fbe941bd65f117c9c9aa71a97a27537a92562158d4361cb -->

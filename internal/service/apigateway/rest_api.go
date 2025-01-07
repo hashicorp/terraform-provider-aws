@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -296,7 +295,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("api_key_source", api.ApiKeySource)
-	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
@@ -304,7 +303,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {
@@ -781,21 +780,10 @@ func flattenAPIPolicy(apiObject *string) (string, error) {
 	return policy, nil
 }
 
-func apiARN(c *conns.AWSClient, apiID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/restapis/%s", apiID),
-	}.String()
+func apiARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s", apiID))
 }
 
-func apiInvokeARN(c *conns.AWSClient, apiID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "execute-api",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  apiID,
-	}.String()
+func apiInvokeARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARN(ctx, "execute-api", apiID)
 }

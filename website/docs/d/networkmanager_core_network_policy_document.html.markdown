@@ -181,7 +181,6 @@ The following arguments are available:
 * `conditions` (Required) - A block argument. Detailed Below.
 * `description` (Optional) - A user-defined description that further helps identify the rule.
 * `rule_number` (Required) - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched. It's important to make sure that you number your rules in the exact order that you want them processed.
-* `add_to_network_function_group` (Optional) - The name of the network function group to attach to the attachment policy.
 
 ### `action`
 

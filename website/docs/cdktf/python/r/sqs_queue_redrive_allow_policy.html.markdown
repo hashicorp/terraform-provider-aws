@@ -77,13 +77,13 @@ from imports.aws.sqs_queue_redrive_allow_policy import SqsQueueRedriveAllowPolic
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SqsQueueRedriveAllowPolicy.generate_config_for_import(self, "test", "https://queue.amazonaws.com/0123456789012/myqueue")
+        SqsQueueRedriveAllowPolicy.generate_config_for_import(self, "test", "https://queue.amazonaws.com/123456789012/myqueue")
 ```
 
 Using `terraform import`, import SQS Queue Redrive Allow Policies using the queue URL. For example:
 
 ```console
-% terraform import aws_sqs_queue_redrive_allow_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+% terraform import aws_sqs_queue_redrive_allow_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-20610df5ca53af34101414784f648f77a8c2ab89455909b2c2cae249011aae9c -->
+<!-- cache-key: cdktf-0.20.8 input-c5be1a5078e220078fefdbcc536fdb85df83115dfe2ff78c1cc8aee9fadc3fee -->

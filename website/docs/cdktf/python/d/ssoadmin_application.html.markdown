@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsSsoadminApplication(self, "example",
-            application_arn="arn:aws:sso::012345678901:application/ssoins-1234/apl-5678"
+            application_arn="arn:aws:sso::123456789012:application/ssoins-1234/apl-5678"
         )
 ```
 
@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `portal_options` - Options for the portal associated with an application. See the `aws_ssoadmin_application` [resource documentation](../r/ssoadmin_application.html.markdown#portal_options-argument-reference). The attributes are the same.
 * `status` - Status of the application.
 
-<!-- cache-key: cdktf-0.20.9 input-0d07cfe6432527b9115d7fc49e2aad9b81dacbb2fee9606812ff5efd006c2f93 -->
+<!-- cache-key: cdktf-0.20.8 input-b8096210ea51a9d18e70341d363454abfccc3d45f7f56956f44ea2603393947a -->

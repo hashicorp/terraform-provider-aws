@@ -78,7 +78,12 @@ This data source exports the following attributes in addition to the arguments a
         * `accountId` - The account ID that this configuration applies to.
     * `licenseConfigurationArns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
     * `region` - AWS Region of distribution.
+    * `s3ExportConfiguration` - Nested list of S3 export configuration.
+        * `diskImageFormat` - The disk image format of the exported image (`RAW`, `VHD`, or `VMDK`)
+        * `roleName` - The name of the IAM role to use for exporting.
+        * `s3Bucket` - The name of the S3 bucket to store the exported image in.
+        * `s3Prefix` - The prefix for the exported image.
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.
 
-<!-- cache-key: cdktf-0.20.9 input-7b28680ba5fe3c06481414befe6f2cb9eb821dae2ff9137702f5a2483f24bb91 -->
+<!-- cache-key: cdktf-0.20.8 input-27043e8beeb3a02079037fbea9c18071b0ec510211018945923139dc9ffa9f6e -->

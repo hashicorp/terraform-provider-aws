@@ -90,7 +90,7 @@ class MyConvertedCode extends TerraformStack {
     SqsQueueRedrivePolicy.generateConfigForImport(
       this,
       "test",
-      "https://queue.amazonaws.com/0123456789012/myqueue"
+      "https://queue.amazonaws.com/123456789012/myqueue"
     );
   }
 }
@@ -100,7 +100,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SQS Queue Redrive Policies using the queue URL. For example:
 
 ```console
-% terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+% terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-e7f48e464819827bf219c6c6888346afabe01cbaae381206aa80f3e9ec43811a -->
+<!-- cache-key: cdktf-0.20.8 input-b62138be20996236ab90f96e5e9187ba981c0f006b69a6a27bc2dbfad0f8f8ca -->

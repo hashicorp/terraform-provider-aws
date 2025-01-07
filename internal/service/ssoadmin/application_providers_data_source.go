@@ -81,7 +81,7 @@ func (d *dataSourceApplicationProviders) Read(ctx context.Context, req datasourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	paginator := ssoadmin.NewListApplicationProvidersPaginator(conn, &ssoadmin.ListApplicationProvidersInput{})
 	var apiObjects []awstypes.ApplicationProvider

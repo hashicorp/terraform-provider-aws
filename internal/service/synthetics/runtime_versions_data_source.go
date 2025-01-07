@@ -83,7 +83,7 @@ func (d *dataSourceRuntimeVersions) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region)
+	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region(ctx))
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data.RuntimeVersions)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

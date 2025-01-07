@@ -96,7 +96,7 @@ func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(catalogID),
 	}

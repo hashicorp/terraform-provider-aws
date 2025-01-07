@@ -227,7 +227,7 @@ This resource supports the following arguments:
     * When the `target_type` is `lambda`, values can be between `200` and `499`. The default is `200`.
 * `path` - (May be required) Destination for the health check request. Required for HTTP/HTTPS ALB and HTTP NLB. Only applies to HTTP/HTTPS.
     * For HTTP and HTTPS health checks, the default is `/`.
-    * For gRPC health checks, the default is `/Amazon Web Services.ALB/healthcheck`.
+    * For gRPC health checks, the default is `/AWS.ALB/healthcheck`.
 * `port` - (Optional) The port the load balancer uses when performing health checks on targets.
   Valid values are either `traffic-port`, to use the same port as the target group, or a valid port number between `1` and `65536`.
   Default is `traffic-port`.
@@ -321,4 +321,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-d3bea472512d80f127efc0c75eb47f82181185cc60e62778c6dbf5bb4b6aa3fb -->
+<!-- cache-key: cdktf-0.20.8 input-20cb036353506017bfefe5c1b327fd62a32a48b6ccdb9d4b57372e62c54e2f10 -->

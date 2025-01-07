@@ -5,7 +5,7 @@ package networkmanager
 
 import (
 	"encoding/json"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -140,7 +140,8 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 
 func coreNetworkPolicyExpandStringList(configured []interface{}) interface{} {
 	vs := flex.ExpandStringValueList(configured)
-	sort.Sort(sort.Reverse(sort.StringSlice(vs)))
+	slices.Sort(vs)
+	slices.Reverse(vs)
 
 	return vs
 }

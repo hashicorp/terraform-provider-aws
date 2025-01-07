@@ -197,7 +197,7 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Image (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitImageDeleted(ctx, conn, d.Id()); err != nil {
+	if err := waitImageDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to delete: %s", d.Id(), err)
 	}
 

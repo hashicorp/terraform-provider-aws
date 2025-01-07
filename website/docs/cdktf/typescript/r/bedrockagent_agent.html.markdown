@@ -132,19 +132,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `agentCollaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customerEncryptionKeyArn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
-* `guardrail_config` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_config` Block](#guardrail_config-block) for details.
+* `guardrailConfiguration` - (Optional) Details about the guardrail associated with the agent. See [`guardrailConfiguration` Block](#guardrail_configuration-block) for details.
 * `idleSessionTtlInSeconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
-* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users.
+* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 8000 characters.
 * `prepareAgent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `promptOverrideConfiguration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`promptOverrideConfiguration` Block](#prompt_override_configuration-block) for details.
 * `skipResourceInUseCheck` - (Optional) Whether the in-use check is skipped when deleting the agent.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `guardrail_config` Block
+### `guardrailConfiguration` Block
 
-The `guardrail_config` configuration block supports the following arguments:
+The `guardrailConfiguration` configuration block supports the following arguments:
 
 * `guardrailIdentifier` - (Optional) Unique identifier of the guardrail.
 * `guardrailVersion` - (Optional) Version of the guardrail.
@@ -223,4 +224,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-10f9ce234966d8f331fa5178176b4ca97f3e0030ff6d304adc93b7f4d8d02f59 -->
+<!-- cache-key: cdktf-0.20.8 input-11b1ee00a32af1f9b4b57de61f7da77db4347915374c563e0c5d4a4684321793 -->

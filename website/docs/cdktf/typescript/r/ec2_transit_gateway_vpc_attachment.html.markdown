@@ -93,4 +93,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_vpc_attachment` using 
 % terraform import aws_ec2_transit_gateway_vpc_attachment.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-3127ab64952e065bf3a2f822e3b8618c7e5d2e1aa02d7a9394312b74185b8b09 -->
+<!-- cache-key: cdktf-0.20.8 input-3127ab64952e065bf3a2f822e3b8618c7e5d2e1aa02d7a9394312b74185b8b09 -->

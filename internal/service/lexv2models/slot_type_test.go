@@ -152,8 +152,8 @@ func TestAccLexV2ModelsSlotType_valueSelectionSetting(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.0.advanced_recognition_setting.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.0.advanced_recognition_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.0.advanced_recognition_setting.0.audio_recognition_strategy", string(types.AudioRecognitionStrategyUseSlotValuesAsCustomVocabulary)),
 				),
 			},
@@ -183,8 +183,8 @@ func TestAccLexV2ModelsSlotType_compositeSlotTypeSetting(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.0.name", "testname"),
 					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.0.slot_type_id", "AMAZON.Date"),
 				),

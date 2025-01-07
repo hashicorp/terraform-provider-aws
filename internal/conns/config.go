@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
@@ -33,7 +33,7 @@ type Config struct {
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
-	EC2MetadataServiceEnableState  imds_sdkv2.ClientEnableState
+	EC2MetadataServiceEnableState  imds.ClientEnableState
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
@@ -46,7 +46,7 @@ type Config struct {
 	NoProxy                        string
 	Profile                        string
 	Region                         string
-	RetryMode                      aws_sdkv2.RetryMode
+	RetryMode                      aws.RetryMode
 	S3UsePathStyle                 bool
 	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
@@ -181,7 +181,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
-	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	accountID, partitionID, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
 			Severity: baseSeverityToSDKSeverity(d.Severity()),
@@ -190,7 +190,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		})
 	}
 
-	if accountID == "" {
+	if accountID == "" && !awsbaseConfig.SkipRequestingAccountId {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
 			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
@@ -201,17 +201,16 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
 	}
 
-	dnsSuffix := "amazonaws.com"
-	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
-		dnsSuffix = p.DNSSuffix()
+	for _, partition := range endpoints.DefaultPartitions() {
+		if partition.ID() == partitionID {
+			client.partition = partition
+		}
 	}
 
-	client.AccountID = accountID
+	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
-	client.dnsSuffix = dnsSuffix
-	client.IgnoreTagsConfig = c.IgnoreTagsConfig
-	client.Partition = partition
-	client.Region = c.Region
+	client.ignoreTagsConfig = c.IgnoreTagsConfig
+	client.region = c.Region
 	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.session = session
 

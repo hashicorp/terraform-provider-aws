@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_snapshot"
 description: |-
@@ -52,7 +52,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the snapshot.
 * `cluster_configuration` - The configuration of the cluster from which the snapshot was taken.
     * `description` - Description for the cluster.
-    * `engine_version` - Version number of the Redis engine used by the cluster.
+    * `engine` - The engine that will run on cluster nodes.
+    * `engine_version` - Version number of the engine used by the cluster.
     * `maintenance_window` - The weekly time range during which maintenance on the cluster is performed.
     * `name` - Name of the cluster.
     * `node_type` - Compute and memory capacity of the nodes in the cluster.
@@ -99,4 +100,4 @@ Using `terraform import`, import a snapshot using the `name`. For example:
 % terraform import aws_memorydb_snapshot.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-540eb2f7a447881028486dd90d40cbfa1d108e80be222d8149c4c844371b23d5 -->
+<!-- cache-key: cdktf-0.20.8 input-472b6583ce4bfcb329a2db7ea7a926933996c5a2cf3009e05e6c6d3eeb644d01 -->

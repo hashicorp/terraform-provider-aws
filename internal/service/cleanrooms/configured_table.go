@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_cleanrooms_configured_table")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceConfiguredTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfiguredTableCreate,

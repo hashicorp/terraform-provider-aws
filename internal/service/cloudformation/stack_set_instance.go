@@ -230,7 +230,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
@@ -241,7 +241,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		StackSetName: aws.String(stackSetName),
 	}
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}

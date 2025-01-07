@@ -206,7 +206,6 @@ The following arguments are available:
 * `conditions` (Required) - A block argument. Detailed Below.
 * `description` (Optional) - A user-defined description that further helps identify the rule.
 * `ruleNumber` (Required) - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched. It's important to make sure that you number your rules in the exact order that you want them processed.
-* `addToNetworkFunctionGroup` (Optional) - The name of the network function group to attach to the attachment policy.
 
 ### `action`
 
@@ -295,4 +294,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.20.9 input-a2e47b27cd0f34515d6ff9e64919da142c3a0f9864d63577b9ebaa20c8610392 -->
+<!-- cache-key: cdktf-0.20.8 input-4c6cfeac554a14d39a0738c63e288695b2b0893217ff2d03c14216cf8f26cb04 -->

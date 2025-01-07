@@ -1890,6 +1890,12 @@ service/s3outposts:
           - any-glob-to-any-file:
               - 'internal/service/s3outposts/**/*'
               - 'website/**/s3outposts_*'
+service/s3tables:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/s3tables/**/*'
+              - 'website/**/s3tables_*'
 service/sagemaker:
   - any:
       - changed-files:
@@ -2130,6 +2136,12 @@ service/synthetics:
           - any-glob-to-any-file:
               - 'internal/service/synthetics/**/*'
               - 'website/**/synthetics_*'
+service/taxsettings:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/taxsettings/**/*'
+              - 'website/**/taxsettings_*'
 service/textract:
   - any:
       - changed-files:
@@ -2235,6 +2247,7 @@ service/vpc:
               - 'website/**/vpc_security_group_*'
               - 'website/**/vpc\.*'
               - 'website/**/vpcs\.*'
+              - 'website/**/vpc_block_public_access_*'
 service/vpclattice:
   - any:
       - changed-files:

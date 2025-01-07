@@ -6,6 +6,13 @@ package conns
 import (
 	"context"
 	"testing"
+
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+)
+
+var (
+	standardPartition, _ = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.UsEast1RegionID)
+	chinaPartition, _    = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.CnNorth1RegionID)
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
@@ -21,7 +28,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
+				partition: standardPartition,
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com",
@@ -29,7 +36,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
+				partition: chinaPartition,
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com.cn",
@@ -62,8 +69,8 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-west-2", //lintignore:AWSAT003
+				partition: standardPartition,
+				region:    "us-west-2", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
 			Expected: "test.us-west-2.amazonaws.com", //lintignore:AWSAT003
@@ -71,8 +78,8 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
-				Region:    "cn-northwest-1", //lintignore:AWSAT003
+				partition: chinaPartition,
+				region:    "cn-northwest-1", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
 			Expected: "test.cn-northwest-1.amazonaws.com.cn", //lintignore:AWSAT003
@@ -105,8 +112,8 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 		{
 			Name: "us-west-2",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-west-2", //lintignore:AWSAT003
+				partition: standardPartition,
+				region:    "us-west-2", //lintignore:AWSAT003
 			},
 			IP:       "10.20.30.40",
 			Expected: "ip-10-20-30-40.us-west-2.compute.internal", //lintignore:AWSAT003
@@ -114,8 +121,8 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 		{
 			Name: "us-east-1",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-east-1", //lintignore:AWSAT003
+				partition: standardPartition,
+				region:    "us-east-1", //lintignore:AWSAT003
 			},
 			IP:       "10.20.30.40",
 			Expected: "ip-10-20-30-40.ec2.internal",
@@ -148,8 +155,8 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 		{
 			Name: "us-west-2",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-west-2", //lintignore:AWSAT003
+				partition: standardPartition,
+				region:    "us-west-2", //lintignore:AWSAT003
 			},
 			IP:       "10.20.30.40",
 			Expected: "ec2-10-20-30-40.us-west-2.compute.amazonaws.com", //lintignore:AWSAT003
@@ -157,8 +164,8 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 		{
 			Name: "us-east-1",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-east-1", //lintignore:AWSAT003
+				partition: standardPartition,
+				region:    "us-east-1", //lintignore:AWSAT003
 			},
 			IP:       "10.20.30.40",
 			Expected: "ec2-10-20-30-40.compute-1.amazonaws.com",
@@ -173,6 +180,52 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestReverseDNS(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "amazonaws.com",
+			input:    "amazonaws.com",
+			expected: "com.amazonaws",
+		},
+		{
+			name:     "amazonaws.com.cn",
+			input:    "amazonaws.com.cn",
+			expected: "cn.com.amazonaws",
+		},
+		{
+			name:     "sc2s.sgov.gov",
+			input:    "sc2s.sgov.gov",
+			expected: "gov.sgov.sc2s",
+		},
+		{
+			name:     "c2s.ic.gov",
+			input:    "c2s.ic.gov",
+			expected: "gov.ic.c2s",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := ReverseDNS(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
 			}
 		})
 	}

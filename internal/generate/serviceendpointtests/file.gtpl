@@ -4,33 +4,25 @@ package {{ .PackageName }}_test
 
 import (
 	"context"
-{{- if eq .SDKVersion 2 }}
 	"errors"
-	"reflect"
-{{- end }}
 	"fmt"
 	"maps"
 	"net"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
-{{ if eq .SDKVersion 1 -}}
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	{{ .GoPackage }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoPackage }}"
-{{ else }}
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	{{ .GoPackage }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}"
 	{{- if .ImportAwsTypes }}
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}/types"
 	{{- end }}
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
-{{ end -}}
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 {{- if gt (len .Aliases) 0 }}
@@ -38,6 +30,7 @@ import (
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -487,11 +480,10 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-{{- if eq .SDKVersion 2 }}
-	r := {{ .GoPackage }}_sdkv2.NewDefaultEndpointResolverV2()
+	r := {{ .GoPackage }}.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
+	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -502,36 +494,14 @@ func defaultEndpoint(region string) (url.URL, error) {
 	}
 
 	return ep.URI, nil
-{{ else }}
-	r := endpoints.DefaultResolver()
-
-	ep, err := r.EndpointFor({{ .GoPackage }}_sdkv1.EndpointsID, region
-	{{- if .V1NameResolverNeedsUnknownService }}, func(opt *endpoints.Options) {
-			opt.ResolveUnknownService = true
-		}
-	{{- end -}}
-	)
-	if err != nil {
-		return url.URL{}, err
-	}
-
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
-	}
-
-	return *url, nil
-{{ end -}}
 }
 
 func defaultFIPSEndpoint(region string) (url.URL, error) {
-{{- if eq .SDKVersion 2 }}
-	r := {{ .GoPackage }}_sdkv2.NewDefaultEndpointResolverV2()
+	r := {{ .GoPackage }}.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -542,28 +512,8 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 	}
 
 	return ep.URI, nil
-{{ else }}
-	r := endpoints.DefaultResolver()
-
-	ep, err := r.EndpointFor({{ .GoPackage }}_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
-		{{- if .V1NameResolverNeedsUnknownService }}opt.ResolveUnknownService = true{{ end }}
-		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
-	})
-	if err != nil {
-		return url.URL{}, err
-	}
-
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
-	}
-
-	return *url, nil
-{{ end -}}
 }
 
-{{ if eq .SDKVersion 2 }}
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
@@ -571,10 +521,11 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.{{ .APICall }}(ctx, &{{ .GoPackage }}_sdkv2.{{ .APICall }}Input{
+	input := {{ .GoPackage }}.{{ .APICall }}Input{
 	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
-	},
-		func(opts *{{ .GoPackage }}_sdkv2.Options) {
+	}
+	_, err := client.{{ .APICall }}(ctx, &input,
+		func(opts *{{ .GoPackage }}.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -590,26 +541,6 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	return result
 }
-{{ end }}
-
-{{ if eq .SDKVersion 1 }}
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
-	t.Helper()
-
-	client := meta.{{ .ProviderNameUpper }}Conn(ctx)
-
-	req, _ := client.{{ .APICall }}Request( &{{ .GoPackage }}_sdkv1.{{ .APICall }}Input{
-	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
-	})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	return apiCallParams{
-		endpoint: req.HTTPRequest.URL.String(),
-		region:   aws_sdkv1.StringValue(client.Config.Region),
-	}
-}
-{{ end }}
 
 func withNoConfig(_ *caseSetup) {
 	// no-op
@@ -826,14 +757,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
-
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
@@ -857,7 +780,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 }
 
-{{ if eq .SDKVersion 2 }}
 func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
 		return stack.Finalize.Add(
@@ -940,7 +862,6 @@ func fullValueTypeName(v reflect.Value) string {
 	requestType := v.Type()
 	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
 }
-{{ end }}
 
 func generateSharedConfigFile(config configFile) string {
 	var buf strings.Builder

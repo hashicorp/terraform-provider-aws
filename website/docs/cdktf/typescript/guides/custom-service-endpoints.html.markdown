@@ -208,7 +208,7 @@ class MyConvertedCode extends TerraformStack {
 |Elastic Beanstalk|`elasticbeanstalk`(or `beanstalk`)|`AWS_ENDPOINT_URL_ELASTIC_BEANSTALK`|`elastic_beanstalk`|
 |Elasticsearch|`elasticsearch`(or `es` or `elasticsearchservice`)|`AWS_ENDPOINT_URL_ELASTICSEARCH_SERVICE`|`elasticsearch_service`|
 |Elastic Transcoder|`elastictranscoder`|`AWS_ENDPOINT_URL_ELASTIC_TRANSCODER`|`elastic_transcoder`|
-|ELB Classic|`elb`(or `elasticloadbalancing`)|`AWS_ENDPOINT_URL_ELASTIC_LOAD_BALANCING`|`elastic_load_balancing`|
+|ELB Classic|`elb`(or `elasticloadbalancing`)|`AWS_ENDPOINT_URL_ELASTIC_LOAD_BALANCING`|`elasticLoadBalancing`|
 |ELB (Elastic Load Balancing)|`elbv2`(or `elasticloadbalancingv2`)|`AWS_ENDPOINT_URL_ELASTIC_LOAD_BALANCING_V2`|`elastic_load_balancing_v2`|
 |EMR|`emr`|`AWS_ENDPOINT_URL_EMR`|`emr`|
 |EMR Containers|`emrcontainers`|`AWS_ENDPOINT_URL_EMR_CONTAINERS`|`emr_containers`|
@@ -267,7 +267,8 @@ class MyConvertedCode extends TerraformStack {
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
-|MemoryDB for Redis|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
+|MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
+|Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
@@ -315,6 +316,7 @@ class MyConvertedCode extends TerraformStack {
 |S3 (Simple Storage)|`s3`(or `s3Api`)|`AWS_ENDPOINT_URL_S3`|`s3`|
 |S3 Control|`s3Control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3Outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3Outposts`|
+|S3 Tables|`s3Tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3Tables`|
 |SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
@@ -337,6 +339,7 @@ class MyConvertedCode extends TerraformStack {
 |SSM (Systems Manager)|`ssm`|`AWS_ENDPOINT_URL_SSM`|`ssm`|
 |SSM Contacts|`ssmcontacts`|`AWS_ENDPOINT_URL_SSM_CONTACTS`|`ssm_contacts`|
 |SSM Incident Manager Incidents|`ssmincidents`|`AWS_ENDPOINT_URL_SSM_INCIDENTS`|`ssm_incidents`|
+|SSM Quick Setup|`ssmquicksetup`|`AWS_ENDPOINT_URL_SSM_QUICKSETUP`|`ssm_quicksetup`|
 |Systems Manager for SAP|`ssmsap`|`AWS_ENDPOINT_URL_SSM_SAP`|`ssm_sap`|
 |SSO (Single Sign-On)|`sso`|`AWS_ENDPOINT_URL_SSO`|`sso`|
 |SSO Admin|`ssoadmin`|`AWS_ENDPOINT_URL_SSO_ADMIN`|`sso_admin`|
@@ -344,7 +347,9 @@ class MyConvertedCode extends TerraformStack {
 |STS (Security Token)|`sts`|`AWS_ENDPOINT_URL_STS`|`sts`|
 |SWF (Simple Workflow)|`swf`|`AWS_ENDPOINT_URL_SWF`|`swf`|
 |CloudWatch Synthetics|`synthetics`|`AWS_ENDPOINT_URL_SYNTHETICS`|`synthetics`|
+|Tax Settings|`taxsettings`|`AWS_ENDPOINT_URL_TAXSETTINGS`|`taxsettings`|
 |Timestream for InfluxDB|`timestreaminfluxdb`|`AWS_ENDPOINT_URL_TIMESTREAM_INFLUXDB`|`timestream_influxdb`|
+|Timestream Query|`timestreamquery`|`AWS_ENDPOINT_URL_TIMESTREAM_QUERY`|`timestream_query`|
 |Timestream Write|`timestreamwrite`|`AWS_ENDPOINT_URL_TIMESTREAM_WRITE`|`timestream_write`|
 |Transcribe|`transcribe`(or `transcribeservice`)|`AWS_ENDPOINT_URL_TRANSCRIBE`|`transcribe`|
 |Transfer Family|`transfer`|`AWS_ENDPOINT_URL_TRANSFER`|`transfer`|
@@ -465,4 +470,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-7f8e5bac5eaae6449261e2943a5adf9c4c2e01b33e93356dd6555fc464bd56a4 -->
+<!-- cache-key: cdktf-0.20.8 input-7d5e83cb756f223a78a2e2031e90a71987614ef4e697b264240b6547c00228b9 -->

@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_cluster"
 description: |-
@@ -50,8 +50,9 @@ This data source exports the following attributes in addition to the arguments a
     * `port` - Port number that the cluster configuration endpoint is listening on.
 * `data_tiering` - True when data tiering is enabled.
 * `description` - Description for the cluster.
-* `engine_patch_version` - Patch version number of the Redis engine used by the cluster.
-* `engine_version` - Version number of the Redis engine used by the cluster.
+* `engine_patch_version` - Patch version number of the engine used by the cluster.
+* `engine` - Engine that will run on cluster nodes.
+* `engine_version` - Version number of the engine used by the cluster.
 * `final_snapshot_name` - Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kms_key_arn` - ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenance_window` - Weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). Example: `sun:23:00-mon:01:30`.
@@ -79,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tls_enabled` - When true, in-transit encryption is enabled for the cluster.
 * `tags` - Map of tags assigned to the cluster.
 
-<!-- cache-key: cdktf-0.20.9 input-60661a32615a44866629e2e9ffadb0c1a33a84edf7060e982e9bec51eec4491d -->
+<!-- cache-key: cdktf-0.20.8 input-4fa9d6fa5d87e0b0c5031a529581a04353360d1f69a02ed4492365aab54afa5d -->

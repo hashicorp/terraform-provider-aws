@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_subnet_group"
 description: |-
@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_id` - VPC in which the subnet group exists.
 * `tags` - Map of tags assigned to the subnet group.
 
-<!-- cache-key: cdktf-0.20.9 input-a2199a4dfc692ac39b45aee765d1dc366111874bffd60dc24a73443b21e9d7d0 -->
+<!-- cache-key: cdktf-0.20.8 input-f77ad8a57a9bbf13a5c17b5ff62c18ee76fd27170a767ce06c73c50da236c2bf -->

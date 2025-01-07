@@ -61,7 +61,7 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
 				),
 			},
 			{
@@ -126,7 +126,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
 				),
 			},
 		},
@@ -164,7 +164,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -177,7 +177,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -186,7 +186,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_tags1(rName, acctest.CtKey2, "value3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value3"),
 				),
 			},

@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_parameter_group"
 description: |-
@@ -91,4 +91,4 @@ Using `terraform import`, import a parameter group using the `name`. For example
 % terraform import aws_memorydb_parameter_group.example my-parameter-group
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-8e9e3599e180f75dd2d3f6d66e99565f9996fadbf7ea8fdbbfa56522a00edac7 -->
+<!-- cache-key: cdktf-0.20.8 input-bad7257e130ea9887dbdb82f1382970cba5e47a9719d17bc028d067f9091814e -->

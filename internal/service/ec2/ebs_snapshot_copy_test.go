@@ -33,7 +33,7 @@ func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`snapshot/snap-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -80,7 +80,7 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 				Config: testAccEBSSnapshotCopyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -88,7 +88,7 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 				Config: testAccEBSSnapshotCopyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -97,7 +97,7 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 				Config: testAccEBSSnapshotCopyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -194,6 +194,29 @@ func TestAccEC2EBSSnapshotCopy_storageTier(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSSnapshotCopy_withCompletionDurationMinutes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_copy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyConfig_completionDurationMinutes(rName, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					resource.TestCheckResourceAttr(resourceName, "completion_duration_minutes", "15"),
 				),
 			},
 		},
@@ -348,4 +371,18 @@ resource "aws_ebs_snapshot_copy" "test" {
   }
 }
 `, rName))
+}
+
+func testAccEBSSnapshotCopyConfig_completionDurationMinutes(rName string, durantionMinutes int) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
+resource "aws_ebs_snapshot_copy" "test" {
+  source_snapshot_id          = aws_ebs_snapshot.test.id
+  source_region               = data.aws_region.current.name
+  completion_duration_minutes = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, durantionMinutes))
 }

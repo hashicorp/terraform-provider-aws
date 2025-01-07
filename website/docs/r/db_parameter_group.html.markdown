@@ -18,11 +18,7 @@ Provides an RDS DB parameter group resource. Documentation of the available para
 
 > **Hands-on:** For an example of the `aws_db_parameter_group` in use, follow the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds?in=terraform/aws&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
 
-~> **NOTE:** After applying your changes, you may encounter a perpetual diff in your Terraform plan
-output for a `parameter` whose `value` remains unchanged but whose `apply_method` is changing
-(e.g., from `immediate` to `pending-reboot`, or `pending-reboot` to `immediate`). If only the
-apply method of a parameter is changing, the AWS API will not register this change. To change
-the `apply_method` of a parameter, its value must also change.
+~> **NOTE:** If you encounter a Terraform plan showing parameter changes after an apply (_i.e._, _perpetual diffs_), see the [Problematic Plan Changes](#problematic-plan-changes) example below for additional guidance.
 
 ## Example Usage
 
@@ -72,6 +68,83 @@ resource "aws_db_instance" "example" {
   # other attributes
   parameter_group_name = aws_db_parameter_group.example.name
   apply_immediately    = true
+}
+```
+
+### Problematic Plan Changes
+
+If you are experiencing unexpected `update in-place` plan changes after running `terraform apply` (_i.e._, "perpetual diffs"), it is likely due to conflicts between the AWS Provider's default behavior and AWS's requirements for managing parameter groups. The following characteristics of parameter management are relevant:
+
+1. The AWS Provider's default `apply_method` is `immediate`.
+2. AWS automatically assigns default parameters with predefined values and `apply_method` settings when you create a parameter group.
+3. AWS does not allow changing the `apply_method` of a default parameter (or an existing parameter) without also modifying its `value`. For example, you cannot change the `apply_method` from `pending-reboot` to `immediate` or vice versa without adjusting the parameter's value.
+
+See an example of this type of problem and solutions below.
+
+#### Example of Problematic Configuration
+
+The following Terraform configuration includes a parameter that overlaps with an AWS default parameter, using the same `name` (`default_password_lifetime`) and `value` (`0`). However:
+
+- AWS sets the default `apply_method` for this parameter to `pending-reboot`.
+- The AWS Provider defaults all parameters' `apply_method` to `immediate`.
+
+This configuration attempts to change _only_ the `apply_method` from `pending-reboot` to `immediate`, which is not allowed by AWS.
+
+```terraform
+resource "aws_db_parameter_group" "test" {
+  name   = "random-test-parameter"
+  family = "mysql5.7"
+
+  parameter {
+    # By default, the apply_method is being set to "immediate"
+    name  = "default_password_lifetime" # same as AWS default
+    value = "0"                         # same as AWS default
+  }
+}
+```
+
+#### Solution 1: Remove the Default Parameter
+
+Exclude the default parameter, such as `default_password_lifetime` in this example, from your configuration entirely. This ensures Terraform does not attempt to modify the parameter, leaving it with AWS's default settings.
+
+```terraform
+resource "aws_db_parameter_group" "test" {
+  name   = "random-test-parameter"
+  family = "mysql5.7"
+}
+```
+
+#### Solution 2: Modify the Parameter's Value Also
+
+Change the `value` of the parameter along with its `apply_method`. Since the AWS default `value` is `0`, selecting any other valid value (_e.g._, `1`) will resolve the issue.
+
+```terraform
+resource "aws_db_parameter_group" "test" {
+  name   = "random-test-parameter"
+  family = "mysql5.7"
+
+  parameter {
+    # Because of the default, the apply_method will also be changed from `pending-reboot` to `immediate`
+    name  = "default_password_lifetime" # same as AWS default
+    value = "1"                         # different from AWS default, "0"
+  }
+}
+```
+
+#### Solution 3: Align `apply_method` with AWS Defaults
+
+Explicitly set the `apply_method` to match AWS's default value for this parameter (`pending-reboot`). This prevents conflicts between Terraform's default (`immediate`) and AWS's default where the `value` is not changing.
+
+```terraform
+resource "aws_db_parameter_group" "test" {
+  name   = "random-test-parameter"
+  family = "mysql5.7"
+
+  parameter {
+    apply_method = "pending-reboot"            # same as AWS default
+    name         = "default_password_lifetime" # same as AWS default
+    value        = "0"                         # same as AWS default
+  }
 }
 ```
 

@@ -45,7 +45,7 @@ func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Connect Lambda Function Association: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrFunctionARN, functionARN)
 	d.Set(names.AttrInstanceID, instanceID)
 

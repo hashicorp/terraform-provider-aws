@@ -68,7 +68,7 @@ func dataSourceTransitGatewayRouteTablesRead(ctx context.Context, d *schema.Reso
 		routeTableIDs = append(routeTableIDs, aws.ToString(v.TransitGatewayRouteTableId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, routeTableIDs)
 
 	return diags

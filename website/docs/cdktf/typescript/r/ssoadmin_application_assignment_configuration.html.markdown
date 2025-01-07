@@ -75,7 +75,7 @@ class MyConvertedCode extends TerraformStack {
     SsoadminApplicationAssignmentConfiguration.generateConfigForImport(
       this,
       "example",
-      "arn:aws:sso::012345678901:application/id-12345678"
+      "arn:aws:sso::123456789012:application/id-12345678"
     );
   }
 }
@@ -85,7 +85,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SSO Admin Application Assignment Configuration using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application_assignment_configuration.example arn:aws:sso::012345678901:application/id-12345678
+% terraform import aws_ssoadmin_application_assignment_configuration.example arn:aws:sso::123456789012:application/id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-7a720f0b0d045e94e162a4cd1586921195ca3d6e0468585c9321df2eef9bcda1 -->
+<!-- cache-key: cdktf-0.20.8 input-6c63af6f678dc94b4869dd1205895273a2172d51e8255ff4e188bc28bd67da7f -->

@@ -237,6 +237,7 @@ This resource supports the following arguments:
     * `TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04`
     * `TransferSecurityPolicy-Restricted-2018-11`
     * `TransferSecurityPolicy-Restricted-2020-06`
+    * `TransferSecurityPolicy-Restricted-2024-06`
 
    See [Security policies for AWS Transfer Family servers](https://docs.aws.amazon.com/transfer/latest/userguide/security-policies.html) for details.
 * `structured_log_destinations` - (Optional) A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs. If provided this enables the transfer server to emit structured logs to the specified locations.
@@ -328,4 +329,4 @@ Using `terraform import`, import Transfer Servers using the server `id`. For exa
 
 Certain resource arguments, such as `host_key`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.9 input-2bdc4db3475a8a70af2a2809e713255b1f3bfb83c028be39f7f94aee79c6fe46 -->
+<!-- cache-key: cdktf-0.20.8 input-3837a1546cd71f2d3ec526f581c931d10d0c50531d3fa50fae2e53cd9dd090cc -->

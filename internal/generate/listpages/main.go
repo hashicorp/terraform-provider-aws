@@ -16,7 +16,7 @@ import (
 	"html/template"
 	"log"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -78,7 +78,7 @@ func main() {
 	awsService := service.GoV2Package()
 
 	functions := strings.Split(*listOps, ",")
-	sort.Strings(functions)
+	slices.Sort(functions)
 
 	tmpl := template.Must(template.New("function").Parse(functionTemplate))
 

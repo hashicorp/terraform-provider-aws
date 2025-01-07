@@ -79,7 +79,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 
 	// Default to provider current Region if no other filters matched.
 	if region == nil {
-		name := d.Meta().Region
+		name := d.Meta().Region(ctx)
 		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
@@ -91,20 +91,14 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		region = matchingRegion
 	}
 
-	partition := names.PartitionForRegion(region.ID())
+	regionID := region.ID()
+	serviceName := fwflex.StringValueFromFramework(ctx, data.ServiceName)
+	sourceServicePrincipal := servicePrincipalNameForPartition(serviceName, names.PartitionForRegion(regionID))
 
-	serviceName := ""
-
-	if !data.ServiceName.IsNull() {
-		serviceName = data.ServiceName.ValueString()
-	}
-
-	sourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, partition)
-
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+region.ID()+"."+sourceServicePrincipal)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+regionID+"."+sourceServicePrincipal)
 	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+sourceServicePrincipal)
 	data.Suffix = fwflex.StringValueToFrameworkLegacy(ctx, sourceServicePrincipal)
-	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, regionID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -115,4 +109,36 @@ type servicePrincipalDataSourceModel struct {
 	Region      types.String `tfsdk:"region"`
 	ServiceName types.String `tfsdk:"service_name"`
 	Suffix      types.String `tfsdk:"suffix"`
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func servicePrincipalNameForPartition(service string, partition endpoints.Partition) string {
+	if partitionID := partition.ID(); service != "" && partitionID != endpoints.AwsPartitionID {
+		switch partitionID {
+		case endpoints.AwsIsoPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"workspaces":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsIsoBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsCnPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs":
+				return partition.DNSSuffix()
+			}
+		}
+	}
+
+	return "amazonaws.com"
 }

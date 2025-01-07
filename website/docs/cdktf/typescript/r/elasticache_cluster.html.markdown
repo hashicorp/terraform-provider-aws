@@ -241,7 +241,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `clusterId` – (Required) Group identifier. ElastiCache converts this name to lowercase. Changing this value will re-create the resource.
-* `engine` – (Optional, Required if `replicationGroupId` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
+* `engine` – (Optional, Required if `replicationGroupId` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` and `redis`.
 * `nodeType` – (Required unless `replicationGroupId` is provided) The instance class used.
   See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
   See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html).
@@ -343,4 +343,4 @@ Using `terraform import`, import ElastiCache Clusters using the `clusterId`. For
 % terraform import aws_elasticache_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-c408ca26351542d57898346cbdee6fce4d66085e439aed7582ef9196dae11ced -->
+<!-- cache-key: cdktf-0.20.8 input-47a1c9bb51a185d4b5c70f1aefe2e98acad45a013bd7962330ddd3a88456287a -->

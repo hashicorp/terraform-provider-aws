@@ -57,7 +57,7 @@ func TestAccDataZoneUserProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVATED"),
 				),
@@ -98,7 +98,7 @@ func TestAccDataZoneUserProfile_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVATED"),
 				),
@@ -108,7 +108,7 @@ func TestAccDataZoneUserProfile_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEACTIVATED"),
 				),

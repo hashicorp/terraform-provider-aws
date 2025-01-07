@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_acl"
 description: |-
@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags assigned to the ACL.
 * `user_names` - Set of MemoryDB user names included in this ACL.
 
-<!-- cache-key: cdktf-0.20.9 input-dae65be976707896a0ccf5394e359974398040d0921bfad084e1f4c241a2a529 -->
+<!-- cache-key: cdktf-0.20.8 input-f1500e5662d3042412f5532fd55a5bdad5207fc4dfd701a05f03a96067c7a681 -->

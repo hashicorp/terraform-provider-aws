@@ -76,7 +76,7 @@ class MyConvertedCode extends TerraformStack {
     Inspector2DelegatedAdminAccount.generateConfigForImport(
       this,
       "example",
-      "012345678901"
+      "123456789012"
     );
   }
 }
@@ -86,7 +86,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Inspector Delegated Admin Account using the `accountId`. For example:
 
 ```console
-% terraform import aws_inspector2_delegated_admin_account.example 012345678901
+% terraform import aws_inspector2_delegated_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-5828f02fcb3f6e66bfb0cfe7ea840e097f0fe9fe69f8bc3e6a28d81ab8a5ab11 -->
+<!-- cache-key: cdktf-0.20.8 input-e433f61a2edf2c12d74bf453ad2d143f9556908d5841fa06b3e2be791d8b84c6 -->

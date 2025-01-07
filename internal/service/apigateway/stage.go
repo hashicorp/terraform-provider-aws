@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,7 +30,8 @@ import (
 
 // @SDKResource("aws_api_gateway_stage", name="Stage")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetStageOutput", serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetStageOutput")
+// @Testing(serialize=true, serializeParallelTests=true)
 // @Testing(importStateIdFunc=testAccStageImportStateIdFunc)
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
@@ -92,6 +93,10 @@ func resourceStage() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"deployment_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"percent_traffic": {
 							Type:     schema.TypeFloat,
 							Optional: true,
@@ -190,7 +195,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}), deploymentID)
+		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -254,7 +259,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set(names.AttrARN, stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
 	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
@@ -274,7 +279,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set(names.AttrDescription, stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
-	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set("execution_arn", stageInvokeARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
 	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, apiID, stageName))
 	if err := d.Set("variables", stage.Variables); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variables: %s", err)
@@ -301,7 +306,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/cacheClusterEnabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("cache_cluster_enabled").(bool))),
+				Value: aws.String(strconv.FormatBool(d.Get("cache_cluster_enabled").(bool))),
 			})
 			waitForCache = true
 		}
@@ -333,14 +338,6 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				Path:  aws.String("/deploymentId"),
 				Value: aws.String(d.Get("deployment_id").(string)),
 			})
-
-			if _, ok := d.GetOk("canary_settings"); ok {
-				operations = append(operations, types.PatchOperation{
-					Op:    types.OpReplace,
-					Path:  aws.String("/canarySettings/deploymentId"),
-					Value: aws.String(d.Get("deployment_id").(string)),
-				})
-			}
 		}
 		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
@@ -353,7 +350,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/tracingEnabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("xray_tracing_enabled").(bool))),
+				Value: aws.String(strconv.FormatBool(d.Get("xray_tracing_enabled").(bool))),
 			})
 		}
 		if d.HasChange("documentation_version") {
@@ -562,13 +559,13 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	return result
 }
 
-func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *types.CanarySettings {
+func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.CanarySettings{
-		DeploymentId: aws.String(deploymentId),
+		DeploymentId: aws.String(tfMap["deployment_id"].(string)),
 	}
 
 	if v, ok := tfMap["percent_traffic"].(float64); ok {
@@ -601,6 +598,7 @@ func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
 
 	settings["percent_traffic"] = canarySettings.PercentTraffic
 	settings["use_stage_cache"] = canarySettings.UseStageCache
+	settings["deployment_id"] = canarySettings.DeploymentId
 
 	return []interface{}{settings}
 }
@@ -622,6 +620,7 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 			"percent_traffic":          0.0,
 			"stage_variable_overrides": make(map[string]interface{}),
 			"use_stage_cache":          false,
+			"deployment_id":            "",
 		}
 	}
 
@@ -645,28 +644,25 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/canarySettings/useStageCache"),
-			Value: aws.String(fmt.Sprintf("%t", newUseStageCache)),
+			Value: aws.String(strconv.FormatBool(newUseStageCache)),
 		})
 	}
 
+	oldDeploymentID, newDeploymentID := oldSettings["deployment_id"].(string), newSettings["deployment_id"].(string)
+	if oldDeploymentID != newDeploymentID {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/canarySettings/deploymentId"),
+			Value: aws.String(newDeploymentID),
+		})
+	}
 	return operations
 }
 
-func stageARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Region:    c.Region,
-		Service:   "apigateway",
-		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName),
-	}.String()
+func stageARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName))
 }
 
-func stageInvokeARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "execute-api",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  fmt.Sprintf("%s/%s", apiID, stageName),
-	}.String()
+func stageInvokeARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARN(ctx, "execute-api", fmt.Sprintf("%s/%s", apiID, stageName))
 }

@@ -38,7 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `assetType` - (Required) The type of asset that is added to a data set. Valid values are: `S3_SNAPSHOT`, `REDSHIFT_DATA_SHARE`, and `API_GATEWAY_API`.
+* `assetType` - (Required) The type of asset that is added to a data set. Valid values include `API_GATEWAY_API`, `LAKE_FORMATION_DATA_PERMISSION`, `REDSHIFT_DATA_SHARE`, `S3_DATA_ACCESS`, `S3_SNAPSHOT`.
 * `description` - (Required) A description for the data set.
 * `name` - (Required) The name of the data set.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -83,4 +83,4 @@ Using `terraform import`, import DataExchange DataSets using their ARN. For exam
 % terraform import aws_dataexchange_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-bcb32869378838571a8ae492463bc57c036b3f3e8528a58d44a0847e4f76852a -->
+<!-- cache-key: cdktf-0.20.8 input-c69771a33e0157109ba607d0d835697d3a75409a3af7513247988e4b8531ad90 -->

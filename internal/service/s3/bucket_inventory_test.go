@@ -38,21 +38,21 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "documents/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, inventoryName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "included_object_versions", "All"),
 
-					resource.TestCheckResourceAttr(resourceName, "optional_fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "optional_fields.#", "2"),
 
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.frequency", "Weekly"),
 
-					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", "1"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "destination.0.bucket.0.account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "destination.0.bucket.0.account_id"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.format", "ORC"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.prefix", "inventory"),
 				),
@@ -83,7 +83,7 @@ func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 				Config: testAccBucketInventoryConfig_encryptSSE(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 				Config: testAccBucketInventoryConfig_encryptSSEKMS(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexache.MustCompile(fmt.Sprintf("^arn:%s:kms:", acctest.Partition()))),
 				),
 			},
@@ -157,6 +157,9 @@ func testAccCheckBucketInventoryExists(ctx context.Context, n string, v *types.I
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindInventoryConfiguration(ctx, conn, bucket, name)
 
@@ -172,9 +175,9 @@ func testAccCheckBucketInventoryExists(ctx context.Context, n string, v *types.I
 
 func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_inventory" {
 				continue
 			}
@@ -182,6 +185,10 @@ func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckF
 			bucket, name, err := tfs3.BucketInventoryParseID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindInventoryConfiguration(ctx, conn, bucket, name)
@@ -316,7 +323,7 @@ resource "aws_s3_directory_bucket" "test" {
 }
 
 resource "aws_s3_bucket_inventory" "test" {
-  bucket = aws_s3_directory_bucket.test.id
+  bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
 
   included_object_versions = "All"

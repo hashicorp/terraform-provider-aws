@@ -30,7 +30,7 @@ class MyConvertedCode extends TerraformStack {
     new RedshiftDataShareConsumerAssociation(this, "example", {
       associateEntireAccount: true,
       dataShareArn:
-        "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example",
+        "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example",
     });
   }
 }
@@ -54,7 +54,7 @@ class MyConvertedCode extends TerraformStack {
     new RedshiftDataShareConsumerAssociation(this, "example", {
       consumerRegion: "us-west-2",
       dataShareArn:
-        "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example",
+        "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example",
     });
   }
 }
@@ -101,7 +101,7 @@ class MyConvertedCode extends TerraformStack {
     RedshiftDataShareConsumerAssociation.generateConfigForImport(
       this,
       "example",
-      "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2"
+      "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2"
     );
   }
 }
@@ -111,7 +111,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Redshift Data Share Consumer Association using the `id`. For example:
 
 ```console
-% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
+% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-c33946aa25940255e66f441f2fbc61c5d7177e0f8ab3a902439c289ff8337aa8 -->
+<!-- cache-key: cdktf-0.20.8 input-05170dbded7a840a44136f651895110c0d440531e138d9457fd4ed97cc5cce0c -->

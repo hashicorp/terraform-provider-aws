@@ -325,8 +325,8 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 		}
 
-		if d.HasChange("rule_json") {
-			r, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
+		if v, ok := d.GetOk("rule_json"); ok {
+			r, err := expandWebACLRulesJSON(v.(string))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
 			}

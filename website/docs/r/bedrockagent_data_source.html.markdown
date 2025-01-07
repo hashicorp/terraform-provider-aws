@@ -106,14 +106,14 @@ The `semantic_chunking_configuration` block supports the following arguments:
 
 * `breakpoint_percentile_threshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
 * `buffer_size` - (Required, Forces new resource) The buffer size.
-* `max_tokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+* `max_token` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
 
 ### `custom_transformation_configuration` block
 
 The `custom_transformation_configuration` block supports the following arguments:
 
 * `intermediate_storage` - (Required, Forces new resource) The intermediate storage for custom transformation.
-* `transformation_function` - (Required) The configuration of transformation function.
+* `transformation` - (Required) A custom processing step for documents moving through the data source ingestion pipeline.
 
 ### `intermediate_storage` block
 
@@ -127,12 +127,18 @@ The `s3_location` block supports the following arguments:
 
 * `uri` - (Required, Forces new resource) S3 URI for intermediate storage.
 
+### `transformation` block
+
+The `transformation` block supports the following arguments:
+
+* `step_to_apply` - (Required, Forces new resource) When the service applies the transformation. Currently only `POST_CHUNKING` is supported.
+* `transformation_function` - (Required) The lambda function that processes documents.
+
 ### `transformation_function` block
 
 The `transformation_function` block supports the following arguments:
 
-* `step_to_apply` - (Required, Forces new resource) Currently only `POST_CHUNKING` is supported.
-* `transformation_lambda_configuration` - (Required, Forces new resource) The lambda configuration for custom transformation.
+* `transformation_lambda_configuration` - (Required, Forces new resource) The configuration of the lambda function.
 
 ### `transformation_lambda_configuration` block
 

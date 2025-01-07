@@ -69,7 +69,7 @@ import { ShieldSubscription } from "./.gen/providers/aws/shield-subscription";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    ShieldSubscription.generateConfigForImport(this, "example", "012345678901");
+    ShieldSubscription.generateConfigForImport(this, "example", "123456789012");
   }
 }
 
@@ -78,7 +78,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Shield Subscription using the `id`. For example:
 
 ```console
-% terraform import aws_shield_subscription.example 012345678901
+% terraform import aws_shield_subscription.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-9770e07cac85f999f7859107f3f56cbf03ebcf3f22b024d8ceb651a16dabeb59 -->
+<!-- cache-key: cdktf-0.20.8 input-adba2bc5cfbcf2573e0325ed0fe35b052c5d8b56cceb87593b86bbcff9af5b45 -->

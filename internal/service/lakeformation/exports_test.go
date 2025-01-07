@@ -11,4 +11,6 @@ var (
 	FindDataCellsFilterByID = findDataCellsFilterByID
 	FindResourceLFTagByID   = findResourceLFTagByID
 	LFTagParseResourceID    = lfTagParseResourceID
+
+	ValidPrincipal = validPrincipal
 )

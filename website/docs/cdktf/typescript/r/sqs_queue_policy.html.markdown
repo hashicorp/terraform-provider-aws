@@ -96,7 +96,7 @@ class MyConvertedCode extends TerraformStack {
     SqsQueuePolicy.generateConfigForImport(
       this,
       "test",
-      "https://queue.amazonaws.com/0123456789012/myqueue"
+      "https://queue.amazonaws.com/123456789012/myqueue"
     );
   }
 }
@@ -106,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SQS Queue Policies using the queue URL. For example:
 
 ```console
-% terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+% terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-07637ff0b9efc607148fb133417a818d191130d7adbc072b948e54c46e471ace -->
+<!-- cache-key: cdktf-0.20.8 input-37a0ecb36fc345df15437efc56151929ade4e151277015316ad5a75760fbd4a4 -->

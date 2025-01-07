@@ -110,7 +110,7 @@ func (d *serviceDataSource) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.Region.IsNull() {
-		data.Region = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Region)
+		data.Region = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Region(ctx))
 	}
 
 	if data.ServiceID.IsNull() {

@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -29,7 +30,7 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
@@ -38,21 +39,21 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestMatchResourceAttr(resourceName, names.AttrAlias, regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
 					acctest.MatchResourceAttrGlobalHostname(resourceName, names.AttrDomainName, "accesspoint.s3-global", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap`)),
-					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_acls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_policy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.ignore_public_acls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
 						names.AttrBucket:    bucketName,
-						"bucket_account_id": acctest.AccountID(),
+						"bucket_account_id": acctest.AccountID(ctx),
 						names.AttrRegion:    acctest.Region(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.MultiRegionAccessPointStatusReady)),
@@ -75,7 +76,7 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
@@ -100,7 +101,7 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
@@ -109,7 +110,7 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_publicBlock(bucketName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_acls", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.block_public_policy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.ignore_public_acls", acctest.CtFalse),
@@ -134,7 +135,7 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
@@ -176,7 +177,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
@@ -186,7 +187,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_three(bucket1Name, bucket2Name, bucket3Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
 						names.AttrBucket: bucket1Name,
 					}),
@@ -216,7 +217,7 @@ func TestAccS3ControlMultiRegionAccessPoint_putAndGetObject(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),

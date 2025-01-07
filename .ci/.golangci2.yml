@@ -34,20 +34,11 @@ linters-settings:
   dogsled:
     max-blank-identifiers: 3
   errcheck:
-    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set
-    # "ignore" is deprecated but "exclude-functions" doesn't seem to work or the syntax is non-obvious.
-    # https://github.com/kisielk/errcheck#excluding-functions
-    # Under exclude-functions are the various attempts at getting it to work, all of which result in d.Set being linted everywhere.
-    # exclude-functions:
-    #   - github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.(*ResourceData).Set
-    #   - github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData.Set
-    #   - github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,io:Close
-    #   - (github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData).Set
-    #   - github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set
-    #   - github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew
-    #   - github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:Set
-    #   - github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.Set
-    #   - io:Close
+    exclude-functions:
+      - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData).Set
+      - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).SetNewComputed
+      - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).ForceNew
+      - io:Close
   errorlint:
     errorf: false
   goconst:
@@ -99,6 +90,7 @@ linters-settings:
       - strconv.ParseFloat
       - strconv.ParseInt
       - strings.SplitN
+      # - big.Int.Text # Not sure how to specify a method
 
 run:
   timeout: 75m

@@ -77,7 +77,7 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	documentType, name := output.DocumentType, aws.ToString(output.Name)
 	d.SetId(name)
 	if !strings.HasPrefix(name, "AWS-") {
-		d.Set(names.AttrARN, documentARN(meta.(*conns.AWSClient), documentType, name))
+		d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
 	} else {
 		d.Set(names.AttrARN, name)
 	}

@@ -60,6 +60,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "examplepartner_1",
       {
+        description: "Event bus for example partner events",
         eventSourceName: Token.asString(examplepartner.name),
         name: Token.asString(examplepartner.name),
       }
@@ -75,17 +76,24 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the new event bus. The names of custom event buses can't contain the / character. To create a partner event bus, ensure the `name` matches the `eventSourceName`.
-* `eventSourceName` - (Optional) The partner event source that the new event bus will be matched with. Must match `name`.
-* `kmsKeyIdentifier` - (Optional) The identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
-* `tags` - (Optional)  A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+The following arguments are required:
+
+* `name` - (Required) Name of the new event bus. The names of custom event buses can't contain the / character. To create a partner event bus, ensure that the `name` matches the `eventSourceName`.
+
+The following arguments are optional:
+
+* `description` - (Optional) Event bus description.
+* `eventSourceName` - (Optional) Partner event source that the new event bus will be matched with. Must match `name`.
+* `kmsKeyIdentifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the event bus.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the event bus.
+* `id` - Name of the event bus.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -113,10 +121,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Using `terraform import`, import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
+Using `terraform import`, import EventBridge event buses using the name of the event bus (which can also be a partner event source name). For example:
 
 ```console
 % terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-384e9d2b003f92ac8d74b3ce6f822a42c332160a102f7d670366c0325c99b7e2 -->
+<!-- cache-key: cdktf-0.20.8 input-5bce83b24545a08c858c24112891176fe8b5151d2f0d3398de3ecac30fde60c6 -->

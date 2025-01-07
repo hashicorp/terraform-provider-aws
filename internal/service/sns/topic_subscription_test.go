@@ -87,15 +87,15 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "confirmation_timeout_in_minutes", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_timeout_in_minutes", "1"),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, "aws_sqs_queue.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_auto_confirms", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "pending_confirmation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "sqs"),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", acctest.CtFalse),
@@ -438,7 +438,7 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_redrivePolicy(rName, dlqName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					testAccCheckTopicSubscriptionRedrivePolicyAttribute(&attributes, dlqName),
+					testAccCheckTopicSubscriptionRedrivePolicyAttribute(ctx, &attributes, dlqName),
 				),
 			},
 			{
@@ -455,7 +455,7 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_redrivePolicy(rName, updatedDlqName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					testAccCheckTopicSubscriptionRedrivePolicyAttribute(&attributes, updatedDlqName),
+					testAccCheckTopicSubscriptionRedrivePolicyAttribute(ctx, &attributes, updatedDlqName),
 				),
 			},
 			{
@@ -605,7 +605,7 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_email(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpoint, acctest.DefaultEmailAddress),
@@ -636,7 +636,7 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, "aws_kinesis_firehose_delivery_stream.test_stream", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
@@ -770,7 +770,7 @@ func testAccCheckTopicSubscriptionDeliveryPolicyAttribute(attributes *map[string
 	}
 }
 
-func testAccCheckTopicSubscriptionRedrivePolicyAttribute(attributes *map[string]string, expectedRedrivePolicyResource string) resource.TestCheckFunc {
+func testAccCheckTopicSubscriptionRedrivePolicyAttribute(ctx context.Context, attributes *map[string]string, expectedRedrivePolicyResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		apiRedrivePolicyJSONString, ok := (*attributes)["RedrivePolicy"]
 
@@ -785,7 +785,7 @@ func testAccCheckTopicSubscriptionRedrivePolicyAttribute(attributes *map[string]
 
 		expectedRedrivePolicy := tfsns.TopicSubscriptionRedrivePolicy{
 			DeadLetterTargetArn: arn.ARN{
-				AccountID: acctest.AccountID(),
+				AccountID: acctest.AccountID(ctx),
 				Partition: acctest.Partition(),
 				Region:    acctest.Region(),
 				Resource:  expectedRedrivePolicyResource,

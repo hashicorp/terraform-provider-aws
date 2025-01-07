@@ -66,13 +66,13 @@ from imports.aws.shield_subscription import ShieldSubscription
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        ShieldSubscription.generate_config_for_import(self, "example", "012345678901")
+        ShieldSubscription.generate_config_for_import(self, "example", "123456789012")
 ```
 
 Using `terraform import`, import Shield Subscription using the `id`. For example:
 
 ```console
-% terraform import aws_shield_subscription.example 012345678901
+% terraform import aws_shield_subscription.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-9770e07cac85f999f7859107f3f56cbf03ebcf3f22b024d8ceb651a16dabeb59 -->
+<!-- cache-key: cdktf-0.20.8 input-adba2bc5cfbcf2573e0325ed0fe35b052c5d8b56cceb87593b86bbcff9af5b45 -->

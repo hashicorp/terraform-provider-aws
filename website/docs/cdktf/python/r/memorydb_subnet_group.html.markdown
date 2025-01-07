@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_subnet_group"
 description: |-
@@ -95,4 +95,4 @@ Using `terraform import`, import a subnet group using its `name`. For example:
 % terraform import aws_memorydb_subnet_group.example my-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-d868401aa8e04d4973ff0ffe4eb6c8770dd89bad3180e6917e7e0015e53618af -->
+<!-- cache-key: cdktf-0.20.8 input-e811f3e22c552003c2bcc699f959ec66adf8ada63b2e23dd00112891e0d2734c -->

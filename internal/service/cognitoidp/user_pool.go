@@ -33,7 +33,7 @@ import (
 )
 
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
-// @Tags
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolType")
 func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
@@ -570,6 +570,12 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"user_pool_tier": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
+			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -767,6 +773,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if v := awstypes.UserPoolTierType(d.Get("user_pool_tier").(string)); v != awstypes.UserPoolTierTypeEssentials {
+		input.UserPoolTier = v
+	}
+
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateUserPool(ctx, input)
 	}, userPoolErrorRetryable)
@@ -881,6 +891,8 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting verification_message_template: %s", err)
 	}
 
+	d.Set("user_pool_tier", userPool.UserPoolTier)
+
 	setTagsOut(ctx, userPool.UserPoolTags)
 
 	output, err := findUserPoolMFAConfigByID(ctx, conn, d.Id())
@@ -955,15 +967,18 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"sms_authentication_message",
 		"sms_configuration",
 		"sms_verification_message",
-		names.AttrTags,
-		names.AttrTagsAll,
+		// names.AttrTagsAll,
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
+		"user_pool_tier",
 	) {
+		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
+		// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
+		// For now, use `UpdateTags`. Once this is fixed, `UpdateTags` will no longer be needed by this package.
 		input := &cognitoidentityprovider.UpdateUserPoolInput{
-			UserPoolId:   aws.String(d.Id()),
-			UserPoolTags: getTagsIn(ctx),
+			UserPoolId: aws.String(d.Id()),
+			// UserPoolTags: getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
@@ -1087,6 +1102,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				input.VerificationMessageTemplate = expandVerificationMessageTemplateType(v)
 			}
+		}
+
+		if v, ok := d.GetOk("user_pool_tier"); ok {
+			input.UserPoolTier = awstypes.UserPoolTierType(v.(string))
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -2289,7 +2308,11 @@ func userPoolSchemaAttributeMatchesStandardAttribute(apiObject *awstypes.SchemaA
 
 func resourceUserPoolSchemaHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]any)
+	m, ok := v.(map[string]any)
+	if !ok {
+		return 0
+	}
+
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["attribute_data_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%t-", m["developer_only_attribute"].(bool)))

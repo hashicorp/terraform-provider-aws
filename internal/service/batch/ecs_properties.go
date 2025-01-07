@@ -4,7 +4,8 @@
 package batch
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -69,8 +70,8 @@ func (ep *ecsProperties) reduce() {
 
 func (ep *ecsProperties) orderContainers() {
 	for i, taskProps := range ep.TaskProperties {
-		sort.Slice(taskProps.Containers, func(i, j int) bool {
-			return aws.ToString(taskProps.Containers[i].Name) < aws.ToString(taskProps.Containers[j].Name)
+		slices.SortFunc(taskProps.Containers, func(a, b awstypes.TaskContainerProperties) int {
+			return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 		})
 
 		ep.TaskProperties[i].Containers = taskProps.Containers
@@ -85,8 +86,8 @@ func (ep *ecsProperties) orderEnvironmentVariables() {
 				return aws.ToString(kvp.Value) != ""
 			})
 
-			sort.Slice(container.Environment, func(i, j int) bool {
-				return aws.ToString(container.Environment[i].Name) < aws.ToString(container.Environment[j].Name)
+			slices.SortFunc(container.Environment, func(a, b awstypes.KeyValuePair) int {
+				return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 			})
 
 			ep.TaskProperties[i].Containers[j].Environment = container.Environment
@@ -97,8 +98,8 @@ func (ep *ecsProperties) orderEnvironmentVariables() {
 func (ep *ecsProperties) orderSecrets() {
 	for i, taskProps := range ep.TaskProperties {
 		for j, container := range taskProps.Containers {
-			sort.Slice(container.Secrets, func(i, j int) bool {
-				return aws.ToString(container.Secrets[i].Name) < aws.ToString(container.Secrets[j].Name)
+			slices.SortFunc(container.Secrets, func(a, b awstypes.Secret) int {
+				return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 			})
 
 			ep.TaskProperties[i].Containers[j].Secrets = container.Secrets

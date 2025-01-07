@@ -56,12 +56,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_datazone_user_profile.example
-  id = "arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6sri,IAM"
+  id = "arn:aws:iam::123456789012:user/example,dzd_54nakfrg9k6sri,IAM"
 }
 ```
 
 Using `terraform import`, import DataZone User Profile using the `user_identifier,domain_identifier,type`. For example:
 
 ```console
-% terraform import aws_datazone_user_profile.example arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6suo,IAM
+% terraform import aws_datazone_user_profile.example arn:aws:iam::123456789012:user/example,dzd_54nakfrg9k6suo,IAM
 ```

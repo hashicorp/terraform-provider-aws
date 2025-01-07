@@ -214,9 +214,9 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	ownerID := aws.ToString(nacl.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("network-acl/%s", d.Id()),
 	}.String()

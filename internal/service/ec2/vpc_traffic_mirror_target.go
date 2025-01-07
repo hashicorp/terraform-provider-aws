@@ -145,9 +145,9 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 
 	ownerID := aws.ToString(target.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
 	}.String()

@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Foundation Models")
+// @FrameworkDataSource("aws_bedrock_foundation_models", name="Foundation Models")
 func newFoundationModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &foundationModelsDataSource{}, nil
 }
@@ -88,7 +88,7 @@ func (d *foundationModelsDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

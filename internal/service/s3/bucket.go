@@ -22,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -711,7 +712,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if err := validBucketName(bucket, region); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
@@ -719,7 +720,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
 	// current account. It also resets the Bucket ACLs.
-	if region == names.USEast1RegionID {
+	if region == endpoints.UsEast1RegionID {
 		if err := findBucket(ctx, conn, bucket); err == nil {
 			return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s): %s", bucket, errors.New(errCodeBucketAlreadyExists))
 		}
@@ -740,7 +741,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
-	if region != names.USEast1RegionID {
+	if region != endpoints.UsEast1RegionID {
 		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
 			LocationConstraint: types.BucketLocationConstraint(region),
 		}
@@ -798,7 +799,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "s3",
 		Resource:  d.Id(),
 	}.String()
@@ -1107,7 +1108,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("object_lock_configuration", nil)
 		d.Set("object_lock_enabled", nil)
 	default:
-		if partition := meta.(*conns.AWSClient).Partition; partition == names.StandardPartitionID || partition == names.USGovCloudPartitionID {
+		if partition := meta.(*conns.AWSClient).Partition(ctx); partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID {
 			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
 		}
 		log.Printf("[WARN] Unable to read S3 Bucket (%s) Object Lock Configuration: %s", d.Id(), err)
@@ -1668,7 +1669,7 @@ func bucketRegionalDomainName(bucket, region string) string {
 	if region == "" {
 		return fmt.Sprintf("%s.s3.amazonaws.com", bucket) //lintignore:AWSR001
 	}
-	return fmt.Sprintf("%s.s3.%s.%s", bucket, region, names.DNSSuffixForPartition(names.PartitionForRegion(region)))
+	return fmt.Sprintf("%s.s3.%s.%s", bucket, region, names.PartitionForRegion(region).DNSSuffix())
 }
 
 func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
@@ -1677,28 +1678,27 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 	// Default to us-east-1 if the bucket doesn't have a region:
 	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
 	if region == "" {
-		region = names.USEast1RegionID
+		region = endpoints.UsEast1RegionID
 	}
 
 	// Different regions have different syntax for website endpoints:
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
 	oldRegions := []string{
-		names.APNortheast1RegionID,
-		names.APSoutheast1RegionID,
-		names.APSoutheast2RegionID,
-		names.EUWest1RegionID,
-		names.SAEast1RegionID,
-		names.USEast1RegionID,
-		names.USGovWest1RegionID,
-		names.USWest1RegionID,
-		names.USWest2RegionID,
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.SaEast1RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsGovWest1RegionID,
+		endpoints.UsWest1RegionID,
+		endpoints.UsWest2RegionID,
 	}
 	if slices.Contains(oldRegions, region) {
 		domain = fmt.Sprintf("s3-website-%s.amazonaws.com", region) //lintignore:AWSR001
 	} else {
-		dnsSuffix := names.DNSSuffixForPartition(names.PartitionForRegion(region))
-		domain = fmt.Sprintf("s3-website.%s.%s", region, dnsSuffix)
+		domain = fmt.Sprintf("s3-website.%s.%s", region, names.PartitionForRegion(region).DNSSuffix())
 	}
 
 	return fmt.Sprintf("%s.%s", bucket, domain), domain
@@ -2962,7 +2962,7 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
 func validBucketName(value string, region string) error {
-	if region != names.USEast1RegionID {
+	if region != endpoints.UsEast1RegionID {
 		if (len(value) < 3) || (len(value) > 63) {
 			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
 		}

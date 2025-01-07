@@ -15,9 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	ses_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -242,10 +242,10 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-	r := ses_sdkv2.NewDefaultEndpointResolverV2()
+	r := ses.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), ses_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
+	ep, err := r.ResolveEndpoint(context.Background(), ses.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -259,11 +259,11 @@ func defaultEndpoint(region string) (url.URL, error) {
 }
 
 func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := ses_sdkv2.NewDefaultEndpointResolverV2()
+	r := ses.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), ses_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.ResolveEndpoint(context.Background(), ses.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -283,8 +283,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListIdentities(ctx, &ses_sdkv2.ListIdentitiesInput{},
-		func(opts *ses_sdkv2.Options) {
+	input := ses.ListIdentitiesInput{}
+	_, err := client.ListIdentities(ctx, &input,
+		func(opts *ses.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -446,14 +447,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
-
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {

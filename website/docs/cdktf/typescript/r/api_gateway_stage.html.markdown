@@ -159,6 +159,7 @@ For more information on configuring the log format rules visit the AWS [document
 
 ### Canary Settings
 
+* `deploymentId` - (Required) ID of the deployment that the canary points to.
 * `percentTraffic` - (Optional) Percent `0.0` - `100.0` of traffic to divert to the canary deployment.
 * `stageVariableOverrides` - (Optional) Map of overridden stage `variables` (including new variables) for the canary deployment.
 * `useStageCache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.
@@ -209,4 +210,4 @@ Using `terraform import`, import `aws_api_gateway_stage` using `REST-API-ID/STAG
 % terraform import aws_api_gateway_stage.example 12345abcde/example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-a0512b7365529cfc2af4fc000b34cd44473168df1e317e144f5b466e44cbe9fe -->
+<!-- cache-key: cdktf-0.20.8 input-2be068207444953915267d90ec483b29ecc881a26f809840ff8476c37a9a0cf4 -->

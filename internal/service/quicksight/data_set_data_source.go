@@ -18,6 +18,7 @@ import (
 
 // @SDKDataSource("aws_quicksight_data_set", name="Data Set")
 // @Testing(tagsTest=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataSetRead,
@@ -72,7 +73,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -117,8 +118,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Cannot use transparent tagging because it has to handle `tags_all` as well
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
@@ -128,8 +128,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

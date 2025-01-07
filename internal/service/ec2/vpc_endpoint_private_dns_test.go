@@ -52,7 +52,7 @@ func TestAccVPCEndpointPrivateDNS_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCEndpointID),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrVPCEndpointID,
 			},
@@ -91,7 +91,7 @@ func TestAccVPCEndpointPrivateDNS_disabled(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCEndpointID),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrVPCEndpointID,
 			},
@@ -227,17 +227,6 @@ func testAccCheckVPCEndpointPrivateDNSDisabled(ctx context.Context, n string) re
 		}
 
 		return nil
-	}
-}
-
-func testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrVPCEndpointID], nil
 	}
 }
 

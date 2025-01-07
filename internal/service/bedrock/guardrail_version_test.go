@@ -42,7 +42,7 @@ func TestAccBedrockGuardrailVersion_basic(t *testing.T) {
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 				),
@@ -107,7 +107,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			//Executes version resource again and validates first version exists
@@ -115,7 +115,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 		},

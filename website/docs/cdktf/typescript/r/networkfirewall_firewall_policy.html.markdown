@@ -201,9 +201,17 @@ The `statefulEngineOptions` block supports the following argument:
 
 ~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this firewall policy can only reference stateful rule groups that utilize `STRICT_ORDER`.
 
+* `flow_timeouts` - (Optional) Amount of time that can pass without any traffic sent through the firewall before the firewall determines that the connection is idle.
+
 * `ruleOrder` - Indicates how to manage the order of stateful rule evaluation for the policy. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
 
 * `streamExceptionPolicy` - Describes how to treat traffic which has broken midstream. Default value: `DROP`. Valid values: `DROP`, `CONTINUE`, `REJECT`.
+
+### Flow Timeouts
+
+The `flow_timeouts` block supports the following argument:
+
+* `tcpIdleTimeoutSeconds` - Number of seconds that can pass without any TCP traffic sent through the firewall before the firewall determines that the connection is idle. After the idle timeout passes, data packets are dropped, however, the next TCP SYN packet is considered a new flow and is processed by the firewall. Clients or targets can use TCP keepalive packets to reset the idle timeout. Default value: `350`.
 
 ### Stateful Rule Group Reference
 
@@ -297,4 +305,4 @@ Using `terraform import`, import Network Firewall Policies using their `arn`. Fo
 % terraform import aws_networkfirewall_firewall_policy.example arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-404c165333a79301aa20f34d18808df0b499908bd2b40ced95421124be533c61 -->
+<!-- cache-key: cdktf-0.20.8 input-c840019f40fdb9f65081632727a8a935f45365d252ed145235479545ad7a7882 -->

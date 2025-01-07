@@ -272,9 +272,10 @@ func resourceTable() *schema.Resource {
 				ForceNew: true,
 			},
 			"read_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"on_demand_throughput"},
 			},
 			"replica": {
 				Type:     schema.TypeSet,
@@ -472,6 +473,14 @@ func resourceTable() *schema.Resource {
 						"attribute_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// AWS requires the attribute name to be set when disabling TTL but
+								// does not return it so it causes a diff.
+								if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
+									return true
+								}
+								return false
+							},
 						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
@@ -483,9 +492,10 @@ func resourceTable() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"write_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
+				Type:          schema.TypeInt,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"on_demand_throughput"},
 			},
 		},
 	}
@@ -800,7 +810,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
-		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("enabling point in time recovery: %w", err))
 		}
 	}
@@ -1079,7 +1089,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
 	if newBillingMode == awstypes.BillingModePayPerRequest {
 		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update.OnDemandThroughput == nil {
+			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.OnDemandThroughput == nil) {
 				continue
 			}
 
@@ -1164,7 +1174,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 			var input = &awstypes.UpdateReplicationGroupMemberAction{
 				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
-				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
+				RegionName:     aws.String(meta.(*conns.AWSClient).Region(ctx)),
 			}
 			var update = awstypes.ReplicationGroupUpdate{Update: input}
 			replicaInputs = append(replicaInputs, update)
@@ -1240,7 +1250,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1420,7 +1430,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			return fmt.Errorf("creating replica (%s): %w", tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), replicaDelayDefault, timeout); err != nil {
 			return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
 		}
 
@@ -1736,7 +1746,7 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			}
 			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
 
-			if capacityChanged && !otherAttributesChanged {
+			if capacityChanged && !otherAttributesChanged && billingMode == awstypes.BillingModeProvisioned {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
@@ -1744,7 +1754,7 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 					},
 				}
 				ops = append(ops, update)
-			} else if onDemandThroughputChanged && !otherAttributesChanged {
+			} else if onDemandThroughputChanged && !otherAttributesChanged && billingMode == awstypes.BillingModePayPerRequest {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:          aws.String(idxName),
@@ -2011,7 +2021,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 
 	sse := sseList[0].(map[string]interface{})
 
-	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region(ctx))
 	if err != nil {
 		return sseList
 	}
@@ -2434,11 +2444,11 @@ func expandOnDemandThroughput(tfMap map[string]interface{}) *awstypes.OnDemandTh
 
 	apiObject := &awstypes.OnDemandThroughput{}
 
-	if v, ok := tfMap["max_read_request_units"].(int); ok {
+	if v, ok := tfMap["max_read_request_units"].(int); ok && v != 0 {
 		apiObject.MaxReadRequestUnits = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_write_request_units"].(int); ok {
+	if v, ok := tfMap["max_write_request_units"].(int); ok && v != 0 {
 		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
 	}
 
@@ -2626,13 +2636,9 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 				errs.PathString(ttlPath.GetAttr("attribute_name")),
 			))
 		}
-	} else {
-		if !(attribute.IsNull() || attribute.AsString() == "") {
-			*diags = append(*diags, errs.NewAttributeConflictsWhenError(
-				ttlPath.GetAttr("attribute_name"),
-				ttlPath.GetAttr(names.AttrEnabled),
-				"false",
-			))
-		}
 	}
+
+	// !! Not a validation error for attribute_name to be set when enabled is false !!
+	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
+	// The diff is handled by DiffSuppressFunc of attribute_name.
 }

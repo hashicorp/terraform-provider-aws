@@ -29,7 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new AuditmanagerOrganizationAdminAccountRegistration(this, "example", {
-      adminAccountId: "012345678901",
+      adminAccountId: "123456789012",
     });
   }
 }
@@ -68,7 +68,7 @@ class MyConvertedCode extends TerraformStack {
     AuditmanagerOrganizationAdminAccountRegistration.generateConfigForImport(
       this,
       "example",
-      "012345678901 "
+      "123456789012 "
     );
   }
 }
@@ -78,7 +78,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Audit Manager Organization Admin Account Registration using the `id`. For example:
 
 ```console
-% terraform import aws_auditmanager_organization_admin_account_registration.example 012345678901 
+% terraform import aws_auditmanager_organization_admin_account_registration.example 123456789012 
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-73a8d01ece65d6322ccb932f7e3936fdefadced313d0732bd4dd6da49b4ca658 -->
+<!-- cache-key: cdktf-0.20.8 input-5cf8a2a486b752b03db8e2831ac4d0063d9d62c0be899f02b3e5d8318993d26c -->

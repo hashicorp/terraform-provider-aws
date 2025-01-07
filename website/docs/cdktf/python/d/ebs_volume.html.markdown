@@ -56,7 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - Volume ID (e.g., vol-59fcb34e).
 * `volume_id` - Volume ID (e.g., vol-59fcb34e).
-* `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
+* `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
 * `availability_zone` - AZ where the EBS volume exists.
 * `encrypted` - Whether the disk is encrypted.
 * `iops` - Amount of IOPS for the disk.
@@ -77,4 +77,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
 
-<!-- cache-key: cdktf-0.20.9 input-00c94bacdc21ca1f9f8c3f77dac8c937947e9644a5d93fbb88f378a86ec1420e -->
+<!-- cache-key: cdktf-0.20.8 input-2cc3adf3199d31ab8dfeb5f2ca1f4ae71de63c586d192b6a6e0c20980731d176 -->

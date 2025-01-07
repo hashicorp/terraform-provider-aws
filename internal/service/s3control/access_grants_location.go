@@ -100,7 +100,7 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.CreateAccessGrantsLocationInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)

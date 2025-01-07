@@ -104,7 +104,7 @@ func (r *resourceEnrollmentStatus) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	data.Status = fwflex.StringValueToFramework(ctx, aws.ToString(out.Status))
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)

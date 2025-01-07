@@ -11,3 +11,8 @@ import (
 func SetDefaultTagsConfig(client *AWSClient, d *tftags.DefaultConfig) {
 	client.defaultTagsConfig = d
 }
+
+// SetIgnoreTagsConfig is only intended for use in tests
+func SetIgnoreTagsConfig(client *AWSClient, i *tftags.IgnoreConfig) {
+	client.ignoreTagsConfig = i
+}

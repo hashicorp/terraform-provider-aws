@@ -336,3 +336,7 @@ func verifiedAccessEndpointProtocol_Values() []string {
 		verifiedAccessEndpointProtocolHTTPS,
 	}
 }
+
+const (
+	supportedRegionServiceStateAvailable = "Available"
+)

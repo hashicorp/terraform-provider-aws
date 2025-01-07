@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Zones")
+// @FrameworkDataSource("aws_route53_zones", name="Zones")
 func newZonesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &zonesDataSource{}, nil
 }
@@ -67,7 +67,7 @@ func (d *zonesDataSource) Read(ctx context.Context, request datasource.ReadReque
 		}
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.ZoneIDs = fwflex.FlattenFrameworkStringValueList(ctx, zoneIDs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

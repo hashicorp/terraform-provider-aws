@@ -76,7 +76,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set `deployment_type` to `MULTI_AZ_1`.
-* `throughput_capacity` - (Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
+* `throughput_capacity` - (Required) Throughput (megabytes per second) of the file system. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/performance.html).
 
 The following arguments are optional:
 
@@ -198,4 +198,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-7fa8e6f410a078e6243e08b1d44003de54acd11d819ea1c8c9817cd9106d7c9c -->
+<!-- cache-key: cdktf-0.20.8 input-0a78a794f659cfe5c611887ac9e1fb7eebb21239a00af5aa1b95cd06aa75b7cb -->

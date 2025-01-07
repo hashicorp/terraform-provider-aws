@@ -57,7 +57,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `target_id` - (Required) The root (string that begins with "r-" followed by 4-32 lowercase letters or digits), account (12 digit string), or Organizational Unit (string starting with "ou-" followed by 4-32 lowercase letters or digits. This string is followed by a second "-" dash and from 8-32 additional lowercase letters or digits.)
-* `filter` - (Required) Must supply one of the 4 different policy filters for a target (SERVICE_CONTROL_POLICY | TAG_POLICY | BACKUP_POLICY | AISERVICES_OPT_OUT_POLICY)
+* `filter` - (Required) Must supply one of the 5 different policy filters for a target (AISERVICES_OPT_OUT_POLICY | BACKUP_POLICY | RESOURCE_CONTROL_POLICY | SERVICE_CONTROL_POLICY | TAG_POLICY)
 
 ## Attribute Reference
 
@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all the policy ids found.
 
-<!-- cache-key: cdktf-0.20.9 input-7436628b3d5183c757aca388e0440d856a1c75b4b189df46ab759d8bf24e7ed5 -->
+<!-- cache-key: cdktf-0.20.8 input-27172d4e78ab2c79a6b38575e2c6c5dc8abedc78025cbd4174fa27ea650a160d -->

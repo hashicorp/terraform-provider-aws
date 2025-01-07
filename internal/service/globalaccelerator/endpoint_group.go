@@ -154,7 +154,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
-		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region),
+		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		IdempotencyToken:    aws.String(id.UniqueId()),
 		ListenerArn:         aws.String(d.Get("listener_arn").(string)),
 	}

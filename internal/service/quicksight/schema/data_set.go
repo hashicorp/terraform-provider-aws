@@ -1119,7 +1119,7 @@ func expandColumnTag(tfMap map[string]interface{}) *awstypes.ColumnTag {
 
 	apiObject := &awstypes.ColumnTag{}
 
-	if v, ok := tfMap["column_description"].(map[string]interface{}); ok {
+	if v, ok := tfMap["column_description"].([]interface{}); ok {
 		apiObject.ColumnDescription = expandColumnDescription(v)
 	}
 	if v, ok := tfMap["column_geographic_role"].(string); ok {
@@ -1129,13 +1129,17 @@ func expandColumnTag(tfMap map[string]interface{}) *awstypes.ColumnTag {
 	return apiObject
 }
 
-func expandColumnDescription(tfMap map[string]interface{}) *awstypes.ColumnDescription {
-	if tfMap == nil {
+func expandColumnDescription(tfList []interface{}) *awstypes.ColumnDescription {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ColumnDescription{}
-
 	if v, ok := tfMap["text"].(string); ok {
 		apiObject.Text = aws.String(v)
 	}
@@ -1352,19 +1356,19 @@ func ExpandRowLevelPermissionDataSet(tfList []interface{}) *awstypes.RowLevelPer
 
 	apiObject := &awstypes.RowLevelPermissionDataSet{}
 
-	if v, ok := tfMap[names.AttrARN].(string); ok {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
-	if v, ok := tfMap["permission_policy"].(string); ok {
-		apiObject.PermissionPolicy = awstypes.RowLevelPermissionPolicy(v)
-	}
-	if v, ok := tfMap["format_version"].(string); ok {
+	if v, ok := tfMap["format_version"].(string); ok && v != "" {
 		apiObject.FormatVersion = awstypes.RowLevelPermissionFormatVersion(v)
 	}
-	if v, ok := tfMap[names.AttrNamespace].(string); ok {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrStatus].(string); ok {
+	if v, ok := tfMap["permission_policy"].(string); ok && v != "" {
+		apiObject.PermissionPolicy = awstypes.RowLevelPermissionPolicy(v)
+	}
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = awstypes.Status(v)
 	}
 

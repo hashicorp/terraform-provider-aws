@@ -58,7 +58,7 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 	// Registration is applied per region, so use this as the ID
-	id := r.Meta().Region
+	id := r.Meta().Region(ctx)
 
 	var plan resourceAccountRegistrationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)

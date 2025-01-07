@@ -139,9 +139,9 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   names.ECSEndpointID,
 		Resource:  "cluster/" + d.Id(),
 	}.String())

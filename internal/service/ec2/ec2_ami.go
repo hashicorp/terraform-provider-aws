@@ -422,8 +422,8 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("architecture", image.Architecture)
 	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   names.EC2,
 	}.String()

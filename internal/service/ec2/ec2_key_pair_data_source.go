@@ -101,10 +101,10 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.ToString(keyPair.KeyPairId))
 	keyName := aws.ToString(keyPair.KeyName)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "key-pair/" + keyName,
 	}.String()
 	d.Set(names.AttrARN, arn)

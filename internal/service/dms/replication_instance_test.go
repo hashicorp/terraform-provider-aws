@@ -47,11 +47,11 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -207,10 +207,10 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.4.7"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.4.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.2"),
 				),
 			},
 			{
@@ -220,10 +220,10 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrAllowMajorVersionUpgrade, names.AttrApplyImmediately},
 			},
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.3"),
 				),
 			},
 		},
@@ -387,7 +387,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
 				),
 			},
 			{
@@ -453,7 +453,7 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -526,7 +526,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   allocated_storage           = %[2]d
   apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -540,7 +540,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   auto_minor_version_upgrade  = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -554,7 +554,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   availability_zone           = data.aws_availability_zones.available.names[0]
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -569,7 +569,7 @@ resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   allow_major_version_upgrade = true
   engine_version              = %[2]q
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -587,7 +587,7 @@ resource "aws_kms_key" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   kms_key_arn                 = aws_kms_key.test.arn
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -601,7 +601,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   multi_az                    = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -621,7 +621,7 @@ resource "aws_dms_replication_subnet_group" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   network_type                = %[2]q
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -635,7 +635,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately            = true
   preferred_maintenance_window = %[2]q
-  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id      = %[1]q
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test.id
 }
@@ -657,7 +657,7 @@ resource "aws_internet_gateway" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   publicly_accessible         = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 
@@ -692,7 +692,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
   vpc_security_group_ids      = [aws_security_group.test.id]

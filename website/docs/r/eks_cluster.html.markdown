@@ -14,195 +14,325 @@ Manages an EKS Cluster.
 
 ## Example Usage
 
-### Basic Usage
+### EKS Cluster
 
 ```terraform
 resource "aws_eks_cluster" "example" {
-  name     = "example"
-  role_arn = aws_iam_role.example.arn
+  name = "example"
 
-  vpc_config {
-    subnet_ids = [aws_subnet.example1.id, aws_subnet.example2.id]
+  access_config {
+    authentication_mode = "API"
   }
 
-  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
-  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+  role_arn = aws_iam_role.example.arn
+  version  = "1.31"
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.az1.id,
+      aws_subnet.az2.id,
+      aws_subnet.az3.id,
+    ]
+  }
+
+  # Ensure that IAM Role permissions are created before and deleted
+  # after EKS Cluster handling. Otherwise, EKS will not be able to
+  # properly delete EKS managed EC2 infrastructure such as Security Groups.
   depends_on = [
-    aws_iam_role_policy_attachment.example-AmazonEKSClusterPolicy,
-    aws_iam_role_policy_attachment.example-AmazonEKSVPCResourceController,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
   ]
 }
 
-output "endpoint" {
-  value = aws_eks_cluster.example.endpoint
+resource "aws_iam_role" "cluster" {
+  name = "eks-cluster-example"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
 
-output "kubeconfig-certificate-authority-data" {
-  value = aws_eks_cluster.example.certificate_authority[0].data
-}
-```
-
-### Example IAM Role for EKS Cluster
-
-```terraform
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["eks.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_role" "example" {
-  name               = "eks-cluster-example"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "example-AmazonEKSClusterPolicy" {
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.example.name
-}
-
-# Optionally, enable Security Groups for Pods
-# Reference: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
-resource "aws_iam_role_policy_attachment" "example-AmazonEKSVPCResourceController" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
-  role       = aws_iam_role.example.name
+  role       = aws_iam_role.cluster.name
 }
 ```
 
-### Enabling Control Plane Logging
+### EKS Cluster with EKS Auto Mode
 
-[EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html) can be enabled via the `enabled_cluster_log_types` argument. To manage the CloudWatch Log Group retention period, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used.
-
--> The below configuration uses [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) to prevent ordering issues with EKS automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
-
-```terraform
-variable "cluster_name" {
-  default = "example"
-  type    = string
-}
-
-resource "aws_eks_cluster" "example" {
-  depends_on = [aws_cloudwatch_log_group.example]
-
-  enabled_cluster_log_types = ["api", "audit"]
-  name                      = var.cluster_name
-
-  # ... other configuration ...
-}
-
-resource "aws_cloudwatch_log_group" "example" {
-  # The log group name format is /aws/eks/<cluster-name>/cluster
-  # Reference: https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html
-  name              = "/aws/eks/${var.cluster_name}/cluster"
-  retention_in_days = 7
-
-  # ... potentially other configuration ...
-}
-```
-
-### Enabling IAM Roles for Service Accounts
-
-For more information about this feature, see the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html).
+~> **NOTE:** When using EKS Auto Mode `compute_config.enabled`, `kubernetes_network_config.elastic_load_balancing.enabled`, and `storage_config.block_storage.enabled` must *ALL be set to `true`. Likewise for disabling EKS Auto Mode, all three arguments must be set to `false`. Enabling EKS Auto Mode also requires that `bootstrap_self_managed_addons` is set to `false`.
 
 ```terraform
 resource "aws_eks_cluster" "example" {
-  # ... other configuration ...
-}
+  name = "example"
 
-data "tls_certificate" "example" {
-  url = aws_eks_cluster.example.identity[0].oidc[0].issuer
-}
+  access_config {
+    authentication_mode = "API"
+  }
 
-resource "aws_iam_openid_connect_provider" "example" {
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = [data.tls_certificate.example.certificates[0].sha1_fingerprint]
-  url             = data.tls_certificate.example.url
-}
+  role_arn = aws_iam_role.cluster.arn
+  version  = "1.31"
 
-data "aws_iam_policy_document" "example_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
+  bootstrap_self_managed_addons = false
 
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(aws_iam_openid_connect_provider.example.url, "https://", "")}:sub"
-      values   = ["system:serviceaccount:kube-system:aws-node"]
-    }
+  compute_config {
+    enabled       = true
+    node_pools    = ["general-purpose"]
+    node_role_arn = aws_iam_role.node.arn
+  }
 
-    principals {
-      identifiers = [aws_iam_openid_connect_provider.example.arn]
-      type        = "Federated"
+  kubernetes_network_config {
+    elastic_load_balancing {
+      enabled = true
     }
   }
+
+  storage_config {
+    block_storage {
+      enabled = true
+    }
+  }
+
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = true
+
+    subnet_ids = [
+      aws_subnet.az1.id,
+      aws_subnet.az2.id,
+      aws_subnet.az3.id,
+    ]
+  }
+
+  # Ensure that IAM Role permissions are created before and deleted
+  # after EKS Cluster handling. Otherwise, EKS will not be able to
+  # properly delete EKS managed EC2 infrastructure such as Security Groups.
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSComputePolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSBlockStoragePolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSLoadBalancingPolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSNetworkingPolicy,
+  ]
 }
 
-resource "aws_iam_role" "example" {
-  assume_role_policy = data.aws_iam_policy_document.example_assume_role_policy.json
-  name               = "example"
+resource "aws_iam_role" "node" {
+  name = "eks-auto-node-example"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodeMinimalPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
+  role       = aws_iam_role.node.name
+}
+
+resource "aws_iam_role_policy_attachment" "node_AmazonEC2ContainerRegistryPullOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+  role       = aws_iam_role.node.name
+}
+
+resource "aws_iam_role" "cluster" {
+  name = "eks-cluster-example"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.cluster.name
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSComputePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSComputePolicy"
+  role       = aws_iam_role.cluster.name
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSBlockStoragePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy"
+  role       = aws_iam_role.cluster.name
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSLoadBalancingPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
+  role       = aws_iam_role.cluster.name
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy"
+  role       = aws_iam_role.cluster.name
 }
 ```
 
-### EKS Cluster on AWS Outpost
+### EKS Cluster with EKS Hybrid Nodes
+
+```terraform
+resource "aws_eks_cluster" "example" {
+  name = "example"
+
+  access_config {
+    authentication_mode = "API"
+  }
+
+  role_arn = aws_iam_role.cluster.arn
+  version  = "1.31"
+
+  cluster_remote_network_config = {
+    remote_node_networks = {
+      cidrs = ["172.16.0.0/18"]
+    }
+    remote_pod_networks = {
+      cidrs = ["172.16.64.0/18"]
+    }
+  }
+
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = true
+
+    subnet_ids = [
+      aws_subnet.az1.id,
+      aws_subnet.az2.id,
+      aws_subnet.az3.id,
+    ]
+  }
+
+  # Ensure that IAM Role permissions are created before and deleted
+  # after EKS Cluster handling. Otherwise, EKS will not be able to
+  # properly delete EKS managed EC2 infrastructure such as Security Groups.
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
+  ]
+}
+
+resource "aws_iam_role" "cluster" {
+  name = "eks-cluster-example"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.cluster.name
+}
+```
+
+### Local EKS Cluster on AWS Outpost
 
 [Creating a local Amazon EKS cluster on an AWS Outpost](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster-outpost.html)
 
 ```terraform
-resource "aws_iam_role" "example" {
-  assume_role_policy = data.aws_iam_policy_document.example_assume_role_policy.json
-  name               = "example"
-}
-
 resource "aws_eks_cluster" "example" {
-  name     = "example-cluster"
+  name = "example"
+
+  access_config {
+    authentication_mode = "CONFIG_MAP"
+  }
+
   role_arn = aws_iam_role.example.arn
+  version  = "1.31"
 
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = false
-    # ... other configuration ...
+
+    subnet_ids = [
+      aws_subnet.az1.id,
+      aws_subnet.az2.id,
+      aws_subnet.az3.id,
+    ]
   }
 
   outpost_config {
-    control_plane_instance_type = "m5d.large"
+    control_plane_instance_type = "m5.large"
     outpost_arns                = [data.aws_outposts_outpost.example.arn]
   }
+
+  # Ensure that IAM Role permissions are created before and deleted
+  # after EKS Cluster handling. Otherwise, EKS will not be able to
+  # properly delete EKS managed EC2 infrastructure such as Security Groups.
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_AmazonEKSLocalOutpostClusterPolicy,
+  ]
+}
+
+data "aws_outposts_outpost" "example" {
+  name = "example"
+}
+
+resource "aws_iam_role" "cluster" {
+  name = "eks-cluster-example"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "eks.amazonaws.com",
+            "ec2.amazonaws.com"
+          ]
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSLocalOutpostClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLocalOutpostClusterPolicy"
+  role       = aws_iam_role.cluster.name
 }
 ```
-
-### EKS Cluster with Access Config
-
-```terraform
-resource "aws_iam_role" "example" {
-  assume_role_policy = data.aws_iam_policy_document.example_assume_role_policy.json
-  name               = "example"
-}
-
-resource "aws_eks_cluster" "example" {
-  name     = "example-cluster"
-  role_arn = aws_iam_role.example.arn
-
-  vpc_config {
-    endpoint_private_access = true
-    endpoint_public_access  = false
-    # ... other configuration ...
-  }
-
-  access_config {
-    authentication_mode                         = "CONFIG_MAP"
-    bootstrap_cluster_creator_admin_permissions = true
-  }
-}
-```
-
-After adding inline IAM Policies (e.g., [`aws_iam_role_policy` resource](/docs/providers/aws/r/iam_role_policy.html)) or attaching IAM Policies (e.g., [`aws_iam_policy` resource](/docs/providers/aws/r/iam_policy.html) and [`aws_iam_role_policy_attachment` resource](/docs/providers/aws/r/iam_role_policy_attachment.html)) with the desired permissions to the IAM Role, annotate the Kubernetes service account (e.g., [`kubernetes_service_account` resource](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account)) and recreate any pods.
 
 ## Argument Reference
 
@@ -216,13 +346,17 @@ The following arguments are optional:
 
 * `access_config` - (Optional) Configuration block for the access config associated with your cluster, see [Amazon EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html).
 * `bootstrap_self_managed_addons` - (Optional) Install default unmanaged add-ons, such as `aws-cni`, `kube-proxy`, and CoreDNS during cluster creation. If `false`, you must manually install desired add-ons. Changing this value will force a new cluster to be created. Defaults to `true`.
+* `compute_config` - (Optional) Configuration block with compute configuration for EKS Auto Mode. Detailed below.
 * `enabled_cluster_log_types` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
-* `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. Only available on Kubernetes 1.13 and above clusters created after March 6, 2020. Detailed below.
+* `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. Detailed below.
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. Detailed below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
+* `remote_network_config` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. Detailed below.
+* `storage_config` - (Optional) Configuration block with storage configuration for EKS Auto Mode. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `upgrade_policy` - (Optional) Configuration block for the support policy to use for the cluster.  See [upgrade_policy](#upgrade_policy) for details.
 * `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
+* `zonal_shift_config` - (Optional) Configuration block with zonal shift configuration for the cluster. Detailed below.
 
 ### access_config
 
@@ -230,6 +364,14 @@ The `access_config` configuration block supports the following arguments:
 
 * `authentication_mode` - (Optional) The authentication mode for the cluster. Valid values are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`
 * `bootstrap_cluster_creator_admin_permissions` - (Optional) Whether or not to bootstrap the access config values to the cluster. Default is `false`.
+
+### compute_config
+
+The `compute_config` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Request to enable or disable the compute capability on your EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode will create and delete EC2 Managed Instances in your Amazon Web Services account.
+* `node_pools` - (Optional) Configuration for node pools that defines the compute resources for your EKS Auto Mode cluster. Valid options are `general-purpose` and `system`.
+* `node_role_arn` - (Optional) The ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster. This value cannot be changed after the compute capability of EKS Auto Mode is enabled..
 
 ### encryption_config
 
@@ -244,6 +386,25 @@ The `provider` configuration block supports the following arguments:
 
 * `key_arn` - (Required) ARN of the Key Management Service (KMS) customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the AWS Key Management Service Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
 
+### remote_network_config
+
+The `remote_network_config` configuration block supports the following arguments:
+
+* `remote_node_networks` - (Optional) Configuration block with remote node network configuration for EKS Hybrid Nodes. Detailed below.
+* `remote_pod_networks` - (Optional) Configuration block with remote pod network configuration for EKS Hybrid Nodes. Detailed below.
+
+#### remote_node_networks
+
+The `remote_node_networks` configuration block supports the following arguments:
+
+* `cidrs` - (Required) List of network CIDRs that can contain hybrid nodes.
+
+#### remote_pod_networks
+
+The `remote_pod_networks` configuration block supports the following arguments:
+
+* `cidrs` - (Required) List of network CIDRs that can contain pods that run Kubernetes webhooks on hybrid nodes.
+
 ### vpc_config Arguments
 
 * `endpoint_private_access` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
@@ -256,6 +417,7 @@ The `provider` configuration block supports the following arguments:
 
 The `kubernetes_network_config` configuration block supports the following arguments:
 
+* `elastic_load_balancing` - (Optional) Configuration block with elastic load balancing configuration for the cluster. Detailed below.
 * `service_ipv4_cidr` - (Optional) The CIDR block to assign Kubernetes pod and service IP addresses from. If you don't specify a block, Kubernetes assigns addresses from either the 10.100.0.0/16 or 172.20.0.0/16 CIDR blocks. We recommend that you specify a block that does not overlap with resources in other networks that are peered or connected to your VPC. You can only specify a custom CIDR block when you create a cluster, changing this value will force a new cluster to be created. The block must meet the following requirements:
 
     * Within one of the following private IP address blocks: 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16.
@@ -264,6 +426,12 @@ The `kubernetes_network_config` configuration block supports the following argum
 
     * Between /24 and /12.
 * `ip_family` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
+
+#### elastic_load_balancing
+
+The `elastic_load_balancing` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Indicates if the load balancing capability is enabled on your EKS Auto Mode cluster. If the load balancing capability is enabled, EKS Auto Mode will create and delete load balancers in your Amazon Web Services account.
 
 ### outpost_config
 
@@ -292,6 +460,12 @@ The `upgrade_policy` configuration block supports the following arguments:
 
 * `support_type` - (Optional) Support type to use for the cluster. If the cluster is set to `EXTENDED`, it will enter extended support at the end of standard support. If the cluster is set to `STANDARD`, it will be automatically upgraded at the end of standard support. Valid values are `EXTENDED`, `STANDARD`
 
+### zonal_shift_config
+
+The `zonal_shift_config` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Whether zonal shift is enabled for the cluster.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -303,7 +477,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `id` - Name of the cluster.
 * `identity` - Attribute block containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. Detailed below.
-* `kubernetes_network_config.service_ipv6_cidr` - The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specified `ipv6` for ipFamily when you created the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
+* `kubernetes_network_config` - Attribute block containing Kubernetes network configuration for the cluster. Detailed below.
 * `platform_version` - Platform version for the cluster.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -316,6 +490,10 @@ This resource exports the following attributes in addition to the arguments abov
 ### identity
 
 * `oidc` - Nested block containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
+
+### kubernetes_network_config
+
+* `service_ipv6_cidr` - The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specified `ipv6` for `ip_family` when you created the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 
 ### oidc
 

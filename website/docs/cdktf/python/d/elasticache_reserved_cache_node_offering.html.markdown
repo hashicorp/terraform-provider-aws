@@ -48,7 +48,7 @@ The following arguments are supported:
   For other current generation nodes (i.e. T2, M3, M4, R3, or R4) the only valid value is `Heavy Utilization`.
   For previous generation modes (i.e. T1, M1, M2, or C1) valid values are `Heavy Utilization`, `Medium Utilization`, and `Light Utilization`.
 * `product_description` - (Required) Engine type for the reserved cache node.
-  Valid values are `redis` and `memcached`.
+  Valid values are `redis`, `valkey` and `memcached`.
 
 ## Attribute Reference
 
@@ -58,4 +58,4 @@ In addition to all arguments above, the following attributes are exported:
 * `fixed_price` - Fixed price charged for this reserved cache node.
 * `offering_id` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.20.9 input-965292cde7ab36b678077acfe62013d1655bf2d077c9b61c55be6121229ef30f -->
+<!-- cache-key: cdktf-0.20.8 input-5295ba7c1a9cdc8e160feb33e78743925ce9e905a56917f4dc0ad1eb813e35c8 -->

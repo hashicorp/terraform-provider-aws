@@ -57,11 +57,9 @@ class MyConvertedCode extends TerraformStack {
       description: "KMS key for Verified Access Group test",
     });
     new VerifiedaccessGroup(this, "test", {
-      server_side_encryption_configuration: [
-        {
-          kms_key_arn: testKey.arn,
-        },
-      ],
+      sseConfiguration: {
+        kmsKeyArn: testKey.arn,
+      },
       verifiedaccessInstanceId: Token.asString(
         awsVerifiedaccessInstanceTrustProviderAttachmentTest.verifiedaccessInstanceId
       ),
@@ -82,7 +80,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the verified access group.
 * `policyDocument` - (Optional) The policy document that is associated with this resource.
 * `sseConfiguration` - (Optional) Configuration block to use KMS keys for server-side encryption.
-    * `cmk_enabled` - (Optional) Boolean flag to indicate that the CMK should be used.
+    * `customerManagedKeyEnabled` - (Optional) Boolean flag to indicate that the CMK should be used.
     * `kmsKeyArn` - (Optional) ARN of the KMS key to use.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -105,4 +103,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.9 input-22f16b2db05b4cb625b1b756ad0432d09d76fda78f68c5ab2e89542fb8336212 -->
+<!-- cache-key: cdktf-0.20.8 input-758e23438ff4a07ded512df332a5c84f45d4f7cd61f8d3e0f6672a8111b8c5f0 -->

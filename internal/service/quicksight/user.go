@@ -84,6 +84,10 @@ func resourceUser() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 				},
+				"user_invitation_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrUserName: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -112,7 +116,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -145,6 +149,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(userCreateResourceID(awsAccountID, namespace, aws.ToString(output.User.UserName)))
+
+	if awstypes.IdentityType(d.Get("identity_type").(string)) == awstypes.IdentityTypeQuicksight {
+		userInvitationUrl := aws.ToString(output.UserInvitationUrl)
+		d.Set("user_invitation_url", userInvitationUrl)
+	}
 
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }

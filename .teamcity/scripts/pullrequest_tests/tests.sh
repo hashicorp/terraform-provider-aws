@@ -70,9 +70,6 @@ aws_access_key_id     = %AWS_ALTERNATE_ACCESS_KEY_ID%
 aws_secret_access_key = %AWS_ALTERNATE_SECRET_ACCESS_KEY%
 EOF
 
-		unset AWS_ALTERNATE_ACCESS_KEY_ID
-		unset AWS_ALTERNATE_SECRET_ACCESS_KEY
-
 		export AWS_ALTERNATE_PROFILE=alternate
 	fi
 fi

@@ -90,13 +90,13 @@ from imports.aws.sns_topic_policy import SnsTopicPolicy
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SnsTopicPolicy.generate_config_for_import(self, "userUpdates", "arn:aws:sns:us-west-2:0123456789012:my-topic")
+        SnsTopicPolicy.generate_config_for_import(self, "userUpdates", "arn:aws:sns:us-west-2:123456789012:my-topic")
 ```
 
 Using `terraform import`, import SNS Topic Policy using the topic ARN. For example:
 
 ```console
-% terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+% terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:123456789012:my-topic
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-5367b280c7c37833f246feb7e18158b32cf70822bccb3de74447a6068d898a1b -->
+<!-- cache-key: cdktf-0.20.8 input-a37f2a58a641b8a016d885ba8eb79be8ca2b4870d24077cc7aa1f9dce6cb0e5f -->

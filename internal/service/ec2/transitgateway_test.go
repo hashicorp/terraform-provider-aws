@@ -200,7 +200,7 @@ func testAccTransitGateway_basic(t *testing.T, semaphore tfsync.Semaphore) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", "64512"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway/tgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway/tgw-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "association_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_attachments", string(awstypes.AutoAcceptSharedAttachmentsValueDisable)),
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_association", string(awstypes.DefaultRouteTableAssociationValueEnable)),
@@ -208,10 +208,10 @@ func testAccTransitGateway_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", string(awstypes.DnsSupportValueEnable)),
 					resource.TestCheckResourceAttr(resourceName, "multicast_support", string(awstypes.MulticastSupportValueDisable)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueDisable)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpn_ecmp_support", string(awstypes.VpnEcmpSupportValueEnable)),
 				),
 			},
@@ -351,7 +351,7 @@ func testAccTransitGateway_cidrBlocks(t *testing.T, semaphore tfsync.Semaphore) 
 				Config: testAccTransitGatewayConfig_cidrBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.120.0.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "2001:1234:1234::/64"),
 				),
@@ -366,7 +366,7 @@ func testAccTransitGateway_cidrBlocks(t *testing.T, semaphore tfsync.Semaphore) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &v2),
 					testAccCheckTransitGatewayNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.120.0.0/24"),
 				),
 			},
@@ -375,7 +375,7 @@ func testAccTransitGateway_cidrBlocks(t *testing.T, semaphore tfsync.Semaphore) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &v3),
 					testAccCheckTransitGatewayNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.120.0.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "2001:1234:1234::/64"),
 				),
@@ -748,7 +748,7 @@ func testAccTransitGateway_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccTransitGatewayConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -762,7 +762,7 @@ func testAccTransitGateway_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway2),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -772,7 +772,7 @@ func testAccTransitGateway_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway3),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway2, &transitGateway3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

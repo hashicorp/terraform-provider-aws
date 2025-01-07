@@ -154,13 +154,13 @@ from imports.aws.sns_topic import SnsTopic
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SnsTopic.generate_config_for_import(self, "userUpdates", "arn:aws:sns:us-west-2:0123456789012:my-topic")
+        SnsTopic.generate_config_for_import(self, "userUpdates", "arn:aws:sns:us-west-2:123456789012:my-topic")
 ```
 
 Using `terraform import`, import SNS Topics using the topic `arn`. For example:
 
 ```console
-% terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+% terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:123456789012:my-topic
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-48c72ff32a9fbe275d73ccac0295699a2829a7d556b8359da2df4433876d29c8 -->
+<!-- cache-key: cdktf-0.20.8 input-850c3703d7ba8c5c1e1057a7cb169f770a7fafd4a06b6073f91a7aea739ce7c0 -->

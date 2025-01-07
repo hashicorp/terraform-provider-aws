@@ -54,6 +54,7 @@ This resource supports the following arguments:
 * `filters` - (Optional) Specifies which resources are included in the results of queries made using this view. See [Filters](#filters) below for more details.
 * `included_property` - (Optional) Optional fields to be included in search results from this view. See [Included Properties](#included-properties) below for more details.
 * `name` - (Required) The name of the view. The name must be no more than 64 characters long, and can include letters, digits, and the dash (-) character. The name must be unique within its AWS Region.
+* `scope`- (Optional) The root ARN of the account, an organizational unit (OU), or an organization ARN. If left empty, the default is account.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Filters
@@ -100,4 +101,4 @@ Using `terraform import`, import Resource Explorer views using the `arn`. For ex
 % terraform import aws_resourceexplorer2_view.example arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-9a55ae10af14ad8a58159e050eea5de7e647cddfd344de98c968a90f50d26575 -->
+<!-- cache-key: cdktf-0.20.8 input-5550d5ace208cf35cd165738fe8334e9b544c475dee09aeaa7f3db074dadc0ae -->

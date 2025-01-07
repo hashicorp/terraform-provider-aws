@@ -128,13 +128,13 @@ from imports.aws.sns_platform_application import SnsPlatformApplication
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SnsPlatformApplication.generate_config_for_import(self, "gcmApplication", "arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application")
+        SnsPlatformApplication.generate_config_for_import(self, "gcmApplication", "arn:aws:sns:us-west-2:123456789012:app/GCM/gcm_application")
 ```
 
 Using `terraform import`, import SNS platform applications using the ARN. For example:
 
 ```console
-% terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
+% terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:123456789012:app/GCM/gcm_application
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-cab192bfd8c23eada362cd924116cfcfef5154b99069d7d8bda52c652e5e8436 -->
+<!-- cache-key: cdktf-0.20.8 input-091a40bc776c6d9196d8c2d8a3184e775e9d9839b99e7f4cdc7a26bf6c561943 -->

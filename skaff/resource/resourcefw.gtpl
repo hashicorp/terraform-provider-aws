@@ -30,26 +30,19 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-{{- end }}
-{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 {{- end }}
 	"context"
 	"errors"
 	"time"
-{{ if .AWSGoSDKV2 }}
+
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
-{{- else }}
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -61,9 +54,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-{{- if .AWSGoSDKV2 }}
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -86,7 +77,7 @@ import (
 {{- end }}
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_{{ .ServicePackage }}_{{ .ResourceSnake }}", name="{{ .HumanResourceName }}")
+// @FrameworkResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
@@ -116,7 +107,7 @@ type resource{{ .Resource }} struct {
 }
 
 func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
+	resp.TypeName = "{{ .ProviderResourceName }}"
 }
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
@@ -168,6 +159,13 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
+			{{- if .IncludeComments }}
+			// TIP: ==== "ID" ATTRIBUTE ====
+			// When using the Terraform Plugin Framework, there is no required "id" attribute.
+			// This is different from the Terraform Plugin SDK. 
+			//
+			// Only include an "id" attribute if the AWS API has an "Id" field, such as "{{ .Resource }}Id"
+			{{- end }}
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
@@ -258,7 +256,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
@@ -271,7 +269,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: -- 3. Populate a Create input structure
 	{{- end }}
-	var input {{ .ServicePackage }}.Create{{ .Resource }}Input
+	var input {{ .SDKPackage }}.Create{{ .Resource }}Input
 	{{ if .IncludeComments -}}
 	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .Resource }}Id`
 	{{- end }}
@@ -286,11 +284,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: -- 4. Call the AWS Create function
 	{{- end }}
-	{{- if .AWSGoSDKV2 }}
 	out, err := conn.Create{{ .Resource }}(ctx, &input)
-	{{- else }}
-	out, err := conn.Create{{ .Resource }}WithContext(ctx, &input)
-	{{- end }}
 	if err != nil {
 		{{- if .IncludeComments }}
 		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
@@ -353,7 +347,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
@@ -421,7 +415,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
@@ -439,7 +433,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
 		!plan.Type.Equal(state.Type) {
 
-		var input {{ .ServicePackage }}.Update{{ .Resource }}Input
+		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -447,11 +441,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		{{ if .IncludeComments }}
 		// TIP: -- 4. Call the AWS modify/update function
 		{{- end }}
-		{{- if .AWSGoSDKV2 }}
 		out, err := conn.Update{{ .Resource }}(ctx, &input)
-		{{- else }}
-		out, err := conn.Update{{ .Resource }}WithContext(ctx, &input)
-		{{- end }}
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, plan.ID.String(), err),
@@ -516,7 +506,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
@@ -534,25 +524,16 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Call the AWS delete function
 	{{- end }}
-	{{- if .AWSGoSDKV2 }}
 	_, err := conn.Delete{{ .Resource }}(ctx, &input)
-	{{- else }}
-	_, err := conn.Delete{{ .Resource }}WithContext(ctx, &input)
-	{{- end }}
 	{{- if .IncludeComments }}
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
 	{{- end }}
 	if err != nil {
-		{{- if .AWSGoSDKV2 }}
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		{{- else }}
-		if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
-			return 
-		}
-		{{- end }}
+
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, state.ID.String(), err),
 			err.Error(),
@@ -618,11 +599,7 @@ const (
 //
 // You will need to adjust the parameters and names to fit the service.
 {{- end }}
-{{- if .AWSGoSDKV2 }}
 func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
-{{- else }}
-func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -645,11 +622,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
 {{- end }}
-{{- if .AWSGoSDKV2 }}
 func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
-{{- else }}
-func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -670,11 +643,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
 {{- end }}
-{{- if .AWSGoSDKV2 }}
 func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
-{{- else }}
-func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusDeleting, statusNormal},
 		Target:                    []string{},
@@ -698,11 +667,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
-{{- if .AWSGoSDKV2 }}
 func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
-{{- else }}
-func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) retry.StateRefreshFunc {
-{{- end }}
 	return func() (interface{}, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -712,11 +677,8 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 		if err != nil {
 			return nil, "", err
 		}
-{{ if .AWSGoSDKV2 }}
+
 		return out, aws.ToString(out.Status), nil
-{{- else }}
-		return out, aws.StringValue(out.Status), nil
-{{- end }}
 	}
 }
 {{ if .IncludeComments }}
@@ -726,15 +688,11 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
 {{- end }}
-{{- if .AWSGoSDKV2 }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .Resource }}, error) {
-{{- else }}
-func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
 		Id: aws.String(id),
 	}
-	{{ if .AWSGoSDKV2 }}
+
 	out, err := conn.Get{{ .Resource }}(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -746,19 +704,6 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 
 		return nil, err
 	}
-	{{- else }}
-	out, err := conn.Get{{ .Resource }}WithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	{{- end }}
 
 	if out == nil || out.{{ .Resource }} == nil {
 		return nil, tfresource.NewEmptyResultError(in)

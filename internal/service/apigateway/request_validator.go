@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -132,7 +133,7 @@ func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData,
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/validateRequestBody"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("validate_request_body").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("validate_request_body").(bool))),
 		})
 	}
 
@@ -140,7 +141,7 @@ func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData,
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/validateRequestParameters"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("validate_request_parameters").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("validate_request_parameters").(bool))),
 		})
 	}
 

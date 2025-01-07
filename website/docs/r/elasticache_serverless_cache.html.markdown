@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_elasticache_serverless_cache
 
-Provides an ElastiCache Serverless Cache resource which manages memcached or redis.
+Provides an ElastiCache Serverless Cache resource which manages memcached, redis or valkey.
 
 ## Example Usage
 
@@ -35,7 +35,7 @@ resource "aws_elasticache_serverless_cache" "example" {
 }
 ```
 
-### Redis Serverless
+### Redis OSS Serverless
 
 ```terraform
 resource "aws_elasticache_serverless_cache" "example" {
@@ -60,17 +60,42 @@ resource "aws_elasticache_serverless_cache" "example" {
 }
 ```
 
+### Valkey Serverless
+
+```terraform
+resource "aws_elasticache_serverless_cache" "example" {
+  engine = "valkey"
+  name   = "example"
+  cache_usage_limits {
+    data_storage {
+      maximum = 10
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = 5000
+    }
+  }
+  daily_snapshot_time      = "09:00"
+  description              = "Test Server"
+  kms_key_id               = aws_kms_key.test.arn
+  major_engine_version     = "7"
+  snapshot_retention_limit = 1
+  security_group_ids       = [aws_security_group.test.id]
+  subnet_ids               = aws_subnet.test[*].id
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `engine` – (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
+* `engine` – (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` or `valkey`.
 * `name` – (Required) The Cluster name which serves as a unique identifier to the serverless cache
 
 The following arguments are optional:
 
 * `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
-* `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine type `"redis"`. Defaults to `0`.
+* `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine types `"redis"` or `"valkey"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.
 * `major_engine_version` – (Optional) The version of the cache engine that will be used to create the serverless cache.

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"log"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -239,11 +238,50 @@ func resourceEventSourceMapping() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(-1, 10_000),
 			},
+			"metrics_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metrics": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.EventSourceMappingMetric](),
+							},
+						},
+					},
+				},
+			},
 			"parallelization_factor": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 10),
+			},
+			"provisioned_poller_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maximum_pollers": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 2000),
+						},
+						"minimum_pollers": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 200),
+						},
+					},
+				},
 			},
 			"queues": {
 				Type:     schema.TypeList,
@@ -285,9 +323,9 @@ func resourceEventSourceMapping() *schema.Resource {
 								if k == "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS" {
 									// AWS returns the bootstrap brokers in sorted order.
 									olds := strings.Split(old, ",")
-									sort.Strings(olds)
+									slices.Sort(olds)
 									news := strings.Split(new, ",")
-									sort.Strings(news)
+									slices.Sort(news)
 
 									return slices.Equal(olds, news)
 								}
@@ -448,8 +486,16 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.MaximumRetryAttempts = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.MetricsConfig = expandEventSourceMappingMetricsConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("parallelization_factor"); ok {
 		input.ParallelizationFactor = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("provisioned_poller_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ProvisionedPollerConfig = expandProvisionedPollerConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("queues"); ok && len(v.([]interface{})) > 0 {
@@ -503,7 +549,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	// Some partitions (e.g. US GovCloud) may not support tags.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = retryEventSourceMapping(ctx, func() (*lambda.CreateEventSourceMappingOutput, error) {
@@ -585,7 +631,21 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("maximum_batching_window_in_seconds", output.MaximumBatchingWindowInSeconds)
 	d.Set("maximum_record_age_in_seconds", output.MaximumRecordAgeInSeconds)
 	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
+	if v := output.MetricsConfig; v != nil {
+		if err := d.Set("metrics_config", []interface{}{flattenEventSourceMappingMetricsConfig(v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting metrics_config: %s", err)
+		}
+	} else {
+		d.Set("metrics_config", nil)
+	}
 	d.Set("parallelization_factor", output.ParallelizationFactor)
+	if v := output.ProvisionedPollerConfig; v != nil {
+		if err := d.Set("provisioned_poller_config", []interface{}{flattenProvisionedPollerConfig(v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting provisioned_poller_config: %s", err)
+		}
+	} else {
+		d.Set("provisioned_poller_config", nil)
+	}
 	d.Set("queues", output.Queues)
 	if v := output.ScalingConfig; v != nil {
 		if err := d.Set("scaling_config", []interface{}{flattenScalingConfig(v)}); err != nil {
@@ -702,8 +762,25 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 			input.MaximumRetryAttempts = aws.Int32(int32(d.Get("maximum_retry_attempts").(int)))
 		}
 
+		if d.HasChange("metrics_config") {
+			if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.MetricsConfig = expandEventSourceMappingMetricsConfig((v.([]interface{})[0].(map[string]interface{})))
+			} else {
+				input.MetricsConfig = &awstypes.EventSourceMappingMetricsConfig{}
+			}
+		}
+
 		if d.HasChange("parallelization_factor") {
 			input.ParallelizationFactor = aws.Int32(int32(d.Get("parallelization_factor").(int)))
+		}
+
+		if d.HasChange("provisioned_poller_config") {
+			if v, ok := d.GetOk("provisioned_poller_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ProvisionedPollerConfig = expandProvisionedPollerConfig(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				// AWS ignores the removal if this is left as nil.
+				input.ProvisionedPollerConfig = &awstypes.ProvisionedPollerConfig{}
+			}
 		}
 
 		if d.HasChange("scaling_config") {
@@ -1108,6 +1185,42 @@ func flattenSelfManagedKafkaEventSourceConfig(apiObject *awstypes.SelfManagedKaf
 	return tfMap
 }
 
+func expandProvisionedPollerConfig(tfMap map[string]interface{}) *awstypes.ProvisionedPollerConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ProvisionedPollerConfig{}
+
+	if v, ok := tfMap["maximum_pollers"].(int); ok && v != 0 {
+		apiObject.MaximumPollers = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["minimum_pollers"].(int); ok && v != 0 {
+		apiObject.MinimumPollers = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenProvisionedPollerConfig(apiObject *awstypes.ProvisionedPollerConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaximumPollers; v != nil {
+		tfMap["maximum_pollers"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MinimumPollers; v != nil {
+		tfMap["minimum_pollers"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
 func expandSourceAccessConfiguration(tfMap map[string]interface{}) *awstypes.SourceAccessConfiguration {
 	if tfMap == nil {
 		return nil
@@ -1302,6 +1415,34 @@ func flattenScalingConfig(apiObject *awstypes.ScalingConfig) map[string]interfac
 
 	if v := apiObject.MaximumConcurrency; v != nil {
 		tfMap["maximum_concurrency"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func expandEventSourceMappingMetricsConfig(tfMap map[string]interface{}) *awstypes.EventSourceMappingMetricsConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EventSourceMappingMetricsConfig{}
+
+	if v, ok := tfMap["metrics"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Metrics = flex.ExpandStringyValueSet[awstypes.EventSourceMappingMetric](v)
+	}
+
+	return apiObject
+}
+
+func flattenEventSourceMappingMetricsConfig(apiObject *awstypes.EventSourceMappingMetricsConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Metrics; v != nil {
+		tfMap["metrics"] = flex.FlattenStringyValueSet(v)
 	}
 
 	return tfMap

@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_acl"
 description: |-
@@ -77,4 +77,4 @@ Using `terraform import`, import an ACL using the `name`. For example:
 % terraform import aws_memorydb_acl.example my-acl
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-c0b11cab2ffda49ddaeadbf6cc9362150372c08b03e6b84d1bd545de5d3072f1 -->
+<!-- cache-key: cdktf-0.20.8 input-81b0aafca8273c497e315e23df245bdaa7eca67e9dec48c672755900e7eb97ca -->

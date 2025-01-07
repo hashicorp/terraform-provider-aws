@@ -21,14 +21,15 @@ jobs:
 
     steps:
       - name: Send Slack Notification
-        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         env:
           ISSUE_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             {
+              "channel" : "${{ secrets.SLACK_CHANNEL }}",
               "blocks": [
                 {
                   "type": "section",
@@ -49,7 +50,7 @@ jobs:
 
       - name: Generate GitHub App Token
         id: token
-        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
+        uses: actions/create-github-app-token@c1a285145b9d317df6ced56c09f525b5c2b6f755 # v1.11.1
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PEM }}

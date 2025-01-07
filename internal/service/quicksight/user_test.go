@@ -39,7 +39,8 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName1, &user),
 					resource.TestCheckResourceAttr(resourceName1, names.AttrUserName, rName1),
-					acctest.CheckResourceAttrRegionalARN(resourceName1, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName1)),
+					resource.TestCheckResourceAttrSet(resourceName1, "user_invitation_url"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName1, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName1)),
 				),
 			},
 			{
@@ -47,7 +48,8 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName2, &user),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrUserName, rName2),
-					acctest.CheckResourceAttrRegionalARN(resourceName2, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName2)),
+					resource.TestCheckResourceAttrSet(resourceName2, "user_invitation_url"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName2, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName2)),
 				),
 			},
 		},

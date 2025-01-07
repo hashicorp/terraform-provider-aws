@@ -398,7 +398,7 @@ class MyConvertedCode extends TerraformStack {
     SnsTopicSubscription.generateConfigForImport(
       this,
       "userUpdatesSqsTarget",
-      "arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
+      "arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
     );
   }
 }
@@ -408,7 +408,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SNS Topic Subscriptions using the subscription `arn`. For example:
 
 ```console
-% terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
+% terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-8335a789d68fa00f04ac50b0acd532b261ef42a17433eddf557b74baf4887b67 -->
+<!-- cache-key: cdktf-0.20.8 input-d864cc4f2253d2005cd38abf872b4c5e97574c651b15e53649930fdc41bdf975 -->

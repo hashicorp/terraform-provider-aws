@@ -278,7 +278,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `globalClusterIdentifier` - (Required, Forces new resources) Global cluster identifier.
-* `databaseName` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
+* `databaseName` - (Optional, Forces new resources) Name for an automatically created database on cluster creation. Terraform will only perform drift detection if a configuration value is provided.
 * `deletionProtection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Valid values: `aurora`, `aurora-mysql`, `aurora-postgresql`. Defaults to `aurora`. Conflicts with `sourceDbClusterIdentifier`.
 * `engineLifecycleSupport` - (Optional) The life cycle type for this DB instance. This setting applies only to Aurora PostgreSQL-based global databases. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
@@ -286,17 +286,20 @@ This resource supports the following arguments:
 * `forceDestroy` - (Optional) Enable to remove DB Cluster members from Global Cluster on destroy. Required with `sourceDbClusterIdentifier`.
 * `sourceDbClusterIdentifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
 * `storageEncrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `sourceDbClusterIdentifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
+* `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - RDS Global Cluster Amazon Resource Name (ARN)
+* `arn` - RDS Global Cluster Amazon Resource Name (ARN).
+* `endpoint` - Writer endpoint for the new global database cluster. This endpoint always points to the writer DB instance in the current primary cluster.
 * `globalClusterMembers` - Set of objects containing Global Cluster members.
-    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
-    * `is_writer` - Whether the member is the primary DB Cluster
-* `globalClusterResourceId` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed
-* `id` - RDS Global Cluster identifier
+    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster.
+    * `is_writer` - Whether the member is the primary DB Cluster.
+* `globalClusterResourceId` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
+* `id` - RDS Global Cluster identifier.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -364,4 +367,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-63ed2a954c6852f58da2c116d6c114fff786c66e1d260cfae7f97136013f0c8e -->
+<!-- cache-key: cdktf-0.20.8 input-156443d4e21cae5a2c7c2b49a5777e8e9a5ae664aa64986cebb73272b4a3b1e8 -->

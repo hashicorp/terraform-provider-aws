@@ -85,13 +85,13 @@ from imports.aws.ssoadmin_application_assignment import SsoadminApplicationAssig
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SsoadminApplicationAssignment.generate_config_for_import(self, "example", "arn:aws:sso::012345678901:application/id-12345678,abcd1234,USER")
+        SsoadminApplicationAssignment.generate_config_for_import(self, "example", "arn:aws:sso::123456789012:application/id-12345678,abcd1234,USER")
 ```
 
 Using `terraform import`, import SSO Admin Application Assignment using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application_assignment.example arn:aws:sso::012345678901:application/id-12345678,abcd1234,USER
+% terraform import aws_ssoadmin_application_assignment.example arn:aws:sso::123456789012:application/id-12345678,abcd1234,USER
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-da7337b5018a58007520a69e823fc2fc465c5c017370c5ce9dcee7d0009dcbc1 -->
+<!-- cache-key: cdktf-0.20.8 input-2cb68a00655e293796d48311cd7c102cf57ad40e92a3e87eacbe769a8cc758b1 -->

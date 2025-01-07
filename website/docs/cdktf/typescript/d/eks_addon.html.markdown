@@ -53,8 +53,11 @@ This data source exports the following attributes in addition to the arguments a
 * `configurationValues` - Configuration values for the addon with a single JSON string.
 * `serviceAccountRoleArn` - ARN of IAM role used for EKS add-on. If value is empty -
   then add-on uses the IAM role assigned to the EKS Cluster node.
+* `podIdentityAssociation` - Pod identity association for the EKS add-on.
+    * `roleArn` - ARN of the IAM role associated with the EKS add-on.
+    * `serviceAccount` - Service account associated with the EKS add-on.
 * `id` - EKS Cluster name and EKS add-on name separated by a colon (`:`).
 * `createdAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modifiedAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
-<!-- cache-key: cdktf-0.20.9 input-e89700b62df039f36c49f7f24832619d2b205441f8e47870c78f8a6f079765fb -->
+<!-- cache-key: cdktf-0.20.8 input-3f4eca3f962477e1b91bf2f70b11158ab3a7885fb267a627640071b891b42423 -->

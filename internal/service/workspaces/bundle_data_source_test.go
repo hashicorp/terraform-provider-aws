@@ -29,14 +29,14 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 				Config: testAccBundleDataSourceConfig_basic("wsb-b0s22j3d7"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-b0s22j3d7"),
-					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.0.name", "PERFORMANCE"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Performance with Windows 7"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrOwner, "Amazon"),
-					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "root_storage.0.capacity", "80"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "user_storage.0.capacity", "100"),
 				),
 			},
@@ -57,15 +57,43 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 				Config: testAccBundleDataSourceConfig_byOwnerName("Amazon", "Value with Ubuntu 22.04"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "bundle_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.0.name", "VALUE"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Value with Ubuntu 22.04"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrOwner, "Amazon"),
-					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "root_storage.0.capacity", "80"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "user_storage.0.capacity", acctest.Ct10),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.0.capacity", "10"),
+				),
+			},
+		},
+	})
+}
+
+func testAccWorkspaceBundleDataSource_byOwnerNameMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_workspaces_bundle.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBundleDataSourceConfig_byOwnerName("AMAZON", "Performance with Windows 10 and Office 2019 Pro Plus (Server 2019 based)"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "bundle_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "compute_type.0.name", "PERFORMANCE"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Performance with Windows 10 and Office 2019 Pro Plus (Server 2019 based)"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrOwner, "Amazon"),
+					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "root_storage.0.capacity", "80"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.0.capacity", "100"),
 				),
 			},
 		},

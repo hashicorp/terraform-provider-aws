@@ -90,7 +90,7 @@ func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "queryloggingconfig/" + d.Id(),
 	}.String()

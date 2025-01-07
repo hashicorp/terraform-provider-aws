@@ -78,6 +78,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `privateDnsName` - (Optional) The private DNS name for the service.
 * `supportedIpAddressTypes` - (Optional) The supported IP address types. The possible values are `ipv4` and `ipv6`.
+* `supportedRegions` - (Optional) The set of regions from which service consumers can access the service.
 
 ## Attribute Reference
 
@@ -130,4 +131,4 @@ Using `terraform import`, import VPC Endpoint Services using the VPC endpoint se
 % terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-c09a7b5d8b527c0d1b6c1d63d0ebeee104d7dd496159317437a0efb2c6008154 -->
+<!-- cache-key: cdktf-0.20.8 input-15284f16ae4e5654c4db1cf2a04dc3b77d5b6519edeab7fa47c530d9faf16ebf -->

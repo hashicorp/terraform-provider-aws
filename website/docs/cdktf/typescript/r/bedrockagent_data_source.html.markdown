@@ -126,14 +126,14 @@ The `semanticChunkingConfiguration` block supports the following arguments:
 
 * `breakpointPercentileThreshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
 * `bufferSize` - (Required, Forces new resource) The buffer size.
-* `maxTokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+* `maxToken` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
 
 ### `customTransformationConfiguration` block
 
 The `customTransformationConfiguration` block supports the following arguments:
 
 * `intermediateStorage` - (Required, Forces new resource) The intermediate storage for custom transformation.
-* `transformationFunction` - (Required) The configuration of transformation function.
+* `transformation` - (Required) A custom processing step for documents moving through the data source ingestion pipeline.
 
 ### `intermediateStorage` block
 
@@ -147,12 +147,18 @@ The `s3Location` block supports the following arguments:
 
 * `uri` - (Required, Forces new resource) S3 URI for intermediate storage.
 
+### `transformation` block
+
+The `transformation` block supports the following arguments:
+
+* `stepToApply` - (Required, Forces new resource) When the service applies the transformation. Currently only `POST_CHUNKING` is supported.
+* `transformationFunction` - (Required) The lambda function that processes documents.
+
 ### `transformationFunction` block
 
 The `transformationFunction` block supports the following arguments:
 
-* `stepToApply` - (Required, Forces new resource) Currently only `POST_CHUNKING` is supported.
-* `transformationLambdaConfiguration` - (Required, Forces new resource) The lambda configuration for custom transformation.
+* `transformationLambdaConfiguration` - (Required, Forces new resource) The configuration of the lambda function.
 
 ### `transformationLambdaConfiguration` block
 
@@ -226,4 +232,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-a6844c8d1576a70595f0eb27383ed66b24e7350d2c18bdf84a9bc5f9440c3698 -->
+<!-- cache-key: cdktf-0.20.8 input-a29b632aed73b2eb2bb1ee798a495964c54fc9897dab020469f9ebbf7fd83f31 -->

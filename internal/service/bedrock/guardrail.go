@@ -39,8 +39,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Guardrail")
+// @FrameworkResource("aws_bedrock_guardrail", name="Guardrail")
 // @Tags(identifierAttribute="guardrail_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetGuardrailOutput")
+// @Testing(importStateIdFunc="testAccGuardrailImportStateIDFunc")
+// @Testing(importStateIdAttribute="guardrail_id")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}
 
@@ -135,8 +138,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"filters_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[filtersConfig](ctx),
+						"filters_config": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[filtersConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"input_strength": schema.StringAttribute{
@@ -667,7 +670,7 @@ type resourceGuardrailData struct {
 }
 
 type contentPolicyConfig struct {
-	Filters fwtypes.ListNestedObjectValueOf[filtersConfig] `tfsdk:"filters_config"`
+	Filters fwtypes.SetNestedObjectValueOf[filtersConfig] `tfsdk:"filters_config"`
 }
 
 type filtersConfig struct {

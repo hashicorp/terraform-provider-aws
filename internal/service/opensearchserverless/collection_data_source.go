@@ -141,7 +141,7 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
 	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
 
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
 		resp.Diagnostics.AddError(

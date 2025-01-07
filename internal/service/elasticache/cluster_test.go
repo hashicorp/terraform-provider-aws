@@ -94,7 +94,7 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cache_nodes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.outpost_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -364,7 +364,7 @@ func TestAccElastiCacheCluster_snapshotsWithUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_elasticache_cluster.test", &ec),
 					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_window", "05:00-09:00"),
-					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_retention_limit", acctest.Ct3),
+					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_retention_limit", "3"),
 				),
 			},
 			{
@@ -399,14 +399,14 @@ func TestAccElastiCacheCluster_NumCacheNodes_decrease(t *testing.T) {
 				Config: testAccClusterConfig_numCacheNodes(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "3"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_numCacheNodes(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "1"),
 				),
 			},
 		},
@@ -433,14 +433,14 @@ func TestAccElastiCacheCluster_NumCacheNodes_increase(t *testing.T) {
 				Config: testAccClusterConfig_numCacheNodes(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "1"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_numCacheNodes(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "3"),
 				),
 			},
 		},
@@ -467,16 +467,16 @@ func TestAccElastiCacheCluster_NumCacheNodes_increaseWithPreferredAvailabilityZo
 				Config: testAccClusterConfig_numCacheNodesPreferredAvailabilityZones(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "preferred_availability_zones.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "1"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_availability_zones.#", "1"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_numCacheNodesPreferredAvailabilityZones(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "preferred_availability_zones.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_availability_zones.#", "3"),
 				),
 			},
 		},
@@ -1190,9 +1190,9 @@ func TestAccElastiCacheCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -1206,10 +1206,10 @@ func TestAccElastiCacheCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
@@ -1218,9 +1218,9 @@ func TestAccElastiCacheCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
@@ -1245,24 +1245,24 @@ func TestAccElastiCacheCluster_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_versionAndTag(rName, "5.0.5", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccClusterConfig_versionAndTag(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.5"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccClusterConfig_versionAndTag(rName, "5.0.6", acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccClusterConfig_versionAndTag(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1Updated),
 				),
 			},

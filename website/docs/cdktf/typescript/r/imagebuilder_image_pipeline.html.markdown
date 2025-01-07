@@ -12,6 +12,8 @@ description: |-
 
 Manages an Image Builder Image Pipeline.
 
+~> **NOTE:** Starting with version `5.74.0`, lifecycle meta-argument [`replace_triggered_by`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) must be used in order to prevent a dependency error on destroy.
+
 ## Example Usage
 
 ```typescript
@@ -23,19 +25,64 @@ import { Token, TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { ImagebuilderImagePipeline } from "./.gen/providers/aws/imagebuilder-image-pipeline";
+import { ImagebuilderImageRecipe } from "./.gen/providers/aws/imagebuilder-image-recipe";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    new ImagebuilderImagePipeline(this, "example", {
-      imageRecipeArn: Token.asString(awsImagebuilderImageRecipeExample.arn),
-      infrastructureConfigurationArn: Token.asString(
-        awsImagebuilderInfrastructureConfigurationExample.arn
-      ),
+    const example = new ImagebuilderImageRecipe(this, "example", {
+      blockDeviceMapping: [
+        {
+          deviceName: "/dev/xvdb",
+          ebs: {
+            deleteOnTermination: Token.asString(true),
+            volumeSize: 100,
+            volumeType: "gp2",
+          },
+        },
+      ],
+      component: [
+        {
+          componentArn: Token.asString(awsImagebuilderComponentExample.arn),
+          parameter: [
+            {
+              name: "Parameter1",
+              value: "Value1",
+            },
+            {
+              name: "Parameter2",
+              value: "Value2",
+            },
+          ],
+        },
+      ],
       name: "example",
-      schedule: {
-        scheduleExpression: "cron(0 0 * * ? *)",
-      },
+      parentImage:
+        "arn:${" +
+        current.partition +
+        "}:imagebuilder:${" +
+        dataAwsRegionCurrent.name +
+        "}:aws:image/amazon-linux-2-x86/x.x.x",
+      version: "1.0.0",
     });
+    const awsImagebuilderImagePipelineExample = new ImagebuilderImagePipeline(
+      this,
+      "example_1",
+      {
+        imageRecipeArn: example.arn,
+        infrastructureConfigurationArn: Token.asString(
+          awsImagebuilderInfrastructureConfigurationExample.arn
+        ),
+        lifecycle: {
+          replaceTriggeredBy: [example],
+        },
+        name: "example",
+        schedule: {
+          scheduleExpression: "cron(0 0 * * ? *)",
+        },
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsImagebuilderImagePipelineExample.overrideLogicalId("example");
   }
 }
 
@@ -159,4 +206,4 @@ Using `terraform import`, import `aws_imagebuilder_image_pipeline` resources usi
 % terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-b7ef54b8ccc48bee42fd6b40e0b184c832c8d3c6a532ff264291c55060d501b7 -->
+<!-- cache-key: cdktf-0.20.8 input-6213af573a56cb0f3b9043ae13ef4ad5e4c1a341ec024c98d73e66df0f125edf -->

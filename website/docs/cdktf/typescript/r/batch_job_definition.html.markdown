@@ -147,16 +147,18 @@ class MyConvertedCode extends TerraformStack {
     new BatchJobDefinition(this, "test", {
       eksProperties: {
         podProperties: {
-          containers: {
-            command: ["sleep", "60"],
-            image: "public.ecr.aws/amazonlinux/amazonlinux:1",
-            resources: {
-              limits: {
-                cpu: "1",
-                memory: "1024Mi",
+          containers: [
+            {
+              command: ["sleep", "60"],
+              image: "public.ecr.aws/amazonlinux/amazonlinux:1",
+              resources: {
+                limits: {
+                  cpu: "1",
+                  memory: "1024Mi",
+                },
               },
             },
-          },
+          ],
           hostNetwork: true,
           metadata: {
             labels: {
@@ -373,9 +375,12 @@ The following arguments are optional:
 * `containers` - (Optional) Properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
 * `dnsPolicy` - (Optional) DNS policy for the pod. The default value is `ClusterFirst`. If the `hostNetwork` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
 * `hostNetwork` - (Optional) Whether the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `initContainers` - (Optional) Containers which run before application containers, always runs to completion, and must complete successfully before the next container starts. These containers are registered with the Amazon EKS Connector agent and persists the registration information in the Kubernetes backend data store. See [containers](#container) below.
 * `imagePullSecret` - (Optional) List of Kubernetes secret resources. See [`imagePullSecret`](#image_pull_secret) below.
 * `metadata` - (Optional) Metadata about the Kubernetes pod.
 * `serviceAccountName` - (Optional) Name of the service account that's used to run the pod.
+* `shareProcessNamespace` - (Optional) Indicates if the processes in a container are shared, or visible, to other containers in the same pod.
+* `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
 * `volumes` - (Optional) Volumes for a job definition that uses Amazon EKS resources. AWS Batch supports [emptyDir](#eks_empty_dir), [hostPath](#eks_host_path), and [secret](#eks_secret) volume types.
 
 #### `containers`
@@ -407,6 +412,10 @@ The following arguments are optional:
 #### `eks_host_path`
 
 * `path` - (Optional) Path of the file or directory on the host to mount into containers on the pod.
+
+#### eks_metadata
+
+* `labels` - Key-value pairs used to identify, sort, and organize cube resources.
 
 #### `eks_secret`
 
@@ -470,4 +479,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-869b943f136098d1f2f82e01bebded433786f75d430a7d0e7b3a1cae42afb918 -->
+<!-- cache-key: cdktf-0.20.8 input-ce143b511a8d573fff1391227be985658d941bc94824b3deac578464fda8dcec -->

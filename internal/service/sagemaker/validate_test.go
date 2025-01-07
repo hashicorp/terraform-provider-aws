@@ -1,12 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package sagemaker
+package sagemaker_test
 
 import (
 	"strings"
 	"testing"
 
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,7 +22,7 @@ func TestValidName(t *testing.T) {
 		strings.Repeat("W", 63),
 	}
 	for _, v := range validNames {
-		_, errors := validName(v, names.AttrName)
+		_, errors := tfsagemaker.ValidName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid SageMaker name with maximum length 63 chars: %q", v, errors)
 		}
@@ -34,7 +35,7 @@ func TestValidName(t *testing.T) {
 		strings.Repeat("W", 64), // length > 63
 	}
 	for _, v := range invalidNames {
-		_, errors := validName(v, names.AttrName)
+		_, errors := tfsagemaker.ValidName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid SageMaker name", v)
 		}
@@ -53,7 +54,7 @@ func TestValidPrefix(t *testing.T) {
 		strings.Repeat("W", maxLength),
 	}
 	for _, v := range validPrefixes {
-		_, errors := validPrefix(v, names.AttrNamePrefix)
+		_, errors := tfsagemaker.ValidPrefix(v, names.AttrNamePrefix)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid SageMaker prefix with maximum length %d chars: %q", v, maxLength, errors)
 		}
@@ -66,7 +67,7 @@ func TestValidPrefix(t *testing.T) {
 		strings.Repeat("W", maxLength+1), // length > maxLength
 	}
 	for _, v := range invalidPrefixes {
-		_, errors := validPrefix(v, names.AttrNamePrefix)
+		_, errors := tfsagemaker.ValidPrefix(v, names.AttrNamePrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid SageMaker prefix", v)
 		}

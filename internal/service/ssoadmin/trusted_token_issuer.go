@@ -211,7 +211,7 @@ func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	instanceARN, _ := TrustedTokenIssuerParseInstanceARN(r.Meta(), aws.ToString(out.TrustedTokenIssuerArn))
+	instanceARN, _ := TrustedTokenIssuerParseInstanceARN(ctx, r.Meta(), aws.ToString(out.TrustedTokenIssuerArn))
 
 	state.ARN = flex.StringToFramework(ctx, out.TrustedTokenIssuerArn)
 	state.Name = flex.StringToFramework(ctx, out.Name)
@@ -485,12 +485,12 @@ func flattenOIDCJWTConfiguration(ctx context.Context, apiObject *awstypes.OidcJw
 
 // Instance ARN is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
 // Instance ARN can be extracted from the Trusted Token Issuer ARN.
-func TrustedTokenIssuerParseInstanceARN(conn *conns.AWSClient, id string) (string, diag.Diagnostics) {
+func TrustedTokenIssuerParseInstanceARN(ctx context.Context, c *conns.AWSClient, id string) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	parts := strings.Split(id, "/")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return fmt.Sprintf("arn:%s:sso:::instance/%s", conn.Partition, parts[1]), diags
+		return fmt.Sprintf("arn:%s:sso:::instance/%s", c.Partition(ctx), parts[1]), diags
 	}
 
 	return "", diags

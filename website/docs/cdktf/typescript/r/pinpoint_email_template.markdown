@@ -107,4 +107,4 @@ Using `terraform import`, import Pinpoint Email Template using the `templateName
 % terraform import aws_pinpoint_email_template.reset template_name
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-6ec76068933a952dc4b7bbba734b8d07ad5b6f5777c00d5d042f3f0723878cc3 -->
+<!-- cache-key: cdktf-0.20.8 input-6ec76068933a952dc4b7bbba734b8d07ad5b6f5777c00d5d042f3f0723878cc3 -->

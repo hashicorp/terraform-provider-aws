@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -55,6 +57,9 @@ func (r *resourceRolePolicyAttachmentsExclusive) Schema(ctx context.Context, req
 			"policy_arns": schema.SetAttribute{
 				ElementType: types.StringType,
 				Required:    true,
+				Validators: []validator.Set{
+					setvalidator.NoNullValues(),
+				},
 			},
 		},
 	}
@@ -139,10 +144,10 @@ func (r *resourceRolePolicyAttachmentsExclusive) Update(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// syncAttachments handles keeping the configured customer managed policy
+// syncAttachments handles keeping the configured managed IAM policy
 // attachments in sync with the remote resource.
 //
-// Customer managed policies defined on this resource but not attached to
+// Managed IAM policies defined on this resource but not attached to
 // the role will be added. Policies attached to the role but not configured
 // on this resource will be removed.
 func (r *resourceRolePolicyAttachmentsExclusive) syncAttachments(ctx context.Context, roleName string, want []string) error {

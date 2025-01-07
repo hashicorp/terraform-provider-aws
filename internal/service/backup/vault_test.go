@@ -43,11 +43,11 @@ func TestAccBackupVault_basic(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -79,53 +79,6 @@ func TestAccBackupVault_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccBackupVault_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v backup.DescribeBackupVaultOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_backup_vault.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVaultConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-			{
-				Config: testAccVaultConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVaultConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -176,7 +129,7 @@ func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
 			{
@@ -205,7 +158,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
 			{
@@ -219,7 +172,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
 				),
 			},
 		},
@@ -278,16 +231,16 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 		conn := client.BackupClient(ctx)
 
 		iamRoleARN := arn.ARN{
-			Partition: client.Partition,
+			Partition: client.Partition(ctx),
 			Service:   "iam",
-			AccountID: client.AccountID,
+			AccountID: client.AccountID(ctx),
 			Resource:  "role/service-role/AWSBackupDefaultServiceRole",
 		}.String()
 		resourceARN := arn.ARN{
-			Partition: client.Partition,
+			Partition: client.Partition(ctx),
 			Service:   "dynamodb",
-			Region:    client.Region,
-			AccountID: client.AccountID,
+			Region:    client.Region(ctx),
+			AccountID: client.AccountID(ctx),
 			Resource:  fmt.Sprintf("table/%s", rName),
 		}.String()
 		output, err := conn.StartBackupJob(ctx, &backup.StartBackupJobInput{
@@ -408,31 +361,6 @@ resource "aws_backup_vault" "test" {
   kms_key_arn = aws_kms_key.test.arn
 }
 `, rName)
-}
-
-func testAccVaultConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_backup_vault" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccVaultConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_backup_vault" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccVaultConfig_forceDestroyEmpty(rName string) string {

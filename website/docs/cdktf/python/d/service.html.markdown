@@ -91,4 +91,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `supported` - Whether the service is supported in the region's partition. New services may not be listed immediately as supported.
 
-<!-- cache-key: cdktf-0.20.9 input-7c79311e7ea6639749452795e558b7c3413aae2129211c3d5f42af6d156ea840 -->
+<!-- cache-key: cdktf-0.20.8 input-7c79311e7ea6639749452795e558b7c3413aae2129211c3d5f42af6d156ea840 -->

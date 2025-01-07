@@ -604,8 +604,8 @@ service "mgn" {
     human_friendly      = "Application Migration (Mgn)"
   }
 
-  client {
-    go_v1_client_typename = "Mgn"
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -615,7 +615,6 @@ service "mgn" {
   provider_package_correct = "mgn"
   doc_prefix               = ["mgn_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "appstream" {
@@ -630,7 +629,7 @@ service "appstream" {
 
   endpoint_info {
     endpoint_api_call   = "ListAssociatedFleets"
-    endpoint_api_params = "StackName: aws_sdkv2.String(\"test\")"
+    endpoint_api_params = "StackName: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -1346,7 +1345,7 @@ service "cloudformation" {
 
   endpoint_info {
     endpoint_api_call   = "ListStackInstances"
-    endpoint_api_params = "StackSetName: aws_sdkv2.String(\"test\")"
+    endpoint_api_params = "StackSetName: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -1403,7 +1402,7 @@ service "cloudfrontkeyvaluestore" {
 
   endpoint_info {
     endpoint_api_call   = "ListKeys"
-    endpoint_api_params = "KvsARN: aws_sdkv2.String(\"arn:aws:cloudfront::111122223333:key-value-store/MaxAge\")"
+    endpoint_api_params = "KvsARN: aws.String(\"arn:aws:cloudfront::111122223333:key-value-store/MaxAge\")"
   }
 
   resource_prefix {
@@ -2036,7 +2035,7 @@ service "cognitoidentity" {
 
   endpoint_info {
     endpoint_api_call   = "ListIdentityPools"
-    endpoint_api_params = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -2076,7 +2075,7 @@ service "cognitoidp" {
 
   endpoint_info {
     endpoint_api_call   = "ListUserPools"
-    endpoint_api_params = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -2945,8 +2944,7 @@ service "ebs" {
 
 service "imagebuilder" {
   sdk {
-    id             = "imagebuilder"
-    client_version = 1
+    id = "imagebuilder"
   }
 
   names {
@@ -3759,7 +3757,7 @@ service "fms" {
 
   endpoint_info {
     endpoint_api_call   = "ListAppsLists"
-    endpoint_api_params = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -5694,7 +5692,7 @@ service "memorydb" {
 
   names {
     provider_name_upper = "MemoryDB"
-    human_friendly      = "MemoryDB for Redis"
+    human_friendly      = "MemoryDB"
   }
 
   client {
@@ -5711,7 +5709,7 @@ service "memorydb" {
 
   provider_package_correct = "memorydb"
   doc_prefix               = ["memorydb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "meta" {
@@ -6798,7 +6796,7 @@ service "quicksight" {
 
   endpoint_info {
     endpoint_api_call   = "ListDashboards"
-    endpoint_api_params = "AwsAccountId: aws_sdkv2.String(\"123456789012\")"
+    endpoint_api_params = "AwsAccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {
@@ -7000,7 +6998,7 @@ service "redshiftdata" {
 
   endpoint_info {
     endpoint_api_call   = "ListDatabases"
-    endpoint_api_params = "Database: aws_sdkv2.String(\"test\")"
+    endpoint_api_params = "Database: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -7483,6 +7481,28 @@ service "s3control" {
   brand                    = "AWS"
 }
 
+service "s3tables" {
+  sdk {
+    id = "S3Tables"
+  }
+
+  names {
+    provider_name_upper = "S3Tables"
+    human_friendly      = "S3 Tables"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTableBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3tables_"
+  }
+
+  doc_prefix = ["s3tables_"]
+  brand      = "Amazon"
+}
+
 service "glacier" {
   sdk {
     id = "Glacier"
@@ -7736,6 +7756,7 @@ service "simpledb" {
 
   client {
     go_v1_client_typename = "SimpleDB"
+    skip_client_generate  = true
   }
 
   endpoint_info {
@@ -8370,7 +8391,7 @@ service "sso" {
 
   endpoint_info {
     endpoint_api_call   = "ListAccounts"
-    endpoint_api_params = "AccessToken: aws_sdkv2.String(\"mock-access-token\")"
+    endpoint_api_params = "AccessToken: aws.String(\"mock-access-token\")"
     endpoint_only       = true
   }
 
@@ -8428,7 +8449,7 @@ service "identitystore" {
 
   endpoint_info {
     endpoint_api_call   = "ListUsers"
-    endpoint_api_params = "IdentityStoreId: aws_sdkv2.String(\"d-1234567890\")"
+    endpoint_api_params = "IdentityStoreId: aws.String(\"d-1234567890\")"
   }
 
   resource_prefix {
@@ -8577,6 +8598,29 @@ service "swf" {
   brand                    = "AWS"
 }
 
+service "taxsettings" {
+  sdk {
+    id = "TaxSettings"
+  }
+
+  names {
+    provider_name_upper = "TaxSettings"
+    human_friendly      = "Tax Settings"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTaxRegistrations"
+  }
+
+  resource_prefix {
+    correct = "aws_taxsettings_"
+  }
+
+  provider_package_correct = "taxsettings"
+  doc_prefix               = ["taxsettings_"]
+  brand                    = "Amazon"
+}
+
 service "textract" {
   sdk {
     id = "Textract"
@@ -8626,7 +8670,7 @@ service "timestreaminfluxdb" {
 
   provider_package_correct = "timestreaminfluxdb"
   doc_prefix               = ["timestreaminfluxdb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "timestreamquery" {
@@ -8644,8 +8688,8 @@ service "timestreamquery" {
     human_friendly      = "Timestream Query"
   }
 
-  client {
-    go_v1_client_typename = "TimestreamQuery"
+  endpoint_info {
+    endpoint_api_call = "DescribeEndpoints"
   }
 
   resource_prefix {
@@ -8655,7 +8699,6 @@ service "timestreamquery" {
   provider_package_correct = "timestreamquery"
   doc_prefix               = ["timestreamquery_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "timestreamwrite" {
@@ -8683,7 +8726,7 @@ service "timestreamwrite" {
 
   provider_package_correct = "timestreamwrite"
   doc_prefix               = ["timestreamwrite_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "transcribe" {
@@ -8908,7 +8951,7 @@ service "budgets" {
 
   endpoint_info {
     endpoint_api_call   = "DescribeBudgets"
-    endpoint_api_params = "AccountId: aws_sdkv2.String(\"012345678901\")"
+    endpoint_api_params = "AccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {
@@ -9431,7 +9474,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "vpc_"
-    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\."]
+    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_"]
     brand               = "Amazon"
     exclude             = true
     allowed_subcategory = true

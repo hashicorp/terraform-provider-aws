@@ -91,14 +91,14 @@ func dataSourceCertificate() *schema.Resource {
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &acm.ListCertificatesInput{}
+	input := acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.Includes = &awstypes.Filters{
+		filters := awstypes.Filters{
 			KeyTypes: flex.ExpandStringyValueSet[awstypes.KeyAlgorithm](v.(*schema.Set)),
 		}
+		input.Includes = &filters
 	}
 
 	if v, ok := d.GetOk("statuses"); ok && len(v.([]interface{})) > 0 {
@@ -124,7 +124,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	)
 	certificateSummaries, err := tfresource.RetryGWhenNotFound(ctx, timeout,
 		func() ([]awstypes.CertificateSummary, error) {
-			output, err := findCertificates(ctx, conn, input, f)
+			output, err := findCertificates(ctx, conn, &input, f)
 			switch {
 			case err != nil:
 				return nil, err
@@ -197,12 +197,12 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	var output *acm.GetCertificateOutput
 	if matchedCertificate.Status == awstypes.CertificateStatusIssued {
 		arn := aws.ToString(matchedCertificate.CertificateArn)
-		input := &acm.GetCertificateInput{
+		input := acm.GetCertificateInput{
 			CertificateArn: aws.String(arn),
 		}
 		var err error
 
-		output, err = conn.GetCertificate(ctx, input)
+		output, err = conn.GetCertificate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
@@ -220,16 +220,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, matchedCertificate.CertificateArn)
 	d.Set(names.AttrDomain, matchedCertificate.DomainName)
 	d.Set(names.AttrStatus, matchedCertificate.Status)
-
-	tags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

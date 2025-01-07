@@ -80,10 +80,12 @@ This data source exports the following attributes in addition to the arguments a
 
 ### pod_properties
 
+* `containers` - The properties of the container that's used on the Amazon EKS pod. See [containers](#container) below.
 * `dns_policy` - The DNS policy for the pod. The default value is ClusterFirst. If the hostNetwork parameter is not specified, the default is ClusterFirstWithHostNet. ClusterFirst indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node.
 * `host_network` - Indicates if the pod uses the hosts' network IP address. The default value is true. Setting this to false enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `init_containers` - Containers which run before application containers, always runs to completion, and must complete successfully before the next container starts. These containers are registered with the Amazon EKS Connector agent and persists the registration information in the Kubernetes backend data store. See [containers](#container) below.
 * `service_account_name` - The name of the service account that's used to run the pod.
-* `containers` - The properties of the container that's used on the Amazon EKS pod. Array of [EksContainer](#container) objects.
+* `share_process_namespace` - (Optional) Indicates if the processes in a container are shared, or visible, to other containers in the same pod.
 * `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
 * `volumes` -  Specifies the volumes for a job definition that uses Amazon EKS resources. Array of [EksVolume](#eks_volumes) objects.
 
@@ -297,4 +299,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `attempt_duration_seconds` - The job timeout time (in seconds) that's measured from the job attempt's startedAt timestamp.
 
-<!-- cache-key: cdktf-0.20.9 input-47abb29d3d9c1603cbff2456b4a3df5e03bcfc96d8dd6131e338380097f2cf41 -->
+<!-- cache-key: cdktf-0.20.8 input-d67c7c8f34bcd44300ace9274ab0b35102b23c36b0ba36058a1028501370ee6c -->

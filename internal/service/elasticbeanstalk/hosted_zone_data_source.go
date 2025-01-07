@@ -6,6 +6,7 @@ package elasticbeanstalk
 import (
 	"context"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,32 +17,32 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html
 
 var hostedZoneIDs = map[string]string{
-	names.AFSouth1RegionID:     "Z1EI3BVKMKK4AM",
-	names.APSoutheast1RegionID: "Z16FZ9L249IFLT",
-	names.APSoutheast2RegionID: "Z2PCDNR3VC2G1N",
-	names.APSoutheast3RegionID: "Z05913172VM7EAZB40TA8",
-	names.APEast1RegionID:      "ZPWYUBWRU171A",
-	names.APNortheast1RegionID: "Z1R25G3KIG2GBW",
-	names.APNortheast2RegionID: "Z3JE5OI70TWKCP",
-	names.APNortheast3RegionID: "ZNE5GEY1TIAGY",
-	names.APSouth1RegionID:     "Z18NTBI3Y7N9TZ",
-	names.CACentral1RegionID:   "ZJFCZL7SSZB5I",
-	names.EUCentral1RegionID:   "Z1FRNW7UH4DEZJ",
-	names.EUNorth1RegionID:     "Z23GO28BZ5AETM",
-	names.EUSouth1RegionID:     "Z10VDYYOA2JFKM",
-	names.EUWest1RegionID:      "Z2NYPWQ7DFZAZH",
-	names.EUWest2RegionID:      "Z1GKAAAUGATPF1",
-	names.EUWest3RegionID:      "Z5WN6GAYWG5OB",
-	names.ILCentral1RegionID:   "Z02941091PERNCB1MI5H7",
-	// names.MECentral1RegionID:   "",
-	names.MESouth1RegionID:   "Z2BBTEKR2I36N2",
-	names.SAEast1RegionID:    "Z10X7K2B4QSOFV",
-	names.USEast1RegionID:    "Z117KPS5GTRQ2G",
-	names.USEast2RegionID:    "Z14LCN19Q5QHIC",
-	names.USWest1RegionID:    "Z1LQECGX5PH1X",
-	names.USWest2RegionID:    "Z38NKT9BP95V3O",
-	names.USGovEast1RegionID: "Z35TSARG0EJ4VU",
-	names.USGovWest1RegionID: "Z4KAURWC4UUUG",
+	endpoints.AfSouth1RegionID:     "Z1EI3BVKMKK4AM",
+	endpoints.ApSoutheast1RegionID: "Z16FZ9L249IFLT",
+	endpoints.ApSoutheast2RegionID: "Z2PCDNR3VC2G1N",
+	endpoints.ApSoutheast3RegionID: "Z05913172VM7EAZB40TA8",
+	endpoints.ApEast1RegionID:      "ZPWYUBWRU171A",
+	endpoints.ApNortheast1RegionID: "Z1R25G3KIG2GBW",
+	endpoints.ApNortheast2RegionID: "Z3JE5OI70TWKCP",
+	endpoints.ApNortheast3RegionID: "ZNE5GEY1TIAGY",
+	endpoints.ApSouth1RegionID:     "Z18NTBI3Y7N9TZ",
+	endpoints.CaCentral1RegionID:   "ZJFCZL7SSZB5I",
+	endpoints.EuCentral1RegionID:   "Z1FRNW7UH4DEZJ",
+	endpoints.EuNorth1RegionID:     "Z23GO28BZ5AETM",
+	endpoints.EuSouth1RegionID:     "Z10VDYYOA2JFKM",
+	endpoints.EuWest1RegionID:      "Z2NYPWQ7DFZAZH",
+	endpoints.EuWest2RegionID:      "Z1GKAAAUGATPF1",
+	endpoints.EuWest3RegionID:      "Z5WN6GAYWG5OB",
+	endpoints.IlCentral1RegionID:   "Z02941091PERNCB1MI5H7",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "Z2BBTEKR2I36N2",
+	endpoints.SaEast1RegionID:    "Z10X7K2B4QSOFV",
+	endpoints.UsEast1RegionID:    "Z117KPS5GTRQ2G",
+	endpoints.UsEast2RegionID:    "Z14LCN19Q5QHIC",
+	endpoints.UsWest1RegionID:    "Z1LQECGX5PH1X",
+	endpoints.UsWest2RegionID:    "Z38NKT9BP95V3O",
+	endpoints.UsGovEast1RegionID: "Z35TSARG0EJ4VU",
+	endpoints.UsGovWest1RegionID: "Z4KAURWC4UUUG",
 }
 
 // @SDKDataSource("aws_elastic_beanstalk_hosted_zone")
@@ -60,7 +61,7 @@ func dataSourceHostedZone() *schema.Resource {
 
 func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}

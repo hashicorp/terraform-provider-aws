@@ -9,7 +9,6 @@ var (
 	DiffSuppressKeyOrAlias      = diffSuppressKeyOrAlias
 	FindAliasByName             = findAliasByName
 	FindDefaultKeyARNForService = findDefaultKeyARNForService
-	FindKeyByID                 = findKeyByID
 	ValidateKey                 = validateKey
 	ValidateKeyOrAlias          = validateKeyOrAlias
 )

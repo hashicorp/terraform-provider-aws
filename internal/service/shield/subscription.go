@@ -67,7 +67,7 @@ func (r *resourceSubscription) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = types.StringValue(r.Meta().AccountID)
+	plan.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	if plan.AutoRenew.Equal(types.StringValue(string(awstypes.AutoRenewDisabled))) {
 		resp.Diagnostics.AddError(
