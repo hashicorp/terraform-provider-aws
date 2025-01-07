@@ -6,6 +6,7 @@ package s3
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -103,6 +104,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 			"routing_rule": {
 				Type:          schema.TypeList,
 				Optional:      true,
+				Computed:      false, // find another way
 				ConflictsWith: []string{"routing_rules"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -159,9 +161,11 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 			"routing_rules": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      false,
 				ConflictsWith: []string{"routing_rule"},
 				ValidateFunc:  validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
+					fmt.Println("-------> inside StateFunc", v)
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -181,6 +185,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	fmt.Println("\nexecute CREATE. raw config ++++", d.GetRawConfig())
 
 	websiteConfig := &types.WebsiteConfiguration{}
 
@@ -247,6 +252,11 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	fmt.Println("\n execute READ operation ++++")
+	// fmt.Println("READ raw plan \n", d.GetRawPlan())
+	// fmt.Println("READ raw config \n", d.GetRawConfig())
+	fmt.Println("READ BEFORE raw state id:", d.Id(), "\n", d.State())
+
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -275,9 +285,10 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	if err := d.Set("redirect_all_requests_to", flattenRedirectAllRequestsTo(output.RedirectAllRequestsTo)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting redirect_all_requests_to: %s", err)
 	}
-	if err := d.Set("routing_rule", flattenRoutingRules(output.RoutingRules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting routing_rule: %s", err)
-	}
+
+	// if err := d.Set("routing_rule", flattenRoutingRules(output.RoutingRules)); err != nil {
+	// 	return sdkdiag.AppendErrorf(diags, "setting routing_rule: %s", err)
+	// }
 	if output.RoutingRules != nil {
 		rr, err := normalizeRoutingRules(output.RoutingRules)
 		if err != nil {
@@ -295,6 +306,7 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
 	}
+	fmt.Println("READ AFTER raw state id:", d.Id(), "\n", d.State())
 
 	return diags
 }
@@ -302,11 +314,15 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	fmt.Println("execute UPDATE operation ++++")
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+	fmt.Println("UPDATE raw plan \n", d.GetRawPlan())
+	fmt.Println("UPDATE raw config \n", d.GetRawConfig())
+	fmt.Println("UPDATE raw state \n", d.State())
 
 	websiteConfig := &types.WebsiteConfiguration{}
 
@@ -323,6 +339,16 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChanges("routing_rule", "routing_rules") {
+		fmt.Println("inside routing rules as changes detected ++++")
+		fmt.Println("routing_rule", d.HasChange("routing_rule"), "routing_rules", d.HasChange("routing_rules"))
+		o, n := d.GetChange("routing_rule")
+		oldInstanceID, newInstanceID := o, n
+		fmt.Println("routing_rule :: old", oldInstanceID, "new", newInstanceID)
+
+		// if routing_rules but not routing_rule
+
+		// if routing_rule but not routing_rules
+
 		if d.HasChange("routing_rule") {
 			websiteConfig.RoutingRules = expandRoutingRules(d.Get("routing_rule").([]interface{}))
 		} else {
