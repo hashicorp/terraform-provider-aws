@@ -32,7 +32,7 @@ resource "aws_elasticache_user_group" "test" {
 
 The following arguments are required:
 
-* `engine` - (Required) The current supported value are `REDIS`, `VALKEY`.
+* `engine` - (Required) The current supported value are `REDIS`, `VALKEY` (case insensitive).
 * `user_group_id` - (Required) The ID of the user group.
 
 The following arguments are optional:
