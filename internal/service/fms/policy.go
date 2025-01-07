@@ -196,11 +196,11 @@ func resourcePolicy() *schema.Resource {
 															"last_entries":  networkAclEntrySetNestedBlock,
 															"force_remediate_for_first_entries": {
 																Type:     schema.TypeBool,
-																Optional: false,
+																Required: true,
 															},
 															"force_remediate_for_last_entries": {
 																Type:     schema.TypeBool,
-																Optional: false,
+																Required: true,
 															},
 														},
 													},
@@ -264,15 +264,15 @@ var (
 		Schema: map[string]*schema.Schema{
 			"egress": {
 				Type:     schema.TypeBool,
-				Optional: false,
+				Required: true,
 			},
 			"protocol": {
 				Type:     schema.TypeString,
-				Optional: false,
+				Required: true,
 			},
 			"rule_action": {
 				Type:     schema.TypeString,
-				Optional: false,
+				Required: true,
 			},
 			"cidr_block": {
 				Type:     schema.TypeString,
