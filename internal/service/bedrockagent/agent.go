@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -450,8 +451,10 @@ func expandBaseUpdateInput(ctx context.Context, value agentResourceModel) bedroc
 
 }
 
-func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	agent, prepareErr := prepareAgent(ctx, conn, id, timeout)
+func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) diag.Diagnostics {
+	_, prepareErr := prepareAgent(ctx, conn, id, timeout)
+
+	var diags diag.Diagnostics
 
 	// This occurs when the last Collaborator from a SUPERVISOR Agent has been removed
 	if errs.IsAErrorMessageContains[*awstypes.ValidationException](prepareErr, "The AgentCollaboration attribute is set to SUPERVISOR but no agent collaborators are added.") {
@@ -462,43 +465,61 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 
 		getAgentOutput, err := conn.GetAgent(ctx, &getAgentInput)
 		if err != nil {
-			return nil, err
+			diags.AddError("failed to read agent", err.Error())
+			return diags
 		}
 
 		var state agentResourceModel
-		fwflex.Flatten(ctx, getAgentOutput.Agent, &state)
+		diags.Append(fwflex.Flatten(ctx, getAgentOutput.Agent, &state)...)
+		if diags.HasError() {
+			return diags
+		}
 
 		updateInput := expandBaseUpdateInput(ctx, state)
-		// Set Collaboration to DISABLED and prepare the agent to release the collaborator alias
+		// Set Collaboration to DISABLED so the agent can be prepared
 		updateInput.AgentCollaboration = awstypes.AgentCollaborationDisabled
 
 		_, err = conn.UpdateAgent(ctx, &updateInput)
 		if err != nil {
-			return nil, err
+			diags.AddError("failed to update agent", err.Error())
+			return diags
 		}
 
-		agent, err = waitAgentUpdated(ctx, conn, id, timeout)
+		_, err = waitAgentUpdated(ctx, conn, id, timeout)
 
 		if err != nil {
-			return nil, err
+			diags.AddError("failed to wait for agent update", err.Error())
+			return diags
 		}
 
-		agent, err = prepareAgent(ctx, conn, id, timeout)
+		// Preparing the agent releases the reference to the collaborators alias
+		_, err = prepareAgent(ctx, conn, id, timeout)
 
 		if err != nil {
-			return nil, err
+			diags.AddError("failed to prepare agent", err.Error())
+			return diags
 		}
 
 		// Set Collaboration back to SUPERVISOR
 		updateInput.AgentCollaboration = awstypes.AgentCollaborationSupervisor
 		_, err = conn.UpdateAgent(ctx, &updateInput)
 		if err != nil {
-			return nil, err
+			diags.AddError("failed to update agent", err.Error())
+			return diags
 		}
-		return waitAgentUpdated(ctx, conn, id, timeout)
+
+		_, err = waitAgentUpdated(ctx, conn, id, timeout)
+		if err != nil {
+			diags.AddError("failed to wait for agent update", err.Error())
+			return diags
+		}
+
 	} else {
-		return agent, prepareErr
+		if prepareErr != nil {
+			diags.AddError("failed to prepare agent", prepareErr.Error())
+		}
 	}
+	return diags
 }
 
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {

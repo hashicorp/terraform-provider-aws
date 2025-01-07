@@ -305,8 +305,8 @@ func (r *resourceAgentCollaborator) Delete(ctx context.Context, request resource
 	}
 
 	if state.PrepareAgent.ValueBool() || state.PrepareAgent.IsNull() {
-		if _, err := prepareSupervisorToReleaseCollaborator(ctx, conn, state.AgentId.ValueString(), r.UpdateTimeout(ctx, state.Timeouts)); err != nil {
-			response.Diagnostics.AddError("preparing Agent", err.Error())
+		response.Diagnostics.Append(prepareSupervisorToReleaseCollaborator(ctx, conn, state.AgentId.ValueString(), r.UpdateTimeout(ctx, state.Timeouts))...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
