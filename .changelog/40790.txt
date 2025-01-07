@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_internet_gateway: Handle `operation error EC2: DetachInternetGateway, ..., api error InvalidInternetGatewayID.NotFound: ...` errors on delete for resources deleted out-of-band
+```
+
+```release-note:bug
+resource/aws_internet_gateway_attachment: Handle `operation error EC2: DetachInternetGateway, ..., api error InvalidInternetGatewayID.NotFound: ...` errors on delete for resources deleted out-of-band
+```

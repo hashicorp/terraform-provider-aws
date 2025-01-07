@@ -279,24 +279,36 @@ go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
 	@misspell -error -source auto -i "littel,ceasar" internal/
 
-golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 ## [CI] All golangci-lint Checks
+golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
-golangci-lint1: ## [CI] golangci-lint Checks / 1 of 3
-	@echo "make: golangci-lint Checks / 1 of 3..."
+golangci-lint1: ## [CI] golangci-lint Checks / 1 of 5
+	@echo "make: golangci-lint Checks / 1 of 5..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
 		$(TEST)
 
-golangci-lint2: ## [CI] golangci-lint Checks / 2 of 3
-	@echo "make: golangci-lint Checks / 2 of 3..."
+golangci-lint2: ## [CI] golangci-lint Checks / 2 of 5
+	@echo "make: golangci-lint Checks / 2 of 5..."
 	@golangci-lint run \
 		--config .ci/.golangci2.yml \
 		$(TEST)
 
-golangci-lint3: ## [CI] golangci-lint Checks / 3 of 3
-	@echo "make: golangci-lint Checks / 3 of 3..."
+golangci-lint3: ## [CI] golangci-lint Checks / 3 of 5
+	@echo "make: golangci-lint Checks / 3 of 5..."
 	@golangci-lint run \
 		--config .ci/.golangci3.yml \
+		$(TEST)
+
+golangci-lint4: ## [CI] golangci-lint Checks / 4 of 5
+	@echo "make: golangci-lint Checks / 4 of 5..."
+	@golangci-lint run \
+		--config .ci/.golangci4.yml \
+		$(TEST)
+
+golangci-lint5: ## [CI] golangci-lint Checks / 5 of 5
+	@echo "make: golangci-lint Checks / 5 of 5..."
+	@golangci-lint run \
+		--config .ci/.golangci5.yml \
 		$(TEST)
 
 help: ## Display this help
@@ -865,6 +877,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	golangci-lint1 \
 	golangci-lint2 \
 	golangci-lint3 \
+	golangci-lint4 \
+	golangci-lint5 \
 	golangci-lint \
 	help \
 	import-lint \
