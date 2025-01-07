@@ -305,17 +305,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) ||
 		!new.AgentCollaboration.Equal(old.AgentCollaboration) {
-		input := &bedrockagent.UpdateAgentInput{
-			AgentId:                  fwflex.StringFromFramework(ctx, new.AgentID),
-			AgentCollaboration:       new.AgentCollaboration.ValueEnum(),
-			AgentName:                fwflex.StringFromFramework(ctx, new.AgentName),
-			AgentResourceRoleArn:     fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
-			CustomerEncryptionKeyArn: fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN),
-			Description:              fwflex.StringFromFramework(ctx, new.Description),
-			FoundationModel:          fwflex.StringFromFramework(ctx, new.FoundationModel),
-			IdleSessionTTLInSeconds:  fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds),
-			Instruction:              fwflex.StringFromFramework(ctx, new.Instruction),
-		}
+		input := expandBaseUpdateInput(ctx, new)
 
 		if !new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) {
 			input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
@@ -343,7 +333,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			}
 		}
 
-		_, err := conn.UpdateAgent(ctx, input)
+		_, err := conn.UpdateAgent(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent (%s)", new.ID.ValueString()), err.Error())
@@ -445,15 +435,70 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 	return agent, nil
 }
 
-func prepareAgentIgnoreCollaborationError(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	agent, err := prepareAgent(ctx, conn, id, timeout)
-
-	// Ignore the ValidationException for AgentCollaboration being set
-	// This occurs when the last Collaborator from an Agent has been removed
-	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The AgentCollaboration attribute is set to") {
-		return agent, nil
+func expandBaseUpdateInput(ctx context.Context, value agentResourceModel) bedrockagent.UpdateAgentInput {
+	return bedrockagent.UpdateAgentInput{
+		AgentId:                  fwflex.StringFromFramework(ctx, value.AgentID),
+		AgentCollaboration:       value.AgentCollaboration.ValueEnum(),
+		AgentName:                fwflex.StringFromFramework(ctx, value.AgentName),
+		AgentResourceRoleArn:     fwflex.StringFromFramework(ctx, value.AgentResourceRoleARN),
+		CustomerEncryptionKeyArn: fwflex.StringFromFramework(ctx, value.CustomerEncryptionKeyARN),
+		Description:              fwflex.StringFromFramework(ctx, value.Description),
+		FoundationModel:          fwflex.StringFromFramework(ctx, value.FoundationModel),
+		IdleSessionTTLInSeconds:  fwflex.Int32FromFramework(ctx, value.IdleSessionTTLInSeconds),
+		Instruction:              fwflex.StringFromFramework(ctx, value.Instruction),
 	}
-	return agent, err
+
+}
+
+func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
+	agent, prepareErr := prepareAgent(ctx, conn, id, timeout)
+
+	// This occurs when the last Collaborator from a SUPERVISOR Agent has been removed
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](prepareErr, "The AgentCollaboration attribute is set to SUPERVISOR but no agent collaborators are added.") {
+
+		getAgentInput := bedrockagent.GetAgentInput{
+			AgentId: aws.String(id),
+		}
+
+		getAgentOutput, err := conn.GetAgent(ctx, &getAgentInput)
+		if err != nil {
+			return nil, err
+		}
+
+		var state agentResourceModel
+		fwflex.Flatten(ctx, getAgentOutput.Agent, &state)
+
+		updateInput := expandBaseUpdateInput(ctx, state)
+		// Set Collaboration to DISABLED and prepare the agent to release the collaborator alias
+		updateInput.AgentCollaboration = awstypes.AgentCollaborationDisabled
+
+		_, err = conn.UpdateAgent(ctx, &updateInput)
+		if err != nil {
+			return nil, err
+		}
+
+		agent, err = waitAgentUpdated(ctx, conn, id, timeout)
+
+		if err != nil {
+			return nil, err
+		}
+
+		agent, err = prepareAgent(ctx, conn, id, timeout)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Set Collaboration back to SUPERVISOR
+		updateInput.AgentCollaboration = awstypes.AgentCollaborationSupervisor
+		_, err = conn.UpdateAgent(ctx, &updateInput)
+		if err != nil {
+			return nil, err
+		}
+		return waitAgentUpdated(ctx, conn, id, timeout)
+	} else {
+		return agent, prepareErr
+	}
 }
 
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
