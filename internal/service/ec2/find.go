@@ -5398,13 +5398,13 @@ func findEIPByAllocationID(ctx context.Context, conn *ec2.Client, id string) (*a
 }
 
 func findEIPByAssociationID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Address, error) {
-	input := &ec2.DescribeAddressesInput{
+	input := ec2.DescribeAddressesInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"association-id": id,
 		}),
 	}
 
-	output, err := findEIP(ctx, conn, input)
+	output, err := findEIP(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
