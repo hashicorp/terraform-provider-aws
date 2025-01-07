@@ -12,6 +12,10 @@ FEATURES:
 * **New Data Source:** `aws_ecs_clusters` ([#40638](https://github.com/hashicorp/terraform-provider-aws/issues/40638))
 * **New Data Source:** `aws_route53_records` ([#38186](https://github.com/hashicorp/terraform-provider-aws/issues/38186))
 * **New Resource:** `aws_cleanrooms_membership` ([#35165](https://github.com/hashicorp/terraform-provider-aws/issues/35165))
+* **New Resource:** `aws_cloudwatch_log_delivery` ([#40731](https://github.com/hashicorp/terraform-provider-aws/issues/40731))
+* **New Resource:** `aws_cloudwatch_log_delivery_destination` ([#40731](https://github.com/hashicorp/terraform-provider-aws/issues/40731))
+* **New Resource:** `aws_cloudwatch_log_delivery_destination_policy` ([#40731](https://github.com/hashicorp/terraform-provider-aws/issues/40731))
+* **New Resource:** `aws_cloudwatch_log_delivery_source` ([#40731](https://github.com/hashicorp/terraform-provider-aws/issues/40731))
 * **New Resource:** `aws_cloudwatch_log_index_policy` ([#40594](https://github.com/hashicorp/terraform-provider-aws/issues/40594))
 
 ENHANCEMENTS:
