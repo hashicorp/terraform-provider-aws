@@ -306,7 +306,11 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) ||
 		!new.AgentCollaboration.Equal(old.AgentCollaboration) {
-		input := expandBaseUpdateInput(ctx, new)
+		var input bedrockagent.UpdateAgentInput
+		response.Diagnostics.Append(flexExpandForUpdate(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 
 		if !new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) {
 			input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
@@ -436,18 +440,8 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 	return agent, nil
 }
 
-func expandBaseUpdateInput(ctx context.Context, value agentResourceModel) bedrockagent.UpdateAgentInput {
-	return bedrockagent.UpdateAgentInput{
-		AgentId:                  fwflex.StringFromFramework(ctx, value.AgentID),
-		AgentCollaboration:       value.AgentCollaboration.ValueEnum(),
-		AgentName:                fwflex.StringFromFramework(ctx, value.AgentName),
-		AgentResourceRoleArn:     fwflex.StringFromFramework(ctx, value.AgentResourceRoleARN),
-		CustomerEncryptionKeyArn: fwflex.StringFromFramework(ctx, value.CustomerEncryptionKeyARN),
-		Description:              fwflex.StringFromFramework(ctx, value.Description),
-		FoundationModel:          fwflex.StringFromFramework(ctx, value.FoundationModel),
-		IdleSessionTTLInSeconds:  fwflex.Int32FromFramework(ctx, value.IdleSessionTTLInSeconds),
-		Instruction:              fwflex.StringFromFramework(ctx, value.Instruction),
-	}
+func flexExpandForUpdate(ctx context.Context, value agentResourceModel, apiObject any) diag.Diagnostics {
+	return fwflex.Expand(ctx, value, apiObject, fwflex.WithIgnoredFieldNames([]string{"CustomerEncryptionKeyARN", "GuardrailConfiguration", "PromptOverrideConfiguration"}))
 }
 
 func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) diag.Diagnostics {
@@ -473,7 +467,12 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 			return diags
 		}
 
-		updateInput := expandBaseUpdateInput(ctx, state)
+		var updateInput bedrockagent.UpdateAgentInput
+		diags.Append(flexExpandForUpdate(ctx, state, &updateInput)...)
+		if diags.HasError() {
+			return diags
+		}
+
 		// Set Collaboration to DISABLED so the agent can be prepared
 		updateInput.AgentCollaboration = awstypes.AgentCollaborationDisabled
 
