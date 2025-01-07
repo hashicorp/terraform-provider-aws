@@ -20,9 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
@@ -395,7 +394,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -404,9 +403,9 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0)
 
   tags = {
     Name = %[1]q
@@ -414,7 +413,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name = %[1]q
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 }
 `, rName)
@@ -423,11 +422,11 @@ resource "aws_security_group" "test" {
 func testAccResourceGatewayConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test.id]
-  subnet_ids = [aws_subnet.test.id]
-  ip_address_type = "IPV4"
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = "IPV4"
 }
 `, rName))
 }
@@ -435,11 +434,11 @@ resource "aws_vpclattice_resource_gateway" "test" {
 func testAccResourceGatewayConfig_addressType(rName, addressType string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test.id]
-  subnet_ids = [aws_subnet.test.id]
-  ip_address_type = %[2]q
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = %[2]q
 }
 `, rName, addressType))
 }
@@ -448,9 +447,9 @@ func testAccResourceGatewayConfig_multipleSubnets(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_subnet" "test2" {
   availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.2.0/24"
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.2.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
     Name = %[1]q
@@ -458,11 +457,11 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test.id]
-  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
-  ip_address_type = "IPV4"
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
+  ip_address_type    = "IPV4"
 }
 `, rName))
 }
@@ -470,12 +469,12 @@ resource "aws_vpclattice_resource_gateway" "test" {
 func testAccResourceGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test.id]
-  subnet_ids = [aws_subnet.test.id]
-  ip_address_type = "IPV4"
-  
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = "IPV4"
+
   tags = {
     %[2]q = %[3]q
   }
@@ -486,12 +485,12 @@ resource "aws_vpclattice_resource_gateway" "test" {
 func testAccResourceGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test.id]
-  subnet_ids = [aws_subnet.test.id]
-  ip_address_type = "IPV4"
-  
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = "IPV4"
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
@@ -507,11 +506,11 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test.id, aws_security_group.test2.id]
-  subnet_ids = [aws_subnet.test.id]
-  ip_address_type = "IPV4"
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = "IPV4"
 }
 `, rName))
 }
@@ -523,11 +522,11 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test2.id]
-  subnet_ids = [aws_subnet.test.id]
-  ip_address_type = "IPV4"
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test2.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = "IPV4"
 }
 `, rName))
 }
