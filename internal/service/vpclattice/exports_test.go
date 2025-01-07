@@ -19,6 +19,7 @@ var (
 
 	ResourceAccessLogSubscription            = resourceAccessLogSubscription
 	ResourceListener                         = resourceListener
+	ResourceResourceGateway                  = newResourceResourceGateway
 	ResourceService                          = resourceService
 	ResourceServiceNetwork                   = resourceServiceNetwork
 	ResourceServiceNetworkServiceAssociation = resourceServiceNetworkServiceAssociation

@@ -316,13 +316,7 @@ func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceResourceGateway = newResourceResourceGateway
-					// acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceGateway, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
