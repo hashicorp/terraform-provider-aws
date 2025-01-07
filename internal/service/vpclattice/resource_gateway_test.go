@@ -134,6 +134,70 @@ func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var resourcegateway vpclattice.GetResourceGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_gateway.test"
+	securityGroup1 := "aws_security_group.test"
+	securityGroup2 := "aws_security_group.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceGatewayConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResourceGatewayConfig_update1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+			{
+				Config: testAccResourceGatewayConfig_update2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -301,7 +365,6 @@ resource "aws_vpclattice_resource_gateway" "test" {
 func testAccResourceGatewayConfig_update1(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
-  name = %[1]q
   vpc_id = aws_vpc.test.id
 }
 
@@ -318,7 +381,6 @@ resource "aws_vpclattice_resource_gateway" "test" {
 func testAccResourceGatewayConfig_update2(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
-  name = %[1]q
   vpc_id = aws_vpc.test.id
 }
 

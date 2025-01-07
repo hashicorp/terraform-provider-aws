@@ -273,6 +273,10 @@ func (r *resourceResourceGateway) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
+func (r *resourceResourceGateway) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
 func (r *resourceResourceGateway) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
