@@ -48,12 +48,20 @@ func resourceEIPAssociation() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ExactlyOneOf: []string{
+					names.AttrInstanceID,
+					names.AttrNetworkInterfaceID,
+				},
 			},
 			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ExactlyOneOf: []string{
+					names.AttrInstanceID,
+					names.AttrNetworkInterfaceID,
+				},
 			},
 			"private_ip_address": {
 				Type:     schema.TypeString,
