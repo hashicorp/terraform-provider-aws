@@ -6,7 +6,6 @@ package elasticache
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,13 +48,10 @@ func resourceUserGroup() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"REDIS"}, false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validation.StringInSlice([]string{"REDIS", "VALKEY"}, false),
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -157,10 +154,13 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
 		}
 
+		if d.HasChange(names.AttrEngine) {
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+		}
+
 		if d.HasChange("user_ids") {
 			o, n := d.GetChange("user_ids")
-			del := o.(*schema.Set).Difference(n.(*schema.Set))
-			add := n.(*schema.Set).Difference(o.(*schema.Set))
+			add, del := n.(*schema.Set).Difference(o.(*schema.Set)), o.(*schema.Set).Difference(n.(*schema.Set))
 
 			if add.Len() > 0 {
 				input.UserIdsToAdd = flex.ExpandStringValueSet(add)
