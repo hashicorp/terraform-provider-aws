@@ -134,6 +134,46 @@ func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceGateway_multipleSubnets(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var resourcegateway vpclattice.GetResourceGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_gateway.test"
+	subnetResourceName1 := "aws_subnet.test"
+	subnetResourceName2 := "aws_subnet.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceGatewayConfig_multipleSubnets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName1, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName2, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -305,6 +345,10 @@ func testAccCheckResourceGatewayNotRecreated(before, after *vpclattice.GetResour
 
 func testAccResourceGatewayConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
   cidr_block = "10.0.0.0/16"
@@ -315,6 +359,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.1.0/24"
   ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0)
@@ -357,6 +402,17 @@ resource "aws_vpclattice_resource_gateway" "test" {
 
 func testAccResourceGatewayConfig_multipleSubnets(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
+resource "aws_subnet" "test2" {
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.2.0/24"
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_vpclattice_resource_gateway" "test" {
   name             = %[1]q
   vpc_id = aws_vpc.test.id
