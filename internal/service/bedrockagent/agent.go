@@ -441,7 +441,7 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 }
 
 func flexExpandForUpdate(ctx context.Context, value agentResourceModel, apiObject any) diag.Diagnostics {
-	return fwflex.Expand(ctx, value, apiObject, fwflex.WithIgnoredFieldNames([]string{"CustomerEncryptionKeyARN", "GuardrailConfiguration", "PromptOverrideConfiguration"}))
+	return fwflex.Expand(ctx, value, apiObject, fwflex.WithIgnoredFieldNames([]string{"GuardrailConfiguration", "PromptOverrideConfiguration"}))
 }
 
 func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) diag.Diagnostics {
