@@ -34,7 +34,7 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 				),
@@ -62,7 +62,7 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEIPAssociation(), resourceName),
 				),
@@ -87,9 +87,24 @@ func TestAccEC2EIPAssociation_instance(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_instance(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resource1Name, &a),
+					resource.TestMatchResourceAttr(resource1Name, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resource1Name, "allocation_id", "aws_eip.test.0", names.AttrID),
+					resource.TestCheckNoResourceAttr(resource1Name, "allow_reassociation"),
+					resource.TestCheckResourceAttrPair(resource1Name, names.AttrInstanceID, "aws_instance.test.0", names.AttrID),
+					resource.TestCheckResourceAttrSet(resource1Name, names.AttrNetworkInterfaceID),
+					resource.TestCheckResourceAttrPair(resource1Name, "private_ip_address", "aws_instance.test.0", "private_ip"),
+					resource.TestCheckResourceAttrPair(resource1Name, "public_ip", "aws_eip.test.0", "public_ip"),
+
 					testAccCheckEIPAssociationExists(ctx, resource2Name, &a),
+					resource.TestMatchResourceAttr(resource2Name, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resource2Name, "allocation_id", "aws_eip.test.1", names.AttrID),
+					resource.TestCheckNoResourceAttr(resource2Name, "allow_reassociation"),
+					resource.TestCheckResourceAttrPair(resource2Name, names.AttrInstanceID, "aws_instance.test.1", names.AttrID),
+					resource.TestCheckResourceAttrSet(resource2Name, names.AttrNetworkInterfaceID),
+					resource.TestCheckResourceAttrPair(resource2Name, "private_ip_address", "aws_instance.test.1", "private_ip"),
+					resource.TestCheckResourceAttrPair(resource2Name, "public_ip", "aws_eip.test.1", "public_ip"),
 				),
 			},
 		},
@@ -110,8 +125,15 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_networkInterface(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, "aws_network_interface.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "private_ip_address", "aws_network_interface.test", "private_ip"),
+					resource.TestCheckResourceAttrPair(resourceName, "public_ip", "aws_eip.test", "public_ip"),
 				),
 			},
 			{
@@ -141,10 +163,15 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_spotInstance(rName, publicKey),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
-					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_spot_instance_request.test", "spot_instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
+					resource.TestCheckResourceAttrPair(resourceName, "private_ip_address", "aws_spot_instance_request.test", "private_ip"),
+					resource.TestCheckResourceAttrPair(resourceName, "public_ip", "aws_eip.test", "public_ip"),
 				),
 			},
 			{
