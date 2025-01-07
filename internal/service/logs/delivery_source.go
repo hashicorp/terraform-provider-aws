@@ -78,6 +78,9 @@ func (r *deliverySourceResource) Schema(ctx context.Context, request resource.Sc
 			},
 			"service": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
