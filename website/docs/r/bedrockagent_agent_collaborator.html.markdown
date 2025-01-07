@@ -77,6 +77,7 @@ resource "aws_bedrockagent_agent" "example_collaborator" {
 resource "aws_bedrockagent_agent" "example_supervisor" {
   agent_name                  = "my-agent-supervisor"
   agent_resource_role_arn     = aws_iam_role.example.arn
+  agent_collaboration         = "SUPERVISOR"
   idle_session_ttl_in_seconds = 500
   foundation_model            = "anthropic.claude-3-5-sonnet-20241022-v2:0"
   instruction                 = "tell the sub agent what to do"
