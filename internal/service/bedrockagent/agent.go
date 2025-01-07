@@ -448,7 +448,6 @@ func expandBaseUpdateInput(ctx context.Context, value agentResourceModel) bedroc
 		IdleSessionTTLInSeconds:  fwflex.Int32FromFramework(ctx, value.IdleSessionTTLInSeconds),
 		Instruction:              fwflex.StringFromFramework(ctx, value.Instruction),
 	}
-
 }
 
 func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) diag.Diagnostics {
@@ -458,7 +457,6 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 
 	// This occurs when the last Collaborator from a SUPERVISOR Agent has been removed
 	if errs.IsAErrorMessageContains[*awstypes.ValidationException](prepareErr, "The AgentCollaboration attribute is set to SUPERVISOR but no agent collaborators are added.") {
-
 		getAgentInput := bedrockagent.GetAgentInput{
 			AgentId: aws.String(id),
 		}
@@ -513,7 +511,6 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 			diags.AddError("failed to wait for agent update", err.Error())
 			return diags
 		}
-
 	} else {
 		if prepareErr != nil {
 			diags.AddError("failed to prepare agent", prepareErr.Error())
