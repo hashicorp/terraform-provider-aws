@@ -27,9 +27,6 @@ import (
 
 func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -50,6 +47,80 @@ func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeResourceGateway_addressTypeDualstack(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var resourcegateway vpclattice.GetResourceGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_gateway.test"
+	addressType := "DUALSTACK"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceGatewayConfig_addressType(rName, addressType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", addressType),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var resourcegateway vpclattice.GetResourceGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_gateway.test"
+	addressType := "IPV6"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceGatewayConfig_addressType(rName, addressType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", addressType),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
@@ -203,28 +274,16 @@ resource "aws_vpclattice_resource_gateway" "test" {
 `, rName))
 }
 
-func testAccResourceGatewayConfig_addressTypeDualstack(rName string) string {
+func testAccResourceGatewayConfig_addressType(rName, addressType string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_resource_gateway" "test" {
   name             = %[1]q
   vpc_id = aws_vpc.test.id
   security_group_ids         = [aws_security_group.test.id]
   subnet_ids = [aws_subnet.test.id]
-  ip_address_type = "DUALSTACK"
+  ip_address_type = %[2]q
 }
-`, rName))
-}
-
-func testAccResourceGatewayConfig_addressTypeIPv6(rName string) string {
-	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
-resource "aws_vpclattice_resource_gateway" "test" {
-  name             = %[1]q
-  vpc_id = aws_vpc.test.id
-  security_group_ids         = [aws_security_group.test.id]
-  subnet_ids = [aws_subnet.test.id]
-  ip_address_type = "IPV6"
-}
-`, rName))
+`, rName, addressType))
 }
 
 func testAccResourceGatewayConfig_multipleSubnets(rName string) string {
