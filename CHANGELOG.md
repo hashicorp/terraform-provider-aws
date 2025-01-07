@@ -29,6 +29,7 @@ ENHANCEMENTS:
 * resource/aws_cognito_user_pool: Add `user_pool_tier` argument ([#40633](https://github.com/hashicorp/terraform-provider-aws/issues/40633))
 * resource/aws_dms_endpoint: Add `kafka_settings.sasl_mechanism` argument ([#36918](https://github.com/hashicorp/terraform-provider-aws/issues/36918))
 * resource/aws_ecr_account_setting: Add valid values for registry policy scope to `name` and `value` arguments ([#40772](https://github.com/hashicorp/terraform-provider-aws/issues/40772))
+* resource/aws_eip_association: Adds validation to only allow one of `instance_id` or `network_interface_id` ([#40769](https://github.com/hashicorp/terraform-provider-aws/issues/40769))
 * resource/aws_eks_node_group: Add `node_repair_config` configuration block ([#40698](https://github.com/hashicorp/terraform-provider-aws/issues/40698))
 * resource/aws_elasticache_user: Add `VALKEY` as supported value for 'engine' argument ([#40764](https://github.com/hashicorp/terraform-provider-aws/issues/40764))
 * resource/aws_elasticache_user_group: Add `VALKEY` as supported value for 'engine' argument ([#40764](https://github.com/hashicorp/terraform-provider-aws/issues/40764))
