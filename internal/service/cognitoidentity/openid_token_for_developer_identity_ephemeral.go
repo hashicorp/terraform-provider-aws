@@ -5,7 +5,6 @@ package cognitoidentity
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
@@ -16,32 +15,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @EphemeralResource("aws_cognito_identity_openid_token_for_developer_identity", name="Cognito Identity Open ID Token for Developer Identity")
-func newEphemeralOpenIDTokenForDeveloperIdentity(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralOpenIDTokenForDeveloperIdentity{}, nil
+// @EphemeralResource("aws_cognito_identity_openid_token_for_developer_identity", name="Open ID Connect Token For Developer Identity")
+func newOpenIDTokenForDeveloperIdentityEphemeralResource(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &openIDTokenForDeveloperIdentityEphemeralResource{}, nil
 }
 
-const (
-	EPNameOpenIDForDeveloperIdentityToken = "Open ID Token for Developer Identity Ephemeral Resource"
-)
-
-type ephemeralOpenIDTokenForDeveloperIdentity struct {
+type openIDTokenForDeveloperIdentityEphemeralResource struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (e *ephemeralOpenIDTokenForDeveloperIdentity) Metadata(_ context.Context, req ephemeral.MetadataRequest, resp *ephemeral.MetadataResponse) {
-	resp.TypeName = "aws_cognito_identity_openid_token_for_developer_identity"
+func (*openIDTokenForDeveloperIdentityEphemeralResource) Metadata(_ context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
+	response.TypeName = "aws_cognito_identity_openid_token_for_developer_identity"
 }
 
-func (e *ephemeralOpenIDTokenForDeveloperIdentity) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (e *openIDTokenForDeveloperIdentityEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"identity_id": schema.StringAttribute{
 				Optional: true,
@@ -51,7 +44,6 @@ func (e *ephemeralOpenIDTokenForDeveloperIdentity) Schema(ctx context.Context, r
 					stringvalidator.LengthBetween(1, 55),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"identity_pool_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -60,7 +52,7 @@ func (e *ephemeralOpenIDTokenForDeveloperIdentity) Schema(ctx context.Context, r
 				},
 			},
 			"logins": schema.MapAttribute{
-				CustomType: fwtypes.NewMapTypeOf[types.String](ctx),
+				CustomType: fwtypes.MapOfStringType,
 				Required:   true,
 				Validators: []validator.Map{
 					mapvalidator.KeysAre(
@@ -73,7 +65,7 @@ func (e *ephemeralOpenIDTokenForDeveloperIdentity) Schema(ctx context.Context, r
 				},
 			},
 			"principal_tags": schema.MapAttribute{
-				CustomType: fwtypes.NewMapTypeOf[types.String](ctx),
+				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 				Validators: []validator.Map{
 					mapvalidator.KeysAre(
@@ -99,41 +91,40 @@ func (e *ephemeralOpenIDTokenForDeveloperIdentity) Schema(ctx context.Context, r
 	}
 }
 
-func (e *ephemeralOpenIDTokenForDeveloperIdentity) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
+func (e *openIDTokenForDeveloperIdentityEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	var data openIDTokenForDeveloperIdentityEphemeralResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := e.Meta().CognitoIdentityClient(ctx)
 
-	var data ephemeralOpenIDTokenForDeveloperIdentityModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var input cognitoidentity.GetOpenIdTokenForDeveloperIdentityInput
-	resp.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
-
-	out, err := conn.GetOpenIdTokenForDeveloperIdentity(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIdentity, create.ErrActionReading, EPNameOpenIDForDeveloperIdentityToken, data.IdentityId.String(), err),
-			err.Error(),
-		)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.Token = types.StringPointerValue(out.Token)
-	data.IdentityId = types.StringPointerValue(out.IdentityId)
-	data.ID = types.StringValue(
-		fmt.Sprintf("%s/%s", data.IdentityId.ValueString(), data.IdentityPoolId.ValueString()),
-	)
-	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
+	output, err := conn.GetOpenIdTokenForDeveloperIdentity(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError("creating Cognito Identity Open ID Connect Token For Developer Identity", err.Error())
+
+		return
+	}
+
+	data.IdentityID = fwflex.StringToFramework(ctx, output.IdentityId)
+	data.Token = fwflex.StringToFramework(ctx, output.Token)
+
+	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
-type ephemeralOpenIDTokenForDeveloperIdentityModel struct {
-	IdentityId     types.String                     `tfsdk:"identity_id"`
-	IdentityPoolId types.String                     `tfsdk:"identity_pool_id"`
-	ID             types.String                     `tfsdk:"id"`
-	Logins         fwtypes.MapValueOf[types.String] `tfsdk:"logins"`
-	PrincipalTags  fwtypes.MapValueOf[types.String] `tfsdk:"principal_tags"`
-	TokenDuration  types.Int64                      `tfsdk:"token_duration"`
-	Token          types.String                     `tfsdk:"token"`
+type openIDTokenForDeveloperIdentityEphemeralResourceModel struct {
+	IdentityID     types.String        `tfsdk:"identity_id"`
+	IdentityPoolID types.String        `tfsdk:"identity_pool_id"`
+	Logins         fwtypes.MapOfString `tfsdk:"logins"`
+	PrincipalTags  fwtypes.MapOfString `tfsdk:"principal_tags"`
+	Token          types.String        `tfsdk:"token"`
+	TokenDuration  types.Int64         `tfsdk:"token_duration"`
 }

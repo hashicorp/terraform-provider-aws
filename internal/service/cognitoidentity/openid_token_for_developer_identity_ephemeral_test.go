@@ -20,7 +20,6 @@ import (
 
 func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uuid, err := uuid.GenerateUUID()
 	developerProviderName := sdkacctest.RandString(10)
@@ -61,8 +60,10 @@ func testAccOpenIDTokenForDeveloperIdentityEphemeralConfig_basic(rName, develope
 		testAccPoolConfig_developerProviderName(rName, developerProviderName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
+
 ephemeral "aws_cognito_identity_openid_token_for_developer_identity" "test" {
   identity_pool_id = aws_cognito_identity_pool.test.id
+
   logins = {
     %[2]q = "user123"
   }

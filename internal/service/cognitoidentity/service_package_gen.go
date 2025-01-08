@@ -17,8 +17,8 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
 	return []*types.ServicePackageEphemeralResource{
 		{
-			Factory: newEphemeralOpenIDTokenForDeveloperIdentity,
-			Name:    "Cognito Identity Open ID Token for Developer Identity",
+			Factory: newOpenIDTokenForDeveloperIdentityEphemeralResource,
+			Name:    "Open ID Connect Token For Developer Identity",
 		},
 	}
 }
