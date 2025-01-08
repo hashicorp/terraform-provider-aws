@@ -26,7 +26,6 @@ import (
 
 func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
@@ -61,7 +60,6 @@ func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 
 func TestAccVPCLatticeResourceGateway_addressTypeDualstack(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
@@ -98,7 +96,6 @@ func TestAccVPCLatticeResourceGateway_addressTypeDualstack(t *testing.T) {
 
 func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
@@ -135,7 +132,6 @@ func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
 
 func TestAccVPCLatticeResourceGateway_multipleSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
@@ -175,7 +171,6 @@ func TestAccVPCLatticeResourceGateway_multipleSubnets(t *testing.T) {
 
 func TestAccVPCLatticeResourceGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
@@ -225,7 +220,6 @@ func TestAccVPCLatticeResourceGateway_tags(t *testing.T) {
 
 func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
@@ -242,7 +236,7 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceGatewayConfig_update1(rName, securityGroup1),
+				Config: testAccResourceGatewayConfig_update1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
@@ -259,7 +253,7 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceGatewayConfig_update2(rName, securityGroup1, securityGroup2),
+				Config: testAccResourceGatewayConfig_update2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
@@ -277,13 +271,13 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceGatewayConfig_update1(rName, securityGroup2),
+				Config: testAccResourceGatewayConfig_update1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
@@ -294,10 +288,6 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 
 func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
@@ -377,11 +367,7 @@ func testAccCheckResourceGatewayExists(ctx context.Context, name string, resourc
 }
 
 func testAccResourceGatewayConfig_base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
   cidr_block                       = "10.0.0.0/16"
@@ -405,8 +391,12 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName)
+`, rName))
 }
 
 func testAccResourceGatewayConfig_basic(rName string) string {
@@ -487,7 +477,7 @@ resource "aws_vpclattice_resource_gateway" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccResourceGatewayConfig_update1(rName, securityGroup1 string) string {
+func testAccResourceGatewayConfig_update1(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
   vpc_id = aws_vpc.test.id
@@ -496,14 +486,14 @@ resource "aws_security_group" "test2" {
 resource "aws_vpclattice_resource_gateway" "test" {
   name               = %[1]q
   vpc_id             = aws_vpc.test.id
-  security_group_ids = [%[2]s.id]
+  security_group_ids = [aws_security_group.test.id]
   subnet_ids         = [aws_subnet.test.id]
   ip_address_type    = "IPV4"
 }
-`, rName, securityGroup1))
+`, rName))
 }
 
-func testAccResourceGatewayConfig_update2(rName, securityGroup1, securityGroup2 string) string {
+func testAccResourceGatewayConfig_update2(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
   vpc_id = aws_vpc.test.id
@@ -512,9 +502,9 @@ resource "aws_security_group" "test2" {
 resource "aws_vpclattice_resource_gateway" "test" {
   name               = %[1]q
   vpc_id             = aws_vpc.test.id
-  security_group_ids = [%[2]s.id, %[3]s.id]
+  security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
   subnet_ids         = [aws_subnet.test.id]
   ip_address_type    = "IPV4"
 }
-`, rName, securityGroup1, securityGroup2))
+`, rName))
 }
