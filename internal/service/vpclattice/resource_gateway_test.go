@@ -44,10 +44,10 @@ func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 			{
@@ -80,11 +80,11 @@ func TestAccVPCLatticeResourceGateway_addressTypeDualstack(t *testing.T) {
 				Config: testAccResourceGatewayConfig_addressType(rName, addressType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", addressType),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, addressType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 			{
@@ -117,11 +117,11 @@ func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
 				Config: testAccResourceGatewayConfig_addressType(rName, addressType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", addressType),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, addressType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 			{
@@ -155,13 +155,13 @@ func TestAccVPCLatticeResourceGateway_multipleSubnets(t *testing.T) {
 				Config: testAccResourceGatewayConfig_multipleSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName1, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName2, names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 			{
@@ -245,12 +245,12 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 			{
@@ -262,13 +262,13 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 				Config: testAccResourceGatewayConfig_update1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 			{
@@ -280,12 +280,12 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 				Config: testAccResourceGatewayConfig_update2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 		},
@@ -371,16 +371,6 @@ func testAccCheckResourceGatewayExists(ctx context.Context, name string, resourc
 		}
 
 		*resourcegateway = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckResourceGatewayNotRecreated(before, after *vpclattice.GetResourceGatewayOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingNotRecreated, tfvpclattice.ResNameResourceGateway, before, errors.New("recreated"))
-		}
 
 		return nil
 	}

@@ -61,13 +61,13 @@ func (r *resourceResourceGateway) Schema(ctx context.Context, req resource.Schem
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			"ip_address_type": schema.StringAttribute{
+			names.AttrIPAddressType: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -198,7 +198,6 @@ func (r *resourceResourceGateway) Update(ctx context.Context, req resource.Updat
 
 	// Only security group IDs can be updated
 	if !plan.SecurityGroupIDs.Equal(state.SecurityGroupIDs) {
-
 		in := &vpclattice.UpdateResourceGatewayInput{
 			ResourceGatewayIdentifier: aws.String(plan.ID.ValueString()),
 			SecurityGroupIds:          flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
@@ -278,7 +277,7 @@ func (r *resourceResourceGateway) ModifyPlan(ctx context.Context, request resour
 }
 
 func (r *resourceResourceGateway) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitResourceGatewayActive(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceGatewayOutput, error) {
