@@ -64,7 +64,7 @@ func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	sdkType := d.Get("sdk_type").(string)
-	input := &apigateway.GetSdkInput{
+	input := apigateway.GetSdkInput{
 		RestApiId: aws.String(apiID),
 		SdkType:   aws.String(sdkType),
 		StageName: aws.String(stageName),
@@ -76,7 +76,7 @@ func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	id := apiID + ":" + stageName + ":" + sdkType
 
-	sdk, err := conn.GetSdk(ctx, input)
+	sdk, err := conn.GetSdk(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway SDK (%s): %s", id, err)
