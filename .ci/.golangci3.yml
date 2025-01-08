@@ -54,6 +54,7 @@ linters-settings:
       - int32validator.*
       - int64validator.*
       - listvalidator.*
+      - mapvalidator.*
       - setvalidator.*
       - stringvalidator.*
       - SetDefaultCreateTimeout
