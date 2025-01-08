@@ -82,6 +82,7 @@ The following arguments are optional:
 * `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
 * `password_policy` - (Optional) Configuration block for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
+* `sign_in_policy` - (Optional) Configuration block for information about the user pool sign in policy. [Detailed below](#sign_in_policy).
 * `sms_authentication_message` - (Optional) String representing the SMS authentication message. The Message must contain the `{####}` placeholder, which will be replaced with the code.
 * `sms_configuration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 * `sms_verification_message` - (Optional) String representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
@@ -89,9 +90,11 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_attribute_update_settings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `user_pool_add_ons` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
+* `user_pool_tier` - (Optional) The user pool [feature plan](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-sign-in-feature-plans.html), or tier. Valid values: `LITE`, `ESSENTIALS`, `PLUS`.
 * `username_attributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
 * `verification_message_template` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
+* `web_authn_configuration` - (Optional) Configuration block for web authn configuration. [Detailed below](#web_authn_configuration).
 
 ### account_recovery_setting
 
@@ -166,6 +169,15 @@ The following arguments are optional:
 * `require_symbols` - (Optional) Whether you have required users to use at least one symbol in their password.
 * `require_uppercase` - (Optional) Whether you have required users to use at least one uppercase letter in their password.
 * `temporary_password_validity_days` - (Optional) In the password policy you have set, refers to the number of days a temporary password is valid. If the user does not sign-in during this time, their password will need to be reset by an administrator.
+
+### sign_in_policy
+
+* `allowed_first_auth_factors` (Optional) The sign in methods your user pool supports as the first factor. This is a list of strings, allowed values are `PASSWORD`, `EMAIL_OTP`, `SMS_OTP`, and `WEB_AUTHN`.
+
+### web_authn_configuration
+
+* `relying_party_id` - (Optional) The authentication domain that passkeys providers use as a relying party.
+* `user_verification` - (Optional) If your user pool should require a passkey. Must be one of `required` or `preferred`.
 
 ### schema
 

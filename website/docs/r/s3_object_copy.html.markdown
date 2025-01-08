@@ -26,6 +26,24 @@ resource "aws_s3_object_copy" "test" {
 }
 ```
 
+### Ignoring Provider `default_tags`
+
+S3 objects support a [maximum of 10 tags](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html).
+If the resource's own `tags` and the provider-level `default_tags` would together lead to more than 10 tags on an S3 object copy, use the `override_provider` configuration block to suppress any provider-level `default_tags`.
+
+```terraform
+resource "aws_s3_object_copy" "test" {
+  bucket = "destination_bucket"
+  key    = "destination_key"
+  source = "source_bucket/source_key"
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -88,6 +106,12 @@ This configuration block has the following optional arguments (one of the three 
 * `uri` - (Optional) URI of the grantee group. Used only when `type` is `Group`.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
+
+### Override Provider
+
+The `override_provider` block supports the following:
+
+* `default_tags` - (Optional) Override the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Attribute Reference
 
