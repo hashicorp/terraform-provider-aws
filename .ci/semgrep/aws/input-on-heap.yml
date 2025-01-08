@@ -4,8 +4,6 @@ rules:
     message: Create the $PKG.$INPUT struct on the stack instead of on the heap
     paths:
       exclude:
-        - "internal/service/**/service_endpoints_gen_test.go"
-        - "internal/service/**/tags_gen.go"
         - "internal/service/apigatewayv2"
         - "internal/service/appconfig"
         - "internal/service/appfabric"
