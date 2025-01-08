@@ -15,9 +15,9 @@ Terraform resource for managing an AWS VPC Lattice Resource Gateway.
 
 ```terraform
 resource "aws_vpclattice_resource_gateway" "example" {
-  name               = "Example"
-  vpc_id             = aws_vpc.example.id
-  subnet_ids         = [aws_subnet.example.id]
+  name       = "Example"
+  vpc_id     = aws_vpc.example.id
+  subnet_ids = [aws_subnet.example.id]
 
   tags = {
     Environment = "Example"
@@ -29,10 +29,10 @@ resource "aws_vpclattice_resource_gateway" "example" {
 
 ```terraform
 resource "aws_vpclattice_resource_gateway" "example" {
-  name               = "Example"
-  vpc_id             = aws_vpc.example.id
-  subnet_ids         = [aws_subnet.example.id]
-  ip_address_type    = "DUALSTACK"
+  name            = "Example"
+  vpc_id          = aws_vpc.example.id
+  subnet_ids      = [aws_subnet.example.id]
+  ip_address_type = "DUALSTACK"
 
   tags = {
     Environment = "Example"
@@ -61,8 +61,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `ip_address_type` - (Optional) IP address type used by the resource gateway. Valid values are `IPV4`, `IPV6`, and `DUALSTACK`. The IP address type of a resource gateway must be compatible with the subnets of the resource gateway and the IP address type of the resource. 
-* `security_group_ids` - 	(Optional) Security group IDs associated with the resource gateway. The security groups must be in the same VPC.
+* `ip_address_type` - (Optional) IP address type used by the resource gateway. Valid values are `IPV4`, `IPV6`, and `DUALSTACK`. The IP address type of a resource gateway must be compatible with the subnets of the resource gateway and the IP address type of the resource.
+* `security_group_ids` - (Optional) Security group IDs associated with the resource gateway. The security groups must be in the same VPC.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

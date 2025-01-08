@@ -412,9 +412,9 @@ resource "aws_security_group" "test" {
 func testAccResourceGatewayConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_resource_gateway" "test" {
-  name               = %[1]q
-  vpc_id             = aws_vpc.test.id
-  subnet_ids         = [aws_subnet.test.id]
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = [aws_subnet.test.id]
 }
 `, rName))
 }
