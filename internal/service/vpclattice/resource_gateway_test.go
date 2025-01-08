@@ -242,7 +242,7 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceGatewayConfig_basic(rName),
+				Config: testAccResourceGatewayConfig_update1(rName, securityGroup1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
@@ -259,7 +259,7 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceGatewayConfig_update1(rName),
+				Config: testAccResourceGatewayConfig_update2(rName, securityGroup1, securityGroup2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
@@ -277,7 +277,7 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceGatewayConfig_update2(rName),
+				Config: testAccResourceGatewayConfig_update1(rName, securityGroup2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
@@ -487,7 +487,7 @@ resource "aws_vpclattice_resource_gateway" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccResourceGatewayConfig_update1(rName string) string {
+func testAccResourceGatewayConfig_update1(rName, securityGroup1 string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
   vpc_id = aws_vpc.test.id
@@ -496,14 +496,14 @@ resource "aws_security_group" "test2" {
 resource "aws_vpclattice_resource_gateway" "test" {
   name               = %[1]q
   vpc_id             = aws_vpc.test.id
-  security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
+  security_group_ids = [%[2]s.id]
   subnet_ids         = [aws_subnet.test.id]
   ip_address_type    = "IPV4"
 }
-`, rName))
+`, rName, securityGroup1))
 }
 
-func testAccResourceGatewayConfig_update2(rName string) string {
+func testAccResourceGatewayConfig_update2(rName, securityGroup1, securityGroup2 string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
   vpc_id = aws_vpc.test.id
@@ -512,9 +512,9 @@ resource "aws_security_group" "test2" {
 resource "aws_vpclattice_resource_gateway" "test" {
   name               = %[1]q
   vpc_id             = aws_vpc.test.id
-  security_group_ids = [aws_security_group.test2.id]
+  security_group_ids = [%[2]s.id, %[3]s.id]
   subnet_ids         = [aws_subnet.test.id]
   ip_address_type    = "IPV4"
 }
-`, rName))
+`, rName, securityGroup1, securityGroup2))
 }
