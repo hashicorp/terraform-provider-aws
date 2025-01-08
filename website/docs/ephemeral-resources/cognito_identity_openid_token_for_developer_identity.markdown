@@ -46,6 +46,6 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This ephemeral resource exports the following attributes in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `token` - An OpenID token.
