@@ -31,6 +31,7 @@ import (
 // @FrameworkResource("aws_cloudwatch_log_index_policy", name="Index Policy")
 func newIndexPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexPolicyResource{}
+
 	return r, nil
 }
 
