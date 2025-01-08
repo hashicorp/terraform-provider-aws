@@ -125,7 +125,7 @@ The `agent_descriptor` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `collaborator_id` - ID of the Agent Collaborator
+* `collaborator_id` - ID of the Agent Collaborator.
 
 ## Timeouts
 
