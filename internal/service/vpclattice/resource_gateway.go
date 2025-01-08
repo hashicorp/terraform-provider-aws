@@ -122,7 +122,7 @@ func (r *resourceResourceGateway) Create(ctx context.Context, req resource.Creat
 	}
 
 	// Create uses attribute name `VpcIdentifier` instead of VpcId
-	in.VpcIdentifier = aws.String(plan.VPCID.ValueString())
+	in.VpcIdentifier = plan.VPCID.ValueStringPointer()
 	in.ClientToken = aws.String(sdkid.UniqueId())
 	in.Tags = getTagsIn(ctx)
 
@@ -199,7 +199,7 @@ func (r *resourceResourceGateway) Update(ctx context.Context, req resource.Updat
 	// Only security group IDs can be updated
 	if !plan.SecurityGroupIDs.Equal(state.SecurityGroupIDs) {
 		in := &vpclattice.UpdateResourceGatewayInput{
-			ResourceGatewayIdentifier: aws.String(plan.ID.ValueString()),
+			ResourceGatewayIdentifier: plan.ID.ValueStringPointer(),
 			SecurityGroupIds:          flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
 		}
 
@@ -246,7 +246,7 @@ func (r *resourceResourceGateway) Delete(ctx context.Context, req resource.Delet
 	}
 
 	in := &vpclattice.DeleteResourceGatewayInput{
-		ResourceGatewayIdentifier: aws.String(state.ID.ValueString()),
+		ResourceGatewayIdentifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteResourceGateway(ctx, in)
