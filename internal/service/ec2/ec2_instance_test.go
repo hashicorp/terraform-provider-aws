@@ -5492,6 +5492,18 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHTTPEndPoint(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -9140,6 +9152,32 @@ resource "aws_instance" "test" {
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
     instance_metadata_tags      = "enabled"
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHTTPEndPoint(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {
+    http_endpoint               = "disabled"
+    http_protocol_ipv6          = "disabled"
+    http_tokens                 = "optional"
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "disabled"
   }
 }
 `, rName))
