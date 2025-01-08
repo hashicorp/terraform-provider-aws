@@ -241,8 +241,8 @@ github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.33.9 h1:41HYpMqQGJzfJfRirT
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.33.9/go.mod h1:nXFpwY9bqIPDCv5t0d0iST0DHlRb4iIsIG4BfAyevGE=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.27.1 h1:kywRSDFKOVFPH6IpihkzsezlguwDjUqFvR3AGYbkDQ0=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.27.1/go.mod h1:B0jBD6uiycypay/53cErzYD/SIbb6X/Hm9aTe5HL1m8=
-github.com/aws/aws-sdk-go-v2/service/eventbridge v1.36.1 h1:T/X6qqOleh63LMUt90FkdQ9dBKTFvogsRlrk0dkCFww=
-github.com/aws/aws-sdk-go-v2/service/eventbridge v1.36.1/go.mod h1:pd8aAX/C3BSJ4Y0PSF8KoOpXFP6p511Uu2PObSdhW/Y=
+github.com/aws/aws-sdk-go-v2/service/eventbridge v1.36.2 h1:es3A4qacM8ygOFqQwnhkHAjlmn3ZQjAV4hs1C8aroqM=
+github.com/aws/aws-sdk-go-v2/service/eventbridge v1.36.2/go.mod h1:pd8aAX/C3BSJ4Y0PSF8KoOpXFP6p511Uu2PObSdhW/Y=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.23.8 h1:xOp+ZD5VOvWqOMKk1qF+QHRlxv6QhzdVdtOwbno0Zxg=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.23.8/go.mod h1:TTCWa93TXhrb6CtYI69zr83iW7VsihxGPsoMQuhXCXk=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.28.8 h1:tqLO4nT7J1SuUm3F/8oNTW2ajvGItVu9APeStZX+Uhg=
