@@ -37,6 +37,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newAgentCollaboratorResource,
+			Name:    "Agent Collaborator",
+		},
+		{
 			Factory: newAgentKnowledgeBaseAssociationResource,
 			Name:    "Agent Knowledge Base Association",
 		},
@@ -57,10 +61,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-		},
-		{
-			Factory: newResourceAgentCollaborator,
-			Name:    "Agent Collaborator",
 		},
 	}
 }

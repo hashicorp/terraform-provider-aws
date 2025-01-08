@@ -8,7 +8,7 @@ var (
 	ResourceAgent                         = newAgentResource
 	ResourceAgentActionGroup              = newAgentActionGroupResource
 	ResourceAgentAlias                    = newAgentAliasResource
-	ResourceAgentCollaborator             = newResourceAgentCollaborator
+	ResourceAgentCollaborator             = newAgentCollaboratorResource
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
 	ResourceDataSource                    = newDataSourceResource
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource

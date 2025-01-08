@@ -5,17 +5,15 @@ package bedrockagent_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,11 +21,7 @@ import (
 
 func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var agentcollaborator types.AgentCollaborator
+	var agentcollaborator awstypes.AgentCollaborator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	resourceAlias := "aws_bedrockagent_agent_alias.test"
@@ -52,7 +46,7 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "agent_id", resourceSuper, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction),
-					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(types.RelayConversationHistoryToCollaborator)),
+					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(awstypes.RelayConversationHistoryToCollaborator)),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_descriptor.0.alias_arn", resourceAlias, "agent_alias_arn"),
 				),
 			},
@@ -67,11 +61,7 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 
 func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var agentcollaborator types.AgentCollaborator
+	var agentcollaborator awstypes.AgentCollaborator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	resourceAlias := "aws_bedrockagent_agent_alias.test"
@@ -96,7 +86,7 @@ func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
 					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction),
-					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(types.RelayConversationHistoryToCollaborator)),
+					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(awstypes.RelayConversationHistoryToCollaborator)),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_descriptor.0.alias_arn", resourceAlias, "agent_alias_arn"),
 				),
 			},
@@ -111,7 +101,7 @@ func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
 					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction2),
-					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(types.RelayConversationHistoryDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(awstypes.RelayConversationHistoryDisabled)),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_descriptor.0.alias_arn", resourceAlias2, "agent_alias_arn"),
 				),
 			},
@@ -121,11 +111,7 @@ func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 
 func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var agentcollaborator types.AgentCollaborator
+	var agentcollaborator awstypes.AgentCollaborator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	instruction := "tell the other agent what to do"
@@ -163,39 +149,38 @@ func testAccCheckAgentCollaboratorDestroy(ctx context.Context) resource.TestChec
 			}
 
 			_, err := tfbedrockagent.FindAgentCollaboratorByThreePartKey(ctx, conn, rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"], rs.Primary.Attributes["collaborator_id"])
+
 			if tfresource.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
-				return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, tfbedrockagent.ResNameAgentCollaborator, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, tfbedrockagent.ResNameAgentCollaborator, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Bedrock Agent Collaborator %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAgentCollaboratorExists(ctx context.Context, name string, agentcollaborator *types.AgentCollaborator) resource.TestCheckFunc {
+func testAccCheckAgentCollaboratorExists(ctx context.Context, n string, v *awstypes.AgentCollaborator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingExistence, tfbedrockagent.ResNameAgentCollaborator, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingExistence, tfbedrockagent.ResNameAgentCollaborator, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		resp, err := tfbedrockagent.FindAgentCollaboratorByThreePartKey(ctx, conn, rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"], rs.Primary.Attributes["collaborator_id"])
+		output, err := tfbedrockagent.FindAgentCollaboratorByThreePartKey(ctx, conn, rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"], rs.Primary.Attributes["collaborator_id"])
+
 		if err != nil {
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingExistence, tfbedrockagent.ResNameAgentCollaborator, rs.Primary.ID, err)
+			return err
 		}
 
-		*agentcollaborator = *resp
+		*v = *output
 
 		return nil
 	}
