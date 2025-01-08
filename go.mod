@@ -55,7 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.56.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.8
-	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.4
@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.5
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.8
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.29.1
@@ -133,7 +133,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.8
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.39.1
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.8
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.20.4
