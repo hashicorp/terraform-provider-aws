@@ -4,7 +4,6 @@
 package ecs
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -454,7 +452,6 @@ func resourceTaskDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceTaskDefinitionVolumeHash, // TODO: Do we need this?
 			},
 		},
 	}
@@ -732,65 +729,6 @@ func validTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []stri
 		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
 	}
 	return
-}
-
-func resourceTaskDefinitionVolumeHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
-
-	if v, ok := m["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		m := v.([]interface{})[0].(map[string]interface{})
-
-		if v, ok := m[names.AttrFileSystemID]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-
-		if v, ok := m["root_directory"]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-
-		if v, ok := m["transit_encryption"]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-		if v, ok := m["transit_encryption_port"]; ok && v.(int) > 0 {
-			buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-		}
-		if v, ok := m["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			m := v.([]interface{})[0].(map[string]interface{})
-			if v, ok := m["access_point_id"]; ok && v.(string) != "" {
-				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-			}
-			if v, ok := m["iam"]; ok && v.(string) != "" {
-				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-			}
-		}
-	}
-
-	if v, ok := m["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		m := v.([]interface{})[0].(map[string]interface{})
-
-		if v, ok := m[names.AttrFileSystemID]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-
-		if v, ok := m["root_directory"]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-
-		if v, ok := m["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			m := v.([]interface{})[0].(map[string]interface{})
-			if v, ok := m["credentials_parameter"]; ok && v.(string) != "" {
-				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-			}
-			if v, ok := m[names.AttrDomain]; ok && v.(string) != "" {
-				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-			}
-		}
-	}
-
-	return create.StringHashcode(buf.String())
 }
 
 func flattenTaskDefinitionPlacementConstraints(apiObjects []awstypes.TaskDefinitionPlacementConstraint) []interface{} {
