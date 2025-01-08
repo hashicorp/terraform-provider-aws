@@ -36,10 +36,15 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", "workspace/"+aws.ToString(v.WorkspaceId))(s)
+					},
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(v.WorkspaceId))(s)
+					},
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
@@ -84,7 +89,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 func TestAccAMPWorkspace_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDescription
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,10 +102,10 @@ func TestAccAMPWorkspace_kms(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_kms(rName1),
+				Config: testAccWorkspaceConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 		},
