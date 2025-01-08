@@ -493,8 +493,8 @@ github.com/aws/aws-sdk-go-v2/service/sns v1.33.9 h1:2XGaTUSuMEq0rPP7/h9s5c/v8mXV
 github.com/aws/aws-sdk-go-v2/service/sns v1.33.9/go.mod h1:Nf9YEyqE51C+Dyj0DWSATxvsr39jBFIss6Jee9Hyqx4=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.37.5 h1:gZp0bvAYAcjXOCkOURI1zqgG7qthhenNl9po+4sGL6A=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.37.5/go.mod h1:171mrsbgz6DahPMnLJzQiH3bXXrdsWhpE9USZiM19Lk=
-github.com/aws/aws-sdk-go-v2/service/ssm v1.56.2 h1:MOxvXH2kRP5exvqJxAZ0/H9Ar51VmADJh95SgZE8u60=
-github.com/aws/aws-sdk-go-v2/service/ssm v1.56.2/go.mod h1:RKWoqC9FlgMCkrfVOtgfqfwdaUIaq8H93UAt4xNaR0A=
+github.com/aws/aws-sdk-go-v2/service/ssm v1.56.3 h1:QMx9lj524IOWjI1IpmcXSkHaazGBzTPgBmECzbppF5s=
+github.com/aws/aws-sdk-go-v2/service/ssm v1.56.3/go.mod h1:RKWoqC9FlgMCkrfVOtgfqfwdaUIaq8H93UAt4xNaR0A=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.26.8 h1:PlcN/0lYOntA8seGJ0pEhVXYAXekUt2cQyIx9PV3+Y8=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.26.8/go.mod h1:CGeBTRZpsHvmOrHyCceuAPseVpJsyq0eMOo0Fu+4WgE=
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.34.8 h1:n88gB3+H7m6/4osKsHiI0r1CfAEAB7rfDtMXuOqVcnY=
