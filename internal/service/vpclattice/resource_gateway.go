@@ -62,7 +62,8 @@ func (r *resourceResourceGateway) Schema(ctx context.Context, req resource.Schem
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrIPAddressType: schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -81,6 +82,7 @@ func (r *resourceResourceGateway) Schema(ctx context.Context, req resource.Schem
 			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{

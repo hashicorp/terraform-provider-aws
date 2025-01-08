@@ -414,9 +414,7 @@ func testAccResourceGatewayConfig_basic(rName string) string {
 resource "aws_vpclattice_resource_gateway" "test" {
   name               = %[1]q
   vpc_id             = aws_vpc.test.id
-  security_group_ids = [aws_security_group.test.id]
   subnet_ids         = [aws_subnet.test.id]
-  ip_address_type    = "IPV4"
 }
 `, rName))
 }
