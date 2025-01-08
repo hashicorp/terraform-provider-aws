@@ -532,7 +532,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_fileSystemLocations(rName, "/mount1"),
+				Config: testAccProjectConfig_fileSystemLocations1(rName, "/mount1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
@@ -555,7 +555,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_fileSystemLocations(rName, "/mount2"),
+				Config: testAccProjectConfig_fileSystemLocations1(rName, "/mount2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
@@ -564,6 +564,13 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount2"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", string(types.FileSystemTypeEfs)),
+				),
+			},
+			{
+				Config: testAccProjectConfig_fileSystemLocations2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "0"),
 				),
 			},
 		},
@@ -3380,114 +3387,12 @@ resource "aws_codebuild_project" "test" {
 `, description, rName))
 }
 
-func testAccProjectConfig_fileSystemLocations(rName, mountPoint string) string {
+func testAccProjectConfig_fileSystemLocations1(rName, mountPoint string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_baseServiceRole(rName),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccProjectConfig_baseVPC(rName),
 		fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "public" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "public" {
-  route_table_id = aws_route_table.public.id
-  subnet_id      = aws_subnet.public.id
-}
-
-resource "aws_route" "public" {
-  route_table_id         = aws_route_table.public.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.test.id
-}
-
-resource "aws_subnet" "private" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_eip" "test" {
-  domain = "vpc"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_nat_gateway" "test" {
-  allocation_id = aws_eip.test.id
-  subnet_id     = aws_subnet.public.id
-
-  tags = {
-    Name = %[1]q
-  }
-
-  depends_on = [aws_route.public]
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "private" {
-  route_table_id = aws_route.private.route_table_id
-  subnet_id      = aws_subnet.private.id
-}
-
-resource "aws_route" "private" {
-  route_table_id         = aws_route_table.private.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.test.id
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
   tags = {
     Name = %[1]q
   }
@@ -3516,7 +3421,7 @@ resource "aws_codebuild_project" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnets            = [aws_subnet.private.id]
+    subnets            = [aws_subnet.test[0].id]
     vpc_id             = aws_vpc.test.id
   }
 
@@ -3529,6 +3434,41 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, mountPoint))
+}
+
+func testAccProjectConfig_fileSystemLocations2(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_baseServiceRole(rName),
+		testAccProjectConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+
+    privileged_mode = true
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test[0].id]
+    vpc_id             = aws_vpc.test.id
+  }
+}
+`, rName))
 }
 
 func testAccProjectConfig_sourceVersion(rName, sourceVersion string) string {
