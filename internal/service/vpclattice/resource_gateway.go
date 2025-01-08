@@ -5,36 +5,39 @@ package vpclattice
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Resource Gateway")
+// @FrameworkResource("aws_vpclattice_resource_gateway", name="Resource Gateway")
 // @Tags(identifierAttribute="arn")
-func newResourceResourceGateway(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourceGateway{}
+func newResourceGatewayResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceGatewayResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -43,51 +46,55 @@ func newResourceResourceGateway(_ context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-const (
-	ResNameResourceGateway = "Resource Gateway"
-)
-
-type resourceResourceGateway struct {
+type resourceGatewayResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceResourceGateway) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_vpclattice_resource_gateway"
+func (*resourceGatewayResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_vpclattice_resource_gateway"
 }
 
-func (r *resourceResourceGateway) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrIPAddressType: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.ResourceGatewayIpAddressType](),
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 40),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
 			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ResourceGatewayStatus](),
+				Computed:   true,
+			},
 			names.AttrSubnetIDs: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -108,178 +115,208 @@ func (r *resourceResourceGateway) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceResourceGateway) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceGatewayResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceGatewayResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	var plan resourceResourceGatewayData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := vpclattice.CreateResourceGatewayInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &vpclattice.CreateResourceGatewayInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
+	input.VpcIdentifier = fwflex.StringFromFramework(ctx, data.VPCID)
 
-	// Create uses attribute name `VpcIdentifier` instead of VpcId
-	in.VpcIdentifier = plan.VPCID.ValueStringPointer()
-	in.ClientToken = aws.String(sdkid.UniqueId())
-	in.Tags = getTagsIn(ctx)
+	outputCRG, err := conn.CreateResourceGateway(ctx, &input)
 
-	out, err := conn.CreateResourceGateway(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionCreating, ResNameResourceGateway, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating VPCLattice Resource Gateway (%s)", data.Name.ValueString()), err.Error())
+
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.Id)
+	// Set values for unknowns.
+	data.ID = fwflex.StringToFramework(ctx, outputCRG.Id)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	resourceGateway, err := waitResourceGatewayActive(ctx, conn, plan.ID.ValueString(), createTimeout)
+	outputGRG, err := waitResourceGatewayActive(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameResourceGateway, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPCLattice Resource Gateway (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, resourceGateway, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGRG, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceResourceGateway) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceResourceGatewayData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceGatewayResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceGatewayResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	out, err := findResourceGatewayByID(ctx, conn, state.ID.ValueString())
+	output, err := findResourceGatewayByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionSetting, ResNameResourceGateway, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading VPCLattice Resource Gateway (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceResourceGateway) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceResourceGatewayData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceGatewayResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new resourceGatewayResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	// Only security group IDs can be updated
-	if !plan.SecurityGroupIDs.Equal(state.SecurityGroupIDs) {
-		in := &vpclattice.UpdateResourceGatewayInput{
-			ResourceGatewayIdentifier: plan.ID.ValueStringPointer(),
-			SecurityGroupIds:          flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
+	// Only security group IDs can be updated.
+	if !new.SecurityGroupIDs.Equal(old.SecurityGroupIDs) {
+		input := vpclattice.UpdateResourceGatewayInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		out, err := conn.UpdateResourceGateway(ctx, in)
+		// Additional fields.
+		input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, new.ID)
+
+		_, err := conn.UpdateResourceGateway(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.VPCLattice, create.ErrActionUpdating, ResNameResourceGateway, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.VPCLattice, create.ErrActionUpdating, ResNameResourceGateway, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating VPCLattice Resource Gateway (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
 
-		plan.ARN = flex.StringToFramework(ctx, out.Arn)
-		plan.ID = flex.StringToFramework(ctx, out.Id)
+		outputGRG, err := waitResourceGatewayActive(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for VPCLattice Resource Gateway (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		new.Status = fwtypes.StringEnumValue(outputGRG.Status)
+	} else {
+		new.Status = old.Status
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitResourceGatewayActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameResourceGateway, plan.ID.String(), err),
-			err.Error(),
-		)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourceGatewayResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceResourceGateway) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	var state resourceResourceGatewayData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	_, err := conn.DeleteResourceGateway(ctx, &vpclattice.DeleteResourceGatewayInput{
+		ResourceGatewayIdentifier: fwflex.StringFromFramework(ctx, data.ID),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	in := &vpclattice.DeleteResourceGatewayInput{
-		ResourceGatewayIdentifier: state.ID.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteResourceGateway(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionDeleting, ResNameResourceGateway, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting VPCLattice Resource Gateway (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitResourceGatewayDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameResourceGateway, state.ID.String(), err),
-			err.Error(),
-		)
+	if _, err := waitResourceGatewayDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPCLattice Resource Gateway (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceResourceGateway) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *resourceGatewayResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceResourceGateway) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceGatewayOutput, error) {
+	input := vpclattice.GetResourceGatewayInput{
+		ResourceGatewayIdentifier: aws.String(id),
+	}
+
+	output, err := conn.GetResourceGateway(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findResourceGatewayByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 func waitResourceGatewayActive(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceGatewayOutput, error) {
@@ -288,13 +325,13 @@ func waitResourceGatewayActive(ctx context.Context, conn *vpclattice.Client, id 
 		Target:                    enum.Slice(awstypes.ResourceGatewayStatusActive),
 		Refresh:                   statusResourceGateway(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetResourceGatewayOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*vpclattice.GetResourceGatewayOutput); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -309,62 +346,24 @@ func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetResourceGatewayOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*vpclattice.GetResourceGatewayOutput); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findResourceGatewayByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, aws.ToString((*string)(&out.Status)), nil
-	}
-}
-
-func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceGatewayOutput, error) {
-	in := &vpclattice.GetResourceGatewayInput{
-		ResourceGatewayIdentifier: aws.String(id),
-	}
-
-	out, err := conn.GetResourceGateway(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
-type resourceResourceGatewayData struct {
-	ARN              types.String   `tfsdk:"arn"`
-	ID               types.String   `tfsdk:"id"`
-	IPAddressType    types.String   `tfsdk:"ip_address_type"`
-	Name             types.String   `tfsdk:"name"`
-	SecurityGroupIDs types.Set      `tfsdk:"security_group_ids"`
-	Status           types.String   `tfsdk:"status"`
-	SubnetIDs        types.Set      `tfsdk:"subnet_ids"`
-	Tags             tftags.Map     `tfsdk:"tags"`
-	TagsAll          tftags.Map     `tfsdk:"tags_all"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	VPCID            types.String   `tfsdk:"vpc_id"`
+type resourceGatewayResourceModel struct {
+	ARN              types.String                                              `tfsdk:"arn"`
+	ID               types.String                                              `tfsdk:"id"`
+	IPAddressType    fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
+	Name             types.String                                              `tfsdk:"name"`
+	SecurityGroupIDs fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
+	Status           fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
+	SubnetIDs        fwtypes.SetOfString                                       `tfsdk:"subnet_ids"`
+	Tags             tftags.Map                                                `tfsdk:"tags"`
+	TagsAll          tftags.Map                                                `tfsdk:"tags_all"`
+	Timeouts         timeouts.Value                                            `tfsdk:"timeouts"`
+	VPCID            types.String                                              `tfsdk:"vpc_id"`
 }
