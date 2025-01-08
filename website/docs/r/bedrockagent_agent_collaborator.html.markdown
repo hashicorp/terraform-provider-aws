@@ -146,7 +146,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock Agents Agent Collaborator using the `9LSJO0BFI8,DRAFT,AG3TN4RQIY`. For example:
+Using `terraform import`, import Bedrock Agents Agent Collaborator using a comma-delimited string combining `agent_id`, `agent_version`, and `collaborator_id`. For example:
 
 ```console
 % terraform import aws_bedrockagent_agent_collaborator.example 9LSJO0BFI8,DRAFT,AG3TN4RQIY
