@@ -11,6 +11,7 @@ FEATURES:
 * **New Data Source:** `aws_cloudwatch_event_buses` ([#40662](https://github.com/hashicorp/terraform-provider-aws/issues/40662))
 * **New Data Source:** `aws_ecs_clusters` ([#40638](https://github.com/hashicorp/terraform-provider-aws/issues/40638))
 * **New Data Source:** `aws_route53_records` ([#38186](https://github.com/hashicorp/terraform-provider-aws/issues/38186))
+* **New Ephemeral Resource:** `aws_cognito_identity_openid_token_for_developer_identity` ([#40763](https://github.com/hashicorp/terraform-provider-aws/issues/40763))
 * **New Resource:** `aws_bedrockagent_agent_collaborator` ([#40559](https://github.com/hashicorp/terraform-provider-aws/issues/40559))
 * **New Resource:** `aws_cleanrooms_membership` ([#35165](https://github.com/hashicorp/terraform-provider-aws/issues/35165))
 * **New Resource:** `aws_cloudwatch_log_delivery` ([#40731](https://github.com/hashicorp/terraform-provider-aws/issues/40731))
