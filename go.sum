@@ -515,8 +515,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.33.4 h1:EzofOvWNMtG9ELt9mPOJjLYh1hz6
 github.com/aws/aws-sdk-go-v2/service/sts v1.33.4/go.mod h1:5Gn+d+VaaRgsjewpMvGazt0WfcFO+Md4wLOuBfGR9Bc=
 github.com/aws/aws-sdk-go-v2/service/swf v1.27.10 h1:wuoRmZ5TlXJhXiwuIwCLHhPRyqM8sGeOuf69kQI9zIo=
 github.com/aws/aws-sdk-go-v2/service/swf v1.27.10/go.mod h1:BhhNXbUQvQWHqCE8ClGZ35wPk0X9yf7GENgrbR+QoNk=
-github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.1 h1:aCYlapkNpdKlwRz4PlJepE/mm7+axQOvu3Okjd5keGw=
-github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.1/go.mod h1:jw1F0BxkenHqIGQN6/CNwjQXaczGUnNygDkHL+eYaHc=
+github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.2 h1:OOYsXCw0IFrigZqnQ//QI4E98jlOovyIwk6qOvDjlu8=
+github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.2/go.mod h1:jw1F0BxkenHqIGQN6/CNwjQXaczGUnNygDkHL+eYaHc=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.2 h1:yoh8AI/J8XgXUfZoSZL6RTupb4bGNSWSXc5lv8gAHeY=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.2/go.mod h1:Hk446tKcJy9rblME6AOP4ohJzbg1OqzhcVagFxuTf7E=
 github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.1 h1:rPorKwVa4M69AL9nIW8uRPMz8RDgB2P6OwumayvqVUs=

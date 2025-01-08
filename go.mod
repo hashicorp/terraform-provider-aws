@@ -246,7 +246,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/swf v1.27.10
-	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.1
+	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.2
