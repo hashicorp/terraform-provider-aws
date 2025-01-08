@@ -5,15 +5,19 @@ package bedrockagent_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -131,7 +135,7 @@ func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 				Config: testAccAgentCollaboratorConfig_basic(rName, model, description, instruction),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceAgentCollaborator, resourceName),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfbedrockagent.ResourceAgentCollaborator, resourceName, agentCollaboratorDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -184,6 +188,41 @@ func testAccCheckAgentCollaboratorExists(ctx context.Context, n string, v *awsty
 
 		return nil
 	}
+}
+
+func agentCollaboratorDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+	v, ok := is.Attributes["agent_id"]
+	if !ok {
+		return errors.New(`Identifying attribute "agent_id" not defined`)
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("agent_id"), v)); err != nil {
+		return err
+	}
+
+	v, ok = is.Attributes["agent_version"]
+	if !ok {
+		return errors.New(`Identifying attribute "agent_version" not defined`)
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("agent_version"), v)); err != nil {
+		return err
+	}
+
+	v, ok = is.Attributes["collaborator_id"]
+	if !ok {
+		return errors.New(`Identifying attribute "collaborator_id" not defined`)
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("collaborator_id"), v)); err != nil {
+		return err
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("prepare_agent"), true)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func testAccAgentCollaboratorConfig_basic(rName, model, description, instruction string) string {
