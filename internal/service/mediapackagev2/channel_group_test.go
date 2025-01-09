@@ -43,7 +43,7 @@ func testAccMediaPackageChannelGroup_basic(t *testing.T) {
 				Config: testAccChannelGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mediapackagev2", regexache.MustCompile(`channelGroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackagev2", regexache.MustCompile(`channelGroup/.+`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDescription, regexache.MustCompile("Managed by Terraform")),
 					resource.TestMatchResourceAttr(resourceName, "egress_domain", regexache.MustCompile(fmt.Sprintf("^[0-9a-z]+.egress.[0-9a-z]+.mediapackagev2.%s.amazonaws.com$", acctest.Region()))),
 					resource.TestMatchResourceAttr(resourceName, "tags.Foo", regexache.MustCompile("Bar")),
@@ -115,7 +115,7 @@ func testAccMediaPackageChannelGroup_disappears(t *testing.T) {
 				Config: testAccChannelGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediapackagev2.ResourceChannelGroup(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmediapackagev2.ResourceChannelGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -180,7 +180,7 @@ func testAccCheckChannelGroupDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfmediapackagev2.FindChannelGroupByID(ctx, conn, rs.Primary.ID)
+			_, err := tfmediapackagev2.FindChannelGroupByID(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 			if err == nil {
 				return fmt.Errorf("MediaPackageV2 Channel Group: %s not deleted", rs.Primary.ID)
 			}

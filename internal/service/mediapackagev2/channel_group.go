@@ -24,7 +24,7 @@ package mediapackagev2
 //	"github.com/hashicorp/terraform-provider-aws/names"
 //)
 //
-//// @SDKResource("aws_media_packagev2_channel_group", name="Channel Group")
+
 //// @Tags(identifierAttribute="arn")
 //func ResourceChannelGroup() *schema.Resource {
 //	return &schema.Resource{
