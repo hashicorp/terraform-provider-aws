@@ -35,10 +35,10 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCIDRBlock, "aws_vpc.test", names.AttrCIDRBlock),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", "aws_security_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
@@ -71,10 +71,10 @@ func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 				Config: testAccEndpointConfig_private(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCIDRBlock, "aws_vpc.test", names.AttrCIDRBlock),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", "aws_security_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
@@ -107,10 +107,10 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 				Config: testAccEndpointConfig_customerOwnedIPv4Pool(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCIDRBlock, "aws_vpc.test", names.AttrCIDRBlock),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", "aws_security_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
@@ -154,7 +154,7 @@ func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3outposts_endpoint" {
@@ -188,7 +188,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No S3 Outposts Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsClient(ctx)
 
 		_, err := tfs3outposts.FindEndpointByARN(ctx, conn, rs.Primary.ID)
 

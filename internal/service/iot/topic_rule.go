@@ -1435,7 +1435,6 @@ pageLoop:
 		}
 
 		for _, v := range page.Rules {
-			v := v
 			if aws.ToString(v.RuleName) == name {
 				rule = &v
 				break pageLoop

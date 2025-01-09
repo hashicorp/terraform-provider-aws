@@ -75,7 +75,7 @@ func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}

@@ -59,6 +59,46 @@ func TestAccLexV2ModelsSlotType_basic(t *testing.T) {
 	})
 }
 
+func TestAccLexV2ModelsSlotType_values(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var slottype lexmodelsv2.DescribeSlotTypeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_slot_type.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSlotTypeConfig_values(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "slot_type_values.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "slot_type_values.0.%"),
+					resource.TestCheckResourceAttr(resourceName, "slot_type_values.0.sample_value.0.value", "testval"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccLexV2ModelsSlotType_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -85,6 +125,69 @@ func TestAccLexV2ModelsSlotType_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceSlotType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsSlotType_valueSelectionSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var slottype lexmodelsv2.DescribeSlotTypeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_slot_type.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSlotTypeConfig_valueSelectionSetting(rName, string(types.AudioRecognitionStrategyUseSlotValuesAsCustomVocabulary)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.0.advanced_recognition_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "value_selection_setting.0.advanced_recognition_setting.0.audio_recognition_strategy", string(types.AudioRecognitionStrategyUseSlotValuesAsCustomVocabulary)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsSlotType_compositeSlotTypeSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var slottype lexmodelsv2.DescribeSlotTypeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_slot_type.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSlotTypeConfig_compositeSlotTypeSetting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.0.name", "testname"),
+					resource.TestCheckResourceAttr(resourceName, "composite_slot_type_setting.0.sub_slots.0.slot_type_id", "AMAZON.Date"),
+				),
 			},
 		},
 	})
@@ -204,6 +307,85 @@ resource "aws_lexv2models_slot_type" "test" {
 
   value_selection_setting {
     resolution_strategy = "OriginalValue"
+  }
+}
+`, rName))
+}
+
+func testAccSlotTypeConfig_values(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSlotTypeConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot_type" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "OriginalValue"
+  }
+
+  slot_type_values {
+    sample_value {
+      value = "testval"
+    }
+  }
+  slot_type_values {
+    sample_value {
+      value = "testval2"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccSlotTypeConfig_valueSelectionSetting(rName, audioRecognitionStrategy string) string {
+	return acctest.ConfigCompose(
+		testAccSlotTypeConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot_type" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "OriginalValue"
+
+    advanced_recognition_setting {
+      audio_recognition_strategy = %[2]q
+    }
+  }
+
+  slot_type_values {
+    sample_value {
+      value = "testval"
+    }
+  }
+}
+`, rName, audioRecognitionStrategy))
+}
+
+func testAccSlotTypeConfig_compositeSlotTypeSetting(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSlotTypeConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot_type" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "Concatenation"
+  }
+
+  composite_slot_type_setting {
+    sub_slots {
+      name         = "testname"
+      slot_type_id = "AMAZON.Date"
+    }
   }
 }
 `, rName))

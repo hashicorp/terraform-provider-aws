@@ -27,7 +27,6 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_basic(name, email),
@@ -69,7 +68,6 @@ func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_filterUserName(name, email),
@@ -96,7 +94,6 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_uniqueAttributeUserName(name, email),
@@ -123,7 +120,6 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_email(name, email),
@@ -150,7 +146,6 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_id(name, email),

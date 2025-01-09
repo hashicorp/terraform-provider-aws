@@ -153,7 +153,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		DBProxyName:  aws.String(name),
 		EngineFamily: types.EngineFamily(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
-		Tags:         getTagsInV2(ctx),
+		Tags:         getTagsIn(ctx),
 		VpcSubnetIds: flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 

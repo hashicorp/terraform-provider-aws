@@ -46,8 +46,8 @@ type podIdentityAssociationResourceModel struct {
 	Namespace      types.String `tfsdk:"namespace"`
 	RoleARN        fwtypes.ARN  `tfsdk:"role_arn"`
 	ServiceAccount types.String `tfsdk:"service_account"`
-	Tags           types.Map    `tfsdk:"tags"`
-	TagsAll        types.Map    `tfsdk:"tags_all"`
+	Tags           tftags.Map   `tfsdk:"tags"`
+	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (model *podIdentityAssociationResourceModel) setID() {

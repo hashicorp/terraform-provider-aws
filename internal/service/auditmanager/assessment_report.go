@@ -87,11 +87,11 @@ func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.Crea
 	}
 
 	in := auditmanager.CreateAssessmentReportInput{
-		AssessmentId: aws.String(plan.AssessmentID.ValueString()),
-		Name:         aws.String(plan.Name.ValueString()),
+		AssessmentId: plan.AssessmentID.ValueStringPointer(),
+		Name:         plan.Name.ValueStringPointer(),
 	}
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	out, err := conn.CreateAssessmentReport(ctx, &in)
@@ -165,8 +165,8 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 	//   deleted. You can only delete assessment reports that are completed or failed
 	err := tfresource.Retry(ctx, reportCompletionTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteAssessmentReport(ctx, &auditmanager.DeleteAssessmentReportInput{
-			AssessmentId:       aws.String(state.AssessmentID.ValueString()),
-			AssessmentReportId: aws.String(state.ID.ValueString()),
+			AssessmentId:       state.AssessmentID.ValueStringPointer(),
+			AssessmentReportId: state.ID.ValueStringPointer(),
 		})
 		if err != nil {
 			var ve *awstypes.ValidationException

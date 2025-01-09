@@ -57,7 +57,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 
 	snapshotID := d.Get(names.AttrSnapshotID).(string)
 	accountID := d.Get(names.AttrAccountID).(string)
-	id := EBSSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID)
+	id := ebsSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID)
 	input := &ec2.ModifySnapshotAttributeInput{
 		Attribute: awstypes.SnapshotAttributeNameCreateVolumePermission,
 		CreateVolumePermission: &awstypes.CreateVolumePermissionModifications{
@@ -91,10 +91,9 @@ func resourceSnapshotCreateVolumePermissionRead(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
-
+	snapshotID, accountID, err := ebsSnapshotCreateVolumePermissionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshot CreateVolumePermission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = findCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
@@ -116,10 +115,9 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
-
+	snapshotID, accountID, err := ebsSnapshotCreateVolumePermissionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EBS Snapshot CreateVolumePermission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Snapshot CreateVolumePermission: %s", d.Id())
@@ -174,14 +172,14 @@ func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, di
 
 const ebsSnapshotCreateVolumePermissionIDSeparator = "-"
 
-func EBSSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID string) string {
+func ebsSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID string) string {
 	parts := []string{snapshotID, accountID}
 	id := strings.Join(parts, ebsSnapshotCreateVolumePermissionIDSeparator)
 
 	return id
 }
 
-func EBSSnapshotCreateVolumePermissionParseResourceID(id string) (string, string, error) {
+func ebsSnapshotCreateVolumePermissionParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ebsSnapshotCreateVolumePermissionIDSeparator, 3)
 
 	if len(parts) != 3 || parts[0] != "snap" || parts[1] == "" || parts[2] == "" {

@@ -152,7 +152,7 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 
 	// Additional fields.
 	input.ClientToken = aws.String(id.UniqueId())
-	input.TagSpecifications = getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
 
@@ -171,6 +171,11 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
 
 		return
+	}
+
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
 	}
 
 	// Set values for unknowns.
@@ -207,12 +212,17 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 		return
 	}
 
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	setTagsOutV2(ctx, instanceConnectEndpoint.Tags)
+	setTagsOut(ctx, instanceConnectEndpoint.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -265,8 +275,8 @@ type instanceConnectEndpointResourceModel struct {
 	PreserveClientIp           types.Bool     `tfsdk:"preserve_client_ip"`
 	SecurityGroupIds           types.Set      `tfsdk:"security_group_ids"`
 	SubnetId                   types.String   `tfsdk:"subnet_id"`
-	Tags                       types.Map      `tfsdk:"tags"`
-	TagsAll                    types.Map      `tfsdk:"tags_all"`
+	Tags                       tftags.Map     `tfsdk:"tags"`
+	TagsAll                    tftags.Map     `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
 	VpcId                      types.String   `tfsdk:"vpc_id"`
 }

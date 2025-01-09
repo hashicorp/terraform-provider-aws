@@ -5,12 +5,8 @@ package ecs
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,7 +15,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newClustersDataSource,
+			Name:    "Clusters",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -29,12 +30,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_ecs_cluster",
+			Name:     "Cluster",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceContainerDefinition,
+			Factory:  dataSourceContainerDefinition,
 			TypeName: "aws_ecs_container_definition",
+			Name:     "Container Definition",
 		},
 		{
 			Factory:  dataSourceService,
@@ -43,12 +47,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTaskDefinition,
+			Factory:  dataSourceTaskDefinition,
 			TypeName: "aws_ecs_task_definition",
+			Name:     "Task Definition",
 		},
 		{
-			Factory:  DataSourceTaskExecution,
+			Factory:  dataSourceTaskExecution,
 			TypeName: "aws_ecs_task_execution",
+			Name:     "Task Execution",
 		},
 	}
 }
@@ -56,12 +62,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccountSettingDefault,
+			Factory:  resourceAccountSettingDefault,
 			TypeName: "aws_ecs_account_setting_default",
-			Name:     "Account Setting Defauilt",
+			Name:     "Account Setting Default",
 		},
 		{
-			Factory:  ResourceCapacityProvider,
+			Factory:  resourceCapacityProvider,
 			TypeName: "aws_ecs_capacity_provider",
 			Name:     "Capacity Provider",
 			Tags: &types.ServicePackageResourceTags{
@@ -69,7 +75,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_ecs_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
@@ -77,11 +83,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterCapacityProviders,
+			Factory:  resourceClusterCapacityProviders,
 			TypeName: "aws_ecs_cluster_capacity_providers",
+			Name:     "Cluster Capacity Providers",
 		},
 		{
-			Factory:  ResourceService,
+			Factory:  resourceService,
 			TypeName: "aws_ecs_service",
 			Name:     "Service",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,7 +101,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "ECS Resource Tag",
 		},
 		{
-			Factory:  ResourceTaskDefinition,
+			Factory:  resourceTaskDefinition,
 			TypeName: "aws_ecs_task_definition",
 			Name:     "Task Definition",
 			Tags: &types.ServicePackageResourceTags{
@@ -102,7 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTaskSet,
+			Factory:  resourceTaskSet,
 			TypeName: "aws_ecs_task_set",
 			Name:     "Task Set",
 			Tags: &types.ServicePackageResourceTags{
@@ -116,30 +123,12 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ECS
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*ecs_sdkv1.ECS, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return ecs_sdkv1.New(sess.Copy(&cfg)), nil
-}
-
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ecs_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ecs.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return ecs_sdkv2.NewFromConfig(cfg,
-		ecs_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return ecs.NewFromConfig(cfg,
+		ecs.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

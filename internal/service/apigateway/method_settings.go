@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -175,7 +176,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "metrics/enabled"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.metrics_enabled").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.metrics_enabled").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.logging_level") {
@@ -189,14 +190,14 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "logging/dataTrace"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.data_trace_enabled").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.data_trace_enabled").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.throttling_burst_limit") {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "throttling/burstLimit"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.throttling_burst_limit").(int))),
+			Value: aws.String(strconv.Itoa(d.Get("settings.0.throttling_burst_limit").(int))),
 		})
 	}
 	if d.HasChange("settings.0.throttling_rate_limit") {
@@ -210,28 +211,28 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/enabled"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.caching_enabled").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.caching_enabled").(bool))),
 		})
 	}
 	if v, ok := d.GetOkExists("settings.0.cache_ttl_in_seconds"); ok {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/ttlInSeconds"),
-			Value: aws.String(fmt.Sprintf("%d", v.(int))),
+			Value: aws.String(strconv.Itoa(v.(int))),
 		})
 	}
 	if d.HasChange("settings.0.cache_data_encrypted") {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/dataEncrypted"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.cache_data_encrypted").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.cache_data_encrypted").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.require_authorization_for_cache_control") {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/requireAuthorizationForCacheControl"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.require_authorization_for_cache_control").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.require_authorization_for_cache_control").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.unauthorized_cache_control_header_strategy") {

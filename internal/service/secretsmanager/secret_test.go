@@ -39,7 +39,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 				Config: testAccSecretConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
@@ -168,7 +168,7 @@ func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
 		},
@@ -264,14 +264,14 @@ func TestAccSecretsManagerSecret_RecoveryWindowInDays_recreate(t *testing.T) {
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
 				),
 			},
 			{
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
 				),
 				Taint: []string{resourceName},
 			},

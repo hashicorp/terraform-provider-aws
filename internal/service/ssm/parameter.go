@@ -337,7 +337,8 @@ func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Deleting SSM Parameter: %s", d.Id())
 	_, err := conn.DeleteParameter(ctx, &ssm.DeleteParameterInput{
-		Name: aws.String(d.Id()),
+		// Use "name" instead of "id" in case the resource was imported by ARN.
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*awstypes.ParameterNotFound](err) {

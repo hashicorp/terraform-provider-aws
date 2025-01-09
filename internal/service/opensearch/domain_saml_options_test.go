@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
@@ -41,9 +41,9 @@ func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, esDomainResourceName, &domain),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.0.entity_id", idpEntityId),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
@@ -135,7 +135,7 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 			{
 				Config: testAccDomainSAMLOptionsConfig_update(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
@@ -162,7 +162,7 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
@@ -170,8 +170,8 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 			{
 				Config: testAccDomainSAMLOptionsConfig_disabled(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "0"),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
 			},
@@ -186,7 +186,7 @@ func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
@@ -220,7 +220,7 @@ func testAccCheckESDomainSAMLOptions(ctx context.Context, esResource string, sam
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 		_, err := tfopensearch.FindDomainByName(ctx, conn, options.Primary.Attributes[names.AttrDomainName])
 
 		return err

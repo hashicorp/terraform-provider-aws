@@ -142,6 +142,30 @@ resource "aws_pipes_pipe" "example" {
 }
 ```
 
+### CloudWatch Logs Logging Configuration Usage
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example-pipe-target"
+}
+
+resource "aws_pipes_pipe" "example" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = "example-pipe"
+  role_arn = aws_iam_role.example.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+  log_configuration {
+    include_execution_data = ["ALL"]
+    level                  = "INFO"
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
+  }
+}
+```
+
 ### SQS Source and Target Configuration Usage
 
 ```terraform
@@ -159,7 +183,7 @@ resource "aws_pipes_pipe" "example" {
   }
 
   target_parameters {
-    sqs_queue {
+    sqs_queue_parameters {
       message_deduplication_id = "example-dedupe"
       message_group_id         = "example-group"
     }
@@ -205,9 +229,10 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 
 You can find out more about EventBridge Pipes Enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-logs.html).
 
-* `level` - (Required) The level of logging detail to include. Valid values `OFF`, `ERROR`, `INFO` and `TRACE`.
 * `cloudwatch_logs_log_destination` - (Optional) Amazon CloudWatch Logs logging configuration settings for the pipe. Detailed below.
 * `firehose_log_destination` - (Optional) Amazon Kinesis Data Firehose logging configuration settings for the pipe. Detailed below.
+* `include_execution_data` - (Optional) String list that specifies whether the execution data (specifically, the `payload`, `awsRequest`, and `awsResponse` fields) is included in the log messages for this pipe. This applies to all log destinations for the pipe. Valid values `ALL`.
+* `level` - (Required) The level of logging detail to include. Valid values `OFF`, `ERROR`, `INFO` and `TRACE`.
 * `s3_log_destination` - (Optional) Amazon S3 logging configuration settings for the pipe. Detailed below.
 
 #### log_configuration.cloudwatch_logs_log_destination Configuration Block

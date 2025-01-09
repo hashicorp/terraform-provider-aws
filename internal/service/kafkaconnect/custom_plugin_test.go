@@ -37,8 +37,8 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "ZIP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "location.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.s3.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.bucket_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.file_key"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.object_version", ""),
@@ -120,7 +120,7 @@ func TestAccKafkaConnectCustomPlugin_tags(t *testing.T) {
 				Config: testAccCustomPluginConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccKafkaConnectCustomPlugin_tags(t *testing.T) {
 				Config: testAccCustomPluginConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -142,7 +142,7 @@ func TestAccKafkaConnectCustomPlugin_tags(t *testing.T) {
 				Config: testAccCustomPluginConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

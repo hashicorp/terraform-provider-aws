@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -168,7 +167,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.CreateAccessGrantInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
@@ -179,7 +178,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	input.Tags = getTagsIn(ctx)
 
 	// "InvalidRequest: Invalid Grantee in the request".
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, s3PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateAccessGrant(ctx, input)
 	}, errCodeInvalidRequest, "Invalid Grantee in the request")
 
@@ -194,7 +193,12 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	data.AccessGrantARN = fwflex.StringToFramework(ctx, output.AccessGrantArn)
 	data.AccessGrantID = fwflex.StringToFramework(ctx, output.AccessGrantId)
 	data.GrantScope = fwflex.StringToFramework(ctx, output.GrantScope)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating S3 Access Grant", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -350,8 +354,8 @@ type accessGrantResourceModel struct {
 	ID                                types.String                                                            `tfsdk:"id"`
 	Permission                        fwtypes.StringEnum[awstypes.Permission]                                 `tfsdk:"permission"`
 	S3PrefixType                      fwtypes.StringEnum[awstypes.S3PrefixType]                               `tfsdk:"s3_prefix_type"`
-	Tags                              types.Map                                                               `tfsdk:"tags"`
-	TagsAll                           types.Map                                                               `tfsdk:"tags_all"`
+	Tags                              tftags.Map                                                              `tfsdk:"tags"`
+	TagsAll                           tftags.Map                                                              `tfsdk:"tags_all"`
 }
 
 type accessGrantsLocationConfigurationModel struct {
@@ -381,8 +385,13 @@ func (data *accessGrantResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *accessGrantResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, accessGrantResourceIDPartCount, false)))
+func (data *accessGrantResourceModel) setID() (string, error) {
+	parts := []string{
+		data.AccountID.ValueString(),
+		data.AccessGrantID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, accessGrantResourceIDPartCount, false)
 }
 
 // API returns <AccessGrantsLocationConfiguration><S3SubPrefix></S3SubPrefix></AccessGrantsLocationConfiguration>.

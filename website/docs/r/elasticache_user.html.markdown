@@ -57,7 +57,7 @@ resource "aws_elasticache_user" "test" {
 The following arguments are required:
 
 * `access_string` - (Required) Access permissions string used for this user. See [Specifying Permissions Using an Access String](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.RBAC.html#Access-string) for more details.
-* `engine` - (Required) The current supported value is `REDIS`.
+* `engine` - (Required) The current supported values are `REDIS`, `VALKEY`.
 * `user_id` - (Required) The ID of the user.
 * `user_name` - (Required) The username of the user.
 

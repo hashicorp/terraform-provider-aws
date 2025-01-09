@@ -7,23 +7,24 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_constraint")
-func ResourceConstraint() *schema.Resource {
+// @SDKResource("aws_servicecatalog_constraint", name="Constraint")
+func resourceConstraint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConstraintCreate,
 		ReadWithoutTimeout:   resourceConstraintRead,
@@ -44,8 +45,8 @@ func ResourceConstraint() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
@@ -80,7 +81,7 @@ func ResourceConstraint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ConstraintType_Values(), false),
+				ValidateFunc: validation.StringInSlice(constraintType_Values(), false),
 			},
 		},
 	}
@@ -88,7 +89,7 @@ func ResourceConstraint() *schema.Resource {
 
 func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.CreateConstraintInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
@@ -110,13 +111,13 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
-		output, err = conn.CreateConstraintWithContext(ctx, input)
+		output, err = conn.CreateConstraint(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return retry.RetryableError(err)
 		}
 
@@ -128,7 +129,7 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateConstraintWithContext(ctx, input)
+		output, err = conn.CreateConstraint(ctx, input)
 	}
 
 	if err != nil {
@@ -139,16 +140,16 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Constraint: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.ConstraintDetail.ConstraintId))
+	d.SetId(aws.ToString(output.ConstraintDetail.ConstraintId))
 
 	return append(diags, resourceConstraintRead(ctx, d, meta)...)
 }
 
 func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := waitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Constraint (%s) not found, removing from state", d.Id())
@@ -167,7 +168,7 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta in
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = AcceptLanguageEnglish
+		acceptLanguage = acceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)
@@ -188,7 +189,7 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.UpdateConstraintInput{
 		Id: aws.String(d.Id()),
@@ -207,9 +208,9 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-		_, err := conn.UpdateConstraintWithContext(ctx, input)
+		_, err := conn.UpdateConstraint(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -221,7 +222,7 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateConstraintWithContext(ctx, input)
+		_, err = conn.UpdateConstraint(ctx, input)
 	}
 
 	if err != nil {
@@ -233,7 +234,7 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.DeleteConstraintInput{
 		Id: aws.String(d.Id()),
@@ -243,9 +244,9 @@ func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta 
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteConstraintWithContext(ctx, input)
+	_, err := conn.DeleteConstraint(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -253,7 +254,7 @@ func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Constraint (%s): %s", d.Id(), err)
 	}
 
-	err = WaitConstraintDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = waitConstraintDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Constraint (%s) to be deleted: %s", d.Id(), err)

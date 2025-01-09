@@ -95,6 +95,9 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
@@ -140,6 +143,10 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	corsRules, err := findCORSRules(ctx, conn, bucket, expectedBucketOwner)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -170,6 +177,10 @@ func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
 		CORSConfiguration: &types.CORSConfiguration{
@@ -196,6 +207,10 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.DeleteBucketCorsInput{

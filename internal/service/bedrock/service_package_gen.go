@@ -5,8 +5,8 @@ package bedrock
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +32,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newFoundationModelsDataSource,
 			Name:    "Foundation Models",
 		},
+		{
+			Factory: newInferenceProfileDataSource,
+			Name:    "Inference Profile",
+		},
+		{
+			Factory: newInferenceProfilesDataSource,
+			Name:    "Inference Profiles",
+		},
 	}
 }
 
@@ -45,6 +53,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newGuardrailVersionResource,
+			Name:    "Guardrail Version",
+		},
+		{
 			Factory: newModelInvocationLoggingConfigurationResource,
 			Name:    "Model Invocation Logging Configuration",
 		},
@@ -53,6 +65,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Provisioned Model Throughput",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "provisioned_model_arn",
+			},
+		},
+		{
+			Factory: newResourceGuardrail,
+			Name:    "Guardrail",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "guardrail_arn",
+			},
+		},
+		{
+			Factory: newResourceInferenceProfile,
+			Name:    "Inference Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -71,11 +97,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*bedrock_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*bedrock.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return bedrock_sdkv2.NewFromConfig(cfg,
-		bedrock_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return bedrock.NewFromConfig(cfg,
+		bedrock.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

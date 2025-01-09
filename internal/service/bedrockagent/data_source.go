@@ -14,10 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -39,6 +41,13 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	hierarchicalLevelConfigurations          = 2
+	hierarchicalMaxTokens                    = 8192
+	semanticBreakpointPercentileThresholdMin = 50
+	semanticBreakpointPercentileThresholdMax = 99
 )
 
 // @FrameworkResource(name="Data Source")
@@ -200,6 +209,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 										},
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
+											listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("hierarchical_chunking_configuration"), path.MatchRelative().AtParent().AtName("semantic_chunking_configuration")),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -219,6 +229,236 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													},
 													Validators: []validator.Int64{
 														int64validator.Between(1, 99),
+													},
+												},
+											},
+										},
+									},
+									"hierarchical_chunking_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[hierarchicalChunkingConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("fixed_size_chunking_configuration"), path.MatchRelative().AtParent().AtName("semantic_chunking_configuration")),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"overlap_tokens": schema.Int32Attribute{
+													Required: true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"level_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[hierarchicalChunkingLevelConfigurationModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.SizeBetween(hierarchicalLevelConfigurations, hierarchicalLevelConfigurations),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"max_tokens": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(1, hierarchicalMaxTokens),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"semantic_chunking_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[semanticChunkingConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("fixed_size_chunking_configuration"), path.MatchRelative().AtParent().AtName("hierarchical_chunking_configuration")),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"breakpoint_percentile_threshold": schema.Int32Attribute{
+													Required: true,
+													Validators: []validator.Int32{
+														int32validator.Between(semanticBreakpointPercentileThresholdMin, semanticBreakpointPercentileThresholdMax),
+													},
+												},
+												"buffer_size": schema.Int32Attribute{
+													Required: true,
+													Validators: []validator.Int32{
+														int32validator.Between(0, 1),
+													},
+												},
+												"max_token": schema.Int32Attribute{
+													Required: true,
+													Validators: []validator.Int32{
+														int32validator.AtLeast(1),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"custom_transformation_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[customTransformationConfigurationModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"intermediate_storage": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[intermediaStorageModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"s3_location": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrURI: schema.StringAttribute{
+																Required: true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"transformation": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[transformationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"step_to_apply": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.StepType](),
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"transformation_function": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[transformationFunctionModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"transformation_lambda_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[transformationLambdaConfigurationModel](ctx),
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"lambda_arn": schema.StringAttribute{
+																			CustomType: fwtypes.ARNType,
+																			Required:   true,
+																			PlanModifiers: []planmodifier.String{
+																				stringplanmodifier.RequiresReplace(),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"parsing_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parsingConfigurationModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"parsing_strategy": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.ParsingStrategy](),
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"bedrock_foundation_model_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockFoundationModelConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"model_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"parsing_prompt": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[parsingPromptModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"parsing_prompt_string": schema.StringAttribute{
+																Required: true,
+															},
+														},
 													},
 												},
 											},
@@ -262,7 +502,12 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	}
 
 	data.DataSourceID = fwflex.StringToFramework(ctx, outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource.DataSourceId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Data Source", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	ds, err := waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -357,8 +602,8 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	_, err := conn.DeleteDataSource(ctx, &bedrockagent.DeleteDataSourceInput{
-		DataSourceId:    aws.String(data.DataSourceID.ValueString()),
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
+		DataSourceId:    data.DataSourceID.ValueStringPointer(),
+		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -487,8 +732,13 @@ func (m *dataSourceResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *dataSourceResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.DataSourceID.ValueString(), m.KnowledgeBaseID.ValueString()}, dataSourceResourceIDPartCount, false)))
+func (m *dataSourceResourceModel) setID() (string, error) {
+	parts := []string{
+		m.DataSourceID.ValueString(),
+		m.KnowledgeBaseID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, dataSourceResourceIDPartCount, false)
 }
 
 type dataSourceConfigurationModel struct {
@@ -507,15 +757,74 @@ type serverSideEncryptionConfigurationModel struct {
 }
 
 type vectorIngestionConfigurationModel struct {
-	ChunkingConfiguration fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel] `tfsdk:"chunking_configuration"`
+	ChunkingConfiguration             fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel]             `tfsdk:"chunking_configuration"`
+	CustomTransformationConfiguration fwtypes.ListNestedObjectValueOf[customTransformationConfigurationModel] `tfsdk:"custom_transformation_configuration"`
+	ParsingConfiguration              fwtypes.ListNestedObjectValueOf[parsingConfigurationModel]              `tfsdk:"parsing_configuration"`
+}
+
+type parsingConfigurationModel struct {
+	ParsingStrategy                     fwtypes.StringEnum[awstypes.ParsingStrategy]                              `tfsdk:"parsing_strategy"`
+	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
+}
+
+type customTransformationConfigurationModel struct {
+	IntermediateStorage fwtypes.ListNestedObjectValueOf[intermediaStorageModel] `tfsdk:"intermediate_storage"`
+	Transformation      fwtypes.ListNestedObjectValueOf[transformationModel]    `tfsdk:"transformation"`
+}
+
+type intermediaStorageModel struct {
+	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
+}
+
+type s3LocationModel struct {
+	Uri types.String `tfsdk:"uri"`
+}
+
+type transformationModel struct {
+	StepToApply            fwtypes.StringEnum[awstypes.StepType]                        `tfsdk:"step_to_apply"`
+	TransformationFunction fwtypes.ListNestedObjectValueOf[transformationFunctionModel] `tfsdk:"transformation_function"`
+}
+
+type transformationFunctionModel struct {
+	TransformationLambdaConfiguration fwtypes.ListNestedObjectValueOf[transformationLambdaConfigurationModel] `tfsdk:"transformation_lambda_configuration"`
+}
+
+type transformationLambdaConfigurationModel struct {
+	LambdaArn fwtypes.ARN `tfsdk:"lambda_arn"`
+}
+
+type bedrockFoundationModelConfigurationModel struct {
+	ModelArn      fwtypes.ARN                                         `tfsdk:"model_arn"`
+	ParsingPrompt fwtypes.ListNestedObjectValueOf[parsingPromptModel] `tfsdk:"parsing_prompt"`
+}
+
+type parsingPromptModel struct {
+	ParsingPromptText types.String `tfsdk:"parsing_prompt_string"`
 }
 
 type chunkingConfigurationModel struct {
-	ChunkingStrategy               fwtypes.StringEnum[awstypes.ChunkingStrategy]                        `tfsdk:"chunking_strategy"`
-	FixedSizeChunkingConfiguration fwtypes.ListNestedObjectValueOf[fixedSizeChunkingConfigurationModel] `tfsdk:"fixed_size_chunking_configuration"`
+	ChunkingStrategy                  fwtypes.StringEnum[awstypes.ChunkingStrategy]                           `tfsdk:"chunking_strategy"`
+	FixedSizeChunkingConfiguration    fwtypes.ListNestedObjectValueOf[fixedSizeChunkingConfigurationModel]    `tfsdk:"fixed_size_chunking_configuration"`
+	HierarchicalChunkingConfiguration fwtypes.ListNestedObjectValueOf[hierarchicalChunkingConfigurationModel] `tfsdk:"hierarchical_chunking_configuration"`
+	SemanticChunkingConfiguration     fwtypes.ListNestedObjectValueOf[semanticChunkingConfigurationModel]     `tfsdk:"semantic_chunking_configuration"`
 }
 
 type fixedSizeChunkingConfigurationModel struct {
 	MaxTokens         types.Int64 `tfsdk:"max_tokens"`
 	OverlapPercentage types.Int64 `tfsdk:"overlap_percentage"`
+}
+
+type semanticChunkingConfigurationModel struct {
+	BreakpointPercentileThreshold types.Int32 `tfsdk:"breakpoint_percentile_threshold"`
+	BufferSize                    types.Int32 `tfsdk:"buffer_size"`
+	MaxTokens                     types.Int32 `tfsdk:"max_token"`
+}
+
+type hierarchicalChunkingConfigurationModel struct {
+	LevelConfigurations fwtypes.ListNestedObjectValueOf[hierarchicalChunkingLevelConfigurationModel] `tfsdk:"level_configuration"`
+	OverlapTokens       types.Int32                                                                  `tfsdk:"overlap_tokens"`
+}
+
+type hierarchicalChunkingLevelConfigurationModel struct {
+	MaxTokens types.Int32 `tfsdk:"max_tokens"`
 }

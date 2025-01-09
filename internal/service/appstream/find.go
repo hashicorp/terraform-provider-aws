@@ -45,20 +45,7 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.Client, name st
 		Names: []string{name},
 	}
 
-	output, err := findImageBuilder(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.Name) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
+	return findImageBuilder(ctx, conn, input)
 }
 
 func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput) ([]awstypes.ImageBuilder, error) {
@@ -92,29 +79,33 @@ func findImageBuilder(ctx context.Context, conn *appstream.Client, input *appstr
 	output, err := findImageBuilders(ctx, conn, input)
 
 	if err != nil {
-		return &awstypes.ImageBuilder{}, err
+		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-// FindUserByUserNameAndAuthType Retrieve a appstream fleet by Username and authentication type
-func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.Client, username, authType string) (*awstypes.User, error) {
+func FindUserByTwoPartKey(ctx context.Context, conn *appstream.Client, username, authType string) (*awstypes.User, error) {
 	input := &appstream.DescribeUsersInput{
 		AuthenticationType: awstypes.AuthenticationType(authType),
 	}
 
-	var result *awstypes.User
+	return findUser(ctx, conn, input, func(v *awstypes.User) bool {
+		return aws.ToString(v.UserName) == username
+	})
+}
+
+func findUsers(ctx context.Context, conn *appstream.Client, input *appstream.DescribeUsersInput, filter tfslices.Predicate[*awstypes.User]) ([]awstypes.User, error) {
+	var output []awstypes.User
 
 	err := describeUsersPages(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, user := range tfslices.ToPointers(page.Users) {
-			if aws.ToString(user.UserName) == username {
-				result = user
-				return false
+		for _, v := range page.Users {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 
@@ -127,18 +118,22 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.Client, 
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if result == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+	return output, nil
+}
+
+func findUser(ctx context.Context, conn *appstream.Client, input *appstream.DescribeUsersInput, filter tfslices.Predicate[*awstypes.User]) (*awstypes.User, error) {
+	output, err := findUsers(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 // FindFleetStackAssociation Validates that a fleet has the named associated stack

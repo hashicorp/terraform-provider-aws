@@ -11,29 +11,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
-func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceBillingServiceAccount{}
+// @FrameworkDataSource(name="Billing Service Account")
+func newBillingServiceAccountDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &billingServiceAccountDataSource{}
 
 	return d, nil
 }
 
-type dataSourceBillingServiceAccount struct {
+type billingServiceAccountDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
-func (d *dataSourceBillingServiceAccount) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (*billingServiceAccountDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_billing_service_account"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceBillingServiceAccount) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *billingServiceAccountDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
@@ -46,13 +44,9 @@ func (d *dataSourceBillingServiceAccount) Schema(ctx context.Context, req dataso
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceBillingServiceAccountData
-
+func (d *billingServiceAccountDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data billingServiceAccountDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -61,19 +55,18 @@ func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request data
 	const billingAccountID = "386209384616"
 
 	arn := arn.ARN{
-		Partition: d.Meta().Partition,
+		Partition: d.Meta().Partition(ctx),
 		Service:   "iam",
 		AccountID: billingAccountID,
 		Resource:  "root",
 	}
-
-	data.ARN = types.StringValue(arn.String())
-	data.ID = types.StringValue(billingAccountID)
+	data.ARN = fwflex.StringValueToFrameworkLegacy(ctx, arn.String())
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, billingAccountID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceBillingServiceAccountData struct {
+type billingServiceAccountDataSourceModel struct {
 	ARN types.String `tfsdk:"arn"`
 	ID  types.String `tfsdk:"id"`
 }

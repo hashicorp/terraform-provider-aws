@@ -3533,6 +3533,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeCommit"
     severity: WARNING
+  - id: codeconnections-in-func-name
+    languages:
+      - go
+    message: Do not use "CodeConnections" in func name inside codeconnections package
+    paths:
+      include:
+        - internal/service/codeconnections
+      exclude:
+        - internal/service/codeconnections/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeConnections"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: codeconnections-in-test-name
+    languages:
+      - go
+    message: Include "CodeConnections" in test name
+    paths:
+      include:
+        - internal/service/codeconnections/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCodeConnections"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codeconnections-in-const-name
+    languages:
+      - go
+    message: Do not use "CodeConnections" in const name inside codeconnections package
+    paths:
+      include:
+        - internal/service/codeconnections
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeConnections"
+    severity: WARNING
+  - id: codeconnections-in-var-name
+    languages:
+      - go
+    message: Do not use "CodeConnections" in var name inside codeconnections package
+    paths:
+      include:
+        - internal/service/codeconnections
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeConnections"
+    severity: WARNING
   - id: codedeploy-in-func-name
     languages:
       - go
@@ -4220,4 +4281,82 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: configservice-in-var-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in var name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: connect-in-func-name
+    languages:
+      - go
+    message: Do not use "Connect" in func name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+      exclude:
+        - internal/service/connect/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: connect-in-test-name
+    languages:
+      - go
+    message: Include "Connect" in test name
+    paths:
+      include:
+        - internal/service/connect/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConnect"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: connect-in-const-name
+    languages:
+      - go
+    message: Do not use "Connect" in const name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
+    severity: WARNING
+  - id: connect-in-var-name
+    languages:
+      - go
+    message: Do not use "Connect" in var name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
     severity: WARNING

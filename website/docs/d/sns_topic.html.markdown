@@ -30,3 +30,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
 * `id` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
+* `tags` - Map of tags for the resource.

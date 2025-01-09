@@ -10,22 +10,25 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_opsworks_instance")
-func ResourceInstance() *schema.Resource {
+// @SDKResource("aws_opsworks_instance", name="Instance")
+func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
 		ReadWithoutTimeout:   resourceInstanceRead,
@@ -56,16 +59,16 @@ func ResourceInstance() *schema.Resource {
 			},
 
 			"architecture": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "x86_64",
-				ValidateFunc: validation.StringInSlice(opsworks.Architecture_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "x86_64",
+				ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
 			},
 
 			"auto_scaling_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(opsworks.AutoScalingType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AutoScalingType](),
 			},
 
 			names.AttrAvailabilityZone: {
@@ -216,11 +219,11 @@ func ResourceInstance() *schema.Resource {
 			},
 
 			"root_device_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(opsworks.RootDeviceType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RootDeviceType](),
 			},
 
 			"root_device_volume_id": {
@@ -292,11 +295,11 @@ func ResourceInstance() *schema.Resource {
 			},
 
 			"virtualization_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(opsworks.VirtualizationType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VirtualizationType](),
 			},
 
 			"ebs_block_device": {
@@ -460,19 +463,11 @@ func resourceInstanceValidate(d *schema.ResourceData) error {
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
-	req := &opsworks.DescribeInstancesInput{
-		InstanceIds: []*string{
-			aws.String(d.Id()),
-		},
-	}
+	output, err := findInstanceByID(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading OpsWorks instance: %s", d.Id())
-
-	resp, err := conn.DescribeInstancesWithContext(ctx, req)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks instance %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -482,67 +477,54 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): %s", d.Id(), err)
 	}
 
-	// If nothing was found, then return no state
-	if len(resp.Instances) == 0 || resp.Instances[0] == nil || resp.Instances[0].InstanceId == nil {
-		log.Printf("[WARN] OpsWorks instance %s not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	instance := resp.Instances[0]
-
-	d.SetId(aws.StringValue(instance.InstanceId))
-	d.Set("agent_version", instance.AgentVersion)
-	d.Set("ami_id", instance.AmiId)
-	d.Set("architecture", instance.Architecture)
-	d.Set("auto_scaling_type", instance.AutoScalingType)
-	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
-	d.Set(names.AttrCreatedAt, instance.CreatedAt)
-	d.Set("ebs_optimized", instance.EbsOptimized)
-	d.Set("ec2_instance_id", instance.Ec2InstanceId)
-	d.Set("ecs_cluster_arn", instance.EcsClusterArn)
-	d.Set("elastic_ip", instance.ElasticIp)
-	d.Set("hostname", instance.Hostname)
-	d.Set("infrastructure_class", instance.InfrastructureClass)
-	d.Set("install_updates_on_boot", instance.InstallUpdatesOnBoot)
-	d.Set("instance_profile_arn", instance.InstanceProfileArn)
-	d.Set(names.AttrInstanceType, instance.InstanceType)
-	d.Set("last_service_error_id", instance.LastServiceErrorId)
-	var layerIds []string
-	for _, v := range instance.LayerIds {
-		layerIds = append(layerIds, aws.StringValue(v))
-	}
-	layerIds, err = sortListBasedonTFFile(layerIds, d)
+	d.SetId(aws.ToString(output.InstanceId))
+	d.Set("agent_version", output.AgentVersion)
+	d.Set("ami_id", output.AmiId)
+	d.Set("architecture", output.Architecture)
+	d.Set("auto_scaling_type", output.AutoScalingType)
+	d.Set(names.AttrAvailabilityZone, output.AvailabilityZone)
+	d.Set(names.AttrCreatedAt, output.CreatedAt)
+	d.Set("ebs_optimized", output.EbsOptimized)
+	d.Set("ec2_instance_id", output.Ec2InstanceId)
+	d.Set("ecs_cluster_arn", output.EcsClusterArn)
+	d.Set("elastic_ip", output.ElasticIp)
+	d.Set("hostname", output.Hostname)
+	d.Set("infrastructure_class", output.InfrastructureClass)
+	d.Set("install_updates_on_boot", output.InstallUpdatesOnBoot)
+	d.Set("instance_profile_arn", output.InstanceProfileArn)
+	d.Set(names.AttrInstanceType, output.InstanceType)
+	d.Set("last_service_error_id", output.LastServiceErrorId)
+	layerIds, err := sortListBasedonTFFile(output.LayerIds, d)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "sorting layer_ids attribute: %#v", err)
 	}
 	if err := d.Set("layer_ids", layerIds); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layer_ids attribute: %#v, error: %#v", layerIds, err)
 	}
-	d.Set("os", instance.Os)
-	d.Set("platform", instance.Platform)
-	d.Set("private_dns", instance.PrivateDns)
-	d.Set("private_ip", instance.PrivateIp)
-	d.Set("public_dns", instance.PublicDns)
-	d.Set("public_ip", instance.PublicIp)
-	d.Set("registered_by", instance.RegisteredBy)
-	d.Set("reported_agent_version", instance.ReportedAgentVersion)
-	d.Set("reported_os_family", instance.ReportedOs.Family)
-	d.Set("reported_os_name", instance.ReportedOs.Name)
-	d.Set("reported_os_version", instance.ReportedOs.Version)
-	d.Set("root_device_type", instance.RootDeviceType)
-	d.Set("root_device_volume_id", instance.RootDeviceVolumeId)
-	d.Set("ssh_host_dsa_key_fingerprint", instance.SshHostDsaKeyFingerprint)
-	d.Set("ssh_host_rsa_key_fingerprint", instance.SshHostRsaKeyFingerprint)
-	d.Set("ssh_key_name", instance.SshKeyName)
-	d.Set("stack_id", instance.StackId)
-	d.Set(names.AttrStatus, instance.Status)
-	d.Set(names.AttrSubnetID, instance.SubnetId)
-	d.Set("tenancy", instance.Tenancy)
-	d.Set("virtualization_type", instance.VirtualizationType)
+	d.Set("os", output.Os)
+	d.Set("platform", output.Platform)
+	d.Set("private_dns", output.PrivateDns)
+	d.Set("private_ip", output.PrivateIp)
+	d.Set("public_dns", output.PublicDns)
+	d.Set("public_ip", output.PublicIp)
+	d.Set("registered_by", output.RegisteredBy)
+	d.Set("reported_agent_version", output.ReportedAgentVersion)
+	d.Set("reported_os_family", output.ReportedOs.Family)
+	d.Set("reported_os_name", output.ReportedOs.Name)
+	d.Set("reported_os_version", output.ReportedOs.Version)
+	d.Set("root_device_type", output.RootDeviceType)
+	d.Set("root_device_volume_id", output.RootDeviceVolumeId)
+	d.Set("ssh_host_dsa_key_fingerprint", output.SshHostDsaKeyFingerprint)
+	d.Set("ssh_host_rsa_key_fingerprint", output.SshHostRsaKeyFingerprint)
+	d.Set("ssh_key_name", output.SshKeyName)
+	d.Set("stack_id", output.StackId)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set(names.AttrSubnetID, output.SubnetId)
+	d.Set("tenancy", output.Tenancy)
+	d.Set("virtualization_type", output.VirtualizationType)
 
 	// Read BlockDeviceMapping
-	ibds := readBlockDevices(instance)
+	ibds := readBlockDevices(output)
 
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting ebs_block_device: %s", d.Id(), err)
@@ -559,10 +541,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// Read Security Groups
-	sgs := make([]string, 0, len(instance.SecurityGroupIds))
-	for _, sg := range instance.SecurityGroupIds {
-		sgs = append(sgs, *sg)
-	}
+	sgs := make([]string, 0, len(output.SecurityGroupIds))
+	sgs = append(sgs, output.SecurityGroupIds...)
 	if err := d.Set(names.AttrSecurityGroupIDs, sgs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting security_group_ids: %s", d.Id(), err)
 	}
@@ -571,7 +551,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
@@ -580,11 +560,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	req := &opsworks.CreateInstanceInput{
 		AgentVersion:         aws.String(d.Get("agent_version").(string)),
-		Architecture:         aws.String(d.Get("architecture").(string)),
+		Architecture:         awstypes.Architecture(d.Get("architecture").(string)),
 		EbsOptimized:         aws.Bool(d.Get("ebs_optimized").(bool)),
 		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
 		InstanceType:         aws.String(d.Get(names.AttrInstanceType).(string)),
-		LayerIds:             flex.ExpandStringList(d.Get("layer_ids").([]interface{})),
+		LayerIds:             flex.ExpandStringValueList(d.Get("layer_ids").([]interface{})),
 		StackId:              aws.String(d.Get("stack_id").(string)),
 	}
 
@@ -594,7 +574,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("auto_scaling_type"); ok {
-		req.AutoScalingType = aws.String(v.(string))
+		req.AutoScalingType = awstypes.AutoScalingType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
@@ -610,7 +590,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("root_device_type"); ok {
-		req.RootDeviceType = aws.String(v.(string))
+		req.RootDeviceType = awstypes.RootDeviceType(v.(string))
 	}
 
 	if v, ok := d.GetOk("ssh_key_name"); ok {
@@ -629,13 +609,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		req.VirtualizationType = aws.String(v.(string))
 	}
 
-	var blockDevices []*opsworks.BlockDeviceMapping
+	var blockDevices []awstypes.BlockDeviceMapping
 
 	if v, ok := d.GetOk("ebs_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &opsworks.EbsBlockDevice{
+			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
@@ -644,18 +624,18 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
+				ebs.VolumeSize = aws.Int32(int32(v))
 			}
 
 			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
+				ebs.VolumeType = awstypes.VolumeType(v)
 			}
 
 			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
-				ebs.Iops = aws.Int64(int64(v))
+				ebs.Iops = aws.Int32(int32(v))
 			}
 
-			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
+			blockDevices = append(blockDevices, awstypes.BlockDeviceMapping{
 				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
@@ -666,7 +646,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
+			blockDevices = append(blockDevices, awstypes.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			})
@@ -680,23 +660,23 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &opsworks.EbsBlockDevice{
+			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
 			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
+				ebs.VolumeSize = aws.Int32(int32(v))
 			}
 
 			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
+				ebs.VolumeType = awstypes.VolumeType(v)
 			}
 
 			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
-				ebs.Iops = aws.Int64(int64(v))
+				ebs.Iops = aws.Int32(int32(v))
 			}
 
-			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
+			blockDevices = append(blockDevices, awstypes.BlockDeviceMapping{
 				DeviceName: aws.String("ROOT_DEVICE"),
 				Ebs:        ebs,
 			})
@@ -711,7 +691,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	var resp *opsworks.CreateInstanceOutput
 
-	resp, err = conn.CreateInstanceWithContext(ctx, req)
+	resp, err = conn.CreateInstance(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: %s", err)
 	}
@@ -720,7 +700,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: no instance returned")
 	}
 
-	instanceId := aws.StringValue(resp.InstanceId)
+	instanceId := aws.ToString(resp.InstanceId)
 	d.SetId(instanceId)
 
 	if v, ok := d.GetOk(names.AttrState); ok && v.(string) == instanceStatusRunning {
@@ -735,7 +715,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
@@ -745,7 +725,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	req := &opsworks.UpdateInstanceInput{
 		InstanceId:           aws.String(d.Id()),
 		AgentVersion:         aws.String(d.Get("agent_version").(string)),
-		Architecture:         aws.String(d.Get("architecture").(string)),
+		Architecture:         awstypes.Architecture(d.Get("architecture").(string)),
 		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
 	}
 
@@ -755,7 +735,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("auto_scaling_type"); ok {
-		req.AutoScalingType = aws.String(v.(string))
+		req.AutoScalingType = awstypes.AutoScalingType(v.(string))
 	}
 
 	if v, ok := d.GetOk("hostname"); ok {
@@ -767,7 +747,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("layer_ids"); ok {
-		req.LayerIds = flex.ExpandStringList(v.([]interface{}))
+		req.LayerIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("os"); ok {
@@ -780,7 +760,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Updating OpsWorks instance: %s", d.Id())
 
-	_, err = conn.UpdateInstanceWithContext(ctx, req)
+	_, err = conn.UpdateInstance(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 	}
@@ -817,7 +797,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != instanceStatusStopped {
 		err := stopInstance(ctx, d, meta, d.Timeout(schema.TimeoutDelete))
@@ -834,9 +814,9 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Deleting OpsWorks instance: %s", d.Id())
 
-	_, err := conn.DeleteInstanceWithContext(ctx, req)
+	_, err := conn.DeleteInstance(ctx, req)
 
-	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -851,6 +831,30 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
+func findInstanceByID(ctx context.Context, conn *opsworks.Client, id string) (*awstypes.Instance, error) {
+	input := &opsworks.DescribeInstancesInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := conn.DescribeInstances(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Instances == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Instances)
+}
+
 func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither delete_eip nor delete_ebs can be fetched
 	// from any API call, so we need to default to the values
@@ -861,7 +865,7 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func startInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	req := &opsworks.StartInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -869,7 +873,7 @@ func startInstance(ctx context.Context, d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Starting OpsWorks instance: %s", d.Id())
 
-	_, err := conn.StartInstanceWithContext(ctx, req)
+	_, err := conn.StartInstance(ctx, req)
 
 	if err != nil {
 		return fmt.Errorf("starting instance: %w", err)
@@ -887,7 +891,7 @@ func startInstance(ctx context.Context, d *schema.ResourceData, meta interface{}
 }
 
 func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	req := &opsworks.StopInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -895,7 +899,7 @@ func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{},
 
 	log.Printf("[DEBUG] Stopping OpsWorks instance: %s", d.Id())
 
-	_, err := conn.StopInstanceWithContext(ctx, req)
+	_, err := conn.StopInstance(ctx, req)
 
 	if err != nil {
 		return fmt.Errorf("stopping instance: %w", err)
@@ -910,7 +914,7 @@ func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{},
 	return nil
 }
 
-func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string) error {
+func waitInstanceDeleted(ctx context.Context, conn *opsworks.Client, instanceId string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{instanceStatusStopped, instanceStatusTerminating, instanceStatusTerminated},
 		Target:     []string{},
@@ -924,7 +928,7 @@ func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceI
 	return err
 }
 
-func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+func waitInstanceStarted(ctx context.Context, conn *opsworks.Client, instanceId string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{instanceStatusRequested, instanceStatusPending, instanceStatusBooting, instanceStatusRunningSetup},
 		Target:     []string{instanceStatusOnline},
@@ -937,7 +941,7 @@ func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceI
 	return err
 }
 
-func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+func waitInstanceStopped(ctx context.Context, conn *opsworks.Client, instanceId string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{instanceStatusStopping, instanceStatusTerminating, instanceStatusShuttingDown, instanceStatusTerminated},
 		Target:     []string{instanceStatusStopped},
@@ -950,13 +954,13 @@ func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceI
 	return err
 }
 
-func instanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID string) retry.StateRefreshFunc {
+func instanceStatus(ctx context.Context, conn *opsworks.Client, instanceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeInstancesWithContext(ctx, &opsworks.DescribeInstancesInput{
-			InstanceIds: []*string{aws.String(instanceID)},
+		resp, err := conn.DescribeInstances(ctx, &opsworks.DescribeInstancesInput{
+			InstanceIds: []string{instanceID},
 		})
 
-		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, "", nil
 		}
 
@@ -964,18 +968,18 @@ func instanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID str
 			return nil, "", err
 		}
 
-		if resp == nil || len(resp.Instances) == 0 || resp.Instances[0] == nil {
+		if resp == nil || len(resp.Instances) == 0 {
 			// Sometimes AWS just has consistency issues and doesn't see
 			// our instance yet. Return an empty state.
 			return nil, "", nil
 		}
 
 		i := resp.Instances[0]
-		return i, aws.StringValue(i.Status), nil
+		return i, aws.ToString(i.Status), nil
 	}
 }
 
-func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
+func readBlockDevices(instance *awstypes.Instance) map[string]interface{} {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["ephemeral"] = make([]map[string]interface{}, 0)
@@ -988,29 +992,29 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 	for _, bdm := range instance.BlockDeviceMappings {
 		bd := make(map[string]interface{})
 		if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
-			bd[names.AttrDeleteOnTermination] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
+			bd[names.AttrDeleteOnTermination] = aws.ToBool(bdm.Ebs.DeleteOnTermination)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
-			bd[names.AttrVolumeSize] = aws.Int64Value(bdm.Ebs.VolumeSize)
+			bd[names.AttrVolumeSize] = aws.ToInt32(bdm.Ebs.VolumeSize)
 		}
-		if bdm.Ebs != nil && bdm.Ebs.VolumeType != nil {
-			bd[names.AttrVolumeType] = aws.StringValue(bdm.Ebs.VolumeType)
+		if bdm.Ebs != nil {
+			bd[names.AttrVolumeType] = bdm.Ebs.VolumeType
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
-			bd[names.AttrIOPS] = aws.Int64Value(bdm.Ebs.Iops)
+			bd[names.AttrIOPS] = aws.ToInt32(bdm.Ebs.Iops)
 		}
-		if aws.StringValue(bdm.DeviceName) == "ROOT_DEVICE" {
+		if aws.ToString(bdm.DeviceName) == "ROOT_DEVICE" {
 			blockDevices["root"] = bd
 		} else {
 			if bdm.DeviceName != nil {
-				bd[names.AttrDeviceName] = aws.StringValue(bdm.DeviceName)
+				bd[names.AttrDeviceName] = aws.ToString(bdm.DeviceName)
 			}
 			if bdm.VirtualName != nil {
-				bd[names.AttrVirtualName] = aws.StringValue(bdm.VirtualName)
+				bd[names.AttrVirtualName] = aws.ToString(bdm.VirtualName)
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-					bd[names.AttrSnapshotID] = aws.StringValue(bdm.Ebs.SnapshotId)
+					bd[names.AttrSnapshotID] = aws.ToString(bdm.Ebs.SnapshotId)
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

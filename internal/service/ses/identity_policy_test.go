@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -132,72 +131,42 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 
 func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_identity_policy" {
 				continue
 			}
 
-			identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			_, err := tfses.FindIdentityPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity"], rs.Primary.Attributes[names.AttrName])
 
-			input := &ses.GetIdentityPoliciesInput{
-				Identity:    aws.String(identityARN),
-				PolicyNames: aws.StringSlice([]string{policyName}),
+			if tfresource.NotFound(err) {
+				continue
 			}
-
-			output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
 
 			if err != nil {
 				return err
 			}
 
-			if output != nil && len(output.Policies) > 0 && aws.StringValue(output.Policies[policyName]) != "" {
-				return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
-			}
+			return fmt.Errorf("SES Identity Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIdentityPolicyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckIdentityPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Identity Policy not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Identity Policy ID not set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		_, err := tfses.FindIdentityPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity"], rs.Primary.Attributes[names.AttrName])
 
-		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &ses.GetIdentityPoliciesInput{
-			Identity:    aws.String(identityARN),
-			PolicyNames: aws.StringSlice([]string{policyName}),
-		}
-
-		output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || len(output.Policies) == 0 {
-			return fmt.Errorf("SES Identity (%s) Policy (%s) not found", identityARN, policyName)
-		}
-
-		return nil
+		return err
 	}
 }
 

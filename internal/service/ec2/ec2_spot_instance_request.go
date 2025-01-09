@@ -57,10 +57,13 @@ func resourceSpotInstanceRequest() *schema.Resource {
 					continue
 				}
 				// tags_all is Optional+Computed.
-				if k == names.AttrTags || k == names.AttrTagsAll {
+				if k == names.AttrTags || k == names.AttrTagsAll || k == "volume_tags" {
 					continue
 				}
-				v.ForceNew = true
+				// Copy-on-write
+				x := *v // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				x.ForceNew = true
+				s[k] = &x
 			}
 
 			// Remove attributes added for spot instances.
@@ -130,11 +133,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
-			s["volume_tags"] = &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -181,7 +179,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 			NetworkInterfaces:   instanceOpts.NetworkInterfaces,
 		},
 		SpotPrice:         aws.String(d.Get("spot_price").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSpotInstancesRequest),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSpotInstancesRequest),
 		Type:              awstypes.SpotInstanceType(d.Get("spot_type").(string)),
 	}
 
@@ -278,7 +276,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	setTagsOutV2(ctx, request.Tags)
+	setTagsOut(ctx, request.Tags)
 
 	d.Set("instance_interruption_behavior", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.ToTime(request.ValidFrom).Format(time.RFC3339))

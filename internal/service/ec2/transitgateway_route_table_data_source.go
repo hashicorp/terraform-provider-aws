@@ -65,7 +65,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -86,10 +86,10 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 
 	d.SetId(aws.ToString(transitGatewayRouteTable.TransitGatewayRouteTableId))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -97,7 +97,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 	d.Set(names.AttrTransitGatewayID, transitGatewayRouteTable.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayRouteTable.Tags)
+	setTagsOut(ctx, transitGatewayRouteTable.Tags)
 
 	return diags
 }

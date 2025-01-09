@@ -36,7 +36,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					// arn:${Partition}:iam::${Account}:group/${GroupNameWithPath}
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
@@ -92,7 +92,7 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName1)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName1)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
@@ -100,7 +100,7 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName2)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName2)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -124,7 +124,7 @@ func TestAccIAMGroup_path(t *testing.T) {
 				Config: testAccGroupConfig_path(rName, "/path1/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path1/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path1/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path1/"),
 				),
@@ -138,7 +138,7 @@ func TestAccIAMGroup_path(t *testing.T) {
 				Config: testAccGroupConfig_path(rName, "/path2/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path2/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path2/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path2/"),
 				),

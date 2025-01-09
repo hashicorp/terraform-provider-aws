@@ -38,7 +38,7 @@ func TestAccKMSAlias_basic(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`alias/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kms", regexache.MustCompile(`alias/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, tfkms.AliasNamePrefix+rName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, names.AttrID),

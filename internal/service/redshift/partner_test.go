@@ -36,7 +36,7 @@ func TestAccRedshiftPartner_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "partner_name", "Datacoral"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_redshift_cluster.test", names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func TestAccRedshiftPartner_disappears_cluster(t *testing.T) {
 
 func testAccCheckPartnerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_partner" {
@@ -131,7 +131,7 @@ func testAccCheckPartnerExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("No Redshift Partner ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindPartnerByID(ctx, conn, rs.Primary.ID)
 

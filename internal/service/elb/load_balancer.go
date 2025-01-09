@@ -341,10 +341,10 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "elasticloadbalancing",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "loadbalancer/" + d.Id(),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -378,7 +378,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), aws.ToString(lb.SourceSecurityGroup.GroupName), aws.ToString(lb.VPCId), aws.ToString(lb.SourceSecurityGroup.OwnerAlias))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, meta.(*conns.AWSClient).EC2Client(ctx), aws.ToString(lb.SourceSecurityGroup.GroupName), aws.ToString(lb.VPCId), aws.ToString(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) security group: %s", d.Id(), err)
 			} else {

@@ -647,8 +647,8 @@ func TestAccExampleThing_basic(t *testing.T) {
 
 func testAccPreCheckExample(ctx context.Context, t *testing.T) {
   conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn(ctx)
-	input := &example.ListThingsInput{}
-	_, err := conn.ListThingsWithContext(ctx, input)
+	input := example.ListThingsInput{}
+	_, err := conn.ListThingsWithContext(ctx, &input)
 	if testAccPreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -1149,12 +1149,12 @@ func sweepThings(region string) error {
   }
 
   conn := client.ExampleConn(ctx)
-  sweepResources := make([]sweep.Sweepable, 0)
+  var sweepResources []sweep.Sweepable
   var errs *multierror.Error
 
-  input := &example.ListThingsInput{}
+  input := example.ListThingsInput{}
 
-  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, lastPage bool) bool {
+  err = conn.ListThingsPages(ctx, &input, func(page *example.ListThingsOutput, lastPage bool) bool {
     if page == nil {
       return !lastPage
     }
@@ -1216,13 +1216,13 @@ func sweepThings(region string) error {
   }
 
   conn := client.ExampleConn(ctx)
-  sweepResources := make([]sweep.Sweepable, 0)
+  var sweepResources []sweep.Sweepable
   var errs *multierror.Error
 
-  input := &example.ListThingsInput{}
+  input := example.ListThingsInput{}
 
   for {
-    output, err := conn.ListThings(input)
+    output, err := conn.ListThings(ctx, &input)
     if awsv1.SkipSweepError(err) {
       log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
       return nil

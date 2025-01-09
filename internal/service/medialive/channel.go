@@ -31,6 +31,8 @@ import (
 
 // @SDKResource("aws_medialive_channel", name="Channel")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeChannelOutput")
+// @Testing(importIgnore="start_channel")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,

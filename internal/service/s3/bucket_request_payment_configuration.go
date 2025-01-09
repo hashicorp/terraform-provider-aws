@@ -62,6 +62,9 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketRequestPaymentInput{
 		Bucket: aws.String(bucket),
@@ -107,6 +110,10 @@ func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schem
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	output, err := findBucketRequestPayment(ctx, conn, bucket, expectedBucketOwner)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -135,6 +142,10 @@ func resourceBucketRequestPaymentConfigurationUpdate(ctx context.Context, d *sch
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketRequestPaymentInput{
 		Bucket: aws.String(bucket),
 		RequestPaymentConfiguration: &types.RequestPaymentConfiguration{
@@ -161,6 +172,10 @@ func resourceBucketRequestPaymentConfigurationDelete(ctx context.Context, d *sch
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutBucketRequestPaymentInput{

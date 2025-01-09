@@ -5,12 +5,8 @@ package emr
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -96,30 +92,12 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.EMR
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*emr_sdkv1.EMR, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return emr_sdkv1.New(sess.Copy(&cfg)), nil
-}
-
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*emr_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*emr.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return emr_sdkv2.NewFromConfig(cfg,
-		emr_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return emr.NewFromConfig(cfg,
+		emr.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

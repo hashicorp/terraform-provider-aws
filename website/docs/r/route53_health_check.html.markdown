@@ -83,7 +83,7 @@ resource "aws_route53_health_check" "foo" {
 
 This resource supports the following arguments:
 
-~> **Note:** At least one of either `fqdn` or `ip_address` must be specified.
+~> **Note:** At least one of either `fqdn` or `ip_address` must be specified for endpoint checks.
 
 * `reference_name` - (Optional) This is a reference name used in Caller Reference
     (helpful for identifying single health_check set amongst others)

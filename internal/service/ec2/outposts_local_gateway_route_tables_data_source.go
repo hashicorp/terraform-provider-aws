@@ -46,11 +46,11 @@ func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.Resour
 
 	input := &ec2.DescribeLocalGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -64,7 +64,7 @@ func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route Tables: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.LocalGatewayRouteTable) string {
 		return aws.ToString(v.LocalGatewayRouteTableId)
 	}))

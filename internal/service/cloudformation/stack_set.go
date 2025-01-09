@@ -651,7 +651,7 @@ func statusStackSetOperation(ctx context.Context, conn *cloudformation.Client, s
 
 func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Client, stackSetName, operationID, callAs string, timeout time.Duration) (*awstypes.StackSetOperation, error) {
 	const (
-		stackSetOperationDelay = 5 * time.Second
+		stackSetOperationDelay = 10 * time.Second
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StackSetOperationStatusRunning, awstypes.StackSetOperationStatusQueued),

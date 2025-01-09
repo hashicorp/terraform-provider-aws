@@ -33,6 +33,7 @@ import (
 
 // @SDKResource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
+// @Testing(importIgnore="password")
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -183,6 +184,11 @@ func resourceEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+						"sasl_mechanism": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.KafkaSaslMechanism](),
 						},
 						"sasl_password": {
 							Type:      schema.TypeString,
@@ -1864,6 +1870,10 @@ func expandKafkaSettings(tfMap map[string]interface{}) *awstypes.KafkaSettings {
 		apiObject.PartitionIncludeSchemaTable = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["sasl_mechanism"].(string); ok && v != "" {
+		apiObject.SaslMechanism = awstypes.KafkaSaslMechanism(v)
+	}
+
 	if v, ok := tfMap["sasl_password"].(string); ok && v != "" {
 		apiObject.SaslPassword = aws.String(v)
 	}
@@ -1930,7 +1940,7 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interfac
 		tfMap["include_transaction_details"] = aws.ToBool(v)
 	}
 
-	tfMap["message_format"] = string(apiObject.MessageFormat)
+	tfMap["message_format"] = apiObject.MessageFormat
 
 	if v := apiObject.MessageMaxBytes; v != nil {
 		tfMap["message_max_bytes"] = aws.ToInt32(v)
@@ -1944,6 +1954,8 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interfac
 		tfMap["partition_include_schema_table"] = aws.ToBool(v)
 	}
 
+	tfMap["sasl_mechanism"] = apiObject.SaslMechanism
+
 	if v := apiObject.SaslPassword; v != nil {
 		tfMap["sasl_password"] = aws.ToString(v)
 	}
@@ -1952,7 +1964,7 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interfac
 		tfMap["sasl_username"] = aws.ToString(v)
 	}
 
-	tfMap["security_protocol"] = string(apiObject.SecurityProtocol)
+	tfMap["security_protocol"] = apiObject.SecurityProtocol
 
 	if v := apiObject.SslCaCertificateArn; v != nil {
 		tfMap["ssl_ca_certificate_arn"] = aws.ToString(v)

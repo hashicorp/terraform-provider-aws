@@ -6,8 +6,8 @@ package ecs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,17 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecs_task_definition")
-func DataSourceTaskDefinition() *schema.Resource {
+// @SDKDataSource("aws_ecs_task_definition", name="Task Definition")
+func dataSourceTaskDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTaskDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
-			"task_definition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			// Computed values.
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -54,6 +49,10 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"task_definition": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"task_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -64,23 +63,22 @@ func DataSourceTaskDefinition() *schema.Resource {
 
 func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	taskDefinitionName := d.Get("task_definition").(string)
 	input := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinitionName),
 	}
 
-	output, err := conn.DescribeTaskDefinitionWithContext(ctx, input)
+	taskDefinition, _, err := findTaskDefinition(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", taskDefinitionName, err)
 	}
 
-	taskDefinition := output.TaskDefinition
-	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
+	d.SetId(aws.ToString(taskDefinition.TaskDefinitionArn))
 	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
+	d.Set("arn_without_revision", taskDefinitionARNStripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)

@@ -156,8 +156,8 @@ func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource
 	}
 
 	in := &ssoadmin.DeleteApplicationAssignmentInput{
-		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
-		PrincipalId:    aws.String(state.PrincipalID.ValueString()),
+		ApplicationArn: state.ApplicationARN.ValueStringPointer(),
+		PrincipalId:    state.PrincipalID.ValueStringPointer(),
 		PrincipalType:  awstypes.PrincipalType(state.PrincipalType.ValueString()),
 	}
 

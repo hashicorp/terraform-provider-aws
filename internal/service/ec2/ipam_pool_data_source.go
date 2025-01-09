@@ -116,7 +116,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.IpamPoolIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -135,7 +135,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("allocation_default_netmask_length", pool.AllocationDefaultNetmaskLength)
 	d.Set("allocation_max_netmask_length", pool.AllocationMaxNetmaskLength)
 	d.Set("allocation_min_netmask_length", pool.AllocationMinNetmaskLength)
-	d.Set("allocation_resource_tags", keyValueTagsV2(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", keyValueTags(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set(names.AttrARN, pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -149,7 +149,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set(names.AttrState, pool.State)
 
-	setTagsOutV2(ctx, pool.Tags)
+	setTagsOut(ctx, pool.Tags)
 
 	return diags
 }

@@ -210,7 +210,7 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	in := &redshift.DisableLoggingInput{
-		ClusterIdentifier: aws.String(state.ID.ValueString()),
+		ClusterIdentifier: state.ID.ValueStringPointer(),
 	}
 
 	// Retry InvalidClusterState faults, which can occur when logging is being enabled.

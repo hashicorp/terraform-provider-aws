@@ -13,16 +13,27 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newRecordsDataSource,
+			Name:    "Records",
+		},
+		{
+			Factory: newZonesDataSource,
+			Name:    "Zones",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newCIDRCollectionResource,
+			Name:    "CIDR Collection",
 		},
 		{
 			Factory: newCIDRLocationResource,
+			Name:    "CIDR Location",
 		},
 	}
 }

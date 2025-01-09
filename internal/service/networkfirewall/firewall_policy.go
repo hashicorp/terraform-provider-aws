@@ -109,6 +109,21 @@ func resourceFirewallPolicy() *schema.Resource {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"flow_timeouts": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"tcp_idle_timeout_seconds": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														Default:      350,
+														ValidateFunc: validation.IntBetween(60, 6000),
+													},
+												},
+											},
+										},
 										"rule_order": {
 											Type:             schema.TypeString,
 											Optional:         true,
@@ -420,11 +435,30 @@ func expandStatefulEngineOptions(tfList []interface{}) *awstypes.StatefulEngineO
 
 	tfMap := tfList[0].(map[string]interface{})
 
+	if v, ok := tfMap["flow_timeouts"].([]interface{}); ok && len(v) > 0 {
+		apiObject.FlowTimeouts = expandFlowTimeouts(v)
+	}
 	if v, ok := tfMap["rule_order"].(string); ok && v != "" {
 		apiObject.RuleOrder = awstypes.RuleOrder(v)
 	}
 	if v, ok := tfMap["stream_exception_policy"].(string); ok && v != "" {
 		apiObject.StreamExceptionPolicy = awstypes.StreamExceptionPolicy(v)
+	}
+
+	return apiObject
+}
+
+func expandFlowTimeouts(tfList []interface{}) *awstypes.FlowTimeouts {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.FlowTimeouts{}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["tcp_idle_timeout_seconds"].(int); ok && v > 0 {
+		apiObject.TcpIdleTimeoutSeconds = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -604,6 +638,22 @@ func flattenStatefulEngineOptions(apiObject *awstypes.StatefulEngineOptions) []i
 	tfMap := map[string]interface{}{
 		"rule_order":              apiObject.RuleOrder,
 		"stream_exception_policy": apiObject.StreamExceptionPolicy,
+	}
+
+	if apiObject.FlowTimeouts != nil {
+		tfMap["flow_timeouts"] = flattenFlowTimeouts(apiObject.FlowTimeouts)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFlowTimeouts(apiObject *awstypes.FlowTimeouts) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"tcp_idle_timeout_seconds": apiObject.TcpIdleTimeoutSeconds,
 	}
 
 	return []interface{}{tfMap}

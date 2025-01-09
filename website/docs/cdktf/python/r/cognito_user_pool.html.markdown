@@ -119,6 +119,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_attribute_update_settings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `user_pool_add_ons` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
+* `user_pool_tier` - (Optional) The user pool [feature plan](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-sign-in-feature-plans.html), or tier. Valid values: `LITE`, `ESSENTIALS`, `PLUS`.
 * `username_attributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
 * `verification_message_template` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
@@ -188,6 +189,9 @@ The following arguments are optional:
 ### password_policy
 
 * `minimum_length` - (Optional) Minimum length of the password policy that you have set.
+* `password_history_size` - (Optional) Number of previous passwords that you want Amazon Cognito to restrict each user from reusing. Users can't set a password that matches any of number of previous passwords specified by this argument. A value of 0 means that password history is not enforced. Valid values are between 0 and 24.
+
+  **Note:** This argument requires advanced security features to be active in the user pool.
 * `require_lowercase` - (Optional) Whether you have required users to use at least one lowercase letter in their password.
 * `require_numbers` - (Optional) Whether you have required users to use at least one number in their password.
 * `require_symbols` - (Optional) Whether you have required users to use at least one symbol in their password.
@@ -321,4 +325,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d2add4de169176a18d535e64e6b4e2b8a61a2e7ab8a1120b63e928572a07990e -->
+<!-- cache-key: cdktf-0.20.8 input-dada491ac66fc732e2264393fc24044c4d61e3fd9ba8814403dc00112a9b3e9b -->

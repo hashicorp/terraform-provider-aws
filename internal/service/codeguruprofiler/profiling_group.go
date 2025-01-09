@@ -223,7 +223,7 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 	}
 
 	in := &codeguruprofiler.DeleteProfilingGroupInput{
-		ProfilingGroupName: aws.String(state.ID.ValueString()),
+		ProfilingGroupName: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteProfilingGroup(ctx, in)
@@ -279,8 +279,8 @@ type resourceProfilingGroupData struct {
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]              `tfsdk:"compute_platform"`
 	ID                       types.String                                              `tfsdk:"id"`
 	Name                     types.String                                              `tfsdk:"name"`
-	Tags                     types.Map                                                 `tfsdk:"tags"`
-	TagsAll                  types.Map                                                 `tfsdk:"tags_all"`
+	Tags                     tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                `tfsdk:"tags_all"`
 }
 
 type agentOrchestrationConfig struct {

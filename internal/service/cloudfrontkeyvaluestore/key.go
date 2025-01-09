@@ -119,7 +119,12 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 
 	// Set values for unknowns.
 	data.TotalSizeInBytes = fwflex.Int64ToFramework(ctx, output.TotalSizeInBytes)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront KeyValueStore (%s) Key (%s)", kvsARN, data.Key.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -340,6 +345,11 @@ func (data *keyResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *keyResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.KvsARN.ValueString(), data.Key.ValueString()}, keyResourceIDPartCount, false)))
+func (data *keyResourceModel) setID() (string, error) {
+	parts := []string{
+		data.KvsARN.ValueString(),
+		data.Key.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, keyResourceIDPartCount, false)
 }

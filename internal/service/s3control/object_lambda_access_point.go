@@ -137,7 +137,7 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -187,9 +187,9 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrAccountID, accountID)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3objectlambda.html#amazons3objectlambda-resources-for-iam-policies.
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "s3-object-lambda",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()

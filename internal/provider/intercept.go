@@ -267,13 +267,9 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 							// If the service package has a generic resource update tags methods, call it.
 							var err error
 
-							if v, ok := sp.(interface {
-								UpdateTags(context.Context, any, string, any, any) error
-							}); ok {
+							if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 								err = v.UpdateTags(ctx, meta, identifier, o, n)
-							} else if v, ok := sp.(interface {
-								UpdateTags(context.Context, any, string, string, any, any) error
-							}); ok && r.tags.ResourceType != "" {
+							} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && r.tags.ResourceType != "" {
 								err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
 							} else {
 								tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
@@ -283,7 +279,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 							}
 
 							// ISO partitions may not support tagging, giving error.
-							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 								return ctx, diags
 							}
 
@@ -324,14 +320,16 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 						// If the service package has a generic resource list tags methods, call it.
 						var err error
 
-						if v, ok := sp.(interface {
-							ListTags(context.Context, any, string) error
-						}); ok {
+						if v, ok := sp.(tftags.ServiceTagLister); ok {
 							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-						} else if v, ok := sp.(interface {
-							ListTags(context.Context, any, string, string) error
-						}); ok && r.tags.ResourceType != "" {
-							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
+							if r.tags.ResourceType == "" {
+								tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]interface{}{
+									"ServicePackage": sp.ServicePackageName(),
+								})
+							} else {
+								err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+							}
 						} else {
 							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
 								"ServicePackage": sp.ServicePackageName(),
@@ -340,7 +338,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 						}
 
 						// ISO partitions may not support tagging, giving error.
-						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 							return ctx, diags
 						}
 
@@ -362,7 +360,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
 			// The resource's configured tags can now include duplicate tags that have been configured on the provider.
-			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, d).Map()); err != nil {
+			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, d, names.AttrTags, nil).Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
@@ -469,7 +467,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 						}
 
 						// ISO partitions may not support tagging, giving error.
-						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 							return ctx, diags
 						}
 

@@ -5,8 +5,8 @@ package opensearchserverless
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,6 +39,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newResourceAccessPolicy,
+			Name:    "Access Policy",
 		},
 		{
 			Factory: newResourceCollection,
@@ -53,12 +54,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newResourceSecurityConfig,
+			Name:    "Security Config",
 		},
 		{
 			Factory: newResourceSecurityPolicy,
+			Name:    "Security Policy",
 		},
 		{
-			Factory: newResourceVPCEndpoint,
+			Factory: newVPCEndpointResource,
+			Name:    "VPC Endpoint",
 		},
 	}
 }
@@ -68,10 +72,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSecurityPolicy,
 			TypeName: "aws_opensearchserverless_security_policy",
+			Name:     "Security Policy",
 		},
 		{
-			Factory:  DataSourceVPCEndpoint,
+			Factory:  dataSourceVPCEndpoint,
 			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
 		},
 	}
 }
@@ -85,11 +91,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*opensearchserverless_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*opensearchserverless.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return opensearchserverless_sdkv2.NewFromConfig(cfg,
-		opensearchserverless_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return opensearchserverless.NewFromConfig(cfg,
+		opensearchserverless.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

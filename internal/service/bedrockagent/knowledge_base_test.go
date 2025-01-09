@@ -6,12 +6,17 @@ package bedrockagent_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
@@ -48,18 +53,25 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "RDS"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.table_name", "bedrock_integration.bedrock_kb"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.vector_field", "embedding"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.text_field", "chunks"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.metadata_field", "metadata"),
@@ -70,6 +82,32 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel, "test description"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "RDS"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.table_name", "bedrock_integration.bedrock_kb"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.vector_field", "embedding"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.text_field", "chunks"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.metadata_field", "metadata"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.primary_key_field", names.AttrID),
+				),
 			},
 		},
 	})
@@ -104,7 +142,7 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceKnowledgeBase, resourceName),
@@ -145,10 +183,18 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, acctest.CtKey1, acctest.CtValue1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -158,19 +204,35 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 			},
 			{
 				Config: testAccKnowledgeBaseConfig_tags2(rName, foundationModel, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, acctest.CtKey2, acctest.CtValue2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -199,14 +261,14 @@ func testAccKnowledgeBase_basicOpenSearch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_SERVERLESS"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
@@ -245,14 +307,14 @@ func testAccKnowledgeBase_updateOpenSearch(t *testing.T) {
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_SERVERLESS"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
@@ -271,14 +333,14 @@ func testAccKnowledgeBase_updateOpenSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_SERVERLESS"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
@@ -341,175 +403,19 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 	}
 }
 
-func testAccKnowledgeBase_baseRDS(rName, model string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsEnableDNSHostnames(rName, 2), fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
+func testAccKnowledgeBaseConfig_basicRDS(rName, model, description string) string {
+	if description == "" {
+		description = "null"
+	} else {
+		description = strconv.Quote(description)
+	}
 
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  path               = "/service-role/"
-  assume_role_policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [{
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		"Service": "bedrock.amazonaws.com"
-		},
-		"Effect": "Allow"
-	}]
-}
-POLICY
-}
-
-# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
-resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
-  role   = aws_iam_role.test.name
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:ListFoundationModels",
-        "bedrock:ListCustomModels"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:InvokeModel"
-      ],
-      "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy_attachment" "rds_data_full_access" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/AmazonRDSDataFullAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier          = %[1]q
-  engine                      = "aurora-postgresql"
-  engine_mode                 = "provisioned"
-  engine_version              = "15.4"
-  database_name               = "test"
-  master_username             = "test"
-  manage_master_user_password = true
-  enable_http_endpoint        = true
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  skip_final_snapshot         = true
-  db_subnet_group_name        = aws_db_subnet_group.test.name
-
-  serverlessv2_scaling_configuration {
-    max_capacity = 1.0
-    min_capacity = 0.5
-  }
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier  = aws_rds_cluster.test.id
-  instance_class      = "db.serverless"
-  engine              = aws_rds_cluster.test.engine
-  engine_version      = aws_rds_cluster.test.engine_version
-  publicly_accessible = true
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_default_route_table" "test" {
-  default_route_table_id = aws_vpc.test.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_rds_cluster.test.master_user_secret[0].secret_arn
-  version_stage = "AWSCURRENT"
-  depends_on    = [aws_rds_cluster.test]
-}
-
-resource "null_resource" "db_setup" {
-  depends_on = [aws_rds_cluster_instance.test, aws_rds_cluster.test, data.aws_secretsmanager_secret_version.test]
-
-  provisioner "local-exec" {
-    command = <<EOT
-      sleep 60
-      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.test.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.name} --query SecretString --output text | jq -r '."password"')
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
-    EOT
-  }
-}
-`, rName, model))
-}
-
-func testAccKnowledgeBaseConfig_basicRDS(rName, model string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
+
+  description = %[3]s
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
@@ -536,11 +442,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
 }
-`, rName, model))
+`, rName, model, description))
 }
 
 func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -578,7 +484,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBaseConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn

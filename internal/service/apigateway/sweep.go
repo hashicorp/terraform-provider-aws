@@ -4,6 +4,7 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -11,11 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_api_gateway_account", sweepAccounts,
+		"aws_api_gateway_rest_api",
+	)
+
 	resource.AddTestSweepers("aws_api_gateway_rest_api", &resource.Sweeper{
 		Name: "aws_api_gateway_rest_api",
 		F:    sweepRestAPIs,
@@ -48,6 +55,14 @@ func RegisterSweepers() {
 		Name: "aws_api_gateway_domain_name",
 		F:    sweepDomainNames,
 	})
+}
+
+func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	return []sweep.Sweepable{
+		framework.NewSweepResource(newResourceAccount, client,
+			framework.NewAttribute("reset_on_delete", true),
+		),
+	}, nil
 }
 
 func sweepRestAPIs(region string) error {

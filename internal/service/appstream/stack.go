@@ -409,7 +409,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err := conn.UpdateStack(ctx, input)
 
 		if err != nil {
-			sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
 		}
 	}
 

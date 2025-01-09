@@ -37,7 +37,7 @@ func TestAccAppConfigExtension_basic(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`extension/*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`extension/*`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action_point.0.point", "ON_DEPLOYMENT_COMPLETE"),
 					resource.TestCheckResourceAttr(resourceName, "action_point.0.action.0.name", "test"),
@@ -68,7 +68,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
@@ -86,7 +86,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_actionPoint2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
@@ -105,7 +105,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
@@ -137,7 +137,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				Config: testAccExtensionConfig_parameter1(rName, pName1, pDescription1, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:        pName1,
 						names.AttrDescription: pDescription1,
@@ -154,7 +154,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				Config: testAccExtensionConfig_parameter2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:        "parameter1",
 						names.AttrDescription: "description1",
@@ -171,7 +171,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				Config: testAccExtensionConfig_parameter1(rName, pName2, pDescription2, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:        pName2,
 						names.AttrDescription: pDescription2,

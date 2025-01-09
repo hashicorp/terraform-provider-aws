@@ -43,7 +43,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -63,7 +63,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 		attachmentIDs = append(attachmentIDs, aws.ToString(v.TransitGatewayAttachmentId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, attachmentIDs)
 
 	return diags

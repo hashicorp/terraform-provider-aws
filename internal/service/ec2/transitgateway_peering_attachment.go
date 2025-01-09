@@ -91,7 +91,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	peerAccountID := meta.(*conns.AWSClient).AccountID
+	peerAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk("peer_account_id"); ok {
 		peerAccountID = v.(string)
 	}
@@ -99,7 +99,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 		PeerAccountId:        aws.String(peerAccountID),
 		PeerRegion:           aws.String(d.Get("peer_region").(string)),
 		PeerTransitGatewayId: aws.String(d.Get("peer_transit_gateway_id").(string)),
-		TagSpecifications:    getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:    getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayAttachment),
 		TransitGatewayId:     aws.String(d.Get(names.AttrTransitGatewayID).(string)),
 	}
 
@@ -148,7 +148,7 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 	}
 
-	setTagsOutV2(ctx, transitGatewayPeeringAttachment.Tags)
+	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 
 	return diags
 }

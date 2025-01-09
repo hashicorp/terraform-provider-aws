@@ -36,7 +36,7 @@ func TestAccS3BucketVersioning_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -153,7 +153,7 @@ func TestAccS3BucketVersioning_MFADelete(t *testing.T) {
 				Config: testAccBucketVersioningConfig_mfaDelete(rName, string(types.MFADeleteDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.mfa_delete", string(types.MFADeleteDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
@@ -183,7 +183,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledNoChange(t *testing.T) 
 				Config: testAccBucketConfig_versioning(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtFalse),
 				),
 			},
@@ -191,7 +191,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledNoChange(t *testing.T) 
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -215,7 +215,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledWithChange(t *testing.T
 				Config: testAccBucketConfig_versioning(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtFalse),
 				),
 			},
@@ -223,7 +223,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledWithChange(t *testing.T
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -247,7 +247,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledNoChange(t *testing.T) {
 				Config: testAccBucketConfig_versioning(bucketName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtTrue),
 				),
 			},
@@ -255,7 +255,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledNoChange(t *testing.T) {
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -279,7 +279,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledWithChange(t *testing.T)
 				Config: testAccBucketConfig_versioning(bucketName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtTrue),
 				),
 			},
@@ -287,7 +287,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledWithChange(t *testing.T)
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, string(types.BucketVersioningStatusSuspended)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusSuspended)),
 				),
 			},
@@ -313,7 +313,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 				Config: testAccBucketConfig_versioningMFADelete(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 				),
 			},
@@ -321,7 +321,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 				Config: testAccBucketVersioningConfig_migrateMFADelete(bucketName, string(types.MFADeleteDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.mfa_delete", string(types.MFADeleteDisabled)),
 				),
 			},
@@ -344,7 +344,7 @@ func TestAccS3BucketVersioning_Status_disabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -372,7 +372,7 @@ func TestAccS3BucketVersioning_Status_disabledToEnabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -380,7 +380,7 @@ func TestAccS3BucketVersioning_Status_disabledToEnabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -408,7 +408,7 @@ func TestAccS3BucketVersioning_Status_disabledToSuspended(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -416,7 +416,7 @@ func TestAccS3BucketVersioning_Status_disabledToSuspended(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusSuspended)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusSuspended)),
 				),
 			},
@@ -444,7 +444,7 @@ func TestAccS3BucketVersioning_Status_enabledToDisabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -471,7 +471,7 @@ func TestAccS3BucketVersioning_Status_suspendedToDisabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusSuspended)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusSuspended)),
 				),
 			},
@@ -503,9 +503,9 @@ func TestAccS3BucketVersioning_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketVersioningDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_versioning" {
 				continue
 			}
@@ -513,6 +513,10 @@ func testAccCheckBucketVersioningDestroy(ctx context.Context) resource.TestCheck
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
@@ -545,6 +549,9 @@ func testAccCheckBucketVersioningExists(ctx context.Context, n string) resource.
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
 

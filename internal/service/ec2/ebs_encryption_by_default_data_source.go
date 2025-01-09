@@ -41,7 +41,7 @@ func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading default EBS encryption toggle: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrEnabled, res.EbsEncryptionByDefault)
 
 	return diags

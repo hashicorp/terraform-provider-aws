@@ -49,7 +49,7 @@ func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schem
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).AccountID)
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	return append(diags, resourceSecurityTokenServicePreferencesRead(ctx, d, meta)...)

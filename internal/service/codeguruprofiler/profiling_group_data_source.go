@@ -102,7 +102,7 @@ func (d *dataSourceProfilingGroup) Read(ctx context.Context, req datasource.Read
 	data.CreatedAt = flex.StringValueToFramework(ctx, out.CreatedAt.Format(time.RFC3339))
 	data.UpdatedAt = flex.StringValueToFramework(ctx, out.UpdatedAt.Format(time.RFC3339))
 	data.ID = flex.StringToFramework(ctx, out.Name)
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, out.Tags)
+	data.Tags = tftags.FlattenStringValueMap(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -115,7 +115,7 @@ type dataSourceProfilingGroupData struct {
 	ID                       types.String                                                `tfsdk:"id"`
 	Name                     types.String                                                `tfsdk:"name"`
 	ProfilingStatus          fwtypes.ListNestedObjectValueOf[dsProfilingStatus]          `tfsdk:"profiling_status"`
-	Tags                     types.Map                                                   `tfsdk:"tags"`
+	Tags                     tftags.Map                                                  `tfsdk:"tags"`
 	UpdatedAt                types.String                                                `tfsdk:"updated_at"`
 }
 

@@ -51,9 +51,7 @@ func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.
 
 func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data directoryBucketsDataSourceModel
-
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -78,10 +76,10 @@ func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasourc
 	}
 
 	data.ARNs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(buckets, func(v string) string {
-		return d.RegionalARN("s3express", fmt.Sprintf("bucket/%s", v))
+		return d.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", v))
 	}))
 	data.Buckets = flex.FlattenFrameworkStringValueList(ctx, buckets)
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

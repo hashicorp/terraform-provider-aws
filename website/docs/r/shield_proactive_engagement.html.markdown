@@ -16,8 +16,26 @@ Proactive engagement authorizes the Shield Response Team (SRT) to use email and 
 ### Basic Usage
 
 ```terraform
+resource "aws_shield_proactive_engagement" "example" {
+  enabled = true
+
+  emergency_contact {
+    contact_notes = "Notes"
+    email_address = "contact1@example.com"
+    phone_number  = "+12358132134"
+  }
+
+  emergency_contact {
+    contact_notes = "Notes 2"
+    email_address = "contact2@example.com"
+    phone_number  = "+12358132134"
+  }
+
+  depends_on = [aws_shield_drt_access_role_arn_association.example]
+}
+
 resource "aws_iam_role" "example" {
-  name = var.aws_shield_drt_access_role_arn
+  name = "example-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -42,28 +60,10 @@ resource "aws_shield_drt_access_role_arn_association" "example" {
   role_arn = aws_iam_role.example.arn
 }
 
-resource "aws_shield_protection_group" "test" {
+resource "aws_shield_protection_group" "example" {
   protection_group_id = "example"
   aggregation         = "MAX"
   pattern             = "ALL"
-}
-
-resource "aws_shield_proactive_engagement" "test" {
-  enabled = true
-
-  emergency_contact {
-    contact_notes = "Notes"
-    email_address = "test@company.com"
-    phone_number  = "+12358132134"
-  }
-
-  emergency_contact {
-    contact_notes = "Notes 2"
-    email_address = "test2@company.com"
-    phone_number  = "+12358132134"
-  }
-
-  depends_on = [aws_shield_drt_access_role_arn_association.test]
 }
 ```
 

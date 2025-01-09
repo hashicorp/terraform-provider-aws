@@ -15,7 +15,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
@@ -127,6 +127,11 @@ func JSONBytesEqual(b1, b2 []byte) bool {
 	return reflect.DeepEqual(o1, o2)
 }
 
+// SecondJSONUnlessEquivalent returns the second JSON string unless
+// the AWS policy content is deemed equivalent.
+//
+// If parsing of the policy content from the first argument fails, the
+// second is returned and no error is raised.
 func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 	// valid empty JSON is "{}" not "" so handle special case to avoid
 	// Error unmarshaling policy: unexpected end of JSON input
@@ -145,6 +150,17 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 	equivalent, err := awspolicy.PoliciesAreEquivalent(old, new)
 
 	if err != nil {
+		// Plugin SDK V2 based resources can set malformed policy content in state
+		// despite a failed update. In these cases, parsing the "old" content
+		// will fail. Surfacing this error during read operations causes a
+		// persistent plan-time validation error, so return the "new" content
+		// read directly from the remote resource instead.
+		//
+		// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39833
+		if errs.Contains(err, "parsing policy 1") {
+			return new, nil
+		}
+
 		return "", err
 	}
 
@@ -211,18 +227,4 @@ func LegacyPolicyToSet(exist, new string) (string, error) {
 	}
 
 	return policyToSet, nil
-}
-
-// SuppressEquivalentJSONRemovingFieldsDiffs returns a difference suppression function that compares
-// two JSON strings and returns `true` if they are equivalent once the specified fields have been removed.
-func SuppressEquivalentJSONRemovingFieldsDiffs(fields ...string) schema.SchemaDiffSuppressFunc {
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
-			return old == new
-		}
-
-		old, new = tfjson.RemoveFields(old, fields...), tfjson.RemoveFields(new, fields...)
-
-		return JSONStringsEqual(old, new)
-	}
 }

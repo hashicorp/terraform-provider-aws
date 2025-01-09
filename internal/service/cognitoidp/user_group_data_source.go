@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="User Group")
+// @FrameworkDataSource("aws_cognito_user_group", name="User Group")
 func newUserGroupDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &userGroupDataSource{}, nil
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -92,7 +93,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -108,7 +109,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 
 	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = names.USWest2RegionID
+		o.Region = endpoints.UsWest2RegionID
 	})
 
 	if err != nil {
@@ -191,7 +192,7 @@ func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.R
 
 	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = names.USWest2RegionID
+		o.Region = endpoints.UsWest2RegionID
 	})
 
 	if err != nil {
@@ -213,7 +214,7 @@ func findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx context.Context, c
 
 	output, err := conn.GetMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = names.USWest2RegionID
+		o.Region = endpoints.UsWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {

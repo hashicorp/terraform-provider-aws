@@ -493,8 +493,8 @@ type pipelineResourceModel struct {
 	PipelineARN               types.String                                                  `tfsdk:"pipeline_arn"`
 	PipelineConfigurationBody types.String                                                  `tfsdk:"pipeline_configuration_body"`
 	PipelineName              types.String                                                  `tfsdk:"pipeline_name"`
-	Tags                      types.Map                                                     `tfsdk:"tags"`
-	TagsAll                   types.Map                                                     `tfsdk:"tags_all"`
+	Tags                      tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                `tfsdk:"timeouts"`
 	VPCOptions                fwtypes.ListNestedObjectValueOf[vpcOptionsModel]              `tfsdk:"vpc_options"`
 }

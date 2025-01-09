@@ -15,12 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_core_network_policy_document")
-func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_core_network_policy_document", name="Core Network Policy Document")
+func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	setOfString := &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -253,10 +254,24 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"edge_sets": setOfString,
-												"use_edge": {
+												"edge_sets": {
+													Type: schema.TypeSet,
+													Elem: &schema.Schema{
+														Type: schema.TypeSet,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+													Optional: true,
+												},
+												"use_edge_location": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"use_edge": {
+													Type:       schema.TypeString,
+													Optional:   true,
+													Deprecated: "Use use_edge_location",
 												},
 											},
 										},
@@ -526,11 +541,18 @@ func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetwork
 						apiObject := &coreNetworkPolicySegmentActionViaEdgeOverride{}
 
 						if v := tfMap["edge_sets"].(*schema.Set).List(); len(v) > 0 {
-							apiObject.EdgeSets = coreNetworkPolicyExpandStringList(v)
+							var edgeSets [][]string
+							for _, esRaw := range v {
+								es := esRaw.(*schema.Set)
+								edgeSets = append(edgeSets, flex.ExpandStringValueSet(es))
+							}
+							apiObject.EdgeSets = edgeSets
 						}
 
-						if v, ok := tfMap["use_edge"]; ok {
-							apiObject.UseEdge = v.(string)
+						if v, ok := tfMap["use_edge_location"]; ok && v != "" {
+							apiObject.UseEdgeLocation = v.(string)
+						} else if v, ok := tfMap["use_edge"]; ok {
+							apiObject.UseEdgeLocation = v.(string)
 						}
 
 						apiObjects = append(apiObjects, apiObject)

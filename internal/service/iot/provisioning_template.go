@@ -153,8 +153,8 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 		input.TemplateBody = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get(names.AttrType).(awstypes.TemplateType); ok && v != "" {
-		input.Type = v
+	if v, ok := d.Get(names.AttrType).(string); ok && v != "" {
+		input.Type = awstypes.TemplateType(v)
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,

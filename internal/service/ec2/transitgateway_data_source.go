@@ -80,6 +80,10 @@ func dataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_group_referencing_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
 				Type:     schema.TypeList,
@@ -100,7 +104,7 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.DescribeTransitGatewaysInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -131,10 +135,11 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	d.Set("security_group_referencing_support", transitGateway.Options.SecurityGroupReferencingSupport)
 	d.Set("transit_gateway_cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	setTagsOutV2(ctx, transitGateway.Tags)
+	setTagsOut(ctx, transitGateway.Tags)
 
 	return diags
 }

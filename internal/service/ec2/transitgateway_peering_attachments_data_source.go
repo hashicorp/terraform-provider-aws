@@ -44,7 +44,7 @@ func dataSourceTransitGatewayPeeringAttachmentsRead(ctx context.Context, d *sche
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -59,7 +59,7 @@ func dataSourceTransitGatewayPeeringAttachmentsRead(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Peering Attachments: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.TransitGatewayPeeringAttachment) string {
 		return aws.ToString(v.TransitGatewayAttachmentId)
 	}))

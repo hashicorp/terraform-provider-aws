@@ -428,13 +428,12 @@ Defaults to true.
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `customIamInstanceProfile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `dbName` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
-* `dbSubnetGroupName` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
-be created in the VPC associated with the DB subnet group. If unspecified, will
-be created in the `default` VPC, or in EC2 Classic, if available. When working
-with read replicas, it should be specified only if the source database
-specifies an instance in another AWS Region. See [DBSubnetGroupName in API
-action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica constraints.
+* `dbSubnetGroupName` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
+  DB instance will be created in the VPC associated with the DB subnet group.
+  If unspecified, will be created in the `default` Subnet Group.
+  When working with read replicas created in the same region, defaults to the Subnet Group Name of the source DB.
+  When working with read replicas created in a different region, defaults to the `default` Subnet Group.
+  See [DBSubnetGroupName in API action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html) for additional read replica constraints.
 * `dedicatedLogVolume` - (Optional, boolean) Use a dedicated log volume (DLV) for the DB instance. Requires Provisioned IOPS. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIOPS.StorageTypes.html#USER_PIOPS.dlv) for more details.
 * `deleteAutomatedBackups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletionProtection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
@@ -447,6 +446,7 @@ for additional read replica constraints.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. For supported values, see the EnableCloudwatchLogsExports.member.N parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 * `engine` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
 * `engineVersion` - (Optional) The engine version to use. If `autoMinorVersionUpgrade` is enabled, you can provide a prefix of the version such as `8.0` (for `8.0.36`). The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+* `engineLifecycleSupport` - (Optional) The life cycle type for this DB instance. This setting applies only to RDS for MySQL and RDS for PostgreSQL. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
 * `finalSnapshotIdentifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skipFinalSnapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
@@ -456,7 +456,7 @@ accounts is enabled.
 * `identifierPrefix` - (Optional) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instanceClass` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
-storage_type of "io1". Can only be set when `storageType` is `"io1"` or `"gp3"`.
+storage_type of "io1" or "io2". Can only be set when `storageType` is `"io1"`, `"io2` or `"gp3"`.
 Cannot be specified for gp3 storage if the `allocatedStorage` value is below a per-`engine` threshold.
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kmsKeyId` - (Optional) The ARN for the KMS encryption key. If creating an
@@ -501,33 +501,33 @@ logs, and it will be stored in the state file. Cannot be set if `manageMasterUse
 accessible. Default is `false`.
 * `replicaMode` - (Optional) Specifies whether the replica is in either `mounted` or `open-read-only` mode. This attribute
 is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
-* `replicateSourceDb` - (Optional) Specifies that this resource is a Replicate
-database, and to use this value as the source database. This correlates to the
-`identifier` of another Amazon RDS Database to replicate (if replicating within
-a single region) or ARN of the Amazon RDS Database to replicate (if replicating
-cross-region). Note that if you are
-creating a cross-region replica of an encrypted database you will also need to
-specify a `kmsKeyId`. See [DB Instance Replication][instance-replication] and [Working with
-PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
-for more information on using Replication.
-* `restoreToPointInTime` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
+* `replicateSourceDb` - (Optional) Specifies that this resource is a Replica database, and to use this value as the source database.
+  If replicating an Amazon RDS Database Instance in the same region, use the `identifier` of the source DB, unless also specifying the `dbSubnetGroupName`.
+  If specifying the `dbSubnetGroupName` in the same region, use the `arn` of the source DB.
+  If replicating an Instance in a different region, use the `arn` of the source DB.
+  Note that if you are creating a cross-region replica of an encrypted database you will also need to specify a `kmsKeyId`.
+  See [DB Instance Replication][instance-replication] and [Working with PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html) for more information on using Replication.
+* `upgradeStorageConfig` - (Optional) Whether to upgrade the storage file system configuration on the read replica.
+  Can only be set with `replicateSourceDb`.
+* `restoreToPointInTime` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time.
+  Requires the `identifier` argument to be set with the name of the new DB instance to be created.
+  See [Restore To Point In Time](#restore-to-point-in-time) below for details.
 * `s3Import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
 * `skipFinalSnapshot` - (Optional) Determines whether a final DB snapshot is
 created before the DB instance is deleted. If true is specified, no DBSnapshot
 is created. If false is specified, a DB snapshot is created before the DB
 instance is deleted, using the value from `finalSnapshotIdentifier`. Default
 is `false`.
-* `snapshotIdentifier` - (Optional) Specifies whether or not to create this
-database from a snapshot. This correlates to the snapshot ID you'd find in the
-RDS console, e.g: rds:production-2015-06-26-06-05.
+* `snapshotIdentifier` - (Optional) Specifies whether or not to create this database from a snapshot.
+  This corresponds to the snapshot ID you'd find in the RDS console, e.g: rds:production-2015-06-26-06-05.
 * `storageEncrypted` - (Optional) Specifies whether the DB instance is
 encrypted. Note that if you are creating a cross-region read replica this field
 is ignored and you should instead declare `kmsKeyId` with a valid ARN. The
 default is `false` if not specified.
 * `storageType` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), "gp3" (general purpose SSD that needs `iops` independently)
-or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is specified,
-"gp2" if not.
+"io1" (provisioned IOPS SSD) or "io2" (block express storage provisioned IOPS
+SSD). The default is "io1" if `iops` is specified, "gp2" if not.
 * `storageThroughput` - (Optional) The storage throughput value for the DB instance. Can only be set when `storageType` is `"gp3"`. Cannot be specified if the `allocatedStorage` value is below a per-`engine` threshold. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
@@ -706,4 +706,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bdb5abf13d6aa4c71c12b4842a5b31828587608e3321f860616855f6f2f7edb7 -->
+<!-- cache-key: cdktf-0.20.8 input-4a73d395cca86db28f6cec85c0b39295ff84bb301f2f565f7dc3008cc42ded33 -->

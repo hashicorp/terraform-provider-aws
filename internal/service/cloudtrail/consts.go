@@ -44,3 +44,7 @@ func field_Values() []string {
 const (
 	propagationTimeout = 2 * time.Minute
 )
+
+const (
+	servicePrincipal = "cloudtrail.amazonaws.com"
+)

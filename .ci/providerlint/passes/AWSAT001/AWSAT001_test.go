@@ -10,7 +10,7 @@ import (
 
 func TestAWSAT001(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, AWSAT001.Analyzer, "a")
+	analysistest.Run(t, testdata, AWSAT001.Analyzer, "testdata/src/a")
 }
 
 func TestAttributeNameAppearsArnRelated(t *testing.T) {

@@ -28,7 +28,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 				Config: testAccProxyProtocolPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "load_balancer", lbName),
-					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_ports.*", "25"),
 				),
 			},
@@ -36,7 +36,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 				Config: testAccProxyProtocolPolicyConfig_update(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "load_balancer", lbName),
-					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_ports.*", "25"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_ports.*", "587"),
 				),

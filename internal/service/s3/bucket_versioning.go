@@ -105,6 +105,9 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 
 	versioningConfiguration := expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]interface{}))
@@ -157,6 +160,10 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	output, err := waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -185,6 +192,10 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutBucketVersioningInput{
@@ -220,6 +231,10 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutBucketVersioningInput{

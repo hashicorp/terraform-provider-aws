@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -42,6 +43,31 @@ func resourceActivity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrEncryptionConfiguration: {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_data_key_reuse_period_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(60, 900),
+						},
+						names.AttrKMSKeyID: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+						},
+					},
+				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -64,6 +90,10 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &sfn.CreateActivityInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreateActivity(ctx, input)
@@ -94,6 +124,13 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
+	if output.EncryptionConfiguration != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrEncryptionConfiguration, nil)
+	}
 	d.Set(names.AttrName, output.Name)
 
 	return diags

@@ -4,45 +4,45 @@
 package opsworks
 
 import (
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // @SDKResource("aws_opsworks_rails_app_layer", name="Rails App Layer")
 // @Tags(identifierAttribute="arn")
-func ResourceRailsAppLayer() *schema.Resource {
+func resourceRailsAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
-		TypeName:         opsworks.LayerTypeRailsApp,
+		TypeName:         awstypes.LayerTypeRailsApp,
 		DefaultLayerName: "Rails App Server",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
 			"app_server": {
-				AttrName: opsworks.LayerAttributesKeysRailsStack,
+				AttrName: awstypes.LayerAttributesKeysRailsStack,
 				Type:     schema.TypeString,
 				Default:  "apache_passenger",
 			},
 			"bundler_version": {
-				AttrName: opsworks.LayerAttributesKeysBundlerVersion,
+				AttrName: awstypes.LayerAttributesKeysBundlerVersion,
 				Type:     schema.TypeString,
 				Default:  "1.5.3",
 			},
 			"manage_bundler": {
-				AttrName: opsworks.LayerAttributesKeysManageBundler,
+				AttrName: awstypes.LayerAttributesKeysManageBundler,
 				Type:     schema.TypeBool,
 				Default:  true,
 			},
 			"passenger_version": {
-				AttrName: opsworks.LayerAttributesKeysPassengerVersion,
+				AttrName: awstypes.LayerAttributesKeysPassengerVersion,
 				Type:     schema.TypeString,
 				Default:  "4.0.46",
 			},
 			"ruby_version": {
-				AttrName: opsworks.LayerAttributesKeysRubyVersion,
+				AttrName: awstypes.LayerAttributesKeysRubyVersion,
 				Type:     schema.TypeString,
 				Default:  "2.0.0",
 			},
 			"rubygems_version": {
-				AttrName: opsworks.LayerAttributesKeysRubygemsVersion,
+				AttrName: awstypes.LayerAttributesKeysRubygemsVersion,
 				Type:     schema.TypeString,
 				Default:  "2.2.2",
 			},

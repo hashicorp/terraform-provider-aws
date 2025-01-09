@@ -43,7 +43,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 					testAccCheckRuleExists(ctx, "aws_waf_rule.test", &rule),
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
 					computeActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
@@ -51,7 +51,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 						names.AttrPriority: "50",
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rulegroup/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`rulegroup/.+`)),
 				),
 			},
 			{
@@ -83,7 +83,7 @@ func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
 				),
 			},
@@ -92,7 +92,7 @@ func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, newGroupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, newGroupName),
 				),
 			},
@@ -154,7 +154,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					testAccCheckRuleExists(ctx, "aws_waf_rule.test", &rule0),
 					testAccCheckRuleGroupExists(ctx, resourceName, &groupBefore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					computeActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
@@ -167,14 +167,14 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 				Config: testAccRuleGroupConfig_changeActivateds(ruleName1, ruleName2, ruleName3, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "3"),
 					testAccCheckRuleGroupExists(ctx, resourceName, &groupAfter),
 
 					testAccCheckRuleExists(ctx, "aws_waf_rule.test", &rule1),
 					computeActivatedRuleWithRuleId(&rule1, "BLOCK", 10, &idx1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "BLOCK",
-						names.AttrPriority: acctest.Ct10,
+						names.AttrPriority: "10",
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 
@@ -182,7 +182,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					computeActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
-						names.AttrPriority: acctest.Ct1,
+						names.AttrPriority: "1",
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 
@@ -245,8 +245,8 @@ func TestAccWAFRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -255,8 +255,8 @@ func TestAccWAFRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -266,8 +266,8 @@ func TestAccWAFRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -297,7 +297,7 @@ func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
 				),
 			},
 		},

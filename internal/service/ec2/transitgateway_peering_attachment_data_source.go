@@ -67,7 +67,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -76,8 +76,8 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	}
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, v.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
@@ -97,7 +97,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	local := transitGatewayPeeringAttachment.RequesterTgwInfo
 	peer := transitGatewayPeeringAttachment.AccepterTgwInfo
 
-	if aws.ToString(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId) == meta.(*conns.AWSClient).AccountID && aws.ToString(transitGatewayPeeringAttachment.AccepterTgwInfo.Region) == meta.(*conns.AWSClient).Region {
+	if aws.ToString(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId) == meta.(*conns.AWSClient).AccountID(ctx) && aws.ToString(transitGatewayPeeringAttachment.AccepterTgwInfo.Region) == meta.(*conns.AWSClient).Region(ctx) {
 		local = transitGatewayPeeringAttachment.AccepterTgwInfo
 		peer = transitGatewayPeeringAttachment.RequesterTgwInfo
 	}
@@ -108,7 +108,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	d.Set(names.AttrState, transitGatewayPeeringAttachment.State)
 	d.Set(names.AttrTransitGatewayID, local.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayPeeringAttachment.Tags)
+	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 
 	return diags
 }

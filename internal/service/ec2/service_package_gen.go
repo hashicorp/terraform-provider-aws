@@ -15,8 +15,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceCapacityBlockOffering,
+			Factory: newCapacityBlockOfferingDataSource,
 			Name:    "Capacity Block Offering",
+		},
+		{
+			Factory: newDataSourceSpotDataFeedSubscription,
+			Name:    "Spot Data Feed Subscription Data Source",
 		},
 		{
 			Factory: newSecurityGroupRuleDataSource,
@@ -31,6 +35,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newCapacityBlockReservationResource,
+			Name:    "Capacity Block Reservation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
 		{
 			Factory: newEBSFastSnapshotRestoreResource,
 			Name:    "EBS Fast Snapshot Restore",
@@ -51,19 +62,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
-			Factory: newResourceCapacityBlockReservation,
-			Name:    "Capacity Block Reservation",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
-		},
-		{
-			Factory: newResourceEndpointPrivateDNS,
-			Name:    "Endpoint Private DNS",
-		},
-		{
-			Factory: newResourceEndpointServicePrivateDNSVerification,
-			Name:    "Endpoint Service Private DNS Verification",
+			Factory: newResourceSecurityGroupVPCAssociation,
+			Name:    "Security Group VPC Association",
 		},
 		{
 			Factory: newSecurityGroupEgressRuleResource,
@@ -78,6 +78,33 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+		},
+		{
+			Factory: newTransitGatewayDefaultRouteTableAssociationResource,
+			Name:    "Transit Gateway Default Route Table Association",
+		},
+		{
+			Factory: newTransitGatewayDefaultRouteTablePropagationResource,
+			Name:    "Transit Gateway Default Route Table Propagation",
+		},
+		{
+			Factory: newVPCBlockPublicAccessExclusionResource,
+			Name:    "VPC Block Public Access Exclusion",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory: newVPCBlockPublicAccessOptionsResource,
+			Name:    "VPC Block Public Access Options",
+		},
+		{
+			Factory: newVPCEndpointPrivateDNSResource,
+			Name:    "VPC Endpoint Private DNS",
+		},
+		{
+			Factory: newVPCEndpointServicePrivateDNSVerificationResource,
+			Name:    "VPC Endpoint Service Private DNS Verification",
 		},
 	}
 }
@@ -226,12 +253,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Local Gateways",
 		},
 		{
-			Factory:  DataSourceManagedPrefixList,
+			Factory:  dataSourceManagedPrefixList,
 			TypeName: "aws_ec2_managed_prefix_list",
+			Name:     "Managed Prefix List",
 		},
 		{
-			Factory:  DataSourceManagedPrefixLists,
+			Factory:  dataSourceManagedPrefixLists,
 			TypeName: "aws_ec2_managed_prefix_lists",
+			Name:     "Managed Prefix Lists",
 		},
 		{
 			Factory:  dataSourceNetworkInsightsAnalysis,
@@ -383,8 +412,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Instances",
 		},
 		{
-			Factory:  DataSourceInternetGateway,
+			Factory:  dataSourceInternetGateway,
 			TypeName: "aws_internet_gateway",
+			Name:     "Internet Gateway",
 		},
 		{
 			Factory:  dataSourceKeyPair,
@@ -399,16 +429,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceNATGateway,
+			Factory:  dataSourceNATGateway,
 			TypeName: "aws_nat_gateway",
+			Name:     "NAT Gateway",
 		},
 		{
-			Factory:  DataSourceNATGateways,
+			Factory:  dataSourceNATGateways,
 			TypeName: "aws_nat_gateways",
+			Name:     "NAT Gateways",
 		},
 		{
-			Factory:  DataSourceNetworkACLs,
+			Factory:  dataSourceNetworkACLs,
 			TypeName: "aws_network_acls",
+			Name:     "Network ACLs",
 		},
 		{
 			Factory:  dataSourceNetworkInterface,
@@ -417,59 +450,68 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceNetworkInterfaces,
+			Factory:  dataSourceNetworkInterfaces,
 			TypeName: "aws_network_interfaces",
+			Name:     "Network Interfaces",
 		},
 		{
-			Factory:  DataSourcePrefixList,
+			Factory:  dataSourcePrefixList,
 			TypeName: "aws_prefix_list",
+			Name:     "Prefix List",
 		},
 		{
-			Factory:  DataSourceRoute,
+			Factory:  dataSourceRoute,
 			TypeName: "aws_route",
+			Name:     "Route",
 		},
 		{
-			Factory:  DataSourceRouteTable,
+			Factory:  dataSourceRouteTable,
 			TypeName: "aws_route_table",
+			Name:     "Route Table",
 		},
 		{
-			Factory:  DataSourceRouteTables,
+			Factory:  dataSourceRouteTables,
 			TypeName: "aws_route_tables",
+			Name:     "Route Tables",
 		},
 		{
-			Factory:  DataSourceSecurityGroup,
+			Factory:  dataSourceSecurityGroup,
 			TypeName: "aws_security_group",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSecurityGroups,
+			Factory:  dataSourceSecurityGroups,
 			TypeName: "aws_security_groups",
+			Name:     "Security Groups",
 		},
 		{
-			Factory:  DataSourceSubnet,
+			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSubnets,
+			Factory:  dataSourceSubnets,
 			TypeName: "aws_subnets",
 		},
 		{
-			Factory:  DataSourceVPC,
+			Factory:  dataSourceVPC,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceVPCDHCPOptions,
+			Factory:  dataSourceVPCDHCPOptions,
 			TypeName: "aws_vpc_dhcp_options",
 		},
 		{
-			Factory:  DataSourceVPCEndpoint,
+			Factory:  dataSourceVPCEndpoint,
 			TypeName: "aws_vpc_endpoint",
+			Name:     "Endpoint",
 		},
 		{
-			Factory:  DataSourceVPCEndpointService,
+			Factory:  dataSourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
+			Name:     "Endpoint Service",
 		},
 		{
 			Factory:  dataSourceIPAMPool,
@@ -493,16 +535,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "IPAM Preview Next CIDR",
 		},
 		{
-			Factory:  DataSourceVPCPeeringConnection,
+			Factory:  dataSourceVPCPeeringConnection,
 			TypeName: "aws_vpc_peering_connection",
+			Name:     "VPC Peering Connection",
 		},
 		{
-			Factory:  DataSourceVPCPeeringConnections,
+			Factory:  dataSourceVPCPeeringConnections,
 			TypeName: "aws_vpc_peering_connections",
+			Name:     "VPC Peering Connections",
 		},
 		{
-			Factory:  DataSourceVPCs,
+			Factory:  dataSourceVPCs,
 			TypeName: "aws_vpcs",
+			Name:     "VPCs",
 		},
 		{
 			Factory:  dataSourceVPNGateway,
@@ -569,7 +614,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDefaultSecurityGroup,
+			Factory:  resourceDefaultSecurityGroup,
 			TypeName: "aws_default_security_group",
 			Name:     "Security Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -577,7 +622,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDefaultSubnet,
+			Factory:  resourceDefaultSubnet,
 			TypeName: "aws_default_subnet",
 			Name:     "Subnet",
 			Tags: &types.ServicePackageResourceTags{
@@ -585,15 +630,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDefaultVPC,
+			Factory:  resourceDefaultVPC,
 			TypeName: "aws_default_vpc",
-			Name:     "VPC",
+			Name:     "Default VPC",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory:  ResourceDefaultVPCDHCPOptions,
+			Factory:  resourceDefaultVPCDHCPOptions,
 			TypeName: "aws_default_vpc_dhcp_options",
 			Name:     "DHCP Options",
 			Tags: &types.ServicePackageResourceTags{
@@ -617,6 +662,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+		},
+		{
+			Factory:  resourceEBSSnapshotBlockPublicAccess,
+			TypeName: "aws_ebs_snapshot_block_public_access",
+			Name:     "EBS Snapshot Block Public Access",
 		},
 		{
 			Factory:  resourceEBSSnapshotCopy,
@@ -725,7 +775,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceManagedPrefixList,
+			Factory:  resourceManagedPrefixList,
 			TypeName: "aws_ec2_managed_prefix_list",
 			Name:     "Managed Prefix List",
 			Tags: &types.ServicePackageResourceTags{
@@ -733,8 +783,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceManagedPrefixListEntry,
+			Factory:  resourceManagedPrefixListEntry,
 			TypeName: "aws_ec2_managed_prefix_list_entry",
+			Name:     "Managed Prefix List Entry",
 		},
 		{
 			Factory:  resourceNetworkInsightsAnalysis,
@@ -758,8 +809,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Serial Console Access",
 		},
 		{
-			Factory:  ResourceSubnetCIDRReservation,
+			Factory:  resourceSubnetCIDRReservation,
 			TypeName: "aws_ec2_subnet_cidr_reservation",
+			Name:     "Subnet CIDR Reservation",
 		},
 		{
 			Factory:  resourceTag,
@@ -916,7 +968,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEgressOnlyInternetGateway,
+			Factory:  resourceEgressOnlyInternetGateway,
 			TypeName: "aws_egress_only_internet_gateway",
 			Name:     "Egress-Only Internet Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -937,7 +989,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "EIP Association",
 		},
 		{
-			Factory:  ResourceFlowLog,
+			Factory:  resourceFlowLog,
 			TypeName: "aws_flow_log",
 			Name:     "Flow Log",
 			Tags: &types.ServicePackageResourceTags{
@@ -953,7 +1005,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInternetGateway,
+			Factory:  resourceInternetGateway,
 			TypeName: "aws_internet_gateway",
 			Name:     "Internet Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -961,8 +1013,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInternetGatewayAttachment,
+			Factory:  resourceInternetGatewayAttachment,
 			TypeName: "aws_internet_gateway_attachment",
+			Name:     "Internet Gateway Attachment",
 		},
 		{
 			Factory:  resourceKeyPair,
@@ -986,7 +1039,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Main Route Table Association",
 		},
 		{
-			Factory:  ResourceNATGateway,
+			Factory:  resourceNATGateway,
 			TypeName: "aws_nat_gateway",
 			Name:     "NAT Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -1002,8 +1055,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNetworkACLAssociation,
+			Factory:  resourceNetworkACLAssociation,
 			TypeName: "aws_network_acl_association",
+			Name:     "Network ACL Association",
 		},
 		{
 			Factory:  resourceNetworkACLRule,
@@ -1019,12 +1073,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNetworkInterfaceAttachment,
+			Factory:  resourceNetworkInterfaceAttachment,
 			TypeName: "aws_network_interface_attachment",
+			Name:     "Network Interface Attachment",
 		},
 		{
-			Factory:  ResourceNetworkInterfaceSGAttachment,
+			Factory:  resourceNetworkInterfaceSGAttachment,
 			TypeName: "aws_network_interface_sg_attachment",
+			Name:     "Network Interface SG Attachement",
 		},
 		{
 			Factory:  resourcePlacementGroup,
@@ -1048,8 +1104,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRouteTableAssociation,
+			Factory:  resourceRouteTableAssociation,
 			TypeName: "aws_route_table_association",
+			Name:     "Route Table Association",
 		},
 		{
 			Factory:  resourceSecurityGroup,
@@ -1060,8 +1117,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSecurityGroupRule,
+			Factory:  resourceSecurityGroupRule,
 			TypeName: "aws_security_group_rule",
+			Name:     "Security Group Rule",
 		},
 		{
 			Factory:  resourceSnapshotCreateVolumePermission,
@@ -1090,7 +1148,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSubnet,
+			Factory:  resourceSubnet,
 			TypeName: "aws_subnet",
 			Name:     "Subnet",
 			Tags: &types.ServicePackageResourceTags{
@@ -1098,7 +1156,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedAccessEndpoint,
+			Factory:  resourceVerifiedAccessEndpoint,
 			TypeName: "aws_verifiedaccess_endpoint",
 			Name:     "Verified Access Endpoint",
 			Tags: &types.ServicePackageResourceTags{
@@ -1106,7 +1164,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedAccessGroup,
+			Factory:  resourceVerifiedAccessGroup,
 			TypeName: "aws_verifiedaccess_group",
 			Name:     "Verified Access Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -1114,7 +1172,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedAccessInstance,
+			Factory:  resourceVerifiedAccessInstance,
 			TypeName: "aws_verifiedaccess_instance",
 			Name:     "Verified Access Instance",
 			Tags: &types.ServicePackageResourceTags{
@@ -1122,17 +1180,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedAccessInstanceLoggingConfiguration,
+			Factory:  resourceVerifiedAccessInstanceLoggingConfiguration,
 			TypeName: "aws_verifiedaccess_instance_logging_configuration",
 			Name:     "Verified Access Instance Logging Configuration",
 		},
 		{
-			Factory:  ResourceVerifiedAccessInstanceTrustProviderAttachment,
+			Factory:  resourceVerifiedAccessInstanceTrustProviderAttachment,
 			TypeName: "aws_verifiedaccess_instance_trust_provider_attachment",
 			Name:     "Verified Access Instance Trust Provider Attachment",
 		},
 		{
-			Factory:  ResourceVerifiedAccessTrustProvider,
+			Factory:  resourceVerifiedAccessTrustProvider,
 			TypeName: "aws_verifiedaccess_trust_provider",
 			Name:     "Verified Access Trust Provider",
 			Tags: &types.ServicePackageResourceTags{
@@ -1145,7 +1203,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "EBS Volume Attachment",
 		},
 		{
-			Factory:  ResourceVPC,
+			Factory:  resourceVPC,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
 			Tags: &types.ServicePackageResourceTags{
@@ -1153,7 +1211,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCDHCPOptions,
+			Factory:  resourceVPCDHCPOptions,
 			TypeName: "aws_vpc_dhcp_options",
 			Name:     "DHCP Options",
 			Tags: &types.ServicePackageResourceTags{
@@ -1161,8 +1219,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCDHCPOptionsAssociation,
+			Factory:  resourceVPCDHCPOptionsAssociation,
 			TypeName: "aws_vpc_dhcp_options_association",
+			Name:     "VPC DHCP Options Association",
 		},
 		{
 			Factory:  resourceVPCEndpoint,
@@ -1173,28 +1232,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCEndpointConnectionAccepter,
+			Factory:  resourceVPCEndpointConnectionAccepter,
 			TypeName: "aws_vpc_endpoint_connection_accepter",
+			Name:     "VPC Endpoint Connection Accepter",
 		},
 		{
-			Factory:  ResourceVPCEndpointConnectionNotification,
+			Factory:  resourceVPCEndpointConnectionNotification,
 			TypeName: "aws_vpc_endpoint_connection_notification",
 			Name:     "VPC Endpoint Connection Notification",
 		},
 		{
-			Factory:  ResourceVPCEndpointPolicy,
+			Factory:  resourceVPCEndpointPolicy,
 			TypeName: "aws_vpc_endpoint_policy",
 		},
 		{
-			Factory:  ResourceVPCEndpointRouteTableAssociation,
+			Factory:  resourceVPCEndpointRouteTableAssociation,
 			TypeName: "aws_vpc_endpoint_route_table_association",
+			Name:     "VPC Endpoint Route Table Association",
 		},
 		{
-			Factory:  ResourceVPCEndpointSecurityGroupAssociation,
+			Factory:  resourceVPCEndpointSecurityGroupAssociation,
 			TypeName: "aws_vpc_endpoint_security_group_association",
+			Name:     "VPC Endpoint Security Group Association",
 		},
 		{
-			Factory:  ResourceVPCEndpointService,
+			Factory:  resourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
 			Name:     "VPC Endpoint Service",
 			Tags: &types.ServicePackageResourceTags{
@@ -1202,12 +1264,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCEndpointServiceAllowedPrincipal,
+			Factory:  resourceVPCEndpointServiceAllowedPrincipal,
 			TypeName: "aws_vpc_endpoint_service_allowed_principal",
+			Name:     "Endpoint Service Allowed Principal",
 		},
 		{
-			Factory:  ResourceVPCEndpointSubnetAssociation,
+			Factory:  resourceVPCEndpointSubnetAssociation,
 			TypeName: "aws_vpc_endpoint_subnet_association",
+			Name:     "VPC Endpoint Subnet Association",
 		},
 		{
 			Factory:  resourceIPAM,
@@ -1270,19 +1334,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCIPv4CIDRBlockAssociation,
+			Factory:  resourceVPCIPv4CIDRBlockAssociation,
 			TypeName: "aws_vpc_ipv4_cidr_block_association",
+			Name:     "VPC IPV4 CIDR Block Association",
 		},
 		{
-			Factory:  ResourceVPCIPv6CIDRBlockAssociation,
+			Factory:  resourceVPCIPv6CIDRBlockAssociation,
 			TypeName: "aws_vpc_ipv6_cidr_block_association",
+			Name:     "VPC IPV6 CIDR Block Association",
 		},
 		{
-			Factory:  ResourceNetworkPerformanceMetricSubscription,
+			Factory:  resourceNetworkPerformanceMetricSubscription,
 			TypeName: "aws_vpc_network_performance_metric_subscription",
+			Name:     "VPC Network Performance Metric Subscription",
 		},
 		{
-			Factory:  ResourceVPCPeeringConnection,
+			Factory:  resourceVPCPeeringConnection,
 			TypeName: "aws_vpc_peering_connection",
 			Name:     "VPC Peering Connection",
 			Tags: &types.ServicePackageResourceTags{
@@ -1290,7 +1357,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCPeeringConnectionAccepter,
+			Factory:  resourceVPCPeeringConnectionAccepter,
 			TypeName: "aws_vpc_peering_connection_accepter",
 			Name:     "VPC Peering Connection",
 			Tags: &types.ServicePackageResourceTags{
@@ -1298,8 +1365,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCPeeringConnectionOptions,
+			Factory:  resourceVPCPeeringConnectionOptions,
 			TypeName: "aws_vpc_peering_connection_options",
+			Name:     "VPC Peering Connection Options",
 		},
 		{
 			Factory:  resourceVPNConnection,

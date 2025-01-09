@@ -72,7 +72,7 @@ func testAccContactFlowDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccContactFlowBaseDataSourceConfig(rName, rName2 string) string {
+func testAccContactFlowDataSourceConfig_base(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -97,7 +97,7 @@ resource "aws_connect_contact_flow" "test" {
 }
 
 func testAccContactFlowDataSourceConfig_id(rName, rName2 string) string {
-	return fmt.Sprintf(testAccContactFlowBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccContactFlowDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id     = aws_connect_instance.test.id
   contact_flow_id = aws_connect_contact_flow.test.contact_flow_id
@@ -106,7 +106,7 @@ data "aws_connect_contact_flow" "test" {
 }
 
 func testAccContactFlowDataSourceConfig_name(rName, rName2 string) string {
-	return fmt.Sprintf(testAccContactFlowBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccContactFlowDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
   name        = aws_connect_contact_flow.test.name

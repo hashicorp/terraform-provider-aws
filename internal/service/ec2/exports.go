@@ -10,20 +10,23 @@ var (
 	DetachNetworkInterface                                         = detachNetworkInterface
 	FindImageByID                                                  = findImageByID
 	FindInstanceByID                                               = findInstanceByID
+	FindNetworkInterfaces                                          = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
-	FindNetworkInterfacesV2                                        = findNetworkInterfaces
 	FindSecurityGroupByDescriptionAndVPCID                         = findSecurityGroupByDescriptionAndVPCID
 	FindSecurityGroupByNameAndVPCID                                = findSecurityGroupByNameAndVPCID
 	FindSecurityGroupByNameAndVPCIDAndOwnerID                      = findSecurityGroupByNameAndVPCIDAndOwnerID
-	FindVPCByIDV2                                                  = findVPCByID
+	FindSecurityGroups                                             = findSecurityGroups
+	FindSubnetByID                                                 = findSubnetByID
+	FindVPCByID                                                    = findVPCByID
 	FindVPCEndpointByID                                            = findVPCEndpointByID
-	NewCustomFilterListFrameworkV2                                 = newCustomFilterListFrameworkV2
+	NetworkInterfaceDetachedTimeout                                = networkInterfaceDetachedTimeout
+	NewCustomFilterListFramework                                   = newCustomFilterListFramework
 	NewFilter                                                      = newFilter
-	NewFilterV2                                                    = newFilterV2
 	ResourceAMI                                                    = resourceAMI
 	ResourceSecurityGroup                                          = resourceSecurityGroup
 	ResourceTransitGateway                                         = resourceTransitGateway
 	ResourceTransitGatewayConnectPeer                              = resourceTransitGatewayConnectPeer
+	ResourceVPC                                                    = resourceVPC
 	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
 	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
 )

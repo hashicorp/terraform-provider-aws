@@ -37,7 +37,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name           = "mydb"
   master_username         = "foo"
-  master_password         = "bar"
+  master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
 }
@@ -51,7 +51,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name           = "mydb"
   master_username         = "foo"
-  master_password         = "bar"
+  master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
 }
@@ -66,7 +66,7 @@ resource "aws_rds_cluster" "postgresql" {
   availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name           = "mydb"
   master_username         = "foo"
-  master_password         = "bar"
+  master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
 }
@@ -113,8 +113,9 @@ resource "aws_rds_cluster" "example" {
   storage_encrypted  = true
 
   serverlessv2_scaling_configuration {
-    max_capacity = 1.0
-    min_capacity = 0.5
+    max_capacity             = 1.0
+    min_capacity             = 0.0
+    seconds_until_auto_pause = 3600
   }
 }
 
@@ -170,7 +171,7 @@ data "aws_db_cluster_snapshot" "example" {
 }
 
 resource "aws_rds_cluster" "example" {
-  # Because the global cluster is sourced from this cluster, the initial 
+  # Because the global cluster is sourced from this cluster, the initial
   # engine and engine_version values are defined here and automatically
   # inherited by the global cluster.
   engine         = "aurora"
@@ -246,10 +247,13 @@ This resource supports the following arguments:
 * `master_user_secret_kms_key_id` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `master_username` - (Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]. This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `network_type` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
-* `port` - (Optional) Port on which the DB accepts connections
-* `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
-* `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
-* `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica. If DB Cluster is part of a Global Cluster, use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to prevent Terraform from showing differences for this argument instead of configuring this value.
+* `performance_insights_enabled` - (Optional) Enables Performance Insights.
+* `performance_insights_kms_key_id` - (Optional) Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (`aws/rds`).
+* `performance_insights_retention_period` - (Optional) Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are `7`, `month * 31` (where month is a number of months from 1-23), and `731`. See [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.Overview.cost.html) for more information on retention periods.
+* `port` - (Optional) Port on which the DB accepts connections.
+* `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region, e.g. `04:00-09:00`.
+* `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., `wed:04:00-wed:04:30`
+* `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica. **Note:** Removing this attribute after creation will promote the read replica to a standalone cluster. If DB Cluster is part of a Global Cluster, use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to prevent Terraform from showing differences for this argument instead of configuring this value.
 * `restore_to_point_in_time` - (Optional) Nested attribute for [point in time restore](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-pitr.html). More details below.
 * `scaling_configuration` - (Optional) Nested attribute with scaling properties. Only valid when `engine_mode` is set to `serverless`. More details below.
 * `serverlessv2_scaling_configuration`- (Optional) Nested attribute with scaling properties for ServerlessV2. Only valid when `engine_mode` is set to `provisioned`. More details below.
@@ -293,6 +297,8 @@ This will not recreate the resource if the S3 object changes in some way. It's o
 
 ~> **NOTE:**  The DB cluster is created from the source DB cluster with the same configuration as the original DB cluster, except that the new DB cluster is created with the default DB security group. Thus, the following arguments should only be specified with the source DB cluster's respective values: `database_name`, `master_username`, `storage_encrypted`, `replication_source_identifier`, and `source_region`.
 
+~> **NOTE:**  One of `source_cluster_identifier` or `source_cluster_resource_id` must be specified.
+
 Example:
 
 ```terraform
@@ -307,7 +313,8 @@ resource "aws_rds_cluster" "example-clone" {
 }
 ```
 
-* `source_cluster_identifier` - (Required) Identifier of the source database cluster from which to restore. When restoring from a cluster in another AWS account, the identifier is the ARN of that cluster.
+* `source_cluster_identifier` - (Optional) Identifier of the source database cluster from which to restore. When restoring from a cluster in another AWS account, the identifier is the ARN of that cluster.
+* `source_cluster_resource_id` - (Optional) Cluster resource ID of the source database cluster from which to restore. To be used for restoring a deleted cluster in the same account which still has a retained automatic backup available.
 * `restore_type` - (Optional) Type of restore to be performed.
    Valid options are `full-copy` (default) and `copy-on-write`.
 * `use_latest_restorable_time` - (Optional) Set to true to restore the database cluster to the latest restorable backup time. Defaults to false. Conflicts with `restore_to_time`.
@@ -329,6 +336,7 @@ resource "aws_rds_cluster" "example" {
     auto_pause               = true
     max_capacity             = 256
     min_capacity             = 2
+    seconds_before_timeout   = 360
     seconds_until_auto_pause = 300
     timeout_action           = "ForceApplyCapacityChange"
   }
@@ -338,6 +346,7 @@ resource "aws_rds_cluster" "example" {
 * `auto_pause` - (Optional) Whether to enable automatic pause. A DB cluster can be paused only when it's idle (it has no connections). If a DB cluster is paused for more than seven days, the DB cluster might be backed up with a snapshot. In this case, the DB cluster is restored when there is a request to connect to it. Defaults to `true`.
 * `max_capacity` - (Optional) Maximum capacity for an Aurora DB cluster in `serverless` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid Aurora MySQL capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, `256`. Valid Aurora PostgreSQL capacity values are (`2`, `4`, `8`, `16`, `32`, `64`, `192`, and `384`). Defaults to `16`.
 * `min_capacity` - (Optional) Minimum capacity for an Aurora DB cluster in `serverless` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid Aurora MySQL capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, `256`. Valid Aurora PostgreSQL capacity values are (`2`, `4`, `8`, `16`, `32`, `64`, `192`, and `384`). Defaults to `1`.
+* `seconds_before_timeout` - (Optional) Amount of time, in seconds, that Aurora Serverless v1 tries to find a scaling point to perform seamless scaling before enforcing the timeout action. Valid values are `60` through `600`. Defaults to `300`.
 * `seconds_until_auto_pause` - (Optional) Time, in seconds, before an Aurora DB cluster in serverless mode is paused. Valid values are `300` through `86400`. Defaults to `300`.
 * `timeout_action` - (Optional) Action to take when the timeout is reached. Valid values: `ForceApplyCapacityChange`, `RollbackCapacityChange`. Defaults to `RollbackCapacityChange`. See [documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v1.how-it-works.html#aurora-serverless.how-it-works.timeout-action).
 
@@ -352,14 +361,16 @@ resource "aws_rds_cluster" "example" {
   # ... other configuration ...
 
   serverlessv2_scaling_configuration {
-    max_capacity = 128.0
-    min_capacity = 0.5
+    max_capacity             = 256
+    min_capacity             = 0
+    seconds_until_auto_pause = 3600
   }
 }
 ```
 
-* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
-* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
+* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
+* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
+* `seconds_until_auto_pause` - (Optional) Time, in seconds, before an Aurora DB cluster in `provisioned` DB engine mode is paused. Valid values are `300` through `86400`.
 
 ## Attribute Reference
 
@@ -398,7 +409,10 @@ load-balanced across replicas
 
 ### master_user_secret
 
-The `master_user_secret` configuration block supports the following attributes:
+~> **NOTE:** The `master_user_secret` block is a list. To reference elements, use [index notation](https://developer.hashicorp.com/terraform/language/expressions/types#indices-and-attributes). For example:<br><br>
+`aws_rds_cluster.this.master_user_secret[0].secret_arn`
+
+The `master_user_secret` block supports the following attributes:
 
 * `kms_key_id` - Amazon Web Services KMS key identifier that is used to encrypt the secret.
 * `secret_arn` - Amazon Resource Name (ARN) of the secret.

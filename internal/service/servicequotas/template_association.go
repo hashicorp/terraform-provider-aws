@@ -58,7 +58,7 @@ func (r *resourceTemplateAssociation) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	plan.ID = types.StringValue(r.Meta().AccountID)
+	plan.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	_, err := conn.AssociateServiceQuotaTemplate(ctx, &servicequotas.AssociateServiceQuotaTemplateInput{})
 	if err != nil {

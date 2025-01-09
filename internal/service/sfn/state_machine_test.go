@@ -6,6 +6,7 @@ package sfn_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -40,7 +41,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_basic(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
@@ -48,15 +49,15 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "revision_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "state_machine_version_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 				),
@@ -70,20 +71,20 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_basic(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 10.*`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "state_machine_version_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 				),
@@ -310,7 +311,7 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 				Config: testAccStateMachineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -323,7 +324,7 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 				Config: testAccStateMachineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -332,7 +333,7 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 				Config: testAccStateMachineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -356,7 +357,7 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 				Config: testAccStateMachineConfig_tracingDisable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtFalse),
 				),
 			},
@@ -369,7 +370,7 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 				Config: testAccStateMachineConfig_tracingEnable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtTrue),
 				),
 			},
@@ -423,7 +424,7 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", string(awstypes.LogLevelError)),
 				),
 			},
@@ -436,9 +437,176 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", string(awstypes.LogLevelAll)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	kmsKeyResource1 := "aws_kms_key.kms_key_for_sfn_1"
+	kmsKeyResource2 := "aws_kms_key.kms_key_for_sfn_2"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	reusePeriodSeconds1 := 900
+	reusePeriodSeconds2 := 450
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(ctx, resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrSet(resourceName, "definition"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds1)),
+					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			//Update periodReuseSeconds
+			{
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(ctx, resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrSet(resourceName, "definition"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds2)),
+					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
+				),
+			},
+			//Update kmsKeyId
+			{
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_2(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(ctx, resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrSet(resourceName, "definition"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds2)),
+					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource2, names.AttrARN),
+				),
+			},
+			//Update Encryption Key Type
+			{
+				Config: testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(ctx, resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrSet(resourceName, "definition"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	kmsKeyResource1 := "aws_kms_key.kms_key_for_sfn_1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	reusePeriodSeconds := 900
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(ctx, resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrSet(resourceName, "definition"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			//Update Encryption Type
+			{
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(ctx, resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrSet(resourceName, "definition"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds)),
+					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSFNStateMachine_definitionValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccStateMachineConfig_invalidDefinition(rName),
+				ExpectError: regexache.MustCompile("invalid Step Functions State Machine definition: .+"),
 			},
 		},
 	})
@@ -535,7 +703,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 data "aws_region" "current" {}
@@ -588,6 +756,10 @@ resource "aws_iam_role" "for_sfn" {
 }
 EOF
 }
+
+resource "aws_kms_key" "kms_key_for_sfn_1" {}
+resource "aws_kms_key" "kms_key_for_sfn_2" {}
+
 `, rName)
 }
 
@@ -926,6 +1098,166 @@ resource "aws_sfn_state_machine" "test" {
   "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
   "StartAt": "HelloWorld",
   "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+}
+`, rName))
+}
+
+func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName string, rType string, reusePeriodSeconds int) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+
+  encryption_configuration {
+    kms_key_id                        = aws_kms_key.kms_key_for_sfn_1.arn
+    type                              = %[2]q
+    kms_data_key_reuse_period_seconds = %[3]d
+  }
+}
+`, rName, rType, reusePeriodSeconds))
+}
+
+func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_2(rName string, rType string, reusePeriodSeconds int) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+
+  encryption_configuration {
+    kms_key_id                        = aws_kms_key.kms_key_for_sfn_2.arn
+    type                              = %[2]q
+    kms_data_key_reuse_period_seconds = %[3]d
+  }
+}
+`, rName, rType, reusePeriodSeconds))
+}
+
+func testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName string, rType string) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+
+  encryption_configuration {
+    type = %[2]q
+  }
+}
+`, rName, rType))
+}
+
+func testAccStateMachineConfig_invalidDefinition(rName string) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A wrongly made stepfunction definition (replaced 'States' by 'Status')",
+  "StartAt": "HelloWorld",
+  "Status": {
     "HelloWorld": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.test.arn}",

@@ -1,0 +1,12 @@
+```release-note:enhancement
+resource/aws_fsx_lustre_file_system: Add `final_backup_tags` and `skip_final_backup` arguments
+```
+```release-note:enhancement
+resource/aws_fsx_openzfs_file_system: Add `delete_options` and `final_backup_tags` arguments
+```
+```release-note:enhancement
+resource/aws_fsx_windows_file_system: Add `final_backup_tags` argument
+```
+```release-note:enhancement
+resource/aws_fsx_ontap_volume: Add `final_backup_tags` argument
+```

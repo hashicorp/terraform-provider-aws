@@ -123,7 +123,7 @@ func (r *resourceTemplate) Create(ctx context.Context, req resource.CreateReques
 
 	in := &servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput{
 		AwsRegion:    aws.String(region),
-		DesiredValue: aws.Float64(plan.Value.ValueFloat64()),
+		DesiredValue: plan.Value.ValueFloat64Pointer(),
 		QuotaCode:    aws.String(quotaCode),
 		ServiceCode:  aws.String(serviceCode),
 	}
@@ -199,10 +199,10 @@ func (r *resourceTemplate) Update(ctx context.Context, req resource.UpdateReques
 
 	if !plan.Value.Equal(state.Value) {
 		in := &servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput{
-			AwsRegion:    aws.String(plan.Region.ValueString()),
-			DesiredValue: aws.Float64(plan.Value.ValueFloat64()),
-			QuotaCode:    aws.String(plan.QuotaCode.ValueString()),
-			ServiceCode:  aws.String(plan.ServiceCode.ValueString()),
+			AwsRegion:    plan.Region.ValueStringPointer(),
+			DesiredValue: plan.Value.ValueFloat64Pointer(),
+			QuotaCode:    plan.QuotaCode.ValueStringPointer(),
+			ServiceCode:  plan.ServiceCode.ValueStringPointer(),
 		}
 
 		out, err := conn.PutServiceQuotaIncreaseRequestIntoTemplate(ctx, in)
@@ -241,9 +241,9 @@ func (r *resourceTemplate) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	in := &servicequotas.DeleteServiceQuotaIncreaseRequestFromTemplateInput{
-		AwsRegion:   aws.String(state.Region.ValueString()),
-		QuotaCode:   aws.String(state.QuotaCode.ValueString()),
-		ServiceCode: aws.String(state.ServiceCode.ValueString()),
+		AwsRegion:   state.Region.ValueStringPointer(),
+		QuotaCode:   state.QuotaCode.ValueStringPointer(),
+		ServiceCode: state.ServiceCode.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteServiceQuotaIncreaseRequestFromTemplate(ctx, in)

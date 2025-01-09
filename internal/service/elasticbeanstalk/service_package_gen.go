@@ -5,8 +5,8 @@ package elasticbeanstalk
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,16 +25,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceApplication,
+			Factory:  dataSourceApplication,
 			TypeName: "aws_elastic_beanstalk_application",
+			Name:     "Application",
 		},
 		{
-			Factory:  DataSourceHostedZone,
+			Factory:  dataSourceHostedZone,
 			TypeName: "aws_elastic_beanstalk_hosted_zone",
 		},
 		{
-			Factory:  DataSourceSolutionStack,
+			Factory:  dataSourceSolutionStack,
 			TypeName: "aws_elastic_beanstalk_solution_stack",
+			Name:     "Solution Stack",
 		},
 	}
 }
@@ -42,7 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceApplication,
+			Factory:  resourceApplication,
 			TypeName: "aws_elastic_beanstalk_application",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
@@ -50,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceApplicationVersion,
+			Factory:  resourceApplicationVersion,
 			TypeName: "aws_elastic_beanstalk_application_version",
 			Name:     "Application Version",
 			Tags: &types.ServicePackageResourceTags{
@@ -58,11 +60,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfigurationTemplate,
+			Factory:  resourceConfigurationTemplate,
 			TypeName: "aws_elastic_beanstalk_configuration_template",
+			Name:     "Configuration Template",
 		},
 		{
-			Factory:  ResourceEnvironment,
+			Factory:  resourceEnvironment,
 			TypeName: "aws_elastic_beanstalk_environment",
 			Name:     "Environment",
 			Tags: &types.ServicePackageResourceTags{
@@ -77,11 +80,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticbeanstalk_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticbeanstalk.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return elasticbeanstalk_sdkv2.NewFromConfig(cfg,
-		elasticbeanstalk_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return elasticbeanstalk.NewFromConfig(cfg,
+		elasticbeanstalk.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

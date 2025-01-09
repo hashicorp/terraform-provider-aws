@@ -255,18 +255,18 @@ resource "aws_apigatewayv2_api" "test" {
 }
 
 func testAccModelConfig_basic(rName, schema string) string {
-	return testAccModelConfig_api(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_api(rName), fmt.Sprintf(`
 resource "aws_apigatewayv2_model" "test" {
   api_id       = aws_apigatewayv2_api.test.id
   content_type = "application/json"
   name         = %[1]q
   schema       = %[2]q
 }
-`, rName, schema)
+`, rName, schema))
 }
 
 func testAccModelConfig_allAttributes(rName, schema string) string {
-	return testAccModelConfig_api(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_api(rName), fmt.Sprintf(`
 resource "aws_apigatewayv2_model" "test" {
   api_id       = aws_apigatewayv2_api.test.id
   content_type = "text/x-json"
@@ -274,5 +274,5 @@ resource "aws_apigatewayv2_model" "test" {
   description  = "test"
   schema       = %[2]q
 }
-`, rName, schema)
+`, rName, schema))
 }

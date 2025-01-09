@@ -5,8 +5,8 @@ package rolesanywhere
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceProfile,
+			Factory:  resourceProfile,
 			TypeName: "aws_rolesanywhere_profile",
 			Name:     "Profile",
 			Tags: &types.ServicePackageResourceTags{
@@ -37,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTrustAnchor,
+			Factory:  resourceTrustAnchor,
 			TypeName: "aws_rolesanywhere_trust_anchor",
 			Name:     "Trust Anchor",
 			Tags: &types.ServicePackageResourceTags{
@@ -52,11 +52,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*rolesanywhere_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*rolesanywhere.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return rolesanywhere_sdkv2.NewFromConfig(cfg,
-		rolesanywhere_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return rolesanywhere.NewFromConfig(cfg,
+		rolesanywhere.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

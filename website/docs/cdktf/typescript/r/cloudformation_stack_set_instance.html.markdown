@@ -175,9 +175,9 @@ This resource supports the following arguments:
 The `deploymentTargets` configuration block supports the following arguments:
 
 * `organizationalUnitIds` - (Optional) Organization root ID or organizational unit (OU) IDs to which StackSets deploys.
-* `account_filter_type` - (Optional) Limit deployment targets to individual accounts or include additional accounts with provided OUs. Valid values: `INTERSECTION`, `DIFFERENCE`, `UNION`, `NONE`.
+* `accountFilterType` - (Optional) Limit deployment targets to individual accounts or include additional accounts with provided OUs. Valid values: `INTERSECTION`, `DIFFERENCE`, `UNION`, `NONE`.
 * `accounts` - (Optional) List of accounts to deploy stack set updates.
-* `accounts_url` - (Optional) S3 URL of the file containing the list of accounts.
+* `accountsUrl` - (Optional) S3 URL of the file containing the list of accounts.
 
 ### `operationPreferences` Argument Reference
 
@@ -187,6 +187,7 @@ The `operationPreferences` configuration block supports the following arguments:
 * `failureTolerancePercentage` - (Optional) Percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
 * `maxConcurrentCount` - (Optional) Maximum number of accounts in which to perform this operation at one time.
 * `maxConcurrentPercentage` - (Optional) Maximum percentage of accounts in which to perform this operation at one time.
+* `concurrencyMode` - (Optional) Specifies how the concurrency level behaves during the operation execution. Valid values are `STRICT_FAILURE_TOLERANCE` and `SOFT_FAILURE_TOLERANCE`.
 * `regionConcurrencyType` - (Optional) Concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
 * `regionOrder` - (Optional) Order of the Regions in where you want to perform the stack operation.
 
@@ -305,4 +306,4 @@ Using `terraform import`, import CloudFormation StackSet Instances when acting a
 % terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7fb05e14791cf7993878a65fbf8c5219cd03182722c0d64aa18f1e90ccb4ef85 -->
+<!-- cache-key: cdktf-0.20.8 input-df3b021595bf17ab87ad0e2cb4d9e10047a4c95db5d1b42a83199e41724c991f -->

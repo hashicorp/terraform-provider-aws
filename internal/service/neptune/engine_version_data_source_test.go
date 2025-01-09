@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -87,14 +87,14 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("neptune"),
 		DefaultOnly: aws.Bool(true),
 	}
 
-	_, err := conn.DescribeDBEngineVersionsWithContext(ctx, input)
+	_, err := conn.DescribeDBEngineVersions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

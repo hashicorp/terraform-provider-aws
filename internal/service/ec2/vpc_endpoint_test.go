@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,21 +37,21 @@ func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 				Config: testAccVPCEndpointConfig_gatewayBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct0),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
 				),
 			},
@@ -79,23 +80,23 @@ func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct0),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -123,23 +124,23 @@ func TestAccVPCEndpoint_interfaceNoPrivateDNS(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceNoPrivateDNS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct0),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -169,8 +170,8 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
@@ -186,8 +187,8 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
@@ -214,8 +215,8 @@ func TestAccVPCEndpoint_interfacePrivateDNSNoGateway(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
@@ -270,7 +271,7 @@ func TestAccVPCEndpoint_tags(t *testing.T) {
 				Config: testAccVPCEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -283,7 +284,7 @@ func TestAccVPCEndpoint_tags(t *testing.T) {
 				Config: testAccVPCEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -292,7 +293,7 @@ func TestAccVPCEndpoint_tags(t *testing.T) {
 				Config: testAccVPCEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -317,7 +318,7 @@ func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
 				),
 			},
 			{
@@ -325,7 +326,7 @@ func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
 				),
 			},
 			{
@@ -448,7 +449,7 @@ func TestAccVPCEndpoint_ipAddressType(t *testing.T) {
 				Config: testAccVPCEndpointConfig_ipAddressType(rName, "ipv4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -464,7 +465,7 @@ func TestAccVPCEndpoint_ipAddressType(t *testing.T) {
 				Config: testAccVPCEndpointConfig_ipAddressType(rName, "dualstack"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
@@ -490,18 +491,18 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 				),
 			},
 			{
 				Config: testAccVPCEndpointConfig_interfaceSubnetModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 				),
 			},
 			{
@@ -606,30 +607,30 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv4(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address2,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -642,30 +643,30 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv4(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1Updated, ipv4Address2Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address1Updated,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address2Updated,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -691,24 +692,24 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv6(rName, ipv6HostNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv6"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -721,24 +722,24 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv6(rName, ipv6HostNum2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv6"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -768,29 +769,29 @@ func TestAccVPCEndpoint_interfaceUserDefinedDualstack(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceUserDefinedDualstackCombined(rName, ipv4Address1, ipv4Address2, ipv6HostNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address2,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -803,29 +804,29 @@ func TestAccVPCEndpoint_interfaceUserDefinedDualstack(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceUserDefinedDualstackCombined(rName, ipv4Address1Updated, ipv4Address2Updated, ipv6HostNum2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address1Updated,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
 						"ipv4": ipv4Address2Updated,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -857,6 +858,75 @@ func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_crossRegionService(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	var svcCfg awstypes.ServiceConfiguration
+	serviceResourceName := "aws_vpc_endpoint_service.test"
+	endpointResourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+
+	// record the initialized providers so that we can use them to
+	// check for the vpc endpoints in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckVPCEndpointDestroy(ctx),
+			testAccCheckVPCEndpointServiceDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_crossRegionService(rName, acctest.Region()), // Cross-region
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExistsWithProvider(ctx, endpointResourceName, &endpoint, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					testAccCheckVPCEndpointServiceExists(ctx, serviceResourceName, &svcCfg),
+					resource.TestCheckResourceAttr(endpointResourceName, "service_region", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:      endpointResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_invalidCrossRegionService(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+
+	// record the initialized providers so that we can use them to
+	// check for the vpc endpoints in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckVPCEndpointDestroy(ctx),
+			testAccCheckVPCEndpointServiceDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCEndpointConfig_crossRegionService(rName, acctest.ThirdRegion()), // Cross-region
+				ExpectError: regexache.MustCompile(`The Vpc Endpoint Service 'com\.amazonaws\.vpce\.([A-Za-z0-9]+(-[A-Za-z0-9]+)+)\.vpce-svc-[A-Za-z0-9]+' does not exist`),
 			},
 		},
 	})
@@ -898,6 +968,31 @@ func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.Vp
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckVPCEndpointExistsWithProvider(ctx context.Context, n string, v *awstypes.VpcEndpoint, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 VPC Endpoint ID is set")
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -1680,4 +1775,34 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName)
+}
+
+func testAccVPCEndpointConfig_crossRegionService(rName, serviceRegion string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccVPCEndpointServiceConfig_crossRegion(rName, acctest.Region(), acctest.AlternateRegion()),
+		fmt.Sprintf(`
+
+resource "aws_vpc" "endpoint" {
+  provider   = "awsalternate"
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  provider          = "awsalternate"
+  vpc_id            = aws_vpc.endpoint.id
+  vpc_endpoint_type = "Interface"
+  service_name      = aws_vpc_endpoint_service.test.service_name
+  service_region    = "%[2]s"
+
+  tags = {
+    Name = "%[1]s"
+  }
+}
+`, rName, serviceRegion),
+	)
 }

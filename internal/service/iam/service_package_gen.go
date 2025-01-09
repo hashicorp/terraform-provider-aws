@@ -5,8 +5,8 @@ package iam
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,7 +19,36 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newOrganizationsFeaturesResource,
+			Name:    "Organizations Features",
+		},
+		{
+			Factory: newResourceGroupPoliciesExclusive,
+			Name:    "Group Policies Exclusive",
+		},
+		{
+			Factory: newResourceGroupPolicyAttachmentsExclusive,
+			Name:    "Group Policy Attachments Exclusive",
+		},
+		{
+			Factory: newResourceRolePoliciesExclusive,
+			Name:    "Role Policies Exclusive",
+		},
+		{
+			Factory: newResourceRolePolicyAttachmentsExclusive,
+			Name:    "Role Policy Attachments Exclusive",
+		},
+		{
+			Factory: newResourceUserPoliciesExclusive,
+			Name:    "User Policies Exclusive",
+		},
+		{
+			Factory: newResourceUserPolicyAttachmentsExclusive,
+			Name:    "User Policy Attachments Exclusive",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -167,7 +196,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "OIDCProvider",
 			},
 		},
@@ -176,7 +205,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Policy",
 			},
 		},
@@ -190,7 +219,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_role",
 			Name:     "Role",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
 			},
 		},
@@ -251,7 +280,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_user",
 			Name:     "User",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrName,
 				ResourceType:        "User",
 			},
 		},
@@ -297,11 +326,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*iam_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*iam.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return iam_sdkv2.NewFromConfig(cfg,
-		iam_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return iam.NewFromConfig(cfg,
+		iam.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

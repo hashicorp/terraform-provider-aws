@@ -23,12 +23,12 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 
 	removedTags := oldTags.Removed(newTags)
 	if len(removedTags) > 0 {
-		input := &transfer.UntagResourceInput{
+		input := transfer.UntagResourceInput{
 			Arn:     aws.String(identifier),
 			TagKeys: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -37,12 +37,12 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 
 	updatedTags := oldTags.Updated(newTags)
 	if len(updatedTags) > 0 {
-		input := &transfer.TagResourceInput{
+		input := transfer.TagResourceInput{
 			Arn:  aws.String(identifier),
 			Tags: Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

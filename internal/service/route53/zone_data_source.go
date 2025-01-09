@@ -87,7 +87,7 @@ func dataSourceZone() *schema.Resource {
 func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	zoneID, zoneIDExists := d.GetOk("zone_id")
@@ -109,7 +109,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 			if zoneIDExists && hostedZoneID == zoneID.(string) {
 				hostedZones = append(hostedZones, hostedZone)
 				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if (normalizeZoneName(aws.ToString(hostedZone.Name)) == normalizeZoneName(name)) && (hostedZone.Config.PrivateZone == d.Get("private_zone").(bool) || (hostedZone.Config.PrivateZone && vpcIDExists)) {
+			} else if (normalizeDomainName(aws.ToString(hostedZone.Name)) == normalizeDomainName(name)) && (hostedZone.Config.PrivateZone == d.Get("private_zone").(bool) || (hostedZone.Config.PrivateZone && vpcIDExists)) {
 				matchingVPC := false
 				if vpcIDExists {
 					hostedZone, err := findHostedZoneByID(ctx, conn, hostedZoneID)
@@ -155,7 +155,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
 	d.SetId(hostedZoneID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "hostedzone/" + d.Id(),
 	}.String()
@@ -168,7 +168,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set(names.AttrName, normalizeZoneName(aws.ToString(hostedZone.Name)))
+	d.Set(names.AttrName, normalizeDomainName(aws.ToString(hostedZone.Name)))
 	d.Set("private_zone", hostedZone.Config.PrivateZone)
 	d.Set("resource_record_set_count", hostedZone.ResourceRecordSetCount)
 	d.Set("zone_id", hostedZoneID)

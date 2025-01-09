@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -465,14 +465,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 }
 
 func testAccOrderableInstancePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String("mysql"),
 		DBInstanceClass: aws.String("db.m5.xlarge"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
+	_, err := conn.DescribeOrderableDBInstanceOptions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

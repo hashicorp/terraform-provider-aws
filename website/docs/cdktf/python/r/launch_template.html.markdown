@@ -111,9 +111,9 @@ This resource supports the following arguments:
   Specification](#credit-specification) below for more details.
 * `default_version` - (Optional) Default Version of the launch template.
 * `description` - (Optional) Description of the launch template.
-* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
+* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-stop-protection.html).
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
-  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
+  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
 * `elastic_gpu_specifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
@@ -430,11 +430,8 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
-* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface.
-  Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.
-  Boolean value, can be left unset.
-* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface.
-  Boolean value, can be left unset.
+* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value, can be left unset.
+* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface. Boolean value, can be left unset.
 * `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `device_index` - (Optional) The integer index of the network interface attachment.
@@ -447,6 +444,7 @@ Each `network_interfaces` block supports the following:
 * `ipv6_prefixes` - (Optional) One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
 * `network_interface_id` - (Optional) The ID of the network interface to attach.
 * `network_card_index` - (Optional) The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
+* `primary_ipv6` - (Optional) Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `private_ip_address` - (Optional) The primary private IPv4 address.
 * `ipv4_address_count` - (Optional) The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
 * `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
@@ -519,4 +517,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fac8b79da8bd94f9c0667594305112d0c6b21bd2d1bb8287098c2f862313a5bf -->
+<!-- cache-key: cdktf-0.20.8 input-d5f5cf3f475aed18197e671b1adb2db9c3270710a8c989074f6c12451f7f2c38 -->

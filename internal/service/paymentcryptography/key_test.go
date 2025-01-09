@@ -48,7 +48,7 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -85,10 +85,10 @@ func TestAccPaymentCryptographyKey_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Other", "Value"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -103,10 +103,10 @@ func TestAccPaymentCryptographyKey_tags(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key2),
 					testAccCheckKeyNotRecreated(&key1, &key2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name2", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Other", "Value2"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
 			},
 		},
@@ -137,7 +137,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -152,7 +152,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key2),
 					testAccCheckKeyNotRecreated(&key1, &key2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -161,7 +161,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key3),
 					testAccCheckKeyNotRecreated(&key2, &key3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
 			},
 		},

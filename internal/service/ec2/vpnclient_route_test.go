@@ -125,12 +125,7 @@ func testAccCheckClientVPNRouteDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+			_, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_vpc_subnet_id"], rs.Primary.Attributes["destination_cidr_block"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -154,14 +149,9 @@ func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *awsty
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_vpc_subnet_id"], rs.Primary.Attributes["destination_cidr_block"])
 
 		if err != nil {
 			return err

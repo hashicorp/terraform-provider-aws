@@ -9,32 +9,49 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func TestCleanRecordName(t *testing.T) {
+func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input, Output string
+		input, output string
 	}{
+		// Preserve escape code
+		{"a\\000c.example.com", "a\\000c.example.com"},
+		{"a\\056c.example.com", "a\\056c.example.com"}, // with escaped "."
+
+		// Preserve "-" / "_" as-is
+		{"a-b.example.com", "a-b.example.com"},
+		{"_abc.example.com", "_abc.example.com"},
+
+		// no conversion
 		{"www.example.com", "www.example.com"},
-		{"\\052.example.com", "*.example.com"},
-		{"\\100.example.com", "@.example.com"},
-		{"\\043.example.com", "#.example.com"},
-		{"example.com", "example.com"},
+
+		// converted into lower-case
+		{"AbC.example.com", "abc.example.com"},
+
+		// convert into escape code
+		{"*.example.com", "\\052.example.com"},
+		{"!.example.com", "\\041.example.com"},
+		{"a/b.example.com", "a\\057b.example.com"},
+		{"/.example.com", "\\057.example.com"},
+		{"~.example.com", "\\176.example.com"},
+		{"a\\2B.example.com", "a\\1342b.example.com"},
 	}
 
 	for _, tc := range cases {
-		actual := cleanRecordName(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		output := normalizeDomainNameToAPI(tc.input)
+
+		if got, want := output, tc.output; got != want {
+			t.Errorf("normalizeDomainNameToAPI(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }
 
-func TestNormalizeAliasName(t *testing.T) {
+func TestNormalizeAliasDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input, Output string
+		input, output string
 	}{
 		{"www.example.com", "www.example.com"},
 		{"www.example.com.", "www.example.com"},
@@ -43,13 +60,14 @@ func TestNormalizeAliasName(t *testing.T) {
 		{"ipv6.name-123456789.region.elb.amazonaws.com", "ipv6.name-123456789.region.elb.amazonaws.com"},
 		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 		{"name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
-		{"\\052.example.com", "*.example.com"},
+		{"\\052.example.com", "\\052.example.com"},
 	}
 
 	for _, tc := range cases {
-		actual := normalizeAliasName(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		output := normalizeAliasDomainName(tc.input)
+
+		if got, want := output, tc.output; got != want {
+			t.Errorf("normalizeAliasDomainName(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }
@@ -58,7 +76,7 @@ func TestCleanZoneID(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input, Output string
+		input, output string
 	}{
 		{"/hostedzone/foo", "foo"},
 		{"/change/foo", "/change/foo"},
@@ -66,19 +84,20 @@ func TestCleanZoneID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := cleanZoneID(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		output := cleanZoneID(tc.input)
+
+		if got, want := output, tc.output; got != want {
+			t.Errorf("cleanZoneID(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }
 
-func TestNormalizeZoneName(t *testing.T) {
+func TestNormalizeDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input  interface{}
-		Output string
+		input  interface{}
+		output string
 	}{
 		{"example.com", "example.com"},
 		{"example.com.", "example.com"},
@@ -98,9 +117,10 @@ func TestNormalizeZoneName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := normalizeZoneName(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		output := normalizeDomainName(tc.input)
+
+		if got, want := output, tc.output; got != want {
+			t.Errorf("normalizeDomainName(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }

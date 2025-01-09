@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -17,9 +16,9 @@ import (
 )
 
 func RegisterSweepers() {
-	sweep.Register("aws_m2_application", sweepApplications)
+	awsv2.Register("aws_m2_application", sweepApplications)
 
-	sweep.Register("aws_m2_environment", sweepEnvironments)
+	awsv2.Register("aws_m2_environment", sweepEnvironments)
 }
 
 func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -30,12 +29,6 @@ func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	pages := m2.NewListApplicationsPaginator(conn, &m2.ListApplicationsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}
@@ -57,12 +50,6 @@ func sweepEnvironments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	pages := m2.NewListEnvironmentsPaginator(conn, &m2.ListEnvironmentsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}

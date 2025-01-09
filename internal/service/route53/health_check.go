@@ -310,7 +310,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "healthcheck/" + d.Id(),
 	}.String()

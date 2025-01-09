@@ -35,7 +35,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 				Config: testAccIdentityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.username", "sub"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_scopes", names.AttrEmail),
@@ -55,7 +55,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 				Config: testAccIdentityProviderConfig_basicUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.username", "sub"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "9"),
@@ -97,7 +97,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				Config: testAccIdentityProviderConfig_identifier(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test"),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				Config: testAccIdentityProviderConfig_identifier(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test2"),
 				),
 			},
@@ -134,10 +134,10 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 				Config: testAccIdentityProviderConfig_saml(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", names.AttrEmail),
 					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
@@ -155,10 +155,10 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 				Config: testAccIdentityProviderConfig_saml(rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", names.AttrEmail),
 					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),

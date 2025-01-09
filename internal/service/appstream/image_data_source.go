@@ -5,8 +5,7 @@ package appstream
 
 import (
 	"context"
-	"sort"
-	"time"
+	"slices"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -202,22 +201,26 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 			)
 			return
 		}
-		sort.Slice(filteredImages, func(i, j int) bool {
-			itime, _ := time.Parse(time.RFC3339, images[i].CreatedTime.Month().String())
-			jtime, _ := time.Parse(time.RFC3339, images[j].CreatedTime.Month().String())
-			return itime.Unix() > jtime.Unix()
+		slices.SortFunc(filteredImages, func(a, b awstypes.Image) int {
+			if aws.ToTime(a.CreatedTime).After(aws.ToTime(b.CreatedTime)) {
+				return -1
+			}
+			if aws.ToTime(a.CreatedTime).Before(aws.ToTime(b.CreatedTime)) {
+				return 1
+			}
+			return 0
 		})
 	}
 	image := filteredImages[0]
 
-	data.Type = fwtypes.StringEnumValue[awstypes.VisibilityType](image.Visibility)
+	data.Type = fwtypes.StringEnumValue(image.Visibility)
 	resp.Diagnostics.Append(flex.Flatten(ctx, &image, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if image.PublicBaseImageReleasedDate != nil {
-		data.PubilcBaseImageReleasedDate = timetypes.NewRFC3339TimeValue(*image.PublicBaseImageReleasedDate)
+		data.PublicBaseImageReleasedDate = timetypes.NewRFC3339TimeValue(*image.PublicBaseImageReleasedDate)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -266,7 +269,7 @@ type dsImage struct {
 	Name                        types.String                                        `tfsdk:"name"`
 	NameRegex                   fwtypes.Regexp                                      `tfsdk:"name_regex"`
 	Platform                    types.String                                        `tfsdk:"platform"`
-	PubilcBaseImageReleasedDate timetypes.RFC3339                                   `tfsdk:"public_base_image_released_date"`
+	PublicBaseImageReleasedDate timetypes.RFC3339                                   `tfsdk:"public_base_image_released_date"`
 	State                       types.String                                        `tfsdk:"state"`
 	StateChangeReason           fwtypes.ListNestedObjectValueOf[dsStateChange]      `tfsdk:"state_change_reason"`
 	Type                        fwtypes.StringEnum[awstypes.VisibilityType]         `tfsdk:"type"`

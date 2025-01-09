@@ -32,6 +32,11 @@ func resourceUserGroupAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceUserGroupAssociationRead,
 		DeleteWithoutTimeout: resourceUserGroupAssociationDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -57,20 +62,18 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	userGroupID := d.Get("user_group_id").(string)
 	userID := d.Get("user_id").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{userGroupID, userID}, userGroupAssociationResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{userGroupID, userID}, userGroupAssociationResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:  aws.String(userGroupID),
 		UserIdsToAdd: []string{userID},
 	}
 
-	const (
-		timeout = 10 * time.Minute
-	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, timeout, func() (interface{}, error) {
+	if _, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.ModifyUserGroup(ctx, input)
-	})
-
-	if err != nil {
+	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%s): %s", id, err)
 	}
 
@@ -122,10 +125,7 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 	userGroupID, userID := parts[0], parts[1]
 
 	log.Printf("[INFO] Deleting ElastiCache User Group Association: %s", d.Id())
-	const (
-		timeout = 10 * time.Minute
-	)
-	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.ModifyUserGroup(ctx, &elasticache.ModifyUserGroupInput{
 			UserGroupId:     aws.String(userGroupID),
 			UserIdsToRemove: []string{userID},

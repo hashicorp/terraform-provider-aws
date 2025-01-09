@@ -67,7 +67,7 @@ func (d *dataSourceDataShares) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	paginator := redshift.NewDescribeDataSharesPaginator(conn, &redshift.DescribeDataSharesInput{})
 

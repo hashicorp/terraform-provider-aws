@@ -106,6 +106,10 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Chime Sip Media Application (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrARN, resp.SipMediaApplicationArn)
 	d.Set("aws_region", resp.AwsRegion)
 	d.Set(names.AttrName, resp.Name)

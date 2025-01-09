@@ -803,12 +803,12 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 		input.LaunchTemplateNames = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -831,10 +831,10 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -847,7 +847,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	setTagsOutV2(ctx, lt.Tags)
+	setTagsOut(ctx, lt.Tags)
 
 	return diags
 }

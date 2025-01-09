@@ -61,17 +61,17 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(ctx context.Context, d *sch
 		input.LocalGatewayVirtualInterfaceGroupIds = []string{v.(string)}
 	}
 
-	input.Filters = newAttributeFilterListV2(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 		},
 	)
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -91,7 +91,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(ctx context.Context, d *sch
 	d.Set("local_gateway_virtual_interface_group_id", localGatewayVirtualInterfaceGroup.LocalGatewayVirtualInterfaceGroupId)
 	d.Set("local_gateway_virtual_interface_ids", localGatewayVirtualInterfaceGroup.LocalGatewayVirtualInterfaceIds)
 
-	setTagsOutV2(ctx, localGatewayVirtualInterfaceGroup.Tags)
+	setTagsOut(ctx, localGatewayVirtualInterfaceGroup.Tags)
 
 	return diags
 }

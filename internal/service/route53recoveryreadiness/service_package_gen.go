@@ -27,7 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCell,
+			Factory:  resourceCell,
 			TypeName: "aws_route53recoveryreadiness_cell",
 			Name:     "Cell",
 			Tags: &types.ServicePackageResourceTags{
@@ -35,7 +35,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceReadinessCheck,
+			Factory:  resourceReadinessCheck,
 			TypeName: "aws_route53recoveryreadiness_readiness_check",
 			Name:     "Readiness Check",
 			Tags: &types.ServicePackageResourceTags{
@@ -43,7 +43,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRecoveryGroup,
+			Factory:  resourceRecoveryGroup,
 			TypeName: "aws_route53recoveryreadiness_recovery_group",
 			Name:     "Recovery Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -51,7 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceResourceSet,
+			Factory:  resourceResourceSet,
 			TypeName: "aws_route53recoveryreadiness_resource_set",
 			Name:     "Resource Set",
 			Tags: &types.ServicePackageResourceTags{

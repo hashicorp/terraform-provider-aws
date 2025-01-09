@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -132,7 +131,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if v := aws.ToString(certificate.CertificatePem); v != "" {
 		d.Set("certificate_pem", v)
 	}
-	if certificate.CertificateWallet != nil && len(certificate.CertificateWallet) != 0 {
+	if len(certificate.CertificateWallet) != 0 {
 		d.Set("certificate_wallet", itypes.Base64EncodeOnce(certificate.CertificateWallet))
 	}
 
@@ -187,10 +186,10 @@ func findCertificate(ctx context.Context, conn *dms.Client, input *dms.DescribeC
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCertificates(ctx context.Context, conn *dms.Client, input *dms.DescribeCertificatesInput) ([]*awstypes.Certificate, error) {
+func findCertificates(ctx context.Context, conn *dms.Client, input *dms.DescribeCertificatesInput) ([]awstypes.Certificate, error) {
 	var output []awstypes.Certificate
 
 	pages := dms.NewDescribeCertificatesPaginator(conn, input)
@@ -212,5 +211,5 @@ func findCertificates(ctx context.Context, conn *dms.Client, input *dms.Describe
 		output = append(output, page.Certificates...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }

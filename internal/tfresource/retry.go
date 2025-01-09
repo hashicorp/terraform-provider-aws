@@ -11,8 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
@@ -96,7 +95,18 @@ func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (T, 
 // RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
 func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if tfawserr.ErrCodeEquals(err, codes...) || tfawserr_sdkv2.ErrCodeEquals(err, codes...) {
+		if tfawserr.ErrCodeEquals(err, codes...) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryGWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
+func RetryGWhenAWSErrCodeEquals[T any](ctx context.Context, timeout time.Duration, f func() (T, error), codes ...string) (T, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr.ErrCodeEquals(err, codes...) {
 			return true, err
 		}
 
@@ -107,7 +117,7 @@ func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f fun
 // RetryWhenAWSErrCodeContains retries the specified function when it returns an AWS error containing the specified code.
 func RetryWhenAWSErrCodeContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if tfawserr.ErrCodeContains(err, code) || tfawserr_sdkv2.ErrCodeContains(err, code) {
+		if tfawserr.ErrCodeContains(err, code) {
 			return true, err
 		}
 
@@ -118,34 +128,8 @@ func RetryWhenAWSErrCodeContains(ctx context.Context, timeout time.Duration, f f
 // RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
 func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if tfawserr.ErrMessageContains(err, code, message) || tfawserr_sdkv2.ErrMessageContains(err, code, message) {
+		if tfawserr.ErrMessageContains(err, code, message) {
 			return true, err
-		}
-
-		return false, err
-	})
-}
-
-// RetryWhenMessageContains retries the specified function when it returns an error containing any of the specified messages.
-func RetryWhenMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes []string, messages []string) (interface{}, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		for i, message := range messages {
-			if tfawserr.ErrMessageContains(err, codes[i], message) || tfawserr_sdkv2.ErrMessageContains(err, codes[i], message) {
-				return true, err
-			}
-		}
-
-		return false, err
-	})
-}
-
-// RetryGWhenMessageContains retries the specified function when it returns an error containing any of the specified messages.
-func RetryGWhenMessageContains[T any](ctx context.Context, timeout time.Duration, f func() (T, error), codes []string, messages []string) (T, error) {
-	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
-		for i, message := range messages {
-			if tfawserr.ErrMessageContains(err, codes[i], message) || tfawserr_sdkv2.ErrMessageContains(err, codes[i], message) {
-				return true, err
-			}
 		}
 
 		return false, err
@@ -175,6 +159,16 @@ func RetryWhenIsOneOf2[T1, T2 error](ctx context.Context, timeout time.Duration,
 func RetryWhenIsOneOf3[T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsOneOf4[T1, T2, T3, T4 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) || errs.IsA[T4](err) {
 			return true, err
 		}
 
@@ -226,17 +220,6 @@ func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t
 	}
 
 	return output, nil
-}
-
-// RetryWhenHTTPStatusCodeEquals retries the specified function when it returns one of the specified HTTP status codes.
-func RetryWhenHTTPStatusCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), statusCodes ...int) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, statusCodes...) {
-			return true, err
-		}
-
-		return false, err
-	})
 }
 
 var ErrFoundResource = errors.New(`found resource`)
