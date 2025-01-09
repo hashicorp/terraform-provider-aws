@@ -20,13 +20,17 @@ FEATURES:
 * **New Resource:** `aws_cloudwatch_log_delivery_destination_policy` ([#40731](https://github.com/hashicorp/terraform-provider-aws/issues/40731))
 * **New Resource:** `aws_cloudwatch_log_delivery_source` ([#40731](https://github.com/hashicorp/terraform-provider-aws/issues/40731))
 * **New Resource:** `aws_cloudwatch_log_index_policy` ([#40594](https://github.com/hashicorp/terraform-provider-aws/issues/40594))
+* **New Resource:** `aws_vpclattice_resource_gateway` ([#40821](https://github.com/hashicorp/terraform-provider-aws/issues/40821))
 
 ENHANCEMENTS:
 
 * data-source/aws_codebuild_fleet: Add `compute_configuration` attribute ([#40752](https://github.com/hashicorp/terraform-provider-aws/issues/40752))
 * data-source/aws_dms_endpoint: Add `kafka_settings.sasl_mechanism` attribute ([#36918](https://github.com/hashicorp/terraform-provider-aws/issues/36918))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-7` AWS Region ([#40850](https://github.com/hashicorp/terraform-provider-aws/issues/40850))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-7` AWS Region ([#40850](https://github.com/hashicorp/terraform-provider-aws/issues/40850))
 * data-source/aws_rds_certificate: Add `default_for_new_launches` attribute ([#40536](https://github.com/hashicorp/terraform-provider-aws/issues/40536))
 * data-source/aws_rds_engine_version: Add `supports_certificate_rotation_without_restart`, `supports_integrations`, and `supports_local_write_forwarding` attributes ([#40700](https://github.com/hashicorp/terraform-provider-aws/issues/40700))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-7` AWS Region ([#40850](https://github.com/hashicorp/terraform-provider-aws/issues/40850))
 * data-source/aws_vpc_endpoint_service: Add `region` attribute ([#40795](https://github.com/hashicorp/terraform-provider-aws/issues/40795))
 * data-source/aws_vpc_endpoint_service: Add `service_regions` argument ([#40795](https://github.com/hashicorp/terraform-provider-aws/issues/40795))
 * provider: Support `ap-southeast-7` as a valid AWS Region ([#40849](https://github.com/hashicorp/terraform-provider-aws/issues/40849))
