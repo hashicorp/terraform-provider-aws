@@ -850,39 +850,39 @@ resource "aws_bedrockagent_data_source" "test" {
 
   data_source_configuration {
     type = "WEB"
- 
+
     web_configuration {
       source_configuration {
         url_configuration {
-		  seed_urls = [
-			{
-			  url = "https://aws.amazon.com/blogs/compute/category/compute/aws-outposts/"
-			},
-			{
-			  url = "https://aws.amazon.com/blogs/networking-and-content-delivery/category/compute/aws-outposts/"
-			}
-		  ]
-		}
+          seed_urls = [
+            {
+              url = "https://aws.amazon.com/blogs/compute/category/compute/aws-outposts/"
+            },
+            {
+              url = "https://aws.amazon.com/blogs/networking-and-content-delivery/category/compute/aws-outposts/"
+            }
+          ]
+        }
       }
 
-	  crawler_configuration {
-	    crawler_limits {
-		  max_pages = 25000
-		  rate_limit = 300
-		}
-		exclusion_filters = [
-		  ".*\\.(txt|csv|md|pdf|doc|docx|xls|xlsx).*",
-		  ".*/(users|topics|products|contact\\-us|about\\-aws|pricing|privacy)/.*",
+      crawler_configuration {
+        crawler_limits {
+          max_pages  = 25000
+          rate_limit = 300
+        }
+        exclusion_filters = [
+          ".*\\.(txt|csv|md|pdf|doc|docx|xls|xlsx).*",
+          ".*/(users|topics|products|contact\\-us|about\\-aws|pricing|privacy)/.*",
           ".*/(terms|getting\\-started)$",
-		  ".*\\.(github|pages\\.awscloud|awsstatic|oracle)\\.com.*",
+          ".*\\.(github|pages\\.awscloud|awsstatic|oracle)\\.com.*",
           ".*\\.(gov|edu).*"
-		]
-		inclusion_filters = [
-		  ".*/blogs/(compute|containers|networking\\-and\\-content\\-delivery|storage|publicsector|media|awsmarketplace|apn|machine\\-learning|industries|mt|aws|architecture|database)/.*"
-		]
-		user_agent = "HOST_ONLY"
+        ]
+        inclusion_filters = [
+          ".*/blogs/(compute|containers|networking\\-and\\-content\\-delivery|storage|publicsector|media|awsmarketplace|apn|machine\\-learning|industries|mt|aws|architecture|database)/.*"
+        ]
+        user_agent = "HOST_ONLY"
       }
-	}
+    }
   }
 }
 `, rName))
