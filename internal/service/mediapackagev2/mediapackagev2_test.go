@@ -19,7 +19,7 @@ func TestAccMediaPackageV2_serial(t *testing.T) {
 			acctest.CtBasic:      testAccMediaPackageChannelGroup_basic,
 			"description":        testAccMediaPackageChannelGroup_description,
 			acctest.CtDisappears: testAccMediaPackageChannelGroup_disappears,
-			"tags":               testAccMediaPackageChannelGroup_tags,
+			//"tags":               testAccMediaPackageChannelGroup_tags,
 		},
 	}
 

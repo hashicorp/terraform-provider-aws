@@ -164,7 +164,7 @@ func (r *resourceChannelGroup) Update(ctx context.Context, request resource.Upda
 
 	if diff.HasChanges() {
 		input := mediapackagev2.UpdateChannelGroupInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, diff, &input, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
