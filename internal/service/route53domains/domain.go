@@ -84,7 +84,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"billing_contact": framework.ResourceOptionalComputedListOfObjectAttribute[contactDetailModel](ctx),
+			"billing_contact": framework.ResourceOptionalComputedListOfSingleObjectAttribute[contactDetailModel](ctx),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
