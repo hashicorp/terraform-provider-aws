@@ -900,12 +900,31 @@ func resourceInstance() *schema.Resource {
 
 				return nil
 			},
-			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("launch_template.0.name")
-			}),
 			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.id")
 			}),
+			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("launch_template.0.name")
+			}),
+			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				// Set public_dns and public_ip to newly computed if the instance will be stopped and started
+				// as part of Update and there is already a public_ip value in state.
+				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
+					// user_data is stored in state as a hash.
+					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
+						if o, n := diff.GetChange("user_data"); userDataHashSum(n.(string)) == o.(string) {
+							return nil
+						}
+					}
+
+					if diff.Get("public_ip").(string) != "" {
+						diff.SetNewComputed("public_dns")
+						diff.SetNewComputed("public_ip")
+					}
+				}
+
+				return nil
+			},
 			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.Get("user_data_replace_on_change").(bool)
 			}),
@@ -1821,6 +1840,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	// See also CustomizeDiff.
 	if d.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") && !d.IsNewResource() {
 		// For each argument change, we start and stop the instance
 		// to account for behaviors occurring outside terraform.
@@ -1971,25 +1991,28 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("metadata_options") && !d.IsNewResource() {
 		if v, ok := d.GetOk("metadata_options"); ok {
 			if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+				httpEndpoint := awstypes.InstanceMetadataEndpointState(tfMap["http_endpoint"].(string))
 				input := &ec2.ModifyInstanceMetadataOptionsInput{
-					HttpEndpoint: awstypes.InstanceMetadataEndpointState(tfMap["http_endpoint"].(string)),
+					HttpEndpoint: httpEndpoint,
+					HttpTokens:   awstypes.HttpTokensState(tfMap["http_tokens"].(string)),
 					InstanceId:   aws.String(d.Id()),
 				}
 
-				if tfMap["http_endpoint"].(string) == string(awstypes.InstanceMetadataEndpointStateEnabled) {
+				if httpEndpoint == awstypes.InstanceMetadataEndpointStateEnabled {
 					// These parameters are not allowed unless HttpEndpoint is enabled.
 					input.HttpProtocolIpv6 = awstypes.InstanceMetadataProtocolState(tfMap["http_protocol_ipv6"].(string))
 					input.HttpPutResponseHopLimit = aws.Int32(int32(tfMap["http_put_response_hop_limit"].(int)))
-					input.HttpTokens = awstypes.HttpTokensState(tfMap["http_tokens"].(string))
 					input.InstanceMetadataTags = awstypes.InstanceMetadataTagsState(tfMap["instance_metadata_tags"].(string))
 				}
 
 				_, err := conn.ModifyInstanceMetadataOptions(ctx, input)
+
 				if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "InstanceMetadataTags") {
 					log.Printf("[WARN] updating EC2 Instance (%s) metadata options: %s. Retrying without instance metadata tags.", d.Id(), err)
 
 					_, err = conn.ModifyInstanceMetadataOptions(ctx, input)
 				}
+
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) metadata options: %s", d.Id(), err)
 				}

@@ -77,12 +77,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `compute_configuration` - (Optional) The compute configuration of the compute fleet. This is only required if `compute_type` is set to `ATTRIBUTE_BASED_COMPUTE`. See [`compute_configuration`](#compute_configuration) below.
 * `fleet_service_role` - (Optional) The service role associated with the compute fleet.
 * `image_id` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
 * `overflow_behavior` - (Optional) Overflow behavior for compute fleet. Valid values: `ON_DEMAND`, `QUEUE`.
-* `scaling_configuration` - (Optional) Configuration block. Detailed below. This option is only valid when your overflow behavior is `QUEUE`.
+* `scaling_configuration` - (Optional) Configuration block. This option is only valid when your overflow behavior is `QUEUE`. See [`scaling_configuration`](#scaling_configuration) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_config` - (Optional) Configuration block. Detailed below.
+* `vpc_config` - (Optional) Configuration block. See [`vpc_config`](#vpc_config) below.
+
+### compute_configuration
+
+* `disk` - (Optional) Amount of disk space of the instance type included in the fleet.
+* `machine_type` - (Optional) Machine type of the instance type included in the fleet. Valid values: `GENERAL`, `NVME`.
+* `memory` - (Optional) Amount of memory of the instance type included in the fleet.
+* `vcpu` - (Optional) Number of vCPUs of the instance type included in the fleet.
 
 ### scaling_configuration
 
@@ -139,4 +147,4 @@ Using `terraform import`, import CodeBuild Fleet using the `name`. For example:
 % terraform import aws_codebuild_fleet.name fleet-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dbb44325b5d2cbb2ee98f3f444c59256fc8b2cadc1771f7659fa4b8a95a92cc4 -->
+<!-- cache-key: cdktf-0.20.8 input-fa06d5482be245bb3fced3fa7e741b380ec91afe7cdfa28aaaa9e3e3a8d884d0 -->

@@ -20,7 +20,8 @@ func TestAccECRAccountSetting_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccAccountSetting_basic,
+		acctest.CtBasic:       testAccAccountSetting_basic,
+		"registryPolicyScope": testAccAccountSetting_registryPolicyScope,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -57,6 +58,42 @@ func testAccAccountSetting_basic(t *testing.T) {
 					testAccCheckAccountSettingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "CLAIR")),
+			},
+		},
+	})
+}
+
+func testAccAccountSetting_registryPolicyScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecr_account_setting.test"
+	rName := "REGISTRY_POLICY_SCOPE"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSettingConfig_basic(rName, "V1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "V1")),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateId:                        rName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccAccountSettingConfig_basic(rName, "V2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "V2")),
 			},
 		},
 	})
