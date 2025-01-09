@@ -16,8 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -234,11 +232,6 @@ func contactDetailBlock(ctx context.Context) schema.Block {
 						stringvalidator.LengthAtMost(254),
 					},
 				},
-				"extra_params": schema.MapAttribute{
-					CustomType:  fwtypes.MapOfStringType,
-					Optional:    true,
-					ElementType: types.StringType,
-				},
 				"fax": schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
@@ -282,6 +275,24 @@ func contactDetailBlock(ctx context.Context) schema.Block {
 					},
 				},
 			},
+			Blocks: map[string]schema.Block{
+				"extra_param": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[extraParamModel](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"name": schema.StringAttribute{
+								Required: true,
+							},
+							"value": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(2048),
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
@@ -309,6 +320,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	// Additional fields.
 	input.PrivacyProtectAdminContact = fwflex.BoolFromFramework(ctx, data.AdminPrivacy)
 	input.PrivacyProtectBillingContact = fwflex.BoolFromFramework(ctx, data.BillingPrivacy)
 	input.PrivacyProtectRegistrantContact = fwflex.BoolFromFramework(ctx, data.RegistrantPrivacy)
@@ -388,34 +400,6 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	tfObject, d := flattenExtraParamsFramework(ctx, data.AdminContact, domainDetail.AdminContact)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	data.AdminContact = tfObject
-
-	tfObject, d = flattenExtraParamsFramework(ctx, data.BillingContact, domainDetail.BillingContact)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	data.BillingContact = tfObject
-
-	tfObject, d = flattenExtraParamsFramework(ctx, data.RegistrantContact, domainDetail.RegistrantContact)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	data.RegistrantContact = tfObject
-
-	tfObject, d = flattenExtraParamsFramework(ctx, data.TechContact, domainDetail.TechContact)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	data.TechContact = tfObject
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -522,20 +506,25 @@ type domainResourceModel struct {
 }
 
 type contactDetailModel struct {
-	AddressLine1     types.String                             `tfsdk:"address_line_1"`
-	AddressLine2     types.String                             `tfsdk:"address_line_2"`
-	City             types.String                             `tfsdk:"city"`
-	ContactType      fwtypes.StringEnum[awstypes.ContactType] `tfsdk:"contact_type"`
-	CountryCode      fwtypes.StringEnum[awstypes.CountryCode] `tfsdk:"country_code"`
-	Email            types.String                             `tfsdk:"email"`
-	ExtraParams      fwtypes.MapOfString                      `tfsdk:"extra_params" autoflex:"-"`
-	Fax              types.String                             `tfsdk:"fax"`
-	FirstName        types.String                             `tfsdk:"first_name"`
-	LastName         types.String                             `tfsdk:"last_name"`
-	OrganizationName types.String                             `tfsdk:"organization_name"`
-	PhoneNumber      types.String                             `tfsdk:"phone_number"`
-	State            types.String                             `tfsdk:"state"`
-	ZipCode          types.String                             `tfsdk:"zip_code"`
+	AddressLine1     types.String                                     `tfsdk:"address_line_1"`
+	AddressLine2     types.String                                     `tfsdk:"address_line_2"`
+	City             types.String                                     `tfsdk:"city"`
+	ContactType      fwtypes.StringEnum[awstypes.ContactType]         `tfsdk:"contact_type"`
+	CountryCode      fwtypes.StringEnum[awstypes.CountryCode]         `tfsdk:"country_code"`
+	Email            types.String                                     `tfsdk:"email"`
+	ExtraParams      fwtypes.ListNestedObjectValueOf[extraParamModel] `tfsdk:"extra_param"`
+	Fax              types.String                                     `tfsdk:"fax"`
+	FirstName        types.String                                     `tfsdk:"first_name"`
+	LastName         types.String                                     `tfsdk:"last_name"`
+	OrganizationName types.String                                     `tfsdk:"organization_name"`
+	PhoneNumber      types.String                                     `tfsdk:"phone_number"`
+	State            types.String                                     `tfsdk:"state"`
+	ZipCode          types.String                                     `tfsdk:"zip_code"`
+}
+
+type extraParamModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
 }
 
 type nameserverModel struct {
@@ -552,43 +541,4 @@ func fixupContactDetail(apiObject *awstypes.ContactDetail) {
 	if aws.ToString(apiObject.AddressLine2) == "" {
 		apiObject.AddressLine2 = nil
 	}
-}
-
-func flattenExtraParamsFramework(ctx context.Context, tfObject fwtypes.ListNestedObjectValueOf[contactDetailModel], apiObject *awstypes.ContactDetail) (fwtypes.ListNestedObjectValueOf[contactDetailModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if apiObject == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
-	}
-
-	if len(apiObject.ExtraParams) == 0 {
-		return tfObject, diags
-	}
-
-	data, d := tfObject.ToPtr(ctx)
-	diags = append(diags, d...)
-	if diags.HasError() {
-		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
-	}
-
-	elements := make(map[string]attr.Value, len(apiObject.ExtraParams))
-	for _, apiObject := range apiObject.ExtraParams {
-		elements[string(apiObject.Name)] = fwflex.StringToFramework(ctx, apiObject.Value)
-	}
-
-	m, d := fwtypes.NewMapValueOf[types.String](ctx, elements)
-	diags = append(diags, d...)
-	if diags.HasError() {
-		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
-	}
-
-	data.ExtraParams = m
-
-	tfObject, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, data)
-	diags = append(diags, d...)
-	if diags.HasError() {
-		return fwtypes.NewListNestedObjectValueOfNull[contactDetailModel](ctx), diags
-	}
-
-	return tfObject, diags
 }
