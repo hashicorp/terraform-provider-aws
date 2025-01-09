@@ -45,6 +45,7 @@ ENHANCEMENTS:
 * resource/aws_emr_studio: Add `encryption_key_arn` argument ([#40771](https://github.com/hashicorp/terraform-provider-aws/issues/40771))
 * resource/aws_quicksight_user: Add `user_invitation_url` attribute ([#40775](https://github.com/hashicorp/terraform-provider-aws/issues/40775))
 * resource/aws_rds_cluster: Support `iam-db-auth-error` as a valid value for `enabled_cloudwatch_logs_exports` ([#40789](https://github.com/hashicorp/terraform-provider-aws/issues/40789))
+* resource/aws_rds_integration: Add `data_filter` argument ([#40816](https://github.com/hashicorp/terraform-provider-aws/issues/40816))
 * resource/aws_s3_object_copy: Add `override_provider` configuration block, allowing tags inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) to be ignored ([#40689](https://github.com/hashicorp/terraform-provider-aws/issues/40689))
 
 BUG FIXES:
