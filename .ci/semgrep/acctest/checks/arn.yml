@@ -4,7 +4,6 @@ rules:
     message: Use one of the `acctest` ARN value checks or TestCheckResourceAttrPair
     paths:
       exclude:
-        - "internal/service/cloudfront"
         - "internal/service/cloudtrail"
         - "internal/service/codeguruprofiler"
         - "internal/service/configservice"
