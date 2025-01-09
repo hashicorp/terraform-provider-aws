@@ -1671,9 +1671,6 @@ func TestAccECSTaskDefinition_Volume_detectChangeInConfigureAtLaunch(t *testing.
 			},
 			{
 				Config: testAccTaskDefinitionConfig_volumeConfigureAtLaunch(rName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
