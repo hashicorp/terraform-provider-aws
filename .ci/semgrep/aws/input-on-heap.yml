@@ -82,7 +82,9 @@ rules:
         - "internal/service/s*"
         - "internal/service/t*"
         - "internal/service/v*"
-        - "internal/service/w*"
+        - "internal/service/wafregional"
+        - "internal/service/wafv2"
+        - "internal/service/worklink"
     patterns:
       - pattern-either:
           - pattern: |

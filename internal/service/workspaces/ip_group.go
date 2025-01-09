@@ -143,8 +143,8 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
-	directories, err := findDirectories(ctx, conn, input)
+	describeInput := &workspaces.DescribeWorkspaceDirectoriesInput{}
+	directories, err := findDirectories(ctx, conn, describeInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Directories: %s", err)
@@ -169,9 +169,10 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting WorkSpaces IP Group (%s)", d.Id())
-	_, err = conn.DeleteIpGroup(ctx, &workspaces.DeleteIpGroupInput{
+	deleteInput := workspaces.DeleteIpGroupInput{
 		GroupId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteIpGroup(ctx, &deleteInput)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
