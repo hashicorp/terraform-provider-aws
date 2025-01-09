@@ -330,13 +330,13 @@ class MyConvertedCode(TerraformStack):
 Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
 
 ```console
-% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
+% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev_NS
 ```
 
 If the record also contains a set identifier, append it:
 
 ```console
-% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS_dev
+% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev_NS_dev
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-32abe2d1593a3dd5368408ddc85d0a1bd4b693b5372bb7da41262f3956828fe8 -->
+<!-- cache-key: cdktf-0.20.8 input-fc20fd130ce2202c5a6719f9387f559be6d934c048b4f1e4916641814f3f2574 -->

@@ -143,6 +143,44 @@ func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildFleet_computeConfiguration(t *testing.T) {
+	ctx := context.Background()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_computeConfiguration(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.machine_type", string(types.MachineTypeGeneral)),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.vcpu", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_computeConfiguration(rName, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.machine_type", string(types.MachineTypeGeneral)),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.vcpu", "4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildFleet_computeType(t *testing.T) {
 	ctx := context.Background()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,6 +290,11 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccFleetConfig_scalingConfiguration2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
@@ -261,6 +304,13 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.metric_type", "FLEET_UTILIZATION_RATE"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.target_value", "90.5"),
+				),
+			},
+			{
+				Config: testAccFleetConfig_scalingConfiguration3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
 				),
 			},
 		},
@@ -374,6 +424,22 @@ resource "aws_codebuild_fleet" "test" {
 `, rName, baseCapacity)
 }
 
+func testAccFleetConfig_computeConfiguration(rName string, vcpu int) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity    = 1
+  compute_type     = "ATTRIBUTE_BASED_COMPUTE"
+  environment_type = "LINUX_CONTAINER"
+  name             = %[1]q
+
+  compute_configuration {
+    machine_type = "GENERAL"
+    vcpu         = %[2]d
+  }
+}
+`, rName, vcpu)
+}
+
 func testAccFleetConfig_computeType(rName string, computeType types.ComputeType) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
@@ -451,6 +517,18 @@ resource "aws_codebuild_fleet" "test" {
       target_value = 90.5
     }
   }
+}
+`, rName)
+}
+
+func testAccFleetConfig_scalingConfiguration3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "ARM_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
 }
 `, rName)
 }

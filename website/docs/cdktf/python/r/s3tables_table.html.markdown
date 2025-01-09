@@ -42,7 +42,7 @@ class MyConvertedCode(TerraformStack):
         aws_s3_tables_table_example = S3TablesTable(self, "example_2",
             format="ICEBERG",
             name="example-table",
-            namespace=aws_s3_tables_namespace_example,
+            namespace=Token.as_string(aws_s3_tables_namespace_example.namespace),
             table_bucket_arn=Token.as_string(aws_s3_tables_namespace_example.table_bucket_arn)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -152,4 +152,4 @@ Using `terraform import`, import S3 Tables Table using the `table_bucket_arn`, t
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c988bcc0883d687fe19ea602de28da9bc0a92d180afa6ac411b7a9181792d84 -->
+<!-- cache-key: cdktf-0.20.8 input-8f3e7f177b00e212e962fca8903f022245d26601468f14ba20d662a02b6a350c -->

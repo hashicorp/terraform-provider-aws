@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_route53_cidr_location", name="CIDR Location")
 func newCIDRLocationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cidrLocationResource{}
 
