@@ -40,9 +40,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_basic(t *testing.T) {
 				Config: testAccSipMediaApplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, &chimeSipMediaApplication),
-					func(s *terraform.State) error {
-						return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", "sma/"+aws.ToString(chimeSipMediaApplication.SipMediaApplicationId))(s)
-					},
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "chime", "sma/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(chimeSipMediaApplication.SipMediaApplicationId))(s)
