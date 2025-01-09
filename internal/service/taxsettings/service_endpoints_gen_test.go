@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListTaxRegistrations(ctx, &taxsettings.ListTaxRegistrationsInput{},
+	input := taxsettings.ListTaxRegistrationsInput{}
+	_, err := client.ListTaxRegistrations(ctx, &input,
 		func(opts *taxsettings.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

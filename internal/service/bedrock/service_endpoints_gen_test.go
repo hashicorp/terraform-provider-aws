@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListFoundationModels(ctx, &bedrock.ListFoundationModelsInput{},
+	input := bedrock.ListFoundationModelsInput{}
+	_, err := client.ListFoundationModels(ctx, &input,
 		func(opts *bedrock.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

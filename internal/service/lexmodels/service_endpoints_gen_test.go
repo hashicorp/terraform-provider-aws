@@ -463,7 +463,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.GetBots(ctx, &lexmodelbuildingservice.GetBotsInput{},
+	input := lexmodelbuildingservice.GetBotsInput{}
+	_, err := client.GetBots(ctx, &input,
 		func(opts *lexmodelbuildingservice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

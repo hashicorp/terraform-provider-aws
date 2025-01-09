@@ -918,6 +918,50 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_ErrorOnConvertToManageOnStoppedInstance(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1 types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_passwordWithStoppedInstance(rName, "valid-password-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
+					resource.TestCheckResourceAttr("aws_rds_instance_state.test", names.AttrState, "stopped"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					names.AttrStatus,
+				},
+			},
+			{
+				Config:      testAccInstanceConfig_masterWithStoppedInstance(rName),
+				ExpectError: regexache.MustCompile(`can't modify a stopped DB instance`),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBInstance
@@ -9032,6 +9076,42 @@ resource "aws_db_instance" "test" {
   manage_master_user_password = true
   skip_final_snapshot         = true
   username                    = "tfacctest"
+}
+`, rName))
+}
+
+func testAccInstanceConfig_passwordWithStoppedInstance(rName, password string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password            = %[2]q
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_instance_state" "test" {
+  identifier = aws_db_instance.test.identifier
+  state      = "stopped"
+}
+`, rName, password))
+}
+
+func testAccInstanceConfig_masterWithStoppedInstance(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage           = 5
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  manage_master_user_password = true
+  skip_final_snapshot         = true
 }
 `, rName))
 }

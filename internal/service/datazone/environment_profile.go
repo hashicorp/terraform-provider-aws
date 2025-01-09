@@ -93,9 +93,7 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{

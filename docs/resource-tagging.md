@@ -226,7 +226,7 @@ use the `getTagsIn` function to get any configured tags.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
-    input := &service.CreateExampleInput{
+    input := service.CreateExampleInput{
       /* ... other configuration ... */
       Tags: getTagsIn(ctx),
     }
@@ -234,7 +234,7 @@ use the `getTagsIn` function to get any configured tags.
 
 === "Terraform Plugin SDK V2"
     ```go
-    input := &service.CreateExampleInput{
+    input := service.CreateExampleInput{
       /* ... other configuration ... */
       Tags: getTagsIn(ctx),
     }
@@ -332,7 +332,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &eks.CreateClusterInput{
+    input := eks.CreateClusterInput{
       /* ... other configuration ... */
       Tags: Tags(tags.IgnoreAWS()),
     }
@@ -346,7 +346,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &eks.CreateClusterInput{
+    input := eks.CreateClusterInput{
       /* ...other configuration... */
     }
 
@@ -383,7 +383,7 @@ This example shows using `TagSpecifications`:
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &ec2.CreateFleetInput{
+    input := ec2.CreateFleetInput{
         /* ... other configuration ... */
         TagSpecifications: tagSpecificationsFromKeyValue(tags, ec2.ResourceTypeFleet),
     }
@@ -460,7 +460,7 @@ If the resource `Update` function applies specific updates to attributes regardl
     ```go
     if d.HasChangesExcept("tags", "tags_all") {
       /* ... other logic ...*/
-      request := &iam.CreatePolicyVersionInput{
+      request := iam.CreatePolicyVersionInput{
         PolicyArn:      aws.String(d.Id()),
         PolicyDocument: aws.String(d.Get("policy").(string)),
         SetAsDefault:   aws.Bool(true),

@@ -187,7 +187,7 @@ class MyConvertedCode extends TerraformStack {
       serverlessv2ScalingConfiguration: {
         maxCapacity: 1,
         minCapacity: 0,
-        seconds_until_auto_pause: 3600,
+        secondsUntilAutoPause: 3600,
       },
       storageEncrypted: true,
     });
@@ -377,9 +377,9 @@ This resource supports the following arguments:
 * `masterUserSecretKmsKeyId` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `masterUsername` - (Required unless a `snapshotIdentifier` or `replicationSourceIdentifier` is provided or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]. This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `networkType` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
-* `performanceInsightsEnabled` - (Optional) Valid only for Non-Aurora Multi-AZ DB Clusters. Enables Performance Insights for the RDS Cluster
-* `performanceInsightsKmsKeyId` - (Optional) Valid only for Non-Aurora Multi-AZ DB Clusters. Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (`aws/rds`).
-* `performanceInsightsRetentionPeriod` - (Optional) Valid only for Non-Aurora Multi-AZ DB Clusters. Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are `7`, `month * 31` (where month is a number of months from 1-23), and `731`. See [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.Overview.cost.html) for more information on retention periods.
+* `performanceInsightsEnabled` - (Optional) Enables Performance Insights.
+* `performanceInsightsKmsKeyId` - (Optional) Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (`aws/rds`).
+* `performanceInsightsRetentionPeriod` - (Optional) Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are `7`, `month * 31` (where month is a number of months from 1-23), and `731`. See [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.Overview.cost.html) for more information on retention periods.
 * `port` - (Optional) Port on which the DB accepts connections.
 * `preferredBackupWindow` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region, e.g. `04:00-09:00`.
 * `preferredMaintenanceWindow` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., `wed:04:00-wed:04:30`
@@ -550,7 +550,7 @@ class MyConvertedCode extends TerraformStack {
       serverlessv2ScalingConfiguration: {
         maxCapacity: 256,
         minCapacity: 0,
-        seconds_until_auto_pause: 3600,
+        secondsUntilAutoPause: 3600,
       },
       engine: config.engine,
     });
@@ -650,4 +650,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-537b22caac4928654c2249807cab70dea10f693e32ea7964cdcfdff81549652f -->
+<!-- cache-key: cdktf-0.20.8 input-c45ffa9332f9115461bc300d48ee9ad46a82d5f626f5b184fd223b9f63026811 -->

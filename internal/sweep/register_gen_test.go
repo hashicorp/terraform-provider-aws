@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -196,6 +197,7 @@ func registerSweepers() {
 	bcmdataexports.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
+	cleanrooms.RegisterSweepers()
 	cloud9.RegisterSweepers()
 	cloudformation.RegisterSweepers()
 	cloudfront.RegisterSweepers()

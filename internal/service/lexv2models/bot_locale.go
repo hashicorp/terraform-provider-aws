@@ -81,12 +81,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			"n_lu_intent_confidence_threshold": schema.Float64Attribute{
 				Required: true,
 			},

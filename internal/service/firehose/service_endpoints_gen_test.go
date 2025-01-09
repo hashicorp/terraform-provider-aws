@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDeliveryStreams(ctx, &firehose.ListDeliveryStreamsInput{},
+	input := firehose.ListDeliveryStreamsInput{}
+	_, err := client.ListDeliveryStreams(ctx, &input,
 		func(opts *firehose.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
