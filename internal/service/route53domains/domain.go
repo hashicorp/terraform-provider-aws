@@ -357,6 +357,11 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	fixupContactDetail(domainDetail.AdminContact)
+	fixupContactDetail(domainDetail.BillingContact)
+	fixupContactDetail(domainDetail.RegistrantContact)
+	fixupContactDetail(domainDetail.TechContact)
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
 	if response.Diagnostics.HasError() {
 		return
