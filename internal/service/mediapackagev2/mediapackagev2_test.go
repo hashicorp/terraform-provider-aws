@@ -15,11 +15,11 @@ func TestAccMediaPackageV2_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
-		"MediaPackageChannelGroup": {
-			acctest.CtBasic:      testAccMediaPackageChannelGroup_basic,
-			"description":        testAccMediaPackageChannelGroup_description,
-			acctest.CtDisappears: testAccMediaPackageChannelGroup_disappears,
-			//"tags":               testAccMediaPackageChannelGroup_tags,
+		"ChannelGroup": {
+			acctest.CtBasic:      testAccMediaPackageV2ChannelGroup_basic,
+			"description":        testAccMediaPackageV2ChannelGroup_description,
+			acctest.CtDisappears: testAccMediaPackageV2ChannelGroup_disappears,
+			"tags":               testAccMediaPackageV2ChannelGroup_tagsSerial,
 		},
 	}
 

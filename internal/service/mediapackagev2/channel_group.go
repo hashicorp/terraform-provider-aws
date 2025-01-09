@@ -35,6 +35,9 @@ const (
 
 // @FrameworkResource("aws_media_packagev2_channel_group", name="Channel Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/mediapackagev2;mediapackagev2.GetChannelGroupOutput")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccChannelGroupImportStateIdFunc)
 func newResourceChannelGroup(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceChannelGroup{}
 
