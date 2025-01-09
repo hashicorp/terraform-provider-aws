@@ -3,174 +3,272 @@
 
 package mediapackagev2
 
-//import (
-//	"context"
-//	"errors"
-//	"fmt"
-//	"log"
-//	"time"
-//
-//	"github.com/aws/aws-sdk-go-v2/aws"
-//	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
-//	awstypes "github.com/aws/aws-sdk-go-v2/service/mediapackagev2/types"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-//	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-//	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-//	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-//	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-//	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-//	"github.com/hashicorp/terraform-provider-aws/names"
-//)
-//
+import (
+	"context"
+	"time"
 
-//// @Tags(identifierAttribute="arn")
-//func ResourceChannelGroup() *schema.Resource {
-//	return &schema.Resource{
-//		CreateWithoutTimeout: resourceChannelGroupCreate,
-//		ReadWithoutTimeout:   resourceChannelGroupRead,
-//		UpdateWithoutTimeout: resourceChannelGroupUpdate,
-//		DeleteWithoutTimeout: resourceChannelGroupDelete,
-//
-//		Importer: &schema.ResourceImporter{
-//			StateContext: schema.ImportStatePassthroughContext,
-//		},
-//		Schema: map[string]*schema.Schema{
-//			names.AttrARN: {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"channel_group_name": {
-//				Type:     schema.TypeString,
-//				Required: true,
-//			},
-//			names.AttrDescription: {
-//				Type:     schema.TypeString,
-//				Optional: true,
-//				Default:  "Managed by Terraform",
-//			},
-//			"egress_domain": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			names.AttrKey: {
-//				Type:      schema.TypeString,
-//				Computed:  true,
-//				Sensitive: true,
-//			},
-//			names.AttrTags:    tftags.TagsSchema(),
-//			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-//		},
-//		CustomizeDiff: verify.SetTagsDiff,
-//	}
-//}
-//
-//func resourceChannelGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).MediaPackageV2Client(ctx)
-//
-//	channelGroupName := d.Get("channel_group_name").(string)
-//	input := &mediapackagev2.CreateChannelGroupInput{
-//		ChannelGroupName: aws.String(channelGroupName),
-//		Tags:             getTagsIn(ctx),
-//	}
-//
-//	if v, ok := d.GetOk("description"); ok {
-//		input.Description = aws.String(v.(string))
-//	}
-//
-//	output, err := conn.CreateChannelGroup(ctx, input)
-//
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "creating MediaPackageV2 Channel Group: %s", err)
-//	}
-//
-//	d.SetId(aws.ToString(output.ChannelGroupName))
-//
-//	return append(diags, resourceChannelGroupRead(ctx, d, meta)...)
-//}
-//
-//func resourceChannelGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).MediaPackageV2Client(ctx)
-//
-//	resp, err := findChannelGroupByID(ctx, conn, d.Id())
-//
-//	if !d.IsNewResource() && tfresource.NotFound(err) {
-//		log.Printf("[WARN] MediaPackageV2 Channel Group: %s not found, removing from state", d.Id())
-//		d.SetId("")
-//		return diags
-//	}
-//
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "reading MediaPackageV2 Channel Group: %s, %s", d.Id(), err)
-//	}
-//
-//	d.Set(names.AttrARN, resp.Arn)
-//	d.Set("channel_group_name", resp.ChannelGroupName)
-//	d.Set(names.AttrDescription, resp.Description)
-//	d.Set("egress_domain", resp.EgressDomain)
-//
-//	setTagsOut(ctx, resp.Tags)
-//
-//	return diags
-//}
-//
-//func resourceChannelGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).MediaPackageV2Client(ctx)
-//
-//	input := &mediapackagev2.UpdateChannelGroupInput{
-//		ChannelGroupName: aws.String(d.Id()),
-//		Description:      aws.String(d.Get(names.AttrDescription).(string)),
-//	}
-//
-//	var _, err = conn.UpdateChannelGroup(ctx, input)
-//
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "updating MediaPackageV2 Channel Group: %s, %s", d.Id(), err)
-//	}
-//
-//	return append(diags, resourceChannelGroupRead(ctx, d, meta)...)
-//}
-//
-//func resourceChannelGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).MediaPackageV2Client(ctx)
-//
-//	DeleteChannelGroup := &mediapackagev2.DeleteChannelGroupInput{
-//		ChannelGroupName: aws.String(d.Id()),
-//	}
-//	_, err := conn.DeleteChannelGroup(ctx, DeleteChannelGroup)
-//	if err != nil {
-//		var nfe *awstypes.ResourceNotFoundException
-//		if errors.As(err, &nfe) {
-//			return diags
-//		}
-//		return sdkdiag.AppendErrorf(diags, "deleting MediaPackageV2 Channel Group: %s", err)
-//	}
-//
-//	channelGroupInput := &mediapackagev2.GetChannelGroupInput{
-//		ChannelGroupName: aws.String(d.Id()),
-//	}
-//	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-//		_, err := conn.GetChannelGroup(ctx, channelGroupInput)
-//		if err != nil {
-//			var nfe *awstypes.ResourceNotFoundException
-//			if errors.As(err, &nfe) {
-//				return nil
-//			}
-//			return retry.NonRetryableError(err)
-//		}
-//		return retry.RetryableError(fmt.Errorf("MediaPackageV2 Channel Group: %s still exists", d.Id()))
-//	})
-//	if tfresource.TimedOut(err) {
-//		_, err = conn.GetChannelGroup(ctx, channelGroupInput)
-//	}
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "waiting for MediaPackage Channel: %s, deletion: %s", d.Id(), err)
-//	}
-//
-//	return diags
-//}
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/mediapackagev2/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	ResNameChannelGroup         = "Channel Group"
+	ChannelGroupFieldNamePrefix = "ChannelGroup"
+)
+
+// @FrameworkResource("aws_media_packagev2_channel_group", name="Channel Group")
+// @Tags(identifierAttribute="arn")
+func newResourceChannelGroup(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceChannelGroup{}
+
+	return r, nil
+}
+
+type resourceChannelGroup struct {
+	framework.ResourceWithConfigure
+}
+
+func (r *resourceChannelGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_media_packagev2_channel_group"
+}
+
+func (r *resourceChannelGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+			},
+			"egress_domain": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+	}
+
+	response.Schema = s
+}
+
+func (r *resourceChannelGroup) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	conn := r.Meta().MediaPackageV2Client(ctx)
+	var data resourceChannelGroupData
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input := mediapackagev2.CreateChannelGroupInput{
+		Tags: getTagsIn(ctx),
+	}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := conn.CreateChannelGroup(ctx, &input)
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MediaPackageV2, create.ErrActionCreating, ResNameChannelGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourceChannelGroup) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	conn := r.Meta().MediaPackageV2Client(ctx)
+	var data resourceChannelGroupData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := findChannelGroupByID(ctx, conn, data.Name.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MediaPackageV2, create.ErrActionReading, ResNameChannelGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	setTagsOut(ctx, output.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourceChannelGroup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	conn := r.Meta().MediaPackageV2Client(ctx)
+	var state, plan resourceChannelGroupData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := fwflex.Calculate(ctx, plan, state)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := mediapackagev2.UpdateChannelGroupInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		output, err := conn.UpdateChannelGroup(ctx, &input)
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.MediaPackageV2, create.ErrActionUpdating, ResNameChannelGroup, state.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().MediaPackageV2Client(ctx)
+	var data resourceChannelGroupData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "deleting Channel Group", map[string]interface{}{
+		names.AttrName: data.Name.ValueString(),
+	})
+
+	input := mediapackagev2.DeleteChannelGroupInput{
+		ChannelGroupName: data.Name.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteChannelGroup(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MediaPackageV2, create.ErrActionDeleting, ResNameChannelGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+		return findChannelGroupByID(ctx, conn, data.Name.ValueString())
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MediaPackageV2, create.ErrActionWaitingForDeletion, ResNameChannelGroup, data.Name.String(), err),
+			err.Error(),
+		)
+	}
+}
+
+func (r *resourceChannelGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
+}
+
+func (r *resourceChannelGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+type resourceChannelGroupData struct {
+	ARN          types.String `tfsdk:"arn"`
+	Name         types.String `tfsdk:"name"`
+	Description  types.String `tfsdk:"description"`
+	EgressDomain types.String `tfsdk:"egress_domain"`
+	Tags         tftags.Map   `tfsdk:"tags"`
+	TagsAll      tftags.Map   `tfsdk:"tags_all"`
+}
+
+func findChannelGroupByID(ctx context.Context, conn *mediapackagev2.Client, id string) (*mediapackagev2.GetChannelGroupOutput, error) {
+	in := &mediapackagev2.GetChannelGroupInput{
+		ChannelGroupName: aws.String(id),
+	}
+
+	out, err := conn.GetChannelGroup(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastRequest: in,
+			LastError:   err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
