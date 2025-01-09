@@ -1120,7 +1120,7 @@ func (w webCrawlerConfiguration) GetCrawlerSchema(ctx context.Context) schema.Ne
 				},
 			},
 			names.AttrScope: schema.StringAttribute{
-				Required:   true,
+				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.WebScopeType](),
 			},
 			"user_agent": schema.StringAttribute{
