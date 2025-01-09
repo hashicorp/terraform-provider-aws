@@ -2,6 +2,7 @@
 
 NOTES:
 
+* provider: The retry handling in the `apigatewayv2` client has been updated to more extensively match `ConflictException` error responses. This change should be transparent to users, but if any unexpected changes in behavior with `apigatewayv2` resources occur following an upgrade to this release, please open a bug report. ([#40840](https://github.com/hashicorp/terraform-provider-aws/issues/40840))
 * resource/aws_api_gateway_domain_name_access_association: Deprecates `id` in favor of `arn`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
 * resource/aws_route53_cidr_location: Deprecates `id`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
 * resource/aws_s3_directory_bucket: Deprecates `id` in favor of `bucket`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
@@ -49,8 +50,10 @@ BUG FIXES:
 
 * resource/aws_api_gateway_domain_name: Fixed error when adding policy to existing private domain name ([#40708](https://github.com/hashicorp/terraform-provider-aws/issues/40708))
 * resource/aws_apigatewayv2_api: Don't overwrite the configured values of `description`, `name` or `version` if they are not present in the OpenAPI definition `body` ([#40707](https://github.com/hashicorp/terraform-provider-aws/issues/40707))
+* resource/aws_apigatewayv2_route: Fix retry handling of `ConflictException` error responses ([#40840](https://github.com/hashicorp/terraform-provider-aws/issues/40840))
 * resource/aws_cloudfront_cache_policy: Fix `panic: interface conversion: interface {} is nil, not map[string]interface {}` when `parameters_in_cache_key_and_forwarded_to_origin.cookies_config`, `parameters_in_cache_key_and_forwarded_to_origin.headers_config`, or `parameters_in_cache_key_and_forwarded_to_origin.query_strings_config` are empty ([#40815](https://github.com/hashicorp/terraform-provider-aws/issues/40815))
 * resource/aws_codebuild_fleet: Allow `scaling_configuration` to be removed on Update ([#40773](https://github.com/hashicorp/terraform-provider-aws/issues/40773))
+* resource/aws_codebuild_project: Allow `file_system_locations` to be removed on Update ([#40842](https://github.com/hashicorp/terraform-provider-aws/issues/40842))
 * resource/aws_ec2_instance_connect_endpoint: Set `fips_dns_name` to an empty value (`""`) when no value is returned from the EC2 API. This fixes known-after-apply loops in Regions that don't support FIPS endpoints ([#37939](https://github.com/hashicorp/terraform-provider-aws/issues/37939))
 * resource/aws_emr_studio: Fix issue with IAM/KMS policy eventual consistency handling not working ([#40771](https://github.com/hashicorp/terraform-provider-aws/issues/40771))
 * resource/aws_glue_catalog_database: Fix crash when expanding `create_table_default_permission` with a nil `principal` block ([#40761](https://github.com/hashicorp/terraform-provider-aws/issues/40761))
@@ -64,6 +67,7 @@ BUG FIXES:
 * resource/aws_route53_zone: Fix perpetual diff if `name` contains characters that the [Route 53 API escapes](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DomainNameFormat.html#domain-name-format-hosted-zones) ([#40154](https://github.com/hashicorp/terraform-provider-aws/issues/40154))
 * resource/aws_ses_identity_notification_topic: Prevent destroy failure when resource is already deleted outside of Terraform ([#40684](https://github.com/hashicorp/terraform-provider-aws/issues/40684))
 * resource/aws_sesv2_configuration_set: Fix handling of `delivery_options.max_delivery_seconds` when not configured ([#40670](https://github.com/hashicorp/terraform-provider-aws/issues/40670))
+* resource/aws_sesv2_configuration_set_event_destination: Retry IAM eventual consistency errors ([#40843](https://github.com/hashicorp/terraform-provider-aws/issues/40843))
 * resource/aws_sqs_queue: Fix timeout error on creation if `sqs_managed_sse_enabled=true` and `kms_data_key_reuse_period_seconds` is configured ([#40729](https://github.com/hashicorp/terraform-provider-aws/issues/40729))
 
 ## 5.82.2 (December 20, 2024)
