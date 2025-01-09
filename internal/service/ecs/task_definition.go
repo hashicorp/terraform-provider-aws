@@ -460,6 +460,9 @@ func resourceTaskDefinition() *schema.Resource {
 					var str strings.Builder
 					tfMap := v.(map[string]interface{})
 
+					if v, ok := tfMap["configure_at_launch"].(bool); ok {
+						str.WriteString(strconv.FormatBool(v))
+					}
 					if v, ok := tfMap["docker_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 						tfMap := v.([]interface{})[0].(map[string]interface{})
 

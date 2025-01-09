@@ -1642,6 +1642,49 @@ func TestAccECSTaskDefinition_DockerVolume_detectChangeInDriverOpts(t *testing.T
 	})
 }
 
+// See https://github.com/hashicorp/terraform-provider-aws/issues/38153.
+func TestAccECSTaskDefinition_Volume_detectChangeInConfigureAtLaunch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_volumeConfigureAtLaunch(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_volumeConfigureAtLaunch(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ExpectError: regexache.MustCompile(`No volume configuration can be configured for volume`),
+			},
+		},
+	})
+}
+
 func testAccCheckTaskDefinitionProxyConfiguration(after *awstypes.TaskDefinition, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) resource.TestCheckFunc {
@@ -3697,4 +3740,34 @@ TASK_DEFINITION
   }
 }
 `, rName, timeo)
+}
+
+func testAccTaskDefinitionConfig_volumeConfigureAtLaunch(rName string, configureAtLaunch bool) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true,
+    "mountPoints": [
+      {"sourceVolume": "vol1", "containerPath": "/vol1"}
+    ]
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name                = "vol1"
+    configure_at_launch = %[2]t
+    host_path           = "/host/vol1"
+  }
+}
+`, rName, configureAtLaunch)
 }
