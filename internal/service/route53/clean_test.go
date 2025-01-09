@@ -30,7 +30,10 @@ func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
 		{"AbC.example.com", "abc.example.com"},
 
 		// convert into escape code
-		{"*.example.com", "\\052.example.com"},
+		{"*.example.com", "*.example.com"}, // * as leftmost label is retained
+		{"*bc.example.com", "\\052bc.example.com"},
+		{"a*c.example.com", "a\\052c.example.com"},
+		{"ab*.example.com", "ab\\052.example.com"},
 		{"!.example.com", "\\041.example.com"},
 		{"a/b.example.com", "a\\057b.example.com"},
 		{"/.example.com", "\\057.example.com"},
