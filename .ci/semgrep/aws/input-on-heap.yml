@@ -50,7 +50,6 @@ rules:
     message: Create the $PKG.$INPUT struct on the stack instead of on the heap
     paths:
       exclude:
-        - "internal/service/appconfig"
         - "internal/service/appfabric"
         - "internal/service/appflow"
         - "internal/service/appintegrations"
