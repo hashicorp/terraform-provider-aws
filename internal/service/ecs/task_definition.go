@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -22,10 +23,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -319,20 +322,21 @@ func resourceTaskDefinition() *schema.Resource {
 									},
 									"driver": {
 										Type:     schema.TypeString,
-										ForceNew: true,
 										Optional: true,
+										Computed: true,
+										ForceNew: true,
 									},
 									"driver_opts": {
 										Type:     schema.TypeMap,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										ForceNew: true,
 										Optional: true,
+										ForceNew: true,
 									},
 									"labels": {
 										Type:     schema.TypeMap,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										ForceNew: true,
 										Optional: true,
+										ForceNew: true,
 									},
 									names.AttrScope: {
 										Type:             schema.TypeString,
@@ -451,6 +455,86 @@ func resourceTaskDefinition() *schema.Resource {
 							ForceNew: true,
 						},
 					},
+				},
+				Set: func(v interface{}) int {
+					var str strings.Builder
+					tfMap := v.(map[string]interface{})
+
+					if v, ok := tfMap["docker_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+						tfMap := v.([]interface{})[0].(map[string]interface{})
+
+						if v, ok := tfMap["autoprovision"].(bool); ok {
+							str.WriteString(strconv.FormatBool(v))
+						}
+						if v, ok := tfMap["driver"].(string); ok {
+							if v == "" {
+								v = "local"
+							}
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["driver_opts"].(map[string]interface{}); ok && len(v) > 0 {
+							str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
+						}
+						if v, ok := tfMap["labels"].(map[string]interface{}); ok && len(v) > 0 {
+							str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
+						}
+						if v, ok := tfMap[names.AttrScope].(string); ok {
+							if v == "" {
+								v = "task"
+							}
+							str.WriteString(v)
+						}
+					}
+					if v, ok := tfMap["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+						tfMap := v.([]interface{})[0].(map[string]interface{})
+
+						if v, ok := tfMap["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+							tfMap := v.([]interface{})[0].(map[string]interface{})
+
+							if v, ok := tfMap["access_point_id"].(string); ok && v != "" {
+								str.WriteString(v)
+							}
+							if v, ok := tfMap["iam"].(string); ok && v != "" {
+								str.WriteString(v)
+							}
+						}
+						if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["transit_encryption"].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["transit_encryption_port"].(int); ok && v != 0 {
+							str.WriteString(strconv.Itoa(v))
+						}
+					}
+					if v, ok := tfMap["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+						tfMap := v.([]interface{})[0].(map[string]interface{})
+
+						if v, ok := tfMap["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+							tfMap := v.([]interface{})[0].(map[string]interface{})
+
+							if v, ok := tfMap["credentials_parameter"].(string); ok && v != "" {
+								str.WriteString(v)
+							}
+							if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
+								str.WriteString(v)
+							}
+						}
+						if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+					}
+					str.WriteString(tfMap["host_path"].(string))
+					str.WriteString(tfMap[names.AttrName].(string))
+
+					return create.StringHashcode(str.String())
 				},
 			},
 		},
