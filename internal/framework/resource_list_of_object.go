@@ -27,9 +27,9 @@ func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context) schema.L
 	}
 }
 
-// ResourceOptionalComputedListOfSingleObjectAttribute returns a new schema.ListAttribute for a single object of the specified type.
+// ResourceComputedListOfObjectAttribute returns a new schema.ListAttribute for objects of the specified type.
 // The list is Optional+Computed.
-func ResourceOptionalComputedListOfSingleObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
+func ResourceComputedListOfObjectAttribute[T any](ctx context.Context, sizeAtMost int) schema.ListAttribute {
 	return schema.ListAttribute{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
 		Optional:   true,
@@ -38,7 +38,7 @@ func ResourceOptionalComputedListOfSingleObjectAttribute[T any](ctx context.Cont
 			listplanmodifier.UseStateForUnknown(),
 		},
 		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtMost(sizeAtMost),
 		},
 		ElementType: types.ObjectType{
 			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),
