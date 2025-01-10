@@ -1,31 +1,65 @@
 ---
 subcategory: "Route 53 Domains"
 layout: "aws"
-page_title: "AWS: aws_route53domains_registered_domain"
+page_title: "AWS: aws_route53domains_domain"
 description: |-
-  Provides a resource to manage a domain that has been registered and associated with the current AWS account.
+  Provides a resource to manage a domain.
 ---
 
-# Resource: aws_route53domains_registered_domain
+# Resource: aws_route53domains_domain
 
-Provides a resource to manage a domain that has been [registered](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/registrar-tld-list.html) and associated with the current AWS account. To register, renew and deregister a domain use the [`aws_route53domains_domain` resource](route53domains_domain.html) instead.
-
-**This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
-
-The `aws_route53domains_registered_domain` resource behaves differently from normal resources in that if a domain has been registered, Terraform does not _register_ this domain, but instead "adopts" it into management. `terraform destroy` does not delete the domain but does remove the resource from Terraform state.
+Provides a resource to manage a domain. This resource registers, renews and deregisters a domain name. If a domain name's lifecycle is managed outside of Terraform use the [`aws_route53domains_registered_domain` resource](route53domains_registered_domain.html) instead.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53domains_registered_domain" "example" {
+resource "aws_route53domains_domain" "example" {
   domain_name = "example.com"
+  auto_renew  = false
 
-  name_server {
-    name = "ns-195.awsdns-24.com"
+  admin_contact {
+    address_line_1    = "101 Main Street"
+    city              = "San Francisco"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "terraform-acctest@example.com"
+    fax               = "+1.4155551234"
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.4155551234"
+    state             = "CA"
+    zip_code          = "94105"
   }
 
-  name_server {
-    name = "ns-874.awsdns-45.net"
+  registrant_contact {
+    address_line_1    = "101 Main Street"
+    city              = "San Francisco"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "terraform-acctest@example.com"
+    fax               = "+1.4155551234"
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.4155551234"
+    state             = "CA"
+    zip_code          = "94105"
+  }
+
+  tech_contact {
+    address_line_1    = "101 Main Street"
+    city              = "San Francisco"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "terraform-acctest@example.com"
+    fax               = "+1.4155551234"
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.4155551234"
+    state             = "CA"
+    zip_code          = "94105"
   }
 
   tags = {
@@ -40,17 +74,18 @@ resource "aws_route53domains_registered_domain" "example" {
 
 This resource supports the following arguments:
 
-* `admin_contact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
+* `admin_contact` - (Required) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
 * `auto_renew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
 * `billing_contact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
 * `billing_privacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
-* `domain_name` - (Required) The name of the registered domain.
+* `domain_name` - (Required) The name of the domain.
+* `duration_in_years` - (Optional) The number of years that you want to register the domain for. Domains are registered for a minimum of one year.
 * `name_server` - (Optional) The list of nameservers for the domain. See [`name_server` Blocks](#name_server-blocks) for more details.
-* `registrant_contact` - (Optional) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
+* `registrant_contact` - (Required) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
 * `registrant_privacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tech_contact` - (Optional) Details about the domain technical contact. See [Contact Blocks](#contact-blocks) for more details.
+* `tech_contact` - (Required) Details about the domain technical contact. See [Contact Blocks](#contact-blocks) for more details.
 * `tech_privacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 * `transfer_lock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
 
@@ -64,7 +99,9 @@ The `admin_contact`, `billing_contact`, `registrant_contact` and `tech_contact` 
 * `contact_type` - (Optional) Indicates whether the contact is a person, company, association, or public organization. See the [AWS API documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_ContactDetail.html#Route53Domains-Type-domains_ContactDetail-ContactType) for valid values.
 * `country_code` - (Optional) Code for the country of the contact's address. See the [AWS API documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_ContactDetail.html#Route53Domains-Type-domains_ContactDetail-CountryCode) for valid values.
 * `email` - (Optional) Email address of the contact.
-* `extra_params` - (Optional) A key-value map of parameters required by certain top-level domains.
+* `extra_param` - (Optional) A list of name-value pairs for parameters required by certain top-level domains.
+    * `name` - (Required) The name of an additional parameter that is required by a top-level domain.
+    * `value` - (Required) The value that corresponds with the name of an extra parameter.
 * `fax` - (Optional) Fax number of the contact. Phone number must be specified in the format "+[country dialing code].[number including any area code]".
 * `first_name` - (Optional) First name of contact.
 * `last_name` - (Optional) Last name of contact.
@@ -84,11 +121,11 @@ The `name_server` blocks supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The domain name.
 * `abuse_contact_email` - Email address to contact to report incorrect contact information for a domain, to report that the domain is being used to send spam, to report that someone is cybersquatting on a domain name, or report some other type of abuse.
 * `abuse_contact_phone` - Phone number for reporting abuse.
 * `creation_date` - The date when the domain was created as found in the response to a WHOIS query.
 * `expiration_date` - The date when the registration for the domain is set to expire.
+* `hosted_zone_id` - The ID of the public Route 53 hosted zone created for the domain. This hosted zone is deleted when the domain is deregistered.
 * `registrar_name` - Name of the registrar of the domain as identified in the registry.
 * `registrar_url` - Web address of the registrar.
 * `reseller` - Reseller of the domain.
@@ -103,6 +140,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -110,7 +148,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_route53domains_registered_domain.example
+  to = aws_route53domains_domain.example
   id = "example.com"
 }
 ```
@@ -118,5 +156,5 @@ import {
 Using `terraform import`, import domains using the domain name. For example:
 
 ```console
-% terraform import aws_route53domains_registered_domain.example example.com
+% terraform import aws_route53domains_domain.example example.com
 ```
