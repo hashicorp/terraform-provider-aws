@@ -19,26 +19,26 @@ import (
 )
 
 // @FrameworkDataSource("aws_vpc_ipams", name="AWS IPAM")
-func newDataSourceAwsVpcIpams(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAwsVpcIpams{}, nil
+func newDataSourceVPCIPAMs(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceVPCIPAMs{}, nil
 }
 
 const (
-	DSNameAwsVpcIpams = "AWS IPAMs Data Source"
+	DSNameVPCIPAMs = "AWS IPAMs Data Source"
 )
 
-type dataSourceAwsVpcIpams struct {
+type dataSourceVPCIPAMs struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceAwsVpcIpams) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceVPCIPAMs) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	resp.TypeName = "aws_vpc_ipams"
 }
 
-func (d *dataSourceAwsVpcIpams) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceVPCIPAMs) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"ipams": framework.DataSourceComputedListOfObjectAttribute[dataSourceAwsVpcIpamSummaryModel](ctx),
+			"ipams": framework.DataSourceComputedListOfObjectAttribute[dataSourceVPCIPAMSummaryModel](ctx),
 			"ipam_ids": schema.ListAttribute{
 				Optional:    true,
 				ElementType: types.StringType,
@@ -63,7 +63,7 @@ func (d *dataSourceAwsVpcIpams) Schema(ctx context.Context, req datasource.Schem
 	}
 }
 
-func findAwsVpcIpams(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsInput) ([]awstypes.Ipam, error) {
+func findVPCIPAMs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsInput) ([]awstypes.Ipam, error) {
 	var output []awstypes.Ipam
 
 	pages := ec2.NewDescribeIpamsPaginator(conn, input)
@@ -77,10 +77,10 @@ func findAwsVpcIpams(ctx context.Context, conn *ec2.Client, input *ec2.DescribeI
 	return output, nil
 }
 
-func (d *dataSourceAwsVpcIpams) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *dataSourceVPCIPAMs) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
 
-	var data dataSourceAwsVpcIpamsModel
+	var data dataSourceVPCIPAMsModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -92,10 +92,10 @@ func (d *dataSourceAwsVpcIpams) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	output, err := findAwsVpcIpams(ctx, conn, &input)
+	output, err := findVPCIPAMs(ctx, conn, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameAwsVpcIpams, "", err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameVPCIPAMs, "", err),
 			err.Error(),
 		)
 		return
@@ -114,8 +114,8 @@ type filterModel struct {
 	Values fwtypes.SetOfString `tfsdk:"values"`
 }
 
-type dataSourceAwsVpcIpamsModel struct {
-	Ipams   fwtypes.ListNestedObjectValueOf[dataSourceAwsVpcIpamSummaryModel] `tfsdk:"ipams"`
-	Filters fwtypes.ListNestedObjectValueOf[filterModel]                      `tfsdk:"filter"`
-	IpamIds types.List                                                        `tfsdk:"ipam_ids"`
+type dataSourceVPCIPAMsModel struct {
+	Ipams   fwtypes.ListNestedObjectValueOf[dataSourceVPCIPAMSummaryModel] `tfsdk:"ipams"`
+	Filters fwtypes.ListNestedObjectValueOf[filterModel]                   `tfsdk:"filter"`
+	IpamIds types.List                                                     `tfsdk:"ipam_ids"`
 }
