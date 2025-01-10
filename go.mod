@@ -217,7 +217,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.72.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.9
-	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.1
+	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.172.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.10
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.28.10
