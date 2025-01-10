@@ -473,22 +473,12 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	// TODO Delete associated hosted zone:
-	// % aws route53 list-hosted-zones
-	// {
-	// 	"HostedZones": [
-	// 		{
-	// 			"Id": "/hostedzone/Z04259161CEX7GET1UCX1",
-	// 			"Name": "tf-acc-test-002.click.",
-	// 			"CallerReference": "RISWorkflow-RD:0c5f36fb-7c78-4c40-8fb3-310d5961bdbe",
-	// 			"Config": {
-	// 				"Comment": "HostedZone created by Route53 Registrar",
-	// 				"PrivateZone": false
-	// 			},
-	// 			"ResourceRecordSetCount": 2
-	// 		}
-	// 	]
-	// }
+	// Delete the associated Route 53 hosted zone.
+	if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), fwflex.StringValueFromFramework(ctx, data.HostedZoneID), domainName, true); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Hosted Zone (%s)", domainName), err.Error())
+
+		return
+	}
 }
 
 func (r *domainResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
