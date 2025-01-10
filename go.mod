@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.9
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.3
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.8
