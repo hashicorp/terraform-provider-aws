@@ -40,19 +40,6 @@ func normalizeDomainNameToAPI(input string) string {
 			output.WriteRune(unicode.ToLower(ch))
 		case ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'z' || ch == '-' || ch == '.' || ch == '_':
 			output.WriteRune(ch)
-		case ch == '*':
-			// * as leftmost label is retained.
-			const (
-				lenDelimiter = 1
-			)
-			if output.Len() == 0 {
-				if bytes, err := br.Peek(lenDelimiter); err == nil && bytes[0] == '.' {
-					output.WriteRune(ch)
-					continue
-				}
-			}
-			// Three-digit octal code.
-			output.WriteString(fmt.Sprintf("\\%03o", ch))
 		case ch == '\\':
 			const (
 				lenOctalCode = 3
@@ -65,8 +52,7 @@ func normalizeDomainNameToAPI(input string) string {
 				_, _ = br.Discard(lenOctalCode)
 				continue
 			}
-			// Three-digit octal code.
-			output.WriteString(fmt.Sprintf("\\%03o", ch))
+			fallthrough
 		default:
 			// Three-digit octal code.
 			output.WriteString(fmt.Sprintf("\\%03o", ch))

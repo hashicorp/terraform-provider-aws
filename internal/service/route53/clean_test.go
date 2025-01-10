@@ -30,10 +30,7 @@ func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
 		{"AbC.example.com", "abc.example.com"},
 
 		// convert into escape code
-		{"*.example.com", "*.example.com"}, // * as leftmost label is retained
-		{"*bc.example.com", "\\052bc.example.com"},
-		{"a*c.example.com", "a\\052c.example.com"},
-		{"ab*.example.com", "ab\\052.example.com"},
+		{"*.example.com", "\\052.example.com"},
 		{"!.example.com", "\\041.example.com"},
 		{"a/b.example.com", "a\\057b.example.com"},
 		{"/.example.com", "\\057.example.com"},
@@ -64,8 +61,7 @@ func TestNormalizeAliasDomainName(t *testing.T) {
 		{"ipv6.name-123456789.region.elb.amazonaws.com", "ipv6.name-123456789.region.elb.amazonaws.com"},
 		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 		{"name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
-		{"\\176.example.com", "\\176.example.com"},
-		{"*.example.com", "*.example.com"},
+		{"\\052.example.com", "\\052.example.com"},
 		{42, ""},
 	}
 
