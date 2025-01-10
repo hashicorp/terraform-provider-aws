@@ -25,12 +25,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "Spot Data Feed Subscription Data Source",
 		},
 		{
-			Factory:  newDataSourceAwsVpcIpam,
+			Factory:  newDataSourceVPCIPAM,
 			TypeName: "aws_vpc_ipam",
 			Name:     "AWS IPAM",
 		},
 		{
-			Factory:  newDataSourceAwsVpcIpams,
+			Factory:  newDataSourceVPCIPAMs,
 			TypeName: "aws_vpc_ipams",
 			Name:     "AWS IPAM",
 		},

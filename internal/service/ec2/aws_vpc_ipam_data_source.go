@@ -19,23 +19,23 @@ import (
 )
 
 // @FrameworkDataSource("aws_vpc_ipam", name="AWS IPAM")
-func newDataSourceAwsVpcIpam(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAwsVpcIpam{}, nil
+func newDataSourceVPCIPAM(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceVPCIPAM{}, nil
 }
 
 const (
-	DSNameAwsVpcIpam = "AWS IPAM Data Source"
+	DSNameVPCIPAM = "AWS IPAM Data Source"
 )
 
-type dataSourceAwsVpcIpam struct {
+type dataSourceVPCIPAM struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceAwsVpcIpam) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceVPCIPAM) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	resp.TypeName = "aws_vpc_ipam"
 }
 
-func (d *dataSourceAwsVpcIpam) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -62,11 +62,11 @@ func (d *dataSourceAwsVpcIpam) Schema(ctx context.Context, req datasource.Schema
 			"enable_private_gua": schema.BoolAttribute{
 				Computed: true,
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Computed: true,
 			},
 			"operating_regions": framework.DataSourceComputedListOfObjectAttribute[ipamOperatingRegionModel](ctx),
-			"owner_id": schema.StringAttribute{
+			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 			},
 			"private_default_scope_id": schema.StringAttribute{
@@ -78,7 +78,7 @@ func (d *dataSourceAwsVpcIpam) Schema(ctx context.Context, req datasource.Schema
 			"resource_discovery_association_count": schema.Int32Attribute{
 				Computed: true,
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.IpamState](),
 			},
@@ -89,10 +89,10 @@ func (d *dataSourceAwsVpcIpam) Schema(ctx context.Context, req datasource.Schema
 	}
 }
 
-func (d *dataSourceAwsVpcIpam) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *dataSourceVPCIPAM) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
 
-	var data dataSourceAwsVpcIpamModel
+	var data dataSourceVPCIPAMModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +101,7 @@ func (d *dataSourceAwsVpcIpam) Read(ctx context.Context, req datasource.ReadRequ
 	ipam, err := findIPAMByID(ctx, conn, data.IpamId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameAwsVpcIpam, data.IpamId.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameVPCIPAM, data.IpamId.String(), err),
 			err.Error(),
 		)
 		return
@@ -120,7 +120,7 @@ func (d *dataSourceAwsVpcIpam) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceAwsVpcIpamSummaryModel struct {
+type dataSourceVPCIPAMSummaryModel struct {
 	Description                           types.String                                              `tfsdk:"description"`
 	DefaultResourceDiscoveryAssociationId types.String                                              `tfsdk:"default_resource_discovery_association_id"`
 	DefaultResourceDiscoveryId            types.String                                              `tfsdk:"default_resource_discovery_id"`
@@ -139,8 +139,8 @@ type dataSourceAwsVpcIpamSummaryModel struct {
 	Tier                                  fwtypes.StringEnum[awstypes.IpamTier]                     `tfsdk:"tier"`
 }
 
-type dataSourceAwsVpcIpamModel struct {
-	dataSourceAwsVpcIpamSummaryModel
+type dataSourceVPCIPAMModel struct {
+	dataSourceVPCIPAMSummaryModel
 	Tags tftags.Map `tfsdk:"tags"`
 }
 

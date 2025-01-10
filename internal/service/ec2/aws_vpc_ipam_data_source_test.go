@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2AwsVpcIpamDataSourceBasic(t *testing.T) {
+func TestAccEC2VPCIPAMDataSource_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceName := "data.aws_vpc_ipam.test"
@@ -26,7 +26,7 @@ func TestAccEC2AwsVpcIpamDataSourceBasic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpcIpamDataSourceConfig_basic(),
+				Config: testAccVPCIPAMDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "operating_regions.0.region_name", resourceName, "operating_regions.0.region_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
@@ -36,7 +36,7 @@ func TestAccEC2AwsVpcIpamDataSourceBasic(t *testing.T) {
 	})
 }
 
-func testAccAwsVpcIpamDataSourceConfig_basic() string {
+func testAccVPCIPAMDataSourceConfig_basic() string {
 	return `
 data "aws_region" "current" {}
 
@@ -52,7 +52,7 @@ resource "aws_vpc_ipam" "test" {
 }
 
 data "aws_vpc_ipam" "test" {
-	id = aws_vpc_ipam.test.id
+  id = aws_vpc_ipam.test.id
 }
 `
 }
