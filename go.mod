@@ -121,7 +121,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/fis v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/fms v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/fsx v1.51.2
+	github.com/aws/aws-sdk-go-v2/service/fsx v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.8
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.29.8
