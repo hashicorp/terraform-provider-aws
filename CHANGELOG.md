@@ -1,4 +1,13 @@
 ## 5.84.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_media_packagev2_channel_group` ([#38406](https://github.com/hashicorp/terraform-provider-aws/issues/38406))
+
+BUG FIXES:
+
+* resource/aws_ecs_task_definition: Correctly detect differences in `volume.configure_at_launch` and `volume.docker_volume_configuration` ([#40853](https://github.com/hashicorp/terraform-provider-aws/issues/40853))
+
 ## 5.83.1 (January 10, 2025)
 
 BUG FIXES:
