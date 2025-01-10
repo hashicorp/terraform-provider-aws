@@ -6,6 +6,7 @@ package wafv2
 import (
 	"context"
 	"fmt"
+	"github.com/YakDriver/regexache"
 	"log"
 	"strings"
 	"time"
@@ -105,10 +106,13 @@ func resourceIPSet() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ForceNew:     true,
-					ValidateFunc: validation.StringLenBetween(1, 128),
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
 				},
 				names.AttrScope: {
 					Type:             schema.TypeString,
