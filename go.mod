@@ -150,7 +150,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.25.10
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.31.10
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.27.9
-	github.com/aws/aws-sdk-go-v2/service/kms v1.37.9
+	github.com/aws/aws-sdk-go-v2/service/kms v1.37.10
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.3
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.8
