@@ -58,6 +58,7 @@ const (
 type resourceResourceLFTag struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithNoUpdate
 }
 
 func (r *resourceResourceLFTag) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -419,17 +420,6 @@ func (r *resourceResourceLFTag) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourceLFTag) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ResourceResourceLFTagData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
 func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
@@ -461,13 +451,15 @@ func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	in.LFTags = []awstypes.LFTagPair{
-		{
-			TagKey: fwflex.StringFromFramework(ctx, lfTag.Key),
-			TagValues: []string{
-				lfTag.Value.ValueString(),
+	if lfTag != nil {
+		in.LFTags = []awstypes.LFTagPair{
+			{
+				TagKey: fwflex.StringFromFramework(ctx, lfTag.Key),
+				TagValues: []string{
+					lfTag.Value.ValueString(),
+				},
 			},
-		},
+		}
 	}
 
 	if in.Resource == nil || reflect.DeepEqual(in.Resource, &awstypes.Resource{}) || len(in.LFTags) == 0 {

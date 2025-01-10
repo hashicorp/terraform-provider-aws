@@ -30,6 +30,7 @@ const (
 	clusterStatusRenaming                      = "renaming"
 	clusterStatusResettingMasterCredentials    = "resetting-master-credentials"
 	clusterStatusScalingCompute                = "scaling-compute"
+	clusterStatusScalingStorage                = "scaling-storage"
 	clusterStatusUpgrading                     = "upgrading"
 
 	// Non-standard status values.
@@ -39,6 +40,7 @@ const (
 const (
 	clusterSnapshotStatusAvailable = "available"
 	clusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusCopying   = "copying"
 )
 
 const (
@@ -209,19 +211,20 @@ func engineLifecycleSupport_Values() []string {
 }
 
 const (
-	exportableLogTypeAgent      = "agent"
-	exportableLogTypeAlert      = "alert"
-	exportableLogTypeAudit      = "audit"
-	exportableLogTypeDiagLog    = "diag.log"
-	exportableLogTypeError      = "error"
-	exportableLogTypeGeneral    = "general"
-	exportableLogTypeListener   = "listener"
-	exportableLogTypeNotifyLog  = "notify.log"
-	exportableLogTypeOEMAgent   = "oemagent"
-	exportableLogTypePostgreSQL = "postgresql"
-	exportableLogTypeSlowQuery  = "slowquery"
-	exportableLogTypeTrace      = "trace"
-	exportableLogTypeUpgrade    = "upgrade"
+	exportableLogTypeAgent          = "agent"
+	exportableLogTypeAlert          = "alert"
+	exportableLogTypeAudit          = "audit"
+	exportableLogTypeDiagLog        = "diag.log"
+	exportableLogTypeError          = "error"
+	exportableLogTypeGeneral        = "general"
+	exportableLogTypeIAMDBAuthError = "iam-db-auth-error"
+	exportableLogTypeListener       = "listener"
+	exportableLogTypeNotifyLog      = "notify.log"
+	exportableLogTypeOEMAgent       = "oemagent"
+	exportableLogTypePostgreSQL     = "postgresql"
+	exportableLogTypeSlowQuery      = "slowquery"
+	exportableLogTypeTrace          = "trace"
+	exportableLogTypeUpgrade        = "upgrade"
 )
 
 func clusterExportableLogType_Values() []string {
@@ -229,6 +232,7 @@ func clusterExportableLogType_Values() []string {
 		exportableLogTypeAudit,
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
+		exportableLogTypeIAMDBAuthError,
 		exportableLogTypePostgreSQL,
 		exportableLogTypeSlowQuery,
 		exportableLogTypeUpgrade,

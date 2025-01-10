@@ -314,6 +314,7 @@ func RegisterSweepers() {
 			"aws_dx_gateway_association",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_ec2_transit_gateway_peering_attachment",
+			"aws_networkmanager_transit_gateway_route_table_attachment",
 			"aws_vpn_connection",
 		},
 	})
@@ -328,6 +329,7 @@ func RegisterSweepers() {
 		F:    sweepTransitGatewayConnects,
 		Dependencies: []string{
 			"aws_ec2_transit_gateway_connect_peer",
+			"aws_networkmanager_connect_attachment",
 		},
 	})
 
@@ -381,6 +383,7 @@ func RegisterSweepers() {
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
+			"aws_networkmanager_vpc_attachment",
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
@@ -402,6 +405,7 @@ func RegisterSweepers() {
 		F:    sweepVPNGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
+			"aws_networkmanager_site_to_site_vpn_attachment",
 			"aws_vpn_connection",
 		},
 	})

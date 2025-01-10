@@ -291,6 +291,44 @@ func TestAccAPIGatewayDomainName_privatePolicy(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayDomainName_privatePolicy_added(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainName apigateway.GetDomainNameOutput
+	resourceName := "aws_api_gateway_domain_name.test"
+	rName := acctest.RandomSubdomain()
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_private(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_id"),
+				),
+			},
+			{
+				Config: testAccDomainNameConfig_privatePolicy(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput

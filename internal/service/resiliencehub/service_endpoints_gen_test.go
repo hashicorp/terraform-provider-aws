@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListApps(ctx, &resiliencehub.ListAppsInput{},
+	input := resiliencehub.ListAppsInput{}
+	_, err := client.ListApps(ctx, &input,
 		func(opts *resiliencehub.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

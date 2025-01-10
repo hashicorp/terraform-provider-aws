@@ -161,6 +161,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mgn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -241,6 +242,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/taxsettings"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamquery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -412,6 +414,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		mediastore.ServicePackage(ctx),
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),
+		mgn.ServicePackage(ctx),
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
 		neptune.ServicePackage(ctx),
@@ -492,6 +495,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		synthetics.ServicePackage(ctx),
 		taxsettings.ServicePackage(ctx),
 		timestreaminfluxdb.ServicePackage(ctx),
+		timestreamquery.ServicePackage(ctx),
 		timestreamwrite.ServicePackage(ctx),
 		transcribe.ServicePackage(ctx),
 		transfer.ServicePackage(ctx),

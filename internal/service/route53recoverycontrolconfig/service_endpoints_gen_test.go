@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListClusters(ctx, &route53recoverycontrolconfig.ListClustersInput{},
+	input := route53recoverycontrolconfig.ListClustersInput{}
+	_, err := client.ListClusters(ctx, &input,
 		func(opts *route53recoverycontrolconfig.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

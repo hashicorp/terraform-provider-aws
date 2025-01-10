@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -39,12 +40,17 @@ func TestAccAMPScraper_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", "scraper/"+aws.ToString(scraper.ScraperId))(s)
+					},
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(scraper.ScraperId))(s)
+					},
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
@@ -206,9 +212,9 @@ func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDe
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
-	input := &amp.ListScrapersInput{}
+	input := amp.ListScrapersInput{}
 
-	_, err := conn.ListScrapers(ctx, input)
+	_, err := conn.ListScrapers(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

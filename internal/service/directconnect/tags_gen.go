@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *directconnect.Client, identifier string, optFns ...func(*directconnect.Options)) (tftags.KeyValueTags, error) {
-	input := &directconnect.DescribeTagsInput{
+	input := directconnect.DescribeTagsInput{
 		ResourceArns: []string{identifier},
 	}
 
-	output, err := conn.DescribeTags(ctx, input, optFns...)
+	output, err := conn.DescribeTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -118,12 +118,12 @@ func updateTags(ctx context.Context, conn *directconnect.Client, identifier stri
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DirectConnect)
 	if len(removedTags) > 0 {
-		input := &directconnect.UntagResourceInput{
+		input := directconnect.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -133,12 +133,12 @@ func updateTags(ctx context.Context, conn *directconnect.Client, identifier stri
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DirectConnect)
 	if len(updatedTags) > 0 {
-		input := &directconnect.TagResourceInput{
+		input := directconnect.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

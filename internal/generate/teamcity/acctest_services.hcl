@@ -44,6 +44,10 @@ service "bcmdataexports" {
   parallelism = 5
 }
 
+service "cleanrooms" {
+  parallelism = 10
+}
+
 service "cloudformation" {
   vpc_lock = true
 }

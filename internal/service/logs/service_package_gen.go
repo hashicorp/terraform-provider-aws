@@ -21,11 +21,40 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAnomalyDetector,
+			Factory: newAnomalyDetectorResource,
 			Name:    "Anomaly Detector",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory: newDeliveryDestinationPolicyResource,
+			Name:    "Delivery Destination Policy",
+		},
+		{
+			Factory: newDeliveryDestinationResource,
+			Name:    "Delivery Destination",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newDeliveryResource,
+			Name:    "Delivery",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newDeliverySourceResource,
+			Name:    "Delivery Source",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newIndexPolicyResource,
+			Name:    "Index Policy",
 		},
 	}
 }
@@ -47,6 +76,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceGroups,
 			TypeName: "aws_cloudwatch_log_groups",
+			Name:     "Log Groups",
 		},
 	}
 }
@@ -61,6 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDataProtectionPolicy,
 			TypeName: "aws_cloudwatch_log_data_protection_policy",
+			Name:     "Data Protection Policy",
 		},
 		{
 			Factory:  resourceDestination,
@@ -73,6 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDestinationPolicy,
 			TypeName: "aws_cloudwatch_log_destination_policy",
+			Name:     "Destination Policy",
 		},
 		{
 			Factory:  resourceGroup,
@@ -85,22 +117,27 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceMetricFilter,
 			TypeName: "aws_cloudwatch_log_metric_filter",
+			Name:     "Metric Filter",
 		},
 		{
 			Factory:  resourceResourcePolicy,
 			TypeName: "aws_cloudwatch_log_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
 			Factory:  resourceStream,
 			TypeName: "aws_cloudwatch_log_stream",
+			Name:     "Log Stream",
 		},
 		{
 			Factory:  resourceSubscriptionFilter,
 			TypeName: "aws_cloudwatch_log_subscription_filter",
+			Name:     "Subscription Filter",
 		},
 		{
 			Factory:  resourceQueryDefinition,
 			TypeName: "aws_cloudwatch_query_definition",
+			Name:     "Query Definition",
 		},
 	}
 }

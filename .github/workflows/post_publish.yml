@@ -83,8 +83,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     needs: [registry-check]
     steps:
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_wrapper: false
       - name: Specify Provider Version in TF Configuration
         run: |
           cat <<EOF > main.tf
@@ -92,7 +98,7 @@ jobs:
             required_providers {
               aws = {
                 source  = "hashicorp/aws"
-                version = ${{ needs.registry-check.outputs.latest-version }}
+                version = "${{ needs.registry-check.outputs.latest-version }}"
               }
             }
           }

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListMeshes(ctx, &appmesh.ListMeshesInput{},
+	input := appmesh.ListMeshesInput{}
+	_, err := client.ListMeshes(ctx, &input,
 		func(opts *appmesh.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
