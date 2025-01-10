@@ -5,5 +5,6 @@ package route53
 
 // Exports for use in other modules.
 var (
-	DeleteHostedZone = deleteHostedZone
+	DeleteHostedZone                 = deleteHostedZone
+	FindPublicHostedZoneByDomainName = findPublicHostedZoneByDomainName
 )

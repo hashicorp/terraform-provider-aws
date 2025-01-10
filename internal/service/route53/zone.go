@@ -530,3 +530,11 @@ func flattenVPCs(apiObjects []awstypes.VPC) []interface{} {
 
 	return tfList
 }
+
+func findPublicHostedZoneByDomainName(ctx context.Context, conn *route53.Client, domainName string) (*awstypes.HostedZone, error) {
+	input := route53.ListHostedZonesInput{}
+
+	return findHostedZone(ctx, conn, &input, func(v *awstypes.HostedZone) bool {
+		return !v.Config.PrivateZone && normalizeDomainName(v.Name) == normalizeDomainName(domainName)
+	})
+}
