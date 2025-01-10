@@ -65,7 +65,7 @@ func resourceCustomKeyStore() *schema.Resource {
 			},
 			"trust_anchor_certificate": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"xks_proxy_authentication_credential": {
