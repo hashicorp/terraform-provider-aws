@@ -67,17 +67,23 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `custom_key_store_type` - (Optional, ForceNew) Specifies the type of key store to create. The default value is `CLOUDHSM`.
-* `cloud_hsm_cluster_id` - (Optional) Cluster ID of CloudHSM. This argument is required for custom key stores with `custom_key_store_type` of `AWS_CLOUDHSM`.
-* `key_store_password` - (Optional) Specifies the `kmsuser` password for an AWS CloudHSM key store. This argument is required for custom key stores with a `custom_key_store_type` of `AWS_CLOUDHSM`.
-* `trust_anchor_certificate` - (Optional) Specifies the certificate for an AWS CloudHSM key store. This argument is required for custom key stores with a `custom_key_store_type` of `AWS_CLOUDHSM`.
-* `xks_proxy_authentication_credential` - (Optional) Specifies an authentication credential for the external key store proxy (XKS proxy). This argument is required for all custom key stores with a `custom_key_store_type` of `EXTERNAL_KEY_STORE`.
-* `xks_proxy_connectivity` - (Optional) Indicates how AWS KMS communicates with the external key store proxy. This argument is required for custom key stores with a `custom_key_store_type` of `EXTERNAL_KEY_STORE`.
-* `xks_proxy_uri_endpoint` - (Optional) Specifies the endpoint that AWS KMS uses to send requests to the external key store proxy (XKS proxy). This argument is required for custom key stores with a `custom_key_store_type` of `EXTERNAL_KEY_STORE`.
-* `xks_proxy_uri_path` - (Optional) Specifies the base path to the proxy APIs for this external key store. To find this value, see the documentation for your external key store proxy. This argument is required for all custom key stores with a `custom_key_store_type` of `EXTERNAL_KEY_STORE`.
-* `xks_proxy_vpc_endpoint_service_name` - (Optional) Specifies the name of the Amazon VPC endpoint service for interface endpoints that is used to communicate with your external key store proxy (XKS proxy). This argument is required when the value of `custom_key_store_type` is `EXTERNAL_KEY_STORE` and the value of `xks_proxy_connectivity` is `VPC_ENDPOINT_SERVICE`.
+* `custom_key_store_type` - (Optional, ForceNew) Specifies the type of key store to create. Valid values are `AWS_CLOUDHSM` and `EXTERNAL_KEY_STORE`. If omitted, AWS will default the value to `AWS_CLOUDHSM`.
 
-The `xks_proxy_authentication_credential` block supports the following arguments:
+If `custom_key_store_type` is `AWS_CLOUDHSM`, the following optional arguments must be set:
+
+* `cloud_hsm_cluster_id` - (Optional) Cluster ID of CloudHSM.
+* `key_store_password` - (Optional) Specifies the `kmsuser` password for an AWS CloudHSM key store.
+* `trust_anchor_certificate` - (Optional) Specifies the certificate for an AWS CloudHSM key store.
+
+If `custom_key_store_type` is `EXTERNAL_KEY_STORE`, the following optional arguments must be set:
+
+* `xks_proxy_authentication_credential` - (Optional) Specifies an authentication credential for the external key store proxy (XKS proxy). See [`xks_proxy_authentication_credential` attribute reference](#xks_proxy_authentication_credential-argument-reference) below.
+* `xks_proxy_connectivity` - (Optional) Indicates how AWS KMS communicates with the external key store proxy.
+* `xks_proxy_uri_endpoint` - (Optional) Specifies the endpoint that AWS KMS uses to send requests to the external key store proxy (XKS proxy).
+* `xks_proxy_uri_path` - (Optional) Specifies the base path to the proxy APIs for this external key store. To find this value, see the documentation for your external key store proxy.
+* `xks_proxy_vpc_endpoint_service_name` - (Optional) Specifies the name of the Amazon VPC endpoint service for interface endpoints that is used to communicate with your external key store proxy (XKS proxy). This argument is required when the value of `xks_proxy_connectivity` is `VPC_ENDPOINT_SERVICE`.
+
+### `xks_proxy_authentication_credential` Argument Reference
 
 * `access_key_id` - (Required) A unique identifier for the raw secret access key.
 * `raw_secret_access_key` - (Required) A secret string of 43-64 characters.
