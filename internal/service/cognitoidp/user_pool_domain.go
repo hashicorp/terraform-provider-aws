@@ -78,6 +78,10 @@ func resourceUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"managed_login_version": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 
 		CustomizeDiff: customdiff.ForceNewIfChange(names.AttrCertificateARN, func(_ context.Context, old, new, meta interface{}) bool {
@@ -94,8 +98,9 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 	domain := d.Get(names.AttrDomain).(string)
 	timeout := 1 * time.Minute
 	input := &cognitoidentityprovider.CreateUserPoolDomainInput{
-		Domain:     aws.String(domain),
-		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
+		Domain:              aws.String(domain),
+		UserPoolId:          aws.String(d.Get(names.AttrUserPoolID).(string)),
+		ManagedLoginVersion: aws.Int32(d.Get("managed_login_version").(int32)),
 	}
 
 	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
@@ -148,6 +153,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrS3Bucket, desc.S3Bucket)
 	d.Set(names.AttrUserPoolID, desc.UserPoolId)
 	d.Set(names.AttrVersion, desc.Version)
+	d.Set("managed_login_version", desc.ManagedLoginVersion)
 
 	return diags
 }
@@ -160,8 +166,9 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 		CustomDomainConfig: &awstypes.CustomDomainConfigType{
 			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 		},
-		Domain:     aws.String(d.Id()),
-		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
+		Domain:              aws.String(d.Id()),
+		UserPoolId:          aws.String(d.Get(names.AttrUserPoolID).(string)),
+		ManagedLoginVersion: aws.Int32(d.Get("managed_login_version").(int32)),
 	}
 
 	_, err := conn.UpdateUserPoolDomain(ctx, input)
