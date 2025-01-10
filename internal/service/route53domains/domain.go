@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -113,6 +114,12 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 			"expiration_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"hosted_zone_id": schema.StringAttribute{
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -367,6 +374,17 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	// Registering a domain creates a Route 53 hosted zone that has the same name as the domain.
+	hostedZone, err := tfroute53.FindPublicHostedZoneByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
+
+		return
+	}
+
+	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZone.Id)
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -493,6 +511,7 @@ type domainResourceModel struct {
 	DomainName        fwtypes.CaseInsensitiveString                       `tfsdk:"domain_name"`
 	DurationInYears   types.Int64                                         `tfsdk:"duration_in_years"`
 	ExpirationDate    timetypes.RFC3339                                   `tfsdk:"expiration_date"`
+	HostedZoneID      types.String                                        `tfsdk:"hosted_zone_id"`
 	NameServers       fwtypes.ListNestedObjectValueOf[nameserverModel]    `tfsdk:"name_server"`
 	RegistrantContact fwtypes.ListNestedObjectValueOf[contactDetailModel] `tfsdk:"registrant_contact"`
 	RegistrantPrivacy types.Bool                                          `tfsdk:"registrant_privacy"`
