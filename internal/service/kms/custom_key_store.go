@@ -54,8 +54,8 @@ func resourceCustomKeyStore() *schema.Resource {
 			"custom_key_store_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ForceNew:         true,
-				Default:          awstypes.CustomKeyStoreTypeAwsCloudhsm,
 				ValidateDiagFunc: enum.Validate[awstypes.CustomKeyStoreType](),
 			},
 			"key_store_password": {
