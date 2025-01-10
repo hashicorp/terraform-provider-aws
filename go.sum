@@ -153,8 +153,8 @@ github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.9 h1:0CFIGrMyqBc6
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.9/go.mod h1:JwzK3preawvQxSi66JSusdroyco/Nvx+9ie8qyiuOfU=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.9 h1:D1BUQJve6LYhwq/AgHXMdtL3YRJ1mvRd+zGFQmkplNc=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.9/go.mod h1:bjDg6YdXEIWpG6XOkSthwKal+B5JdBTg4zDjlLU6WjM=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.9 h1:45fUrgNmm/p7K3jZdUUAmmh+NvpjsTtgceFjDjKHpt8=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.9/go.mod h1:YKkFAyQpB2INvqQCRqund14d8HOwz3r8lA+9ZwzoPWs=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.10 h1:I4auvNO9LF+7vtFieaFiMZN7GhH3cC3846QbMNuxMtc=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.10/go.mod h1:RfRVBxE9vpabWILKktA2XqQXZTApkDuCvchm/bPvSn8=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.48.3 h1:dCHr9LHyvstMsKpvQE416MJZCsT0xwsO/JBdTkofzyA=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.48.3/go.mod h1:Rb0ZVYhF0yOeUKciNUNOsUwMwnlZCod7zyiF2+C7qVQ=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.9 h1:PrxvtpRaiYgMuIxaiODBsX1rtadAuyLw5EZVticjSyE=
