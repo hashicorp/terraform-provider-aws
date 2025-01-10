@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"log"
 	"strings"
 	"time"
@@ -106,9 +107,22 @@ func resourceIPSet() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name_prefix"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name"},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
@@ -133,7 +147,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateIPSetInput{
 		Addresses:        []string{},
 		IPAddressVersion: awstypes.IPAddressVersion(d.Get("ip_address_version").(string)),
@@ -157,6 +171,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(output.Summary.Id))
+	d.Set(names.AttrName, name) // Required in Read.
 
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
@@ -185,6 +200,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("ip_address_version", ipSet.IPAddressVersion)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ipSet.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ipSet.Name)))
 
 	return diags
 }

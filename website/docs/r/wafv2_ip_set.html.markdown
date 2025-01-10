@@ -31,7 +31,8 @@ resource "aws_wafv2_ip_set" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required, Forces new resource) A friendly name of the IP set.
+* `name` - (Optional, Forces new resource) A friendly name of the IP set. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the IP set.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
 * `ip_address_version` - (Required, Forces new resource) Specify IPV4 or IPV6. Valid values are `IPV4` or `IPV6`.

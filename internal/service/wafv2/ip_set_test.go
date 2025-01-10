@@ -6,6 +6,7 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -57,6 +58,64 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccIPSetImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2IPSet_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.IPSet
+	resourceName := "aws_wafv2_ip_set.ip_set"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPSetConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPSetExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccIPSetImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2IPSet_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.IPSet
+	resourceName := "aws_wafv2_ip_set.ip_set"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPSetConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPSetExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -378,6 +437,39 @@ resource "aws_wafv2_ip_set" "ip_set" {
   }
 }
 `, name)
+}
+
+func testAccIPSetConfig_nameGenerated() string {
+	return `
+resource "aws_wafv2_ip_set" "ip_set" {
+  description        = "test"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+  `
+}
+
+func testAccIPSetConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "ip_set" {
+  name_prefix        = %[1]q
+  description        = %[1]q
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+  `, namePrefix)
 }
 
 func testAccIPSetConfig_addresses(name string) string {
