@@ -361,7 +361,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Registering a domain creates a Route 53 hosted zone that has the same name as the domain.
-	hostedZone, err := tfroute53.FindPublicHostedZoneByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
+	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
@@ -369,7 +369,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZone.Id)
+	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -409,6 +409,16 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
+
+		return
+	}
+
+	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -460,10 +470,12 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 
 	// Delete the associated Route 53 hosted zone.
-	if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), fwflex.StringValueFromFramework(ctx, data.HostedZoneID), domainName, true); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Hosted Zone (%s)", domainName), err.Error())
+	if hostedZoneID := fwflex.StringValueFromFramework(ctx, data.HostedZoneID); hostedZoneID != "" {
+		if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), hostedZoneID, domainName, true); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Hosted Zone (%s)", hostedZoneID), err.Error())
 
-		return
+			return
+		}
 	}
 }
 
