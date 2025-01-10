@@ -304,38 +304,38 @@ func findCustomKeyStores(ctx context.Context, conn *kms.Client, input *kms.Descr
 	return output, nil
 }
 
-func expandXksProxyAuthenticationCredential(l []interface{}) *awstypes.XksProxyAuthenticationCredentialType {
-	if len(l) == 0 || l[0] == nil {
+func expandXksProxyAuthenticationCredential(tfList []interface{}) *awstypes.XksProxyAuthenticationCredentialType {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
-	result := &awstypes.XksProxyAuthenticationCredentialType{}
+	apiObject := &awstypes.XksProxyAuthenticationCredentialType{}
 
-	if accessKeyId, ok := tfMap["access_key_id"].(string); ok {
-		result.AccessKeyId = aws.String(accessKeyId)
+	if v, ok := tfMap["access_key_id"].(string); ok {
+		apiObject.AccessKeyId = aws.String(v)
 	}
 
-	if rawSecretAccessKey, ok := tfMap["raw_secret_access_key"].(string); ok {
-		result.RawSecretAccessKey = aws.String(rawSecretAccessKey)
+	if v, ok := tfMap["raw_secret_access_key"].(string); ok {
+		apiObject.RawSecretAccessKey = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
 // We flatten against `XksProxyConfigurationType` because that contains the `AccessKeyId` field
-func flattenXksProxyConfiguration(config *awstypes.XksProxyConfigurationType) []interface{} {
-	if config == nil {
+func flattenXksProxyConfiguration(apiObject *awstypes.XksProxyConfigurationType) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"access_key_id": aws.ToString(config.AccessKeyId),
+	tfMap := map[string]interface{}{
+		"access_key_id": aws.ToString(apiObject.AccessKeyId),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
