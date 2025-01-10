@@ -550,7 +550,37 @@ func fixupContactDetail(apiObject *awstypes.ContactDetail) {
 		return
 	}
 
+	if aws.ToString(apiObject.AddressLine1) == "" {
+		apiObject.AddressLine1 = nil
+	}
 	if aws.ToString(apiObject.AddressLine2) == "" {
 		apiObject.AddressLine2 = nil
+	}
+	if aws.ToString(apiObject.City) == "" {
+		apiObject.City = nil
+	}
+	if aws.ToString(apiObject.Email) == "" {
+		apiObject.Email = nil
+	}
+	if aws.ToString(apiObject.Fax) == "" {
+		apiObject.Fax = nil
+	}
+	if aws.ToString(apiObject.FirstName) == "" {
+		apiObject.FirstName = nil
+	}
+	if aws.ToString(apiObject.LastName) == "" {
+		apiObject.LastName = nil
+	}
+	if aws.ToString(apiObject.OrganizationName) == "" {
+		apiObject.OrganizationName = nil
+	}
+	if aws.ToString(apiObject.PhoneNumber) == "" {
+		apiObject.PhoneNumber = nil
+	}
+	if aws.ToString(apiObject.State) == "" {
+		apiObject.State = nil
+	}
+	if aws.ToString(apiObject.ZipCode) == "" {
+		apiObject.ZipCode = nil
 	}
 }
