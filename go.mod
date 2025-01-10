@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.10
 	github.com/aws/aws-sdk-go-v2/service/amp v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.28.2
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.3
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.24.9
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.11.8
