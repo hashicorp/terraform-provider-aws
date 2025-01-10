@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"log"
 	"strings"
 	"time"
@@ -69,9 +70,22 @@ func resourceRegexPatternSet() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name_prefix"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name"},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
@@ -113,7 +127,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateRegexPatternSetInput{
 		Name:                  aws.String(name),
 		RegularExpressionList: []awstypes.Regex{},
@@ -136,6 +150,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.ToString(output.Summary.Id))
+	d.Set(names.AttrName, name) // Required in Read.
 
 	return append(diags, resourceRegexPatternSetRead(ctx, d, meta)...)
 }
@@ -162,6 +177,7 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrDescription, regexPatternSet.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, regexPatternSet.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(regexPatternSet.Name)))
 	if err := d.Set("regular_expression", flattenRegexPatternSet(regexPatternSet.RegularExpressionList)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting regular_expression: %s", err)
 	}

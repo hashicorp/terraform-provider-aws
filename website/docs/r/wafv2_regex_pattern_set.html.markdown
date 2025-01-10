@@ -37,7 +37,8 @@ resource "aws_wafv2_regex_pattern_set" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) A friendly name of the regular expression pattern set.
+* `name` - (Optional, Forces new resource) A friendly name of the regular expression pattern set. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `regular_expression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`. See [Regular Expression](#regular-expression) below for details. A maximum of 10 `regular_expression` blocks may be specified.
