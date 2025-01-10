@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_ses_receipt_rul: Retry IAM eventual consistency errors
+resource/aws_ses_receipt_rule: Retry errors caused by IAM eventual consistency
 ```
