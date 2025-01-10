@@ -157,8 +157,8 @@ github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.10 h1:I4auvNO9LF+7vtF
 github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.10/go.mod h1:RfRVBxE9vpabWILKktA2XqQXZTApkDuCvchm/bPvSn8=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.48.4 h1:78+PSLTY1QcbesyoPKAnYRG+jFhcuZr17pGAQVxDTWw=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.48.4/go.mod h1:vPpQlrSaeqEX2s/iM5eqaSFUxVtBrpZFP9SOd25AZuY=
-github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.9 h1:PrxvtpRaiYgMuIxaiODBsX1rtadAuyLw5EZVticjSyE=
-github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.9/go.mod h1:B54u0dzMmGt47kJ98a/lFwByBscvrIWT2HX1p/szNWc=
+github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.10 h1:CatBzHfA3O0opsycXRU63hJcf8qCk5rONYtCxwRLQQY=
+github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.10/go.mod h1:35Zh1aJmBNJz7Dfuyz3sMqz+8K8CD90qhuYEk0Mh+hs=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.2 h1:DxMFMEcH8cXMB2KSfDSY/QWQ3LQMBbCRVS9OxB+D3s0=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.2/go.mod h1:mTG74QNXnV8f0Qr95VbKEUfE4a+9fh8rYTDwa5uvo3Y=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.51.3 h1:ybU+H4GCd6yQhe3HNQf5YCsJm5yAT0lIXxey4azQZWE=
