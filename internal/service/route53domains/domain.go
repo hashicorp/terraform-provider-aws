@@ -327,15 +327,15 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.DomainName) // Set 'id' so as to taint the resource.
+
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.DomainName) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Route 53 Domains Domain (%s) create", domainName), err.Error())
 
 		return
 	}
 
 	if err := createTags(ctx, conn, domainName, getTagsIn(ctx)); err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.DomainName) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("setting Route 53 Domains Domain (%s) tags", domainName), err.Error())
 
 		return
@@ -355,6 +355,17 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	fixupContactDetail(domainDetail.RegistrantContact)
 	fixupContactDetail(domainDetail.TechContact)
 
+	transferLock := hasDomainTransferLock(domainDetail.StatusList)
+	if v := fwflex.BoolValueFromFramework(ctx, data.TransferLock); v != transferLock {
+		if err := modifyDomainTransferLock(ctx, conn, domainName, v, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError("post-registration", err.Error())
+
+			return
+		}
+
+		transferLock = v
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -370,6 +381,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
+	data.TransferLock = types.BoolValue(transferLock)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -419,6 +431,10 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
+
+	transferLock := hasDomainTransferLock(domainDetail.StatusList)
+
+	data.TransferLock = types.BoolValue(transferLock)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
