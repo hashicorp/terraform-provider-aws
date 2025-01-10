@@ -51,16 +51,18 @@ func TestNormalizeAliasDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		input, output string
+		input  interface{}
+		output string
 	}{
 		{"www.example.com", "www.example.com"},
 		{"www.example.com.", "www.example.com"},
 		{"dualstack.name-123456789.region.elb.amazonaws.com", "dualstack.name-123456789.region.elb.amazonaws.com"},
-		{"dualstacktest.test", "dualstacktest.test"},
+		{aws.String("dualstacktest.test"), "dualstacktest.test"},
 		{"ipv6.name-123456789.region.elb.amazonaws.com", "ipv6.name-123456789.region.elb.amazonaws.com"},
 		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 		{"name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 		{"\\052.example.com", "\\052.example.com"},
+		{42, ""},
 	}
 
 	for _, tc := range cases {
