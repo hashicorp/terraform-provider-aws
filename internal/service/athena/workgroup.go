@@ -88,6 +88,24 @@ func resourceWorkGroup() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"identity_center_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable_identity_center": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"identity_center_instance_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -361,6 +379,10 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 		configuration.ExecutionRole = aws.String(v)
 	}
 
+	if v, ok := m["identity_center_configuration"]; ok {
+		configuration.IdentityCenterConfiguration = expandWorkGroupIdentityCenterConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
 		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
@@ -432,6 +454,26 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 	}
 
 	return configurationUpdates
+}
+
+func expandWorkGroupIdentityCenterConfiguration(l []interface{}) *types.IdentityCenterConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	identityCenterConfiguration := &types.IdentityCenterConfiguration{}
+
+	if v, ok := m["enable_identity_center"].(bool); ok {
+		identityCenterConfiguration.EnableIdentityCenter = aws.Bool(v)
+	}
+
+	if v, ok := m["identity_center_instance_arn"].(string); ok && v != "" {
+		identityCenterConfiguration.IdentityCenterInstanceArn = aws.String(v)
+	}
+
+	return identityCenterConfiguration
 }
 
 func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfiguration {
@@ -528,6 +570,7 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
 		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
 		"execution_role":                     aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":      flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
 		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.ToBool(configuration.RequesterPaysEnabled),
@@ -544,6 +587,19 @@ func flattenWorkGroupEngineVersion(engineVersion *types.EngineVersion) []interfa
 	m := map[string]interface{}{
 		"effective_engine_version": aws.ToString(engineVersion.EffectiveEngineVersion),
 		"selected_engine_version":  aws.ToString(engineVersion.SelectedEngineVersion),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWorkGroupIdentityCenterConfiguration(identityCenterConfiguration *types.IdentityCenterConfiguration) []interface{} {
+	if identityCenterConfiguration == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enable_identity_center":       aws.ToBool(identityCenterConfiguration.EnableIdentityCenter),
+		"identity_center_instance_arn": aws.ToString(identityCenterConfiguration.IdentityCenterInstanceArn),
 	}
 
 	return []interface{}{m}
