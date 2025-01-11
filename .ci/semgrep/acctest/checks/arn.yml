@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/connect"
         - "internal/service/controltower"
-        - "internal/service/dms"
         - "internal/service/docdb"
         - "internal/service/docdbelastic"
         - "internal/service/drs"
