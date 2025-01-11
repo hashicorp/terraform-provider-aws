@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/connect"
         - "internal/service/controltower"
-        - "internal/service/datazone"
         - "internal/service/deploy"
         - "internal/service/directconnect"
         - "internal/service/dms"
