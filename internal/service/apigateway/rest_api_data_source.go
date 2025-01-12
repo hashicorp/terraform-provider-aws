@@ -94,9 +94,9 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName)
-	inputGRAs := &apigateway.GetRestApisInput{}
 
-	match, err := findRestAPI(ctx, conn, inputGRAs, func(v *types.RestApi) bool {
+	inputGRAs := apigateway.GetRestApisInput{}
+	match, err := findRestAPI(ctx, conn, &inputGRAs, func(v *types.RestApi) bool {
 		return aws.ToString(v.Name) == name
 	})
 
@@ -120,11 +120,10 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set(names.AttrPolicy, match.Policy)
 
-	inputGRs := &apigateway.GetResourcesInput{
+	inputGRs := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
 	}
-
-	rootResource, err := findResource(ctx, conn, inputGRs, func(v *types.Resource) bool {
+	rootResource, err := findResource(ctx, conn, &inputGRs, func(v *types.Resource) bool {
 		return aws.ToString(v.Path) == "/"
 	})
 

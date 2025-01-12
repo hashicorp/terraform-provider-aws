@@ -110,7 +110,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.PutMethodInput{
+	input := apigateway.PutMethodInput{
 		ApiKeyRequired:    d.Get("api_key_required").(bool),
 		AuthorizationType: aws.String(d.Get("authorization").(string)),
 		HttpMethod:        aws.String(d.Get("http_method").(string)),
@@ -142,7 +142,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.RequestValidatorId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutMethod(ctx, input)
+	_, err := conn.PutMethod(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Method: %s", err)
@@ -284,14 +284,14 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 	}
 
-	input := &apigateway.UpdateMethodInput{
+	input := apigateway.UpdateMethodInput{
 		HttpMethod:      aws.String(d.Get("http_method").(string)),
 		PatchOperations: operations,
 		ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 	}
 
-	_, err := conn.UpdateMethod(ctx, input)
+	_, err := conn.UpdateMethod(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Method (%s): %s", d.Id(), err)
 	}
@@ -308,11 +308,12 @@ func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
-	_, err := conn.DeleteMethod(ctx, &apigateway.DeleteMethodInput{
+	input := apigateway.DeleteMethodInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-	})
+	}
+	_, err := conn.DeleteMethod(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -365,14 +366,14 @@ func updateIntegration(ctx context.Context, d *schema.ResourceData, conn *apigat
 			return nil
 		}
 
-		input := &apigateway.UpdateIntegrationInput{
+		input := apigateway.UpdateIntegrationInput{
 			HttpMethod:      aws.String(d.Get("http_method").(string)),
 			PatchOperations: integrationOperations,
 			ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
 			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 		}
 
-		_, err = conn.UpdateIntegration(ctx, input)
+		_, err = conn.UpdateIntegration(ctx, &input)
 
 		if err != nil {
 			return err
@@ -383,13 +384,13 @@ func updateIntegration(ctx context.Context, d *schema.ResourceData, conn *apigat
 }
 
 func findMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetMethodOutput, error) {
-	input := &apigateway.GetMethodInput{
+	input := apigateway.GetMethodInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
 		RestApiId:  aws.String(apiID),
 	}
 
-	output, err := conn.GetMethod(ctx, input)
+	output, err := conn.GetMethod(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

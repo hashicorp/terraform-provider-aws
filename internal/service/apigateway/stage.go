@@ -176,7 +176,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	deploymentID := d.Get("deployment_id").(string)
-	input := &apigateway.CreateStageInput{
+	input := apigateway.CreateStageInput{
 		RestApiId:    aws.String(apiID),
 		StageName:    aws.String(stageName),
 		DeploymentId: aws.String(deploymentID),
@@ -214,7 +214,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.TracingEnabled = v.(bool)
 	}
 
-	output, err := conn.CreateStage(ctx, input)
+	output, err := conn.CreateStage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Stage (%s): %s", stageName, err)
@@ -387,13 +387,13 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		input := &apigateway.UpdateStageInput{
+		input := apigateway.UpdateStageInput{
 			RestApiId:       aws.String(apiID),
 			StageName:       aws.String(stageName),
 			PatchOperations: operations,
 		}
 
-		output, err := conn.UpdateStage(ctx, input)
+		output, err := conn.UpdateStage(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Stage (%s): %s", d.Id(), err)
@@ -414,10 +414,11 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
-	_, err := conn.DeleteStage(ctx, &apigateway.DeleteStageInput{
+	input := apigateway.DeleteStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
-	})
+	}
+	_, err := conn.DeleteStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -431,12 +432,12 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, stageName string) (*apigateway.GetStageOutput, error) {
-	input := &apigateway.GetStageInput{
+	input := apigateway.GetStageInput{
 		RestApiId: aws.String(apiID),
 		StageName: aws.String(stageName),
 	}
 
-	output, err := conn.GetStage(ctx, input)
+	output, err := conn.GetStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
