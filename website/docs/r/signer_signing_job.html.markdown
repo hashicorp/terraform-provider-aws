@@ -45,6 +45,7 @@ resource "aws_signer_signing_job" "build_signing_job" {
 * `source` - (Required) The S3 bucket that contains the object to sign. See [Source](#source) below for details.
 * `destination` - (Required) The S3 bucket in which to save your signed object. See [Destination](#destination) below for details.
 * `ignore_signing_job_failure` - (Optional) Set this argument to `true` to ignore signing job failures and retrieve failed status and reason. Default `false`.
+* `profile_owner` - (Optional) The AWS account ID of the signing profile owner.
 
 ### Source
 
