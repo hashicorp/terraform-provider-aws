@@ -441,7 +441,12 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	v, err := findInstanceTypeByName(ctx, conn, d.Get(names.AttrInstanceType).(string))
+	name := d.Get(names.AttrInstanceType).(string)
+	v, err := findInstanceTypeByName(ctx, conn, name)
+
+	if err == nil && (v.EbsInfo == nil || v.NetworkInfo == nil || v.PlacementGroupInfo == nil || v.ProcessorInfo == nil || v.VCpuInfo == nil) {
+		err = tfresource.NewEmptyResultError(name)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
@@ -462,80 +467,80 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("ebs_encryption_support", v.EbsInfo.EncryptionSupport)
 	d.Set("ebs_nvme_support", v.EbsInfo.NvmeSupport)
 	d.Set("ebs_optimized_support", v.EbsInfo.EbsOptimizedSupport)
-	if v.EbsInfo.EbsOptimizedInfo != nil {
-		d.Set("ebs_performance_baseline_bandwidth", v.EbsInfo.EbsOptimizedInfo.BaselineBandwidthInMbps)
-		d.Set("ebs_performance_baseline_throughput", v.EbsInfo.EbsOptimizedInfo.BaselineThroughputInMBps)
-		d.Set("ebs_performance_baseline_iops", v.EbsInfo.EbsOptimizedInfo.BaselineIops)
-		d.Set("ebs_performance_maximum_bandwidth", v.EbsInfo.EbsOptimizedInfo.MaximumBandwidthInMbps)
-		d.Set("ebs_performance_maximum_throughput", v.EbsInfo.EbsOptimizedInfo.MaximumThroughputInMBps)
-		d.Set("ebs_performance_maximum_iops", v.EbsInfo.EbsOptimizedInfo.MaximumIops)
+	if v := v.EbsInfo.EbsOptimizedInfo; v != nil {
+		d.Set("ebs_performance_baseline_bandwidth", v.BaselineBandwidthInMbps)
+		d.Set("ebs_performance_baseline_throughput", v.BaselineThroughputInMBps)
+		d.Set("ebs_performance_baseline_iops", v.BaselineIops)
+		d.Set("ebs_performance_maximum_bandwidth", v.MaximumBandwidthInMbps)
+		d.Set("ebs_performance_maximum_throughput", v.MaximumThroughputInMBps)
+		d.Set("ebs_performance_maximum_iops", v.MaximumIops)
 	}
 	d.Set("efa_supported", v.NetworkInfo.EfaSupported)
-	if v.NetworkInfo.EfaInfo != nil {
-		d.Set("efa_maximum_interfaces", v.NetworkInfo.EfaInfo.MaximumEfaInterfaces)
+	if v := v.NetworkInfo.EfaInfo; v != nil {
+		d.Set("efa_maximum_interfaces", v.MaximumEfaInterfaces)
 	}
 	d.Set("ena_srd_supported", v.NetworkInfo.EnaSrdSupported)
 	d.Set("ena_support", v.NetworkInfo.EnaSupport)
 	d.Set("encryption_in_transit_supported", v.NetworkInfo.EncryptionInTransitSupported)
-	if v.FpgaInfo != nil {
-		fpgaList := make([]interface{}, len(v.FpgaInfo.Fpgas))
-		for i, fpg := range v.FpgaInfo.Fpgas {
-			fpga := map[string]interface{}{
-				"count":        aws.ToInt32(fpg.Count),
-				"manufacturer": aws.ToString(fpg.Manufacturer),
-				"memory_size":  aws.ToInt32(fpg.MemoryInfo.SizeInMiB),
-				names.AttrName: aws.ToString(fpg.Name),
+	if v := v.FpgaInfo; v != nil {
+		tfList := make([]interface{}, len(v.Fpgas))
+		for i, v := range v.Fpgas {
+			tfMap := map[string]interface{}{
+				"count":        aws.ToInt32(v.Count),
+				"manufacturer": aws.ToString(v.Manufacturer),
+				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(v.Name),
 			}
-			fpgaList[i] = fpga
+			tfList[i] = tfMap
 		}
-		d.Set("fpgas", fpgaList)
-		d.Set("total_fpga_memory", v.FpgaInfo.TotalFpgaMemoryInMiB)
+		d.Set("fpgas", tfList)
+		d.Set("total_fpga_memory", v.TotalFpgaMemoryInMiB)
 	}
 	d.Set("free_tier_eligible", v.FreeTierEligible)
-	if v.GpuInfo != nil {
-		gpuList := make([]interface{}, len(v.GpuInfo.Gpus))
-		for i, gp := range v.GpuInfo.Gpus {
-			gpu := map[string]interface{}{
-				"count":        aws.ToInt32(gp.Count),
-				"manufacturer": aws.ToString(gp.Manufacturer),
-				"memory_size":  aws.ToInt32(gp.MemoryInfo.SizeInMiB),
-				names.AttrName: aws.ToString(gp.Name),
+	if v := v.GpuInfo; v != nil {
+		tfList := make([]interface{}, len(v.Gpus))
+		for i, v := range v.Gpus {
+			tfMap := map[string]interface{}{
+				"count":        aws.ToInt32(v.Count),
+				"manufacturer": aws.ToString(v.Manufacturer),
+				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(v.Name),
 			}
-			gpuList[i] = gpu
+			tfList[i] = tfMap
 		}
-		d.Set("gpus", gpuList)
-		d.Set("total_gpu_memory", v.GpuInfo.TotalGpuMemoryInMiB)
+		d.Set("gpus", tfList)
+		d.Set("total_gpu_memory", v.TotalGpuMemoryInMiB)
 	}
 	d.Set("hibernation_supported", v.HibernationSupported)
 	d.Set("hypervisor", v.Hypervisor)
-	if info := v.InferenceAcceleratorInfo; info != nil {
-		acceleratorList := make([]interface{}, len(info.Accelerators))
-		for i, accl := range info.Accelerators {
-			accelerator := map[string]interface{}{
-				"count":        aws.ToInt32(accl.Count),
-				"manufacturer": aws.ToString(accl.Manufacturer),
-				"memory_size":  aws.ToInt32(accl.MemoryInfo.SizeInMiB),
-				names.AttrName: aws.ToString(accl.Name),
+	if v := v.InferenceAcceleratorInfo; v != nil {
+		tfList := make([]interface{}, len(v.Accelerators))
+		for i, v := range v.Accelerators {
+			tfMap := map[string]interface{}{
+				"count":        aws.ToInt32(v.Count),
+				"manufacturer": aws.ToString(v.Manufacturer),
+				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(v.Name),
 			}
-			acceleratorList[i] = accelerator
+			tfList[i] = tfMap
 		}
-		d.Set("inference_accelerators", acceleratorList)
-		d.Set("total_inference_memory", info.TotalInferenceMemoryInMiB)
+		d.Set("inference_accelerators", tfList)
+		d.Set("total_inference_memory", v.TotalInferenceMemoryInMiB)
 	}
-	if v.InstanceStorageInfo != nil {
-		if v.InstanceStorageInfo.Disks != nil {
-			diskList := make([]interface{}, len(v.InstanceStorageInfo.Disks))
-			for i, dk := range v.InstanceStorageInfo.Disks {
-				disk := map[string]interface{}{
-					"count":        aws.ToInt32(dk.Count),
-					names.AttrSize: aws.ToInt64(dk.SizeInGB),
-					names.AttrType: dk.Type,
+	if v := v.InstanceStorageInfo; v != nil {
+		if v := v.Disks; v != nil {
+			tfList := make([]interface{}, len(v))
+			for i, v := range v {
+				tfMap := map[string]interface{}{
+					"count":        aws.ToInt32(v.Count),
+					names.AttrSize: aws.ToInt64(v.SizeInGB),
+					names.AttrType: v.Type,
 				}
-				diskList[i] = disk
+				tfList[i] = tfMap
 			}
-			d.Set("instance_disks", diskList)
+			d.Set("instance_disks", tfList)
 		}
-		d.Set("total_instance_storage", v.InstanceStorageInfo.TotalSizeInGB)
+		d.Set("total_instance_storage", v.TotalSizeInGB)
 	}
 	d.Set("instance_storage_supported", v.InstanceStorageSupported)
 	d.Set(names.AttrInstanceType, v.InstanceType)
@@ -544,59 +549,57 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)
 	d.Set("maximum_network_cards", v.NetworkInfo.MaximumNetworkCards)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
-	if info := v.MediaAcceleratorInfo; info != nil {
-		acceleratorList := make([]interface{}, len(info.Accelerators))
-		for i, accl := range info.Accelerators {
-			accelerator := map[string]interface{}{
-				"count":        aws.ToInt32(accl.Count),
-				"manufacturer": aws.ToString(accl.Manufacturer),
-				"memory_size":  aws.ToInt32(accl.MemoryInfo.SizeInMiB),
-				names.AttrName: aws.ToString(accl.Name),
+	if v := v.MediaAcceleratorInfo; v != nil {
+		tfList := make([]interface{}, len(v.Accelerators))
+		for i, v := range v.Accelerators {
+			tfMap := map[string]interface{}{
+				"count":        aws.ToInt32(v.Count),
+				"manufacturer": aws.ToString(v.Manufacturer),
+				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(v.Name),
 			}
-			acceleratorList[i] = accelerator
+			tfList[i] = tfMap
 		}
-		d.Set("media_accelerators", acceleratorList)
-		d.Set("total_media_memory", info.TotalMediaMemoryInMiB)
+		d.Set("media_accelerators", tfList)
+		d.Set("total_media_memory", v.TotalMediaMemoryInMiB)
 	}
 	d.Set("memory_size", v.MemoryInfo.SizeInMiB)
-	if info := v.NeuronInfo; info != nil {
-		deviceList := make([]interface{}, len(info.NeuronDevices))
-		for i, d := range info.NeuronDevices {
-			device := map[string]interface{}{
-				"count":        aws.ToInt32(d.Count),
-				"core_count":   aws.ToInt32(d.CoreInfo.Count),
-				"core_version": aws.ToInt32(d.CoreInfo.Version),
-				"memory_size":  aws.ToInt32(d.MemoryInfo.SizeInMiB),
-				names.AttrName: aws.ToString(d.Name),
+	if v := v.NeuronInfo; v != nil {
+		tfList := make([]interface{}, len(v.NeuronDevices))
+		for i, v := range v.NeuronDevices {
+			tfMap := map[string]interface{}{
+				"count":        aws.ToInt32(v.Count),
+				"core_count":   aws.ToInt32(v.CoreInfo.Count),
+				"core_version": aws.ToInt32(v.CoreInfo.Version),
+				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(v.Name),
 			}
-			deviceList[i] = device
+			tfList[i] = tfMap
 		}
-		d.Set("neuron_devices", deviceList)
-		d.Set("total_neuron_device_memory", info.TotalNeuronDeviceMemoryInMiB)
+		d.Set("neuron_devices", tfList)
+		d.Set("total_neuron_device_memory", v.TotalNeuronDeviceMemoryInMiB)
 	}
 	d.Set("nitro_enclaves_support", v.NitroEnclavesSupport)
 	d.Set("nitro_tpm_support", v.NitroTpmSupport)
-	var nitroTpmSupportedVersions []string
+	var nitroTPMSupportedVersions []string
 	if v.NitroTpmInfo != nil {
-		nitroTpmSupportedVersions = v.NitroTpmInfo.SupportedVersions
-	} else {
-		nitroTpmSupportedVersions = []string{}
+		nitroTPMSupportedVersions = v.NitroTpmInfo.SupportedVersions
 	}
-	d.Set("nitro_tpm_supported_versions", nitroTpmSupportedVersions)
+	d.Set("nitro_tpm_supported_versions", nitroTPMSupportedVersions)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)
-	if info := v.NetworkInfo; info != nil {
-		cardList := make([]interface{}, len(info.NetworkCards))
-		for i, c := range info.NetworkCards {
-			card := map[string]interface{}{
-				"baseline_bandwidth": aws.ToFloat64(c.BaselineBandwidthInGbps),
-				"index":              aws.ToInt32(c.NetworkCardIndex),
-				"maximum_interfaces": aws.ToInt32(c.MaximumNetworkInterfaces),
-				"peak_bandwidth":     aws.ToFloat64(c.PeakBandwidthInGbps),
-				"performance":        aws.ToString(c.NetworkPerformance),
+	if v := v.NetworkInfo; v != nil {
+		tfList := make([]interface{}, len(v.NetworkCards))
+		for i, v := range v.NetworkCards {
+			tfMap := map[string]interface{}{
+				"baseline_bandwidth": aws.ToFloat64(v.BaselineBandwidthInGbps),
+				"index":              aws.ToInt32(v.NetworkCardIndex),
+				"maximum_interfaces": aws.ToInt32(v.MaximumNetworkInterfaces),
+				"peak_bandwidth":     aws.ToFloat64(v.PeakBandwidthInGbps),
+				"performance":        aws.ToString(v.NetworkPerformance),
 			}
-			cardList[i] = card
+			tfList[i] = tfMap
 		}
-		d.Set("network_cards", cardList)
+		d.Set("network_cards", tfList)
 	}
 	d.Set("phc_support", v.PhcSupport)
 	d.Set("supported_architectures", v.ProcessorInfo.SupportedArchitectures)
