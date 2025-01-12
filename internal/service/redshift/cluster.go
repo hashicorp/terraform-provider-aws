@@ -103,6 +103,10 @@ func resourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
+			name.AttrClusterStatus: {
+				Type:    schema.TypeString,
+				Computed: true,
+			},
 			"cluster_namespace_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -149,10 +153,10 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{clusterTypeSingleNode, clusterTypeMultiNode}, false),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+
 			},
 			"cluster_version": {
 				Type:     schema.TypeString,
@@ -319,9 +323,9 @@ func resourceCluster() *schema.Resource {
 				Required: true,
 			},
 			"number_of_nodes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Default:       1,
 				ValidateFunc: validation.IntBetween(1, 100),
 			},
 			"owner_account": {
@@ -413,7 +417,6 @@ func resourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				fmt.Println("IN CustomizeDiff")
 				azRelocationEnabled, multiAZ := diff.Get("availability_zone_relocation_enabled").(bool), diff.Get("multi_az").(bool)
 
 				if azRelocationEnabled && multiAZ {
@@ -592,7 +595,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get(names.AttrClusterIdentifier).(string))
 		}
 
-		// TODO: CHECK for cluster status
+		if _, ok := d.GetOk("number_of_nodes"); !ok {
+			if _, ok := d.GetOk("cluster_type"); !ok {
+				fmt.Println(diags, "provider.aws: aws_redshift_cluster: %s: one of \"cluster_type\" or \"number_of_nodes\" is required", d.Get(names.AttrClusterIdentifier).(string))
+			}
+		}
+
 		if v := d.Get("number_of_nodes").(int); v > 1 {
 			inputC.ClusterType = aws.String(clusterTypeMultiNode)
 			inputC.NumberOfNodes = aws.Int32(int32(d.Get("number_of_nodes").(int)))
@@ -687,6 +695,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
+	d.Set("cluster_status", rsc.ClusterStatus)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
 	// TODO: check cluster status!!!
 	if len(rsc.ClusterNodes) > 1 {
@@ -780,19 +789,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManualSnapshotRetentionPeriod = aws.Int32(int32(d.Get("manual_snapshot_retention_period").(int)))
 		}
 
-		// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
-		// items to be sent over.
-		if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
-			// do not do anything if the cluster is suspended
-			input.NodeType = aws.String(d.Get("node_type").(string))
+		if v, ok := d.GetOk(names.AttrClusterStatus); ok &&  {
+			status = aws.String(v.(string))
+			if *status != "paused" {
+				// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
+				// items to be sent over.
+				if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
+					// do not do anything if the cluster is suspended
+					input.NodeType = aws.String(d.Get("node_type").(string))
 
-			if v := d.Get("number_of_nodes").(int); v > 1 {
-				input.ClusterType = aws.String(clusterTypeMultiNode)
-				input.NumberOfNodes = aws.Int32(int32(d.Get("number_of_nodes").(int)))
-			} else {
-				input.ClusterType = aws.String(clusterTypeSingleNode)
+					if v := d.Get("number_of_nodes").(int); v > 1 {
+						input.ClusterType = aws.String(clusterTypeMultiNode)
+						input.NumberOfNodes = aws.Int32(int32(d.Get("number_of_nodes").(int)))
+					} else {
+						input.ClusterType = aws.String(clusterTypeSingleNode)
+					}
+				}
 			}
-		}
+        }
+
 
 		if d.HasChange("cluster_version") {
 			input.ClusterVersion = aws.String(d.Get("cluster_version").(string))
