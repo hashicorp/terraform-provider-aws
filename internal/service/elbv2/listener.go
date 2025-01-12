@@ -389,43 +389,63 @@ func resourceListener() *schema.Resource {
 				},
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
 			},
-			"ssl_policy": {
+			"routing_http_request_x_amzn_mtls_clientcert_header_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tcp_idle_timeout_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(60, 6000),
-				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
-			},
-			"routing_http_response_server_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_strict_transport_security_header_value": {
+			"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
 			},
-			"routing_http_response_access_control_allow_origin_header_value": {
+			"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
 			},
-			"routing_http_response_access_control_allow_methods_header_value": {
+			"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_subject_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_validity_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_tls_version_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_allow_credentials_header_value": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -439,7 +459,14 @@ func resourceListener() *schema.Resource {
 				// Attribute only valid for HTTP and HTTPS (ALB) listeners
 				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
 			},
-			"routing_http_response_access_control_allow_credentials_header_value": {
+			"routing_http_response_access_control_allow_methods_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_allow_origin_header_value": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -467,6 +494,20 @@ func resourceListener() *schema.Resource {
 				// Attribute only valid for HTTP and HTTPS (ALB) listeners
 				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
 			},
+			"routing_http_response_server_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_strict_transport_security_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
 			"routing_http_response_x_content_type_options_header_value": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -481,61 +522,20 @@ func resourceListener() *schema.Resource {
 				// Attribute only valid for HTTP and HTTPS (ALB) listeners
 				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
 			},
-			"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
+			"ssl_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
 			},
-			"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_subject_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_validity_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_tls_version_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tcp_idle_timeout_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(60, 6000),
+				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
 			},
 		},
 
@@ -615,8 +615,8 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Protocol = awstypes.ProtocolEnum(v.(string))
 	} else if strings.Contains(lbARN, "loadbalancer/app/") {
 		// Default to HTTP for Application Load Balancers if no protocol specified
-		// and no certificate ARN is present
-		if _, certOk := d.GetOk(names.AttrCertificateARN); certOk {
+		// and no certificate ARN is present.
+		if _, ok := d.GetOk(names.AttrCertificateARN); ok {
 			input.Protocol = awstypes.ProtocolEnumHttps
 		} else {
 			input.Protocol = awstypes.ProtocolEnumHttp
@@ -878,20 +878,30 @@ type listenerAttributeInfo struct {
 type listenerAttributeMap map[string]listenerAttributeInfo
 
 var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
-	// Attribute only supported on TCP and GENEVE listeners
+	// Attribute only supported on TCP and GENEVE listeners.
 	"tcp_idle_timeout_seconds": {
 		apiAttributeKey:        "tcp.idle_timeout.seconds",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumGeneve},
 		tfType:                 schema.TypeInt,
 	},
-	// Attributes only supported on HTTPS listeners
-	"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
-		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_serial_number.header_name",
+	// Attributes only supported on HTTPS listeners.
+	"routing_http_request_x_amzn_mtls_clientcert_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert.header_name",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
 	"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name": {
 		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_issuer.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_leaf.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_serial_number.header_name",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
@@ -905,13 +915,8 @@ var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
-	"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
-		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_leaf.header_name",
-		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
-		tfType:                 schema.TypeString,
-	},
-	"routing_http_request_x_amzn_mtls_clientcert_header_name": {
-		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert.header_name",
+	"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_tls_cipher_suite.header_name",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
@@ -920,29 +925,9 @@ var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
-	"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
-		apiAttributeKey:        "routing.http.request.x_amzn_tls_cipher_suite.header_name",
-		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
-		tfType:                 schema.TypeString,
-	},
-	// Attributes only supported on HTTPS and HTTPS listeners
-	"routing_http_response_server_enabled": {
-		apiAttributeKey:        "routing.http.response.server.enabled",
-		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
-		tfType:                 schema.TypeBool,
-	},
-	"routing_http_response_strict_transport_security_header_value": {
-		apiAttributeKey:        "routing.http.response.strict_transport_security.header_value",
-		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
-		tfType:                 schema.TypeString,
-	},
-	"routing_http_response_access_control_allow_origin_header_value": {
-		apiAttributeKey:        "routing.http.response.access_control_allow_origin.header_value",
-		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
-		tfType:                 schema.TypeString,
-	},
-	"routing_http_response_access_control_allow_methods_header_value": {
-		apiAttributeKey:        "routing.http.response.access_control_allow_methods.header_value",
+	// Attributes only supported on HTTPS and HTTPS listeners.
+	"routing_http_response_access_control_allow_credentials_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_allow_credentials.header_value",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
@@ -951,8 +936,13 @@ var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
-	"routing_http_response_access_control_allow_credentials_header_value": {
-		apiAttributeKey:        "routing.http.response.access_control_allow_credentials.header_value",
+	"routing_http_response_access_control_allow_methods_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_allow_methods.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_access_control_allow_origin_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_allow_origin.header_value",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
@@ -971,6 +961,16 @@ var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
 		tfType:                 schema.TypeString,
 	},
+	"routing_http_response_server_enabled": {
+		apiAttributeKey:        "routing.http.response.server.enabled",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeBool,
+	},
+	"routing_http_response_strict_transport_security_header_value": {
+		apiAttributeKey:        "routing.http.response.strict_transport_security.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
 	"routing_http_response_x_content_type_options_header_value": {
 		apiAttributeKey:        "routing.http.response.x_content_type_options.header_value",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
@@ -984,11 +984,11 @@ var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
 })
 
 func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstypes.ProtocolEnum, update bool) []awstypes.ListenerAttribute {
-	var attributes []awstypes.ListenerAttribute
+	var apiObjects []awstypes.ListenerAttribute
 
 	for tfAttributeName, attributeInfo := range m {
-		// Skip if not an update and the attribute wasn't set
-		if !update && !d.HasChange(tfAttributeName) {
+		// Skip if an update and the attribute hasn't changed.
+		if update && !d.HasChange(tfAttributeName) {
 			continue
 		}
 
@@ -997,28 +997,30 @@ func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstyp
 			continue
 		}
 
-		if v, ok := d.GetOk(tfAttributeName); ok {
-			switch attributeInfo.tfType {
-			case schema.TypeInt:
-				attributes = append(attributes, awstypes.ListenerAttribute{
-					Key:   aws.String(attributeInfo.apiAttributeKey),
-					Value: flex.IntValueToString(v.(int)),
-				})
-			case schema.TypeString:
-				attributes = append(attributes, awstypes.ListenerAttribute{
-					Key:   aws.String(attributeInfo.apiAttributeKey),
-					Value: aws.String(v.(string)),
-				})
-			case schema.TypeBool:
-				attributes = append(attributes, awstypes.ListenerAttribute{
-					Key:   aws.String(attributeInfo.apiAttributeKey),
-					Value: flex.BoolValueToString(v.(bool)),
+		switch v, t, k := d.Get(tfAttributeName), attributeInfo.tfType, aws.String(attributeInfo.apiAttributeKey); t {
+		case schema.TypeBool:
+			v := v.(bool)
+			apiObjects = append(apiObjects, awstypes.ListenerAttribute{
+				Key:   k,
+				Value: flex.BoolValueToString(v),
+			})
+		case schema.TypeInt:
+			v := v.(int)
+			apiObjects = append(apiObjects, awstypes.ListenerAttribute{
+				Key:   k,
+				Value: flex.IntValueToString(v),
+			})
+		case schema.TypeString:
+			if v := v.(string); v != "" {
+				apiObjects = append(apiObjects, awstypes.ListenerAttribute{
+					Key:   k,
+					Value: aws.String(v),
 				})
 			}
 		}
 	}
 
-	return attributes
+	return apiObjects
 }
 
 func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awstypes.ListenerAttribute) {
@@ -1032,13 +1034,13 @@ func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awsty
 			continue
 		}
 
-		switch attributeInfo.tfType {
-		case schema.TypeInt:
-			d.Set(tfAttributeName, flex.StringToIntValue(apiObjects[i].Value))
-		case schema.TypeString:
-			d.Set(tfAttributeName, aws.ToString(apiObjects[i].Value))
+		switch v, t := apiObjects[i].Value, attributeInfo.tfType; t {
 		case schema.TypeBool:
-			d.Set(tfAttributeName, flex.StringToBoolValue(apiObjects[i].Value))
+			d.Set(tfAttributeName, flex.StringToBoolValue(v))
+		case schema.TypeInt:
+			d.Set(tfAttributeName, flex.StringToIntValue(v))
+		case schema.TypeString:
+			d.Set(tfAttributeName, aws.ToString(v))
 		}
 	}
 }
