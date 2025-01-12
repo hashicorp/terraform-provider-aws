@@ -149,10 +149,10 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ConflictsWith: []string{"number_of_nodes"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{clusterTypeSingleNode, clusterTypeMultiNode}, false),
 			},
 			"cluster_version": {
 				Type:     schema.TypeString,
@@ -319,10 +319,10 @@ func resourceCluster() *schema.Resource {
 				Required: true,
 			},
 			"number_of_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-				ConflictsWith: []string{"cluster_type"},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: validation.IntBetween(1, 100),
 			},
 			"owner_account": {
 				Type:         schema.TypeString,
@@ -413,6 +413,7 @@ func resourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				fmt.Println("IN CustomizeDiff")
 				azRelocationEnabled, multiAZ := diff.Get("availability_zone_relocation_enabled").(bool), diff.Get("multi_az").(bool)
 
 				if azRelocationEnabled && multiAZ {
@@ -591,6 +592,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get(names.AttrClusterIdentifier).(string))
 		}
 
+		// TODO: CHECK for cluster status
 		if v := d.Get("number_of_nodes").(int); v > 1 {
 			inputC.ClusterType = aws.String(clusterTypeMultiNode)
 			inputC.NumberOfNodes = aws.Int32(int32(d.Get("number_of_nodes").(int)))
@@ -778,7 +780,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManualSnapshotRetentionPeriod = aws.Int32(int32(d.Get("manual_snapshot_retention_period").(int)))
 		}
 
-		// TODO: not to change if status is disabled
 		// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
 		// items to be sent over.
 		if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
