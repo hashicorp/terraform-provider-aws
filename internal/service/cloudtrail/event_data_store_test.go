@@ -97,6 +97,35 @@ func TestAccCloudTrailEventDataStore_billingMode(t *testing.T) {
 	})
 }
 
+func TestAccCloudTrailEventDataStore_suspend(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail_event_data_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventDataStoreConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventDataStoreExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "suspend", "false"),
+				),
+			},
+			{
+				Config: testAccEventDataStoreConfig_suspend(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventDataStoreExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "suspend", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -392,6 +421,19 @@ resource "aws_cloudtrail_event_data_store" "test" {
   termination_protection_enabled = false # For ease of deletion.
 }
 `, rName)
+}
+
+func testAccEventDataStoreConfig_suspend(rName string, suspend bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail_event_data_store" "test" {
+  name = %[1]q
+
+  suspend = %[2]t
+  multi_region_enabled = false
+  organization_enabled = false
+  termination_protection_enabled = false # For ease of deletion.
+}
+`, rName, suspend)
 }
 
 func testAccEventDataStoreConfig_billingModeUpdated(rName string) string {
