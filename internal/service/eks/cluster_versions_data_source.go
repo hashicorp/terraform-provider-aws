@@ -43,12 +43,15 @@ func (d *dataSourceClusterVersions) Schema(ctx context.Context, req datasource.S
 			"cluster_type": schema.StringAttribute{
 				Optional: true,
 			},
-			"default_only": schema.BoolAttribute{
-				Optional: true,
-			},
 			"cluster_versions_only": schema.ListAttribute{
 				Optional:   true,
 				CustomType: fwtypes.ListOfStringType,
+			},
+			"default_only": schema.BoolAttribute{
+				Optional: true,
+			},
+			"include_all": schema.BoolAttribute{
+				Optional: true,
 			},
 			names.AttrStatus: schema.StringAttribute{
 				Optional:   true,
@@ -141,6 +144,7 @@ func (clusterVersionAWSStatus) Values() []clusterVersionAWSStatus {
 type dataSourceClusterVersionsModel struct {
 	ClusterType         types.String                                                    `tfsdk:"cluster_type"`
 	DefaultOnly         types.Bool                                                      `tfsdk:"default_only"`
+	IncludeAll          types.Bool                                                      `tfsdk:"include_all"`
 	ClusterVersionsOnly fwtypes.ListValueOf[types.String]                               `tfsdk:"cluster_versions_only"`
 	Status              fwtypes.StringEnum[clusterVersionAWSStatus]                     `tfsdk:"status"`
 	ClusterVersions     fwtypes.ListNestedObjectValueOf[customDataSourceClusterVersion] `tfsdk:"cluster_versions"`

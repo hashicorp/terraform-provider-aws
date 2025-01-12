@@ -25,7 +25,7 @@ func TestAccEKSClusterVersionsDataSource_basic(t *testing.T) {
 				Config: testAccClusterVersionsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "cluster_versions.#", 0),
-					acctest.CheckResourceAttrContains(dataSourceName, "cluster_versions.0.default_version", "true"),
+					acctest.CheckResourceAttrContains(dataSourceName, "cluster_versions.0.default_version", acctest.CtTrue),
 				),
 			},
 		},
@@ -66,6 +66,28 @@ func TestAccEKSClusterVersionsDataSource_defaultOnly(t *testing.T) {
 				Config: testAccClusterVersionsDataSourceConfig_defaultOnly(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.#", "1"),
+					acctest.CheckResourceAttrContains(dataSourceName, "cluster_versions.0.default_version", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSClusterVersionsDataSource_status(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	dataSourceName := "data.aws_eks_cluster_versions.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterVersionsDataSourceConfig_status(),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "cluster_versions.#", 0),
+					acctest.CheckResourceAttrContains(dataSourceName, "cluster_versions.0.status", "STANDARD_SUPPORT"),
 				),
 			},
 		},
@@ -91,6 +113,14 @@ func testAccClusterVersionsDataSourceConfig_defaultOnly() string {
 	return acctest.ConfigCompose(`
 data "aws_eks_cluster_versions" "test" {
   default_only = true
+}
+`)
+}
+
+func testAccClusterVersionsDataSourceConfig_status() string {
+	return acctest.ConfigCompose(`
+data "aws_eks_cluster_versions" "test" {
+  status = "STANDARD_SUPPORT"
 }
 `)
 }
