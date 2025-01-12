@@ -394,7 +394,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									names.AttrStatus: {
 										Type:             schema.TypeString,
@@ -566,7 +566,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									names.AttrStatus: {
 										Type:             schema.TypeString,
@@ -1133,7 +1133,7 @@ func expandManagedInstanceScaling(configured []interface{}) *awstypes.Production
 		c.Status = awstypes.ManagedInstanceScalingStatus(v)
 	}
 
-	if v, ok := m["min_instance_count"].(int); ok && v > 0 {
+	if v, ok := m["min_instance_count"].(int); ok {
 		c.MinInstanceCount = aws.Int32(int32(v))
 	}
 
