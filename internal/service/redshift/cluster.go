@@ -152,6 +152,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ConflictsWith: []string{"number_of_nodes"},
 			},
 			"cluster_version": {
 				Type:     schema.TypeString,
@@ -321,6 +322,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  1,
+				ConflictsWith: []string{"cluster_type"},
 			},
 			"owner_account": {
 				Type:         schema.TypeString,
@@ -684,6 +686,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
+	// TODO: check cluster status!!!
 	if len(rsc.ClusterNodes) > 1 {
 		d.Set("cluster_type", clusterTypeMultiNode)
 	} else {
@@ -775,9 +778,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManualSnapshotRetentionPeriod = aws.Int32(int32(d.Get("manual_snapshot_retention_period").(int)))
 		}
 
+		// TODO: not to change if status is disabled
 		// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
 		// items to be sent over.
 		if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
+			// do not do anything if the cluster is suspended
 			input.NodeType = aws.String(d.Get("node_type").(string))
 
 			if v := d.Get("number_of_nodes").(int); v > 1 {
