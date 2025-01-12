@@ -39,9 +39,7 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
-					func(s *terraform.State) error {
-						return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", "workspace/"+aws.ToString(v.WorkspaceId))(s)
-					},
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "workspace/{id}"),
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(v.WorkspaceId))(s)
 					},

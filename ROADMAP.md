@@ -1,4 +1,4 @@
-# Roadmap:  Nov 2024 - Jan 2024
+# Roadmap:  Nov 2024 - Jan 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
