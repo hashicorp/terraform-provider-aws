@@ -349,6 +349,12 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 							}
 						}
 
+						if inContext.ServicePackageName == names.SageMaker && inContext.ResourceName == "App" && err != nil {
+							if tfawserr.ErrMessageContains(err, "ValidationException", "UnknownError") {
+								err = nil
+							}
+						}
+
 						if err != nil {
 							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 						}
