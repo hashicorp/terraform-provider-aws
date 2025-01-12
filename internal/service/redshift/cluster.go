@@ -789,7 +789,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
 					// do not do anything if the cluster is suspended
 					input.NodeType = aws.String(d.Get("node_type").(string))
-
 					if v := d.Get("number_of_nodes").(int); v > 1 {
 						input.ClusterType = aws.String(clusterTypeMultiNode)
 						input.NumberOfNodes = aws.Int32(int32(d.Get("number_of_nodes").(int)))
