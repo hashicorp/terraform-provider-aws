@@ -688,7 +688,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-	d.Set("cluster_status", rsc.ClusterStatus)
+	d.Set(names.AttrClusterStatus, rsc.ClusterStatus)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
 	if len(rsc.ClusterNodes) > 1 {
 		d.Set("cluster_type", clusterTypeMultiNode)
