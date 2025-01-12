@@ -156,7 +156,6 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-
 			},
 			"cluster_version": {
 				Type:     schema.TypeString,
@@ -593,12 +592,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if _, ok := d.GetOk("master_username"); !ok {
 			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get(names.AttrClusterIdentifier).(string))
-		}
-
-		if _, ok := d.GetOk("number_of_nodes"); !ok {
-			if _, ok := d.GetOk("cluster_type"); !ok {
-				fmt.Println(diags, "provider.aws: aws_redshift_cluster: %s: one of \"cluster_type\" or \"number_of_nodes\" is required", d.Get(names.AttrClusterIdentifier).(string))
-			}
 		}
 
 		if v := d.Get("number_of_nodes").(int); v > 1 {
