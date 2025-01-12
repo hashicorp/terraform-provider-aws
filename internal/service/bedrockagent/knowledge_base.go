@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -181,7 +181,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"type": schema.StringAttribute{
+															names.AttrType: schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.OneOf("S3"),
@@ -191,11 +191,11 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 														Blocks: map[string]schema.Block{
 															"s3_location": schema.SingleNestedBlock{
 																Attributes: map[string]schema.Attribute{
-																	"uri": schema.StringAttribute{
+																	names.AttrURI: schema.StringAttribute{
 																		Required: true,
 																		Validators: []validator.String{
 																			stringvalidator.RegexMatches(
-																				regexp.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
+																				regexache.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
 																				"must be a valid S3 URI",
 																			),
 																		},
