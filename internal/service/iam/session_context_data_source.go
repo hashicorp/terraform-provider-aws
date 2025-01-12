@@ -59,8 +59,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(arn)
 
-	roleName := ""
-	sessionName := ""
+	var roleName, sessionName string
 	var err error
 
 	if roleName, sessionName = RoleNameSessionFromARN(arn); roleName == "" {

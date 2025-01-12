@@ -133,6 +133,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `userAttributeUpdateSettings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `userPoolAddOns` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
+* `user_pool_tier` - (Optional) The user pool [feature plan](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-sign-in-feature-plans.html), or tier. Valid values: `LITE`, `ESSENTIALS`, `PLUS`.
 * `usernameAttributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `aliasAttributes`.
 * `usernameConfiguration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
 * `verificationMessageTemplate` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
@@ -348,4 +349,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a5026c8f072622eb3e4e8544e9cd32706d5985790507f537d138da4206879cc1 -->
+<!-- cache-key: cdktf-0.20.8 input-dada491ac66fc732e2264393fc24044c4d61e3fd9ba8814403dc00112a9b3e9b -->

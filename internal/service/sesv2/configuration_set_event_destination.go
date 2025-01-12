@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -221,7 +222,20 @@ func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *sche
 
 	configurationSetEventDestinationID := configurationSetEventDestinationCreateResourceID(d.Get("configuration_set_name").(string), d.Get("event_destination_name").(string))
 
-	out, err := conn.CreateConfigurationSetEventDestination(ctx, in)
+	out, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateConfigurationSetEventDestination(ctx, in)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not access Kinesis Firehose Stream") ||
+				tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not assume IAM role") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameConfigurationSetEventDestination, configurationSetEventDestinationID, err)
 	}
@@ -282,7 +296,19 @@ func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *sche
 		}
 
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSetEventDestination (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateConfigurationSetEventDestination(ctx, in)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateConfigurationSetEventDestination(ctx, in)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not access Kinesis Firehose Stream") ||
+					tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not assume IAM role") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 		if err != nil {
 			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSetEventDestination, d.Id(), err)
 		}
