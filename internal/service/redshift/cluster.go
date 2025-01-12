@@ -690,7 +690,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 	d.Set("cluster_status", rsc.ClusterStatus)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
-	// TODO: check cluster status!!!
 	if len(rsc.ClusterNodes) > 1 {
 		d.Set("cluster_type", clusterTypeMultiNode)
 	} else {
