@@ -524,6 +524,20 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	}
 
+	if !new.NameServers.Equal(old.NameServers) && !new.NameServers.IsUnknown() {
+		var apiObjects []awstypes.Nameserver
+		response.Diagnostics.Append(fwflex.Expand(ctx, &new.NameServers, &apiObjects)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if err := modifyDomainNameservers(ctx, conn, domainName, apiObjects, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError("update", err.Error())
+
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
