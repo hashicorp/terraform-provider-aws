@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_account_primary_contact")
+// @SDKResource("aws_account_primary_contact", name="Primary Contact")
 func resourcePrimaryContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrimaryContactPut,
