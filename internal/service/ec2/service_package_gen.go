@@ -765,6 +765,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceLocalGatewayRoute,
 			TypeName: "aws_ec2_local_gateway_route",
+			Name:     "Local Gateway Route",
 		},
 		{
 			Factory:  resourceLocalGatewayRouteTableVPCAssociation,
@@ -1244,6 +1245,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceVPCEndpointPolicy,
 			TypeName: "aws_vpc_endpoint_policy",
+			Name:     "VPC Endpoint Policy",
 		},
 		{
 			Factory:  resourceVPCEndpointRouteTableAssociation,
