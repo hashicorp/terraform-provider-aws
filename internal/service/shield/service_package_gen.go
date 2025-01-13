@@ -71,6 +71,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceProtectionHealthCheckAssociation,
 			TypeName: "aws_shield_protection_health_check_association",
+			Name:     "Protection Health Check Association",
 		},
 	}
 }
