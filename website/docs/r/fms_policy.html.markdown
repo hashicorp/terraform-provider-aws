@@ -90,8 +90,51 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 ## `policy_option` Configuration Block
 
+* `network_acl_common_policy` - (Optional) Defines NACL rules across accounts in their AWS Organization.
 * `network_firewall_policy` - (Optional) Defines the deployment model to use for the firewall policy. Documented below.
 * `thirdparty_firewall_policy` - (Optional) Defines the policy options for a third-party firewall policy. Documented below.
+
+## `network_acl_common_policy` Configuration Block
+
+* `network_acl_entry_set` - (Optional) Defines NACL entries for Network ACL policy
+
+## `network_acl_entry_set` Configuration Block
+
+* `first_entries` - (Optional) The rules that you want to run first in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 1 and 5000.
+* `last_entries` - (Optional) The rules that you want to run last in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 32000 and 32766.
+* `force_remediate_for_first_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
+* `force_remediate_for_last_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
+
+
+## `first_entries` Configuration Block
+
+* `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
+* `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.
+* `rule_action` - (Required) - A string value that indicates whether to allow or deny the traffic that matches the rule. (Valid Values: allow | deny)
+* `cidr_block` - (Optional) A string value containing the IPv4 network range to allow or deny, in CIDR notation.
+* `icmp_type_code` - (Optional) A configuration block for ICMP protocol: The ICMP type and code.
+* `ipv6_cidr_block` - (Optional) A string value containing the IPv6 network range to allow or deny, in CIDR notation.
+* `port_range` - (Optional) A configuration block for PortRange
+
+## `last_entries` Configuration Block
+
+* `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
+* `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.
+* `rule_action` - (Required) - A string value that indicates whether to allow or deny the traffic that matches the rule. (Valid Values: allow | deny)
+* `cidr_block` - (Optional) A string value containing the IPv4 network range to allow or deny, in CIDR notation.
+* `icmp_type_code` - (Optional) A configuration block for ICMP protocol: The ICMP type and code.
+* `ipv6_cidr_block` - (Optional) A string value containing the IPv6 network range to allow or deny, in CIDR notation.
+* `port_range` - (Optional) A configuration block for PortRange
+
+## `icmp_type_code` Configuration Block
+
+* `code` - (Optional) - An integer value containing ICMP code.
+* `type` - (Optional) - An integer value containing ICMP type.
+
+## `port_range` Configuration Block
+
+* `from` - (Optional) - The beginning port number of the range.
+* `to` - (Optional) - The ending port number of the range. 
 
 ## `network_firewall_policy` Configuration Block
 
