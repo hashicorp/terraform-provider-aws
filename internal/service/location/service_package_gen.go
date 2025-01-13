@@ -100,6 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrackerAssociation,
 			TypeName: "aws_location_tracker_association",
+			Name:     "Tracker Association",
 		},
 	}
 }
