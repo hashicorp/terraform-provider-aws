@@ -36,6 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDirectoryConfig,
 			TypeName: "aws_appstream_directory_config",
+			Name:     "Directory Config",
 		},
 		{
 			Factory:  ResourceFleet,
@@ -48,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFleetStackAssociation,
 			TypeName: "aws_appstream_fleet_stack_association",
+			Name:     "Fleet Stack Association",
 		},
 		{
 			Factory:  ResourceImageBuilder,
@@ -68,10 +70,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUser,
 			TypeName: "aws_appstream_user",
+			Name:     "User",
 		},
 		{
 			Factory:  ResourceUserStackAssociation,
 			TypeName: "aws_appstream_user_stack_association",
+			Name:     "User Stack Association",
 		},
 	}
 }
