@@ -1,4 +1,4 @@
-# Roadmap:  Nov 2024 - Jan 2024
+# Roadmap:  Nov 2024 - Jan 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,7 +8,7 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning Nov to Jan 2024 the AWS Provider added support for the following (among many others):
+In the period spanning Nov to Jan 2025 the AWS Provider added support for the following (among many others):
 
 - AWS Chatbot
 - Amazon Bedrock
@@ -16,7 +16,7 @@ In the period spanning Nov to Jan 2024 the AWS Provider added support for the fo
 - Amazon Bedrock Agents
 - Completed the migration to Amazon GO SDK v2
 
-From Nov - Jan 2024, we will be prioritizing the following areas of work:
+From Nov - Jan 2025, we will be prioritizing the following areas of work:
 
 ## New Services
 

@@ -134,6 +134,7 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Invoicing
 IoT Analytics
 IoT Core
 IoT Events
