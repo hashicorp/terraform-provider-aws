@@ -1041,7 +1041,7 @@ func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awsty
 		case schema.TypeInt:
 			d.Set(tfAttributeName, flex.StringToIntValue(v))
 		case schema.TypeString:
-			d.Set(tfAttributeName, aws.ToString(v))
+			d.Set(tfAttributeName, v)
 		}
 	}
 }
