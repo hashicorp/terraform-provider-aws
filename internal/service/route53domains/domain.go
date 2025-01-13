@@ -143,16 +143,13 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"reseller": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"status_list": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -546,6 +543,23 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	}
 
+	// Set values for unknowns.
+	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s)", domainName), err.Error())
+
+		return
+	}
+
+	fixupContactDetail(domainDetail.BillingContact)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail.BillingContact, &new.BillingContact)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	new.UpdatedDate = timetypes.NewRFC3339TimePointerValue(domainDetail.UpdatedDate)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
@@ -617,7 +631,6 @@ type domainResourceModel struct {
 	RegistrantPrivacy types.Bool                                          `tfsdk:"registrant_privacy"`
 	RegistrarName     types.String                                        `tfsdk:"registrar_name"`
 	RegistrarURL      types.String                                        `tfsdk:"registrar_url"`
-	Reseller          types.String                                        `tfsdk:"reseller"`
 	StatusList        fwtypes.ListOfString                                `tfsdk:"status_list"`
 	Tags              tftags.Map                                          `tfsdk:"tags"`
 	TagsAll           tftags.Map                                          `tfsdk:"tags_all"`

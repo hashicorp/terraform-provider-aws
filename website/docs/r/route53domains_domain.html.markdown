@@ -128,7 +128,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `hosted_zone_id` - The ID of the public Route 53 hosted zone created for the domain. This hosted zone is deleted when the domain is deregistered.
 * `registrar_name` - Name of the registrar of the domain as identified in the registry.
 * `registrar_url` - Web address of the registrar.
-* `reseller` - Reseller of the domain.
 * `status_list` - List of [domain name status codes](https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updated_date` - The last updated date of the domain as found in the response to a WHOIS query.
