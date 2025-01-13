@@ -361,6 +361,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `object` - (Required) Object specified in the Salesforce flow source.
 * `enableDynamicFieldUpdate` - (Optional, boolean) Flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
 * `includeDeletedRecords` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
+* `dataTransferApi` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Source Properties
 
@@ -512,4 +513,4 @@ Using `terraform import`, import AppFlow flows using the `arn`. For example:
 % terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f192b09e300b934b584e0b1c5452829b823418f222f4290dc0020e6e128ba592 -->
+<!-- cache-key: cdktf-0.20.8 input-ebece2049267e2e946c15e412a2838dd2355365a39ed91a787b4dd1c249fb5b3 -->
