@@ -1078,6 +1078,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Network Interface Attachment",
 		},
 		{
+			Factory:  resourceNetworkInterfacePermission,
+			TypeName: "aws_network_interface_permission",
+			Name:     "Network Interface Permission",
+		},
+		{
 			Factory:  resourceNetworkInterfaceSGAttachment,
 			TypeName: "aws_network_interface_sg_attachment",
 			Name:     "Network Interface SG Attachement",

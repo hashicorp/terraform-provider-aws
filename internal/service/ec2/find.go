@@ -2081,6 +2081,61 @@ func findSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.Clie
 	return findSecurityGroupRules(ctx, conn, input)
 }
 
+func findNetworkInterfacePermissions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacePermissionsInput) ([]awstypes.NetworkInterfacePermission, error) {
+	var output []awstypes.NetworkInterfacePermission
+
+	pages := ec2.NewDescribeNetworkInterfacePermissionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, "InvalidPermissionID.NotFound") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NetworkInterfacePermissions...)
+	}
+
+	return output, nil
+}
+
+func findNetworkInterfacePermission(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacePermissionsInput) (*awstypes.NetworkInterfacePermission, error) {
+	output, err := findNetworkInterfacePermissions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNetworkInterfacePermissionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterfacePermission, error) {
+	input := &ec2.DescribeNetworkInterfacePermissionsInput{
+		NetworkInterfacePermissionIds: []string{id},
+	}
+
+	output, err := findNetworkInterfacePermission(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkInterfacePermissionId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
 func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {
 	var output []awstypes.NetworkInterface
 
