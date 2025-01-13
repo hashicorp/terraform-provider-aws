@@ -36,6 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAssessmentTarget,
 			TypeName: "aws_inspector_assessment_target",
+			Name:     "Assessment Target",
 		},
 		{
 			Factory:  ResourceAssessmentTemplate,
@@ -48,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResourceGroup,
 			TypeName: "aws_inspector_resource_group",
+			Name:     "Resource Group",
 		},
 	}
 }
