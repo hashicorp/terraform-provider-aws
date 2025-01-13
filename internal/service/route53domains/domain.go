@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -502,6 +503,17 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	} else {
 		new.BillingContact = old.BillingContact
+	}
+
+	if !new.AdminPrivacy.Equal(old.AdminPrivacy) ||
+		!new.BillingPrivacy.Equal(old.BillingPrivacy) ||
+		!new.RegistrantPrivacy.Equal(old.RegistrantPrivacy) ||
+		!new.TechPrivacy.Equal(old.TechPrivacy) {
+		if err := modifyDomainContactPrivacy(ctx, conn, domainName, flex.BoolValueFromFramework(ctx, new.AdminPrivacy), flex.BoolValueFromFramework(ctx, new.BillingPrivacy), flex.BoolValueFromFramework(ctx, new.RegistrantPrivacy), flex.BoolValueFromFramework(ctx, new.TechPrivacy), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError("update", err.Error())
+
+			return
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
