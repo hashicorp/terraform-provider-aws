@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -94,9 +95,22 @@ func resourceWebACL() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name_prefix"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name"},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
@@ -191,7 +205,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	input := &wafv2.CreateWebACLInput{
 		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
@@ -242,6 +256,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	output := outputRaw.(*wafv2.CreateWebACLOutput)
 
 	d.SetId(aws.ToString(output.Summary.Id))
+	d.Set(names.AttrName, name) // Required in Read.
 
 	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
@@ -284,6 +299,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(webACL.Name)))
 
 	if _, ok := d.GetOk(names.AttrRule); ok {
 		rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))

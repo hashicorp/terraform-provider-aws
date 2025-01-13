@@ -6,6 +6,7 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"regexp"
 	"testing"
 	"time"
@@ -69,6 +70,64 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -3218,6 +3277,45 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, rName)
+}
+
+func testAccWebACLConfig_nameGenerated() string {
+	return `
+resource "aws_wafv2_web_acl" "test" {
+  description = "test"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+  `
+}
+
+func testAccWebACLConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name_prefix  = %[1]q
+  description  = %[1]q
+  scope        = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+  `, namePrefix)
 }
 
 func testAccWebACLConfig_basicRule(rName string) string {
