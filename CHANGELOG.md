@@ -7,6 +7,7 @@ FEATURES:
 BUG FIXES:
 
 * resource/aws_ecs_task_definition: Correctly detect differences in `volume.configure_at_launch` and `volume.docker_volume_configuration` ([#40853](https://github.com/hashicorp/terraform-provider-aws/issues/40853))
+* resource/aws_ses_receipt_rule: Retry errors caused by IAM eventual consistency ([#40873](https://github.com/hashicorp/terraform-provider-aws/issues/40873))
 
 ## 5.83.1 (January 10, 2025)
 
