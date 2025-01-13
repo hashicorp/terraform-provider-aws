@@ -793,6 +793,7 @@ func (m loadBalancerAttributeMap) expand(d *schema.ResourceData, lbType awstypes
 	var apiObjects []awstypes.LoadBalancerAttribute
 
 	for tfAttributeName, attributeInfo := range m {
+		// Skip if an update and the attribute hasn't changed.
 		if update && !d.HasChange(tfAttributeName) {
 			continue
 		}
