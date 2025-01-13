@@ -64,6 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClusterSnapshot,
 			TypeName: "aws_docdb_cluster_snapshot",
+			Name:     "Cluster Snapshot",
 		},
 		{
 			Factory:  resourceEventSubscription,
@@ -76,6 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceGlobalCluster,
 			TypeName: "aws_docdb_global_cluster",
+			Name:     "Global Cluster",
 		},
 		{
 			Factory:  resourceSubnetGroup,
