@@ -184,7 +184,6 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("key_store_password", d.Get("key_store_password"))
 	d.Set("trust_anchor_certificate", output.TrustAnchorCertificate)
 
-	d.Set("xks_proxy_authentication_credential", flattenXksProxyConfiguration(output.XksProxyConfiguration))
 	d.Set("xks_proxy_connectivity", output.XksProxyConfiguration.Connectivity)
 	d.Set("xks_proxy_uri_endpoint", output.XksProxyConfiguration.UriEndpoint)
 	d.Set("xks_proxy_uri_path", output.XksProxyConfiguration.UriPath)
@@ -325,17 +324,4 @@ func expandXksProxyAuthenticationCredential(tfList []interface{}) *awstypes.XksP
 	}
 
 	return apiObject
-}
-
-// We flatten against `XksProxyConfigurationType` because that contains the `AccessKeyId` field
-func flattenXksProxyConfiguration(apiObject *awstypes.XksProxyConfigurationType) []interface{} {
-	if apiObject == nil {
-		return []interface{}{}
-	}
-
-	tfMap := map[string]interface{}{
-		"access_key_id": aws.ToString(apiObject.AccessKeyId),
-	}
-
-	return []interface{}{tfMap}
 }
