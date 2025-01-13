@@ -53,14 +53,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataLakeSettings,
 			TypeName: "aws_lakeformation_data_lake_settings",
+			Name:     "Data Lake Settings",
 		},
 		{
 			Factory:  ResourceLFTag,
 			TypeName: "aws_lakeformation_lf_tag",
+			Name:     "LF Tag",
 		},
 		{
 			Factory:  ResourcePermissions,
 			TypeName: "aws_lakeformation_permissions",
+			Name:     "Permissions",
 		},
 		{
 			Factory:  ResourceResource,
@@ -70,6 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResourceLFTags,
 			TypeName: "aws_lakeformation_resource_lf_tags",
+			Name:     "Resource LF Tags",
 		},
 	}
 }
