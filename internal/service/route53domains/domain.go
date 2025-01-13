@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -123,7 +124,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceComputedListOfObjectAttribute[nameserverModel](ctx, 6),
+			"name_server": framework.ResourceComputedListOfObjectAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()),
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -355,8 +356,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	fixupContactDetail(domainDetail.RegistrantContact)
 	fixupContactDetail(domainDetail.TechContact)
 
-	transferLock := hasDomainTransferLock(domainDetail.StatusList)
-	if v := fwflex.BoolValueFromFramework(ctx, data.TransferLock); v != transferLock {
+	if transferLock, v := hasDomainTransferLock(domainDetail.StatusList), fwflex.BoolValueFromFramework(ctx, data.TransferLock); v != transferLock {
 		if err := modifyDomainTransferLock(ctx, conn, domainName, v, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 			response.Diagnostics.AddError("post-registration", err.Error())
 
@@ -381,7 +381,6 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
-	data.TransferLock = types.BoolValue(transferLock)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -448,6 +447,61 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	conn := r.Meta().Route53DomainsClient(ctx)
+
+	domainName := fwflex.StringValueFromFramework(ctx, new.DomainName)
+
+	if !new.AdminContact.Equal(old.AdminContact) ||
+		!new.BillingContact.Equal(old.BillingContact) ||
+		!new.RegistrantContact.Equal(old.RegistrantContact) ||
+		!new.TechContact.Equal(old.TechContact) {
+		var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
+
+		if !new.AdminContact.Equal(old.AdminContact) {
+			var apiObject awstypes.ContactDetail
+			response.Diagnostics.Append(fwflex.Expand(ctx, &new.AdminContact, &apiObject)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			adminContact = &apiObject
+		}
+
+		if !new.BillingContact.Equal(old.BillingContact) && !new.BillingContact.IsUnknown() {
+			var apiObject awstypes.ContactDetail
+			response.Diagnostics.Append(fwflex.Expand(ctx, &new.BillingContact, &apiObject)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			billingContact = &apiObject
+		}
+
+		if !new.RegistrantContact.Equal(old.RegistrantContact) {
+			var apiObject awstypes.ContactDetail
+			response.Diagnostics.Append(fwflex.Expand(ctx, &new.RegistrantContact, &apiObject)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			registrantContact = &apiObject
+		}
+
+		if !new.TechContact.Equal(old.TechContact) {
+			var apiObject awstypes.ContactDetail
+			response.Diagnostics.Append(fwflex.Expand(ctx, &new.TechContact, &apiObject)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			techContact = &apiObject
+		}
+
+		if err := modifyDomainContact(ctx, conn, domainName, adminContact, billingContact, registrantContact, techContact, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError("update", err.Error())
+
+			return
+		}
+	} else {
+		new.BillingContact = old.BillingContact
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)

@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,14 +28,12 @@ func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context) schema.L
 
 // ResourceComputedListOfObjectAttribute returns a new schema.ListAttribute for objects of the specified type.
 // The list is Optional+Computed.
-func ResourceComputedListOfObjectAttribute[T any](ctx context.Context, sizeAtMost int) schema.ListAttribute {
+func ResourceComputedListOfObjectAttribute[T any](ctx context.Context, sizeAtMost int, planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
-		Optional:   true,
-		Computed:   true,
-		PlanModifiers: []planmodifier.List{
-			listplanmodifier.UseStateForUnknown(),
-		},
+		CustomType:    fwtypes.NewListNestedObjectTypeOf[T](ctx),
+		Optional:      true,
+		Computed:      true,
+		PlanModifiers: planModifiers,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(sizeAtMost),
 		},
