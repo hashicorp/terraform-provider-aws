@@ -156,6 +156,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.20.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/invoicing v1.0.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iot v1.62.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.27.9 // indirect

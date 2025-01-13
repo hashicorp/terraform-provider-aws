@@ -3323,6 +3323,29 @@ service "elb" {
   doc_prefix               = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
 }
 
+service "invoicing" {
+  sdk {
+    id = "Invoicing"
+  }
+
+  names {
+    provider_name_upper = "Invoicing"
+    human_friendly      = "Invoicing"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListInvoiceUnits"
+  }
+
+  resource_prefix {
+    correct = "aws_invoicing_"
+  }
+
+  provider_package_correct = "invoicing"
+  doc_prefix               = ["invoicing_"]
+  brand                    = "AWS"
+}
+
 service "mediaconnect" {
   sdk {
     id = "MediaConnect"
