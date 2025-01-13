@@ -44,6 +44,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRepositoryPolicy,
 			TypeName: "aws_ecrpublic_repository_policy",
+			Name:     "Repository Policy",
 		},
 	}
 }
