@@ -516,6 +516,14 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	}
 
+	if !new.AutoRenew.Equal(old.AutoRenew) {
+		if err := modifyDomainAutoRenew(ctx, conn, domainName, flex.BoolValueFromFramework(ctx, new.AutoRenew)); err != nil {
+			response.Diagnostics.AddError("update", err.Error())
+
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
