@@ -538,6 +538,14 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	}
 
+	if !new.TransferLock.Equal(old.TransferLock) {
+		if err := modifyDomainTransferLock(ctx, conn, domainName, flex.BoolValueFromFramework(ctx, new.TransferLock), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError("update", err.Error())
+
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
