@@ -124,9 +124,10 @@ func resourceService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"failure_threshold": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
+							Type:       schema.TypeInt,
+							Optional:   true,
+							ForceNew:   true,
+							Deprecated: `The attribute "failure_threshold" is now unsupported in the AWS API and is always set to 1. The attribute will be removed in a future major version.`,
 						},
 					},
 				},
