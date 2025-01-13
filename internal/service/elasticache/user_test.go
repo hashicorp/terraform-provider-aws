@@ -180,14 +180,14 @@ func TestAccElastiCacheUser_updateEngine(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigWithEngine(rName, "VALKEY"),
+				Config: testAccUserConfigWithEngine(rName, "valkey"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
 				),
 			},
 			{
-				Config: testAccUserConfigWithEngine(rName, "REDIS"),
+				Config: testAccUserConfigWithEngine(rName, "redis"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -453,7 +453,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password123456789"]
 }
 `, rName)
@@ -465,7 +465,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type      = "password"
@@ -481,7 +481,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = %[1]q
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type = "iam"
@@ -496,7 +496,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~* +@all"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password234567891", "password345678912"]
 }
 `, rName)
@@ -520,7 +520,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type      = "password"
@@ -536,7 +536,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type      = "password"
@@ -552,7 +552,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password123456789"]
 
   tags = {
