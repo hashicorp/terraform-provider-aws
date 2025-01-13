@@ -798,6 +798,7 @@ func (m loadBalancerAttributeMap) expand(d *schema.ResourceData, lbType awstypes
 			continue
 		}
 
+		// Not all attributes are supported on all LB types.
 		if !slices.Contains(attributeInfo.loadBalancerTypesSupported, lbType) {
 			continue
 		}

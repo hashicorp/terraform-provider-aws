@@ -992,7 +992,7 @@ func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstyp
 			continue
 		}
 
-		// Not all attributes are supported on all listener types
+		// Not all attributes are supported on all listener types.
 		if !slices.Contains(attributeInfo.listenerTypesSupported, listenerType) {
 			continue
 		}
@@ -1005,11 +1005,12 @@ func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstyp
 				Value: flex.BoolValueToString(v),
 			})
 		case schema.TypeInt:
-			v := v.(int)
-			apiObjects = append(apiObjects, awstypes.ListenerAttribute{
-				Key:   k,
-				Value: flex.IntValueToString(v),
-			})
+			if v := v.(int); v != 0 {
+				apiObjects = append(apiObjects, awstypes.ListenerAttribute{
+					Key:   k,
+					Value: flex.IntValueToString(v),
+				})
+			}
 		case schema.TypeString:
 			if v := v.(string); v != "" {
 				apiObjects = append(apiObjects, awstypes.ListenerAttribute{
