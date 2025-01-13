@@ -33,6 +33,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
@@ -1186,6 +1187,63 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 
 	if aws.ToString(organization.MasterAccountId) == aws.ToString(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckMultipleOrganizationalUnitsWithAccounts(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	PreCheckMultipleOrganizationalUnitsWithAccountsWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
+
+func PreCheckMultipleOrganizationalUnitsWithAccountsWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	conn := providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+
+	listRootsOutput, err := conn.ListRoots(ctx, &organizations.ListRootsInput{})
+	if err != nil {
+		t.Fatalf("Error listing roots: %v", err)
+	}
+
+	rootId := ""
+	if len(listRootsOutput.Roots) != 0 {
+		rootId = *listRootsOutput.Roots[0].Id
+	} else {
+		t.Fatal("AWS Organization has no valid root ID")
+	}
+
+	ousOutput, err := conn.ListOrganizationalUnitsForParent(ctx, &organizations.ListOrganizationalUnitsForParentInput{
+		ParentId: &rootId,
+	})
+
+	if err != nil {
+		t.Fatalf("error listing organizational units for root: %s", err)
+	}
+
+	if len(ousOutput.OrganizationalUnits) < 2 {
+		t.Skip("less than 2 organizational units found, skipping")
+	}
+
+	counter := 0
+
+	for _, ou := range ousOutput.OrganizationalUnits {
+		if ou.Id == nil {
+			t.Fatal("organizational unit has no valid ID")
+		}
+		accountsOutput, err := conn.ListAccountsForParent(ctx, &organizations.ListAccountsForParentInput{
+			ParentId: ou.Id,
+		})
+		if err != nil {
+			t.Fatalf("error listing accounts for organizational unit %s: %s", aws.ToString(ou.Name), err)
+		}
+
+		if len(accountsOutput.Accounts) != 0 {
+			counter++
+		}
+	}
+	if counter < 2 {
+		t.Fatal("At least two OUs need one account")
 	}
 }
 

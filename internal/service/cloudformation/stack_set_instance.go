@@ -416,11 +416,19 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 		input := &cloudformation.UpdateStackInstancesInput{
-			Accounts:           []string{accountOrOrgID},
 			OperationId:        aws.String(sdkid.UniqueId()),
 			ParameterOverrides: []awstypes.Parameter{},
 			Regions:            []string{region},
 			StackSetName:       aws.String(stackSetName),
+		}
+
+		if itypes.IsAWSAccountID(accountOrOrgID) {
+			input.Accounts = []string{accountOrOrgID}
+		} else {
+			orgIDs := strings.Split(accountOrOrgID, "/")
+			input.DeploymentTargets = &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: orgIDs,
+			}
 		}
 
 		callAs := d.Get("call_as").(string)
