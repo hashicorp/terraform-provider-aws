@@ -17,6 +17,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceKeyGroup,
+			Name:    "Key Group",
+		},
+		{
 			Factory: newDataSourceOriginAccessControl,
 			Name:    "Origin Access Control",
 		},
