@@ -46,7 +46,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DataExchange DataSets using their ARN. For example:
+Using `terraform import`, import DataExchange DataSets using their `id`. For example:
 
 ```console
 % terraform import aws_dataexchange_data_set.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1
