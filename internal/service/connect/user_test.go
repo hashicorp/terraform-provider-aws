@@ -41,7 +41,7 @@ func testAccUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent/{user_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "directory_user_id"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", "example"),
