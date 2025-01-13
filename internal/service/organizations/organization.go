@@ -46,6 +46,11 @@ func resourceOrganization() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
+			"describe_organization_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -240,6 +245,16 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, org.Arn)
+	d.Set("feature_set", org.FeatureSet)
+	d.Set("master_account_arn", org.MasterAccountArn)
+	d.Set("master_account_email", org.MasterAccountEmail)
+	d.Set("master_account_id", org.MasterAccountId)
+
+	if d.Get("describe_organization_only").(bool) {
+		return diags
+	}
+
 	accounts, err := findAccounts(ctx, conn, &organizations.ListAccountsInput{})
 
 	if err != nil {
@@ -266,11 +281,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-	d.Set(names.AttrARN, org.Arn)
-	d.Set("feature_set", org.FeatureSet)
-	d.Set("master_account_arn", org.MasterAccountArn)
-	d.Set("master_account_email", org.MasterAccountEmail)
-	d.Set("master_account_id", org.MasterAccountId)
+
 	d.Set("master_account_name", managementAccountName)
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)

@@ -26,16 +26,17 @@ func TestAccOrganizations_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
-			acctest.CtBasic:                     testAccOrganization_basic,
-			acctest.CtDisappears:                testAccOrganization_disappears,
-			"AwsServiceAccessPrincipals":        testAccOrganization_serviceAccessPrincipals,
-			"EnabledPolicyTypes":                testAccOrganization_EnabledPolicyTypes,
-			"FeatureSet_Basic":                  testAccOrganization_FeatureSet,
-			"FeatureSet_Update":                 testAccOrganization_FeatureSetUpdate,
-			"FeatureSet_ForcesNew":              testAccOrganization_FeatureSetForcesNew,
-			"DataSource_basic":                  testAccOrganizationDataSource_basic,
-			"DataSource_memberAccount":          testAccOrganizationDataSource_memberAccount,
-			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
+			acctest.CtBasic:                       testAccOrganization_basic,
+			acctest.CtDisappears:                  testAccOrganization_disappears,
+			"AwsServiceAccessPrincipals":          testAccOrganization_serviceAccessPrincipals,
+			"EnabledPolicyTypes":                  testAccOrganization_EnabledPolicyTypes,
+			"FeatureSet_Basic":                    testAccOrganization_FeatureSet,
+			"FeatureSet_Update":                   testAccOrganization_FeatureSetUpdate,
+			"FeatureSet_ForcesNew":                testAccOrganization_FeatureSetForcesNew,
+			"DataSource_basic":                    testAccOrganizationDataSource_basic,
+			"DataSource_memberAccount":            testAccOrganizationDataSource_memberAccount,
+			"DataSource_delegatedAdministrator":   testAccOrganizationDataSource_delegatedAdministrator,
+			"DataSource_descrobeOrganizationOnly": testAccOrganizationDataSource_describeOrganizationOnly,
 		},
 		"Account": {
 			acctest.CtBasic:   testAccAccount_basic,
