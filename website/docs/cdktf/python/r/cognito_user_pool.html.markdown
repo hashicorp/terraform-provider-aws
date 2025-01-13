@@ -106,12 +106,14 @@ The following arguments are optional:
 * `deletion_protection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `device_configuration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
+* `email_mfa_configuration` -  (Optional) Configuration block for configuring email Multi-Factor Authentication (MFA); requires at least 2 `account_recovery_setting` entries; requires an `email_configuration` configuration block. [Detailed below](#email_mfa_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
 * `email_verification_subject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
 * `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
 * `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
 * `password_policy` - (Optional) Configuration block for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
+* `sign_in_policy` - (Optional) Configuration block for information about the user pool sign in policy. [Detailed below](#sign_in_policy).
 * `sms_authentication_message` - (Optional) String representing the SMS authentication message. The Message must contain the `{####}` placeholder, which will be replaced with the code.
 * `sms_configuration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 * `sms_verification_message` - (Optional) String representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
@@ -123,6 +125,7 @@ The following arguments are optional:
 * `username_attributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
 * `verification_message_template` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
+* `web_authn_configuration` - (Optional) Configuration block for web authn configuration. [Detailed below](#web_authn_configuration).
 
 ### account_recovery_setting
 
@@ -153,6 +156,11 @@ The following arguments are optional:
 * `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `reply_to_email_address` - (Optional) REPLY-TO email address.
 * `source_arn` - (Optional) ARN of the SES verified email identity to use. Required if `email_sending_account` is set to `DEVELOPER`.
+
+### email_mfa_configuration
+
+* `message` - (Optional) The template for the email messages that your user pool sends to users with codes for MFA and sign-in with email OTPs. The message must contain the {####} placeholder. In the message, Amazon Cognito replaces this placeholder with the code. If you don't provide this parameter, Amazon Cognito sends messages in the default format.
+* `subject` - (Optional) The subject of the email messages that your user pool sends to users with codes for MFA and email OTP sign-in.
 
 ### lambda_config
 
@@ -197,6 +205,15 @@ The following arguments are optional:
 * `require_symbols` - (Optional) Whether you have required users to use at least one symbol in their password.
 * `require_uppercase` - (Optional) Whether you have required users to use at least one uppercase letter in their password.
 * `temporary_password_validity_days` - (Optional) In the password policy you have set, refers to the number of days a temporary password is valid. If the user does not sign-in during this time, their password will need to be reset by an administrator.
+
+### sign_in_policy
+
+* `allowed_first_auth_factors` (Optional) The sign in methods your user pool supports as the first factor. This is a list of strings, allowed values are `PASSWORD`, `EMAIL_OTP`, `SMS_OTP`, and `WEB_AUTHN`.
+
+### web_authn_configuration
+
+* `relying_party_id` - (Optional) The authentication domain that passkeys providers use as a relying party.
+* `user_verification` - (Optional) If your user pool should require a passkey. Must be one of `required` or `preferred`.
 
 ### schema
 
@@ -325,4 +342,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dada491ac66fc732e2264393fc24044c4d61e3fd9ba8814403dc00112a9b3e9b -->
+<!-- cache-key: cdktf-0.20.8 input-5054bf1f8c99d38b3df5f641dc7c9e291006da93b9aaa80a66822cd21ccdfd0b -->

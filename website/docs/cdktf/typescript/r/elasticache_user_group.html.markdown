@@ -55,7 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `engine` - (Required) The current supported value is `REDIS`.
+* `engine` - (Required) The current supported value are `REDIS`, `VALKEY`.
 * `userGroupId` - (Required) The ID of the user group.
 
 The following arguments are optional:
@@ -103,4 +103,4 @@ Using `terraform import`, import ElastiCache user groups using the `userGroupId`
 % terraform import aws_elasticache_user_group.my_user_group userGoupId1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-273ead1e6f40d517ea4aa4538fa2dae8368c51b3c1f92a67ddcf5ffa9c8dd66f -->
+<!-- cache-key: cdktf-0.20.8 input-5d472f4a97f4cb6d500729bf944ccf66216f5257161de9e5de0cde3b98205f12 -->
