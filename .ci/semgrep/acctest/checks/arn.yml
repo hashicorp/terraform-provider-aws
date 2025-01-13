@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/connect"
         - "internal/service/controltower"
-        - "internal/service/docdbelastic"
         - "internal/service/ec2"
         - "internal/service/elasticache"
         - "internal/service/elasticbeanstalk"
