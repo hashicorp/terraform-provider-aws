@@ -341,25 +341,6 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	// Set values for unknowns.
-	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s)", domainName), err.Error())
-
-		return
-	}
-
-	fixupContactDetail(domainDetail.AdminContact)
-	fixupContactDetail(domainDetail.BillingContact)
-	fixupContactDetail(domainDetail.RegistrantContact)
-	fixupContactDetail(domainDetail.TechContact)
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	if !data.NameServers.IsUnknown() {
 		var apiObjects []awstypes.Nameserver
 		response.Diagnostics.Append(fwflex.Expand(ctx, &data.NameServers, &apiObjects)...)
@@ -372,6 +353,22 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 			return
 		}
+	}
+
+	// Set values for unknowns.
+	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s)", domainName), err.Error())
+
+		return
+	}
+
+	fixupDomainDetail(domainDetail)
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	if transferLock, v := hasDomainTransferLock(domainDetail.StatusList), fwflex.BoolValueFromFramework(ctx, data.TransferLock); v != transferLock {
@@ -426,10 +423,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	fixupContactDetail(domainDetail.AdminContact)
-	fixupContactDetail(domainDetail.BillingContact)
-	fixupContactDetail(domainDetail.RegistrantContact)
-	fixupContactDetail(domainDetail.TechContact)
+	fixupDomainDetail(domainDetail)
 
 	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
@@ -680,6 +674,22 @@ type extraParamModel struct {
 type nameserverModel struct {
 	GlueIPs fwtypes.SetOfString `tfsdk:"glue_ips"`
 	Name    types.String        `tfsdk:"name"`
+}
+
+func fixupDomainDetail(apiObject *route53domains.GetDomainDetailOutput) {
+	fixupContactDetail(apiObject.AdminContact)
+	fixupContactDetail(apiObject.BillingContact)
+	if len(apiObject.BillingContact.ExtraParams) == 0 {
+		apiObject.BillingContact.ExtraParams = nil
+	}
+	fixupContactDetail(apiObject.RegistrantContact)
+	fixupContactDetail(apiObject.TechContact)
+
+	for i, v := range apiObject.Nameservers {
+		if len(v.GlueIps) == 0 {
+			apiObject.Nameservers[i].GlueIps = nil
+		}
+	}
 }
 
 // API response empty contact detail strings are converted to nil.
