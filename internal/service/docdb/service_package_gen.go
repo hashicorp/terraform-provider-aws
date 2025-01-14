@@ -27,10 +27,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceEngineVersion,
 			TypeName: "aws_docdb_engine_version",
+			Name:     "Engine Version",
 		},
 		{
 			Factory:  dataSourceOrderableDBInstance,
 			TypeName: "aws_docdb_orderable_db_instance",
+			Name:     "Orderable DB Instance",
 		},
 	}
 }
