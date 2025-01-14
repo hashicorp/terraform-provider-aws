@@ -69,10 +69,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceInstances,
 			TypeName: "aws_ssoadmin_instances",
+			Name:     "Instances",
 		},
 		{
 			Factory:  DataSourcePermissionSet,
 			TypeName: "aws_ssoadmin_permission_set",
+			Name:     "Permission Set",
 		},
 	}
 }
