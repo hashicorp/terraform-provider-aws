@@ -106,11 +106,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Organization",
 		},
 		{
-		    Factory:  resourceDescribeOrganization,
-		    TypeName: "aws_organizations_describe_organization",
-		    Name:     "Isolated Describe Organization"
-		},
-		{
 			Factory:  resourceOrganizationalUnit,
 			TypeName: "aws_organizations_organizational_unit",
 			Name:     "Organizational Unit",
