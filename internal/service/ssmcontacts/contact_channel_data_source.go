@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmcontacts_contact_channel")
+// @SDKDataSource("aws_ssmcontacts_contact_channel", name="Contact Channel")
 func DataSourceContactChannel() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactChannelRead,
