@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.40.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.49.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.29.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.3 // indirect
@@ -114,7 +114,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.199.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.38.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.4 // indirect
@@ -146,7 +146,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.52.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.40.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.34.3 // indirect
@@ -163,7 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.42.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.16.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.38.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.55.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.32.10 // indirect
@@ -272,7 +272,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.41.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.42.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.55.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.20.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.13.4 // indirect

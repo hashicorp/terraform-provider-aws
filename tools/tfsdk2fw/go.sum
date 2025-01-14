@@ -95,8 +95,8 @@ github.com/aws/aws-sdk-go-v2/service/batch v1.49.3 h1:VNhOT2x30BVqYHxHqRo8nbbTIJ
 github.com/aws/aws-sdk-go-v2/service/batch v1.49.3/go.mod h1:DDZipXxa7CzfQ7YTbXGIxcLh2MDYLQYUABzxCH9N/Gc=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.9 h1:lfU897A7mINaj4s3pjoP0B2YW4W5BbZq8fc2PiMQakM=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.9/go.mod h1:Pxd+sMDrUQ8R+cd2A0BtOifJKWKIPHhktmDtbMXOgEs=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.3 h1:pOf4CkuRoS+P6bSwFyu3hU/UOMTRBmK66Hohpl1RblI=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.3/go.mod h1:NhNOeZ0rQNIFtgDoOfdZeM5QUPSEOc91OtBBBPcAS+s=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.0 h1:xdZsQQRCmNFhfCIi5qQeaa6ijn9j3NyONkbq+hIsD1w=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.0/go.mod h1:NhNOeZ0rQNIFtgDoOfdZeM5QUPSEOc91OtBBBPcAS+s=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.1 h1:cttLcpst5q0kCDZzfNqz8SoKI6DbU+f7fxBWCGgGLe0=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.1/go.mod h1:8h2diMjLKtybifOINnJb4SQFceBIRXnxNuZnoj+qUwk=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.29.3 h1:0nU6IsGAYo5QJCRyOp4/FMfAtek9ruMtXmcfUCzkAyA=
@@ -211,8 +211,8 @@ github.com/aws/aws-sdk-go-v2/service/drs v1.30.9 h1:Okx2qoWqzstTvKHY2GY9FYT55UNW
 github.com/aws/aws-sdk-go-v2/service/drs v1.30.9/go.mod h1:HPo1Mimcxt37+KVdHAJKrWUUCdlaJQLWFFxaZXFLWcs=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.2 h1:XcdIh35yg1J8bAiUOLtL/PoPMSGsD72Zanwmim8jEXc=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.2/go.mod h1:516U/KQM3zdcahNBjHUZKGWNfNnIYyt7sxLeqOx78b0=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.3 h1:h5UPeMBMm29Vjk45QVnH2Qu2QMbzRrWUORwyGjzWQso=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.3/go.mod h1:WAFpTnWeO2BNfwpQ8LTTTx9l9/bTztMPrA8gkh41PvI=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.199.0 h1:5kOeqHgn9ku+gnk+tbCRyVDni9irMwjUf5kcv+/HXQU=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.199.0/go.mod h1:WAFpTnWeO2BNfwpQ8LTTTx9l9/bTztMPrA8gkh41PvI=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.38.3 h1:T+IMPnZs0Fo++nglydSsLnHFXvuxk9ePeY2v+qyPnhs=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.38.3/go.mod h1:gOMFY4rPwJFnq2/v3sWgQykTlNxzHBop2W/4K9ilnw4=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.29.2 h1:h4q24ImESGfeamE0I0KJvsblO+03tn8J3+upacKf0vw=
@@ -275,8 +275,8 @@ github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.9 h1:a2OHH6PR5klv+ECQHuLNq
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.9/go.mod h1:9JU/iSEzPA9NUZkkh9n+pnetEt5R674sAMsGbLJgC2s=
 github.com/aws/aws-sdk-go-v2/service/iam v1.38.4 h1:440YtmP8Cn6Qp7WHYfvz2/Xzmu1v1Vox/FJnzUDDQGM=
 github.com/aws/aws-sdk-go-v2/service/iam v1.38.4/go.mod h1:oXqc4hmGhZpj06Zu8z+ahXhdbjq4Uw8pjN9flty0Ync=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.9 h1:48CauHAgCaSkqa1ivsmetxXdqH3SHHMdtjbCSHtocvs=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.9/go.mod h1:Q5iwBUzJ6A//ydFM5wVAzJfggPqa2h1zlTuLoyuLvbE=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.10 h1:0j1J/BjFJ4vYaVox8l6Ixm3YRGVKR35FVjUN63jWbxo=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.10/go.mod h1:Q5iwBUzJ6A//ydFM5wVAzJfggPqa2h1zlTuLoyuLvbE=
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.40.1 h1:bVqq9SuCMmpPRPjUff2oVrFQUWUwv6h8PNvXf80zWS4=
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.40.1/go.mod h1:Noit7KEAXSWMeh53owi9Xn2lvlK+GpgQBoTUhAj+Qok=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.25.9 h1:May9SMpldaDK0+Pf81TeR/N4Z7Rf+IFIPGWjpNiLk+U=
@@ -309,8 +309,8 @@ github.com/aws/aws-sdk-go-v2/service/ivschat v1.16.9 h1:cf87o4vRzkDpigSVUAha3luh
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.16.9/go.mod h1:mcxzp3lZ0OoRLjOgGlSo599x40UtPSPOK0K/cFzCb9I=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.38.10 h1:+oc1dc8hvPja/oB6YVVstnE4zn4x87BO8N/4dzv+3/Y=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.38.10/go.mod h1:eGeVvysieSSz/y7HkEMqBXiLBanQ71dsOYHBr0OePQM=
-github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.9 h1:dQ7SEs+tbBFBr4aut/SYbO5SnGj67/IuFzWqiGqmnRI=
-github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.9/go.mod h1:J8F14KPtosW2+pHFoLLtNAHSs2cipaAykqqRELbOK60=
+github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.22.0 h1:jGql/tHGHVAj0X46x4loTtbL0AcQTgaY/vm2qJAQtuY=
+github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.22.0/go.mod h1:J8F14KPtosW2+pHFoLLtNAHSs2cipaAykqqRELbOK60=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.55.2 h1:OrStgCCMZ0BT+7jEvIHlytpDZoMY5LC9cH4or/9d5nQ=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.55.2/go.mod h1:7aBWiWNRCRcOzSCwDlmjCI1BtJF2+LmkWWTx4L6ZWao=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.4 h1:ZeLM8W99z3wDgNHq6MPLrCsVmpMQ3kg3a3auT2zLuis=
@@ -527,8 +527,8 @@ github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.3 h1:tV2CSlzscc9h+z1H
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.3/go.mod h1:sf5gB5Jag/9nfCIYoszjklj0dqftgICGsm2PYLA8Kn4=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.10 h1:R7gIzuE1yvmo5W/BNXXqsZToILLLT1tC8/cYY0x4cRY=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.10/go.mod h1:Kq3W70z1J01kaVX32gzR37X00ciCCqzJUChUDMPCKl0=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.41.9 h1:TtJdBRFgCmGzH3s1V0OLcAIocXqo+vf9SLPjRNoVRUE=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.41.9/go.mod h1:L9uJoM+Pk6bTq6b7W81xqY2nG50RV8k3PgmkkOghdbQ=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.42.0 h1:98n0c6iFySq6tMcm+XQQL/hmWqLBJz4mOg9lNs63UF8=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.42.0/go.mod h1:L9uJoM+Pk6bTq6b7W81xqY2nG50RV8k3PgmkkOghdbQ=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.55.2 h1:whz6fCHhGpybj0kQxe3Hl7WKs5neSb3wx5A1mrTVscE=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.55.2/go.mod h1:XLKzWMvUy4DsUG1lXjfzz6x1bVzd6zolRb2fAeDuUyA=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.20.5 h1:xZwnsQlg3bVvi6ciu7kebVb210Az606kAO7C14U0Duc=
