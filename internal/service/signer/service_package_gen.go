@@ -27,10 +27,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSigningJob,
 			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
 		},
 		{
 			Factory:  DataSourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
+			Name:     "Signing Profile",
 		},
 	}
 }
