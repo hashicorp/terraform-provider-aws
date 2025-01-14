@@ -138,12 +138,13 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
 					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
-					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
+					createInput := apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
 						EndpointConfiguration: &types.EndpointConfiguration{
 							Types: []types.EndpointType{types.EndpointTypeEdge},
 						},
-					})
+					}
+					output, err := conn.CreateRestApi(ctx, &createInput)
 					if err != nil {
 						if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Endpoint Configuration type EDGE is not supported in this region") {
 							t.Skip("Region does not support EDGE endpoint type")
@@ -152,9 +153,10 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					}
 
 					// Be kind and rewind. :)
-					_, err = conn.DeleteRestApi(ctx, &apigateway.DeleteRestApiInput{
+					deleteInput := apigateway.DeleteRestApiInput{
 						RestApiId: output.Id,
-					})
+					}
+					_, err = conn.DeleteRestApi(ctx, &deleteInput)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -189,12 +191,13 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
 					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
-					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
+					createInput := apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &types.EndpointConfiguration{
 							Types: []types.EndpointType{types.EndpointTypePrivate},
 						},
-					})
+					}
+					output, err := conn.CreateRestApi(ctx, &createInput)
 					if err != nil {
 						if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Endpoint Configuration type PRIVATE is not supported in this region") {
 							t.Skip("Region does not support PRIVATE endpoint type")
@@ -203,9 +206,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					}
 
 					// Be kind and rewind. :)
-					_, err = conn.DeleteRestApi(ctx, &apigateway.DeleteRestApiInput{
+					deleteInput := apigateway.DeleteRestApiInput{
 						RestApiId: output.Id,
-					})
+					}
+					_, err = conn.DeleteRestApi(ctx, &deleteInput)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -1368,9 +1372,10 @@ func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.GetRestApiO
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		resp, err := conn.GetResources(ctx, &apigateway.GetResourcesInput{
+		input := apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
-		})
+		}
+		resp, err := conn.GetResources(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -1399,9 +1404,10 @@ func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.Get
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		resp, err := conn.GetRestApi(ctx, &apigateway.GetRestApiInput{
+		input := apigateway.GetRestApiInput{
 			RestApiId: conf.Id,
-		})
+		}
+		resp, err := conn.GetRestApi(ctx, &input)
 		if err != nil {
 			return err
 		}

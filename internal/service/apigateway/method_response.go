@@ -90,7 +90,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.PutMethodResponseInput{
+	input := apigateway.PutMethodResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
@@ -113,7 +113,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 		timeout = 2 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, timeout, func() (interface{}, error) {
-		return conn.PutMethodResponse(ctx, input)
+		return conn.PutMethodResponse(ctx, &input)
 	})
 
 	if err != nil {
@@ -165,7 +165,7 @@ func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, m
 		operations = append(operations, expandMethodParametersOperations(d, "response_parameters", "responseParameters")...)
 	}
 
-	input := &apigateway.UpdateMethodResponseInput{
+	input := apigateway.UpdateMethodResponseInput{
 		HttpMethod:      aws.String(d.Get("http_method").(string)),
 		PatchOperations: operations,
 		ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
@@ -173,7 +173,7 @@ func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, m
 		StatusCode:      aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 
-	_, err := conn.UpdateMethodResponse(ctx, input)
+	_, err := conn.UpdateMethodResponse(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Method Response (%s): %s", d.Id(), err)
@@ -187,12 +187,13 @@ func resourceMethodResponseDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Method Response: %s", d.Id())
-	_, err := conn.DeleteMethodResponse(ctx, &apigateway.DeleteMethodResponseInput{
+	input := apigateway.DeleteMethodResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
-	})
+	}
+	_, err := conn.DeleteMethodResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -206,14 +207,14 @@ func resourceMethodResponseDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findMethodResponseByFourPartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID, statusCode string) (*apigateway.GetMethodResponseOutput, error) {
-	input := &apigateway.GetMethodResponseInput{
+	input := apigateway.GetMethodResponseInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
 		RestApiId:  aws.String(apiID),
 		StatusCode: aws.String(statusCode),
 	}
 
-	output, err := conn.GetMethodResponse(ctx, input)
+	output, err := conn.GetMethodResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
