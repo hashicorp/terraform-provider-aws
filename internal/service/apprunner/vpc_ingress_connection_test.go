@@ -79,6 +79,33 @@ func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAppRunnerVPCIngressConnection_serviceARNChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_vpc_ingress_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIngressConnectionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+				),
+			},
+			{
+				Config: testAccVPCIngressConnectionConfig_serviceARNChange(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCIngressConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -168,6 +195,41 @@ func testAccVPCIngressConnectionConfig_basic(rName string) string {
 resource "aws_apprunner_vpc_ingress_connection" "test" {
   name        = %[1]q
   service_arn = aws_apprunner_service.test.arn
+
+  ingress_vpc_configuration {
+    vpc_id          = aws_vpc.test.id
+    vpc_endpoint_id = aws_vpc_endpoint.test.id
+  }
+}
+`, rName))
+}
+
+func testAccVPCIngressConnectionConfig_serviceARNChange(rName string) string {
+	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
+resource "aws_apprunner_service" "test2" {
+  service_name = "%[1]s-changed"
+
+  source_configuration {
+    image_repository {
+      image_configuration {
+        port = "8000"
+      }
+      image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+    auto_deployments_enabled = false
+  }
+
+  network_configuration {
+    ingress_configuration {
+      is_publicly_accessible = false
+    }
+  }
+}
+
+resource "aws_apprunner_vpc_ingress_connection" "test" {
+  name        = %[1]q
+  service_arn = aws_apprunner_service.test2.arn
 
   ingress_vpc_configuration {
     vpc_id          = aws_vpc.test.id
