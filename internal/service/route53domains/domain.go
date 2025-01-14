@@ -126,7 +126,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown(), fwplanmodifiers.ListNotConfigurableOnCreate()),
+			"name_server": framework.ResourceOptionalComputedListOfObjectAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()),
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -355,6 +355,25 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	fixupContactDetail(domainDetail.RegistrantContact)
 	fixupContactDetail(domainDetail.TechContact)
 
+	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !data.NameServers.IsUnknown() {
+		var apiObjects []awstypes.Nameserver
+		response.Diagnostics.Append(fwflex.Expand(ctx, &data.NameServers, &apiObjects)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if err := modifyDomainNameservers(ctx, conn, domainName, apiObjects, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError("post-registration", err.Error())
+
+			return
+		}
+	}
+
 	if transferLock, v := hasDomainTransferLock(domainDetail.StatusList), fwflex.BoolValueFromFramework(ctx, data.TransferLock); v != transferLock {
 		if err := modifyDomainTransferLock(ctx, conn, domainName, v, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 			response.Diagnostics.AddError("post-registration", err.Error())
@@ -363,11 +382,6 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		}
 
 		transferLock = v
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
-	if response.Diagnostics.HasError() {
-		return
 	}
 
 	// Registering a domain creates a Route 53 hosted zone that has the same name as the domain.
