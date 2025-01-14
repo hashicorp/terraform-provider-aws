@@ -5,7 +5,6 @@ rules:
     paths:
       exclude:
         - "internal/service/controltower"
-        - "internal/service/elbv2"
         - "internal/service/events"
         - "internal/service/firehose"
         - "internal/service/globalaccelerator"
