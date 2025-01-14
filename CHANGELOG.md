@@ -1,5 +1,9 @@
 ## 5.84.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_kms_custom_key_store: We cannot acceptance test the support for external key stores added in this release. The impementation is best effort and we ask for community help in testing. ([#40557](https://github.com/hashicorp/terraform-provider-aws/issues/40557))
+
 FEATURES:
 
 * **New Resource:** `aws_media_packagev2_channel_group` ([#38406](https://github.com/hashicorp/terraform-provider-aws/issues/38406))
@@ -7,6 +11,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ec2_instance_type: Add `bandwidth_weightings`, `boot_modes`, `default_network_card_index`, `efa_maximum_interfaces`, `ena_srd_supported`, `inference_accelerators.memory_size`, `media_accelerators`, `network_cards`, `neuron_devices`, `nitro_enclaves_support`, `nitro_tpm_support`, `nitro_tpm_supported_versions`, `phc_support`, `supported_cpu_features`, `total_inference_memory`, `total_media_memory`, and `total_neuron_device_memory` attributes ([#40717](https://github.com/hashicorp/terraform-provider-aws/issues/40717))
+* resource/aws_kms_custom_key_store: Add support for external key stores ([#40557](https://github.com/hashicorp/terraform-provider-aws/issues/40557))
+* resource/aws_lb_listener: Add `routing_http_response_server_enabled`, `routing_http_response_strict_transport_security_header_value`, `routing_http_response_access_control_allow_origin_header_value`, `routing_http_response_access_control_allow_methods_header_value`, `routing_http_response_access_control_allow_headers_header_value`, `routing_http_response_access_control_allow_credentials_header_value`, `routing_http_response_access_control_expose_headers_header_value`, `routing_http_response_access_control_max_age_header_value`, `routing_http_response_content_security_policy_header_value`, `routing_http_response_x_content_type_options_header_value`, `routing_http_response_x_frame_options_header_value`, `routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name`, `routing_http_request_x_amzn_mtls_clientcert_issuer_header_name`, `routing_http_request_x_amzn_mtls_clientcert_subject_header_name`, `routing_http_request_x_amzn_mtls_clientcert_validity_header_name`, `routing_http_request_x_amzn_mtls_clientcert_leaf_header_name`, `routing_http_request_x_amzn_mtls_clientcert_header_name`, `routing_http_request_x_amzn_tls_version_header_name`, and `routing_http_request_x_amzn_tls_cipher_suite_header_name` arguments in support of [HTTP header modification](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/header-modification.html) ([#40736](https://github.com/hashicorp/terraform-provider-aws/issues/40736))
 * resource/aws_sagemaker_endpoint_configuration: Support setting `production_variants.managed_instance_scaling` and `shadow_production_variants.managed_instance_scaling` to `0` ([#40882](https://github.com/hashicorp/terraform-provider-aws/issues/40882))
 
 BUG FIXES:
