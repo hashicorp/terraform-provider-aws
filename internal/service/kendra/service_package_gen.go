@@ -60,6 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceExperience,
 			TypeName: "aws_kendra_experience",
+			Name:     "Experience",
 		},
 		{
 			Factory:  ResourceFaq,

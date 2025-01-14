@@ -287,6 +287,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
+
+				if d.Name == "" {
+					v.g.Errorf("%s missing name: %s/%s", annotationName, v.packageName, typeName)
+				}
 			case "Tags":
 				// Handled above.
 			case "Testing":

@@ -39,26 +39,32 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVoiceConnectorGroup,
 			TypeName: "aws_chime_voice_connector_group",
+			Name:     "Voice Connector Group",
 		},
 		{
 			Factory:  ResourceVoiceConnectorLogging,
 			TypeName: "aws_chime_voice_connector_logging",
+			Name:     "Voice Connector Logging",
 		},
 		{
 			Factory:  ResourceVoiceConnectorOrigination,
 			TypeName: "aws_chime_voice_connector_origination",
+			Name:     "Voice Connector Origination",
 		},
 		{
 			Factory:  ResourceVoiceConnectorStreaming,
 			TypeName: "aws_chime_voice_connector_streaming",
+			Name:     "Voice Connector Streaming",
 		},
 		{
 			Factory:  ResourceVoiceConnectorTermination,
 			TypeName: "aws_chime_voice_connector_termination",
+			Name:     "Voice Connector Termination",
 		},
 		{
 			Factory:  ResourceVoiceConnectorTerminationCredentials,
 			TypeName: "aws_chime_voice_connector_termination_credentials",
+			Name:     "Voice Connector Termination Credentials",
 		},
 	}
 }

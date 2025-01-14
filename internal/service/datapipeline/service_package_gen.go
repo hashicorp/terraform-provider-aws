@@ -50,6 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePipelineDefinition,
 			TypeName: "aws_datapipeline_pipeline_definition",
+			Name:     "Pipeline Definition",
 		},
 	}
 }

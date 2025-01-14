@@ -39,6 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCollaboration,
 			TypeName: "aws_cleanrooms_collaboration",
+			Name:     "Collaboration",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -46,6 +47,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceConfiguredTable,
 			TypeName: "aws_cleanrooms_configured_table",
+			Name:     "Configured Table",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

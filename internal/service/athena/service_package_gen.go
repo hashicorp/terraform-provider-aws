@@ -44,10 +44,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDatabase,
 			TypeName: "aws_athena_database",
+			Name:     "Database",
 		},
 		{
 			Factory:  resourceNamedQuery,
 			TypeName: "aws_athena_named_query",
+			Name:     "Named Query",
 		},
 		{
 			Factory:  resourcePreparedStatement,

@@ -40,6 +40,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSigningJob,
 			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
 		},
 		{
 			Factory:  ResourceSigningProfile,
@@ -52,6 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSigningProfilePermission,
 			TypeName: "aws_signer_signing_profile_permission",
+			Name:     "Signing Profile Permission",
 		},
 	}
 }

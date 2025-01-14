@@ -54,6 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
+			Name:     "Service Quota",
 		},
 	}
 }

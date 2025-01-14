@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshiftdata_statement")
+// @SDKResource("aws_redshiftdata_statement", name="Statement")
 func resourceStatement() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStatementCreate,

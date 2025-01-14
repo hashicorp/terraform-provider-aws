@@ -82,18 +82,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccountAssignment,
 			TypeName: "aws_ssoadmin_account_assignment",
+			Name:     "Account Assignment",
 		},
 		{
 			Factory:  ResourceCustomerManagedPolicyAttachment,
 			TypeName: "aws_ssoadmin_customer_managed_policy_attachment",
+			Name:     "Customer Managed Policy Attachment",
 		},
 		{
 			Factory:  ResourceAccessControlAttributes,
 			TypeName: "aws_ssoadmin_instance_access_control_attributes",
+			Name:     "Instance Access Control Attributes",
 		},
 		{
 			Factory:  ResourceManagedPolicyAttachment,
 			TypeName: "aws_ssoadmin_managed_policy_attachment",
+			Name:     "Managed Policy Attachment",
 		},
 		{
 			Factory:  ResourcePermissionSet,
@@ -104,10 +108,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePermissionSetInlinePolicy,
 			TypeName: "aws_ssoadmin_permission_set_inline_policy",
+			Name:     "Permission Set Inline Policy",
 		},
 		{
 			Factory:  ResourcePermissionsBoundaryAttachment,
 			TypeName: "aws_ssoadmin_permissions_boundary_attachment",
+			Name:     "Permissions Boundary Attachment",
 		},
 	}
 }
