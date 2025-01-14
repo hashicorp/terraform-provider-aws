@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -575,7 +576,40 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.Set{
 			setvalidator.SizeAtMost(6),
 		},
-		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx, func(ctx context.Context, value basetypes.SetValue, value2 basetypes.SetValue) (bool, diag.Diagnostics) {
+			//var diags diag.Diagnostics
+			//var priorValues []PromptAttemptsSpecification
+			//var newValues []PromptAttemptsSpecification
+			//diags.Append(value.ElementsAs(ctx, &priorValues, false)...)
+			//diags.Append(value2.ElementsAs(ctx, &newValues, false)...)
+			//if diags.HasError() {
+			//	return false, diags
+			//}
+			//
+			//log.Printf("[DEBUG] we got here")
+			//log.Printf("[DEBUG] priorValues: %v", priorValues)
+			//log.Printf("[DEBUG] newValues: %v", newValues)
+			//
+			//if len(priorValues) == 0 && len(newValues) == 0 {
+			//	return true, nil
+			//}
+			////if !reflect.DeepEqual(priorValues, newValues) {
+			//
+			//for _, val := range priorValues {
+			//	if !slices.ContainsFunc(newValues, func(v PromptAttemptsSpecification) bool {
+			//		return val.MapBlockKey.ValueString() == v.MapBlockKey.ValueString()
+			//	}) {
+			//		//if val.MapBlockKey.ValueString() == "Initial" || val.MapBlockKey.ValueString() == "Retry1" {
+			//		//	return true, diags
+			//		//}
+			//		return true, diags
+			//	}
+			//
+			//}
+			////}
+
+			return true, nil
+		}),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
@@ -954,6 +988,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	// unknowns must be set to satisfy apply
 	data.CreationDateTime = dataAfter.CreationDateTime
 	data.LastUpdatedDateTime = dataAfter.LastUpdatedDateTime
+	// data.ConfirmationSetting = dataAfter.ConfirmationSetting
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
