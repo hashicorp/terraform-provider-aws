@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/controltower"
         - "internal/service/elasticache"
-        - "internal/service/elasticbeanstalk"
         - "internal/service/elb"
         - "internal/service/elbv2"
         - "internal/service/events"
