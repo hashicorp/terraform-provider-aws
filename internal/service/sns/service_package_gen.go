@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceTopic,
 			TypeName: "aws_sns_topic",
+			Name:     "Topic",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
