@@ -274,6 +274,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkDataSources[typeName] = d
 				}
+
+				if d.Name == "" {
+					v.g.Errorf("%s missing name: %s/%s", annotationName, v.packageName, typeName)
+				}
 			case "SDKResource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
