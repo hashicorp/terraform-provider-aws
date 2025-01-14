@@ -373,13 +373,16 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	// Registering a domain creates a Route 53 hosted zone that has the same name as the domain.
 	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
 
-	if err != nil {
+	switch {
+	case tfresource.NotFound(err):
+		data.HostedZoneID = types.StringNull()
+	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
 
 		return
+	default:
+		data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
 	}
-
-	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -422,13 +425,16 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
 
-	if err != nil {
+	switch {
+	case tfresource.NotFound(err):
+		data.HostedZoneID = types.StringNull()
+	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
 
 		return
+	default:
+		data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
 	}
-
-	data.HostedZoneID = fwflex.StringToFramework(ctx, hostedZoneID)
 
 	transferLock := hasDomainTransferLock(domainDetail.StatusList)
 
