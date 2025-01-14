@@ -29,6 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newResourceAccountRegistration,
+			Name:    "Account Registration",
 		},
 		{
 			Factory: newResourceAssessment,
@@ -39,9 +40,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newResourceAssessmentDelegation,
+			Name:    "Assessment Delegation",
 		},
 		{
 			Factory: newResourceAssessmentReport,
+			Name:    "Assessment Report",
 		},
 		{
 			Factory: newResourceControl,
@@ -59,9 +62,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newResourceFrameworkShare,
+			Name:    "Framework Share",
 		},
 		{
 			Factory: newResourceOrganizationAdminAccountRegistration,
+			Name:    "Organization Admin Account Registration",
 		},
 	}
 }
