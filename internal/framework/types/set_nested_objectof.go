@@ -106,7 +106,7 @@ func (t setNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tft
 }
 
 func (t setNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
-	return SetNestedObjectValueOf[T]{}
+	return SetNestedObjectValueOf[T]{semanticEqualityFunc: t.semanticEqualityFunc}
 }
 
 func (t setNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
