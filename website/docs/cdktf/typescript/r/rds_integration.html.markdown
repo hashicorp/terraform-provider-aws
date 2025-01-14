@@ -133,17 +133,22 @@ For more detailed documentation about each argument, refer to the [AWS official 
 The following arguments are required:
 
 * `integrationName` - (Required, Forces new resources) Name of the integration.
-
 * `sourceArn` - (Required, Forces new resources) ARN of the database to use as the source for replication.
-
 * `targetArn` - (Required, Forces new resources) ARN of the Redshift data warehouse to use as the target for replication.
 
 The following arguments are optional:
 
-* `kmsKeyId` - (Optional, Forces new resources) KMS key identifier for the key to use to encrypt the integration. If you don't specify an encryption key, RDS uses a default AWS owned key. If you use the default AWS owned key, you should ignore `kmsKeyId` parameter by using [`lifecycle` parameter](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) to avoid unintended change after the first creation.
-
-* `additionalEncryptionContext` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data. For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context). You can only include this parameter if you specify the `kmsKeyId` parameter.
-
+* `additionalEncryptionContext` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data.
+For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context).
+You can only include this parameter if you specify the `kmsKeyId` parameter.
+* `dataFilter` - (Optional, Forces new resources) Data filters for the integration.
+These filters determine which tables from the source database are sent to the target Amazon Redshift data warehouse.
+The value should match the syntax from the AWS CLI which includes an `include:` or `exclude:` prefix before a filter expression.
+Multiple expressions are separated by a comma.
+See the [Amazon RDS data filtering guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/zero-etl.filtering.html) for additional details.
+* `kmsKeyId` - (Optional, Forces new resources) KMS key identifier for the key to use to encrypt the integration.
+If you don't specify an encryption key, RDS uses a default AWS owned key.
+If you use the default AWS owned key, you should ignore `kmsKeyId` parameter by using [`lifecycle` parameter](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) to avoid unintended change after the first creation.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -194,4 +199,4 @@ Using `terraform import`, import RDS (Relational Database) Integration using the
 % terraform import aws_rds_integration.example arn:aws:rds:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6d881641e36f968c4be6df36fe5b0eed1da39b2dd6f94f45a69756d625982f58 -->
+<!-- cache-key: cdktf-0.20.8 input-537e10dd9cfba2b772c6f4c9dff8800054e2a66b92ee345b5352e63dda6d5be6 -->

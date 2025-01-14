@@ -43,9 +43,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
-					func(s *terraform.State) error {
-						return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", "scraper/"+aws.ToString(scraper.ScraperId))(s)
-					},
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "scraper/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
 					func(s *terraform.State) error {
