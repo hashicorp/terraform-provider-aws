@@ -37,10 +37,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
+			Name:     "Catalog Table",
 		},
 		{
 			Factory:  DataSourceConnection,
 			TypeName: "aws_glue_connection",
+			Name:     "Connection",
 		},
 		{
 			Factory:  DataSourceDataCatalogEncryptionSettings,
@@ -50,6 +52,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceScript,
 			TypeName: "aws_glue_script",
+			Name:     "Script",
 		},
 	}
 }

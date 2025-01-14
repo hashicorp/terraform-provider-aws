@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceRulesPackages,
 			TypeName: "aws_inspector_rules_packages",
+			Name:     "Rules Packages",
 		},
 	}
 }

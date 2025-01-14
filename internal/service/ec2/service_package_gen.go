@@ -477,6 +477,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSecurityGroup,
 			TypeName: "aws_security_group",
+			Name:     "Security Group",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
@@ -487,11 +488,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
+			Name:     "Subnet",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceSubnets,
 			TypeName: "aws_subnets",
+			Name:     "Subnets",
 		},
 		{
 			Factory:  dataSourceVPC,
@@ -502,6 +505,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceVPCDHCPOptions,
 			TypeName: "aws_vpc_dhcp_options",
+			Name:     "DHCP Options",
 		},
 		{
 			Factory:  dataSourceVPCEndpoint,

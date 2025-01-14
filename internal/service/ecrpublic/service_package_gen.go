@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceAuthorizationToken,
 			TypeName: "aws_ecrpublic_authorization_token",
+			Name:     "Authorization Token",
 		},
 	}
 }

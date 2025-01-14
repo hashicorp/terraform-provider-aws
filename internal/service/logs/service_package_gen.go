@@ -64,6 +64,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceDataProtectionPolicyDocument,
 			TypeName: "aws_cloudwatch_log_data_protection_policy_document",
+			Name:     "Data Protection Policy Document",
 		},
 		{
 			Factory:  dataSourceGroup,

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_datapipeline_pipeline")
+// @SDKDataSource("aws_datapipeline_pipeline", name="Pipeline")
 // @Tags
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Pipeline")
 func dataSourcePipeline() *schema.Resource {
