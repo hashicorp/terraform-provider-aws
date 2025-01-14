@@ -27,22 +27,27 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceExperience,
 			TypeName: "aws_kendra_experience",
+			Name:     "Experience",
 		},
 		{
 			Factory:  DataSourceFaq,
 			TypeName: "aws_kendra_faq",
+			Name:     "FAQ",
 		},
 		{
 			Factory:  DataSourceIndex,
 			TypeName: "aws_kendra_index",
+			Name:     "Index",
 		},
 		{
 			Factory:  DataSourceQuerySuggestionsBlockList,
 			TypeName: "aws_kendra_query_suggestions_block_list",
+			Name:     "Query Suggestions Block List",
 		},
 		{
 			Factory:  DataSourceThesaurus,
 			TypeName: "aws_kendra_thesaurus",
+			Name:     "Thesaurus",
 		},
 	}
 }
