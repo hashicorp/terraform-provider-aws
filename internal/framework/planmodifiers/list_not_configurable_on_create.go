@@ -15,7 +15,7 @@ import (
 //   - The configuration value is not unknown.
 //
 // This plan modifier should be applied to an Optional+Computed list attribute.
-// See e.g. framework.ResourceComputedListOfObjectAttribute.
+// See e.g. framework.ResourceOptionalComputedListOfObjectAttribute.
 func ListNotConfigurableOnCreate() planmodifier.List {
 	return listNotConfigurableOnCreateModifier{}
 }
