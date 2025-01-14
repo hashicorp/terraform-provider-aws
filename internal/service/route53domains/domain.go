@@ -85,7 +85,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"billing_contact": framework.ResourceOptionalComputedListOfObjectAttribute[contactDetailModel](ctx, 1),
+			"billing_contact": framework.ResourceOptionalComputedListOfObjectAttribute[contactDetailModel](ctx, 1, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -473,7 +473,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			adminContact = &apiObject
 		}
 
-		if !new.BillingContact.Equal(old.BillingContact) && !new.BillingContact.IsUnknown() {
+		if !new.BillingContact.Equal(old.BillingContact) {
 			var apiObject awstypes.ContactDetail
 			response.Diagnostics.Append(fwflex.Expand(ctx, &new.BillingContact, &apiObject)...)
 			if response.Diagnostics.HasError() {
@@ -505,8 +505,6 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 
 			return
 		}
-	} else {
-		new.BillingContact = old.BillingContact
 	}
 
 	if !new.AdminPrivacy.Equal(old.AdminPrivacy) ||
@@ -556,12 +554,6 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s)", domainName), err.Error())
 
-		return
-	}
-
-	fixupContactDetail(domainDetail.BillingContact)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail.BillingContact, &new.BillingContact)...)
-	if response.Diagnostics.HasError() {
 		return
 	}
 
