@@ -27,8 +27,11 @@ func (m listNotConfigurableOnCreateModifier) Description(ctx context.Context) st
 }
 
 func (m listNotConfigurableOnCreateModifier) MarkdownDescription(context.Context) string {
-	return ""
+	return "This attribute must not be configured when creating a new resource."
 }
 
 func (m listNotConfigurableOnCreateModifier) PlanModifyList(ctx context.Context, request planmodifier.ListRequest, response *planmodifier.ListResponse) {
+	if request.State.Raw.IsNull() && !request.PlanValue.IsUnknown() {
+		response.Diagnostics.AddAttributeError(request.Path, m.Description(ctx), "")
+	}
 }
