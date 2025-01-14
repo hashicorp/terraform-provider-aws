@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceNamedQuery,
 			TypeName: "aws_athena_named_query",
+			Name:     "Named Query",
 		},
 	}
 }
