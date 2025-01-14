@@ -52,6 +52,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceMultiRegionAccessPoint,
 			TypeName: "aws_s3control_multi_region_access_point",
+			Name:     "Multi-Region Access Point",
 		},
 	}
 }
