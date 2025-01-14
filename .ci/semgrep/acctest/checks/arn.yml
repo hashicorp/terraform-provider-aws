@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/controltower"
         - "internal/service/globalaccelerator"
-        - "internal/service/iam"
         - "internal/service/iot"
         - "internal/service/kafka"
         - "internal/service/kafkaconnect"
