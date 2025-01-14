@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_api_gateway_account")
+// @FrameworkResource("aws_api_gateway_account", name="Account")
 func newResourceAccount(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAccount{}
 
