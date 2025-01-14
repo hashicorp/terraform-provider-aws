@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -125,7 +126,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()),
+			"name_server": framework.ResourceOptionalComputedListOfObjectAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown(), fwplanmodifiers.ListNotConfigurableOnCreate()),
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
