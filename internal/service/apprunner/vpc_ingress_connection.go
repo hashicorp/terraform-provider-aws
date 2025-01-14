@@ -70,6 +70,7 @@ func resourceVPCIngressConnection() *schema.Resource {
 			"service_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrStatus: {
