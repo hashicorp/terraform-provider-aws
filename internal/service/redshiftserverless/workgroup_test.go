@@ -6,6 +6,7 @@ package redshiftserverless_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -113,6 +114,39 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
+				),
+			},
+		},
+	})
+}
+
+// Tests the logic involved in validating/updating 'base_capacity' and 'price_performance_target'.
+func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, true),
+				ExpectError: regexp.MustCompile("base_capacity cannot be set when price_performance_target.enabled is true"),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, "LOW_COST"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "LOW_COST"),
 				),
 			},
 		},
@@ -405,6 +439,41 @@ resource "aws_redshiftserverless_workgroup" "test" {
 }
 
 `, rName, baseCapacity)
+}
+
+func testAccWorkgroupConfig_pricePerformanceTarget(rName string, targetLevel string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  price_performance_target {
+    enabled = true
+    level   = %[2]q
+  }
+}
+
+`, rName, targetLevel)
+}
+
+func testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName string, pricePerformanceEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  base_capacity  = 128
+  price_performance_target {
+    enabled = %[2]t
+  }
+}
+`, rName, pricePerformanceEnabled)
 }
 
 func testAccWorkgroupConfig_configParameters(rName, maxQueryExecutionTime string) string {
