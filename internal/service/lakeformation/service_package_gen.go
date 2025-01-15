@@ -21,12 +21,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceDataCellsFilter,
-			Name:    "Data Cells Filter",
+			Factory:  newResourceDataCellsFilter,
+			TypeName: "aws_lakeformation_data_cells_filter",
+			Name:     "Data Cells Filter",
 		},
 		{
-			Factory: newResourceResourceLFTag,
-			Name:    "Resource LF Tag",
+			Factory:  newResourceResourceLFTag,
+			TypeName: "aws_lakeformation_resource_lf_tag",
+			Name:     "Resource LF Tag",
 		},
 	}
 }
