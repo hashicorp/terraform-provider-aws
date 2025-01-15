@@ -26,26 +26,30 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newIntegrationResource,
-			Name:    "Integration",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourceClusterSnapshotCopy,
-			Name:    "Cluster Snapshot Copy",
+			Factory:  newResourceClusterSnapshotCopy,
+			TypeName: "aws_rds_cluster_snapshot_copy",
+			Name:     "Cluster Snapshot Copy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "db_cluster_snapshot_arn",
 			},
 		},
 		{
-			Factory: newResourceExportTask,
-			Name:    "Export Task",
+			Factory:  newResourceExportTask,
+			TypeName: "aws_rds_export_task",
+			Name:     "Export Task",
 		},
 		{
-			Factory: newResourceInstanceState,
-			Name:    "Instance State",
+			Factory:  newResourceInstanceState,
+			TypeName: "aws_rds_instance_state",
+			Name:     "Instance State",
+		},
+		{
+			Factory:  newIntegrationResource,
+			TypeName: "aws_rds_integration",
+			Name:     "Integration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
