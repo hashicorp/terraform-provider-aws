@@ -17,12 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceNotificationChannel,
-			Name:    "Notification Channel",
+			Factory:  newDataSourceNotificationChannel,
+			TypeName: "aws_devopsguru_notification_channel",
+			Name:     "Notification Channel",
 		},
 		{
-			Factory: newDataSourceResourceCollection,
-			Name:    "Resource Collection",
+			Factory:  newDataSourceResourceCollection,
+			TypeName: "aws_devopsguru_resource_collection",
+			Name:     "Resource Collection",
 		},
 	}
 }

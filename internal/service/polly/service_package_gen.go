@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceVoices,
-			Name:    "Voices",
+			Factory:  newDataSourceVoices,
+			TypeName: "aws_polly_voices",
+			Name:     "Voices",
 		},
 	}
 }

@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceAgentVersions,
-			Name:    "Agent Versions",
+			Factory:  newDataSourceAgentVersions,
+			TypeName: "aws_bedrockagent_agent_versions",
+			Name:     "Agent Versions",
 		},
 	}
 }

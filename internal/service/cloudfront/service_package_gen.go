@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceOriginAccessControl,
-			Name:    "Origin Access Control",
+			Factory:  newDataSourceOriginAccessControl,
+			TypeName: "aws_cloudfront_origin_access_control",
+			Name:     "Origin Access Control",
 		},
 	}
 }

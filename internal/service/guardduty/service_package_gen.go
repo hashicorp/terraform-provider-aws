@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceFindingIds,
-			Name:    "Finding Ids",
+			Factory:  newDataSourceFindingIds,
+			TypeName: "aws_guardduty_finding_ids",
+			Name:     "Finding Ids",
 		},
 	}
 }

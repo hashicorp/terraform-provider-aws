@@ -15,20 +15,24 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newCapacityBlockOfferingDataSource,
-			Name:    "Capacity Block Offering",
+			Factory:  newCapacityBlockOfferingDataSource,
+			TypeName: "aws_ec2_capacity_block_offering",
+			Name:     "Capacity Block Offering",
 		},
 		{
-			Factory: newDataSourceSpotDataFeedSubscription,
-			Name:    "Spot Data Feed Subscription Data Source",
+			Factory:  newDataSourceSpotDataFeedSubscription,
+			TypeName: "aws_spot_datafeed_subscription",
+			Name:     "Spot Data Feed Subscription Data Source",
 		},
 		{
-			Factory: newSecurityGroupRuleDataSource,
-			Name:    "Security Group Rule",
+			Factory:  newSecurityGroupRuleDataSource,
+			TypeName: "aws_vpc_security_group_rule",
+			Name:     "Security Group Rule",
 		},
 		{
-			Factory: newSecurityGroupRulesDataSource,
-			Name:    "Security Group Rules",
+			Factory:  newSecurityGroupRulesDataSource,
+			TypeName: "aws_vpc_security_group_rules",
+			Name:     "Security Group Rules",
 		},
 	}
 }

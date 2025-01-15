@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceSearch,
-			Name:    "Search",
+			Factory:  newDataSourceSearch,
+			TypeName: "aws_resourceexplorer2_search",
+			Name:     "Search",
 		},
 	}
 }

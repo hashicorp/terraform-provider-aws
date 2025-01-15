@@ -17,28 +17,34 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newCustomModelDataSource,
-			Name:    "Custom Model",
+			Factory:  newCustomModelDataSource,
+			TypeName: "aws_bedrock_custom_model",
+			Name:     "Custom Model",
 		},
 		{
-			Factory: newCustomModelsDataSource,
-			Name:    "Custom Models",
+			Factory:  newCustomModelsDataSource,
+			TypeName: "aws_bedrock_custom_models",
+			Name:     "Custom Models",
 		},
 		{
-			Factory: newFoundationModelDataSource,
-			Name:    "Foundation Model",
+			Factory:  newFoundationModelDataSource,
+			TypeName: "aws_bedrock_foundation_model",
+			Name:     "Foundation Model",
 		},
 		{
-			Factory: newFoundationModelsDataSource,
-			Name:    "Foundation Models",
+			Factory:  newFoundationModelsDataSource,
+			TypeName: "aws_bedrock_foundation_models",
+			Name:     "Foundation Models",
 		},
 		{
-			Factory: newInferenceProfileDataSource,
-			Name:    "Inference Profile",
+			Factory:  newInferenceProfileDataSource,
+			TypeName: "aws_bedrock_inference_profile",
+			Name:     "Inference Profile",
 		},
 		{
-			Factory: newInferenceProfilesDataSource,
-			Name:    "Inference Profiles",
+			Factory:  newInferenceProfilesDataSource,
+			TypeName: "aws_bedrock_inference_profiles",
+			Name:     "Inference Profiles",
 		},
 	}
 }

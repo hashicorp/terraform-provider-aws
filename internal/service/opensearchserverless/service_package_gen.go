@@ -17,20 +17,24 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceAccessPolicy,
-			Name:    "Access Policy",
+			Factory:  newDataSourceAccessPolicy,
+			TypeName: "aws_opensearchserverless_access_policy",
+			Name:     "Access Policy",
 		},
 		{
-			Factory: newDataSourceCollection,
-			Name:    "Collection",
+			Factory:  newDataSourceCollection,
+			TypeName: "aws_opensearchserverless_collection",
+			Name:     "Collection",
 		},
 		{
-			Factory: newDataSourceLifecyclePolicy,
-			Name:    "Lifecycle Policy",
+			Factory:  newDataSourceLifecyclePolicy,
+			TypeName: "aws_opensearchserverless_lifecycle_policy",
+			Name:     "Lifecycle Policy",
 		},
 		{
-			Factory: newDataSourceSecurityConfig,
-			Name:    "Security Config",
+			Factory:  newDataSourceSecurityConfig,
+			TypeName: "aws_opensearchserverless_security_config",
+			Name:     "Security Config",
 		},
 	}
 }

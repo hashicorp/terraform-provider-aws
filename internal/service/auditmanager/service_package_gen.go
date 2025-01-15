@@ -17,12 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceControl,
-			Name:    "Control",
+			Factory:  newDataSourceControl,
+			TypeName: "aws_auditmanager_control",
+			Name:     "Control",
 		},
 		{
-			Factory: newDataSourceFramework,
-			Name:    "Framework",
+			Factory:  newDataSourceFramework,
+			TypeName: "aws_auditmanager_framework",
+			Name:     "Framework",
 		},
 	}
 }

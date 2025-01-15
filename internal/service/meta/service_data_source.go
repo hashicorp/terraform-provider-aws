@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Service")
+// @FrameworkDataSource("aws_service", name="Service")
 func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &serviceDataSource{}
 

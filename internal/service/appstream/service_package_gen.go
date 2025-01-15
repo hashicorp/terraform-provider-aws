@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceImage,
-			Name:    "Image",
+			Factory:  newDataSourceImage,
+			TypeName: "aws_appstream_image",
+			Name:     "Image",
 		},
 	}
 }
