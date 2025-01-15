@@ -17,9 +17,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newJobDefinitionDataSource,
-			Name:    "Job Definition",
-			Tags:    &types.ServicePackageResourceTags{},
+			Factory:  newJobDefinitionDataSource,
+			TypeName: "aws_batch_job_definition",
+			Name:     "Job Definition",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
