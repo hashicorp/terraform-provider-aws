@@ -59,8 +59,8 @@ github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.5 h1:JKkUVrk8RLauIDWp8Vouy
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.5/go.mod h1:OsefIqTa1Sy7PtkHDxFqGT89jvsKsFb2OOioWp1dDh8=
 github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.24.11 h1:9UY7ITBusyexyApuzop4+6yC071qAwINuhBrNdBTq2k=
 github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.24.11/go.mod h1:GG0ExdDvVNLn6/eU9R5n6hcG0BE63KricEzZHCeg058=
-github.com/aws/aws-sdk-go-v2/service/appconfig v1.36.4 h1:CBZS/ehJGP8UwSrIJao5Bxnb6tRMr3lRDKh2yZGKpbc=
-github.com/aws/aws-sdk-go-v2/service/appconfig v1.36.4/go.mod h1:ukvvrjaMaaOKCOEltzo/4YM2DvgW+kyOgK//t+0yf50=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.36.5 h1:e7AXNfcGj/P/M8un4Ia08UGhKOthGpq6m945xJVbqOg=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.36.5/go.mod h1:ukvvrjaMaaOKCOEltzo/4YM2DvgW+kyOgK//t+0yf50=
 github.com/aws/aws-sdk-go-v2/service/appfabric v1.11.9 h1:V2KSVx0DKX3ZWFaNAcFIN6aMQBTVZJehk4bcIbdeSIk=
 github.com/aws/aws-sdk-go-v2/service/appfabric v1.11.9/go.mod h1:Y6QWvlw/WUGNh/FH60KTfvaAXzIraFkNygVqarw099s=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.45.10 h1:gjM82NtTvn1tegWUFL8kIzCBM1fE9JXK8Wu5iIEjs3M=
