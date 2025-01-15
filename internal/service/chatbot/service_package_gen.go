@@ -15,8 +15,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceSlackWorkspace,
-			Name:    "Slack Workspace",
+			Factory:  newDataSourceSlackWorkspace,
+			TypeName: "aws_chatbot_slack_workspace",
+			Name:     "Slack Workspace",
 		},
 	}
 }
