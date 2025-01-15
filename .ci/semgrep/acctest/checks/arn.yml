@@ -5,7 +5,6 @@ rules:
     paths:
       exclude:
         - "internal/service/controltower"
-        - "internal/service/iot"
         - "internal/service/kafka"
         - "internal/service/kafkaconnect"
         - "internal/service/kendra"
