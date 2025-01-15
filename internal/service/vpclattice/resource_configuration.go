@@ -6,13 +6,7 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"strconv"
 	"strings"
 	"time"
@@ -22,19 +16,25 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -83,10 +83,6 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"port_ranges": schema.ListAttribute{
-				ElementType: types.StringType,
-				Required:    true,
-			},
 			"protocol": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ProtocolType](),
 				Optional:   true,
@@ -127,16 +123,16 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"from_port": schema.Int32Attribute{
+						"from_port": schema.Int64Attribute{
 							Required: true,
-							Validators: []validator.Int32{
-								int32validator.Between(1, 65535),
+							Validators: []validator.Int64{
+								int64validator.Between(1, 65535),
 							},
 						},
-						"to_port": schema.Int32Attribute{
+						"to_port": schema.Int64Attribute{
 							Required: true,
-							Validators: []validator.Int32{
-								int32validator.Between(1, 65535),
+							Validators: []validator.Int64{
+								int64validator.Between(1, 65535),
 							},
 						},
 					},
@@ -220,7 +216,7 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, req resource
 
 	var input vpclattice.CreateResourceConfigurationInput
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("ResourceConfiguration"))...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
