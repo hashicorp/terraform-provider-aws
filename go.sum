@@ -515,8 +515,8 @@ github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.9 h1:QI8+pZYDt/QI2cDcv
 github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.9/go.mod h1:prdFQmSoku4eA5PZWbLh2XgX5MFl5Nb/1NGQ13aC1ZM=
 github.com/aws/aws-sdk-go-v2/service/sts v1.33.7 h1:qwGa9MA8G7mBq2YphHFaygdPe5t9OA7SvaJdwWTlEds=
 github.com/aws/aws-sdk-go-v2/service/sts v1.33.7/go.mod h1:+8h7PZb3yY5ftmVLD7ocEoE98hdc8PoKS0H3wfx1dlc=
-github.com/aws/aws-sdk-go-v2/service/swf v1.27.11 h1:s9+DVXOw4Wfv5Lxbdl+zsCCcmv03+H7WvZ8i7vGdCRA=
-github.com/aws/aws-sdk-go-v2/service/swf v1.27.11/go.mod h1:i53dflDDKZzNihJU15bi81sJ1oNQ03tnWQiV5LPHFQA=
+github.com/aws/aws-sdk-go-v2/service/swf v1.27.12 h1:zopQhj9//B3JI1+tVhUGvcDsPP7IXcJtNZcpjl9nvIE=
+github.com/aws/aws-sdk-go-v2/service/swf v1.27.12/go.mod h1:i53dflDDKZzNihJU15bi81sJ1oNQ03tnWQiV5LPHFQA=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.3 h1:Gh9X61KEynKNCNfSnJQqlbGPWfeJ9TgbiLsGS2YhM8s=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.3/go.mod h1:snwko95wqa8/wYGEPPkmrAOLktqOjnjk8tHJFn0RDXo=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.3 h1:savbQ49FRbBttgAP4MZzfpPKvkFydV2nPkyFaAQFr/c=
