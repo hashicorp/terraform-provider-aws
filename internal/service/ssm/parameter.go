@@ -368,7 +368,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if !valueWO.IsNull() && valueWO.AsString() != "" {
 			value = valueWO.AsString()
 		}
-		
+
 		input := &ssm.PutParameterInput{
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 			Name:           aws.String(d.Id()),
