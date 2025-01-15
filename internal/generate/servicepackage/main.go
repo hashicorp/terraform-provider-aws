@@ -259,6 +259,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.frameworkDataSources = append(v.frameworkDataSources, d)
 				}
+
+				if d.Name == "" {
+					v.g.Errorf("%s missing name: %s.%s", annotationName, v.packageName, v.functionName)
+				}
 			case "FrameworkResource":
 				if slices.ContainsFunc(v.frameworkResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
