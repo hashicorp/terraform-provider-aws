@@ -18,9 +18,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 	return []*types.ServicePackageFrameworkDataSource{
 		{
 			Factory: newDataSourceControl,
+			Name:    "Control",
 		},
 		{
 			Factory: newDataSourceFramework,
+			Name:    "Framework",
 		},
 	}
 }
