@@ -28,12 +28,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newCIDRCollectionResource,
-			Name:    "CIDR Collection",
+			Factory:  newCIDRCollectionResource,
+			TypeName: "aws_route53_cidr_collection",
+			Name:     "CIDR Collection",
 		},
 		{
-			Factory: newCIDRLocationResource,
-			Name:    "CIDR Location",
+			Factory:  newCIDRLocationResource,
+			TypeName: "aws_route53_cidr_location",
+			Name:     "CIDR Location",
 		},
 	}
 }
