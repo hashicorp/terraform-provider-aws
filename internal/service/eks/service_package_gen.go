@@ -40,30 +40,37 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceAddon,
 			TypeName: "aws_eks_addon",
+			Name:     "Add-On",
 		},
 		{
 			Factory:  dataSourceAddonVersion,
 			TypeName: "aws_eks_addon_version",
+			Name:     "Add-On Version",
 		},
 		{
 			Factory:  dataSourceCluster,
 			TypeName: "aws_eks_cluster",
+			Name:     "Cluster",
 		},
 		{
 			Factory:  dataSourceClusterAuth,
 			TypeName: "aws_eks_cluster_auth",
+			Name:     "Cluster Authentication Token",
 		},
 		{
 			Factory:  dataSourceClusters,
 			TypeName: "aws_eks_clusters",
+			Name:     "Clusters",
 		},
 		{
 			Factory:  dataSourceNodeGroup,
 			TypeName: "aws_eks_node_group",
+			Name:     "Node Group",
 		},
 		{
 			Factory:  dataSourceNodeGroups,
 			TypeName: "aws_eks_node_groups",
+			Name:     "Node Groups",
 		},
 	}
 }

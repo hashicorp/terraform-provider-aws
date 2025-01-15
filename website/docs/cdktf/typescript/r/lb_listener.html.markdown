@@ -513,9 +513,10 @@ The following arguments are optional:
 
 ### mutual_authentication
 
+* `advertiseTrustStoreCaNames` - (Optional) Valid values are `off` and `on`.
+* `ignoreClientCertificateExpiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 * `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
 * `trustStoreArn` - (Required) ARN of the elbv2 Trust Store.
-* `ignoreClientCertificateExpiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 
 ## Attribute Reference
 
@@ -559,4 +560,4 @@ Using `terraform import`, import listeners using their ARN. For example:
 % terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ac5b42fed0af8c7abedc91532dcd3dbe96cd351d8f6c3dfad606fca29a2dae5e -->
+<!-- cache-key: cdktf-0.20.8 input-648231a12b98e111847d414eb30bc4bcf304e881b1f8a444ea52aa8eaf12d46a -->

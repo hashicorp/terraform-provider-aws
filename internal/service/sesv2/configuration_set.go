@@ -325,7 +325,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			if v, ok := tfMap["max_delivery_seconds"].(int); ok {
+			if v, ok := tfMap["max_delivery_seconds"].(int); ok && v != 0 {
 				input.MaxDeliverySeconds = aws.Int64(int64(v))
 			}
 
@@ -624,7 +624,7 @@ func expandDeliveryOptions(tfMap map[string]interface{}) *types.DeliveryOptions 
 
 	apiObject := &types.DeliveryOptions{}
 
-	if v, ok := tfMap["max_delivery_seconds"].(int); ok {
+	if v, ok := tfMap["max_delivery_seconds"].(int); ok && v != 0 {
 		apiObject.MaxDeliverySeconds = aws.Int64(int64(v))
 	}
 

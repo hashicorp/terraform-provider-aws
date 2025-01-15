@@ -52,6 +52,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceMultiRegionAccessPoint,
 			TypeName: "aws_s3control_multi_region_access_point",
+			Name:     "Multi-Region Access Point",
 		},
 	}
 }
@@ -61,6 +62,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAccessPoint,
 			TypeName: "aws_s3_access_point",
+			Name:     "Access Point",
 		},
 		{
 			Factory:  resourceAccountPublicAccessBlock,
@@ -70,6 +72,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAccessPointPolicy,
 			TypeName: "aws_s3control_access_point_policy",
+			Name:     "Access Point Policy",
 		},
 		{
 			Factory:  resourceBucket,
@@ -80,26 +83,32 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceBucketLifecycleConfiguration,
 			TypeName: "aws_s3control_bucket_lifecycle_configuration",
+			Name:     "Bucket Lifecycle Configuration",
 		},
 		{
 			Factory:  resourceBucketPolicy,
 			TypeName: "aws_s3control_bucket_policy",
+			Name:     "Bucket Policy",
 		},
 		{
 			Factory:  resourceMultiRegionAccessPoint,
 			TypeName: "aws_s3control_multi_region_access_point",
+			Name:     "Multi-Region Access Point",
 		},
 		{
 			Factory:  resourceMultiRegionAccessPointPolicy,
 			TypeName: "aws_s3control_multi_region_access_point_policy",
+			Name:     "Multi-Region Access Point Policy",
 		},
 		{
 			Factory:  resourceObjectLambdaAccessPoint,
 			TypeName: "aws_s3control_object_lambda_access_point",
+			Name:     "Object Lambda Access Point",
 		},
 		{
 			Factory:  resourceObjectLambdaAccessPointPolicy,
 			TypeName: "aws_s3control_object_lambda_access_point_policy",
+			Name:     "Object Lambda Access Point Policy",
 		},
 		{
 			Factory:  resourceStorageLensConfiguration,

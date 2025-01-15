@@ -249,6 +249,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.ephemeralResources = append(v.ephemeralResources, d)
 				}
+
+				if d.Name == "" {
+					v.g.Errorf("%s missing name: %s.%s", annotationName, v.packageName, v.functionName)
+				}
 			case "FrameworkDataSource":
 				if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -260,6 +264,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.frameworkResources = append(v.frameworkResources, d)
+				}
+
+				if d.Name == "" {
+					v.g.Errorf("%s missing name: %s.%s", annotationName, v.packageName, v.functionName)
 				}
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
@@ -274,6 +282,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkDataSources[typeName] = d
 				}
+
+				if d.Name == "" {
+					v.g.Errorf("%s missing name: %s/%s", annotationName, v.packageName, typeName)
+				}
 			case "SDKResource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -286,6 +298,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkResources[typeName] = d
+				}
+
+				if d.Name == "" {
+					v.g.Errorf("%s missing name: %s/%s", annotationName, v.packageName, typeName)
 				}
 			case "Tags":
 				// Handled above.

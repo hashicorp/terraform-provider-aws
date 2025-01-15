@@ -30,6 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceStream,
 			TypeName: "aws_kinesis_stream",
+			Name:     "Stream",
 		},
 		{
 			Factory:  dataSourceStreamConsumer,

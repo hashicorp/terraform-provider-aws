@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_https_redirection_policy")
+// @SDKResource("aws_lightsail_lb_https_redirection_policy", name="Load Balancer HTTPS Redirection Policy")
 func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerHTTPSRedirectionPolicyCreate,

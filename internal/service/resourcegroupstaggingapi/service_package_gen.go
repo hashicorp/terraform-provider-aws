@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceResources,
 			TypeName: "aws_resourcegroupstaggingapi_resources",
+			Name:     "Resources",
 		},
 	}
 }

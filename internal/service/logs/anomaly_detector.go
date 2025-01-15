@@ -5,7 +5,7 @@ package logs
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -20,11 +20,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,33 +36,23 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="enabled")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/logs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
-func newResourceAnomalyDetector(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAnomalyDetector{}
+func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &anomalyDetectorResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameAnomalyDetector = "Anomaly Detector"
-)
-
-type resourceAnomalyDetector struct {
+type anomalyDetectorResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAnomalyDetector) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_cloudwatch_log_anomaly_detector"
+func (*anomalyDetectorResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_cloudwatch_log_anomaly_detector"
 }
 
-func (r *resourceAnomalyDetector) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *anomalyDetectorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"log_group_arn_list": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Required:    true,
-			},
 			"anomaly_visibility_time": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -74,8 +63,12 @@ func (r *resourceAnomalyDetector) Schema(ctx context.Context, req resource.Schem
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"detector_name": schema.StringAttribute{
 				Optional: true,
+			},
+			names.AttrEnabled: schema.BoolAttribute{
+				Required: true,
 			},
 			"evaluation_frequency": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EvaluationFrequency](),
@@ -84,15 +77,16 @@ func (r *resourceAnomalyDetector) Schema(ctx context.Context, req resource.Schem
 			"filter_pattern": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrEnabled: schema.BoolAttribute{
-				Required: true,
-			},
 			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"log_group_arn_list": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfARNType,
+				Required:    true,
+				ElementType: types.StringType,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -100,203 +94,190 @@ func (r *resourceAnomalyDetector) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceAnomalyDetector) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *anomalyDetectorResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data anomalyDetectorResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LogsClient(ctx)
 
-	var plan resourceAnomalyDetectorData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := &cloudwatchlogs.CreateLogAnomalyDetectorInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &cloudwatchlogs.CreateLogAnomalyDetectorInput{
-		Tags: getTagsIn(ctx),
-	}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	outputCLAD, err := conn.CreateLogAnomalyDetector(ctx, input)
 
-	out, err := conn.CreateLogAnomalyDetector(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameAnomalyDetector, plan.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating CloudWatch Logs Anomaly Detector", err.Error())
+
 		return
 	}
 
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameAnomalyDetector, plan.ARN.String(), nil),
-			errors.New("empty output").Error(),
-		)
+	// Set values for unknowns.
+	data.AnomalyDetectorARN = fwflex.StringToFramework(ctx, outputCLAD.AnomalyDetectorArn)
+
+	outputGLAD, err := findLogAnomalyDetectorByARN(ctx, conn, data.AnomalyDetectorARN.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Anomaly Detector (%s)", data.AnomalyDetectorARN.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	data.AnomalyVisibilityTime = fwflex.Int64ToFramework(ctx, outputGLAD.AnomalyVisibilityTime)
 
-	plan.ARN = flex.StringToFramework(ctx, out.AnomalyDetectorArn)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAnomalyDetector) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var state resourceAnomalyDetectorData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *anomalyDetectorResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data anomalyDetectorResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findLogAnomalyDetectorByARN(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().LogsClient(ctx)
+
+	output, err := findLogAnomalyDetectorByARN(ctx, conn, data.AnomalyDetectorARN.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionSetting, ResNameAnomalyDetector, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Anomaly Detector (%s)", data.AnomalyDetectorARN.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state.AnomalyVisibilityTime = flex.Int64ToFramework(ctx, out.AnomalyVisibilityTime)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAnomalyDetector) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var plan, state resourceAnomalyDetectorData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *anomalyDetectorResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new anomalyDetectorResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	conn := r.Meta().LogsClient(ctx)
+
+	diff, d := fwflex.Calculate(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
-		in := &cloudwatchlogs.UpdateLogAnomalyDetectorInput{}
+		input := &cloudwatchlogs.UpdateLogAnomalyDetectorInput{}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		in.AnomalyDetectorArn = plan.ARN.ValueStringPointer()
-		in.AnomalyVisibilityTime = plan.AnomalyVisibilityTime.ValueInt64Pointer()
+		_, err := conn.UpdateLogAnomalyDetector(ctx, input)
 
-		out, err := conn.UpdateLogAnomalyDetector(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameAnomalyDetector, plan.ARN.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameAnomalyDetector, plan.ARN.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Anomaly Detector (%s)", new.AnomalyDetectorARN.ValueString()), err.Error())
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceAnomalyDetector) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *anomalyDetectorResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data anomalyDetectorResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LogsClient(ctx)
 
-	var state resourceAnomalyDetectorData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	_, err := conn.DeleteLogAnomalyDetector(ctx, &cloudwatchlogs.DeleteLogAnomalyDetectorInput{
+		AnomalyDetectorArn: data.AnomalyDetectorARN.ValueStringPointer(),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	in := &cloudwatchlogs.DeleteLogAnomalyDetectorInput{
-		AnomalyDetectorArn: state.ARN.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteLogAnomalyDetector(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameAnomalyDetector, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Anomaly Detector (%s)", data.AnomalyDetectorARN.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceAnomalyDetector) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
+func (r *anomalyDetectorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
-func (r *resourceAnomalyDetector) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
+func (r *anomalyDetectorResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func findLogAnomalyDetectorByARN(ctx context.Context, conn *cloudwatchlogs.Client, arn string) (*cloudwatchlogs.GetLogAnomalyDetectorOutput, error) {
-	in := &cloudwatchlogs.GetLogAnomalyDetectorInput{
+	input := cloudwatchlogs.GetLogAnomalyDetectorInput{
 		AnomalyDetectorArn: aws.String(arn),
 	}
 
-	out, err := conn.GetLogAnomalyDetector(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	return findLogAnomalyDetector(ctx, conn, &input)
+}
 
+func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.GetLogAnomalyDetectorInput) (*cloudwatchlogs.GetLogAnomalyDetectorOutput, error) {
+	output, err := conn.GetLogAnomalyDetector(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
-type resourceAnomalyDetectorData struct {
-	ARN                   types.String                                     `tfsdk:"arn"`
-	LogGroupARNList       fwtypes.ListValueOf[types.String]                `tfsdk:"log_group_arn_list"`
+type anomalyDetectorResourceModel struct {
+	AnomalyDetectorARN    types.String                                     `tfsdk:"arn"`
 	AnomalyVisibilityTime types.Int64                                      `tfsdk:"anomaly_visibility_time"`
 	DetectorName          types.String                                     `tfsdk:"detector_name"`
 	Enabled               types.Bool                                       `tfsdk:"enabled"`
 	EvaluationFrequency   fwtypes.StringEnum[awstypes.EvaluationFrequency] `tfsdk:"evaluation_frequency"`
 	FilterPattern         types.String                                     `tfsdk:"filter_pattern"`
 	KMSKeyID              types.String                                     `tfsdk:"kms_key_id"`
+	LogGroupARNList       fwtypes.ListOfARN                                `tfsdk:"log_group_arn_list"`
 	Tags                  tftags.Map                                       `tfsdk:"tags"`
 	TagsAll               tftags.Map                                       `tfsdk:"tags_all"`
 }

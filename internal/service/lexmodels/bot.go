@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lex_bot")
+// @SDKResource("aws_lex_bot", name="Bot")
 func resourceBot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotCreate,

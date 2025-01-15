@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_detective_organization_admin_account")
+// @SDKResource("aws_detective_organization_admin_account", name="Organization Admin Account")
 func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,

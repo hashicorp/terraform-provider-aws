@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListApplications(ctx, &m2.ListApplicationsInput{},
+	input := m2.ListApplicationsInput{}
+	_, err := client.ListApplications(ctx, &input,
 		func(opts *m2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

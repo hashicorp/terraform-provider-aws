@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceApplication,
 			TypeName: "aws_serverlessapplicationrepository_application",
+			Name:     "Application",
 		},
 	}
 }

@@ -5,7 +5,6 @@ package logs_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,11 +21,7 @@ import (
 
 func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var loganomalydetector cloudwatchlogs.GetLogAnomalyDetectorOutput
+	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 
@@ -42,7 +36,7 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 			{
 				Config: testAccLogAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "TEN_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
@@ -63,11 +57,7 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 
 func TestAccLogsAnomalyDetector_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var loganomalydetector cloudwatchlogs.GetLogAnomalyDetectorOutput
+	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 
@@ -82,7 +72,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 			{
 				Config: testAccLogAnomalyDetectorConfig_update(rName, "TEN_MIN", acctest.CtFalse, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "TEN_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
@@ -102,7 +92,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 			{
 				Config: testAccLogAnomalyDetectorConfig_update(rName, "FIVE_MIN", acctest.CtTrue, 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "FIVE_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "8"),
@@ -124,11 +114,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 
 func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var loganomalydetector cloudwatchlogs.GetLogAnomalyDetectorOutput
+	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 
@@ -143,7 +129,7 @@ func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 			{
 				Config: testAccLogAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceAnomalyDetector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -162,6 +148,7 @@ func testAccCheckAnomalyDetectorDestroy(ctx context.Context) resource.TestCheckF
 			}
 
 			_, err := tflogs.FindLogAnomalyDetectorByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -170,43 +157,39 @@ func testAccCheckAnomalyDetectorDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			return fmt.Errorf("CloudwatchLogs Anomaly Detector %s still exists", rs.Primary.Attributes[names.AttrARN])
+			return fmt.Errorf("CloudWatch Logs Anomaly Detector still exists: %s", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAnomalyDetectorExists(ctx context.Context, name string, loganomalydetector *cloudwatchlogs.GetLogAnomalyDetectorOutput) resource.TestCheckFunc {
+func testAccCheckAnomalyDetectorExists(ctx context.Context, n string, v *cloudwatchlogs.GetLogAnomalyDetectorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameAnomalyDetector, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameAnomalyDetector, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		resp, err := tflogs.FindLogAnomalyDetectorByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tflogs.FindLogAnomalyDetectorByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		if err != nil {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameAnomalyDetector, rs.Primary.Attributes[names.AttrARN], err)
+			return err
 		}
 
-		*loganomalydetector = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccAnomalyDetectorImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAnomalyDetectorImportStateIDFunc(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
+			return "", fmt.Errorf("Not found: %s", n)
 		}
 
 		return rs.Primary.Attributes[names.AttrARN], nil

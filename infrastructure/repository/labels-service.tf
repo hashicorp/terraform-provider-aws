@@ -154,6 +154,7 @@ variable "service_labels" {
     "inspector",
     "inspector2",
     "internetmonitor",
+    "invoicing",
     "iot",
     "iot1clickdevices",
     "iot1clickprojects",

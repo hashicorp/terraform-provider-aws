@@ -130,7 +130,7 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 	appID := d.Get("app_id").(string)
 	domainName := d.Get(names.AttrDomainName).(string)
 	id := domainAssociationCreateResourceID(appID, domainName)
-	input := &amplify.CreateDomainAssociationInput{
+	input := amplify.CreateDomainAssociationInput{
 		AppId:               aws.String(appID),
 		DomainName:          aws.String(domainName),
 		EnableAutoSubDomain: aws.Bool(d.Get("enable_auto_sub_domain").(bool)),
@@ -141,7 +141,7 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 		input.CertificateSettings = expandCertificateSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.CreateDomainAssociation(ctx, input)
+	_, err := conn.CreateDomainAssociation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Domain Association (%s): %s", id, err)
@@ -253,10 +253,11 @@ func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Domain Association: %s", d.Id())
-	_, err = conn.DeleteDomainAssociation(ctx, &amplify.DeleteDomainAssociationInput{
+	input := amplify.DeleteDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
-	})
+	}
+	_, err = conn.DeleteDomainAssociation(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -270,12 +271,12 @@ func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) {
-	input := &amplify.GetDomainAssociationInput{
+	input := amplify.GetDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
 	}
 
-	output, err := conn.GetDomainAssociation(ctx, input)
+	output, err := conn.GetDomainAssociation(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

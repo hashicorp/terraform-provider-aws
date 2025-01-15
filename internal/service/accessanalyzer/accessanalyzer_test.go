@@ -37,9 +37,9 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
-	input := &accessanalyzer.ListAnalyzersInput{}
+	input := accessanalyzer.ListAnalyzersInput{}
 
-	_, err := conn.ListAnalyzers(ctx, input)
+	_, err := conn.ListAnalyzers(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

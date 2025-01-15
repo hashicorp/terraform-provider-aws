@@ -43,7 +43,7 @@ The `location` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Name of the bucket.
+* `id` - (**Deprecated**, use `bucket` instead) Name of the bucket.
 * `arn` - ARN of the bucket.
 
 ## Import

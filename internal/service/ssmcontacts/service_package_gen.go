@@ -43,6 +43,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceContact,
 			TypeName: "aws_ssmcontacts_contact",
+			Name:     "Contact",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -50,10 +51,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceContactChannel,
 			TypeName: "aws_ssmcontacts_contact_channel",
+			Name:     "Contact Channel",
 		},
 		{
 			Factory:  DataSourcePlan,
 			TypeName: "aws_ssmcontacts_plan",
+			Name:     "Plan",
 		},
 	}
 }

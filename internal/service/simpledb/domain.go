@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_simpledb_domain", name="Domain")
 func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainResource{}
 
