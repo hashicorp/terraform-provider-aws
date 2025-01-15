@@ -201,6 +201,7 @@ A `stage` block supports the following arguments:
 
 * `name` - (Required) The name of the stage.
 * `action` - (Required) The action(s) to include in the stage. Defined as an `action` block below
+* `on_failure` - (Optional) Specifies how CodePipeline should behave if this stage fails. An `on_failure` block is documented below.
 
 An `action` block supports the following arguments:
 
@@ -216,6 +217,13 @@ An `action` block supports the following arguments:
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
+
+
+A `on_failure` block supports the following arguments:
+
+* `result` - (Required) The stage’s failure outcome. Possible values are `RETRY`
+* `retry_configuration` - (Optional) Nested block specifying retry details for the failed stage. A `retry_configuration` block supports the following arguments:
+* `retry_mode` - (Required) Defines which actions in the stage are retried upon failure. Possible values are `ALL_ACTIONS`, `FAILED_ACTIONS`
 
 A `trigger` block supports the following arguments:
 
