@@ -152,6 +152,18 @@ func resourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"launch_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"os_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"stage_last_updated_date_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"short_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -325,6 +337,11 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
+	d.Set("launch_time", aws.ToTime(dir.LaunchTime).Format(time.RFC3339))
+	if dir.Type == awstypes.DirectoryTypeMicrosoftAd {
+		d.Set("os_version", dir.OsVersion)
+	}
+	d.Set("stage_last_updated_date_time", aws.ToTime(dir.StageLastUpdatedDateTime).Format(time.RFC3339))
 	d.Set("short_name", dir.ShortName)
 	d.Set(names.AttrSize, dir.Size)
 	d.Set(names.AttrType, dir.Type)
