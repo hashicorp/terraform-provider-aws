@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Framework")
+// @FrameworkResource("aws_auditmanager_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFramework{}, nil

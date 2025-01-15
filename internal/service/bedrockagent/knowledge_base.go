@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Knowledge Base")
+// @FrameworkResource("aws_bedrockagent_knowledge_base", name="Knowledge Base")
 // @Tags(identifierAttribute="arn")
 func newKnowledgeBaseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &knowledgeBaseResource{}

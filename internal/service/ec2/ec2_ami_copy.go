@@ -256,6 +256,10 @@ func resourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,

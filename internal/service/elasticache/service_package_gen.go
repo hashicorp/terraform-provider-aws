@@ -18,6 +18,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 	return []*types.ServicePackageFrameworkDataSource{
 		{
 			Factory: newDataSourceReservedCacheNodeOffering,
+			Name:    "Reserved Cache Node Offering",
 		},
 		{
 			Factory: newDataSourceServerlessCache,
@@ -29,14 +30,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceReservedCacheNode,
+			Factory:  newResourceReservedCacheNode,
+			TypeName: "aws_elasticache_reserved_cache_node",
+			Name:     "Reserved Cache Node",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newServerlessCacheResource,
-			Name:    "Serverless Cache",
+			Factory:  newServerlessCacheResource,
+			TypeName: "aws_elasticache_serverless_cache",
+			Name:     "Serverless Cache",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

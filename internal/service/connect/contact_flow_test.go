@@ -36,7 +36,7 @@ func testAccContactFlow_basic(t *testing.T) {
 				Config: testAccContactFlowConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/contact-flow/{contact_flow_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
@@ -55,7 +55,7 @@ func testAccContactFlow_basic(t *testing.T) {
 				Config: testAccContactFlowConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/contact-flow/{contact_flow_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
@@ -86,7 +86,7 @@ func testAccContactFlow_filename(t *testing.T) {
 				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/contact-flow/{contact_flow_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
@@ -108,7 +108,7 @@ func testAccContactFlow_filename(t *testing.T) {
 				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/contact-flow/{contact_flow_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),

@@ -27,7 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceMultiplexProgram,
+			Factory:  newResourceMultiplexProgram,
+			TypeName: "aws_medialive_multiplex_program",
+			Name:     "Multiplex Program",
 		},
 	}
 }

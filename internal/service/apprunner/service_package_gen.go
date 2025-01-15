@@ -26,12 +26,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newDeploymentResource,
-			Name:    "Deployment",
+			Factory:  newResourceDefaultAutoScalingConfigurationVersion,
+			TypeName: "aws_apprunner_default_auto_scaling_configuration_version",
+			Name:     "Default AutoScaling Configuration Version",
 		},
 		{
-			Factory: newResourceDefaultAutoScalingConfigurationVersion,
-			Name:    "Default AutoScaling Configuration Version",
+			Factory:  newDeploymentResource,
+			TypeName: "aws_apprunner_deployment",
+			Name:     "Deployment",
 		},
 	}
 }

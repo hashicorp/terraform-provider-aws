@@ -97,8 +97,6 @@ func (r *resourceInstanceState) Create(ctx context.Context, req resource.CreateR
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", instanceID), err.Error())
 	}
 
-	plan.State = flex.StringToFramework(ctx, instance.DBInstanceStatus)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 

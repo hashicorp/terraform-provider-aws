@@ -21,12 +21,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceDataCellsFilter,
-			Name:    "Data Cells Filter",
+			Factory:  newResourceDataCellsFilter,
+			TypeName: "aws_lakeformation_data_cells_filter",
+			Name:     "Data Cells Filter",
 		},
 		{
-			Factory: newResourceResourceLFTag,
-			Name:    "Resource LF Tag",
+			Factory:  newResourceResourceLFTag,
+			TypeName: "aws_lakeformation_resource_lf_tag",
+			Name:     "Resource LF Tag",
 		},
 	}
 }
@@ -36,14 +38,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceDataLakeSettings,
 			TypeName: "aws_lakeformation_data_lake_settings",
+			Name:     "Data Lake Settings",
 		},
 		{
 			Factory:  DataSourcePermissions,
 			TypeName: "aws_lakeformation_permissions",
+			Name:     "Permissions",
 		},
 		{
 			Factory:  DataSourceResource,
 			TypeName: "aws_lakeformation_resource",
+			Name:     "Resource",
 		},
 	}
 }
@@ -53,14 +58,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataLakeSettings,
 			TypeName: "aws_lakeformation_data_lake_settings",
+			Name:     "Data Lake Settings",
 		},
 		{
 			Factory:  ResourceLFTag,
 			TypeName: "aws_lakeformation_lf_tag",
+			Name:     "LF Tag",
 		},
 		{
 			Factory:  ResourcePermissions,
 			TypeName: "aws_lakeformation_permissions",
+			Name:     "Permissions",
 		},
 		{
 			Factory:  ResourceResource,
@@ -70,6 +78,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResourceLFTags,
 			TypeName: "aws_lakeformation_resource_lf_tags",
+			Name:     "Resource LF Tags",
 		},
 	}
 }

@@ -18,9 +18,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 	return []*types.ServicePackageFrameworkDataSource{
 		{
 			Factory: newDataSourceControl,
+			Name:    "Control",
 		},
 		{
 			Factory: newDataSourceFramework,
+			Name:    "Framework",
 		},
 	}
 }
@@ -28,40 +30,53 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAccountRegistration,
+			Factory:  newResourceAccountRegistration,
+			TypeName: "aws_auditmanager_account_registration",
+			Name:     "Account Registration",
 		},
 		{
-			Factory: newResourceAssessment,
-			Name:    "Assessment",
+			Factory:  newResourceAssessment,
+			TypeName: "aws_auditmanager_assessment",
+			Name:     "Assessment",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceAssessmentDelegation,
+			Factory:  newResourceAssessmentDelegation,
+			TypeName: "aws_auditmanager_assessment_delegation",
+			Name:     "Assessment Delegation",
 		},
 		{
-			Factory: newResourceAssessmentReport,
+			Factory:  newResourceAssessmentReport,
+			TypeName: "aws_auditmanager_assessment_report",
+			Name:     "Assessment Report",
 		},
 		{
-			Factory: newResourceControl,
-			Name:    "Control",
+			Factory:  newResourceControl,
+			TypeName: "aws_auditmanager_control",
+			Name:     "Control",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceFramework,
-			Name:    "Framework",
+			Factory:  newResourceFramework,
+			TypeName: "aws_auditmanager_framework",
+			Name:     "Framework",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceFrameworkShare,
+			Factory:  newResourceFrameworkShare,
+			TypeName: "aws_auditmanager_framework_share",
+			Name:     "Framework Share",
 		},
 		{
-			Factory: newResourceOrganizationAdminAccountRegistration,
+			Factory:  newResourceOrganizationAdminAccountRegistration,
+			TypeName: "aws_auditmanager_organization_admin_account_registration",
+			Name:     "Organization Admin Account Registration",
 		},
 	}
 }

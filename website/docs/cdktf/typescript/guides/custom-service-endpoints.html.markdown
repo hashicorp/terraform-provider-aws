@@ -268,6 +268,7 @@ class MyConvertedCode extends TerraformStack {
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
+|Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
@@ -469,4 +470,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5d8f02e5766b22d3b4353ae26193eeb01512ec61264949160844931349f39ff6 -->
+<!-- cache-key: cdktf-0.20.8 input-7d5e83cb756f223a78a2e2031e90a71987614ef4e697b264240b6547c00228b9 -->

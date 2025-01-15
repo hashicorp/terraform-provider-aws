@@ -65,6 +65,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `CHATBOT_TEAMS_CHANNEL_ID` | ID of the Microsoft Teams channel. |
 | `CHATBOT_TEAMS_TEAM_ID` | ID of the Microsoft Teams workspace authorized with AWS Chatbot. |
 | `CHATBOT_TEAMS_TENANT_ID` | ID of the Microsoft Teams tenant. |
+| `CLOUD_HSM_CLUSTER_ID` | Cloud HSM cluster identifier for KMS custom key store acceptance tests. |
 | `DX_CONNECTION_ID` | Identifier for Direct Connect Connection testing. |
 | `DX_VIRTUAL_INTERFACE_ID` | Identifier for Direct Connect Virtual Interface testing. |
 | `EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT` | EC2 Quota for Rules per Security Group. Defaults to 50. **DEPRECATED:** Can be augmented or replaced with Service Quotas lookup. |
@@ -97,3 +98,4 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL` | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit. |
 | `TF_TEST_CLOUDFRONT_RETAIN` | Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards) |
 | `TF_TEST_ELASTICACHE_RESERVED_CACHE_NODE` | Flag to enable resource tests for ElastiCache reserved nodes. Set to `1` to run tests |
+| `TRUST_ANCHOR_CERTIFICATE` | Trust anchor certificate for KMS custom key store acceptance tests. |

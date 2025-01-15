@@ -29,8 +29,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceRotation,
-			Name:    "Rotation",
+			Factory:  newResourceRotation,
+			TypeName: "aws_ssmcontacts_rotation",
+			Name:     "Rotation",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -43,6 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceContact,
 			TypeName: "aws_ssmcontacts_contact",
+			Name:     "Contact",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -50,10 +52,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceContactChannel,
 			TypeName: "aws_ssmcontacts_contact_channel",
+			Name:     "Contact Channel",
 		},
 		{
 			Factory:  DataSourcePlan,
 			TypeName: "aws_ssmcontacts_plan",
+			Name:     "Plan",
 		},
 	}
 }

@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="DRT Role ARN Association")
+// @FrameworkResource("aws_shield_drt_access_role_arn_association", name="DRT Role ARN Association")
 func newDRTAccessRoleARNAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDRTAccessRoleARNAssociation{}
 
