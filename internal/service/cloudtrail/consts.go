@@ -39,7 +39,7 @@ func field_Values() []string {
 		fieldReadOnly,
 		fieldResourcesARN,
 		fieldResourcesType,
-		fieldUserIdentityARN
+		fieldUserIdentityARN,
 	}
 }
 
