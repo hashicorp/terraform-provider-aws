@@ -24,24 +24,29 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newApplicationLayerAutomaticResponseResource,
-			Name:    "Application Layer Automatic Response",
+			Factory:  newApplicationLayerAutomaticResponseResource,
+			TypeName: "aws_shield_application_layer_automatic_response",
+			Name:     "Application Layer Automatic Response",
 		},
 		{
-			Factory: newDRTAccessLogBucketAssociationResource,
-			Name:    "DRT Log Bucket Association",
+			Factory:  newDRTAccessLogBucketAssociationResource,
+			TypeName: "aws_shield_drt_access_log_bucket_association",
+			Name:     "DRT Log Bucket Association",
 		},
 		{
-			Factory: newDRTAccessRoleARNAssociationResource,
-			Name:    "DRT Role ARN Association",
+			Factory:  newDRTAccessRoleARNAssociationResource,
+			TypeName: "aws_shield_drt_access_role_arn_association",
+			Name:     "DRT Role ARN Association",
 		},
 		{
-			Factory: newProactiveEngagementResource,
-			Name:    "Proactive Engagement",
+			Factory:  newProactiveEngagementResource,
+			TypeName: "aws_shield_proactive_engagement",
+			Name:     "Proactive Engagement",
 		},
 		{
-			Factory: newResourceSubscription,
-			Name:    "Subscription",
+			Factory:  newResourceSubscription,
+			TypeName: "aws_shield_subscription",
+			Name:     "Subscription",
 		},
 	}
 }
