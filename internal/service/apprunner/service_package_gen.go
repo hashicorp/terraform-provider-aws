@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newHostedZoneIDDataSource,
-			Name:    "Hosted Zone ID",
+			Factory:  newHostedZoneIDDataSource,
+			TypeName: "aws_apprunner_hosted_zone_id",
+			Name:     "Hosted Zone ID",
 		},
 	}
 }
