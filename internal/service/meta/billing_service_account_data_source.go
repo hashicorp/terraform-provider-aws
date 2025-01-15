@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Billing Service Account")
+// @FrameworkDataSource("aws_billing_service_account", name="Billing Service Account")
 func newBillingServiceAccountDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &billingServiceAccountDataSource{}
 
