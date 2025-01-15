@@ -40,22 +40,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceApplication,
-			Name:    "Application",
+			Factory:  newResourceApplication,
+			TypeName: "aws_servicecatalogappregistry_application",
+			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceAttributeGroup,
-			Name:    "Attribute Group",
+			Factory:  newResourceAttributeGroup,
+			TypeName: "aws_servicecatalogappregistry_attribute_group",
+			Name:     "Attribute Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceAttributeGroupAssociation,
-			Name:    "Attribute Group Association",
+			Factory:  newResourceAttributeGroupAssociation,
+			TypeName: "aws_servicecatalogappregistry_attribute_group_association",
+			Name:     "Attribute Group Association",
 		},
 	}
 }

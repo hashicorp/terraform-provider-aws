@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceChannelGroup,
-			Name:    "Channel Group",
+			Factory:  newResourceChannelGroup,
+			TypeName: "aws_media_packagev2_channel_group",
+			Name:     "Channel Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

@@ -27,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newJobQueueResource,
-			Name:    "Job Queue",
+			Factory:  newJobQueueResource,
+			TypeName: "aws_batch_job_queue",
+			Name:     "Job Queue",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

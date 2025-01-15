@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceCatalogTableOptimizer,
-			Name:    "Catalog Table Optimizer",
+			Factory:  newResourceCatalogTableOptimizer,
+			TypeName: "aws_glue_catalog_table_optimizer",
+			Name:     "Catalog Table Optimizer",
 		},
 	}
 }

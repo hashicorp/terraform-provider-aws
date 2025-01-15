@@ -26,22 +26,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAssociation,
-			Name:    "Association",
+			Factory:  newResourceAssociation,
+			TypeName: "aws_route53profiles_association",
+			Name:     "Association",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceProfile,
-			Name:    "Profile",
+			Factory:  newResourceProfile,
+			TypeName: "aws_route53profiles_profile",
+			Name:     "Profile",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceResourceAssociation,
-			Name:    "ResourceAssociation",
+			Factory:  newResourceResourceAssociation,
+			TypeName: "aws_route53profiles_resource_association",
+			Name:     "ResourceAssociation",
 		},
 	}
 }

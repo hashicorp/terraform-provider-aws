@@ -38,31 +38,37 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAccessPolicy,
-			Name:    "Access Policy",
+			Factory:  newResourceAccessPolicy,
+			TypeName: "aws_opensearchserverless_access_policy",
+			Name:     "Access Policy",
 		},
 		{
-			Factory: newResourceCollection,
-			Name:    "Collection",
+			Factory:  newResourceCollection,
+			TypeName: "aws_opensearchserverless_collection",
+			Name:     "Collection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceLifecyclePolicy,
-			Name:    "Lifecycle Policy",
+			Factory:  newResourceLifecyclePolicy,
+			TypeName: "aws_opensearchserverless_lifecycle_policy",
+			Name:     "Lifecycle Policy",
 		},
 		{
-			Factory: newResourceSecurityConfig,
-			Name:    "Security Config",
+			Factory:  newResourceSecurityConfig,
+			TypeName: "aws_opensearchserverless_security_config",
+			Name:     "Security Config",
 		},
 		{
-			Factory: newResourceSecurityPolicy,
-			Name:    "Security Policy",
+			Factory:  newResourceSecurityPolicy,
+			TypeName: "aws_opensearchserverless_security_policy",
+			Name:     "Security Policy",
 		},
 		{
-			Factory: newVPCEndpointResource,
-			Name:    "VPC Endpoint",
+			Factory:  newVPCEndpointResource,
+			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
 		},
 	}
 }

@@ -21,15 +21,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newConnectionResource,
-			Name:    "Connection",
+			Factory:  newConnectionResource,
+			TypeName: "aws_codeconnections_connection",
+			Name:     "Connection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newHostResource,
-			Name:    "Host",
+			Factory:  newHostResource,
+			TypeName: "aws_codeconnections_host",
+			Name:     "Host",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

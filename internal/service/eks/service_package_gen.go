@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newPodIdentityAssociationResource,
-			Name:    "Pod Identity Association",
+			Factory:  newPodIdentityAssociationResource,
+			TypeName: "aws_eks_pod_identity_association",
+			Name:     "Pod Identity Association",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "association_arn",
 			},

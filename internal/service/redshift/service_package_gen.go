@@ -30,20 +30,24 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceDataShareAuthorization,
-			Name:    "Data Share Authorization",
+			Factory:  newResourceDataShareAuthorization,
+			TypeName: "aws_redshift_data_share_authorization",
+			Name:     "Data Share Authorization",
 		},
 		{
-			Factory: newResourceDataShareConsumerAssociation,
-			Name:    "Data Share Consumer Association",
+			Factory:  newResourceDataShareConsumerAssociation,
+			TypeName: "aws_redshift_data_share_consumer_association",
+			Name:     "Data Share Consumer Association",
 		},
 		{
-			Factory: newResourceLogging,
-			Name:    "Logging",
+			Factory:  newResourceLogging,
+			TypeName: "aws_redshift_logging",
+			Name:     "Logging",
 		},
 		{
-			Factory: newResourceSnapshotCopy,
-			Name:    "Snapshot Copy",
+			Factory:  newResourceSnapshotCopy,
+			TypeName: "aws_redshift_snapshot_copy",
+			Name:     "Snapshot Copy",
 		},
 	}
 }

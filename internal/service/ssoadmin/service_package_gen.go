@@ -40,26 +40,31 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceApplication,
-			Name:    "Application",
-			Tags:    &types.ServicePackageResourceTags{},
+			Factory:  newResourceApplication,
+			TypeName: "aws_ssoadmin_application",
+			Name:     "Application",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory: newResourceApplicationAccessScope,
-			Name:    "Application Access Scope",
+			Factory:  newResourceApplicationAccessScope,
+			TypeName: "aws_ssoadmin_application_access_scope",
+			Name:     "Application Access Scope",
 		},
 		{
-			Factory: newResourceApplicationAssignment,
-			Name:    "Application Assignment",
+			Factory:  newResourceApplicationAssignment,
+			TypeName: "aws_ssoadmin_application_assignment",
+			Name:     "Application Assignment",
 		},
 		{
-			Factory: newResourceApplicationAssignmentConfiguration,
-			Name:    "Application Assignment Configuration",
+			Factory:  newResourceApplicationAssignmentConfiguration,
+			TypeName: "aws_ssoadmin_application_assignment_configuration",
+			Name:     "Application Assignment Configuration",
 		},
 		{
-			Factory: newResourceTrustedTokenIssuer,
-			Name:    "Trusted Token Issuer",
-			Tags:    &types.ServicePackageResourceTags{},
+			Factory:  newResourceTrustedTokenIssuer,
+			TypeName: "aws_ssoadmin_trusted_token_issuer",
+			Name:     "Trusted Token Issuer",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
