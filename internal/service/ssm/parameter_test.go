@@ -55,9 +55,10 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			// Test import with version.
 			// https://github.com/hashicorp/terraform-provider-aws/issues/37812.
@@ -67,7 +68,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				ImportStateId:                        name + ":1",
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite"},
+				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite", "has_value_wo"},
 			},
 		},
 	})
@@ -125,9 +126,10 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
@@ -139,9 +141,10 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -170,9 +173,10 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_description(name, "updated description", "String", "test"),
@@ -185,9 +189,10 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -213,9 +218,10 @@ func TestAccSSMParameter_tier(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierStandard)),
@@ -255,9 +261,10 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierStandard)),
@@ -274,9 +281,10 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -302,9 +310,10 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierAdvanced)),
@@ -322,9 +331,10 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -352,9 +362,10 @@ func TestAccSSMParameter_Tier_intelligentTieringOnCreation(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -462,7 +473,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite"},
+				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test3"),
@@ -532,7 +543,7 @@ func TestAccSSMParameter_Overwrite_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite"},
+				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
 			},
 		},
 	})
@@ -566,7 +577,7 @@ func TestAccSSMParameter_Overwrite_noOverwriteTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite"},
+				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
 			},
 		},
 	})
@@ -597,9 +608,10 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_overwriteTags1(rName, true, acctest.CtKey1, acctest.CtValue2),
@@ -667,9 +679,10 @@ func TestAccSSMParameter_updateType(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "SecureString", "test2"),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
@@ -701,7 +714,7 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite"},
+				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_basicOverwriteNoDescription(name, "String", "test2"),
@@ -734,9 +747,10 @@ func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_basic(after, "String", "test2"),
@@ -771,9 +785,10 @@ func TestAccSSMParameter_fullPath(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -801,9 +816,10 @@ func TestAccSSMParameter_Secure_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -910,9 +926,10 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -939,9 +956,10 @@ func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -967,9 +985,10 @@ func TestAccSSMParameter_DataType_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_dataTypeUpdate(rName, "aws:ec2:image"),
@@ -1005,9 +1024,10 @@ func TestAccSSMParameter_Secure_key(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 		},
 	})
@@ -1036,9 +1056,10 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_value_wo"},
 			},
 			{
 				Config: testAccParameterConfig_secureKey(name, "secret", randString),
@@ -1082,7 +1103,7 @@ func TestAccSSMParameter_importByARN(t *testing.T) {
 				},
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite"},
+				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite", "has_value_wo"},
 			},
 		},
 	})

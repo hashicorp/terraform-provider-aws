@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -30,6 +31,7 @@ import (
 // @SDKResource("aws_ssm_parameter", name="Parameter")
 // @Tags(identifierAttribute="id", resourceType="Parameter")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
+// @Testing(importIgnore="has_value_wo")
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -38,10 +40,17 @@ func resourceParameter() *schema.Resource {
 		DeleteWithoutTimeout: resourceParameterDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("has_value_wo", false)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
+			"has_value_wo": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"allowed_pattern": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -72,7 +81,7 @@ func resourceParameter() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
+				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
 			},
 			names.AttrKeyID: {
 				Type:     schema.TypeString,
@@ -114,7 +123,14 @@ func resourceParameter() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
+				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+			},
+			"value_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				WriteOnly:    true,
+				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
 			},
 			names.AttrVersion: {
 				Type:     schema.TypeInt,
@@ -153,6 +169,17 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 		value = v
 	}
+
+	valueWO, di := d.GetRawConfigAt(cty.GetAttrPath("value_wo"))
+	if di.HasError() {
+		diags = append(diags, di...)
+		return diags
+	}
+
+	if !valueWO.IsNull() && valueWO.AsString() != "" {
+		value = valueWO.AsString()
+	}
+
 	input := &ssm.PutParameterInput{
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 		Name:           aws.String(name),
@@ -248,10 +275,29 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrType, param.Type)
 	d.Set(names.AttrVersion, param.Version)
 
+	hasWriteOnly := d.Get("has_value_wo").(bool)
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsNull() {
+		valueWO, di := d.GetRawConfigAt(cty.GetAttrPath("value_wo"))
+		if di.HasError() {
+			diags = append(diags, di...)
+			return diags
+		}
+
+		if !valueWO.IsNull() && valueWO.AsString() != "" {
+			hasWriteOnly = true
+		}
+	}
+
 	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
 	} else {
 		d.Set(names.AttrValue, param.Value)
+	}
+
+	if hasWriteOnly {
+		d.Set("has_value_wo", true)
+		d.Set(names.AttrValue, nil)
 	}
 
 	if param.Type == awstypes.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {

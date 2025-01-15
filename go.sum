@@ -664,12 +664,12 @@ github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 h1:v3DapR8gsp3E
 github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0/go.mod h1:c3PnGE9pHBDfdEVG9t1S1C9ia5LW+gkFR0CygXlM8ak=
 github.com/hashicorp/terraform-plugin-framework-validators v0.16.0 h1:O9QqGoYDzQT7lwTXUsZEtgabeWW96zUBh47Smn2lkFA=
 github.com/hashicorp/terraform-plugin-framework-validators v0.16.0/go.mod h1:Bh89/hNmqsEWug4/XWKYBwtnw3tbz5BAy1L1OgvbIaY=
-github.com/hashicorp/terraform-plugin-go v0.25.0 h1:oi13cx7xXA6QciMcpcFi/rwA974rdTxjqEhXJjbAyks=
-github.com/hashicorp/terraform-plugin-go v0.25.0/go.mod h1:+SYagMYadJP86Kvn+TGeV+ofr/R3g4/If0O5sO96MVw=
+github.com/hashicorp/terraform-plugin-go v0.25.1-0.20241217173851-dcf8f64dbfaa h1:GOXZVYZrfDrWxZMHdSNqZKDwayH8WBBtyOLx25ekwv8=
+github.com/hashicorp/terraform-plugin-go v0.25.1-0.20241217173851-dcf8f64dbfaa/go.mod h1:OKJU8uauqiLVRWjlFB0KIgK++baq26qfvOU1IVycx9k=
 github.com/hashicorp/terraform-plugin-mux v0.17.0 h1:/J3vv3Ps2ISkbLPiZOLspFcIZ0v5ycUXCEQScudGCCw=
 github.com/hashicorp/terraform-plugin-mux v0.17.0/go.mod h1:yWuM9U1Jg8DryNfvCp+lH70WcYv6D8aooQxxxIzFDsE=
-github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.0 h1:wyKCCtn6pBBL46c1uIIBNUOWlNfYXfXpVo16iDyLp8Y=
-github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.0/go.mod h1:B0Al8NyYVr8Mp/KLwssKXG1RqnTk7FySqSn4fRuLNgw=
+github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.1-0.20250103201413-5f29273ad6f0 h1:wBngDRqcqKObWtg/2e/FPcMaL9SLtkBePd5adYjCcMo=
+github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.1-0.20250103201413-5f29273ad6f0/go.mod h1:wsPZ9W0E/8tID4aejTrYrNPlJS8YhkEepeMeZlUaB8M=
 github.com/hashicorp/terraform-plugin-testing v1.11.0 h1:MeDT5W3YHbONJt2aPQyaBsgQeAIckwPX41EUHXEn29A=
 github.com/hashicorp/terraform-plugin-testing v1.11.0/go.mod h1:WNAHQ3DcgV/0J+B15WTE6hDvxcUdkPPpnB1FR3M910U=
 github.com/hashicorp/terraform-registry-address v0.2.3 h1:2TAiKJ1A3MAkZlH1YI/aTVcLZRu7JseiXNRHbOAyoTI=
