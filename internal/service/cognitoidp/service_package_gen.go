@@ -17,16 +17,19 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newUserGroupDataSource,
-			Name:    "User Group",
+			Factory:  newUserGroupDataSource,
+			TypeName: "aws_cognito_user_group",
+			Name:     "User Group",
 		},
 		{
-			Factory: newUserGroupsDataSource,
-			Name:    "User Groups",
+			Factory:  newUserGroupsDataSource,
+			TypeName: "aws_cognito_user_groups",
+			Name:     "User Groups",
 		},
 		{
-			Factory: newUserPoolDataSource,
-			Name:    "User Pool",
+			Factory:  newUserPoolDataSource,
+			TypeName: "aws_cognito_user_pool",
+			Name:     "User Pool",
 		},
 	}
 }
