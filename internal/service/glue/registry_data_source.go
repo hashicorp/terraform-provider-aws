@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Registry")
+// @FrameworkDataSource("aws_glue_registry", name="Registry")
 func newDataSourceRegistry(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceRegistry{}, nil
 }
