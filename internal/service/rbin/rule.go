@@ -196,7 +196,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk(names.AttrExcludeResourceTags); ok && v.(*schema.Set).Len() > 0 {
-		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
+		in.ExcludeResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 
 	out, err := conn.CreateRule(ctx, in)
@@ -280,7 +280,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		update = true
 	}
 	if d.HasChanges(names.AttrExcludeResourceTags) {
-		in.ResourceTags = expandResourceTags(d.Get(names.AttrExcludeResourceTags).(*schema.Set).List())
+		in.ExcludeResourceTags = expandResourceTags(d.Get(names.AttrExcludeResourceTags).(*schema.Set).List())
 		update = true
 	}
 
