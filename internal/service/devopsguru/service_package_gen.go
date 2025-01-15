@@ -30,20 +30,24 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceEventSourcesConfig,
-			Name:    "Event Sources Config",
+			Factory:  newResourceEventSourcesConfig,
+			TypeName: "aws_devopsguru_event_sources_config",
+			Name:     "Event Sources Config",
 		},
 		{
-			Factory: newResourceNotificationChannel,
-			Name:    "Notification Channel",
+			Factory:  newResourceNotificationChannel,
+			TypeName: "aws_devopsguru_notification_channel",
+			Name:     "Notification Channel",
 		},
 		{
-			Factory: newResourceResourceCollection,
-			Name:    "Resource Collection",
+			Factory:  newResourceResourceCollection,
+			TypeName: "aws_devopsguru_resource_collection",
+			Name:     "Resource Collection",
 		},
 		{
-			Factory: newResourceServiceIntegration,
-			Name:    "Service Integration",
+			Factory:  newResourceServiceIntegration,
+			TypeName: "aws_devopsguru_service_integration",
+			Name:     "Service Integration",
 		},
 	}
 }
