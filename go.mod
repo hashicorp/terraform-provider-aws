@@ -12,8 +12,8 @@ require (
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/aws/aws-sdk-go-v2 v1.32.8
-	github.com/aws/aws-sdk-go-v2/config v1.28.10
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.51
+	github.com/aws/aws-sdk-go-v2/config v1.28.11
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.52
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.23
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.48
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.5
@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.9
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.2
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.3
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.29.2
@@ -131,7 +131,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.9
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.9
-	github.com/aws/aws-sdk-go-v2/service/iam v1.38.4
+	github.com/aws/aws-sdk-go-v2/service/iam v1.38.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.9
@@ -215,7 +215,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.9
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/rum v1.21.9
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.72.2
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.72.3
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.9
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.2
@@ -236,7 +236,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/shield v1.29.9
 	github.com/aws/aws-sdk-go-v2/service/signer v1.26.9
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.10
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.6
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.26.9
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.34.9
@@ -245,7 +245,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.9
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.29.9
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.9
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.6
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/swf v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.3
@@ -272,7 +272,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.60
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.60.0.20250115132415-305ecf3d32ed
 	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.61
 	github.com/hashicorp/awspolicyequivalence v1.7.0
 	github.com/hashicorp/cli v1.1.6
