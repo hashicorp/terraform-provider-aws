@@ -26,16 +26,21 @@ func globalIDFromLocationURI(uri string) (string, error) {
 	}
 
 	globalIDAndSubdir := submatches[2]
-	parsedARN, err := arn.Parse(globalIDAndSubdir)
-
-	if err == nil {
+	if parsedARN, err := arn.Parse(globalIDAndSubdir); err == nil {
 		submatches = s3OutpostsAccessPointARNResourcePattern.FindStringSubmatch(parsedARN.Resource)
 
 		if len(submatches) != 3 {
 			return "", fmt.Errorf("location URI S3 on Outposts access point ARN resource (%s) does not match pattern %q", parsedARN.Resource, s3OutpostsAccessPointARNResourcePattern)
 		}
 
-		s3OutpostsAccessPointARN := fmt.Sprintf("arn:%s:%s:%s:%s:%s", parsedARN.Partition, parsedARN.Service, parsedARN.Region, parsedARN.AccountID, submatches[1])
+		s3OutpostsAccessPointARN := arn.ARN{
+			Partition: parsedARN.Partition,
+			Service:   parsedARN.Service,
+			Region:    parsedARN.Region,
+			AccountID: parsedARN.AccountID,
+			Resource:  submatches[1],
+		}.String()
+
 		return s3OutpostsAccessPointARN, nil
 	}
 
