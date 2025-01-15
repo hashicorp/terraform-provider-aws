@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.28.10
-	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.23.4
+	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.9
