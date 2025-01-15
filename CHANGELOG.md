@@ -20,6 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_apprunner_vpc_ingress_connection: Change `ingress_vpc_configuration`, `name`, and `service_arn` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#40927](https://github.com/hashicorp/terraform-provider-aws/issues/40927))
 * resource/aws_ecs_task_definition: Correctly detect differences in `volume.configure_at_launch` and `volume.docker_volume_configuration` ([#40853](https://github.com/hashicorp/terraform-provider-aws/issues/40853))
 * resource/aws_msk_cluster: Prevent persistent differences when `broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput` is unset ([#40910](https://github.com/hashicorp/terraform-provider-aws/issues/40910))
 * resource/aws_msk_cluster: Properly disable provisioned throughput when a previously configured `broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput` block is removed ([#40910](https://github.com/hashicorp/terraform-provider-aws/issues/40910))
