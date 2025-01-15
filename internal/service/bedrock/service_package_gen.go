@@ -57,6 +57,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Guardrail Version",
 		},
 		{
+			Factory: newKnowledgeBaseLoggingConfigurationResource,
+			Name:    "Knowledge Base Logging Configuration",
+		},
+		{
 			Factory: newModelInvocationLoggingConfigurationResource,
 			Name:    "Model Invocation Logging Configuration",
 		},
