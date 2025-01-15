@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_ami: Add support for UEFI data
+```
+
+```release-note:enhancement
+resource/aws_ami: Add support for UEFI data
+```
