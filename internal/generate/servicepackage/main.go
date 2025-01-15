@@ -244,34 +244,47 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			switch annotationName := m[1]; annotationName {
 			case "EphemeralResource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				if slices.ContainsFunc(v.ephemeralResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.ephemeralResources = append(v.ephemeralResources, d)
 				}
-
-				if d.Name == "" {
-					v.g.Errorf("%s missing name: %s.%s", annotationName, v.packageName, v.functionName)
-				}
 			case "FrameworkDataSource":
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.frameworkDataSources = append(v.frameworkDataSources, d)
 				}
+			case "FrameworkResource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
 
 				if d.Name == "" {
-					v.g.Errorf("%s missing name: %s.%s", annotationName, v.packageName, v.functionName)
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
 				}
-			case "FrameworkResource":
+
 				if slices.ContainsFunc(v.frameworkResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.frameworkResources = append(v.frameworkResources, d)
-				}
-
-				if d.Name == "" {
-					v.g.Errorf("%s missing name: %s.%s", annotationName, v.packageName, v.functionName)
 				}
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
@@ -281,14 +294,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				typeName := args.Positional[0]
 
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				if _, ok := v.sdkDataSources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkDataSources[typeName] = d
-				}
-
-				if d.Name == "" {
-					v.g.Errorf("%s missing name: %s/%s", annotationName, v.packageName, typeName)
 				}
 			case "SDKResource":
 				if len(args.Positional) == 0 {
@@ -298,14 +312,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				typeName := args.Positional[0]
 
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				if _, ok := v.sdkResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkResources[typeName] = d
-				}
-
-				if d.Name == "" {
-					v.g.Errorf("%s missing name: %s/%s", annotationName, v.packageName, typeName)
 				}
 			case "Tags":
 				// Handled above.
