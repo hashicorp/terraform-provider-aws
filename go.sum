@@ -327,8 +327,8 @@ github.com/aws/aws-sdk-go-v2/service/kms v1.37.11 h1:49cjX6w3sLuMk0PBBXzUsgzF6v4
 github.com/aws/aws-sdk-go-v2/service/kms v1.37.11/go.mod h1:wHYtyttsH+A6d2MzXYl8cIf4O2Kw1Kg0qzromSX/wOs=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.39.3 h1:rQM/LElNp/6uw+I85yNsaV40iiJeZ5QZmF32YkSPBxk=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.39.3/go.mod h1:1+EysBcnJhsK4gCScTDieHIuus9uhKCx5uGnILv+irs=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.69.4 h1:wzPwPinzX/rEuSAu12Qh8YFYNrHR8prIAnYMuXttCDc=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.69.4/go.mod h1:1izOmZ+TgwoltIn2xqydUZGl0J+Uw6OYku8U8V96+oc=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.69.5 h1:G3F2wYUqmEiPgptgCeZaZWGyttf3DN+Rj38OSCHNXwk=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.69.5/go.mod h1:1izOmZ+TgwoltIn2xqydUZGl0J+Uw6OYku8U8V96+oc=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.9 h1:LgHcd6tB9J47qk0moV6UxZQkz9tJTYi2WlXjQGSjyvY=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.9/go.mod h1:jgnseggDE4Q0z2OdbyZqHNdbPEmfnPPX3pAWFGw5J8E=
 github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.9 h1:1hzdyha/4WbzgHlBCJhKntSIIQUJFFtVpmvL2jfp1Qw=
