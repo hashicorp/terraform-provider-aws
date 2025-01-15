@@ -158,7 +158,16 @@ func resourceParameter() *schema.Resource {
 			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-				output, err := findParameterByName(ctx, conn, diff.Id(), true)
+				if diff.Id() == "" {
+					return nil
+				}
+
+				output, err := findParameterByName(ctx, conn, diff.Get(names.AttrName).(string), true)
+
+				if tfresource.NotFound(err) {
+					return nil
+				}
+
 				if err != nil {
 					return err
 				}
