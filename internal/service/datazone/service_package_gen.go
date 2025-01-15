@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceEnvironmentBlueprint,
-			Name:    "Environment Blueprint",
+			Factory:  newDataSourceEnvironmentBlueprint,
+			TypeName: "aws_datazone_environment_blueprint",
+			Name:     "Environment Blueprint",
 		},
 	}
 }
