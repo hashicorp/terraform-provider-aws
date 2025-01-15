@@ -15,8 +15,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceProtection,
-			Name:    "Protection",
+			Factory:  newDataSourceProtection,
+			TypeName: "aws_shield_protection",
+			Name:     "Protection",
 		},
 	}
 }
