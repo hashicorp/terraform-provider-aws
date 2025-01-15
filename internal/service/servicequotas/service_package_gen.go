@@ -26,12 +26,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceTemplate,
-			Name:    "Template",
+			Factory:  newResourceTemplate,
+			TypeName: "aws_servicequotas_template",
+			Name:     "Template",
 		},
 		{
-			Factory: newResourceTemplateAssociation,
-			Name:    "Template Association",
+			Factory:  newResourceTemplateAssociation,
+			TypeName: "aws_servicequotas_template_association",
+			Name:     "Template Association",
 		},
 	}
 }
