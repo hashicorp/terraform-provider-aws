@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/controltower"
         - "internal/service/kafka"
-        - "internal/service/kendra"
         - "internal/service/kinesis"
         - "internal/service/kinesisvideo"
         - "internal/service/lexmodels"
