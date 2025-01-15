@@ -24,8 +24,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newDirectoryBucketResource,
-			Name:    "Directory Bucket",
+			Factory:  newDirectoryBucketResource,
+			TypeName: "aws_s3_directory_bucket",
+			Name:     "Directory Bucket",
 		},
 	}
 }
