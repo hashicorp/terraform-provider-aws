@@ -81,6 +81,26 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
+			names.AttrExcludeResourceTags: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_tag_key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 127),
+						},
+						"resource_tag_value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 256),
+						},
+					},
+				},
+			},
 			names.AttrResourceType: {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -175,6 +195,9 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && v.(*schema.Set).Len() > 0 {
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
+	if v, ok := d.GetOk(names.AttrExcludeResourceTags); ok && v.(*schema.Set).Len() > 0 {
+		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
+	}
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
@@ -226,6 +249,9 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(out.ResourceTags)); err != nil {
 		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
+	if err := d.Set(names.AttrExcludeResourceTags, flattenResourceTags(out.ExcludeResourceTags)); err != nil {
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
+	}
 
 	if err := d.Set(names.AttrRetentionPeriod, flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
 		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
@@ -251,6 +277,10 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChanges(names.AttrResourceTags) {
 		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
+		update = true
+	}
+	if d.HasChanges(names.AttrExcludeResourceTags) {
+		in.ResourceTags = expandResourceTags(d.Get(names.AttrExcludeResourceTags).(*schema.Set).List())
 		update = true
 	}
 
