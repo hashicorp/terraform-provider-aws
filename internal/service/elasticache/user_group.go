@@ -50,7 +50,7 @@ func resourceUserGroup() *schema.Resource {
 			names.AttrEngine: {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validation.StringInSlice([]string{"REDIS", "VALKEY"}, false),
+				ValidateFunc:     validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			names.AttrTags:    tftags.TagsSchema(),

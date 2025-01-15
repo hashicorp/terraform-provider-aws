@@ -20,7 +20,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = "testUserId"
   user_name     = "testUserName"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password123456789"]
 }
 ```
@@ -30,7 +30,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = "testUserId"
   user_name     = "testUserName"
   access_string = "on ~* +@all"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type = "iam"
@@ -43,7 +43,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = "testUserId"
   user_name     = "testUserName"
   access_string = "on ~* +@all"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type      = "password"
@@ -57,7 +57,7 @@ resource "aws_elasticache_user" "test" {
 The following arguments are required:
 
 * `access_string` - (Required) Access permissions string used for this user. See [Specifying Permissions Using an Access String](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.RBAC.html#Access-string) for more details.
-* `engine` - (Required) The current supported values are `REDIS`, `VALKEY`.
+* `engine` - (Required) The current supported values are `redis`, `valkey` (case insensitive).
 * `user_id` - (Required) The ID of the user.
 * `user_name` - (Required) The username of the user.
 
