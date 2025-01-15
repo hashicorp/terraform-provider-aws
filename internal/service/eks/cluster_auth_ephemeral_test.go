@@ -25,7 +25,7 @@ func TestAccEKSClusterAuthEphemeral_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck: acctest.ErrorCheck(t, names.EKSServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_10_0),
 		},
