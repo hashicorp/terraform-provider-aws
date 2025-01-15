@@ -48,10 +48,6 @@ func resourceParameter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"has_value_wo": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"allowed_pattern": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -77,6 +73,10 @@ func resourceParameter() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+			"has_value_wo": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"insecure_value": {
 				Type:         schema.TypeString,
@@ -208,6 +208,10 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return diags
 	}
 
+	if !valueWO.Type().Equals(cty.String) {
+		return sdkdiag.AppendErrorf(diags, "creating SSM Parameter (%s): invalid value_wo type", d.Id())
+	}
+
 	if !valueWO.IsNull() && valueWO.AsString() != "" {
 		value = valueWO.AsString()
 	}
@@ -316,6 +320,10 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 			return diags
 		}
 
+		if !valueWO.Type().Equals(cty.String) {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Parameter (%s): invalid value_wo type", d.Id())
+		}
+
 		if !valueWO.IsNull() && valueWO.AsString() != "" {
 			hasWriteOnly = true
 		}
@@ -372,6 +380,10 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if di.HasError() {
 			diags = append(diags, di...)
 			return diags
+		}
+
+		if !valueWO.Type().Equals(cty.String) {
+			return sdkdiag.AppendErrorf(diags, "updating SSM Parameter (%s): invalid value_wo type", d.Id())
 		}
 
 		if !valueWO.IsNull() && valueWO.AsString() != "" {
