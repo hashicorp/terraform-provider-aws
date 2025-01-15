@@ -6,6 +6,7 @@ package s3_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -47,6 +48,14 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccDirectoryBucketConfig_localZone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_redundancy", "SingleLocalZone"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.type", "LocalZone"),
+				),
 			},
 		},
 	})
@@ -210,4 +219,66 @@ resource "aws_s3_directory_bucket" "test" {
   force_destroy = true
 }
 `)
+}
+
+func TestAccS3DirectoryBucket_localZoneLocationType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryBucketConfig_localZone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_redundancy", "SingleLocalZone"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.type", "LocalZone"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDirectoryBucketConfig_localZone(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = "apne1-az2" // Example LocalZone
+    type = "LocalZone"
+  }
+}
+`)
+}
+
+func TestAccS3DirectoryBucket_invalidLocationType(t *testing.T) {
+	ctx := acctest.Context(t)
+	invalidConfig := `
+resource "aws_s3_directory_bucket" "test" {
+  bucket = "invalid-bucket"
+
+  location {
+    name = "invalid-zone"
+    type = "InvalidLocationType"
+  }
+}
+`
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      invalidConfig,
+				ExpectError: regexp.MustCompile("expected location.type to be one of .*"),
+			},
+		},
+	})
 }
