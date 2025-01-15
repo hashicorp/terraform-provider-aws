@@ -27,12 +27,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Application Providers",
 		},
 		{
-			Factory: newDataSourcePrincipalApplicationAssignments,
-			Name:    "Principal Application Assignments",
-		},
-		{
 			Factory: newPermissionSetsDataSource,
 			Name:    "Permission Sets",
+		},
+		{
+			Factory: newDataSourcePrincipalApplicationAssignments,
+			Name:    "Principal Application Assignments",
 		},
 	}
 }
