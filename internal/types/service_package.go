@@ -21,8 +21,9 @@ type ServicePackageResourceTags struct {
 // ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
 // implemented by a service package.
 type ServicePackageEphemeralResource struct {
-	Factory func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
-	Name    string
+	Factory  func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
+	TypeName string
+	Name     string
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
@@ -36,9 +37,10 @@ type ServicePackageFrameworkDataSource struct {
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource
 // implemented by a service package.
 type ServicePackageFrameworkResource struct {
-	Factory func(context.Context) (resource.ResourceWithConfigure, error)
-	Name    string
-	Tags    *ServicePackageResourceTags
+	Factory  func(context.Context) (resource.ResourceWithConfigure, error)
+	TypeName string
+	Name     string
+	Tags     *ServicePackageResourceTags
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
