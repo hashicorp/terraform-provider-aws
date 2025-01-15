@@ -5,6 +5,7 @@ package ssm
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -153,7 +154,29 @@ func resourceParameter() *schema.Resource {
 			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange(names.AttrValue)
 			}),
+			// detect drift on write-only attributes
+			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
+				output, err := findParameterByName(ctx, conn, diff.Id(), true)
+				if err != nil {
+					return err
+				}
+
+				valueWO, di := diff.GetRawConfigAt(cty.GetAttrPath("value_wo"))
+				if di.HasError() {
+					return errors.New("unable to retrieve write only value")
+				}
+
+				if !valueWO.IsNull() && valueWO.AsString() != "" {
+					if valueWO.AsString() != aws.ToString(output.Value) {
+						if err := diff.SetNewComputed("has_value_wo"); err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
 			verify.SetTagsDiff,
 		),
 	}
@@ -335,6 +358,17 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 			value = v
 		}
+
+		valueWO, di := d.GetRawConfigAt(cty.GetAttrPath("value_wo"))
+		if di.HasError() {
+			diags = append(diags, di...)
+			return diags
+		}
+
+		if !valueWO.IsNull() && valueWO.AsString() != "" {
+			value = valueWO.AsString()
+		}
+		
 		input := &ssm.PutParameterInput{
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 			Name:           aws.String(d.Id()),
