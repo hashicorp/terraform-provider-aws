@@ -43,15 +43,16 @@ func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 				Config: testAccServerlessCacheConfig_basicRedis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrSet(resourceName, "daily_snapshot_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
@@ -87,7 +88,7 @@ func TestAccElastiCacheServerlessCache_basicValkey(t *testing.T) {
 				Config: testAccServerlessCacheConfig_basicValkey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrSet(resourceName, "daily_snapshot_time"),
@@ -131,7 +132,7 @@ func TestAccElastiCacheServerlessCache_full(t *testing.T) {
 				Config: testAccServerlessCacheConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.maximum", "10"),
 					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.minimum", "1"),
@@ -179,7 +180,7 @@ func TestAccElastiCacheServerlessCache_fullRedis(t *testing.T) {
 				Config: testAccServerlessCacheConfig_fullRedis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
@@ -222,7 +223,7 @@ func TestAccElastiCacheServerlessCache_fullValkey(t *testing.T) {
 				Config: testAccServerlessCacheConfig_fullValkey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
@@ -267,7 +268,7 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 				Config: testAccServerlessCacheConfig_update(rName, descriptionOld),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
@@ -289,7 +290,7 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 				Config: testAccServerlessCacheConfig_update(rName, descriptionNew),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
@@ -330,7 +331,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionOld, 1, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
@@ -353,7 +354,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &v2),
 					testAccCheckServerlessCacheNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
@@ -371,7 +372,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &v3),
 					testAccCheckServerlessCacheNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
@@ -389,7 +390,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &v4),
 					testAccCheckServerlessCacheNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),

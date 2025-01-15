@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,7 +36,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("db:%s", rName))),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "rds", "db:{identifier}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
@@ -50,6 +49,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "docdb"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),

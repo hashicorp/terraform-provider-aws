@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_partition_index")
+// @SDKResource("aws_glue_partition_index", name="Partition Index")
 func ResourcePartitionIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartitionIndexCreate,

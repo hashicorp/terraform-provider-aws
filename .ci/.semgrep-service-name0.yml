@@ -4360,3 +4360,21 @@ rules:
             - pattern-regex: "(?i)Connect"
             - pattern-not-regex: .*uickConnect.*
     severity: WARNING
+  - id: connectcases-in-func-name
+    languages:
+      - go
+    message: Do not use "ConnectCases" in func name inside connectcases package
+    paths:
+      include:
+        - internal/service/connectcases
+      exclude:
+        - internal/service/connectcases/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConnectCases"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING

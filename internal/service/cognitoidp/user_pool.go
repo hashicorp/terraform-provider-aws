@@ -210,6 +210,31 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"email_mfa_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMessage: {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(6, 20000),
+								validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+							),
+						},
+						"subject": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+								`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+						},
+					},
+				},
+			},
 			"email_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -486,6 +511,24 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"sign_in_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allowed_first_auth_factors": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.AuthFactorType](),
+							},
+						},
+					},
+				},
+			},
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -570,6 +613,12 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"user_pool_tier": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
+			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -643,6 +692,24 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"web_authn_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relying_party_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"user_verification": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.UserVerificationType](),
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -709,14 +776,26 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("password_policy"); ok {
 		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-			input.Policies = &awstypes.UserPoolPolicyType{
-				PasswordPolicy: expandPasswordPolicyType(v),
+			passwordPolicy := expandPasswordPolicyType(v)
+			if input.Policies == nil {
+				input.Policies = &awstypes.UserPoolPolicyType{}
 			}
+			input.Policies.PasswordPolicy = passwordPolicy
 		}
 	}
 
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		input.Schema = expandSchemaAttributeTypes(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("sign_in_policy"); ok {
+		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+			signInPolicy := expandSignInPolicyType(v)
+			if input.Policies == nil {
+				input.Policies = &awstypes.UserPoolPolicyType{}
+			}
+			input.Policies.SignInPolicy = signInPolicy
+		}
 	}
 
 	// For backwards compatibility, include this outside of MFA configuration
@@ -767,6 +846,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if v := awstypes.UserPoolTierType(d.Get("user_pool_tier").(string)); v != awstypes.UserPoolTierTypeEssentials {
+		input.UserPoolTier = v
+	}
+
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateUserPool(ctx, input)
 	}, userPoolErrorRetryable)
@@ -777,11 +860,18 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(outputRaw.(*cognitoidentityprovider.CreateUserPoolOutput).UserPool.Id))
 
-	if v := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string)); v != awstypes.UserPoolMfaTypeOff {
+	if mfaConfig := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string)); mfaConfig != awstypes.UserPoolMfaTypeOff || len(d.Get("web_authn_configuration").([]interface{})) > 0 {
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-			MfaConfiguration:              v,
-			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
-			UserPoolId:                    aws.String(d.Id()),
+			UserPoolId: aws.String(d.Id()),
+		}
+
+		if mfaConfig != awstypes.UserPoolMfaTypeOff {
+			input.MfaConfiguration = mfaConfig
+			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{}))
+		}
+
+		if v := d.Get("email_mfa_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
+			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
 		}
 
 		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
@@ -792,6 +882,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 			if v, ok := d.GetOk("sms_authentication_message"); ok {
 				input.SmsMfaConfiguration.SmsAuthenticationMessage = aws.String(v.(string))
 			}
+		}
+
+		if webAuthnConfig := d.Get("web_authn_configuration").([]interface{}); len(webAuthnConfig) > 0 {
+			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
@@ -859,6 +953,9 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		configuredSchema = v.(*schema.Set).List()
 	}
+	if err := d.Set("sign_in_policy", flattenSignInPolicyType(userPool.Policies.SignInPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sign_in_policy: %s", err)
+	}
 	if err := d.Set(names.AttrSchema, flattenSchemaAttributeTypes(expandSchemaAttributeTypes(configuredSchema), userPool.SchemaAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
@@ -873,6 +970,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("user_pool_add_ons", flattenUserPoolAddOnsType(userPool.UserPoolAddOns)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user_pool_add_ons: %s", err)
 	}
+	d.Set("user_pool_tier", userPool.UserPoolTier)
 	d.Set("username_attributes", userPool.UsernameAttributes)
 	if err := d.Set("username_configuration", flattenUsernameConfigurationType(userPool.UsernameConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting username_configuration: %s", err)
@@ -889,9 +987,15 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
 	}
 
+	if err := d.Set("email_mfa_configuration", flattenEmailMFAConfigType(output.EmailMfaConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting email_mfa_configuration: %s", err)
+	}
 	d.Set("mfa_configuration", output.MfaConfiguration)
 	if err := d.Set("software_token_mfa_configuration", flattenSoftwareTokenMFAConfigType(output.SoftwareTokenMfaConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting software_token_mfa_configuration: %s", err)
+	}
+	if err := d.Set("web_authn_configuration", flattenWebAuthnConfigType(output.WebAuthnConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting web_authn_configuration: %s", err)
 	}
 
 	return diags
@@ -903,16 +1007,20 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	// MFA updates.
 	if d.HasChanges(
+		"email_mfa_configuration",
 		"mfa_configuration",
 		"sms_authentication_message",
 		"sms_configuration",
 		"software_token_mfa_configuration",
+		"web_authn_configuration",
 	) {
 		mfaConfiguration := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string))
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
 			MfaConfiguration:              mfaConfiguration,
+			EmailMfaConfiguration:         expandEmailMFAConfigType(d.Get("email_mfa_configuration").([]interface{})),
 			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
 			UserPoolId:                    aws.String(d.Id()),
+			WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]interface{})),
 		}
 
 		// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
@@ -952,12 +1060,14 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"email_verification_subject",
 		"lambda_config",
 		"password_policy",
+		"sign_in_policy",
 		"sms_authentication_message",
 		"sms_configuration",
 		"sms_verification_message",
 		// names.AttrTagsAll,
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
+		"user_pool_tier",
 		"verification_message_template",
 	) {
 		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
@@ -1034,9 +1144,21 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("password_policy"); ok {
 			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-				input.Policies = &awstypes.UserPoolPolicyType{
-					PasswordPolicy: expandPasswordPolicyType(v),
+				passwordPolicy := expandPasswordPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
 				}
+				input.Policies.PasswordPolicy = passwordPolicy
+			}
+		}
+
+		if v, ok := d.GetOk("sign_in_policy"); ok {
+			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+				signInPolicy := expandSignInPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
+				}
+				input.Policies.SignInPolicy = signInPolicy
 			}
 		}
 
@@ -1089,6 +1211,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				input.VerificationMessageTemplate = expandVerificationMessageTemplateType(v)
 			}
+		}
+
+		if v, ok := d.GetOk("user_pool_tier"); ok {
+			input.UserPoolTier = awstypes.UserPoolTierType(v.(string))
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -1220,6 +1346,25 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	return output, nil
 }
 
+func expandEmailMFAConfigType(tfList []interface{}) *awstypes.EmailMfaConfigType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.EmailMfaConfigType{}
+
+	if v, ok := tfMap[names.AttrMessage].(string); ok && v != "" {
+		apiObject.Message = aws.String(v)
+	}
+
+	if v, ok := tfMap["subject"].(string); ok && v != "" {
+		apiObject.Subject = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandSMSConfigurationType(tfList []interface{}) *awstypes.SmsConfigurationType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1258,6 +1403,26 @@ func expandSoftwareTokenMFAConfigType(tfList []interface{}) *awstypes.SoftwareTo
 	return apiObject
 }
 
+func expandWebAuthnConfigurationConfigType(tfList []interface{}) *awstypes.WebAuthnConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &awstypes.WebAuthnConfigurationType{}
+
+	if v, ok := tfMap["relying_party_id"].(string); ok && v != "" {
+		apiObject.RelyingPartyId = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_verification"].(string); ok && v != "" {
+		apiObject.UserVerification = awstypes.UserVerificationType(v)
+	}
+
+	return apiObject
+}
+
 func flattenSMSConfigurationType(apiObject *awstypes.SmsConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1280,6 +1445,24 @@ func flattenSMSConfigurationType(apiObject *awstypes.SmsConfigurationType) []int
 	return []interface{}{tfMap}
 }
 
+func flattenEmailMFAConfigType(apiObject *awstypes.EmailMfaConfigType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Message; v != nil {
+		tfMap[names.AttrMessage] = aws.ToString(v)
+	}
+
+	if v := apiObject.Subject; v != nil {
+		tfMap["subject"] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenSoftwareTokenMFAConfigType(apiObject *awstypes.SoftwareTokenMfaConfigType) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1287,6 +1470,22 @@ func flattenSoftwareTokenMFAConfigType(apiObject *awstypes.SoftwareTokenMfaConfi
 
 	tfMap := map[string]interface{}{
 		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWebAuthnConfigType(apiObject *awstypes.WebAuthnConfigurationType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"user_verification": apiObject.UserVerification,
+	}
+
+	if v := apiObject.RelyingPartyId; v != nil {
+		tfMap["relying_party_id"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
@@ -1628,6 +1827,16 @@ func expandPasswordPolicyType(tfMap map[string]interface{}) *awstypes.PasswordPo
 	return apiObject
 }
 
+func expandSignInPolicyType(tfMap map[string]interface{}) *awstypes.SignInPolicyType {
+	apiObject := &awstypes.SignInPolicyType{}
+
+	if v, ok := tfMap["allowed_first_auth_factors"]; ok {
+		apiObject.AllowedFirstAuthFactors = flex.ExpandStringyValueSet[awstypes.AuthFactorType](v.(*schema.Set))
+	}
+
+	return apiObject
+}
+
 func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []interface{} {
 	if apiObject == nil {
 		return []interface{}{}
@@ -1908,6 +2117,22 @@ func flattenPasswordPolicyType(apiObject *awstypes.PasswordPolicyType) []interfa
 
 	if apiObject.PasswordHistorySize != nil {
 		tfMap["password_history_size"] = aws.ToInt32(apiObject.PasswordHistorySize)
+	}
+
+	if len(tfMap) > 0 {
+		return []interface{}{tfMap}
+	}
+
+	return []interface{}{}
+}
+
+func flattenSignInPolicyType(apiObject *awstypes.SignInPolicyType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"allowed_first_auth_factors": apiObject.AllowedFirstAuthFactors,
 	}
 
 	if len(tfMap) > 0 {

@@ -1074,6 +1074,12 @@ service/internetmonitor:
           - any-glob-to-any-file:
               - 'internal/service/internetmonitor/**/*'
               - 'website/**/internetmonitor_*'
+service/invoicing:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/invoicing/**/*'
+              - 'website/**/invoicing_*'
 service/iot:
   - any:
       - changed-files:

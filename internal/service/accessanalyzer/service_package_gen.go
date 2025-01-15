@@ -39,6 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceArchiveRule,
 			TypeName: "aws_accessanalyzer_archive_rule",
+			Name:     "Archive Rule",
 		},
 	}
 }

@@ -28,6 +28,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newDeliveryDestinationPolicyResource,
+			Name:    "Delivery Destination Policy",
+		},
+		{
+			Factory: newDeliveryDestinationResource,
+			Name:    "Delivery Destination",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newDeliveryResource,
+			Name:    "Delivery",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newDeliverySourceResource,
+			Name:    "Delivery Source",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory: newIndexPolicyResource,
 			Name:    "Index Policy",
 		},
@@ -39,6 +64,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceDataProtectionPolicyDocument,
 			TypeName: "aws_cloudwatch_log_data_protection_policy_document",
+			Name:     "Data Protection Policy Document",
 		},
 		{
 			Factory:  dataSourceGroup,

@@ -123,6 +123,7 @@ val services = mapOf(
     "inspector" to ServiceSpec("Inspector Classic"),
     "inspector2" to ServiceSpec("Inspector"),
     "internetmonitor" to ServiceSpec("CloudWatch Internet Monitor"),
+    "invoicing" to ServiceSpec("Invoicing"),
     "iot" to ServiceSpec("IoT Core"),
     "iotanalytics" to ServiceSpec("IoT Analytics"),
     "iotevents" to ServiceSpec("IoT Events"),

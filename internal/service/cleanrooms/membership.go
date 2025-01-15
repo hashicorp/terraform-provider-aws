@@ -335,9 +335,11 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 		names.AttrID: data.ID.ValueString(),
 	})
 
-	_, err := conn.DeleteMembership(ctx, &cleanrooms.DeleteMembershipInput{
+	input := cleanrooms.DeleteMembershipInput{
 		MembershipIdentifier: data.ID.ValueStringPointer(),
-	})
+	}
+
+	_, err := conn.DeleteMembership(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

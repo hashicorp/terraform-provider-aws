@@ -18,6 +18,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 	return []*types.ServicePackageFrameworkDataSource{
 		{
 			Factory: newDataSourceReservedCacheNodeOffering,
+			Name:    "Reserved Cache Node Offering",
 		},
 		{
 			Factory: newDataSourceServerlessCache,
@@ -30,6 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newResourceReservedCacheNode,
+			Name:    "Reserved Cache Node",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

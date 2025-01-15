@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_api_gateway_account")
+// @FrameworkResource("aws_api_gateway_account", name="Account")
 func newResourceAccount(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAccount{}
 
@@ -88,7 +88,7 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 
 	conn := r.Meta().APIGatewayClient(ctx)
 
-	input := &apigateway.UpdateAccountInput{}
+	input := apigateway.UpdateAccountInput{}
 
 	if data.CloudwatchRoleARN.IsNull() || data.CloudwatchRoleARN.ValueString() == "" {
 		input.PatchOperations = []awstypes.PatchOperation{
@@ -110,7 +110,7 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 
 	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
 		func() (*apigateway.UpdateAccountOutput, error) {
-			return conn.UpdateAccount(ctx, input)
+			return conn.UpdateAccount(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The role ARN does not have required permissions") {
@@ -179,7 +179,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 	if diff.HasChanges() {
 		conn := r.Meta().APIGatewayClient(ctx)
 
-		input := &apigateway.UpdateAccountInput{}
+		input := apigateway.UpdateAccountInput{}
 
 		if plan.CloudwatchRoleARN.IsNull() || plan.CloudwatchRoleARN.ValueString() == "" {
 			input.PatchOperations = []awstypes.PatchOperation{
@@ -201,7 +201,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 
 		output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
 			func() (*apigateway.UpdateAccountOutput, error) {
-				return conn.UpdateAccount(ctx, input)
+				return conn.UpdateAccount(ctx, &input)
 			},
 			func(err error) (bool, error) {
 				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The role ARN does not have required permissions") {
@@ -234,7 +234,7 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 	if data.ResetOnDelete.ValueBool() {
 		conn := r.Meta().APIGatewayClient(ctx)
 
-		input := &apigateway.UpdateAccountInput{}
+		input := apigateway.UpdateAccountInput{}
 
 		input.PatchOperations = []awstypes.PatchOperation{{
 			Op:    awstypes.OpReplace,
@@ -242,7 +242,7 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 			Value: nil,
 		}}
 
-		_, err := conn.UpdateAccount(ctx, input)
+		_, err := conn.UpdateAccount(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
 		}
@@ -295,9 +295,9 @@ func (r *resourceAccount) ModifyPlan(ctx context.Context, request resource.Modif
 }
 
 func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetAccountOutput, error) {
-	input := &apigateway.GetAccountInput{}
+	input := apigateway.GetAccountInput{}
 
-	output, err := conn.GetAccount(ctx, input)
+	output, err := conn.GetAccount(ctx, &input)
 
 	if err != nil {
 		return nil, err

@@ -40,6 +40,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceDetector,
 			TypeName: "aws_guardduty_detector",
+			Name:     "Detector",
 		},
 	}
 }
@@ -83,10 +84,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMember,
 			TypeName: "aws_guardduty_member",
+			Name:     "Member",
 		},
 		{
 			Factory:  ResourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
+			Name:     "Organization Admin Account",
 		},
 		{
 			Factory:  ResourceOrganizationConfiguration,
@@ -101,6 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePublishingDestination,
 			TypeName: "aws_guardduty_publishing_destination",
+			Name:     "Publishing Destination",
 		},
 		{
 			Factory:  ResourceThreatIntelSet,

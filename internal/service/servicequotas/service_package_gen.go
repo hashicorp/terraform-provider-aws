@@ -41,10 +41,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceService,
 			TypeName: "aws_servicequotas_service",
+			Name:     "Service",
 		},
 		{
 			Factory:  DataSourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
+			Name:     "Service Quota",
 		},
 	}
 }
@@ -54,6 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
+			Name:     "Service Quota",
 		},
 	}
 }
