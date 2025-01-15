@@ -13,10 +13,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -29,40 +27,46 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const testAccDataSetIDEnvVar = "TF_AWS_DATAEXCHANGE_DATA_SET_ID"
+
+func testAccPreCheckDataSetID(t *testing.T) {
+	if dataSetId := os.Getenv(testAccDataSetIDEnvVar); dataSetId == "" {
+		t.Skipf("Environment variable %s is required for DataExchange Event Action tests. "+
+			"This requires subscribing to an AWS Data Exchange product (e.g. AWS Data Exchange Heartbeat) "+
+			"and setting the environment variable to the entitled dataset ID", testAccDataSetIDEnvVar)
+	}
+}
+
+// TestAccDataExchangeEventAction_basic, TestAccDataExchangeEventAction_update, TestAccDataExchangeEventAction_disappears, TestAccDataExchangeEventAction_keyPattern, TestAccDataExchangeEventAction_encryption, TestAccDataExchangeEventAction_kmsKeyEncryption require an entitled AWS Data Exchange dataset.
+// To run this test:
+// 1. Subscribe to an AWS Data Exchange product (e.g. AWS Data Exchange Heartbeat)
+// 2. Set TF_AWS_DATAEXCHANGE_DATA_SET_ID environment variable to the entitled dataset ID
+// 3. Ensure your AWS region is set to where the entitled dataset resides (e.g. us-east-1)
+
 func TestAccDataExchangeEventAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	var eventaction dataexchange.GetEventActionOutput
-	resourceName := "aws_dataexchange_event_action.test"
-
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
-
-	if _, okAcc := os.LookupEnv("TF_ACC"); !okAcc {
-		t.Skipf("TF_ACC must be set")
-	}
-
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
 	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
-
-	dataSetId, err := helperAccEventActionGetReceivedDataSet(ctx, awstypes.AssetTypeS3Snapshot)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if dataSetId == "" {
-		return
-	}
+	var eventaction dataexchange.GetEventActionOutput
+	resourceName := "aws_dataexchange_event_action.test"
+	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			testAccPreCheckDataSetID(t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 			testAccEventActionPreCheck(ctx, t)
 		},
@@ -93,35 +97,25 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	var eventaction dataexchange.GetEventActionOutput
-	resourceName := "aws_dataexchange_event_action.test"
-
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
-
-	if _, okAcc := os.LookupEnv("TF_ACC"); !okAcc {
-		t.Skipf("TF_ACC must be set")
-	}
-
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
 	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
-
-	dataSetId, err := helperAccEventActionGetReceivedDataSet(ctx, awstypes.AssetTypeS3Snapshot)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if dataSetId == "" {
-		return
-	}
+	var eventaction dataexchange.GetEventActionOutput
+	resourceName := "aws_dataexchange_event_action.test"
+	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			testAccPreCheckDataSetID(t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 			testAccEventActionPreCheck(ctx, t)
 		},
@@ -160,34 +154,25 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var eventaction dataexchange.GetEventActionOutput
-	resourceName := "aws_dataexchange_event_action.test"
-
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
-
-	if _, okAcc := os.LookupEnv("TF_ACC"); !okAcc {
-		t.Skipf("TF_ACC must be set")
-	}
-
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
 	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
-
-	dataSetId, err := helperAccEventActionGetReceivedDataSet(ctx, awstypes.AssetTypeS3Snapshot)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if dataSetId == "" {
-		return
-	}
+	var eventaction dataexchange.GetEventActionOutput
+	resourceName := "aws_dataexchange_event_action.test"
+	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			testAccPreCheckDataSetID(t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 			testAccEventActionPreCheck(ctx, t)
 		},
@@ -209,14 +194,9 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 
 func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
-	if _, okAcc := os.LookupEnv("TF_ACC"); !okAcc {
-		t.Skipf("TF_ACC must be set")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
-
-	dataSetId, err := helperAccEventActionGetReceivedDataSet(ctx, awstypes.AssetTypeS3Snapshot)
-
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		t.Error(err)
@@ -227,12 +207,17 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 		t.Error(err)
 	}
 
-	if dataSetId == "" {
-		return
-	}
+	resourceName := "aws_dataexchange_event_action.test"
+	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDataSetID(t)
+			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
+			testAccEventActionPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
@@ -251,14 +236,9 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 
 func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
-	if _, okAcc := os.LookupEnv("TF_ACC"); !okAcc {
-		t.Skipf("TF_ACC must be set")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
-
-	dataSetId, err := helperAccEventActionGetReceivedDataSet(ctx, awstypes.AssetTypeS3Snapshot)
-
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		t.Error(err)
@@ -269,12 +249,17 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 		t.Error(err)
 	}
 
-	if dataSetId == "" {
-		return
-	}
+	resourceName := "aws_dataexchange_event_action.test"
+	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDataSetID(t)
+			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
+			testAccEventActionPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
@@ -293,13 +278,9 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 
 func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
-	if _, okAcc := os.LookupEnv("TF_ACC"); !okAcc {
-		t.Skipf("TF_ACC must be set")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
-
-	dataSetId, err := helperAccEventActionGetReceivedDataSet(ctx, awstypes.AssetTypeS3Snapshot)
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
@@ -311,12 +292,17 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 		t.Error(err)
 	}
 
-	if dataSetId == "" {
-		return
-	}
+	resourceName := "aws_dataexchange_event_action.test"
+	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDataSetID(t)
+			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
+			testAccEventActionPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
@@ -403,7 +389,7 @@ func testAccCheckEventActionExists(ctx context.Context, n string, v *dataexchang
 func s3BucketConfig(bucketName, accountId string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket        = "%s"
   force_destroy = true
 }
 
@@ -446,7 +432,7 @@ func testAccEventActionConfig_basic(bucketName, dataSetId, accountId string) str
 		s3BucketConfig(bucketName, accountId),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3  {
+  action_export_revision_to_s3 {
     revision_destination {
       bucket = aws_s3_bucket.test.id
     }
@@ -458,8 +444,7 @@ resource "aws_dataexchange_event_action" "test" {
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`, dataSetId),
-	)
+`, dataSetId))
 }
 
 func testAccEventActionConfig_keyPattern(bucketName, dataSetId, accountId string) string {
@@ -467,17 +452,17 @@ func testAccEventActionConfig_keyPattern(bucketName, dataSetId, accountId string
 		s3BucketConfig(bucketName, accountId),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3  {
+  action_export_revision_to_s3 {
     encryption {
       type = "AES256"
     }
     revision_destination {
-      bucket = aws_s3_bucket.test.id
+      bucket      = aws_s3_bucket.test.id
       key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
 
-  event_revision_published  {
+  event_revision_published {
     data_set_id = "%s"
   }
 
@@ -492,17 +477,17 @@ func testAccEventActionConfig_encryption(bucketName, dataSetId, accountId string
 		s3BucketConfig(bucketName, accountId),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3  {
+  action_export_revision_to_s3 {
     encryption {
       type = "AES256"
     }
     revision_destination {
-      bucket = aws_s3_bucket.test.id
+      bucket      = aws_s3_bucket.test.id
       key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
 
-  event_revision_published  {
+  event_revision_published {
     data_set_id = "%s"
   }
 
@@ -520,18 +505,18 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3  {
+  action_export_revision_to_s3 {
     encryption {
-      type = "aws:kms"
+      type        = "aws:kms"
       kms_key_arn = aws_kms_key.test.arn
     }
     revision_destination {
-      bucket = aws_s3_bucket.test.id
+      bucket      = aws_s3_bucket.test.id
       key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
 
-  event_revision_published  {
+  event_revision_published {
     data_set_id = "%s"
   }
 
@@ -539,48 +524,4 @@ resource "aws_dataexchange_event_action" "test" {
 }
 `, dataSetId),
 	)
-}
-
-func helperAccEventActionGetReceivedDataSet(ctx context.Context, assetType awstypes.AssetType) (string, error) {
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	conn := dataexchange.NewFromConfig(cfg)
-	out, err := conn.ListDataSets(ctx, &dataexchange.ListDataSetsInput{
-		MaxResults: 200,
-		Origin:     aws.String("ENTITLED"),
-	})
-	if err != nil {
-		return "", err
-	}
-	for _, dataSet := range out.DataSets {
-		if dataSet.AssetType == assetType {
-			existingActions, err := conn.ListEventActions(ctx, &dataexchange.ListEventActionsInput{
-				EventSourceId: dataSet.SourceId,
-			})
-			if err != nil {
-				continue
-			}
-
-			if len(existingActions.EventActions) < 5 {
-				return *dataSet.Id, nil
-			}
-		}
-	}
-
-	return "", nil
-}
-
-func TestHelperAccEventActionGetReceivedDataSet(t *testing.T) {
-	ctx := context.Background()
-	if _, okAcc := os.LookupEnv("TF_ACC"); !okAcc {
-		t.Skipf("TF_ACC must be set")
-	}
-
-	_, err := helperAccEventActionGetReceivedDataSet(ctx, awstypes.AssetTypeS3Snapshot)
-	if err != nil {
-		t.Error(err)
-	}
 }

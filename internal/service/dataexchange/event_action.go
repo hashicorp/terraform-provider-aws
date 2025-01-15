@@ -185,7 +185,6 @@ func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().DataExchangeClient(ctx)
 
 	var data, state resourceEventActionModel
@@ -306,10 +305,10 @@ type eventRevisionPublishedModel struct {
 
 func (m resourceEventActionModel) Expand(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	switch v.(type) {
-	case *dataexchange.CreateEventActionInput:
-		apiInput := v.(*dataexchange.CreateEventActionInput)
 
+	// Use switch variable assignment to eliminate type assertions in cases
+	switch apiInput := v.(type) {
+	case *dataexchange.CreateEventActionInput:
 		var eventApiInput awstypes.RevisionPublished
 		eventModel, _ := m.EventRevisionPublished.ToPtr(ctx)
 		diags.Append(flex.Expand(ctx, eventModel, &eventApiInput)...)
@@ -319,15 +318,13 @@ func (m resourceEventActionModel) Expand(ctx context.Context, v any) diag.Diagno
 		var actionApiInput awstypes.AutoExportRevisionToS3RequestDetails
 		diags.Append(flex.Expand(ctx, actionModel, &actionApiInput)...)
 		apiInput.Action = &awstypes.Action{ExportRevisionToS3: &actionApiInput}
-		break
+
 	case *dataexchange.UpdateEventActionInput:
-		apiInput := v.(*dataexchange.UpdateEventActionInput)
 		apiInput.EventActionId = m.ID.ValueStringPointer()
 		actionModel, _ := m.ActionExportRevisionToS3.ToPtr(ctx)
 		var actionApiInput awstypes.AutoExportRevisionToS3RequestDetails
 		diags.Append(flex.Expand(ctx, actionModel, &actionApiInput)...)
 		apiInput.Action = &awstypes.Action{ExportRevisionToS3: &actionApiInput}
-		break
 	}
 
 	return diags
