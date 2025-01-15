@@ -555,7 +555,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -565,7 +565,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 }
 `, rName)
 }
@@ -628,7 +628,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -638,7 +638,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id                    = aws_lb.test.id
@@ -687,7 +687,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -697,7 +697,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id                    = aws_instance.test.id
@@ -724,7 +724,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -744,7 +744,7 @@ resource "aws_eip" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id = aws_eip.test.id
@@ -771,7 +771,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -781,7 +781,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   health_check_port = 80
 
@@ -802,7 +802,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -812,7 +812,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   port_override {
     endpoint_port = 8081
@@ -836,7 +836,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -856,7 +856,7 @@ resource "aws_eip" "test" {
 data "aws_region" "current" {}
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id = aws_eip.test.id
@@ -882,7 +882,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -900,7 +900,7 @@ resource "aws_eip" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id = aws_eip.test.id
@@ -1034,7 +1034,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -1044,7 +1044,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id                    = aws_lb.alt_test.arn
