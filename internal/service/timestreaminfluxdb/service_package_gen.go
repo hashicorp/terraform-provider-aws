@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceDBInstance,
-			Name:    "DB Instance",
+			Factory:  newResourceDBInstance,
+			TypeName: "aws_timestreaminfluxdb_db_instance",
+			Name:     "DB Instance",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
