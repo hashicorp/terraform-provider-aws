@@ -218,7 +218,6 @@ An `action` block supports the following arguments:
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
 
-
 A `on_failure` block supports the following arguments:
 
 * `result` - (Required) The stage’s failure outcome. Possible values are `RETRY`
