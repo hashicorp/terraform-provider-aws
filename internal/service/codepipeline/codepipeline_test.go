@@ -2763,7 +2763,7 @@ resource "aws_codepipeline" "test" {
     on_failure {
       result = %[2]q
       retry_configuration {
-      retry_mode = %[3]q
+        retry_mode = %[3]q
       }
     }
   }
@@ -2787,7 +2787,7 @@ resource "aws_codepipeline" "test" {
     on_failure {
       result = %[2]q
       retry_configuration {
-       retry_mode = %[3]q
+        retry_mode = %[3]q
       }
     }
   }
