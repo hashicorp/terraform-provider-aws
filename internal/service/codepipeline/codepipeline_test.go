@@ -1041,6 +1041,61 @@ func TestAccCodePipeline_manualApprovalTimeoutInMinutes(t *testing.T) {
 	})
 }
 
+func TestAccCodePipeline_onFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p types.PipelineDeclaration
+	rName := sdkacctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodePipelineConfig_onFailure(rName, "RETRY", "ALL_ACTIONS"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.on_failure.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.on_failure.0.result", "RETRY"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.on_failure.0.retry_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.on_failure.0.retry_configuration.0.retry_mode", "ALL_ACTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.on_failure.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.on_failure.0.result", "RETRY"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.on_failure.0.retry_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.on_failure.0.retry_configuration.0.retry_mode", "ALL_ACTIONS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodePipelineConfig_noOnFailure(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.on_failure.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func testAccCheckPipelineExists(ctx context.Context, n string, v *types.PipelineDeclaration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2640,6 +2695,147 @@ resource "aws_codepipeline" "test" {
       owner    = "AWS"
       provider = "Manual"
       version  = "1"
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName))
+}
+func testAccCodePipelineConfig_onFailure(rName, result string, retryMode string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name          = "test-pipeline-%[1]s"
+  role_arn      = aws_iam_role.codepipeline_role.arn
+  pipeline_type = "V2"
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
+    }
+
+    on_failure {
+      result = %[2]q
+      retry_configuration {
+      retry_mode = %[3]q
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+
+    on_failure {
+      result = %[2]q
+      retry_configuration {
+       retry_mode = %[3]q
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName, result, retryMode))
+}
+
+func testAccCodePipelineConfig_noOnFailure(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name          = "test-pipeline-%[1]s"
+  role_arn      = aws_iam_role.codepipeline_role.arn
+  pipeline_type = "V2"
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
     }
   }
 
