@@ -139,7 +139,8 @@ var endpointResolverTmpl string
 
 // Annotation processing.
 var (
-	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
+	annotation    = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
+	validTypeName = regexache.MustCompile(`^aws(?:_[a-z0-9]+)+$`)
 )
 
 type visitor struct {
@@ -242,6 +243,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				typeName := args.Positional[0]
 
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				if d.Name == "" {
 					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -259,6 +265,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
 
 				if d.Name == "" {
 					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -278,6 +289,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				typeName := args.Positional[0]
 
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				if d.Name == "" {
 					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -296,6 +312,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				typeName := args.Positional[0]
 
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				if d.Name == "" {
 					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -313,6 +334,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
 
 				if d.Name == "" {
 					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

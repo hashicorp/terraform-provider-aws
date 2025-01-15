@@ -37,6 +37,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 {{- range $key, $value := .FrameworkDataSources }}
 		{
 			Factory: {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
 			Name:    "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
