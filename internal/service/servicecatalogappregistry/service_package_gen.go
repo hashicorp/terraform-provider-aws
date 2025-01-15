@@ -17,22 +17,25 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceApplication,
-			Name:    "Application",
+			Factory:  newDataSourceApplication,
+			TypeName: "aws_servicecatalogappregistry_application",
+			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newDataSourceAttributeGroup,
-			Name:    "Attribute Group",
+			Factory:  newDataSourceAttributeGroup,
+			TypeName: "aws_servicecatalogappregistry_attribute_group",
+			Name:     "Attribute Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newDataSourceAttributeGroupAssociations,
-			Name:    "Attribute Group Associations",
+			Factory:  newDataSourceAttributeGroupAssociations,
+			TypeName: "aws_servicecatalogappregistry_attribute_group_associations",
+			Name:     "Attribute Group Associations",
 		},
 	}
 }
