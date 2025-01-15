@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceResiliencyPolicy,
-			Name:    "Resiliency Policy",
+			Factory:  newResourceResiliencyPolicy,
+			TypeName: "aws_resiliencehub_resiliency_policy",
+			Name:     "Resiliency Policy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
