@@ -15,8 +15,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDirectoryBucketsDataSource,
-			Name:    "Directory Buckets",
+			Factory:  newDirectoryBucketsDataSource,
+			TypeName: "aws_s3_directory_buckets",
+			Name:     "Directory Buckets",
 		},
 	}
 }
