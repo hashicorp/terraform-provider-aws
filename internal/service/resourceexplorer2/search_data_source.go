@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Search")
+// @FrameworkDataSource("aws_resourceexplorer2_search", name="Search")
 func newDataSourceSearch(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSearch{}, nil
 }
