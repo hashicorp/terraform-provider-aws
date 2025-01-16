@@ -17,12 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceDataShares,
-			Name:    "Data Shares",
+			Factory:  newDataSourceDataShares,
+			TypeName: "aws_redshift_data_shares",
+			Name:     "Data Shares",
 		},
 		{
-			Factory: newDataSourceProducerDataShares,
-			Name:    "Producer Data Shares",
+			Factory:  newDataSourceProducerDataShares,
+			TypeName: "aws_redshift_producer_data_shares",
+			Name:     "Producer Data Shares",
 		},
 	}
 }

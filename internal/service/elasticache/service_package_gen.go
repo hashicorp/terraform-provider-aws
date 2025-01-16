@@ -17,12 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceReservedCacheNodeOffering,
-			Name:    "Reserved Cache Node Offering",
+			Factory:  newDataSourceReservedCacheNodeOffering,
+			TypeName: "aws_elasticache_reserved_cache_node_offering",
+			Name:     "Reserved Cache Node Offering",
 		},
 		{
-			Factory: newDataSourceServerlessCache,
-			Name:    "Serverless Cache",
+			Factory:  newDataSourceServerlessCache,
+			TypeName: "aws_elasticache_serverless_cache",
+			Name:     "Serverless Cache",
 		},
 	}
 }

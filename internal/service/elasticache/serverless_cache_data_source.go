@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Serverless Cache")
+// @FrameworkDataSource("aws_elasticache_serverless_cache", name="Serverless Cache")
 func newDataSourceServerlessCache(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceServerlessCache{}, nil
 }

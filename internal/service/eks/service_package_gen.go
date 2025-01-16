@@ -14,6 +14,16 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource{
+		{
+			Factory:  newEphemeralClusterAuth,
+			TypeName: "aws_eks_cluster_auth",
+			Name:     "ClusterAuth",
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
 }

@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newStandardsControlAssociationsDataSource,
-			Name:    "Standards Control Associations",
+			Factory:  newStandardsControlAssociationsDataSource,
+			TypeName: "aws_securityhub_standards_control_associations",
+			Name:     "Standards Control Associations",
 		},
 	}
 }

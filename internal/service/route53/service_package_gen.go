@@ -15,12 +15,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newRecordsDataSource,
-			Name:    "Records",
+			Factory:  newRecordsDataSource,
+			TypeName: "aws_route53_records",
+			Name:     "Records",
 		},
 		{
-			Factory: newZonesDataSource,
-			Name:    "Zones",
+			Factory:  newZonesDataSource,
+			TypeName: "aws_route53_zones",
+			Name:     "Zones",
 		},
 	}
 }

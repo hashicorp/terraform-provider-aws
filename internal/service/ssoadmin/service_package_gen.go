@@ -15,24 +15,29 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceApplication,
-			Name:    "Application",
+			Factory:  newDataSourceApplication,
+			TypeName: "aws_ssoadmin_application",
+			Name:     "Application",
 		},
 		{
-			Factory: newDataSourceApplicationAssignments,
-			Name:    "Application Assignments",
+			Factory:  newDataSourceApplicationAssignments,
+			TypeName: "aws_ssoadmin_application_assignments",
+			Name:     "Application Assignments",
 		},
 		{
-			Factory: newDataSourceApplicationProviders,
-			Name:    "Application Providers",
+			Factory:  newDataSourceApplicationProviders,
+			TypeName: "aws_ssoadmin_application_providers",
+			Name:     "Application Providers",
 		},
 		{
-			Factory: newDataSourcePrincipalApplicationAssignments,
-			Name:    "Principal Application Assignments",
+			Factory:  newPermissionSetsDataSource,
+			TypeName: "aws_ssoadmin_permission_sets",
+			Name:     "Permission Sets",
 		},
 		{
-			Factory: newPermissionSetsDataSource,
-			Name:    "Permission Sets",
+			Factory:  newDataSourcePrincipalApplicationAssignments,
+			TypeName: "aws_ssoadmin_principal_application_assignments",
+			Name:     "Principal Application Assignments",
 		},
 	}
 }

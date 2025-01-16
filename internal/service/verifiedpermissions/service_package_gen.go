@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourcePolicyStore,
-			Name:    "Policy Store",
+			Factory:  newDataSourcePolicyStore,
+			TypeName: "aws_verifiedpermissions_policy_store",
+			Name:     "Policy Store",
 		},
 	}
 }

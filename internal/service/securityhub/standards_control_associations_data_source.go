@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Standards Control Associations")
+// @FrameworkDataSource("aws_securityhub_standards_control_associations", name="Standards Control Associations")
 func newStandardsControlAssociationsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &standardsControlAssociationsDataSource{}
 

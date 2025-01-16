@@ -29,9 +29,10 @@ type ServicePackageEphemeralResource struct {
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
 // implemented by a service package.
 type ServicePackageFrameworkDataSource struct {
-	Factory func(context.Context) (datasource.DataSourceWithConfigure, error)
-	Name    string
-	Tags    *ServicePackageResourceTags
+	Factory  func(context.Context) (datasource.DataSourceWithConfigure, error)
+	TypeName string
+	Name     string
+	Tags     *ServicePackageResourceTags
 }
 
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource

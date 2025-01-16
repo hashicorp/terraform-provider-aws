@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Templates")
+// @FrameworkDataSource("aws_servicequotas_templates", name="Templates")
 func newDataSourceTemplates(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceTemplates{}, nil
 }

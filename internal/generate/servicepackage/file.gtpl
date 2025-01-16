@@ -34,12 +34,11 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.Servic
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource {
-{{- range .FrameworkDataSources }}
+{{- range $key, $value := .FrameworkDataSources }}
 		{
-			Factory: {{ .FactoryName }},
-			{{- if ne .Name "" }}
-			Name:    "{{ .Name }}",
-			{{- end }}
+			Factory: {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
+			Name:    "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}

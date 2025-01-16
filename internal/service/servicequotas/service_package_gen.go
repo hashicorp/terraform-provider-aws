@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceTemplates,
-			Name:    "Templates",
+			Factory:  newDataSourceTemplates,
+			TypeName: "aws_servicequotas_templates",
+			Name:     "Templates",
 		},
 	}
 }
