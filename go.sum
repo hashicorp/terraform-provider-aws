@@ -397,8 +397,8 @@ github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.10 h1:LdDZ0qnkXMtv7id73
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.10/go.mod h1:RAvKdR+AMqDq7DoaN91l9bbwGg2WTe2qj7o4KL0ex1I=
 github.com/aws/aws-sdk-go-v2/service/pcs v1.2.11 h1:5mkIwnYnqr29qF4MOoxLqdW5LfQkr50wYl9FDf+Pac0=
 github.com/aws/aws-sdk-go-v2/service/pcs v1.2.11/go.mod h1:gHxg0I2FNj6WDFTfwIVqT28Ab2/1gT8eQIm38eGRQ6A=
-github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.9 h1:nCiiuePuTeq3v/vUYBauv1NjrEwr0Z4kuFGNEPE1uWU=
-github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.9/go.mod h1:EjGFx1FAQXH2QFU8hO2qNeEvbomZ72hCq+2UpIs2SD0=
+github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.10 h1:sZj/K/nRbmAm1ig4jG4WeXKOROD9i/h8edPz2HjhEN0=
+github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.10/go.mod h1:p3+qXvV+W0sHWbkCCEAxgB+R6LDV0FKuVK/HvWyvV3o=
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.18.4 h1:2bCATlyGKWUcp/5VARFP5/KXirnqibu3jjNYmmAfPic=
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.18.4/go.mod h1:Um+8bvbtVtA4F5YkkumW5gWi+UQMji6CwFMj9KpXWhs=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.18.7 h1:eRrGzrpbO+K99si9VlQl6RhOGiBLk/tSHl5WZ18/SuU=
