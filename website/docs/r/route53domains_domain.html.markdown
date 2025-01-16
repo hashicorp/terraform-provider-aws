@@ -80,7 +80,7 @@ This resource supports the following arguments:
 * `billing_contact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
 * `billing_privacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
 * `domain_name` - (Required) The name of the domain.
-* `duration_in_years` - (Optional) The number of years that you want to register the domain for. Domains are registered for a minimum of one year.
+* `duration_in_years` - (Optional) The number of years that you want to register the domain for. Domains are registered for a minimum of one year. Increasing the duration renews the domain.
 * `name_server` - (Optional) The list of nameservers for the domain. See [`name_server` Blocks](#name_server-blocks) for more details.
 * `registrant_contact` - (Required) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
 * `registrant_privacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
