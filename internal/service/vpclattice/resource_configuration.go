@@ -6,9 +6,7 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"strconv"
-	"strings"
+	"github.com/YakDriver/regexache"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -83,9 +81,19 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"port_ranges": schema.ListAttribute{
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
+				Computed:   true,
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(
+						stringvalidator.RegexMatches(regexache.MustCompile("^((\\d{1,5}\\-\\d{1,5})|(\\d+))$"), "must contain one port number between 1 and 65535 or two seperated by hyphen.")),
+				},
+			},
 			"protocol": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ProtocolType](),
 				Optional:   true,
+				Computed:   true,
 				Default:    stringdefault.StaticString(string(awstypes.ProtocolTypeTcp)),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -109,35 +117,16 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.ResourceConfigurationType](),
+				Optional:   true,
+				Computed:   true,
+				Default:    stringdefault.StaticString(string(awstypes.ResourceConfigurationTypeSingle)),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"port_range": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[portRangeModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"from_port": schema.Int64Attribute{
-							Required: true,
-							Validators: []validator.Int64{
-								int64validator.Between(1, 65535),
-							},
-						},
-						"to_port": schema.Int64Attribute{
-							Required: true,
-							Validators: []validator.Int64{
-								int64validator.Between(1, 65535),
-							},
-						},
-					},
-				},
-			},
 			"resource_configuration_definition": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceConfigurationDefinitionModel](ctx),
 				Validators: []validator.List{
@@ -146,7 +135,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"arn_resource": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[ipResourceModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[arnResourceModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrARN: schema.StringAttribute{
@@ -163,19 +152,6 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 								),
 							},
 						},
-						"ip_resource": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[ipResourceModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"ip_address": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-						},
 						"dns_resource": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dnsResourceModel](ctx),
 							NestedObject: schema.NestedBlockObject{
@@ -186,6 +162,19 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 									"ip_address_type": schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
+									},
+								},
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+						},
+						"ip_resource": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[ipResourceModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"ip_address": schema.StringAttribute{
+										Required: true,
 									},
 								},
 							},
@@ -241,6 +230,7 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, req resource
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	plan.ResourceGatewayIdentifier = flex.StringToFramework(ctx, out.ResourceGatewayId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitResourceConfigurationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
@@ -281,6 +271,7 @@ func (r *resourceResourceConfiguration) Read(ctx context.Context, req resource.R
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.ResourceGatewayIdentifier = flex.StringToFramework(ctx, out.ResourceGatewayId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -322,9 +313,11 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, req resource
 		}
 
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		plan.ResourceGatewayIdentifier = flex.StringToFramework(ctx, out.ResourceGatewayId)
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
@@ -477,7 +470,7 @@ type resourceResourceConfigurationModel struct {
 	AllowAssociationToShareableServiceNetwork types.Bool                                                            `tfsdk:"allow_association_to_shareable_service_network"`
 	ID                                        types.String                                                          `tfsdk:"id"`
 	Name                                      types.String                                                          `tfsdk:"name"`
-	PortRanges                                fwtypes.ListNestedObjectValueOf[portRangeModel]                       `tfsdk:"port_ranges"`
+	PortRanges                                fwtypes.ListOfString                                                  `tfsdk:"port_ranges"`
 	Protocol                                  fwtypes.StringEnum[awstypes.ProtocolType]                             `tfsdk:"protocol"`
 	ResourceConfigurationDefinition           fwtypes.ListNestedObjectValueOf[resourceConfigurationDefinitionModel] `tfsdk:"resource_configuration_definition"`
 	ResourceGatewayIdentifier                 types.String                                                          `tfsdk:"resource_gateway_identifier"`
@@ -515,6 +508,16 @@ func (r *resourceConfigurationDefinitionModel) Flatten(ctx context.Context, v an
 		}
 		r.DnsResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
+		return diags
+	case awstypes.ResourceConfigurationDefinitionMemberArnResource:
+		var model arnResourceModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		r.ArnResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 		return diags
 
 	default:
@@ -583,40 +586,3 @@ type dnsResourceModel struct {
 type arnResourceModel struct {
 	ARN fwtypes.ARN `tfsdk:"arn"`
 }
-
-type portRangeModel struct {
-	FromPort types.Int64 `tfsdk:"from_port"`
-	ToPort   types.Int64 `tfsdk:"to_port"`
-}
-
-func (p portRangeModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-
-	if portRange, ok := v.(string); ok {
-		ports := strings.SplitN(portRange, "-", 2)
-		fromPort, err := strconv.ParseInt(ports[0], 10, 32)
-		if err != nil {
-			diags.AddError("failed to parse ports", err.Error())
-			return diags
-		}
-		p.FromPort = flex.Int32ValueToFramework(ctx, int32(fromPort))
-		toPort, err := strconv.ParseInt(ports[1], 10, 32)
-		if err != nil {
-			diags.AddError("failed to parse ports", err.Error())
-			return diags
-		}
-		p.ToPort = flex.Int32ValueToFramework(ctx, int32(toPort))
-
-	}
-
-	return diags
-}
-
-func (p portRangeModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	result = aws.String(p.FromPort.String() + "-" + p.ToPort.String())
-	return result, diags
-}
-
-var (
-	_ flex.Expander  = portRangeModel{}
-	_ flex.Flattener = &portRangeModel{}
-)
