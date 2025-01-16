@@ -57,7 +57,7 @@ linters-settings:
       - mapvalidator.*
       - setvalidator.*
       - stringvalidator.*
-      - ResourceComputedListOfObjectAttribute
+      - ResourceOptionalComputedListOfObjectAttribute
       - SetDefaultCreateTimeout
       - SetDefaultReadTimeout
       - SetDefaultUpdateTimeout
