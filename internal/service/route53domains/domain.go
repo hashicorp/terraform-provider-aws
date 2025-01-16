@@ -112,6 +112,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Validators: []validator.Int64{
 					int64validator.Between(1, 10),
 				},
+				// TODO Can't decrease the duration.
 			},
 			"expiration_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -556,6 +557,22 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	}
 
+	if !new.DurationInYears.Equal(old.DurationInYears) {
+		currentExpirationDate, diags := old.ExpirationDate.ValueRFC3339Time()
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		renewForYears := fwflex.Int32ValueFromFramework(ctx, new.DurationInYears) - fwflex.Int32ValueFromFramework(ctx, old.DurationInYears)
+
+		if err := renewDomain(ctx, conn, domainName, currentExpirationDate, renewForYears, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError("update", err.Error())
+
+			return
+		}
+	}
+
 	// Set values for unknowns.
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
@@ -618,6 +635,26 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
+}
+
+func renewDomain(ctx context.Context, conn *route53domains.Client, domainName string, currentExpirationDate time.Time, renewForYears int32, timeout time.Duration) error {
+	input := route53domains.RenewDomainInput{
+		CurrentExpiryYear: int32(currentExpirationDate.Year()),
+		DomainName:        aws.String(domainName),
+		DurationInYears:   aws.Int32(renewForYears),
+	}
+
+	output, err := conn.RenewDomain(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("renewing Route 53 Domains Domain (%s): %w", domainName, err)
+	}
+
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) renew: %w", domainName, err)
+	}
+
+	return nil
 }
 
 type domainResourceModel struct {
