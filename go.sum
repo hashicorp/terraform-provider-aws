@@ -295,8 +295,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.9 h1:2aInXbh02XsbO0
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.9/go.mod h1:dgXS1i+HgWnYkPXqNoPIPKeUsUUYHaUbThC90aDnNiE=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.20.8 h1:sVabqpJPm/NUBKhifGcr2EEZLltMj9YGKMUWRnTmx4w=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.20.8/go.mod h1:uCj6l2adFIUNswEPjQyC6/u7H6VTS7NPRmf9OCJDjVs=
-github.com/aws/aws-sdk-go-v2/service/invoicing v1.0.2 h1:dR1Ck23GPbGFyK++gmBiaq4Z8O6brYH5lyQ4XrAQhuY=
-github.com/aws/aws-sdk-go-v2/service/invoicing v1.0.2/go.mod h1:LuVqPvMOGSnD3FDzHzd3fE0qn38Fxo1rmsHYT6mS5QI=
+github.com/aws/aws-sdk-go-v2/service/invoicing v1.0.3 h1:dDsKlnAtnkobzQIrh8uRkARkPYsTqesHtiy1Hzb6N7A=
+github.com/aws/aws-sdk-go-v2/service/invoicing v1.0.3/go.mod h1:d5RWzIdDLoOqk/erAIqv0KcApWVjRJlSnehe3qVZ1RI=
 github.com/aws/aws-sdk-go-v2/service/iot v1.62.2 h1:yNJKpeTzeVkNWh7RNSXALul8Rz5O76g7iXhrGk5la/c=
 github.com/aws/aws-sdk-go-v2/service/iot v1.62.2/go.mod h1:hvaPIueOpIq6Oohwy4xMEkNvEeQTgYtgt/lAvIJBXxk=
 github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.9 h1:KGnV5IvXFz+7RFxiWCIvXocsOVavG1TOSCirDo1D/V4=
