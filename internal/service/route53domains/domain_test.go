@@ -223,7 +223,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551230"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -238,7 +238,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551232"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -253,7 +253,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551233"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -263,7 +263,7 @@ resource "aws_route53domains_domain" "test" {
     zip_code          = "94105"
   }
 }
-`, domainName)
+`, domainName, acctest.DefaultEmailAddress)
 }
 
 func testAccDomainConfig_tags1(domainName, tag1Key, tag1Value string) string {
@@ -276,7 +276,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551230"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -291,7 +291,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551232"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -306,7 +306,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551233"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -317,10 +317,10 @@ resource "aws_route53domains_domain" "test" {
   }
 
   tags = {
-    %[2]q = %[3]q
+    %[3]q = %[4]q
   }
 }
-`, domainName, tag1Key, tag1Value)
+`, domainName, acctest.DefaultEmailAddress, tag1Key, tag1Value)
 }
 
 func testAccDomainConfig_tags2(domainName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
@@ -333,7 +333,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551230"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -348,7 +348,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551232"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -363,7 +363,7 @@ resource "aws_route53domains_domain" "test" {
     city              = "San Francisco"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "terraform-acctest+aws@hashicorp.com"
+    email             = %[2]q
     fax               = "+1.4155551233"
     first_name        = "Terraform"
     last_name         = "Team"
@@ -374,9 +374,9 @@ resource "aws_route53domains_domain" "test" {
   }
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 }
-`, domainName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, domainName, acctest.DefaultEmailAddress, tag1Key, tag1Value, tag2Key, tag2Value)
 }
