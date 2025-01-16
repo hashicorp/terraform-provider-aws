@@ -59,7 +59,6 @@ resource "aws_rds_cluster" "secondary" {
       replication_source_identifier
     ]
   }
-  
   depends_on = [
     aws_rds_cluster_instance.primary
   ]
