@@ -40,6 +40,7 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_vpclattice_resource_configuration", name="Resource Configuration")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceConfigurationOutput")
 func newResourceResourceConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceResourceConfiguration{}
 
