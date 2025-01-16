@@ -91,7 +91,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"creation_date": schema.StringAttribute{
+			names.AttrCreationDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -117,7 +117,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"hosted_zone_id": schema.StringAttribute{
+			names.AttrHostedZoneID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -252,7 +252,7 @@ func contactDetailBlock(ctx context.Context) schema.Block {
 						stringvalidator.LengthAtMost(30),
 					},
 				},
-				"state": schema.StringAttribute{
+				names.AttrState: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(255),
@@ -270,10 +270,10 @@ func contactDetailBlock(ctx context.Context) schema.Block {
 					CustomType: fwtypes.NewListNestedObjectTypeOf[extraParamModel](ctx),
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"name": schema.StringAttribute{
+							names.AttrName: schema.StringAttribute{
 								Required: true,
 							},
-							"value": schema.StringAttribute{
+							names.AttrValue: schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthAtMost(2048),
