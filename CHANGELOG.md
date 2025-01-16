@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Ephemeral Resource:** `aws_eks_cluster_auth` ([#40660](https://github.com/hashicorp/terraform-provider-aws/issues/40660))
 * **New Resource:** `aws_media_packagev2_channel_group` ([#38406](https://github.com/hashicorp/terraform-provider-aws/issues/38406))
 
 ENHANCEMENTS:
