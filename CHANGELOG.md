@@ -1,4 +1,9 @@
 ## 5.85.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_elasticache_serverless_cache: Fix `InvalidParameterCombination` error during update ([#40969](https://github.com/hashicorp/terraform-provider-aws/issues/40969))
+
 ## 5.84.0 (January 16, 2025)
 
 NOTES:
