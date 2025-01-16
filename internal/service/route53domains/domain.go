@@ -112,14 +112,10 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Validators: []validator.Int64{
 					int64validator.Between(1, 10),
 				},
-				// TODO Can't decrease the duration.
 			},
 			"expiration_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"hosted_zone_id": schema.StringAttribute{
 				Computed: true,
@@ -446,7 +442,6 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	transferLock := hasDomainTransferLock(domainDetail.StatusList)
-
 	data.TransferLock = types.BoolValue(transferLock)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -582,7 +577,13 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		return
 	}
 
+	new.ExpirationDate = timetypes.NewRFC3339TimePointerValue(domainDetail.ExpirationDate)
 	new.UpdatedDate = timetypes.NewRFC3339TimePointerValue(domainDetail.UpdatedDate)
+
+	// If the associted public hosted zone was not found its plan value will be Unknown.
+	if new.HostedZoneID.IsUnknown() {
+		new.HostedZoneID = types.StringNull()
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -635,6 +636,36 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
+
+	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
+		// duration_in_years can only be increased.
+		var oldDurationInYears, newDurationInYears types.Int64
+		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("duration_in_years"), &oldDurationInYears)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("duration_in_years"), &newDurationInYears)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if newDurationInYears.ValueInt64() < oldDurationInYears.ValueInt64() {
+			response.Diagnostics.AddAttributeError(path.Root("duration_in_years"), "value cannot be decreased", "")
+		}
+
+		// expiration_date is newly computed if duration_in_years is changed.
+		if newDurationInYears.ValueInt64() != oldDurationInYears.ValueInt64() {
+			response.Plan.SetAttribute(ctx, path.Root("expiration_date"), timetypes.NewRFC3339Unknown())
+		} else {
+			var expirationDate timetypes.RFC3339
+			response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("expiration_date"), &expirationDate)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			response.Plan.SetAttribute(ctx, path.Root("expiration_date"), expirationDate)
+		}
+	}
 }
 
 func renewDomain(ctx context.Context, conn *route53domains.Client, domainName string, currentExpirationDate time.Time, renewForYears int32, timeout time.Duration) error {
