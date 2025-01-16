@@ -374,8 +374,6 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 			return
 		}
-
-		transferLock = v
 	}
 
 	// Registering a domain creates a Route 53 hosted zone that has the same name as the domain.
