@@ -51,6 +51,7 @@ which take the following arguments:
 
 In addition to all arguments above except `filter`, the following attributes are exported:
 
+* `id` - ID of the VPC endpoint.
 * `arn` - ARN of the VPC endpoint.
 * `cidr_blocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. [DNS entry blocks are documented below](#dns_entry-block).
