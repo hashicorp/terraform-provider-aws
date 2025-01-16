@@ -356,6 +356,22 @@ func testAccKnowledgeBase_updateOpenSearch(t *testing.T) {
 	})
 }
 
+// Prerequisites:
+// * comment out acctest.Skip
+// * you will need an OpenSearch Serverless Collection whose index matches what we will tell a Bedrock Knowledge Base to expect, so...
+// * follow the guide here with the following details ==> https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-create.html
+// * when you press the "Create" button for a Knowledge Base choose "Knowledge Base With Vector Store"
+// * allow the process to create a role for you (which you will insert later for FANCY_OSSC_TEST_ROLE_ARN)
+// * choose S3 as a data source and enter any valid s3 URI for its location (bucket doesn't need to actually exist)
+// * choose Titan Text Embedding v2 as the embedding model and under additional configs choose floating point for type and 1024 for dimensions
+// * choose the "quick create a new vector store" option and choose Amazon OpenSearch Serverless
+// * note the service role that was created for the Bedrock Knowledge Base and plug it into the hard coded FANCY_OSSC_TEST_ROLE_ARN in testAccKnowledgeBaseConfig_fancyOpenSearch
+// * also add S3FullAccess to that role so that it can validate access to a bucket that will underpin supplemental data storage
+// * note the ARN of the created OpenSearch Serverless Collection and plug it into FANCY_OSSC_VDB_ARN in testAccKnowledgeBaseConfig_fancyOpenSearch
+// * create an S3 bucket, note its name, and fill SDS_BUCKET_NAME with it
+// * make sure your shell env has set AWS_DEFAULT_REGION to whatever region you use in the console to set up BKB and OSSC stuffs
+// * run this test with ==> make testacc TESTS=TestAccBedrockAgent_serial/KnowledgeBase/fancyOpenSearch PKG=bedrockagent
+// * clean up after yourself by deleting the BKB, the OSSC, the IAM Role, and the S3 bucket
 func testAccKnowledgeBase_fancyOpenSearch(t *testing.T) {
 	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
 
@@ -383,14 +399,14 @@ func testAccKnowledgeBase_fancyOpenSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.embedding_model_configuration.0.bedrock_embedding_model_configuration.0.dimensions", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.embedding_model_configuration.0.bedrock_embedding_model_configuration.0.embedding_data_type", "FLOAT32"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.supplemental_data_storage_configuration.0.storage_location.0.type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.supplemental_data_storage_configuration.0.storage_location.0.s3_location.uri", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.supplemental_data_storage_configuration.0.storage_location.0.s3_location.uri", "s3://SDS_BUCKET_NAME"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_SERVERLESS"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
 				),
 			},
@@ -892,7 +908,7 @@ data "aws_region" "current" {}
 
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
-  role_arn = "XXX"
+  role_arn = "FANCY_OSSC_TEST_ROLE_ARN"
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
@@ -910,7 +926,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
           type = "S3"
 
           s3_location {
-            uri = "XXX"
+            uri = "s3://SDS_BUCKET_NAME"
           }
         }
       }
@@ -921,11 +937,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
-      collection_arn    = "XXX"
+      collection_arn    = "FANCY_OSSC_VDB_ARN"
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
         vector_field   = "bedrock-knowledge-base-default-vector"
-        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
+        text_field     = "AMAZON_BEDROCK_TEXT"
         metadata_field = "AMAZON_BEDROCK_METADATA"
       }
     }
