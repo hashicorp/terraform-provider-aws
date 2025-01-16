@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -513,7 +512,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		!new.BillingPrivacy.Equal(old.BillingPrivacy) ||
 		!new.RegistrantPrivacy.Equal(old.RegistrantPrivacy) ||
 		!new.TechPrivacy.Equal(old.TechPrivacy) {
-		if err := modifyDomainContactPrivacy(ctx, conn, domainName, flex.BoolValueFromFramework(ctx, new.AdminPrivacy), flex.BoolValueFromFramework(ctx, new.BillingPrivacy), flex.BoolValueFromFramework(ctx, new.RegistrantPrivacy), flex.BoolValueFromFramework(ctx, new.TechPrivacy), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if err := modifyDomainContactPrivacy(ctx, conn, domainName, fwflex.BoolValueFromFramework(ctx, new.AdminPrivacy), fwflex.BoolValueFromFramework(ctx, new.BillingPrivacy), fwflex.BoolValueFromFramework(ctx, new.RegistrantPrivacy), fwflex.BoolValueFromFramework(ctx, new.TechPrivacy), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())
 
 			return
@@ -521,7 +520,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 	}
 
 	if !new.AutoRenew.Equal(old.AutoRenew) {
-		if err := modifyDomainAutoRenew(ctx, conn, domainName, flex.BoolValueFromFramework(ctx, new.AutoRenew)); err != nil {
+		if err := modifyDomainAutoRenew(ctx, conn, domainName, fwflex.BoolValueFromFramework(ctx, new.AutoRenew)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())
 
 			return
@@ -543,7 +542,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 	}
 
 	if !new.TransferLock.Equal(old.TransferLock) {
-		if err := modifyDomainTransferLock(ctx, conn, domainName, flex.BoolValueFromFramework(ctx, new.TransferLock), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if err := modifyDomainTransferLock(ctx, conn, domainName, fwflex.BoolValueFromFramework(ctx, new.TransferLock), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())
 
 			return
