@@ -24,8 +24,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Delegation Signer Record",
 		},
 		{
-			Factory: newDomainResource,
-			Name:    "Domain",
+			Factory:  newDomainResource,
+			TypeName: "aws_route53domains_domain",
+			Name:     "Domain",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrDomainName,
 			},
