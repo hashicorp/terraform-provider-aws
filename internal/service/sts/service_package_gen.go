@@ -15,7 +15,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceCallerIdentity,
+			Factory:  newCallerIdentityDataSource,
+			TypeName: "aws_caller_identity",
+			Name:     "Caller Identity",
 		},
 	}
 }

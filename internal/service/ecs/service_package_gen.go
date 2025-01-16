@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newClustersDataSource,
-			Name:    "Clusters",
+			Factory:  newClustersDataSource,
+			TypeName: "aws_ecs_clusters",
+			Name:     "Clusters",
 		},
 	}
 }

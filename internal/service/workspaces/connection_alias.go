@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Connection Alias")
+// @FrameworkResource("aws_workspaces_connection_alias", name="Connection Alias")
 // @Tags(identifierAttribute="id")
 func newConnectionAliasResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionAliasResource{}

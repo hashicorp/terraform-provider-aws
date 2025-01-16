@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceConnection,
 			TypeName: "aws_codestarconnections_connection",
+			Name:     "Connection",
 		},
 	}
 }

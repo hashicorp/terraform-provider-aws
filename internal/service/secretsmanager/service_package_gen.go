@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
 	return []*types.ServicePackageEphemeralResource{
 		{
-			Factory: newEphemeralSecretVersion,
-			Name:    "Secret Version",
+			Factory:  newEphemeralSecretVersion,
+			TypeName: "aws_secretsmanager_secret_version",
+			Name:     "Secret Version",
 		},
 	}
 }
@@ -26,8 +27,9 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceSecretVersions,
-			Name:    "Secret Versions",
+			Factory:  newDataSourceSecretVersions,
+			TypeName: "aws_secretsmanager_secret_versions",
+			Name:     "Secret Versions",
 		},
 	}
 }

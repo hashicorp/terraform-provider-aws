@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Collection")
+// @FrameworkDataSource("aws_opensearchserverless_collection", name="Collection")
 func newDataSourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCollection{}, nil
 }

@@ -31,10 +31,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAlternateContact,
 			TypeName: "aws_account_alternate_contact",
+			Name:     "Alternate Contact",
 		},
 		{
 			Factory:  resourcePrimaryContact,
 			TypeName: "aws_account_primary_contact",
+			Name:     "Primary Contact",
 		},
 		{
 			Factory:  resourceRegion,

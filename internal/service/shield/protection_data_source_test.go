@@ -63,7 +63,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = aws_globalaccelerator_accelerator.test.id
+  resource_arn = aws_globalaccelerator_accelerator.test.arn
 }
 `, rName)
 }

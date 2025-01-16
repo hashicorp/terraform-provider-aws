@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_data_catalog_encryption_settings")
+// @SDKResource("aws_glue_data_catalog_encryption_settings", name="Data Catalog Encryption Settings")
 func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,

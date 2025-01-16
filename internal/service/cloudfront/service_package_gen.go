@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceOriginAccessControl,
-			Name:    "Origin Access Control",
+			Factory:  newDataSourceOriginAccessControl,
+			TypeName: "aws_cloudfront_origin_access_control",
+			Name:     "Origin Access Control",
 		},
 	}
 }
@@ -26,16 +27,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newContinuousDeploymentPolicyResource,
-			Name:    "Continuous Deployment Policy",
+			Factory:  newContinuousDeploymentPolicyResource,
+			TypeName: "aws_cloudfront_continuous_deployment_policy",
+			Name:     "Continuous Deployment Policy",
 		},
 		{
-			Factory: newKeyValueStoreResource,
-			Name:    "Key Value Store",
+			Factory:  newKeyValueStoreResource,
+			TypeName: "aws_cloudfront_key_value_store",
+			Name:     "Key Value Store",
 		},
 		{
-			Factory: newVPCOriginResource,
-			Name:    "VPC Origin",
+			Factory:  newVPCOriginResource,
+			TypeName: "aws_cloudfront_vpc_origin",
+			Name:     "VPC Origin",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

@@ -14,6 +14,16 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource{
+		{
+			Factory:  newEphemeralClusterAuth,
+			TypeName: "aws_eks_cluster_auth",
+			Name:     "ClusterAuth",
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
 }
@@ -21,8 +31,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newPodIdentityAssociationResource,
-			Name:    "Pod Identity Association",
+			Factory:  newPodIdentityAssociationResource,
+			TypeName: "aws_eks_pod_identity_association",
+			Name:     "Pod Identity Association",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "association_arn",
 			},
@@ -40,30 +51,37 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceAddon,
 			TypeName: "aws_eks_addon",
+			Name:     "Add-On",
 		},
 		{
 			Factory:  dataSourceAddonVersion,
 			TypeName: "aws_eks_addon_version",
+			Name:     "Add-On Version",
 		},
 		{
 			Factory:  dataSourceCluster,
 			TypeName: "aws_eks_cluster",
+			Name:     "Cluster",
 		},
 		{
 			Factory:  dataSourceClusterAuth,
 			TypeName: "aws_eks_cluster_auth",
+			Name:     "Cluster Authentication Token",
 		},
 		{
 			Factory:  dataSourceClusters,
 			TypeName: "aws_eks_clusters",
+			Name:     "Clusters",
 		},
 		{
 			Factory:  dataSourceNodeGroup,
 			TypeName: "aws_eks_node_group",
+			Name:     "Node Group",
 		},
 		{
 			Factory:  dataSourceNodeGroups,
 			TypeName: "aws_eks_node_groups",
+			Name:     "Node Groups",
 		},
 	}
 }

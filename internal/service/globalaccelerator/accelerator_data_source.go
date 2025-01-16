@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Accelerator")
+// @FrameworkDataSource("aws_globalaccelerator_accelerator", name="Accelerator")
 func newAcceleratorDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &acceleratorDataSource{}
 

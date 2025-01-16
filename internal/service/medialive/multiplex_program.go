@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_medialive_multiplex_program")
+// @FrameworkResource("aws_medialive_multiplex_program", name="Multiplex Program")
 func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &multiplexProgram{}, nil
 }

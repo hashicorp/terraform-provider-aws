@@ -31,10 +31,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePipeline,
 			TypeName: "aws_elastictranscoder_pipeline",
+			Name:     "Pipeline",
 		},
 		{
 			Factory:  ResourcePreset,
 			TypeName: "aws_elastictranscoder_preset",
+			Name:     "Preset",
 		},
 	}
 }

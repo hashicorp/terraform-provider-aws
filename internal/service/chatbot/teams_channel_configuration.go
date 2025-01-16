@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Teams Channel Configuration")
+// @FrameworkResource("aws_chatbot_teams_channel_configuration", name="Teams Channel Configuration")
 // @Tags(identifierAttribute="chat_configuration_arn")
 func newTeamsChannelConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &teamsChannelConfigurationResource{}

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ssoadmin_permission_set_inline_policy")
+// @SDKResource("aws_ssoadmin_permission_set_inline_policy", name="Permission Set Inline Policy")
 func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionSetInlinePolicyPut,

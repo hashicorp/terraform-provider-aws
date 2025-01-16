@@ -1,17 +1,44 @@
 ## 5.84.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_kms_custom_key_store: We cannot acceptance test the support for external key stores added in this release. The impementation is best effort and we ask for community help in testing. ([#40557](https://github.com/hashicorp/terraform-provider-aws/issues/40557))
+
 FEATURES:
 
+* **New Ephemeral Resource:** `aws_eks_cluster_auth` ([#40660](https://github.com/hashicorp/terraform-provider-aws/issues/40660))
 * **New Resource:** `aws_media_packagev2_channel_group` ([#38406](https://github.com/hashicorp/terraform-provider-aws/issues/38406))
 
 ENHANCEMENTS:
 
+* data-source/aws_ami: Add `uefi_data` attribute ([#40210](https://github.com/hashicorp/terraform-provider-aws/issues/40210))
 * data-source/aws_ec2_instance_type: Add `bandwidth_weightings`, `boot_modes`, `default_network_card_index`, `efa_maximum_interfaces`, `ena_srd_supported`, `inference_accelerators.memory_size`, `media_accelerators`, `network_cards`, `neuron_devices`, `nitro_enclaves_support`, `nitro_tpm_support`, `nitro_tpm_supported_versions`, `phc_support`, `supported_cpu_features`, `total_inference_memory`, `total_media_memory`, and `total_neuron_device_memory` attributes ([#40717](https://github.com/hashicorp/terraform-provider-aws/issues/40717))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `mx-central-1` AWS Region ([#40940](https://github.com/hashicorp/terraform-provider-aws/issues/40940))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `mx-central-1` AWS Region ([#40940](https://github.com/hashicorp/terraform-provider-aws/issues/40940))
+* data-source/aws_s3_bucket: Add hosted zone ID for `mx-central-1` AWS Region ([#40940](https://github.com/hashicorp/terraform-provider-aws/issues/40940))
+* provider: Support `mx-central-1` as a valid AWS Region ([#40940](https://github.com/hashicorp/terraform-provider-aws/issues/40940))
+* resource/aws_ami: Add `uefi_data` argument ([#40210](https://github.com/hashicorp/terraform-provider-aws/issues/40210))
+* resource/aws_ami_copy: Add `uefi_data` attribute ([#40210](https://github.com/hashicorp/terraform-provider-aws/issues/40210))
+* resource/aws_ami_from_instance: Add `uefi_data` attribute ([#40210](https://github.com/hashicorp/terraform-provider-aws/issues/40210))
+* resource/aws_cloudtrail: Add `userIdentity.arn` to advanced_event_selector.field_selector ([#40629](https://github.com/hashicorp/terraform-provider-aws/issues/40629))
+* resource/aws_elasticache_user: `engine` is now case insensitive ([#40794](https://github.com/hashicorp/terraform-provider-aws/issues/40794))
+* resource/aws_elasticache_user_group: `engine` is now case insensitive ([#40794](https://github.com/hashicorp/terraform-provider-aws/issues/40794))
+* resource/aws_globalaccelerator_accelerator: Add `arn` attribute ([#40930](https://github.com/hashicorp/terraform-provider-aws/issues/40930))
+* resource/aws_globalaccelerator_custom_routing_accelerator: Add `arn` attribute ([#40930](https://github.com/hashicorp/terraform-provider-aws/issues/40930))
+* resource/aws_globalaccelerator_custom_routing_listener: Add `arn` attribute ([#40930](https://github.com/hashicorp/terraform-provider-aws/issues/40930))
+* resource/aws_globalaccelerator_listener: Add `arn` attribute ([#40930](https://github.com/hashicorp/terraform-provider-aws/issues/40930))
+* resource/aws_kms_custom_key_store: Add support for external key stores ([#40557](https://github.com/hashicorp/terraform-provider-aws/issues/40557))
+* resource/aws_lb_listener: Add `routing_http_response_server_enabled`, `routing_http_response_strict_transport_security_header_value`, `routing_http_response_access_control_allow_origin_header_value`, `routing_http_response_access_control_allow_methods_header_value`, `routing_http_response_access_control_allow_headers_header_value`, `routing_http_response_access_control_allow_credentials_header_value`, `routing_http_response_access_control_expose_headers_header_value`, `routing_http_response_access_control_max_age_header_value`, `routing_http_response_content_security_policy_header_value`, `routing_http_response_x_content_type_options_header_value`, `routing_http_response_x_frame_options_header_value`, `routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name`, `routing_http_request_x_amzn_mtls_clientcert_issuer_header_name`, `routing_http_request_x_amzn_mtls_clientcert_subject_header_name`, `routing_http_request_x_amzn_mtls_clientcert_validity_header_name`, `routing_http_request_x_amzn_mtls_clientcert_leaf_header_name`, `routing_http_request_x_amzn_mtls_clientcert_header_name`, `routing_http_request_x_amzn_tls_version_header_name`, and `routing_http_request_x_amzn_tls_cipher_suite_header_name` arguments in support of [HTTP header modification](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/header-modification.html) ([#40736](https://github.com/hashicorp/terraform-provider-aws/issues/40736))
+* resource/aws_route53_health_check: Add `triggers` argument to support synchronization with upstream CloudWatch alarm changes ([#40918](https://github.com/hashicorp/terraform-provider-aws/issues/40918))
 * resource/aws_sagemaker_endpoint_configuration: Support setting `production_variants.managed_instance_scaling` and `shadow_production_variants.managed_instance_scaling` to `0` ([#40882](https://github.com/hashicorp/terraform-provider-aws/issues/40882))
 
 BUG FIXES:
 
+* resource/aws_apprunner_vpc_ingress_connection: Change `ingress_vpc_configuration`, `name`, and `service_arn` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#40927](https://github.com/hashicorp/terraform-provider-aws/issues/40927))
+* resource/aws_datasync_location_s3: Fix `location URI global ID and subdirectory (...) does not match pattern "..."` errors on Read when `s3_bucket_arn` is an S3 on Outposts access point ([#40929](https://github.com/hashicorp/terraform-provider-aws/issues/40929))
 * resource/aws_ecs_task_definition: Correctly detect differences in `volume.configure_at_launch` and `volume.docker_volume_configuration` ([#40853](https://github.com/hashicorp/terraform-provider-aws/issues/40853))
+* resource/aws_msk_cluster: Prevent persistent differences when `broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput` is unset ([#40910](https://github.com/hashicorp/terraform-provider-aws/issues/40910))
+* resource/aws_msk_cluster: Properly disable provisioned throughput when a previously configured `broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput` block is removed ([#40910](https://github.com/hashicorp/terraform-provider-aws/issues/40910))
 * resource/aws_ses_receipt_rule: Retry errors caused by IAM eventual consistency ([#40873](https://github.com/hashicorp/terraform-provider-aws/issues/40873))
 
 ## 5.83.1 (January 10, 2025)

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_account_registration", name="Account Registration")
 func newResourceAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAccountRegistration{}, nil
 }

@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Recommendation Preferences")
+// @FrameworkResource("aws_computeoptimizer_recommendation_preferences", name="Recommendation Preferences")
 func newRecommendationPreferencesResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &recommendationPreferencesResource{}
 

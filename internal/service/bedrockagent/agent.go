@@ -43,7 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent")
+// @FrameworkResource("aws_bedrockagent_agent", name="Agent")
 // @Tags(identifierAttribute="agent_arn")
 func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentResource{}
