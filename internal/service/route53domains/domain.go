@@ -122,7 +122,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()),
+			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
