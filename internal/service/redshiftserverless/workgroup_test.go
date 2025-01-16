@@ -6,7 +6,6 @@ package redshiftserverless_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -133,7 +132,7 @@ func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, true),
-				ExpectError: regexp.MustCompile("base_capacity cannot be set when price_performance_target.enabled is true"),
+				ExpectError: regexache.MustCompile("base_capacity cannot be set when price_performance_target.enabled is true"),
 			},
 			{
 				Config: testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, false),

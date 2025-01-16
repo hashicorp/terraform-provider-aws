@@ -63,21 +63,15 @@ func resourceWorkgroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
 						"level": {
-							Type:     schema.TypeString,
-							Default:  "BALANCED",
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"LOW_COST",
-								"ECONOMICAL",
-								"BALANCED",
-								"RESOURCEFUL",
-								"HIGH_PERFORMANCE",
-							}, false),
+							Type:         schema.TypeString,
+							Default:      performanceTargetLevelBalanced,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(performanceTargetLevel_Values(), false),
 						},
 					},
 				},
@@ -639,11 +633,11 @@ func expandPricePerformanceTarget(list []interface{}) *awstypes.PerformanceTarge
 	apiObject := &awstypes.PerformanceTarget{}
 	// bool is a nicer way to represent the enabled/disabled state but the API expects
 	// a string enumeration
-	if enabled, ok := tfMap["enabled"].(bool); ok {
+	if enabled, ok := tfMap[names.AttrEnabled].(bool); ok {
 		if enabled {
-			apiObject.Status = awstypes.PerformanceTargetStatus(awstypes.PerformanceTargetStatusEnabled)
+			apiObject.Status = awstypes.PerformanceTargetStatusEnabled
 		} else {
-			apiObject.Status = awstypes.PerformanceTargetStatus(awstypes.PerformanceTargetStatusDisabled)
+			apiObject.Status = awstypes.PerformanceTargetStatusDisabled
 		}
 	}
 	// The target price performance level for the workgroup. Valid values include 1,
@@ -651,16 +645,16 @@ func expandPricePerformanceTarget(list []interface{}) *awstypes.PerformanceTarge
 	// ECONOMICAL, BALANCED, RESOURCEFUL, and HIGH_PERFORMANCE.
 	if level, ok := tfMap["level"].(string); ok {
 		switch level {
-		case "LOW_COST":
-			apiObject.Level = aws.Int32(int32(1))
-		case "ECONOMICAL":
-			apiObject.Level = aws.Int32(int32(25))
-		case "BALANCED":
-			apiObject.Level = aws.Int32(int32(50))
-		case "RESOURCEFUL":
-			apiObject.Level = aws.Int32(int32(75))
-		case "HIGH_PERFORMANCE":
-			apiObject.Level = aws.Int32(int32(100))
+		case performanceTargetLevelLowCost:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelLowCostValue))
+		case performanceTargetLevelEconomical:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelEconomicalValue))
+		case performanceTargetLevelBalanced:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelBalancedValue))
+		case performanceTargetLevelResourceful:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelResourcefulValue))
+		case performanceTargetLevelHighPerformance:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelHighPerformanceValue))
 		}
 	}
 
@@ -674,18 +668,18 @@ func flattenPricePerformanceTarget(apiObject *awstypes.PerformanceTarget) []inte
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enabled"] = apiObject.Status == awstypes.PerformanceTargetStatusEnabled
+	tfMap[names.AttrEnabled] = apiObject.Status == awstypes.PerformanceTargetStatusEnabled
 	switch aws.ToInt32(apiObject.Level) {
-	case 1:
-		tfMap["level"] = "LOW_COST"
-	case 25:
-		tfMap["level"] = "ECONOMICAL"
-	case 50:
-		tfMap["level"] = "BALANCED"
-	case 75:
-		tfMap["level"] = "RESOURCEFUL"
-	case 100:
-		tfMap["level"] = "HIGH_PERFORMANCE"
+	case performanceTargetLevelLowCostValue:
+		tfMap["level"] = performanceTargetLevelLowCost
+	case performanceTargetLevelEconomicalValue:
+		tfMap["level"] = performanceTargetLevelEconomical
+	case performanceTargetLevelBalancedValue:
+		tfMap["level"] = performanceTargetLevelBalanced
+	case performanceTargetLevelResourcefulValue:
+		tfMap["level"] = performanceTargetLevelResourceful
+	case performanceTargetLevelHighPerformanceValue:
+		tfMap["level"] = performanceTargetLevelHighPerformance
 	}
 
 	return []interface{}{tfMap}
