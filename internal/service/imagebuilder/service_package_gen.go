@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newLifecyclePolicyResource,
-			Name:    "Lifecycle Policy",
+			Factory:  newLifecyclePolicyResource,
+			TypeName: "aws_imagebuilder_lifecycle_policy",
+			Name:     "Lifecycle Policy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},

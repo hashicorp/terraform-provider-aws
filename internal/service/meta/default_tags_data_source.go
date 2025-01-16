@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Default Tags")
+// @FrameworkDataSource("aws_default_tags", name="Default Tags")
 func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &defaultTagsDataSource{}
 

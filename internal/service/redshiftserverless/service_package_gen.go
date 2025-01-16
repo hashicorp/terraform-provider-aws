@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newCustomDomainAssociationResource,
-			Name:    "Custom Domain Association",
+			Factory:  newCustomDomainAssociationResource,
+			TypeName: "aws_redshiftserverless_custom_domain_association",
+			Name:     "Custom Domain Association",
 		},
 	}
 }

@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newMultiRegionClusterResource,
-			Name:    "Multi Region Cluster",
+			Factory:  newMultiRegionClusterResource,
+			TypeName: "aws_memorydb_multi_region_cluster",
+			Name:     "Multi Region Cluster",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

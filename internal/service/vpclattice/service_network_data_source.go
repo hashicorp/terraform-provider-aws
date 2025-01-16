@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpclattice_service_network")
+// @SDKDataSource("aws_vpclattice_service_network", name="Service Network")
 // @Tags
 func dataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{

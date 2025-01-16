@@ -40,7 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="TLS Inspection Configuration")
+// @FrameworkResource("aws_networkfirewall_tls_inspection_configuration", name="TLS Inspection Configuration")
 // @Tags(identifierAttribute="arn")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}

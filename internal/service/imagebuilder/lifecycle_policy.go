@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Lifecycle Policy")
+// @FrameworkResource("aws_imagebuilder_lifecycle_policy", name="Lifecycle Policy")
 // @Tags(identifierAttribute="id")
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil

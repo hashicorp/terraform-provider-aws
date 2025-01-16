@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceProfilingGroup,
-			Name:    "Profiling Group",
+			Factory:  newDataSourceProfilingGroup,
+			TypeName: "aws_codeguruprofiler_profiling_group",
+			Name:     "Profiling Group",
 		},
 	}
 }
@@ -26,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceProfilingGroup,
-			Name:    "Profiling Group",
+			Factory:  newResourceProfilingGroup,
+			TypeName: "aws_codeguruprofiler_profiling_group",
+			Name:     "Profiling Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

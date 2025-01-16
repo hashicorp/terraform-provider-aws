@@ -33,8 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Connection")
+// @FrameworkResource("aws_codeconnections_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}

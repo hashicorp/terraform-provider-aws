@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceTemplates,
-			Name:    "Templates",
+			Factory:  newDataSourceTemplates,
+			TypeName: "aws_servicequotas_templates",
+			Name:     "Templates",
 		},
 	}
 }
@@ -26,12 +27,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceTemplate,
-			Name:    "Template",
+			Factory:  newResourceTemplate,
+			TypeName: "aws_servicequotas_template",
+			Name:     "Template",
 		},
 		{
-			Factory: newResourceTemplateAssociation,
-			Name:    "Template Association",
+			Factory:  newResourceTemplateAssociation,
+			TypeName: "aws_servicequotas_template_association",
+			Name:     "Template Association",
 		},
 	}
 }
@@ -41,10 +44,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceService,
 			TypeName: "aws_servicequotas_service",
+			Name:     "Service",
 		},
 		{
 			Factory:  DataSourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
+			Name:     "Service Quota",
 		},
 	}
 }
@@ -54,6 +59,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
+			Name:     "Service Quota",
 		},
 	}
 }

@@ -19,14 +19,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newDomainNameAccessAssociationResource,
-			Name:    "Domain Name Access Association",
+			Factory:  newResourceAccount,
+			TypeName: "aws_api_gateway_account",
+			Name:     "Account",
+		},
+		{
+			Factory:  newDomainNameAccessAssociationResource,
+			TypeName: "aws_api_gateway_domain_name_access_association",
+			Name:     "Domain Name Access Association",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-		},
-		{
-			Factory: newResourceAccount,
 		},
 	}
 }

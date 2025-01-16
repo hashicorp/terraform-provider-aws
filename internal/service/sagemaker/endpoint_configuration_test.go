@@ -773,7 +773,7 @@ func TestAccSageMakerEndpointConfiguration_productionVariantsManagedInstanceScal
 		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfigurationConfig_productionVariantsManagedInstanceScaling(rName),
+				Config: testAccEndpointConfigurationConfig_productionVariantsManagedInstanceScaling(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -784,6 +784,41 @@ func TestAccSageMakerEndpointConfiguration_productionVariantsManagedInstanceScal
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.g5.4xlarge"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.min_instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.max_instance_count", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_productionVariantsManagedInstanceScalingZero(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_productionVariantsManagedInstanceScaling(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.g5.4xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.min_instance_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.managed_instance_scaling.0.max_instance_count", "2"),
 				),
 			},
@@ -1431,7 +1466,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 `, rName))
 }
 
-func testAccEndpointConfigurationConfig_productionVariantsManagedInstanceScaling(rName string) string {
+func testAccEndpointConfigurationConfig_productionVariantsManagedInstanceScaling(rName string, min int) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
@@ -1544,7 +1579,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
     managed_instance_scaling {
       status             = "ENABLED"
-      min_instance_count = 1
+      min_instance_count = %[2]d
       max_instance_count = 2
     }
 
@@ -1556,5 +1591,5 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     container_startup_health_check_timeout_in_seconds = 60
   }
 }
-`, rName))
+`, rName, min))
 }

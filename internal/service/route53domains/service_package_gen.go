@@ -19,8 +19,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newDelegationSignerRecordResource,
-			Name:    "Delegation Signer Record",
+			Factory:  newDelegationSignerRecordResource,
+			TypeName: "aws_route53domains_delegation_signer_record",
+			Name:     "Delegation Signer Record",
 		},
 	}
 }

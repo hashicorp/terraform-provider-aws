@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Policy Store")
+// @FrameworkResource("aws_verifiedpermissions_policy_store", name="Policy Store")
 func newResourcePolicyStore(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyStore{}
 

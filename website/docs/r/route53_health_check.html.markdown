@@ -79,6 +79,36 @@ resource "aws_route53_health_check" "foo" {
 }
 ```
 
+### CloudWatch Alarm Check With Triggers
+
+The `triggers` argument allows the Route53 health check to be synchronized when a change to the upstream CloudWatch alarm is made.
+In the configuration below, the health check will be synchronized any time the `threshold` of the alarm is changed.
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "example" {
+  alarm_name          = "example"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "This metric monitors ec2 cpu utilization"
+}
+
+resource "aws_route53_health_check" "example" {
+  type                            = "CLOUDWATCH_METRIC"
+  cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.example.alarm_name
+  cloudwatch_alarm_region         = "us-west-2"
+  insufficient_data_health_status = "Healthy"
+
+  triggers = {
+    threshold = aws_cloudwatch_metric_alarm.example.threshold
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -98,7 +128,7 @@ This resource supports the following arguments:
 * `measure_latency` - (Optional) A Boolean value that indicates whether you want Route 53 to measure the latency between health checkers in multiple AWS regions and your endpoint and to display CloudWatch latency graphs in the Route 53 console.
 * `invert_healthcheck` - (Optional) A boolean value that indicates whether the status of health check should be inverted. For example, if a health check is healthy but Inverted is True , then Route 53 considers the health check to be unhealthy.
 * `disabled` - (Optional) A boolean value that stops Route 53 from performing health checks. When set to true, Route 53 will do the following depending on the type of health check:
-    * For health checks that check the health of endpoints, Route5 53 stops submitting requests to your application, server, or other resource.
+    * For health checks that check the health of endpoints, Route53 stops submitting requests to your application, server, or other resource.
     * For calculated health checks, Route 53 stops aggregating the status of the referenced health checks.
     * For health checks that monitor CloudWatch alarms, Route 53 stops monitoring the corresponding CloudWatch metrics.
 
@@ -107,11 +137,12 @@ This resource supports the following arguments:
 * `child_healthchecks` - (Optional) For a specified parent health check, a list of HealthCheckId values for the associated child health checks.
 * `child_health_threshold` - (Optional) The minimum number of child health checks that must be healthy for Route 53 to consider the parent health check to be healthy. Valid values are integers between 0 and 256, inclusive
 * `cloudwatch_alarm_name` - (Optional) The name of the CloudWatch alarm.
-* `cloudwatch_alarm_region` - (Optional) The CloudWatchRegion that the CloudWatch alarm was created in.
+* `cloudwatch_alarm_region` - (Optional) The region that the CloudWatch alarm was created in.
 * `insufficient_data_health_status` - (Optional) The status of the health check when CloudWatch has insufficient data about the state of associated alarm. Valid values are `Healthy` , `Unhealthy` and `LastKnownStatus`.
 * `regions` - (Optional) A list of AWS regions that you want Amazon Route 53 health checkers to check the specified endpoint from.
 * `routing_control_arn` - (Optional) The Amazon Resource Name (ARN) for the Route 53 Application Recovery Controller routing control. This is used when health check type is `RECOVERY_CONTROL`
 * `tags` - (Optional) A map of tags to assign to the health check. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update of the CloudWatch alarm arguments. Use this argument to synchronize the health check when an alarm is changed. See example above.
 
 ## Attribute Reference
 

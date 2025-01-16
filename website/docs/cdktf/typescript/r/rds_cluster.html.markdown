@@ -377,7 +377,7 @@ This resource supports the following arguments:
 * `masterUserSecretKmsKeyId` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `masterUsername` - (Required unless a `snapshotIdentifier` or `replicationSourceIdentifier` is provided or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]. This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `networkType` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
-* `performanceInsightsEnabled` - (Optional) Enables Performance Insights for the RDS Cluster
+* `performanceInsightsEnabled` - (Optional) Enables Performance Insights.
 * `performanceInsightsKmsKeyId` - (Optional) Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (`aws/rds`).
 * `performanceInsightsRetentionPeriod` - (Optional) Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are `7`, `month * 31` (where month is a number of months from 1-23), and `731`. See [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.Overview.cost.html) for more information on retention periods.
 * `port` - (Optional) Port on which the DB accepts connections.
@@ -650,4 +650,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-86817a4407fc50efc45a9621f5975d3e3e843414357fd76fc1b3a001fdb294c5 -->
+<!-- cache-key: cdktf-0.20.8 input-c45ffa9332f9115461bc300d48ee9ad46a82d5f626f5b184fd223b9f63026811 -->

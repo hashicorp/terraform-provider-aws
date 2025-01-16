@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
-	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,8 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cleanrooms_configured_table")
+// @SDKResource("aws_cleanrooms_configured_table", name="Configured Table")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceConfiguredTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfiguredTableCreate,
@@ -214,7 +215,13 @@ func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, 
 		ConfiguredTableIdentifier: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteConfiguredTable(ctx, in); err != nil {
+	_, err := conn.DeleteConfiguredTable(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionDeleting, ResNameConfiguredTable, d.Id(), err)
 	}
 
@@ -228,7 +235,7 @@ func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id st
 
 	out, err := conn.GetConfiguredTable(ctx, in)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -246,28 +253,28 @@ func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id st
 	return out, nil
 }
 
-func expandAnalysisMethod(analysisMethod string) (types.AnalysisMethod, error) {
+func expandAnalysisMethod(analysisMethod string) (awstypes.AnalysisMethod, error) {
 	switch analysisMethod {
 	case "DIRECT_QUERY":
-		return types.AnalysisMethodDirectQuery, nil
+		return awstypes.AnalysisMethodDirectQuery, nil
 	default:
 		return "", fmt.Errorf("Invalid analysis method type: %s. Currently the only valid value is `DIRECT_QUERY`", analysisMethod)
 	}
 }
 
-func expandTableReference(data []interface{}) types.TableReference {
+func expandTableReference(data []interface{}) awstypes.TableReference {
 	tableReference := data[0].(map[string]interface{})
-	return &types.TableReferenceMemberGlue{
-		Value: types.GlueTableReference{
+	return &awstypes.TableReferenceMemberGlue{
+		Value: awstypes.GlueTableReference{
 			DatabaseName: aws.String(tableReference[names.AttrDatabaseName].(string)),
 			TableName:    aws.String(tableReference[names.AttrTableName].(string)),
 		},
 	}
 }
 
-func flattenTableReference(tableReference types.TableReference) []interface{} {
+func flattenTableReference(tableReference awstypes.TableReference) []interface{} {
 	switch v := tableReference.(type) {
-	case *types.TableReferenceMemberGlue:
+	case *awstypes.TableReferenceMemberGlue:
 		m := map[string]interface{}{
 			names.AttrDatabaseName: v.Value.DatabaseName,
 			names.AttrTableName:    v.Value.TableName,

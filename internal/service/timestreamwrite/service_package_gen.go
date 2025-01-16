@@ -17,12 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceDatabase,
-			Name:    "Database",
+			Factory:  newDataSourceDatabase,
+			TypeName: "aws_timestreamwrite_database",
+			Name:     "Database",
 		},
 		{
-			Factory: newDataSourceTable,
-			Name:    "Table",
+			Factory:  newDataSourceTable,
+			TypeName: "aws_timestreamwrite_table",
+			Name:     "Table",
 		},
 	}
 }

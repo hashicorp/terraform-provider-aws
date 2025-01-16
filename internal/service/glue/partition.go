@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_partition")
+// @SDKResource("aws_glue_partition", name="Partition")
 func ResourcePartition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartitionCreate,

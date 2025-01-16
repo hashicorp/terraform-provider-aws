@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_custom_routing_listener", name="Custom Routing Listener")
@@ -45,6 +46,10 @@ func resourceCustomRoutingListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"port_range": {
 				Type:     schema.TypeSet,
@@ -119,6 +124,7 @@ func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
+	d.Set(names.AttrARN, listener.ListenerArn)
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)
 	}

@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Finding Ids")
+// @FrameworkDataSource("aws_guardduty_finding_ids", name="Finding Ids")
 func newDataSourceFindingIds(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFindingIds{}, nil
 }
