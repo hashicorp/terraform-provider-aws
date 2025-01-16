@@ -84,7 +84,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"billing_contact": framework.ResourceOptionalComputedListOfObjectAttribute[contactDetailModel](ctx, 1, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
+			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -122,7 +122,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()),
+			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()),
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
