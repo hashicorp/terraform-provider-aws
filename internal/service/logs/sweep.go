@@ -4,17 +4,23 @@
 package logs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_cloudwatch_log_anomaly_detector", sweepAnomalyDetectors)
+
 	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_group",
 		F:    sweepGroups,
@@ -22,6 +28,7 @@ func RegisterSweepers() {
 			"aws_api_gateway_rest_api",
 			"aws_cloudhsm_v2_cluster",
 			"aws_cloudtrail",
+			"aws_cloudwatch_log_anomaly_detector",
 			"aws_datasync_task",
 			"aws_db_instance",
 			"aws_directory_service_directory",
@@ -44,13 +51,35 @@ func RegisterSweepers() {
 
 	resource.AddTestSweepers("aws_cloudwatch_query_definition", &resource.Sweeper{
 		Name: "aws_cloudwatch_query_definition",
-		F:    sweeplogQueryDefinitions,
+		F:    sweepQueryDefinitions,
 	})
 
 	resource.AddTestSweepers("aws_cloudwatch_log_resource_policy", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_resource_policy",
 		F:    sweepResourcePolicies,
 	})
+}
+
+func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &cloudwatchlogs.ListLogAnomalyDetectorsInput{}
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := cloudwatchlogs.NewListLogAnomalyDetectorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AnomalyDetectors {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAnomalyDetectorResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.AnomalyDetectorArn))))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepGroups(region string) error {
@@ -94,7 +123,7 @@ func sweepGroups(region string) error {
 	return nil
 }
 
-func sweeplogQueryDefinitions(region string) error {
+func sweepQueryDefinitions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
