@@ -25,6 +25,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatch_log_delivery_destination", sweepDeliveryDestinations, "aws_cloudwatch_log_delivery")
 	awsv2.Register("aws_cloudwatch_log_delivery_source", sweepDeliverySources, "aws_cloudwatch_log_delivery")
 
+	awsv2.Register("aws_cloudwatch_log_destination", sweepDestinations)
+
 	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_group",
 		F:    sweepGroups,
@@ -146,6 +148,31 @@ func sweepDeliverySources(ctx context.Context, client *conns.AWSClient) ([]sweep
 		for _, v := range page.DeliverySources {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDeliverySourceResource, client,
 				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepDestinations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &cloudwatchlogs.DescribeDestinationsInput{}
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Destinations {
+			r := resourceQueryDefinition()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.DestinationName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
