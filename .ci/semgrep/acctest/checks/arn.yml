@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/controltower"
         - "internal/service/lightsail"
-        - "internal/service/memorydb"
         - "internal/service/networkmanager"
         - "internal/service/networkmonitor"
         - "internal/service/oam"
