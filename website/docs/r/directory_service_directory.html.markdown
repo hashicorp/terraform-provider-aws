@@ -168,7 +168,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 For `MicrosoftAD` type export the following attributes in addition to the arguments above:
 
-* `os_version` - (for `MicrosoftAD`) The operating system (OS) version of the directory.
+* `os_version` - The operating system (OS) version of the directory.
 
 ## Timeouts
 
