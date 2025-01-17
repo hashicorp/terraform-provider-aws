@@ -71,8 +71,12 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 			},
 			"field_delimiter": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 5),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),

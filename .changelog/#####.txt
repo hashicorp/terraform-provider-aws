@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_delivery: Mark `field_delimiter` as Computed.
+```
