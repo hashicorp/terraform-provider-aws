@@ -335,6 +335,11 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
 			typeName := metadataResponse.TypeName
 
+			// Temporary check that type name from annotation equals Metadata response.
+			if typeName != v.TypeName {
+				errs = append(errs, fmt.Errorf("data source %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
+			}
+
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
@@ -405,6 +410,11 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			metadataResponse := resource.MetadataResponse{}
 			inner.Metadata(ctx, resource.MetadataRequest{}, &metadataResponse)
 			typeName := metadataResponse.TypeName
+
+			// Temporary check that type name from annotation equals Metadata response.
+			if typeName != v.TypeName {
+				errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
+			}
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
@@ -485,6 +495,15 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					})
 
 					continue
+				}
+
+				metadataResponse := ephemeral.MetadataResponse{}
+				inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
+				typeName := metadataResponse.TypeName
+
+				// Temporary check that type name from annotation equals Metadata response.
+				if typeName != v.TypeName {
+					errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
 				}
 
 				// bootstrapContext is run on all wrapped methods before any interceptors.
