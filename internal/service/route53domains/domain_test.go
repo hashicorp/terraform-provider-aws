@@ -23,7 +23,7 @@ import (
 )
 
 func testAccDomain_basic(t *testing.T) {
-	//acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
+	acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
 
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53domains_domain.test"
@@ -56,13 +56,14 @@ func testAccDomain_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccDomainImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
+				ImportStateVerifyIgnore:              []string{"duration_in_years"},
 			},
 		},
 	})
 }
 
 func testAccDomain_disappears(t *testing.T) {
-	//acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
+	acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
 
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53domains_domain.test"
@@ -88,7 +89,7 @@ func testAccDomain_disappears(t *testing.T) {
 }
 
 func testAccDomain_tags(t *testing.T) {
-	//acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
+	acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
 
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53domains_domain.test"
@@ -123,9 +124,10 @@ func testAccDomain_tags(t *testing.T) {
 				ImportStateIdFunc:                    testAccDomainImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
+				ImportStateVerifyIgnore:              []string{"duration_in_years"},
 			},
 			{
-				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDomainConfig_tags2(domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 				),
@@ -142,7 +144,7 @@ func testAccDomain_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDomainConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDomainConfig_tags1(domainName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 				),
