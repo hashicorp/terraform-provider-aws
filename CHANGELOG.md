@@ -1,5 +1,9 @@
 ## 5.85.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_medialive_multiplex_program: Add configurable `create` timeout ([#40972](https://github.com/hashicorp/terraform-provider-aws/issues/40972))
+
 BUG FIXES:
 
 * resource/aws_elasticache_serverless_cache: Fix `InvalidParameterCombination` error during update ([#40969](https://github.com/hashicorp/terraform-provider-aws/issues/40969))
