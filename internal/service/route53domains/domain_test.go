@@ -23,7 +23,7 @@ import (
 )
 
 func testAccDomain_basic(t *testing.T) {
-	acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
+	//acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
 
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53domains_domain.test"
@@ -62,7 +62,7 @@ func testAccDomain_basic(t *testing.T) {
 }
 
 func testAccDomain_disappears(t *testing.T) {
-	acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
+	//acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
 
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53domains_domain.test"
@@ -88,7 +88,7 @@ func testAccDomain_disappears(t *testing.T) {
 }
 
 func testAccDomain_tags(t *testing.T) {
-	acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
+	//acctest.Skip(t, "Route 53 domain registration acceptance test skipped")
 
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53domains_domain.test"
@@ -269,7 +269,8 @@ resource "aws_route53domains_domain" "test" {
 func testAccDomainConfig_tags1(domainName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53domains_domain" "test" {
-  domain_name = %[1]q
+  domain_name   = %[1]q
+  transfer_lock = false
 
   admin_contact {
     address_line_1    = "101 2nd St #700"
@@ -326,7 +327,8 @@ resource "aws_route53domains_domain" "test" {
 func testAccDomainConfig_tags2(domainName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53domains_domain" "test" {
-  domain_name = %[1]q
+  domain_name   = %[1]q
+  transfer_lock = false
 
   admin_contact {
     address_line_1    = "101 2nd St #700"

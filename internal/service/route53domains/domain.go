@@ -351,6 +351,14 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		}
 	}
 
+	if transferLock := fwflex.BoolValueFromFramework(ctx, data.TransferLock); transferLock {
+		if err := modifyDomainTransferLock(ctx, conn, domainName, transferLock, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError("post-registration", err.Error())
+
+			return
+		}
+	}
+
 	// Set values for unknowns.
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
@@ -365,14 +373,6 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	if transferLock, v := hasDomainTransferLock(domainDetail.StatusList), fwflex.BoolValueFromFramework(ctx, data.TransferLock); v != transferLock {
-		if err := modifyDomainTransferLock(ctx, conn, domainName, v, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-			response.Diagnostics.AddError("post-registration", err.Error())
-
-			return
-		}
 	}
 
 	// Registering a domain creates a Route 53 hosted zone that has the same name as the domain.
