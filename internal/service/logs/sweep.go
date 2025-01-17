@@ -21,6 +21,8 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatch_log_anomaly_detector", sweepAnomalyDetectors)
 
+	awsv2.Register("aws_cloudwatch_log_delivery", sweepDeliveries)
+
 	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_group",
 		F:    sweepGroups,
@@ -76,6 +78,28 @@ func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]swee
 		for _, v := range page.AnomalyDetectors {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAnomalyDetectorResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(v.AnomalyDetectorArn))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepDeliveries(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &cloudwatchlogs.DescribeDeliveriesInput{}
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := cloudwatchlogs.NewDescribeDeliveriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Deliveries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDeliveryResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
 		}
 	}
 
