@@ -166,9 +166,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `connect_ips` - The IP addresses of the AD Connector servers.
 
-For `MicrosoftAD` type export the following attributes in addition to the arguments above:
+For `MicrosoftAD` export the following attributes in addition to the arguments above:
 
-* `os_version` - The operating system (OS) version of the directory.
+* `os_version` - The operating system version of the directory.
 
 ## Timeouts
 
