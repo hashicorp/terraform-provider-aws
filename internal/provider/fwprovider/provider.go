@@ -43,14 +43,14 @@ type fwprovider struct {
 	Primary interface{ Meta() interface{} }
 }
 
-func (p *fwprovider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "aws"
+func (*fwprovider) Metadata(ctx context.Context, request provider.MetadataRequest, response *provider.MetadataResponse) {
+	response.TypeName = "aws"
 }
 
 // Schema returns the schema for this provider's configuration.
-func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (*fwprovider) Schema(ctx context.Context, request provider.SchemaRequest, response *provider.SchemaResponse) {
 	// This schema must match exactly the Terraform Protocol v5 (Terraform Plugin SDK v2) provider's schema.
-	resp.Schema = schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_key": schema.StringAttribute{
 				Optional:    true,
