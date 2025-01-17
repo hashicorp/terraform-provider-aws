@@ -21,7 +21,8 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatch_log_anomaly_detector", sweepAnomalyDetectors)
 
-	awsv2.Register("aws_cloudwatch_log_delivery", sweepDeliveries, "aws_cloudwatch_log_delivery_source")
+	awsv2.Register("aws_cloudwatch_log_delivery", sweepDeliveries, "aws_cloudwatch_log_delivery_source", "aws_cloudwatch_log_delivery_destination")
+	awsv2.Register("aws_cloudwatch_log_delivery_destination", sweepDeliveryDestinations)
 	awsv2.Register("aws_cloudwatch_log_delivery_source", sweepDeliverySources)
 
 	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
@@ -101,6 +102,28 @@ func sweepDeliveries(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		for _, v := range page.Deliveries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDeliveryResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepDeliveryDestinations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &cloudwatchlogs.DescribeDeliveryDestinationsInput{}
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := cloudwatchlogs.NewDescribeDeliveryDestinationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DeliveryDestinations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDeliveryDestinationResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))))
 		}
 	}
 
