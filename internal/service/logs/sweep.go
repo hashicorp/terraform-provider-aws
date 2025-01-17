@@ -21,9 +21,9 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatch_log_anomaly_detector", sweepAnomalyDetectors)
 
-	awsv2.Register("aws_cloudwatch_log_delivery", sweepDeliveries, "aws_cloudwatch_log_delivery_source", "aws_cloudwatch_log_delivery_destination")
-	awsv2.Register("aws_cloudwatch_log_delivery_destination", sweepDeliveryDestinations)
-	awsv2.Register("aws_cloudwatch_log_delivery_source", sweepDeliverySources)
+	awsv2.Register("aws_cloudwatch_log_delivery", sweepDeliveries)
+	awsv2.Register("aws_cloudwatch_log_delivery_destination", sweepDeliveryDestinations, "aws_cloudwatch_log_delivery")
+	awsv2.Register("aws_cloudwatch_log_delivery_source", sweepDeliverySources, "aws_cloudwatch_log_delivery")
 
 	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_group",
