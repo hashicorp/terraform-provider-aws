@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -259,6 +260,47 @@ func testAccDelivery_update(t *testing.T) {
 	})
 }
 
+func testAccDelivery_cloudFrontDistribution(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Delivery
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// CloudFront distribution delivery source must be in us-east-1.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryConfig_cloudFrontDistribution(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
@@ -372,4 +414,33 @@ resource "aws_cloudwatch_log_delivery" "test" {
   }
 }
 `, rName, fieldDelimiter, suffixPath))
+}
+
+func testAccDeliveryConfig_cloudFrontDistribution(rName string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_baseCloudFrontDistribution(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_source" "test" {
+  name         = %[1]q
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.test.arn
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name          = %[1]q
+  output_format = "parquet"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.test.arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "test" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
+}
+`, rName))
 }
