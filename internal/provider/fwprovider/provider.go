@@ -316,7 +316,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 	var errs []error
 	var dataSources []func() datasource.DataSource
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
@@ -391,7 +391,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var errs []error
 	var resources []func() resource.Resource
 
-	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkResources(ctx) {
@@ -471,7 +471,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 	var errs []error
 	var ephemeralResources []func() ephemeral.EphemeralResource
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
 		if data, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
 			servicePackageName := data.ServicePackageName()
 

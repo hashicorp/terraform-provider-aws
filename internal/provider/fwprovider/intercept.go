@@ -270,12 +270,12 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 		return ctx, diags
 	}
 
-	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-	if !ok {
+	sp := meta.ServicePackage(ctx, inContext.ServicePackageName)
+	if sp == nil {
 		return ctx, diags
 	}
 
-	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
 	if err != nil {
 		serviceName = "<service>"
 	}
@@ -334,7 +334,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 					return ctx, diags
 				}
 
-				if inContext.ServicePackageName == names.DynamoDB && err != nil {
+				if sp.ServicePackageName() == names.DynamoDB && err != nil {
 					// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
 					if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 						err = nil
@@ -351,7 +351,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 		tags := tagsInContext.TagsOut.UnwrapOrDefault()
 
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-		stateTags := flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTags := flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), tftags.NewMapFromMapValue(stateTags))...)
 
 		if diags.HasError() {
@@ -623,12 +623,12 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		return ctx, diags
 	}
 
-	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-	if !ok {
+	sp := meta.ServicePackage(ctx, inContext.ServicePackageName)
+	if sp == nil {
 		return ctx, diags
 	}
 
-	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
 	if err != nil {
 		serviceName = "<service>"
 	}
@@ -705,7 +705,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		response.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, &diags).Map(); len(v) > 0 {
+		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, &diags).Map(); len(v) > 0 {
 			stateTags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
@@ -715,7 +715,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		}
 
 		// Computed tags_all do.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
@@ -736,12 +736,12 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		return ctx, diags
 	}
 
-	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-	if !ok {
+	sp := meta.ServicePackage(ctx, inContext.ServicePackageName)
+	if sp == nil {
 		return ctx, diags
 	}
 
-	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
 	if err != nil {
 		serviceName = "<service>"
 	}
@@ -768,7 +768,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreSystem(inContext.ServicePackageName)
+		tags = tags.IgnoreSystem(sp.ServicePackageName())
 
 		tagsInContext.TagsIn = option.Some(tags)
 
