@@ -5,7 +5,6 @@ rules:
     paths:
       exclude:
         - "internal/service/controltower"
-        - "internal/service/networkmonitor"
         - "internal/service/organizations"
         - "internal/service/pinpoint"
         - "internal/service/redshift"
