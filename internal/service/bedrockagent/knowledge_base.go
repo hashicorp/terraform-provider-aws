@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -526,17 +527,41 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateKnowledgeBase(ctx, input)
-	}, errCodeValidationException, "cannot assume role")
+	var output *bedrockagent.CreateKnowledgeBaseOutput
+	var err error
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		output, err = conn.CreateKnowledgeBase(ctx, input)
+
+		// IAM propagation
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "cannot assume role") {
+			return retry.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "unable to assume the given role") {
+			return retry.RetryableError(err)
+		}
+
+		// OpenSearch data access propagation
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "storage configuration provided is invalid") {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateKnowledgeBase(ctx, input)
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base", err.Error())
-
 		return
 	}
 
-	kb := outputRaw.(*bedrockagent.CreateKnowledgeBaseOutput).KnowledgeBase
+	kb := output.KnowledgeBase
 	data.KnowledgeBaseARN = fwflex.StringToFramework(ctx, kb.KnowledgeBaseArn)
 	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, kb.KnowledgeBaseId)
 
@@ -544,7 +569,6 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) create", data.KnowledgeBaseID.ValueString()), err.Error())
-
 		return
 	}
 
