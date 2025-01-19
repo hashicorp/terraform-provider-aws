@@ -348,7 +348,7 @@ This resource supports the following arguments:
 * `databaseName` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `dbClusterInstanceClass` - (Optional, Required for Multi-AZ DB cluster) The compute and memory capacity of each DB instance in the Multi-AZ DB cluster, for example `db.m6g.xlarge`. Not all DB instance classes are available in all AWS Regions, or for all database engines. For the full list of DB instance classes and availability for your engine, see [DB instance class](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) in the Amazon RDS User Guide.
 * `dbClusterParameterGroupName` - (Optional) A cluster parameter group to associate with the cluster.
-* `dbInstanceParameterGroupName` - (Optional) Instance parameter group to associate with all instances of the DB cluster. The `dbInstanceParameterGroupName` parameter is only valid in combination with the `allowMajorVersionUpgrade` parameter.
+* `dbInstanceParameterGroupName` - (Optional) Instance parameter group to associate with all instances of the DB cluster. It can be set always since ignored when unnecessary.
 * `dbSubnetGroupName` - (Optional) DB subnet group to associate with this DB cluster.
   **NOTE:** This must match the `dbSubnetGroupName` specified on every [`aws_rds_cluster_instance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
 * `dbSystemId` - (Optional) For use with RDS Custom.

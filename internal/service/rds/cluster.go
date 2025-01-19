@@ -1499,6 +1499,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		// removed during update retry, if necessary.
 		if v, ok := d.GetOk("db_instance_parameter_group_name"); ok || d.HasChange("db_instance_parameter_group_name") {
 			input.DBInstanceParameterGroupName = aws.String(v.(string))
+		} else if isMajorVersionUpgrade(d) {
+			return sdkdiag.AppendErrorf(diags, "db_instance_parameter_group_name must be set on RDS cluster (%s) on a major version upgrade. It can be set always since ignored when unnecessary.", d.Id())
 		}
 
 		if d.HasChange(names.AttrDeletionProtection) {
@@ -1702,6 +1704,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
+}
+
+func isMajorVersionUpgrade(d *schema.ResourceData) bool {
+	sourceVer, diffVer := d.GetChange(names.AttrEngineVersion)
+	sourceMajorVer := strings.Split(sourceVer.(string), ".")[0]
+	diffMajorVer := strings.Split(diffVer.(string), ".")[0]
+	return sourceMajorVer != diffMajorVer
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
