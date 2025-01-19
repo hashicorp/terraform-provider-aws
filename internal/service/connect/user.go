@@ -189,8 +189,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Password = aws.String(v.(string))
 	}
 
-	// fmt.Printf("Found email: %s", *input.IdentityInfo.SecondaryEmail)
-
 	output, err := conn.CreateUser(ctx, input)
 
 	if err != nil {
