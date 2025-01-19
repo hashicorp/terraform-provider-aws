@@ -62,6 +62,7 @@ An `identity_info` block supports the following attributes:
 * `email` - The email address.
 * `first_name` - The first name.
 * `last_name` - The last name.
+* `secondary_email` - The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 ### `phone_config`
 
