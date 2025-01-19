@@ -940,10 +940,6 @@ service "billing" {
     correct = "aws_billing_"
   }
 
-  endpoint_info {
-    endpoint_api_call = "ListBillingViews"
-  }
-
   provider_package_correct = "billing"
   doc_prefix               = ["billing_"]
   brand                    = "AWS"
