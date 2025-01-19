@@ -629,7 +629,7 @@ resource "aws_connect_user" "test" {
     email           = %[2]q
     first_name      = %[3]q
     last_name       = %[4]q
-	secondary_email = %[5]q
+    secondary_email = %[5]q
   }
 
   phone_config {

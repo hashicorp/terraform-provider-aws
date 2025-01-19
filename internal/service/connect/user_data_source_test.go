@@ -129,7 +129,7 @@ resource "aws_connect_user" "test" {
     email           = %[2]q
     first_name      = "example"
     last_name       = "example2"
-	secondary_email = "example@example.com"
+    secondary_email = "example@example.com"
   }
 
   phone_config {
