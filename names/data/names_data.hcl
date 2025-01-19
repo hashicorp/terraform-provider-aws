@@ -922,6 +922,34 @@ service "bcmdataexports" {
   brand                    = "AWS"
 }
 
+service "billing" {
+  sdk {
+    id = "Billing"
+  }
+
+  names {
+    provider_name_upper = "Billing"
+    human_friendly      = "Billing"
+  }
+
+  client {
+    skip_client_generate = true
+  }
+
+  resource_prefix {
+    correct = "aws_billing_"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListBillingViews"
+  }
+
+  provider_package_correct = "billing"
+  doc_prefix               = ["billing_"]
+  brand                    = "AWS"
+  not_implemented          = true
+}
+
 service "billingconductor" {
   go_packages {
     v1_package = "billingconductor"
