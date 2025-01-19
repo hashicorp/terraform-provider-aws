@@ -635,7 +635,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   bucket                 = "initial"
   organization           = "organization"
 
-  network_type           = "IPV4"
+  network_type = "IPV4"
 }
 `, rName))
 }
@@ -657,7 +657,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   bucket                 = "initial"
   organization           = "organization"
 
-  network_type           = "DUAL"
+  network_type = "DUAL"
 }
 `, rName))
 }
@@ -675,7 +675,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   bucket                 = "initial"
   organization           = "organization"
 
-  port                   = %[2]s
+  port = %[2]s
 }
 `, rName, port))
 }
