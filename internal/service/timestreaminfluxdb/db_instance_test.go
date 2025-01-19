@@ -135,7 +135,6 @@ func TestAccTimestreamInfluxDBDBInstance_dbInstanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
 					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				),
 			},
@@ -191,6 +190,109 @@ func TestAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBInstance_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance1, dbInstance2 timestreaminfluxdb.GetDbInstanceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBInstanceConfig_networkTypeIpV4(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+				Destroy:                 true, // network_type cannot be updated.
+			},
+			{
+				Config: testAccDBInstanceConfig_networkTypeDual(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDual)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+				Destroy:                 true,
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBInstance_port(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance1, dbInstance2 timestreaminfluxdb.GetDbInstanceOutput
+	port1 := "8086"
+	port2 := "8087"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBInstanceConfig_port(rName, port1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+			{
+				Config: testAccDBInstanceConfig_port(rName, port2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
+					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port2),
 				),
 			},
 			{
@@ -517,4 +619,63 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   deployment_type = %[2]q
 }
 `, rName, deploymentType))
+}
+
+func testAccDBInstanceConfig_networkTypeIpV4(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  port                   = 8086
+  bucket                 = "initial"
+  organization           = "organization"
+
+  network_type           = "IPV4"
+}
+`, rName))
+}
+
+func testAccDBInstanceConfig_networkTypeDual(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  port                   = 8086
+  bucket                 = "initial"
+  organization           = "organization"
+
+  network_type           = "DUAL"
+}
+`, rName))
+}
+
+func testAccDBInstanceConfig_port(rName string, port string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+
+  port                   = %[2]s
+}
+`, rName, port))
 }
