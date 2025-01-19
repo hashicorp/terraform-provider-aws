@@ -40,6 +40,7 @@ func testAccUserDataSource_userID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.email", resourceName, "identity_info.0.email"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.first_name", resourceName, "identity_info.0.first_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.last_name", resourceName, "identity_info.0.last_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.secondary_email", resourceName, "identity_info.0.secondary_email"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.#", resourceName, "phone_config.#"),
@@ -87,6 +88,7 @@ func testAccUserDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.email", resourceName, "identity_info.0.email"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.first_name", resourceName, "identity_info.0.first_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.last_name", resourceName, "identity_info.0.last_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.secondary_email", resourceName, "identity_info.0.secondary_email"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.#", resourceName, "phone_config.#"),
@@ -124,9 +126,10 @@ resource "aws_connect_user" "test" {
   ]
 
   identity_info {
-    email      = %[2]q
-    first_name = "example"
-    last_name  = "example2"
+    email           = %[2]q
+    first_name      = "example"
+    last_name       = "example2"
+	secondary_email = "example@example.com"
   }
 
   phone_config {
