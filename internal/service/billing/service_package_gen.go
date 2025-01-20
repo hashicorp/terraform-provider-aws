@@ -15,9 +15,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newBillingServiceAccountDataSource,
+			Factory:  newServiceAccountDataSource,
 			TypeName: "aws_billing_service_account",
-			Name:     "Billing Service Account",
+			Name:     "Service Account",
 		},
 	}
 }
