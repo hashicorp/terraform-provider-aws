@@ -198,6 +198,36 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameter_writeOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_writeOnly(rName, "test", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, resourceName, &param),
+					testAccCheckParameterWriteOnlyValueEqual(t, &param, "test"),
+				),
+			},
+			{
+				Config: testAccParameterConfig_writeOnly(rName, "testUpdated", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, resourceName, &param),
+					testAccCheckParameterWriteOnlyValueEqual(t, &param, "testUpdated"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSSMParameter_tier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var parameter1, parameter2, parameter3 awstypes.Parameter
@@ -1118,6 +1148,15 @@ func testAccCheckParameterRecreated(t *testing.T, before, after *awstypes.Parame
 	}
 }
 
+func testAccCheckParameterWriteOnlyValueEqual(t *testing.T, param *awstypes.Parameter, writeOnlyValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToString(param.Value) != writeOnlyValue {
+			t.Fatalf("Expected SSM Param Value to be %v, but got %v", writeOnlyValue, aws.ToString(param.Value))
+		}
+		return nil
+	}
+}
+
 func testAccCheckParameterExists(ctx context.Context, n string, v *awstypes.Parameter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1504,4 +1543,15 @@ resource "aws_kms_alias" "test_alias" {
   target_key_id = aws_kms_key.test_key.id
 }
 `, rName, value, keyAlias)
+}
+
+func testAccParameterConfig_writeOnly(rName string, value string, valueVersion int) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name             = %[1]q
+  type             = "String"
+  value_wo         = %[2]q
+  value_wo_version = %[3]d
+}
+`, rName, value, valueVersion)
 }
