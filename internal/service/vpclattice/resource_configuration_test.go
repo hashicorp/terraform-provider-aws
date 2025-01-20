@@ -65,6 +65,68 @@ func TestAccVPCLatticeResourceConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.domain_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResourceConfigurationConfig_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.1", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.domain_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -164,6 +226,27 @@ resource "aws_vpclattice_resource_configuration" "test" {
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
   port_ranges = ["80"]
+
+  resource_configuration_definition {
+    dns_resource {
+       domain_name     = "example.com"
+       ip_address_type = "IPV4" 
+    }
+  }
+}
+
+`, rName))
+}
+
+func testAccResourceConfigurationConfig_update(rName string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+  
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["80", "8080"]
 
   resource_configuration_definition {
     dns_resource {

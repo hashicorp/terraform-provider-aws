@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -57,6 +58,7 @@ const (
 
 type resourceResourceConfiguration struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -71,7 +73,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplace(),
 				},
 			},
 			"arn": framework.ARNAttributeComputedOnly(),
@@ -144,6 +146,9 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 									},
 								},
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.ExactlyOneOf(
@@ -165,6 +170,9 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 										CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
 									},
 								},
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -210,6 +218,8 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, req resource
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateResourceConfiguration(ctx, &input)
 	if err != nil {
@@ -287,14 +297,25 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, req resource
 		return
 	}
 
-	if !plan.AllowAssociationToShareableServiceNetwork.Equal(state.AllowAssociationToShareableServiceNetwork) ||
-		!plan.PortRanges.Equal(state.PortRanges) ||
+	if !plan.PortRanges.Equal(state.PortRanges) ||
 		!plan.ResourceConfigurationDefinition.Equal(state.ResourceConfigurationDefinition) {
 
 		var input vpclattice.UpdateResourceConfigurationInput
+		input.ResourceConfigurationIdentifier = plan.ID.ValueStringPointer()
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		rdc, diags := plan.ResourceConfigurationDefinition.ToPtr(ctx)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if rdc.IpResource.IsNull() {
+			// DNS and ARN resources cannot be updated and must not be passed to update
+			input.ResourceConfigurationDefinition = nil
 		}
 
 		out, err := conn.UpdateResourceConfiguration(ctx, &input)
@@ -322,7 +343,13 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, req resource
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitResourceConfigurationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	updated, err := waitResourceConfigurationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	resp.Diagnostics.Append(flex.Flatten(ctx, updated, &plan)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameResourceConfiguration, plan.ID.String(), err),
@@ -369,6 +396,10 @@ func (r *resourceResourceConfiguration) Delete(ctx context.Context, req resource
 		)
 		return
 	}
+}
+
+func (r *resourceResourceConfiguration) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *resourceResourceConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
