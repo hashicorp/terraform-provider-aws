@@ -139,7 +139,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.20.9
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.0.4
 	github.com/aws/aws-sdk-go-v2/service/iot v1.62.4
-	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.10
+	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.11
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.27.10
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.16.10
