@@ -932,8 +932,13 @@ service "billing" {
     human_friendly      = "Billing"
   }
 
+  client {
+    skip_client_generate = true
+  }
+
   endpoint_info {
     endpoint_api_call = "ListBillingViews"
+    endpoint_region_override = "us-east-1"
   }
 
   resource_prefix {
