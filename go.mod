@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/athena v1.49.5
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.10
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.11
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.6
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.24.10
 	github.com/aws/aws-sdk-go-v2/service/backup v1.40.3
