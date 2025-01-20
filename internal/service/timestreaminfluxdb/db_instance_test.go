@@ -222,7 +222,7 @@ func TestAccTimestreamInfluxDBDBInstance_networkType(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBInstanceConfig_networkTypeIpV4(rName),
+				Config: testAccDBInstanceConfig_networkTypeIPV4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
@@ -621,7 +621,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName, deploymentType))
 }
 
-func testAccDBInstanceConfig_networkTypeIpV4(rName string) string {
+func testAccDBInstanceConfig_networkTypeIPV4(rName string) string {
 	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   name                   = %[1]q
