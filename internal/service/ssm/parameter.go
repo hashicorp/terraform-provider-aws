@@ -5,7 +5,6 @@ package ssm
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -132,6 +131,12 @@ func resourceParameter() *schema.Resource {
 				Sensitive:    true,
 				WriteOnly:    true,
 				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+				RequiredWith: []string{"value_wo_version"},
+			},
+			"value_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"value_wo"},
 			},
 			names.AttrVersion: {
 				Type:     schema.TypeInt,
@@ -154,38 +159,9 @@ func resourceParameter() *schema.Resource {
 			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange(names.AttrValue)
 			}),
-			// detect drift on write-only attributes
-			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				conn := meta.(*conns.AWSClient).SSMClient(ctx)
-
-				if diff.Id() == "" {
-					return nil
-				}
-
-				output, err := findParameterByName(ctx, conn, diff.Get(names.AttrName).(string), true)
-
-				if tfresource.NotFound(err) {
-					return nil
-				}
-
-				if err != nil {
-					return err
-				}
-
-				valueWO, di := diff.GetRawConfigAt(cty.GetAttrPath("value_wo"))
-				if di.HasError() {
-					return errors.New("unable to retrieve write only value")
-				}
-
-				if !valueWO.IsNull() && valueWO.AsString() != "" {
-					if valueWO.AsString() != aws.ToString(output.Value) {
-						if err := diff.SetNewComputed("has_value_wo"); err != nil {
-							return err
-						}
-					}
-				}
-				return nil
-			},
+			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("value_wo_version")
+			}),
 			verify.SetTagsDiff,
 		),
 	}
@@ -376,18 +352,20 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			value = v
 		}
 
-		valueWO, di := d.GetRawConfigAt(cty.GetAttrPath("value_wo"))
-		if di.HasError() {
-			diags = append(diags, di...)
-			return diags
-		}
+		if d.HasChanges("value_wo_version") {
+			valueWO, di := d.GetRawConfigAt(cty.GetAttrPath("value_wo"))
+			if di.HasError() {
+				diags = append(diags, di...)
+				return diags
+			}
 
-		if !valueWO.Type().Equals(cty.String) {
-			return sdkdiag.AppendErrorf(diags, "updating SSM Parameter (%s): invalid value_wo type", d.Id())
-		}
+			if !valueWO.Type().Equals(cty.String) {
+				return sdkdiag.AppendErrorf(diags, "updating SSM Parameter (%s): invalid value_wo type", d.Id())
+			}
 
-		if !valueWO.IsNull() && valueWO.AsString() != "" {
-			value = valueWO.AsString()
+			if !valueWO.IsNull() && valueWO.AsString() != "" {
+				value = valueWO.AsString()
+			}
 		}
 
 		input := &ssm.PutParameterInput{
