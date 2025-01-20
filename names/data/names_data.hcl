@@ -932,6 +932,10 @@ service "billing" {
     human_friendly      = "Billing"
   }
 
+  endpoint_info {
+    endpoint_api_call = "ListBillingViews"
+  }
+
   client {
     skip_client_generate = true
   }
