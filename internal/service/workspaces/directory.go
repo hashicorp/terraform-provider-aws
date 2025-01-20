@@ -240,6 +240,7 @@ func resourceDirectory() *schema.Resource {
 			"tenancy": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				ForceNew:         true,
 				Default:          types.TenancyShared,
 				ValidateDiagFunc: enum.Validate[types.Tenancy](),
 			},
