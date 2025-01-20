@@ -936,10 +936,6 @@ service "billing" {
     endpoint_api_call = "ListBillingViews"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   resource_prefix {
     correct = "aws_billing_"
   }
