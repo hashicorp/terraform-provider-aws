@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceProduct,
 			TypeName: "aws_pricing_product",
+			Name:     "Product",
 		},
 	}
 }

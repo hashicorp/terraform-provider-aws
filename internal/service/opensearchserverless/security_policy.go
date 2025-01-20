@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Security Policy")
+// @FrameworkResource("aws_opensearchserverless_security_policy", name="Security Policy")
 func newResourceSecurityPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSecurityPolicy{}, nil
 }

@@ -19,8 +19,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceResourceSet,
-			Name:    "Resource Set",
+			Factory:  newResourceResourceSet,
+			TypeName: "aws_fms_resource_set",
+			Name:     "Resource Set",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

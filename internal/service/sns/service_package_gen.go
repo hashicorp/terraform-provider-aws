@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceTopic,
 			TypeName: "aws_sns_topic",
+			Name:     "Topic",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -39,10 +40,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourcePlatformApplication,
 			TypeName: "aws_sns_platform_application",
+			Name:     "Platform Application",
 		},
 		{
 			Factory:  resourceSMSPreferences,
 			TypeName: "aws_sns_sms_preferences",
+			Name:     "SMS Preferences",
 		},
 		{
 			Factory:  resourceTopic,
@@ -55,14 +58,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceTopicDataProtectionPolicy,
 			TypeName: "aws_sns_topic_data_protection_policy",
+			Name:     "Topic Data Protection Policy",
 		},
 		{
 			Factory:  resourceTopicPolicy,
 			TypeName: "aws_sns_topic_policy",
+			Name:     "Topic Policy",
 		},
 		{
 			Factory:  resourceTopicSubscription,
 			TypeName: "aws_sns_topic_subscription",
+			Name:     "Topic Subscription",
 		},
 	}
 }

@@ -27,10 +27,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSigningJob,
 			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
 		},
 		{
 			Factory:  DataSourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
+			Name:     "Signing Profile",
 		},
 	}
 }
@@ -40,6 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSigningJob,
 			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
 		},
 		{
 			Factory:  ResourceSigningProfile,
@@ -52,6 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSigningProfilePermission,
 			TypeName: "aws_signer_signing_profile_permission",
+			Name:     "Signing Profile Permission",
 		},
 	}
 }

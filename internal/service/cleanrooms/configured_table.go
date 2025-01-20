@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cleanrooms_configured_table")
+// @SDKResource("aws_cleanrooms_configured_table", name="Configured Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
 func ResourceConfiguredTable() *schema.Resource {

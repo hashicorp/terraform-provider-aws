@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourcePolicyStore,
-			Name:    "Policy Store",
+			Factory:  newDataSourcePolicyStore,
+			TypeName: "aws_verifiedpermissions_policy_store",
+			Name:     "Policy Store",
 		},
 	}
 }
@@ -26,24 +27,29 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceIdentitySource,
-			Name:    "Identity Source",
+			Factory:  newResourceIdentitySource,
+			TypeName: "aws_verifiedpermissions_identity_source",
+			Name:     "Identity Source",
 		},
 		{
-			Factory: newResourcePolicy,
-			Name:    "Policy",
+			Factory:  newResourcePolicy,
+			TypeName: "aws_verifiedpermissions_policy",
+			Name:     "Policy",
 		},
 		{
-			Factory: newResourcePolicyStore,
-			Name:    "Policy Store",
+			Factory:  newResourcePolicyStore,
+			TypeName: "aws_verifiedpermissions_policy_store",
+			Name:     "Policy Store",
 		},
 		{
-			Factory: newResourcePolicyTemplate,
-			Name:    "Policy Template",
+			Factory:  newResourcePolicyTemplate,
+			TypeName: "aws_verifiedpermissions_policy_template",
+			Name:     "Policy Template",
 		},
 		{
-			Factory: newResourceSchema,
-			Name:    "Schema",
+			Factory:  newResourceSchema,
+			TypeName: "aws_verifiedpermissions_schema",
+			Name:     "Schema",
 		},
 	}
 }

@@ -27,18 +27,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceLink,
 			TypeName: "aws_oam_link",
+			Name:     "Link",
 		},
 		{
 			Factory:  DataSourceLinks,
 			TypeName: "aws_oam_links",
+			Name:     "Links",
 		},
 		{
 			Factory:  DataSourceSink,
 			TypeName: "aws_oam_sink",
+			Name:     "Sink",
 		},
 		{
 			Factory:  DataSourceSinks,
 			TypeName: "aws_oam_sinks",
+			Name:     "Sinks",
 		},
 	}
 }
@@ -64,6 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSinkPolicy,
 			TypeName: "aws_oam_sink_policy",
+			Name:     "Sink Policy",
 		},
 	}
 }

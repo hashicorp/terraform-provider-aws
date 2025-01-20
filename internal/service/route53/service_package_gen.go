@@ -15,12 +15,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newRecordsDataSource,
-			Name:    "Records",
+			Factory:  newRecordsDataSource,
+			TypeName: "aws_route53_records",
+			Name:     "Records",
 		},
 		{
-			Factory: newZonesDataSource,
-			Name:    "Zones",
+			Factory:  newZonesDataSource,
+			TypeName: "aws_route53_zones",
+			Name:     "Zones",
 		},
 	}
 }
@@ -28,12 +30,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newCIDRCollectionResource,
-			Name:    "CIDR Collection",
+			Factory:  newCIDRCollectionResource,
+			TypeName: "aws_route53_cidr_collection",
+			Name:     "CIDR Collection",
 		},
 		{
-			Factory: newCIDRLocationResource,
-			Name:    "CIDR Location",
+			Factory:  newCIDRLocationResource,
+			TypeName: "aws_route53_cidr_location",
+			Name:     "CIDR Location",
 		},
 	}
 }
