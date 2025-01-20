@@ -27,6 +27,7 @@ Backup
 Batch
 Bedrock
 Bedrock Agents
+Billing
 CE (Cost Explorer)
 Chatbot
 Chime
