@@ -12,8 +12,8 @@ require (
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/aws/aws-sdk-go-v2 v1.33.0
-	github.com/aws/aws-sdk-go-v2/config v1.29.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.53
+	github.com/aws/aws-sdk-go-v2/config v1.29.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.54
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.24
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.51
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.7
@@ -242,10 +242,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.34.11
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.19.3
-	github.com/aws/aws-sdk-go-v2/service/sso v1.24.10
+	github.com/aws/aws-sdk-go-v2/service/sso v1.24.11
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.29.10
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.10
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.8
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.9
 	github.com/aws/aws-sdk-go-v2/service/swf v1.27.13
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.4
@@ -329,7 +329,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.10 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
