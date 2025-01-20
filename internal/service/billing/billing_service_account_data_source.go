@@ -52,16 +52,16 @@ func (d *billingServiceAccountDataSource) Read(ctx context.Context, request data
 	}
 
 	// See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
-	const billingAccountID = "386209384616"
+	const serviceAccountID = "386209384616"
 
 	arn := arn.ARN{
 		Partition: d.Meta().Partition(ctx),
 		Service:   "iam",
-		AccountID: billingAccountID,
+		AccountID: serviceAccountID,
 		Resource:  "root",
 	}
 	data.ARN = fwflex.StringValueToFrameworkLegacy(ctx, arn.String())
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, billingAccountID)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceAccountID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
