@@ -71,7 +71,7 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	var v1, v2 vpclattice.GetResourceConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
@@ -89,14 +89,14 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 			{
 				Config: testAccResourceConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					testAccCheckResourceConfigurationExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`v1/+.`)),
 				),
 			},
 			{
@@ -107,7 +107,8 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 			{
 				Config: testAccResourceConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					testAccCheckResourceConfigurationExists(ctx, resourceName, &v2),
+					testAccCheckResourceConfigurationNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
@@ -115,7 +116,7 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.1", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`v1/+.`)),
 				),
 			},
 			{
