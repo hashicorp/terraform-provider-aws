@@ -90,7 +90,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				Computed:   true,
 				Validators: []validator.List{
 					listvalidator.ValueStringsAre(
-						stringvalidator.RegexMatches(regexache.MustCompile("^((\\d{1,5}\\-\\d{1,5})|(\\d+))$"), "must contain one port number between 1 and 65535 or two seperated by hyphen.")),
+						stringvalidator.RegexMatches(regexache.MustCompile("^((\\d{1,5}\\-\\d{1,5})|(\\d+))$"), "must contain one port number between 1 and 65535 or two separated by hyphen.")),
 				},
 			},
 			"protocol": schema.StringAttribute{
