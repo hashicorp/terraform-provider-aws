@@ -502,6 +502,67 @@ func testAccCheckExperimentTemplateDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
+func TestAccFISExperimentTemplate_reportConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.report_configuration"
+	var conf awstypes.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_reportConfiguration(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboards.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboards.0.dashboard_arn", "arn:aws:cloudwatch:us-east-1:123456789012:dashboard/test"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.bucket_name", "reports_bucket"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.prefix", "chaos-engineering-reports"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.post_experiment_duration", "PT6M"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.pre_experiment_duration", "PT6M"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "test-action-1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", ""),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:ec2:terminate-instances"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "Instances"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "to-terminate-1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An experiment template for testing"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "to-terminate-1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:ec2:instance"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "COUNT(1)"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.key", "env"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccExperimentTemplateConfig_basic(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1164,4 +1225,80 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName, mode)
+}
+
+func testAccExperimentTemplateConfig_reportConfiguration(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[8]q
+    selection_mode = %[9]q
+
+    resource_tag {
+      key   = %[10]q
+      value = %[11]q
+    }
+  }
+
+  experiment_report_configuration {
+    data_sources {
+      cloudwatch_dashboards {
+        dashboard_arn = "arn:aws:cloudwatch:us-east-1:123456789012:dashboard/test"
+      }
+    }
+
+    outputs {
+      s3_configuration {
+        bucket_name = "reports_bucket"
+        prefix      = "chaos-engineering-reports"
+      }
+    }
+
+    post_experiment_duration = "PT6M"
+    pre_experiment_duration  = "PT6M"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
 }

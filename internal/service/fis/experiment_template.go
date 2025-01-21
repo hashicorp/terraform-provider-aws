@@ -145,6 +145,71 @@ func resourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
+			"experiment_report_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_sources": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cloudwatch_dashboards": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"dashboard_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws:cloudwatch::\d{12}:dashboard\/[a-zA-Z0-9_-]+$`), "must be in the format of arn:aws:cloudwatch::account-id:dashboard/dashboard-name"),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"outputs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrBucketName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrPrefix: {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"post_experiment_duration": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^PT\d+[M|H|S]$`), "must be in the format of PT10S"),
+						},
+						"pre_experiment_duration": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^PT\d+[M|H|S]$`), "must be in the format of PT10S"),
+						},
+					},
+				},
+			},
 			"log_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -302,13 +367,14 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.CreateExperimentTemplateInput{
-		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
-		ClientToken:      aws.String(id.UniqueId()),
-		Description:      aws.String(d.Get(names.AttrDescription).(string)),
-		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]any)),
-		RoleArn:          aws.String(d.Get(names.AttrRoleARN).(string)),
-		StopConditions:   expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
-		Tags:             getTagsIn(ctx),
+		Actions:                       expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
+		ClientToken:                   aws.String(id.UniqueId()),
+		Description:                   aws.String(d.Get(names.AttrDescription).(string)),
+		ExperimentReportConfiguration: expandCeateExperimentTemplateExperimentReportConfiguration(d.Get("experiment_report_configuration").(*schema.Set)),
+		LogConfiguration:              expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]any)),
+		RoleArn:                       aws.String(d.Get(names.AttrRoleARN).(string)),
+		StopConditions:                expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("experiment_options"); ok {
@@ -366,6 +432,9 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set(names.AttrTarget, flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
+	if err := d.Set("experiment_report_configuration", flattenExperimentTemplateExperimentReportConfiguration(experimentTemplate.ExperimentReportConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting experiment_report_configuration: %s", err)
+	}
 
 	setTagsOut(ctx, experimentTemplate.Tags)
 
@@ -413,6 +482,10 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			} else {
 				input.Targets = targets
 			}
+		}
+
+		if d.HasChange("experiment_report_configuration") {
+			input.ExperimentReportConfiguration = expandUpdateExperimentTemplateExperimentReportConfiguration(d.Get("experiment_report_configuration").(*schema.Set))
 		}
 
 		_, err := conn.UpdateExperimentTemplate(ctx, input)
@@ -899,6 +972,187 @@ func expandExperimentTemplateTargetResourceTags(l *schema.Set) map[string]string
 	}
 
 	return attrs
+}
+
+func expandCeateExperimentTemplateExperimentReportConfiguration(l *schema.Set) *awstypes.CreateExperimentTemplateReportConfigurationInput {
+	if l == nil || l.Len() == 0 {
+		return nil
+	}
+
+	config := &awstypes.CreateExperimentTemplateReportConfigurationInput{}
+
+	raw := l.List()[0].(map[string]interface{})
+
+	if v, ok := raw["data_sources"].(*schema.Set); ok && v.Len() > 0 {
+		config.DataSources = expandExperimentTemplateExperimentReportConfigurationDataSources(v)
+	}
+
+	if v, ok := raw["outputs"].([]interface{}); ok && len(v) > 0 {
+		config.Outputs = expandExperimentTemplateExperimentReportConfigurationOutputs(v)
+	}
+
+	if v, ok := raw["post_experiment_duration"].(string); ok && v != "" {
+		config.PostExperimentDuration = aws.String(v)
+	}
+
+	if v, ok := raw["pre_experiment_duration"].(string); ok && v != "" {
+		config.PreExperimentDuration = aws.String(v)
+	}
+
+	return config
+}
+
+func expandUpdateExperimentTemplateExperimentReportConfiguration(l *schema.Set) *awstypes.UpdateExperimentTemplateReportConfigurationInput {
+	if l == nil || l.Len() == 0 {
+		return nil
+	}
+
+	config := &awstypes.UpdateExperimentTemplateReportConfigurationInput{}
+
+	raw := l.List()[0].(map[string]interface{})
+
+	if v, ok := raw["data_sources"].(*schema.Set); ok && v.Len() > 0 {
+		config.DataSources = expandExperimentTemplateExperimentReportConfigurationDataSources(v)
+	}
+
+	if v, ok := raw["outputs"].([]interface{}); ok && len(v) > 0 {
+		config.Outputs = expandExperimentTemplateExperimentReportConfigurationOutputs(v)
+	}
+
+	if v, ok := raw["post_experiment_duration"].(string); ok && v != "" {
+		config.PostExperimentDuration = aws.String(v)
+	}
+
+	if v, ok := raw["pre_experiment_duration"].(string); ok && v != "" {
+		config.PreExperimentDuration = aws.String(v)
+	}
+
+	return config
+}
+
+func expandExperimentTemplateExperimentReportConfigurationDataSources(s *schema.Set) *awstypes.ExperimentTemplateReportConfigurationDataSourcesInput {
+	if s == nil || s.Len() == 0 {
+		return nil
+	}
+
+	dataSourcesInput := &awstypes.ExperimentTemplateReportConfigurationDataSourcesInput{}
+
+	rawMap := s.List()[0].(map[string]interface{})
+
+	if v, ok := rawMap["cloudwatch_dashboards"].([]interface{}); ok && len(v) > 0 {
+		dashboards := make([]awstypes.ReportConfigurationCloudWatchDashboardInput, 0, len(v))
+
+		for _, dashboard := range v {
+			dashboardMap := dashboard.(map[string]interface{})
+			if dashboardArn, ok := dashboardMap["dashboard_arn"].(string); ok && dashboardArn != "" {
+				dashboards = append(dashboards, awstypes.ReportConfigurationCloudWatchDashboardInput{
+					DashboardIdentifier: aws.String(dashboardArn),
+				})
+			}
+		}
+
+		dataSourcesInput.CloudWatchDashboards = dashboards
+	}
+
+	return dataSourcesInput
+}
+
+func expandExperimentTemplateExperimentReportConfigurationOutputs(l []interface{}) *awstypes.ExperimentTemplateReportConfigurationOutputsInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	rawMap := l[0].(map[string]interface{})
+
+	outputsInput := &awstypes.ExperimentTemplateReportConfigurationOutputsInput{}
+
+	if v, ok := rawMap["s3_configuration"].([]interface{}); ok && len(v) > 0 {
+		outputsInput.S3Configuration = expandExperimentTemplateReportConfigurationS3Configuration(v)
+	}
+
+	return outputsInput
+}
+
+func expandExperimentTemplateReportConfigurationS3Configuration(l []interface{}) *awstypes.ReportConfigurationS3OutputInput {
+	if len(l) == 0 {
+		return nil
+	}
+
+	raw := l[0].(map[string]interface{})
+
+	config := awstypes.ReportConfigurationS3OutputInput{
+		BucketName: aws.String(raw[names.AttrBucketName].(string)),
+	}
+
+	if v, ok := raw[names.AttrPrefix].(string); ok && v != "" {
+		config.Prefix = aws.String(v)
+	}
+
+	return &config
+}
+
+func flattenExperimentTemplateExperimentReportConfiguration(configured *awstypes.ExperimentTemplateReportConfiguration) []map[string]interface{} {
+	if configured == nil {
+		return make([]map[string]interface{}, 0)
+	}
+
+	dataResources := make([]map[string]interface{}, 1)
+	dataResources[0] = make(map[string]interface{})
+	dataResources[0]["data_sources"] = flattenExperimentTemplateExperimentReportConfigurationDataSources(configured.DataSources)
+	dataResources[0]["outputs"] = flattenExperimentTemplateExperimentReportConfigurationOutputs(configured.Outputs)
+	dataResources[0]["post_experiment_duration"] = aws.ToString(configured.PostExperimentDuration)
+	dataResources[0]["pre_experiment_duration"] = aws.ToString(configured.PreExperimentDuration)
+
+	return dataResources
+}
+
+func flattenExperimentTemplateExperimentReportConfigurationOutputs(configured *awstypes.ExperimentTemplateReportConfigurationOutputs) []map[string]interface{} {
+	if configured == nil {
+		return make([]map[string]interface{}, 0)
+	}
+
+	dataResources := make([]map[string]interface{}, 1)
+	dataResources[0] = make(map[string]interface{})
+	dataResources[0]["s3_configuration"] = flattenExperimentTemplateExperimentReportConfigurationS3Configuration(configured.S3Configuration)
+
+	return dataResources
+}
+
+func flattenExperimentTemplateExperimentReportConfigurationDataSources(configured *awstypes.ExperimentTemplateReportConfigurationDataSources) []map[string]interface{} {
+	if configured == nil {
+		return make([]map[string]interface{}, 0)
+	}
+
+	dataResources := make([]map[string]interface{}, 1)
+	dataResources[0] = make(map[string]interface{})
+	dataResources[0]["cloudwatch_dashboards"] = flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(configured.CloudWatchDashboards)
+
+	return dataResources
+}
+
+func flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(configured []awstypes.ExperimentTemplateReportConfigurationCloudWatchDashboard) []map[string]interface{} {
+	dataResources := make([]map[string]interface{}, 0, len(configured))
+
+	for _, v := range configured {
+		item := make(map[string]interface{})
+		item["dashboard_arn"] = aws.ToString(v.DashboardIdentifier)
+		dataResources = append(dataResources, item)
+	}
+
+	return dataResources
+}
+
+func flattenExperimentTemplateExperimentReportConfigurationS3Configuration(configured *awstypes.ReportConfigurationS3Output) []map[string]interface{} {
+	if configured == nil {
+		return make([]map[string]interface{}, 0)
+	}
+
+	dataResources := make([]map[string]interface{}, 1)
+	dataResources[0] = make(map[string]interface{})
+	dataResources[0]["bucket_name"] = aws.ToString(configured.BucketName)
+	dataResources[0]["prefix"] = aws.ToString(configured.Prefix)
+
+	return dataResources
 }
 
 func flattenExperimentTemplateActions(configured map[string]awstypes.ExperimentTemplateAction) []map[string]any {
