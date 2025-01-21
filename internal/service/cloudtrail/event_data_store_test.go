@@ -428,9 +428,9 @@ func testAccEventDataStoreConfig_suspend(rName string, suspend bool) string {
 resource "aws_cloudtrail_event_data_store" "test" {
   name = %[1]q
 
-  suspend = %[2]t
-  multi_region_enabled = false
-  organization_enabled = false
+  suspend                        = %[2]t
+  multi_region_enabled           = false
+  organization_enabled           = false
   termination_protection_enabled = false # For ease of deletion.
 }
 `, rName, suspend)
