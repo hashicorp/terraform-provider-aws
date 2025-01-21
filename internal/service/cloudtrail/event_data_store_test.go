@@ -57,9 +57,10 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"suspend"},
 			},
 		},
 	})
@@ -85,9 +86,10 @@ func TestAccCloudTrailEventDataStore_billingMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"suspend"},
 			},
 			{
 				Config: testAccEventDataStoreConfig_billingModeUpdated(rName),
@@ -193,9 +195,10 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"suspend"},
 			},
 		},
 	})
@@ -244,9 +247,10 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"suspend"},
 			},
 			{
 				Config: testAccEventDataStoreConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -291,9 +295,10 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"suspend"},
 			},
 			{
 				Config: testAccEventDataStoreConfig_optionsUpdated(rName),
@@ -396,9 +401,10 @@ func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"suspend"},
 			},
 		},
 	})
@@ -472,8 +478,6 @@ resource "aws_cloudtrail_event_data_store" "test" {
   name = %[1]q
 
   suspend                        = %[2]t
-  multi_region_enabled           = false
-  organization_enabled           = false
   termination_protection_enabled = false # For ease of deletion.
 }
 `, rName, suspend)
