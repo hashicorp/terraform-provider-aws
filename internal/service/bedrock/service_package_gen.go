@@ -17,28 +17,34 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newCustomModelDataSource,
-			Name:    "Custom Model",
+			Factory:  newCustomModelDataSource,
+			TypeName: "aws_bedrock_custom_model",
+			Name:     "Custom Model",
 		},
 		{
-			Factory: newCustomModelsDataSource,
-			Name:    "Custom Models",
+			Factory:  newCustomModelsDataSource,
+			TypeName: "aws_bedrock_custom_models",
+			Name:     "Custom Models",
 		},
 		{
-			Factory: newFoundationModelDataSource,
-			Name:    "Foundation Model",
+			Factory:  newFoundationModelDataSource,
+			TypeName: "aws_bedrock_foundation_model",
+			Name:     "Foundation Model",
 		},
 		{
-			Factory: newFoundationModelsDataSource,
-			Name:    "Foundation Models",
+			Factory:  newFoundationModelsDataSource,
+			TypeName: "aws_bedrock_foundation_models",
+			Name:     "Foundation Models",
 		},
 		{
-			Factory: newInferenceProfileDataSource,
-			Name:    "Inference Profile",
+			Factory:  newInferenceProfileDataSource,
+			TypeName: "aws_bedrock_inference_profile",
+			Name:     "Inference Profile",
 		},
 		{
-			Factory: newInferenceProfilesDataSource,
-			Name:    "Inference Profiles",
+			Factory:  newInferenceProfilesDataSource,
+			TypeName: "aws_bedrock_inference_profiles",
+			Name:     "Inference Profiles",
 		},
 	}
 }
@@ -46,39 +52,45 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newCustomModelResource,
-			Name:    "Custom Model",
+			Factory:  newCustomModelResource,
+			TypeName: "aws_bedrock_custom_model",
+			Name:     "Custom Model",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			},
 		},
 		{
-			Factory: newGuardrailVersionResource,
-			Name:    "Guardrail Version",
-		},
-		{
-			Factory: newModelInvocationLoggingConfigurationResource,
-			Name:    "Model Invocation Logging Configuration",
-		},
-		{
-			Factory: newProvisionedModelThroughputResource,
-			Name:    "Provisioned Model Throughput",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "provisioned_model_arn",
-			},
-		},
-		{
-			Factory: newResourceGuardrail,
-			Name:    "Guardrail",
+			Factory:  newResourceGuardrail,
+			TypeName: "aws_bedrock_guardrail",
+			Name:     "Guardrail",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "guardrail_arn",
 			},
 		},
 		{
-			Factory: newResourceInferenceProfile,
-			Name:    "Inference Profile",
+			Factory:  newGuardrailVersionResource,
+			TypeName: "aws_bedrock_guardrail_version",
+			Name:     "Guardrail Version",
+		},
+		{
+			Factory:  newResourceInferenceProfile,
+			TypeName: "aws_bedrock_inference_profile",
+			Name:     "Inference Profile",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newModelInvocationLoggingConfigurationResource,
+			TypeName: "aws_bedrock_model_invocation_logging_configuration",
+			Name:     "Model Invocation Logging Configuration",
+		},
+		{
+			Factory:  newProvisionedModelThroughputResource,
+			TypeName: "aws_bedrock_provisioned_model_throughput",
+			Name:     "Provisioned Model Throughput",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "provisioned_model_arn",
 			},
 		},
 	}

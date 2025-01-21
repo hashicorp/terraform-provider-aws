@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *kinesis.Client, identifier string, optFns ...func(*kinesis.Options)) (tftags.KeyValueTags, error) {
-	input := &kinesis.ListTagsForStreamInput{
+	input := kinesis.ListTagsForStreamInput{
 		StreamName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(ctx, input, optFns...)
+	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -110,12 +110,12 @@ func updateTags(ctx context.Context, conn *kinesis.Client, identifier string, ol
 	removedTags = removedTags.IgnoreSystem(names.Kinesis)
 	if len(removedTags) > 0 {
 		for _, removedTags := range removedTags.Chunks(10) {
-			input := &kinesis.RemoveTagsFromStreamInput{
+			input := kinesis.RemoveTagsFromStreamInput{
 				StreamName: aws.String(identifier),
 				TagKeys:    removedTags.Keys(),
 			}
 
-			_, err := conn.RemoveTagsFromStream(ctx, input, optFns...)
+			_, err := conn.RemoveTagsFromStream(ctx, &input, optFns...)
 
 			if err != nil {
 				return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -127,12 +127,12 @@ func updateTags(ctx context.Context, conn *kinesis.Client, identifier string, ol
 	updatedTags = updatedTags.IgnoreSystem(names.Kinesis)
 	if len(updatedTags) > 0 {
 		for _, updatedTags := range updatedTags.Chunks(10) {
-			input := &kinesis.AddTagsToStreamInput{
+			input := kinesis.AddTagsToStreamInput{
 				StreamName: aws.String(identifier),
 				Tags:       updatedTags.IgnoreAWS().Map(),
 			}
 
-			_, err := conn.AddTagsToStream(ctx, input, optFns...)
+			_, err := conn.AddTagsToStream(ctx, &input, optFns...)
 
 			if err != nil {
 				return fmt.Errorf("tagging resource (%s): %w", identifier, err)

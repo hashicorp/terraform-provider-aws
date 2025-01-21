@@ -39,6 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceContainerPolicy,
 			TypeName: "aws_media_store_container_policy",
+			Name:     "Container Policy",
 		},
 	}
 }

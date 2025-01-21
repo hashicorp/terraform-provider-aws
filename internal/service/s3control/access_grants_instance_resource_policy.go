@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grants Instance Resource Policy")
+// @FrameworkResource("aws_s3control_access_grants_instance_resource_policy", name="Access Grants Instance Resource Policy")
 func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsInstanceResourcePolicyResource{}
 

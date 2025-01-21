@@ -236,7 +236,7 @@ func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicyDocumentDataSource_validateSid(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_invalidSidValid(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -244,8 +244,8 @@ func TestAccIAMPolicyDocumentDataSource_validateSid(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPolicyDocumentDataSourceConfig_invalidSid,
-				ExpectError: regexache.MustCompile(`must only include alphanumeric characters`),
+				Config:   testAccPolicyDocumentDataSourceConfig_invalidSid,
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1040,7 +1040,7 @@ data "aws_iam_policy_document" "test_source_conflicting" {
 var testAccPolicyDocumentDataSourceConfig_invalidSid = `
 data "aws_iam_policy_document" "test" {
   statement {
-    sid = "Invalid_SID"
+    sid = "Invalid SID"
     actions = [
       "s3:ListAllMyBuckets",
       "s3:GetBucketLocation",

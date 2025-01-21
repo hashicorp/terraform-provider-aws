@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceEnvironmentBlueprint,
-			Name:    "Environment Blueprint",
+			Factory:  newDataSourceEnvironmentBlueprint,
+			TypeName: "aws_datazone_environment_blueprint",
+			Name:     "Environment Blueprint",
 		},
 	}
 }
@@ -26,47 +27,57 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAssetType,
-			Name:    "Asset Type",
+			Factory:  newResourceAssetType,
+			TypeName: "aws_datazone_asset_type",
+			Name:     "Asset Type",
 		},
 		{
-			Factory: newResourceDomain,
-			Name:    "Domain",
+			Factory:  newResourceDomain,
+			TypeName: "aws_datazone_domain",
+			Name:     "Domain",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceEnvironment,
-			Name:    "Environment",
+			Factory:  newResourceEnvironment,
+			TypeName: "aws_datazone_environment",
+			Name:     "Environment",
 		},
 		{
-			Factory: newResourceEnvironmentBlueprintConfiguration,
-			Name:    "Environment Blueprint Configuration",
+			Factory:  newResourceEnvironmentBlueprintConfiguration,
+			TypeName: "aws_datazone_environment_blueprint_configuration",
+			Name:     "Environment Blueprint Configuration",
 		},
 		{
-			Factory: newResourceEnvironmentProfile,
-			Name:    "Environment Profile",
+			Factory:  newResourceEnvironmentProfile,
+			TypeName: "aws_datazone_environment_profile",
+			Name:     "Environment Profile",
 		},
 		{
-			Factory: newResourceFormType,
-			Name:    "Form Type",
+			Factory:  newResourceFormType,
+			TypeName: "aws_datazone_form_type",
+			Name:     "Form Type",
 		},
 		{
-			Factory: newResourceGlossary,
-			Name:    "Glossary",
+			Factory:  newResourceGlossary,
+			TypeName: "aws_datazone_glossary",
+			Name:     "Glossary",
 		},
 		{
-			Factory: newResourceGlossaryTerm,
-			Name:    "Glossary Term",
+			Factory:  newResourceGlossaryTerm,
+			TypeName: "aws_datazone_glossary_term",
+			Name:     "Glossary Term",
 		},
 		{
-			Factory: newResourceProject,
-			Name:    "Project",
+			Factory:  newResourceProject,
+			TypeName: "aws_datazone_project",
+			Name:     "Project",
 		},
 		{
-			Factory: newResourceUserProfile,
-			Name:    "User Profile",
+			Factory:  newResourceUserProfile,
+			TypeName: "aws_datazone_user_profile",
+			Name:     "User Profile",
 		},
 	}
 }

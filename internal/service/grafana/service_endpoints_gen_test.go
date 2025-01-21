@@ -396,7 +396,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListWorkspaces(ctx, &grafana.ListWorkspacesInput{},
+	input := grafana.ListWorkspacesInput{}
+	_, err := client.ListWorkspaces(ctx, &input,
 		func(opts *grafana.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

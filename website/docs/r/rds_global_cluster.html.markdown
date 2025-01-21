@@ -54,6 +54,11 @@ resource "aws_rds_cluster" "secondary" {
   global_cluster_identifier = aws_rds_global_cluster.example.id
   db_subnet_group_name      = "default"
 
+  lifecycle {
+    ignore_changes = [
+      replication_source_identifier
+    ]
+  }
   depends_on = [
     aws_rds_cluster_instance.primary
   ]
@@ -120,6 +125,12 @@ resource "aws_rds_cluster" "secondary" {
   global_cluster_identifier = aws_rds_global_cluster.example.id
   skip_final_snapshot       = true
   db_subnet_group_name      = "default"
+
+  lifecycle {
+    ignore_changes = [
+      replication_source_identifier
+    ]
+  }
 
   depends_on = [
     aws_rds_cluster_instance.primary

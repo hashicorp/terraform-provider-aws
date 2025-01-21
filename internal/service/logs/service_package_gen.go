@@ -21,11 +21,46 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAnomalyDetector,
-			Name:    "Anomaly Detector",
+			Factory:  newAnomalyDetectorResource,
+			TypeName: "aws_cloudwatch_log_anomaly_detector",
+			Name:     "Anomaly Detector",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory:  newDeliveryResource,
+			TypeName: "aws_cloudwatch_log_delivery",
+			Name:     "Delivery",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newDeliveryDestinationResource,
+			TypeName: "aws_cloudwatch_log_delivery_destination",
+			Name:     "Delivery Destination",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newDeliveryDestinationPolicyResource,
+			TypeName: "aws_cloudwatch_log_delivery_destination_policy",
+			Name:     "Delivery Destination Policy",
+		},
+		{
+			Factory:  newDeliverySourceResource,
+			TypeName: "aws_cloudwatch_log_delivery_source",
+			Name:     "Delivery Source",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newIndexPolicyResource,
+			TypeName: "aws_cloudwatch_log_index_policy",
+			Name:     "Index Policy",
 		},
 	}
 }
@@ -35,6 +70,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceDataProtectionPolicyDocument,
 			TypeName: "aws_cloudwatch_log_data_protection_policy_document",
+			Name:     "Data Protection Policy Document",
 		},
 		{
 			Factory:  dataSourceGroup,
@@ -47,6 +83,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceGroups,
 			TypeName: "aws_cloudwatch_log_groups",
+			Name:     "Log Groups",
 		},
 	}
 }
@@ -61,6 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDataProtectionPolicy,
 			TypeName: "aws_cloudwatch_log_data_protection_policy",
+			Name:     "Data Protection Policy",
 		},
 		{
 			Factory:  resourceDestination,
@@ -73,6 +111,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDestinationPolicy,
 			TypeName: "aws_cloudwatch_log_destination_policy",
+			Name:     "Destination Policy",
 		},
 		{
 			Factory:  resourceGroup,
@@ -85,22 +124,27 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceMetricFilter,
 			TypeName: "aws_cloudwatch_log_metric_filter",
+			Name:     "Metric Filter",
 		},
 		{
 			Factory:  resourceResourcePolicy,
 			TypeName: "aws_cloudwatch_log_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
 			Factory:  resourceStream,
 			TypeName: "aws_cloudwatch_log_stream",
+			Name:     "Log Stream",
 		},
 		{
 			Factory:  resourceSubscriptionFilter,
 			TypeName: "aws_cloudwatch_log_subscription_filter",
+			Name:     "Subscription Filter",
 		},
 		{
 			Factory:  resourceQueryDefinition,
 			TypeName: "aws_cloudwatch_query_definition",
+			Name:     "Query Definition",
 		},
 	}
 }

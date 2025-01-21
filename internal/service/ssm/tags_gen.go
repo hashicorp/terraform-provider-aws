@@ -85,13 +85,13 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.SSM)
 	if len(removedTags) > 0 {
-		input := &ssm.RemoveTagsFromResourceInput{
+		input := ssm.RemoveTagsFromResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsFromResource(ctx, input, optFns...)
+		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -101,13 +101,13 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.SSM)
 	if len(updatedTags) > 0 {
-		input := &ssm.AddTagsToResourceInput{
+		input := ssm.AddTagsToResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToResource(ctx, input, optFns...)
+		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

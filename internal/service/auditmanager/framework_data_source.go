@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource("aws_auditmanager_framework", name="Framework")
 func newDataSourceFramework(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFramework{}, nil
 }

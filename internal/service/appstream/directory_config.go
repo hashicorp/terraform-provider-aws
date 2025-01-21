@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appstream_directory_config")
+// @SDKResource("aws_appstream_directory_config", name="Directory Config")
 func ResourceDirectoryConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryConfigCreate,

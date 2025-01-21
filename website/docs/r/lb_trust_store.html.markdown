@@ -31,7 +31,7 @@ resource "aws_lb_listener" "example" {
     type             = "forward"
   }
 
-  mutual_authentication = {
+  mutual_authentication {
     mode            = "verify"
     trust_store_arn = aws_lb_trust_store.test.arn
   }

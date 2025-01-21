@@ -314,8 +314,6 @@ documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-
 The following arguments are required:
 
 * `budgetType` - (Required) Whether this budget tracks monetary cost or usage.
-* `limitAmount` - (Required) The amount of cost or usage being measured for a budget.
-* `limitUnit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `timeUnit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
 
 The following arguments are optional:
@@ -324,6 +322,8 @@ The following arguments are optional:
 * `autoAdjustData` - (Optional) Object containing [AutoAdjustData](#auto-adjust-data) which determines the budget amount for an auto-adjusting budget.
 * `costFilter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
 * `costTypes` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
+* `limitAmount` - (Optional) The amount of cost or usage being measured for a budget.
+* `limitUnit` - (Optional) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `name` - (Optional) The name of a budget. Unique within accounts.
 * `namePrefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
 * `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
@@ -443,4 +443,4 @@ Using `terraform import`, import budgets using `AccountID:BudgetName`. For examp
 % terraform import aws_budgets_budget.myBudget 123456789012:myBudget
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4659c02ccf6bf7ddf8ab54ca8547bd42ceb36308ce7771f1c85d769ac386dbbc -->
+<!-- cache-key: cdktf-0.20.8 input-4da70f0ee9ede834ba7f60d9a6c3be7b0c17fa40ba1f1bc6edb7ec3d54bddb07 -->

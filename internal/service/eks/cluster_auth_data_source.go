@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eks_cluster_auth")
+// @SDKDataSource("aws_eks_cluster_auth", name="Cluster Authentication Token")
 func dataSourceClusterAuth() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterAuthRead,

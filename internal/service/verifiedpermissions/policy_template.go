@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Policy Template")
+// @FrameworkResource("aws_verifiedpermissions_policy_template", name="Policy Template")
 func newResourcePolicyTemplate(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyTemplate{}
 

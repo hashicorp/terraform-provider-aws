@@ -83,11 +83,10 @@ func TestAccSESV2ConfigurationSet_deliveryOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, 300, string(types.TlsPolicyRequire)),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(types.TlsPolicyRequire)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.max_delivery_seconds", "300"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(types.TlsPolicyRequire)),
 				),
 			},
@@ -97,7 +96,16 @@ func TestAccSESV2ConfigurationSet_deliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, 800, string(types.TlsPolicyOptional)),
+				Config: testAccConfigurationSetConfig_deliveryOptions_maxDeliverySeconds(rName, 300, string(types.TlsPolicyRequire)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.max_delivery_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(types.TlsPolicyRequire)),
+				),
+			},
+			{
+				Config: testAccConfigurationSetConfig_deliveryOptions_maxDeliverySeconds(rName, 800, string(types.TlsPolicyOptional)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -383,7 +391,19 @@ resource "aws_sesv2_configuration_set" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetConfig_deliveryOptions(rName string, MaxDeliverySeconds int, tlsPolicy string) string {
+func testAccConfigurationSetConfig_deliveryOptions(rName string, tlsPolicy string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+
+  delivery_options {
+    tls_policy = %[2]q
+  }
+}
+`, rName, tlsPolicy)
+}
+
+func testAccConfigurationSetConfig_deliveryOptions_maxDeliverySeconds(rName string, maxDeliverySeconds int, tlsPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
@@ -393,7 +413,7 @@ resource "aws_sesv2_configuration_set" "test" {
     tls_policy           = %[3]q
   }
 }
-`, rName, MaxDeliverySeconds, tlsPolicy)
+`, rName, maxDeliverySeconds, tlsPolicy)
 }
 
 func testAccConfigurationSetConfig_reputationMetricsEnabled(rName string, reputationMetricsEnabled bool) string {

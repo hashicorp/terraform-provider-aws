@@ -68,10 +68,11 @@ This resource exports the following attributes in addition to the arguments abov
 - `attachment_policy_rule_number` - The policy rule number associated with the attachment.
 - `core_network_arn` - The ARN of a core network.
 - `core_network_id` - The id of a core network.
-- `edge_location` - The Region where the edge is located.
+- `edge_location` - The Region where the edge is located. This is returned for all attachment types except a Direct Connect gateway attachment, which instead returns `edge_locations`.
+- `edge_locations` - The edge locations that the Direct Connect gateway is associated with. This is returned only for Direct Connect gateway attachments. All other attachment types return `edge_location`
 - `owner_account_id` - The ID of the attachment account owner.
 - `resource_arn` - The attachment resource ARN.
 - `segment_name` - The name of the segment attachment.
 - `state` - The state of the attachment.
 
-<!-- cache-key: cdktf-0.20.8 input-c1fd000ad23ab3bc2ca659776b5869bbc286d0197dd4d6b077a2c7d3ade9242b -->
+<!-- cache-key: cdktf-0.20.8 input-842f6eb8091d2f1f428ef81fcbc124f5d3826af7ff2f820c7d62cd75bbf6b640 -->

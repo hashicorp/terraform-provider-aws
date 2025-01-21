@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{},
+	input := ecr.DescribeRepositoriesInput{}
+	_, err := client.DescribeRepositories(ctx, &input,
 		func(opts *ecr.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

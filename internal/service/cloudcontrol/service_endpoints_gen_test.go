@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListResourceRequests(ctx, &cloudcontrol.ListResourceRequestsInput{},
+	input := cloudcontrol.ListResourceRequestsInput{}
+	_, err := client.ListResourceRequests(ctx, &input,
 		func(opts *cloudcontrol.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

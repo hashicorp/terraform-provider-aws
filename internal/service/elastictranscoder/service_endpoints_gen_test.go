@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListPipelines(ctx, &elastictranscoder.ListPipelinesInput{},
+	input := elastictranscoder.ListPipelinesInput{}
+	_, err := client.ListPipelines(ctx, &input,
 		func(opts *elastictranscoder.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
