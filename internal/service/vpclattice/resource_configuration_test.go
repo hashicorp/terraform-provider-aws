@@ -396,7 +396,7 @@ func testAccResourceConfigurationConfig_parentChild(rName, ip string) string {
 resource "aws_vpclattice_resource_configuration" "parent" {
   name = "%[1]s-parent"
 
-  protocol    = "TCP"
+  protocol = "TCP"
 
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
   type                        = "GROUP"
