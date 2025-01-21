@@ -45,9 +45,9 @@ import (
 func newResourceResourceConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceResourceConfiguration{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
@@ -102,12 +102,6 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"resource_gateway_identifier": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"resource_configuration_group_id": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -116,6 +110,12 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				Validators: []validator.String{stringvalidator.ConflictsWith(
 					path.MatchRelative().AtParent().AtName("resource_gateway_identifier"),
 				)},
+			},
+			"resource_gateway_identifier": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -402,7 +402,7 @@ func (r *resourceResourceConfiguration) ModifyPlan(ctx context.Context, request 
 }
 
 func (r *resourceResourceConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
@@ -504,8 +504,8 @@ type resourceResourceConfigurationModel struct {
 	PortRanges                                fwtypes.ListOfString                                                  `tfsdk:"port_ranges"`
 	Protocol                                  fwtypes.StringEnum[awstypes.ProtocolType]                             `tfsdk:"protocol"`
 	ResourceConfigurationDefinition           fwtypes.ListNestedObjectValueOf[resourceConfigurationDefinitionModel] `tfsdk:"resource_configuration_definition"`
-	ResourceGatewayIdentifier                 types.String                                                          `tfsdk:"resource_gateway_identifier"`
 	ResourceConfigurationGroupId              types.String                                                          `tfsdk:"resource_configuration_group_id"`
+	ResourceGatewayIdentifier                 types.String                                                          `tfsdk:"resource_gateway_identifier"`
 	Tags                                      tftags.Map                                                            `tfsdk:"tags"`
 	TagsAll                                   tftags.Map                                                            `tfsdk:"tags_all"`
 	Timeouts                                  timeouts.Value                                                        `tfsdk:"timeouts"`
