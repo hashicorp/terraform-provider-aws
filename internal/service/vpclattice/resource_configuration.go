@@ -299,7 +299,6 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, req resource
 
 	if !plan.PortRanges.Equal(state.PortRanges) ||
 		!plan.ResourceConfigurationDefinition.Equal(state.ResourceConfigurationDefinition) {
-
 		var input vpclattice.UpdateResourceConfigurationInput
 		input.ResourceConfigurationIdentifier = plan.ID.ValueStringPointer()
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
@@ -554,12 +553,10 @@ func (r *resourceConfigurationDefinitionModel) Flatten(ctx context.Context, v an
 
 	default:
 		return diags
-
 	}
 }
 
 func (r resourceConfigurationDefinitionModel) Expand(ctx context.Context) (results any, diags diag.Diagnostics) {
-
 	switch {
 	case !r.IpResource.IsNull():
 		ipAddressData, d := r.IpResource.ToPtr(ctx)
@@ -595,7 +592,6 @@ func (r resourceConfigurationDefinitionModel) Expand(ctx context.Context) (resul
 		diags.Append(flex.Expand(ctx, ArnResourceData, &rdc.Value)...)
 
 		return &rdc, diags
-
 	}
 
 	return nil, diags
