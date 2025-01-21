@@ -162,7 +162,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dnsResourceModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrDNSName: schema.StringAttribute{
+									names.AttrDomainName: schema.StringAttribute{
 										Required: true,
 									},
 									names.AttrIPAddressType: schema.StringAttribute{
