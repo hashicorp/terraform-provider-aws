@@ -39,7 +39,8 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"validateRootVolumeSize": testAccWorkspace_validateRootVolumeSize,
 			"validateUserVolumeSize": testAccWorkspace_validateUserVolumeSize,
 			"workspaceProperties":    testAccWorkspace_workspaceProperties,
-			"workspaceProperties_runningModeAlwaysOn": testAccWorkspace_workspaceProperties_runningModeAlwaysOn,
+			"workspaceProperties_runningModeAlwaysOn":                 testAccWorkspace_workspaceProperties_runningModeAlwaysOn,
+			"workspaceProperties_runningModeAutoStopTimeoutInMinutes": testAccWorkspace_workspaceProperties_runningModeAutoStopTimeoutInMinutes,
 		},
 	}
 
