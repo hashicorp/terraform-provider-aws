@@ -73,7 +73,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
