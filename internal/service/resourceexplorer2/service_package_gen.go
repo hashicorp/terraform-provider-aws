@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceSearch,
-			Name:    "Search",
+			Factory:  newDataSourceSearch,
+			TypeName: "aws_resourceexplorer2_search",
+			Name:     "Search",
 		},
 	}
 }
@@ -26,15 +27,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newIndexResource,
-			Name:    "Index",
+			Factory:  newIndexResource,
+			TypeName: "aws_resourceexplorer2_index",
+			Name:     "Index",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory: newViewResource,
-			Name:    "View",
+			Factory:  newViewResource,
+			TypeName: "aws_resourceexplorer2_view",
+			Name:     "View",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},

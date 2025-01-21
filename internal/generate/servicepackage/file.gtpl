@@ -21,12 +21,11 @@ type servicePackage struct {}
 {{- if .EphemeralResources }}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
 	return []*types.ServicePackageEphemeralResource {
-{{- range .EphemeralResources }}
+{{- range $key, $value := .EphemeralResources }}
 		{
-			Factory: {{ .FactoryName }},
-			{{- if ne .Name "" }}
-			Name:    "{{ .Name }}",
-			{{- end }}
+			Factory:  {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
+			Name:     "{{ $value.Name }}",
 		},
 {{- end }}
 	}
@@ -35,12 +34,11 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.Servic
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource {
-{{- range .FrameworkDataSources }}
+{{- range $key, $value := .FrameworkDataSources }}
 		{
-			Factory: {{ .FactoryName }},
-			{{- if ne .Name "" }}
-			Name:    "{{ .Name }}",
-			{{- end }}
+			Factory: {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
+			Name:    "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
@@ -58,12 +56,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource {
-{{- range .FrameworkResources }}
+{{- range $key, $value := .FrameworkResources }}
 		{
-			Factory: {{ .FactoryName }},
-			{{- if ne .Name "" }}
-			Name:    "{{ .Name }}",
-			{{- end }}
+			Factory:  {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
+			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
@@ -85,9 +82,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
-			{{- if ne $value.Name "" }}
 			Name:     "{{ $value.Name }}",
-			{{- end }}
 			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
@@ -109,9 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
-			{{- if ne $value.Name "" }}
 			Name:     "{{ $value.Name }}",
-			{{- end }}
 			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}

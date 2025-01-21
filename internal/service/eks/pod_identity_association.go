@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Pod Identity Association")
+// @FrameworkResource("aws_eks_pod_identity_association", name="Pod Identity Association")
 // @Tags(identifierAttribute="association_arn")
 func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &podIdentityAssociationResource{}

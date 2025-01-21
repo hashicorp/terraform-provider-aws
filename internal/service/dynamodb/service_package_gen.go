@@ -19,8 +19,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourcePolicyResource,
-			Name:    "Resource Policy",
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_dynamodb_resource_policy",
+			Name:     "Resource Policy",
 		},
 	}
 }

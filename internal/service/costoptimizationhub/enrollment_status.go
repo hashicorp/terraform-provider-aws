@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Enrollment Status")
+// @FrameworkResource("aws_costoptimizationhub_enrollment_status", name="Enrollment Status")
 func newResourceEnrollmentStatus(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnrollmentStatus{}
 

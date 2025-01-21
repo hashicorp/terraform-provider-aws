@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Trusted Token Issuer")
+// @FrameworkResource("aws_ssoadmin_trusted_token_issuer", name="Trusted Token Issuer")
 // @Tags
 func newResourceTrustedTokenIssuer(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTrustedTokenIssuer{}, nil

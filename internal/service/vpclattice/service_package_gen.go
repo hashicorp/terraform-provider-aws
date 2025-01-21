@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceGatewayResource,
-			Name:    "Resource Gateway",
+			Factory:  newResourceGatewayResource,
+			TypeName: "aws_vpclattice_resource_gateway",
+			Name:     "Resource Gateway",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

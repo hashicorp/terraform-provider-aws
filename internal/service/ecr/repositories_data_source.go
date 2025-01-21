@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Repositories")
+// @FrameworkDataSource("aws_ecr_repositories", name="Repositories")
 func newRepositoriesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &repositoriesDataSource{}, nil
 }

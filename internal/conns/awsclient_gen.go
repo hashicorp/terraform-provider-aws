@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	"github.com/aws/aws-sdk-go-v2/service/chime"
@@ -366,6 +367,10 @@ func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock.Client {
 
 func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client {
 	return errs.Must(client[*bedrockagent.Client](ctx, c, names.BedrockAgent, make(map[string]any)))
+}
+
+func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
+	return errs.Must(client[*billing.Client](ctx, c, names.Billing, make(map[string]any)))
 }
 
 func (c *AWSClient) BudgetsClient(ctx context.Context) *budgets.Client {

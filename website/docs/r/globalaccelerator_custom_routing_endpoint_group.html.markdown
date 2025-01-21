@@ -14,7 +14,7 @@ Provides a Global Accelerator custom routing endpoint group.
 
 ```terraform
 resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
-  listener_arn = aws_globalaccelerator_custom_routing_listener.example.id
+  listener_arn = aws_globalaccelerator_custom_routing_listener.example.arn
 
   destination_configuration {
     from_port = 80

@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newConnectionAliasResource,
-			Name:    "Connection Alias",
+			Factory:  newConnectionAliasResource,
+			TypeName: "aws_workspaces_connection_alias",
+			Name:     "Connection Alias",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},

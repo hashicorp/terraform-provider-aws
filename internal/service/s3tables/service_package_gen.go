@@ -21,24 +21,29 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceNamespace,
-			Name:    "Namespace",
+			Factory:  newResourceNamespace,
+			TypeName: "aws_s3tables_namespace",
+			Name:     "Namespace",
 		},
 		{
-			Factory: newResourceTable,
-			Name:    "Table",
+			Factory:  newResourceTable,
+			TypeName: "aws_s3tables_table",
+			Name:     "Table",
 		},
 		{
-			Factory: newResourceTableBucket,
-			Name:    "Table Bucket",
+			Factory:  newResourceTableBucket,
+			TypeName: "aws_s3tables_table_bucket",
+			Name:     "Table Bucket",
 		},
 		{
-			Factory: newResourceTableBucketPolicy,
-			Name:    "Table Bucket Policy",
+			Factory:  newResourceTableBucketPolicy,
+			TypeName: "aws_s3tables_table_bucket_policy",
+			Name:     "Table Bucket Policy",
 		},
 		{
-			Factory: newResourceTablePolicy,
-			Name:    "Table Policy",
+			Factory:  newResourceTablePolicy,
+			TypeName: "aws_s3tables_table_policy",
+			Name:     "Table Policy",
 		},
 	}
 }

@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_lambda_invocation: Prevent a new invocation when upgrading from a version less than `v5.1.0` with no configuration changes
+```
+```release-note:bug
+resource/aws_lambda_invocation: Fix failed input transformations when upgrading from a version less than `v5.1.0` with an `input` that cannot be marshaled into a `map[string]interface{}`
+```

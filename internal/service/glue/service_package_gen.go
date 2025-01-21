@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceRegistry,
-			Name:    "Registry",
+			Factory:  newDataSourceRegistry,
+			TypeName: "aws_glue_registry",
+			Name:     "Registry",
 		},
 	}
 }
@@ -26,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceCatalogTableOptimizer,
-			Name:    "Catalog Table Optimizer",
+			Factory:  newResourceCatalogTableOptimizer,
+			TypeName: "aws_glue_catalog_table_optimizer",
+			Name:     "Catalog Table Optimizer",
 		},
 	}
 }
