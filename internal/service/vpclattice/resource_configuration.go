@@ -76,9 +76,9 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -93,7 +93,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 						stringvalidator.RegexMatches(regexache.MustCompile("^((\\d{1,5}\\-\\d{1,5})|(\\d+))$"), "must contain one port number between 1 and 65535 or two separated by hyphen.")),
 				},
 			},
-			"protocol": schema.StringAttribute{
+			names.AttrProtocol: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ProtocolType](),
 				Optional:   true,
 				Computed:   true,
@@ -119,7 +119,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ResourceConfigurationType](),
 				Optional:   true,
 				Computed:   true,
@@ -162,10 +162,10 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dnsResourceModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"domain_name": schema.StringAttribute{
+									names.AttrDNSName: schema.StringAttribute{
 										Required: true,
 									},
-									"ip_address_type": schema.StringAttribute{
+									names.AttrIPAddressType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
 									},
@@ -182,7 +182,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 							CustomType: fwtypes.NewListNestedObjectTypeOf[ipResourceModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"ip_address": schema.StringAttribute{
+									names.AttrIPAddress: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -194,7 +194,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -338,7 +338,6 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, req resource
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		plan.ResourceGatewayIdentifier = flex.StringToFramework(ctx, out.ResourceGatewayId)
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
