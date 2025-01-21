@@ -5,6 +5,7 @@ package cloudtrail
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -148,11 +149,6 @@ func resourceEventDataStore() *schema.Resource {
 				Default:          types.BillingModeExtendableRetentionPricing,
 				ValidateDiagFunc: enum.Validate[types.BillingMode](),
 			},
-			"suspend": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -182,6 +178,11 @@ func resourceEventDataStore() *schema.Resource {
 					validation.IntBetween(7, 2555),
 				),
 			},
+			"suspend": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"termination_protection_enabled": {
@@ -204,6 +205,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		Name:                         aws.String(name),
 		OrganizationEnabled:          aws.Bool(d.Get("organization_enabled").(bool)),
 		RetentionPeriod:              aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int))),
+		StartIngestion:               aws.Bool(!d.Get("suspend").(bool)),
 		TagsList:                     getTagsIn(ctx),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
 	}
@@ -299,19 +301,6 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.TerminationProtectionEnabled = aws.Bool(d.Get("termination_protection_enabled").(bool))
 		}
 
-		if d.HasChange("suspend") {
-			if d.Get("suspend").(bool) {
-				if _, err := stopEventDataStoreIngestion(ctx, conn, d.Id()); err != nil {
-					return sdkdiag.AppendErrorf(diags, "error stopping CloudTrail Event Data Store ingestion (%s): %s", d.Id(), err)
-				}
-
-			} else {
-				if _, err := startEventDataStoreIngestion(ctx, conn, d.Id()); err != nil {
-					return sdkdiag.AppendErrorf(diags, "error starting CloudTrail Event Data Store ingestion (%s): %s", d.Id(), err)
-				}
-			}
-		}
-
 		_, err := conn.UpdateEventDataStore(ctx, input)
 
 		if err != nil {
@@ -320,6 +309,19 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if _, err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for CloudTrail Event Data Store (%s) update: %s", d.Id(), err)
+		}
+
+		if d.HasChange("suspend") {
+			if d.Get("suspend").(bool) {
+				if err := stopEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+			} else {
+				if err := startEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
 		}
 	}
 
@@ -355,7 +357,24 @@ func findEventDataStoreByARN(ctx context.Context, conn *cloudtrail.Client, arn s
 		EventDataStore: aws.String(arn),
 	}
 
-	output, err := conn.GetEventDataStore(ctx, &input)
+	output, err := findEventDataStore(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == types.EventDataStoreStatusPendingDeletion {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *cloudtrail.GetEventDataStoreInput) (*cloudtrail.GetEventDataStoreOutput, error) {
+	output, err := conn.GetEventDataStore(ctx, input)
 
 	if errs.IsA[*types.EventDataStoreNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -370,13 +389,6 @@ func findEventDataStoreByARN(ctx context.Context, conn *cloudtrail.Client, arn s
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if status := output.Status; status == types.EventDataStoreStatusPendingDeletion {
-		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
-		}
 	}
 
 	return output, nil
@@ -398,38 +410,46 @@ func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn stri
 	}
 }
 
-func stopEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string) (*cloudtrail.StopEventDataStoreIngestionOutput, error) {
-	input := &cloudtrail.StopEventDataStoreIngestionInput{
+func startEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) error {
+	input := cloudtrail.StartEventDataStoreIngestionInput{
 		EventDataStore: aws.String(arn),
 	}
 
-	output, err := conn.StopEventDataStoreIngestion(ctx, input)
+	_, err := conn.StartEventDataStoreIngestion(ctx, &input)
 
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("starting CloudTrail Event Data Store (%s) ingestion: %w", arn, err)
 	}
 
-	return output, nil
+	if _, err := waitEventDataStoreIngestionStarted(ctx, conn, arn, timeout); err != nil {
+		return fmt.Errorf("waiting for CloudTrail Event Data Store (%s) ingestion start: %w", arn, err)
+	}
+
+	return nil
 }
 
-func startEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string) (*cloudtrail.StartEventDataStoreIngestionOutput, error) {
-	input := &cloudtrail.StartEventDataStoreIngestionInput{
+func stopEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) error {
+	input := cloudtrail.StopEventDataStoreIngestionInput{
 		EventDataStore: aws.String(arn),
 	}
 
-	output, err := conn.StartEventDataStoreIngestion(ctx, input)
+	_, err := conn.StopEventDataStoreIngestion(ctx, &input)
 
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("stopping CloudTrail Event Data Store (%s) ingestion: %w", arn, err)
 	}
 
-	return output, nil
+	if _, err := waitEventDataStoreIngestionStopped(ctx, conn, arn, timeout); err != nil {
+		return fmt.Errorf("waiting for CloudTrail Event Data Store (%s) ingestion stop: %w", arn, err)
+	}
+
+	return nil
 }
 
 func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.EventDataStoreStatusCreated, types.EventDataStoreStatusStartingIngestion, types.EventDataStoreStatusStoppingIngestion),
-		Target:  enum.Slice(types.EventDataStoreStatusEnabled, types.EventDataStoreStatusStoppedIngestion),
+		Pending: enum.Slice(types.EventDataStoreStatusCreated),
+		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
 		Refresh: statusEventDataStore(ctx, conn, arn),
 		Timeout: timeout,
 	}
@@ -447,6 +467,40 @@ func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.Client, arn
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated, types.EventDataStoreStatusEnabled),
 		Target:  []string{},
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudtrail.GetEventDataStoreOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventDataStoreIngestionStarted(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EventDataStoreStatusStartingIngestion),
+		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudtrail.GetEventDataStoreOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventDataStoreIngestionStopped(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EventDataStoreStatusStoppingIngestion),
+		Target:  enum.Slice(types.EventDataStoreStatusStoppedIngestion),
 		Refresh: statusEventDataStore(ctx, conn, arn),
 		Timeout: timeout,
 	}
