@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -188,6 +189,51 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
+	resourceParentName := "aws_vpclattice_resource_configuration.parent"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_parentChild(rName, "10.0.0.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_group_id", resourceParentName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeChild)),
+					resource.TestCheckResourceAttr(resourceParentName, names.AttrType, string(types.ResourceConfigurationTypeGroup)),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.ip_resource.0.ip_address", "10.0.0.1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -287,6 +333,7 @@ resource "aws_vpclattice_resource_configuration" "test" {
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
   port_ranges = ["80"]
+  protocol    = "TCP"
 
   resource_configuration_definition {
     dns_resource {
@@ -308,6 +355,7 @@ resource "aws_vpclattice_resource_configuration" "test" {
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
   port_ranges = ["80", "8080"]
+  protocol    = "TCP"
 
   resource_configuration_definition {
     dns_resource {
@@ -329,10 +377,42 @@ resource "aws_vpclattice_resource_configuration" "test" {
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
   port_ranges = ["80"]
+  protocol    = "TCP"
 
   resource_configuration_definition {
     ip_resource {
-      ip_address= %[2]q
+      ip_address = %[2]q
+    }
+  }
+}
+
+`, rName, ip))
+}
+
+func testAccResourceConfigurationConfig_parentChild(rName, ip string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_basic(rName),
+		fmt.Sprintf(`
+
+resource "aws_vpclattice_resource_configuration" "parent" {
+  name = "%[1]s-parent"
+
+  protocol    = "TCP"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+  type                        = "GROUP"
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  port_ranges = ["80"]
+
+  resource_configuration_group_id = aws_vpclattice_resource_configuration.parent.id
+  type                            = "CHILD"
+
+  resource_configuration_definition {
+    ip_resource {
+      ip_address = %[2]q
     }
   }
 }

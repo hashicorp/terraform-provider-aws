@@ -97,9 +97,8 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				CustomType: fwtypes.StringEnumType[awstypes.ProtocolType](),
 				Optional:   true,
 				Computed:   true,
-				Default:    stringdefault.StaticString(string(awstypes.ProtocolTypeTcp)),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			"resource_configuration_group_id": schema.StringAttribute{
@@ -107,14 +106,16 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{stringvalidator.ConflictsWith(
-					path.MatchRelative().AtParent().AtName("resource_gateway_identifier"),
-				)},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("resource_gateway_identifier")),
+					stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName(names.AttrProtocol)),
+				},
 			},
 			"resource_gateway_identifier": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -219,6 +220,7 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, req resource
 		return
 	}
 
+	input.ResourceConfigurationGroupIdentifier = plan.ResourceConfigurationGroupId.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateResourceConfiguration(ctx, &input)

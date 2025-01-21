@@ -7,6 +7,7 @@ resource "aws_vpclattice_resource_configuration" "test" {
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
   port_ranges = ["80"]
+  protocol    = "TCP"
 
   resource_configuration_definition {
     dns_resource {
