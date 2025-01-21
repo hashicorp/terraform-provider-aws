@@ -96,7 +96,7 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`v1/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
 			},
 			{
@@ -116,7 +116,7 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.1", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`v1/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
 			},
 			{
