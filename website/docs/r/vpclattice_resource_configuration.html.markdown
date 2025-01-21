@@ -68,6 +68,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `allow_association_to_shareable_service_network` (Optional) Allow or Deny the association of this resource to a shareable service network. 
 * `protocol` - (Optional) Protocol for the Resource, currently only `TCP`.
 * `resource_configuration_group_id` (Optional) ID of Resource Configuration where `type` is `CHILD`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
