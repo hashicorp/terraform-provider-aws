@@ -317,7 +317,6 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			if err := stopEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-
 		} else {
 			if err := startEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
