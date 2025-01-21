@@ -222,15 +222,15 @@ func testAccResourceConfigurationConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_vpclattice_resource_configuration" "test" {
   name = %[1]q
-  
+
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
   port_ranges = ["80"]
 
   resource_configuration_definition {
     dns_resource {
-       domain_name     = "example.com"
-       ip_address_type = "IPV4" 
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
     }
   }
 }
@@ -243,15 +243,15 @@ func testAccResourceConfigurationConfig_update(rName string) string {
 		fmt.Sprintf(`
 resource "aws_vpclattice_resource_configuration" "test" {
   name = %[1]q
-  
+
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
   port_ranges = ["80", "8080"]
 
   resource_configuration_definition {
     dns_resource {
-       domain_name     = "example.com"
-       ip_address_type = "IPV4" 
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
     }
   }
 }
