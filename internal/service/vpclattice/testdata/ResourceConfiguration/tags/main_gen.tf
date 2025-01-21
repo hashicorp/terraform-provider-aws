@@ -10,8 +10,8 @@ resource "aws_vpclattice_resource_configuration" "test" {
 
   resource_configuration_definition {
     dns_resource {
-       domain_name     = "example.com"
-       ip_address_type = "IPV4"
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
     }
   }
 
