@@ -64,13 +64,13 @@ The following arguments are required:
 * `name` - (Required) Name for the Resource Configuration.
 * `port_ranges` - (Required) Port ranges to access the Resource either single port `80` or range `80-81` range.
 * `resource_configuration_definition` - (Required) Details of the Resource Configuration. See [`resource_configuration_definition` Block](#resource_configuration_definition-block) for details.
-* `resource_gateway_identifier` - (Required) ID of the Resource Gateway used to access the resource.
 
 The following arguments are optional:
 
 * `allow_association_to_shareable_service_network` (Optional) Allow or Deny the association of this resource to a shareable service network.
-* `protocol` - (Optional) Protocol for the Resource, currently only `TCP`.
+* `protocol` - (Optional) Protocol for the Resource `TCP` is currently the only supported value.  MUST be specified if `resource_configuration_group_id` is not.
 * `resource_configuration_group_id` (Optional) ID of Resource Configuration where `type` is `CHILD`.
+* `resource_gateway_identifier` - (Optional) ID of the Resource Gateway used to access the resource. MUST be specified if `resource_configuration_group_id` is not.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of Resource Configuration. Must be one of `GROUP`, `CHILD`, `SINGLE`, `ARN`.
 
