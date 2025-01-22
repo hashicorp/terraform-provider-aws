@@ -6,7 +6,6 @@ rules:
       exclude:
         - "internal/service/controltower"
         - "internal/service/organizations"
-        - "internal/service/pinpoint"
         - "internal/service/redshift"
         - "internal/service/rekognition"
         - "internal/service/resourcegroups"
