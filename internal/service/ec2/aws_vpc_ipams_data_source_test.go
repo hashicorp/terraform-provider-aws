@@ -63,4 +63,5 @@ data "aws_vpc_ipams" "free" {
   }
 }
 
-`)}
+`)
+}
