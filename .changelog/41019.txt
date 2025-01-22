@@ -3,5 +3,5 @@ aws_vpclattice_resource_configuration
 ```
 
 ```release-note:bug-fix
-aws_vpclattice_resource_configuration: Fix issue updating where `ip_address_type` or `security_group_ids` aren't configured
+aws_vpclattice_resource_gateway: Fix issue updating where `ip_address_type` or `security_group_ids` aren't configured
 ```
