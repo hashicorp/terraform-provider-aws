@@ -54,10 +54,10 @@ resource "aws_vpclattice_resource_configuration" "example" {
     Environment = "Example"
   }
 }
-
 ```
 
 ### ARN Example
+
 ```terraform
 resource "aws_vpclattice_resource_configuration" "test" {
   name = "Example"
