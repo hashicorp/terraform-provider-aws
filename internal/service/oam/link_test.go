@@ -48,7 +48,7 @@ func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/.+$`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "oam", "link/{link_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),

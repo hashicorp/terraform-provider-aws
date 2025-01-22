@@ -16,7 +16,6 @@ rules:
         - "internal/service/memorydb"
         - "internal/service/networkmanager"
         - "internal/service/networkmonitor"
-        - "internal/service/oam"
         - "internal/service/organizations"
         - "internal/service/pinpoint"
         - "internal/service/redshift"

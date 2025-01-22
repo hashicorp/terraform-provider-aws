@@ -47,7 +47,7 @@ func testAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_oam_sink.test", names.AttrARN),
 					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
