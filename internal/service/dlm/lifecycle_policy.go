@@ -265,34 +265,34 @@ func resourceLifecyclePolicy() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"execute_operation_on_script_failure": {
 																Type:     schema.TypeBool,
-																Computed:         true,
-																Optional: true,																
+																Computed: true,
+																Optional: true,
 															},
 															"execution_handler": {
 																Type:     schema.TypeString,
-																Computed:  true,
+																Computed: true,
 																Required: true,
 																ValidateFunc: validation.All(
 																	validation.StringLenBetween(0, 200),
 																	validation.StringMatch(regexache.MustCompile("^([a-zA-Z0-9_\\-.]{3,128}|[a-zA-Z0-9_\\-.:/]{3,200}|[A-Z0-9_]+)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
 																),
 															},
-															"execution_handler_service":{
-																Type:     schema.TypeString,
-																Computed:  true,
-																Optional: true,	
+															"execution_handler_service": {
+																Type:             schema.TypeString,
+																Computed:         true,
+																Optional:         true,
 																ValidateDiagFunc: enum.Validate[awstypes.ExecutionHandlerServiceValues](),
 															},
 															"execution_timeout": {
-																Type:     schema.TypeInt,
-																Computed:  true,
-																Optional: true,
+																Type:         schema.TypeInt,
+																Computed:     true,
+																Optional:     true,
 																ValidateFunc: validation.IntBetween(1, 120),
 															},
 															"maximum_retry_count": {
-																Type:     schema.TypeInt,
-																Computed:  true,
-																Optional: true,
+																Type:         schema.TypeInt,
+																Computed:     true,
+																Optional:     true,
 																ValidateFunc: validation.IntBetween(1, 3),
 															},
 															"stages": {
@@ -304,7 +304,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 																	Type:             schema.TypeString,
 																	ValidateDiagFunc: enum.Validate[awstypes.StageValues](),
 																},
-															},																						
+															},
 														},
 													},
 												},
@@ -531,7 +531,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
-	},
+	}
 }
 
 const (
