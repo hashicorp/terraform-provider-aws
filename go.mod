@@ -1,13 +1,13 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.21
+go 1.23.5
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.50.23
-	github.com/aws/aws-sdk-go-v2 v1.25.1
+	github.com/aws/aws-sdk-go-v2 v1.33.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.2
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.1
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.4
@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.30.3
@@ -142,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/xray v1.24.2
-	github.com/aws/smithy-go v1.20.1
+	github.com/aws/smithy-go v1.22.1
 	github.com/beevik/etree v1.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
@@ -192,8 +192,8 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.28 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.28 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.30.1 // indirect

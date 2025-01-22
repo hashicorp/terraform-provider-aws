@@ -136,6 +136,16 @@ func resourcePipeline() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ActionCategory](),
 									},
+									"commands": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 50,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 1000),
+										},
+									},
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
@@ -622,6 +632,10 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
+	if v, ok := tfMap["commands"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.Commands = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
 	if v, ok := tfMap["configuration"].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
@@ -884,6 +898,10 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 		if v := apiObject.Version; v != nil {
 			tfMap["version"] = aws.ToString(v)
 		}
+	}
+
+	if v := apiObject.Commands; len(v) > 0 {
+		tfMap["commands"] = apiObject.Commands
 	}
 
 	if v := apiObject.Configuration; v != nil {
