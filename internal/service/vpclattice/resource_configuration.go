@@ -108,7 +108,8 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 				},
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("resource_gateway_identifier")),
-					stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName(names.AttrProtocol)),
+					stringvalidator.ConflictsWith(path.MatchRoot(names.AttrProtocol)),
+					stringvalidator.AtLeastOneOf(path.MatchRoot(names.AttrProtocol), path.MatchRoot("resource_configuration_definition").AtListIndex(0).AtName("arn_resource")),
 				},
 			},
 			"resource_gateway_identifier": schema.StringAttribute{
@@ -157,6 +158,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 									path.MatchRelative().AtParent().AtName("ip_resource"),
 									path.MatchRelative().AtParent().AtName("dns_resource"),
 								),
+								listvalidator.ConflictsWith(path.MatchRoot("port_ranges"), path.MatchRoot(names.AttrProtocol)),
 							},
 						},
 						"dns_resource": schema.ListNestedBlock{
@@ -177,6 +179,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 							},
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.AlsoRequires(path.MatchRoot("port_ranges")),
 							},
 						},
 						"ip_resource": schema.ListNestedBlock{
@@ -190,6 +193,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, req resource
 							},
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.AlsoRequires(path.MatchRoot("port_ranges")),
 							},
 						},
 					},
@@ -221,6 +225,7 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, req resource
 	}
 
 	input.ResourceConfigurationGroupIdentifier = plan.ResourceConfigurationGroupId.ValueStringPointer()
+	input.ResourceGatewayIdentifier = plan.ResourceGatewayId.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateResourceConfiguration(ctx, &input)
@@ -243,7 +248,6 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, req resource
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ResourceGatewayIdentifier = flex.StringToFramework(ctx, out.ResourceGatewayId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitResourceConfigurationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
@@ -284,7 +288,6 @@ func (r *resourceResourceConfiguration) Read(ctx context.Context, req resource.R
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.ResourceGatewayIdentifier = flex.StringToFramework(ctx, out.ResourceGatewayId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -506,7 +509,7 @@ type resourceResourceConfigurationModel struct {
 	Protocol                                  fwtypes.StringEnum[awstypes.ProtocolType]                             `tfsdk:"protocol"`
 	ResourceConfigurationDefinition           fwtypes.ListNestedObjectValueOf[resourceConfigurationDefinitionModel] `tfsdk:"resource_configuration_definition"`
 	ResourceConfigurationGroupId              types.String                                                          `tfsdk:"resource_configuration_group_id"`
-	ResourceGatewayIdentifier                 types.String                                                          `tfsdk:"resource_gateway_identifier"`
+	ResourceGatewayId                         types.String                                                          `tfsdk:"resource_gateway_identifier"`
 	Tags                                      tftags.Map                                                            `tfsdk:"tags"`
 	TagsAll                                   tftags.Map                                                            `tfsdk:"tags_all"`
 	Timeouts                                  timeouts.Value                                                        `tfsdk:"timeouts"`

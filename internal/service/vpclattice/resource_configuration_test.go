@@ -88,7 +88,7 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfigurationConfig_basic(rName),
+				Config: testAccResourceConfigurationConfig_update(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceConfigurationExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -106,7 +106,7 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceConfigurationConfig_update(rName),
+				Config: testAccResourceConfigurationConfig_update(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceConfigurationExists(ctx, resourceName, &v2),
 					testAccCheckResourceConfigurationNotRecreated(&v1, &v2),
@@ -234,6 +234,47 @@ func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
+	resourceArnName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_arnResource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_definition.0.arn_resource.0.arn", resourceArnName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -346,11 +387,13 @@ resource "aws_vpclattice_resource_configuration" "test" {
 `, rName))
 }
 
-func testAccResourceConfigurationConfig_update(rName string) string {
+func testAccResourceConfigurationConfig_update(rName, shareable string) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_basic(rName),
 		fmt.Sprintf(`
 resource "aws_vpclattice_resource_configuration" "test" {
   name = %[1]q
+
+  allow_association_to_shareable_service_network = %[2]s
 
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
@@ -365,7 +408,7 @@ resource "aws_vpclattice_resource_configuration" "test" {
   }
 }
 
-`, rName))
+`, rName, shareable))
 }
 
 func testAccResourceConfigurationConfig_ipAddress(rName, ip string) string {
@@ -418,4 +461,55 @@ resource "aws_vpclattice_resource_configuration" "test" {
 }
 
 `, rName, ip))
+}
+
+func testAccResourceConfigurationConfig_arnResource(rName string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_multipleSubnets(rName),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  type = "ARN"
+
+  resource_configuration_definition {
+    arn_resource {
+      arn = aws_rds_cluster_instance.test.arn
+    }
+  }
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier          = %[1]q
+  engine                      = "aurora-postgresql"
+  engine_mode                 = "provisioned"
+  engine_version              = "15.4"
+  database_name               = "test"
+  master_username             = "test"
+  manage_master_user_password = true
+  enable_http_endpoint        = true
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  skip_final_snapshot         = true
+  db_subnet_group_name        = aws_db_subnet_group.test.name
+
+  serverlessv2_scaling_configuration {
+    max_capacity = 1.0
+    min_capacity = 0.5
+  }
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier  = aws_rds_cluster.test.id
+  instance_class      = "db.serverless"
+  engine              = aws_rds_cluster.test.engine
+  engine_version      = aws_rds_cluster.test.engine_version
+  publicly_accessible = false
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
+}
+`, rName))
 }

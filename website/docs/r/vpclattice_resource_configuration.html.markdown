@@ -57,6 +57,23 @@ resource "aws_vpclattice_resource_configuration" "example" {
 
 ```
 
+### ARN Example
+```terraform
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = "Example"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  type = "ARN"
+
+  resource_configuration_definition {
+    arn_resource {
+      arn = aws_rds_cluster_instance.example.arn
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
