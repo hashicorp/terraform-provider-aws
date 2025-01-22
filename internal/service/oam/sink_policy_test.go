@@ -233,7 +233,7 @@ resource "aws_oam_sink" "test" {
 }
 
 resource "aws_oam_sink_policy" "test" {
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -266,7 +266,7 @@ resource "aws_oam_sink" "test" {
 }
 
 resource "aws_oam_sink_policy" "test" {
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
