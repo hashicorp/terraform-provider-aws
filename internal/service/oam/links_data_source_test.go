@@ -89,8 +89,6 @@ resource "aws_oam_sink_policy" "test" {
 }
 
 resource "aws_oam_link" "test" {
-  depends_on = [aws_oam_sink_policy.test]
-
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
   sink_identifier = aws_oam_sink.test.arn
@@ -98,6 +96,10 @@ resource "aws_oam_link" "test" {
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_links "test" {

@@ -189,6 +189,10 @@ resource "aws_oam_link" "test" {
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_link "test" {
@@ -254,6 +258,10 @@ resource "aws_oam_link" "test" {
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_link "test" {
@@ -319,6 +327,10 @@ resource "aws_oam_link" "test" {
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_link "test" {

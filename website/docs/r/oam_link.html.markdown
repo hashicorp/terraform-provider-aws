@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS CloudWatch Observability Access Manager Link.
 
+~> **NOTE:** Creating an `aws_oam_link` may sometimes fail if the `aws_oam_sink_policy` for the attached `aws_oam_sink` is not created before the `aws_oam_link`. To prevent this, declare an explicit dependency using a [`depends_on`](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on) meta-argument.
+
 ## Example Usage
 
 ### Basic Usage
@@ -22,6 +24,19 @@ resource "aws_oam_link" "example" {
   tags = {
     Env = "prod"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.example
+  ]
+}
+
+resource "aws_oam_sink" "example" {
+  # ...
+}
+
+resource "aws_oam_sink_policy" "example" {
+  sink_identifier = aws_oam_sink.example.arn
+  # ...
 }
 ```
 
@@ -37,6 +52,10 @@ resource "aws_oam_link" "example" {
   }
   resource_types  = ["AWS::Logs::LogGroup"]
   sink_identifier = aws_oam_sink.example.arn
+
+  depends_on = [
+    aws_oam_sink_policy.example
+  ]
 }
 ```
 
@@ -52,6 +71,10 @@ resource "aws_oam_link" "example" {
   }
   resource_types  = ["AWS::CloudWatch::Metric"]
   sink_identifier = aws_oam_sink.example.arn
+
+  depends_on = [
+    aws_oam_sink_policy.example
+  ]
 }
 ```
 

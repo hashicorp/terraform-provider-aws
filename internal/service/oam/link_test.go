@@ -421,6 +421,10 @@ resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
   sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName))
 }
@@ -473,6 +477,10 @@ resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
   sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName))
 }
@@ -528,6 +536,10 @@ resource "aws_oam_link" "test" {
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, tag1Key, tag1Value))
 }
@@ -585,6 +597,10 @@ resource "aws_oam_link" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
@@ -642,6 +658,10 @@ resource "aws_oam_link" "test" {
   }
   resource_types  = ["AWS::Logs::LogGroup"]
   sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, filter))
 }
@@ -699,6 +719,10 @@ resource "aws_oam_link" "test" {
   }
   resource_types  = ["AWS::CloudWatch::Metric"]
   sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, filter))
 }
