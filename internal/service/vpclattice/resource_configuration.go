@@ -225,7 +225,9 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, req resource
 	}
 
 	input.ResourceConfigurationGroupIdentifier = plan.ResourceConfigurationGroupId.ValueStringPointer()
-	input.ResourceGatewayIdentifier = plan.ResourceGatewayId.ValueStringPointer()
+	if !plan.ResourceGatewayId.IsUnknown() {
+		input.ResourceGatewayIdentifier = plan.ResourceGatewayId.ValueStringPointer()
+	}
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateResourceConfiguration(ctx, &input)
