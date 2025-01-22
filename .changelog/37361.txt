@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_budgets_budget: Add `tags` argument
+```
+```release-note:enhancement
+resource/aws_budgets_budget_action: Add `tags` argument
+```
+```release-note:enhancement
+data-source/aws_budgets_budget: Add `tags` attribute
+```

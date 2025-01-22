@@ -34,16 +34,16 @@ func TestAccCloudWatchCompositeAlarm_basic(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "actions_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", ""),
 					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "alarm_rule", fmt.Sprintf("ALARM(%[1]s-0) OR ALARM(%[1]s-1)", rName)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexache.MustCompile(`alarm:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudwatch", regexache.MustCompile(`alarm:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ok_actions.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -78,51 +78,6 @@ func TestAccCloudWatchCompositeAlarm_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchCompositeAlarm_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_composite_alarm.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCompositeAlarmDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCompositeAlarmConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCompositeAlarmConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccCompositeAlarmConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -138,7 +93,7 @@ func TestAccCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_actionsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "actions_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -150,7 +105,7 @@ func TestAccCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_actionsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "actions_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -489,33 +444,6 @@ resource "aws_cloudwatch_composite_alarm" "test" {
   alarm_rule = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test[*].alarm_name))
 }
 `, rName))
-}
-
-func testAccCompositeAlarmConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccCompositeAlarmConfig_base(rName), fmt.Sprintf(`
-resource "aws_cloudwatch_composite_alarm" "test" {
-  alarm_name = %[1]q
-  alarm_rule = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test[*].alarm_name))
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccCompositeAlarmConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccCompositeAlarmConfig_base(rName), fmt.Sprintf(`
-resource "aws_cloudwatch_composite_alarm" "test" {
-  alarm_name = %[1]q
-  alarm_rule = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test[*].alarm_name))
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccCompositeAlarmConfig_actionsEnabled(rName string, enabled bool) string {

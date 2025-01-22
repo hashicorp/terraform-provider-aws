@@ -35,8 +35,8 @@ func TestAccVPCNetworkInterfaceSGAttachment_basic(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", networkInterfaceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, names.AttrID),
 				),
 			},
 			{
@@ -89,8 +89,8 @@ func TestAccVPCNetworkInterfaceSGAttachment_instance(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_viaInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, names.AttrID),
 				),
 			},
 		},
@@ -120,17 +120,17 @@ func TestAccVPCNetworkInterfaceSGAttachment_multiple(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName1),
-					resource.TestCheckResourceAttrPair(resourceName1, "network_interface_id", networkInterfaceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName1, "security_group_id", securityGroupResourceName1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName1, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName1, "security_group_id", securityGroupResourceName1, names.AttrID),
 					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName2),
-					resource.TestCheckResourceAttrPair(resourceName2, "network_interface_id", networkInterfaceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName2, "security_group_id", securityGroupResourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName2, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName2, "security_group_id", securityGroupResourceName2, names.AttrID),
 					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName3),
-					resource.TestCheckResourceAttrPair(resourceName3, "network_interface_id", networkInterfaceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName3, "security_group_id", securityGroupResourceName3, "id"),
+					resource.TestCheckResourceAttrPair(resourceName3, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName3, "security_group_id", securityGroupResourceName3, names.AttrID),
 					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName4),
-					resource.TestCheckResourceAttrPair(resourceName4, "network_interface_id", networkInterfaceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName4, "security_group_id", securityGroupResourceName4, "id"),
+					resource.TestCheckResourceAttrPair(resourceName4, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName4, "security_group_id", securityGroupResourceName4, names.AttrID),
 				),
 			},
 		},
@@ -148,9 +148,9 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(ctx context.Context, resourc
 			return fmt.Errorf("No EC2 Network Interface Security Group Attachment ID is set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindNetworkInterfaceSecurityGroup(ctx, conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
+		_, err := tfec2.FindNetworkInterfaceSecurityGroup(ctx, conn, rs.Primary.Attributes[names.AttrNetworkInterfaceID], rs.Primary.Attributes["security_group_id"])
 
 		return err
 	}
@@ -158,14 +158,14 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(ctx context.Context, resourc
 
 func testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_interface_sg_attachment" {
 				continue
 			}
 
-			_, err := tfec2.FindNetworkInterfaceSecurityGroup(ctx, conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
+			_, err := tfec2.FindNetworkInterfaceSecurityGroup(ctx, conn, rs.Primary.Attributes[names.AttrNetworkInterfaceID], rs.Primary.Attributes["security_group_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -333,7 +333,7 @@ func testAccVPCNetworkInterfaceSGAttachmentImportStateIdFunc(resourceName string
 		var networkInterfaceID string
 		var securityGroupID string
 
-		networkInterfaceID = rs.Primary.Attributes["network_interface_id"]
+		networkInterfaceID = rs.Primary.Attributes[names.AttrNetworkInterfaceID]
 		securityGroupID = rs.Primary.Attributes["security_group_id"]
 
 		return fmt.Sprintf("%s_%s", networkInterfaceID, securityGroupID), nil

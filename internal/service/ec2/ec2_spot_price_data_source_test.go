@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -59,13 +59,13 @@ func TestAccEC2SpotPriceDataSource_filter(t *testing.T) {
 }
 
 func testAccPreCheckSpotPrice(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSpotPriceHistoryInput{
-		MaxResults: aws.Int64(5),
+		MaxResults: aws.Int32(5),
 	}
 
-	_, err := conn.DescribeSpotPriceHistoryWithContext(ctx, input)
+	_, err := conn.DescribeSpotPriceHistory(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

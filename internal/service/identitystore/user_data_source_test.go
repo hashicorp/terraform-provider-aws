@@ -27,16 +27,15 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_basic(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "external_ids.#", resourceName, "external_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", dataSourceName, "user_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, "user_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name.0", resourceName, "name.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "nickname", resourceName, "nickname"),
@@ -46,8 +45,8 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "timezone", resourceName, "timezone"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "title", resourceName, "title"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_type", resourceName, "user_type"),
 				),
 			},
@@ -69,13 +68,12 @@ func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_filterUserName(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
 			},
 		},
@@ -96,13 +94,12 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_uniqueAttributeUserName(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
 			},
 		},
@@ -123,13 +120,12 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_email(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
 			},
 		},
@@ -150,13 +146,12 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_id(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 				),
 			},
 		},

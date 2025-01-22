@@ -9,14 +9,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -93,7 +94,7 @@ func TestAccIAMGroupMembership_paginatedUserList(t *testing.T) {
 
 func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_membership" {
@@ -102,11 +103,11 @@ func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckF
 
 			group := rs.Primary.Attributes["group"]
 
-			_, err := conn.GetGroupWithContext(ctx, &iam.GetGroupInput{
+			_, err := conn.GetGroup(ctx, &iam.GetGroupInput{
 				GroupName: aws.String(group),
 			})
 
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			if errs.IsA[*awstypes.NoSuchEntityException](err) {
 				continue
 			}
 
@@ -132,10 +133,10 @@ func testAccCheckGroupMembershipExists(ctx context.Context, n string, g *iam.Get
 			return fmt.Errorf("No User name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 		gn := rs.Primary.Attributes["group"]
 
-		resp, err := conn.GetGroupWithContext(ctx, &iam.GetGroupInput{
+		resp, err := conn.GetGroup(ctx, &iam.GetGroupInput{
 			GroupName: aws.String(gn),
 		})
 

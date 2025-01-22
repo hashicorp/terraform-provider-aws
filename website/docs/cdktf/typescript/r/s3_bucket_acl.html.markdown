@@ -193,8 +193,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `acl` - (Optional, Conflicts with `accessControlPolicy`) Canned ACL to apply to the bucket.
-* `accessControlPolicy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
+* `acl` - (Optional, either `accessControlPolicy` or `acl` is required) Specifies the Canned ACL to apply to the bucket. Valid values: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`, `log-delivery-write`. Full details are available on the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
+* `accessControlPolicy` - (Optional, either `accessControlPolicy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
 * `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 
@@ -358,4 +358,4 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
 
-<!-- cache-key: cdktf-0.20.1 input-6e85df38035944cb581b15759c2b6fd86b7bf937d52ffe8175ea539531910178 -->
+<!-- cache-key: cdktf-0.20.8 input-f7eaa2b766c3b5417b859c0c0fbb4bf31664e8d5dac63afac62a9262559a8893 -->

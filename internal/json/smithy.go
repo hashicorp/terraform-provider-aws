@@ -4,15 +4,13 @@
 package json
 
 import (
-	"encoding/json"
-
 	smithydocument "github.com/aws/smithy-go/document"
 )
 
 func SmithyDocumentFromString[T smithydocument.Marshaler](s string, f func(any) T) (T, error) {
 	var v map[string]interface{}
 
-	err := json.Unmarshal([]byte(s), &v)
+	err := DecodeFromString(s, &v)
 	if err != nil {
 		var zero T
 		return zero, err
@@ -30,10 +28,11 @@ func SmithyDocumentToString(document smithydocument.Unmarshaler) (string, error)
 		return "", err
 	}
 
-	bytes, err := json.Marshal(v)
-	if err != nil {
-		return "", err
-	}
+	return EncodeToString(v)
+}
 
-	return string(bytes), nil
+// JSONStringer interface is used to marshal and unmarshal JSON interface objects.
+type JSONStringer interface {
+	smithydocument.Marshaler
+	smithydocument.Unmarshaler
 }

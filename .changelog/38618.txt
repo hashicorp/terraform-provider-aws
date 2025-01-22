@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc_ipam_pool_cidr_allocation: Set `description` on Read
+```
+
+```release-note:bug
+resource/aws_vpc_ipam_pool_cidr_allocation: Set `netmask_length` on Read
+```

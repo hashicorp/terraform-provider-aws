@@ -21,11 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_accessanalyzer_archive_rule")
+// @SDKResource("aws_accessanalyzer_archive_rule", name="Archive Rule")
 func resourceArchiveRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceArchiveRuleCreate,
@@ -43,7 +44,7 @@ func resourceArchiveRule() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -96,17 +97,17 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	analyzerName := d.Get("analyzer_name").(string)
 	ruleName := d.Get("rule_name").(string)
 	id := archiveRuleCreateResourceID(analyzerName, ruleName)
-	input := &accessanalyzer.CreateArchiveRuleInput{
+	input := accessanalyzer.CreateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filter = expandFilter(v.(*schema.Set))
 	}
 
-	_, err := conn.CreateArchiveRule(ctx, input)
+	_, err := conn.CreateArchiveRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Access Analyzer Archive Rule (%s): %s", id, err)
@@ -141,7 +142,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("analyzer_name", analyzerName)
-	d.Set("filter", flattenFilter(archiveRule.Filter))
+	d.Set(names.AttrFilter, flattenFilter(archiveRule.Filter))
 	d.Set("rule_name", archiveRule.RuleName)
 
 	return diags
@@ -158,17 +159,17 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &accessanalyzer.UpdateArchiveRuleInput{
+	input := accessanalyzer.UpdateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	}
 
-	if d.HasChanges("filter") {
-		input.Filter = expandFilter(d.Get("filter").(*schema.Set))
+	if d.HasChanges(names.AttrFilter) {
+		input.Filter = expandFilter(d.Get(names.AttrFilter).(*schema.Set))
 	}
 
-	_, err = conn.UpdateArchiveRule(ctx, input)
+	_, err = conn.UpdateArchiveRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating AWS IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
@@ -189,11 +190,12 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting IAM Access Analyzer Archive Rule: %s", d.Id())
-	_, err = conn.DeleteArchiveRule(ctx, &accessanalyzer.DeleteArchiveRuleInput{
+	input := accessanalyzer.DeleteArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
-	})
+	}
+	_, err = conn.DeleteArchiveRule(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -207,12 +209,12 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Client, analyzerName, ruleName string) (*types.ArchiveRuleSummary, error) {
-	input := &accessanalyzer.GetArchiveRuleInput{
+	input := accessanalyzer.GetArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		RuleName:     aws.String(ruleName),
 	}
 
-	output, err := conn.GetArchiveRule(ctx, input)
+	output, err := conn.GetArchiveRule(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -282,7 +284,7 @@ func expandFilter(l *schema.Set) map[string]types.Criterion {
 			}
 		}
 		if v, ok := value.(map[string]interface{})["exists"]; ok {
-			if val, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			if val, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				c.Exists = aws.Bool(val)
 			}
 		}

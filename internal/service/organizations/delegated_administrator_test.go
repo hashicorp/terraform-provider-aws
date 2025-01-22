@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +20,7 @@ import (
 
 func testAccDelegatedAdministrator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.DelegatedAdministrator
+	var organization awstypes.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
@@ -39,7 +39,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceIdentity, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "delegation_enabled_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
@@ -51,7 +51,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 
 func testAccDelegatedAdministrator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.DelegatedAdministrator
+	var organization awstypes.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
@@ -79,20 +79,14 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 
 func testAccCheckDelegatedAdministratorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_delegated_administrator" {
 				continue
 			}
 
-			accountID, servicePrincipal, err := tforganizations.DelegatedAdministratorParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, servicePrincipal)
+			_, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["service_principal"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -109,22 +103,16 @@ func testAccCheckDelegatedAdministratorDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckDelegatedAdministratorExists(ctx context.Context, n string, v *organizations.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckDelegatedAdministratorExists(ctx context.Context, n string, v *awstypes.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		accountID, servicePrincipal, err := tforganizations.DelegatedAdministratorParseResourceID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
-
-		output, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, servicePrincipal)
+		output, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["service_principal"])
 
 		if err != nil {
 			return err

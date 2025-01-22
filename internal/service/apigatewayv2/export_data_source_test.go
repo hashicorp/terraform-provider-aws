@@ -50,7 +50,7 @@ func TestAccAPIGatewayV2ExportDataSource_stage(t *testing.T) {
 				Config: testAccExportDataSourceConfig_httpStage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_id", "aws_apigatewayv2_route.test", "api_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stage_name", "aws_apigatewayv2_stage.test", "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stage_name", "aws_apigatewayv2_stage.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "body"),
 				),
 			},

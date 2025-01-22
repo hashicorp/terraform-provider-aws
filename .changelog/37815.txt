@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_customer_gateway: Add `bgp_asn_extended` argument
+```
+
+```release-note:enhancement
+data-source/aws_customer_gateway: Add `bgp_asn_extended` argument
+```

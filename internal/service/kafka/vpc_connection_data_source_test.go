@@ -30,13 +30,13 @@ func TestAccKafkaVPCConnectionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCConnectionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "authentication", resourceName, "authentication"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_subnets.#", resourceName, "client_subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.% ", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.% ", resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "target_cluster_arn", resourceName, "target_cluster_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},

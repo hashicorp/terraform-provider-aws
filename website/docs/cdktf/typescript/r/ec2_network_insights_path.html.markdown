@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `source` - (Required) ID or ARN of the resource which is the source of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
-* `destination` - (Required) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
+* `destination` - (Optional) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
 * `protocol` - (Required) Protocol to use for analysis. Valid options are `tcp` or `udp`.
 
 The following arguments are optional:
@@ -93,4 +93,4 @@ Using `terraform import`, import Network Insights Paths using the `id`. For exam
 % terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2d954457dd6558b313317ea2a62a029bb4f6b0f9fb109a2eff89ecd56e960d31 -->
+<!-- cache-key: cdktf-0.20.8 input-645d11fe41637643fed84a2b234c7fbc0c008ac395ec9f6314171deb55f71cf0 -->

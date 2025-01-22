@@ -5,7 +5,22 @@ package ecr
 
 // Exports for use in tests only.
 var (
-	ResourcePullThroughCacheRule = resourcePullThroughCacheRule
+	ResourceLifecyclePolicy               = resourceLifecyclePolicy
+	ResourcePullThroughCacheRule          = resourcePullThroughCacheRule
+	ResourceRegistryPolicy                = resourceRegistryPolicy
+	ResourceRegistryScanningConfiguration = resourceRegistryScanningConfiguration
+	ResourceReplicationConfiguration      = resourceReplicationConfiguration
+	ResourceRepository                    = resourceRepository
+	ResourceRepositoryCreationTemplate    = resourceRepositoryCreationTemplate
+	ResourceRepositoryPolicy              = resourceRepositoryPolicy
 
-	FindPullThroughCacheRuleByRepositoryPrefix = findPullThroughCacheRuleByRepositoryPrefix
+	FindAccountSettingByName                         = findAccountSettingByName
+	FindLifecyclePolicyByRepositoryName              = findLifecyclePolicyByRepositoryName
+	FindPullThroughCacheRuleByRepositoryPrefix       = findPullThroughCacheRuleByRepositoryPrefix
+	FindRegistryPolicy                               = findRegistryPolicy
+	FindRegistryScanningConfiguration                = findRegistryScanningConfiguration
+	FindReplicationConfiguration                     = findReplicationConfiguration
+	FindRepositoryByName                             = findRepositoryByName
+	FindRepositoryCreationTemplateByRepositoryPrefix = findRepositoryCreationTemplateByRepositoryPrefix
+	FindRepositoryPolicyByRepositoryName             = findRepositoryPolicyByRepositoryName
 )

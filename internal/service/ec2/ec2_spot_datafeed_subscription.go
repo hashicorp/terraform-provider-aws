@@ -7,17 +7,18 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_spot_datafeed_subscription")
-func ResourceSpotDataFeedSubscription() *schema.Resource {
+// @SDKResource("aws_spot_datafeed_subscription", name="Spot Datafeed Subscription")
+func resourceSpotDataFeedSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotDataFeedSubscriptionCreate,
 		ReadWithoutTimeout:   resourceSpotDataFeedSubscriptionRead,
@@ -28,12 +29,12 @@ func ResourceSpotDataFeedSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -44,17 +45,17 @@ func ResourceSpotDataFeedSubscription() *schema.Resource {
 
 func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateSpotDatafeedSubscriptionInput{
-		Bucket: aws.String(d.Get("bucket").(string)),
+		Bucket: aws.String(d.Get(names.AttrBucket).(string)),
 	}
 
-	if v, ok := d.GetOk("prefix"); ok {
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateSpotDatafeedSubscriptionWithContext(ctx, input)
+	_, err := conn.CreateSpotDatafeedSubscription(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Spot Datafeed Subscription: %s", err)
@@ -67,9 +68,9 @@ func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.Resou
 
 func resourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	subscription, err := FindSpotDatafeedSubscription(ctx, conn)
+	subscription, err := findSpotDatafeedSubscription(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Spot Datafeed Subscription (%s) not found, removing from state", d.Id())
@@ -81,18 +82,18 @@ func resourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Datafeed Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", subscription.Bucket)
-	d.Set("prefix", subscription.Prefix)
+	d.Set(names.AttrBucket, subscription.Bucket)
+	d.Set(names.AttrPrefix, subscription.Prefix)
 
 	return diags
 }
 
 func resourceSpotDataFeedSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Spot Datafeed Subscription: %s", d.Id())
-	_, err := conn.DeleteSpotDatafeedSubscriptionWithContext(ctx, &ec2.DeleteSpotDatafeedSubscriptionInput{})
+	_, err := conn.DeleteSpotDatafeedSubscription(ctx, &ec2.DeleteSpotDatafeedSubscriptionInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Spot Datafeed Subscription (%s): %s", d.Id(), err)

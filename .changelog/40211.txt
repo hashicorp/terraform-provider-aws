@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ami: Add warning diagnostic when `most_recent` is true and certain filter criteria are missing
+```

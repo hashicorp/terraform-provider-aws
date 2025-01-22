@@ -1,0 +1,15 @@
+rules:
+  - id: checks-with-expecterror
+    languages: [go]
+    message: Checks are ignored when ExpectError is set.
+    patterns:
+      - pattern-inside: "Steps: []resource.TestStep{ ... }"
+      - pattern: |
+          {
+            ...,
+            Check:       $CHECK,
+            ...,
+            ExpectError: $ERR,
+            ...,
+          }
+    severity: ERROR

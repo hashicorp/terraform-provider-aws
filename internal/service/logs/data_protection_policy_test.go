@@ -35,7 +35,7 @@ func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
 				Config: testAccDataProtectionPolicy_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, "aws_cloudwatch_log_group.test", names.AttrName),
 					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", fmt.Sprintf(`
 {
@@ -221,7 +221,7 @@ func testAccCheckDataProtectionPolicyDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tflogs.FindDataProtectionPolicyByID(ctx, conn, rs.Primary.ID)
+			_, err := tflogs.FindDataProtectionPolicyByLogGroupName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -245,13 +245,9 @@ func testAccCheckDataProtectionPolicyExists(ctx context.Context, n string, v *cl
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch Logs Data Protection Policy ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindDataProtectionPolicyByID(ctx, conn, rs.Primary.ID)
+		output, err := tflogs.FindDataProtectionPolicyByLogGroupName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

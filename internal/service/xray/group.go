@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_xray_group", name="Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;types.Group")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -38,11 +39,11 @@ func resourceGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,8 +81,8 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	name := d.Get("group_name").(string)
-	input := &xray.CreateGroupInput{
+	name := d.Get(names.AttrGroupName).(string)
+	input := xray.CreateGroupInput{
 		GroupName:        aws.String(name),
 		FilterExpression: aws.String(d.Get("filter_expression").(string)),
 		Tags:             getTagsIn(ctx),
@@ -91,7 +92,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
 	}
 
-	output, err := conn.CreateGroup(ctx, input)
+	output, err := conn.CreateGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating XRay Group (%s): %s", name, err)
@@ -118,9 +119,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading XRay Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", group.GroupARN)
+	d.Set(names.AttrARN, group.GroupARN)
 	d.Set("filter_expression", group.FilterExpression)
-	d.Set("group_name", group.GroupName)
+	d.Set(names.AttrGroupName, group.GroupName)
 	if err := d.Set("insights_configuration", flattenInsightsConfig(group.InsightsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting insights_configuration: %s", err)
 	}
@@ -132,8 +133,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
 
 		if v, ok := d.GetOk("filter_expression"); ok {
 			input.FilterExpression = aws.String(v.(string))
@@ -143,7 +144,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
 		}
 
-		_, err := conn.UpdateGroup(ctx, input)
+		_, err := conn.UpdateGroup(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating XRay Group (%s): %s", d.Id(), err)
@@ -158,9 +159,14 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
-	_, err := conn.DeleteGroup(ctx, &xray.DeleteGroupInput{
+	input := xray.DeleteGroupInput{
 		GroupARN: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGroup(ctx, &input)
+
+	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Group not found") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting XRay Group (%s): %s", d.Id(), err)
@@ -170,11 +176,11 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func findGroupByARN(ctx context.Context, conn *xray.Client, arn string) (*types.Group, error) {
-	input := &xray.GetGroupInput{
+	input := xray.GetGroupInput{
 		GroupARN: aws.String(arn),
 	}
 
-	output, err := conn.GetGroup(ctx, input)
+	output, err := conn.GetGroup(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Group not found") {
 		return nil, &retry.NotFoundError{

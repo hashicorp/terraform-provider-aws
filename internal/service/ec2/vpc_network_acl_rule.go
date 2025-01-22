@@ -11,20 +11,22 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_network_acl_rule")
-func ResourceNetworkACLRule() *schema.Resource {
+// @SDKResource("aws_network_acl_rule", name="Network ACL Rule")
+func resourceNetworkACLRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLRuleCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRuleRead,
@@ -35,11 +37,11 @@ func ResourceNetworkACLRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"cidr_block", "ipv6_cidr_block"},
+				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
 			},
 			"egress": {
 				Type:     schema.TypeBool,
@@ -66,14 +68,14 @@ func ResourceNetworkACLRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"cidr_block", "ipv6_cidr_block"},
+				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
 			},
 			"network_acl_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -104,7 +106,7 @@ func ResourceNetworkACLRule() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.EqualFold(old, new)
 				},
-				ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
+				ValidateDiagFunc: enum.Validate[awstypes.RuleAction](),
 			},
 			"rule_number": {
 				Type:     schema.TypeInt,
@@ -122,32 +124,41 @@ func ResourceNetworkACLRule() *schema.Resource {
 
 func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	protocol := d.Get("protocol").(string)
+	protocol := d.Get(names.AttrProtocol).(string)
 	protocolNumber, err := networkACLProtocolNumber(protocol)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL Rule: %s", err)
 	}
 
-	egress := d.Get("egress").(bool)
-	naclID := d.Get("network_acl_id").(string)
-	ruleNumber := d.Get("rule_number").(int)
+	naclID, egress, ruleNumber := d.Get("network_acl_id").(string), d.Get("egress").(bool), d.Get("rule_number").(int)
+
+	// CreateNetworkAclEntry succeeds if there is an existing rule with identical attributes.
+	_, err = findNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
+
+	switch {
+	case err == nil:
+		return sdkdiag.AppendFromErr(diags, networkACLEntryAlreadyExistsError(naclID, egress, ruleNumber))
+	case tfresource.NotFound(err):
+		break
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule: %s", err)
+	}
 
 	input := &ec2.CreateNetworkAclEntryInput{
 		Egress:       aws.Bool(egress),
 		NetworkAclId: aws.String(naclID),
-		PortRange: &ec2.PortRange{
-			From: aws.Int64(int64(d.Get("from_port").(int))),
-			To:   aws.Int64(int64(d.Get("to_port").(int))),
+		PortRange: &awstypes.PortRange{
+			From: aws.Int32(int32(d.Get("from_port").(int))),
+			To:   aws.Int32(int32(d.Get("to_port").(int))),
 		},
 		Protocol:   aws.String(strconv.Itoa(protocolNumber)),
-		RuleAction: aws.String(d.Get("rule_action").(string)),
-		RuleNumber: aws.Int64(int64(ruleNumber)),
+		RuleAction: awstypes.RuleAction(d.Get("rule_action").(string)),
+		RuleNumber: aws.Int32(int32(ruleNumber)),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -158,34 +169,34 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	// Specify additional required fields for ICMP. For the list
 	// of ICMP codes and types, see: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 	if protocolNumber == 1 || protocolNumber == 58 {
-		input.IcmpTypeCode = &ec2.IcmpTypeCode{
-			Code: aws.Int64(int64(d.Get("icmp_code").(int))),
-			Type: aws.Int64(int64(d.Get("icmp_type").(int))),
+		input.IcmpTypeCode = &awstypes.IcmpTypeCode{
+			Code: aws.Int32(int32(d.Get("icmp_code").(int))),
+			Type: aws.Int32(int32(d.Get("icmp_type").(int))),
 		}
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Network ACL Rule: %s", input)
-	_, err = conn.CreateNetworkAclEntryWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating EC2 Network ACL Rule: %#v", input)
+	_, err = conn.CreateNetworkAclEntry(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL (%s) Rule (egress: %t)(%d): %s", naclID, egress, ruleNumber, err)
 	}
 
-	d.SetId(NetworkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
+	d.SetId(networkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
 
 	return append(diags, resourceNetworkACLRuleRead(ctx, d, meta)...)
 }
 
 func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	egress := d.Get("egress").(bool)
 	naclID := d.Get("network_acl_id").(string)
 	ruleNumber := d.Get("rule_number").(int)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
+		return findNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -198,9 +209,9 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 	}
 
-	naclEntry := outputRaw.(*ec2.NetworkAclEntry)
+	naclEntry := outputRaw.(*awstypes.NetworkAclEntry)
 
-	d.Set("cidr_block", naclEntry.CidrBlock)
+	d.Set(names.AttrCIDRBlock, naclEntry.CidrBlock)
 	d.Set("egress", naclEntry.Egress)
 	d.Set("ipv6_cidr_block", naclEntry.Ipv6CidrBlock)
 	if naclEntry.IcmpTypeCode != nil {
@@ -214,7 +225,7 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("rule_action", naclEntry.RuleAction)
 	d.Set("rule_number", naclEntry.RuleNumber)
 
-	if v := aws.StringValue(naclEntry.Protocol); v != "" {
+	if v := aws.ToString(naclEntry.Protocol); v != "" {
 		// The AWS network ACL API only speaks protocol numbers, and
 		// that's all we record.
 		protocolNumber, err := networkACLProtocolNumber(v)
@@ -223,9 +234,9 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 		}
 
-		d.Set("protocol", strconv.Itoa(protocolNumber))
+		d.Set(names.AttrProtocol, strconv.Itoa(protocolNumber))
 	} else {
-		d.Set("protocol", nil)
+		d.Set(names.AttrProtocol, nil)
 	}
 
 	return diags
@@ -233,16 +244,16 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Network ACL Rule: %s", d.Id())
-	_, err := conn.DeleteNetworkAclEntryWithContext(ctx, &ec2.DeleteNetworkAclEntryInput{
+	_, err := conn.DeleteNetworkAclEntry(ctx, &ec2.DeleteNetworkAclEntryInput{
 		Egress:       aws.Bool(d.Get("egress").(bool)),
 		NetworkAclId: aws.String(d.Get("network_acl_id").(string)),
-		RuleNumber:   aws.Int64(int64(d.Get("rule_number").(int))),
+		RuleNumber:   aws.Int32(int32(d.Get("rule_number").(int))),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLEntryNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound, errCodeInvalidNetworkACLEntryNotFound) {
 		return diags
 	}
 
@@ -254,10 +265,10 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), NetworkACLRuleImportIDSeparator)
+	parts := strings.Split(d.Id(), networkACLRuleImportIDSeparator)
 
 	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", d.Id(), NetworkACLRuleImportIDSeparator)
+		return nil, fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", d.Id(), networkACLRuleImportIDSeparator)
 	}
 
 	naclID := parts[0]
@@ -274,7 +285,7 @@ func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, m
 		return nil, err
 	}
 
-	d.SetId(NetworkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
+	d.SetId(networkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
 	d.Set("egress", egress)
 	d.Set("network_acl_id", naclID)
 	d.Set("rule_number", ruleNumber)
@@ -282,9 +293,9 @@ func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, m
 	return []*schema.ResourceData{d}, nil
 }
 
-const NetworkACLRuleImportIDSeparator = ":"
+const networkACLRuleImportIDSeparator = ":"
 
-func NetworkACLRuleCreateResourceID(naclID string, ruleNumber int, egress bool, protocol string) string {
+func networkACLRuleCreateResourceID(naclID string, ruleNumber int, egress bool, protocol string) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", naclID))
 	buf.WriteString(fmt.Sprintf("%d-", ruleNumber))

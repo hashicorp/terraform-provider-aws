@@ -15,7 +15,7 @@ func TestAccIoTIndexingConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":         testAccIndexingConfiguration_basic,
+		acctest.CtBasic: testAccIndexingConfiguration_basic,
 		"allAttributes": testAccIndexingConfiguration_allAttributes,
 	}
 
@@ -77,16 +77,16 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
-						"name": "attributes.version",
-						"type": "Number",
+						names.AttrName: "attributes.version",
+						names.AttrType: "Number",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
-						"name": "shadow.name.thing1shadow.desired.DefaultDesired",
-						"type": "String",
+						names.AttrName: "shadow.name.thing1shadow.desired.DefaultDesired",
+						names.AttrType: "String",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
-						"name": "deviceDefender.securityProfile1.NUMBER_VALUE_BEHAVIOR.lastViolationValue.number",
-						"type": "Number",
+						names.AttrName: "deviceDefender.securityProfile1.NUMBER_VALUE_BEHAVIOR.lastViolationValue.number",
+						names.AttrType: "Number",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.device_defender_indexing_mode", "VIOLATIONS"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "thing_group_indexing_configuration.0.managed_field.#", 0),

@@ -28,9 +28,9 @@ func TestAccIAMSAMLProviderDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSAMLProviderDataSourceConfig_basic(rName, idpEntityID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "create_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.#", resourceName, "tags.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "valid_util", resourceName, "valid_util"),
 				),

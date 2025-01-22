@@ -11,19 +11,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_lambda_function_association")
-func DataSourceLambdaFunctionAssociation() *schema.Resource {
+// @SDKDataSource("aws_connect_lambda_function_association", name="Lambda Function Association")
+func dataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLambdaFunctionAssociationRead,
+
 		Schema: map[string]*schema.Schema{
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -33,23 +35,19 @@ func DataSourceLambdaFunctionAssociation() *schema.Resource {
 
 func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-	functionArn := d.Get("function_arn")
-	instanceID := d.Get("instance_id")
+	functionARN := d.Get(names.AttrFunctionARN).(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	_, err := findLambdaFunctionAssociationByTwoPartKey(ctx, conn, instanceID, functionARN)
 
-	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding Connect Lambda Function Association by ARN (%s): %s", functionArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Lambda Function Association: %s", err)
 	}
 
-	if lfaArn == "" {
-		return sdkdiag.AppendErrorf(diags, "finding Connect Lambda Function Association by ARN (%s): not found", functionArn)
-	}
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("function_arn", functionArn)
-	d.Set("instance_id", instanceID)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrFunctionARN, functionARN)
+	d.Set(names.AttrInstanceID, instanceID)
 
 	return diags
 }

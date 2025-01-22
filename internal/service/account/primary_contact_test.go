@@ -33,7 +33,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 				Config: testAccPrimaryConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrimaryContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
 					resource.TestCheckResourceAttr(resourceName, "company_name", "Example Corp, Inc."),
@@ -55,7 +55,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 				Config: testAccPrimaryConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrimaryContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
 					resource.TestCheckResourceAttr(resourceName, "company_name", "Example Corp, Inc."),
@@ -85,7 +85,7 @@ func testAccCheckPrimaryContactExists(ctx context.Context, n string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
-		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes["account_id"])
+		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes[names.AttrAccountID])
 
 		return err
 	}

@@ -36,14 +36,17 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "workspace/{id}"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(v.WorkspaceId))(s)
+					},
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -84,7 +87,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 func TestAccAMPWorkspace_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDescription
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,55 +100,10 @@ func TestAccAMPWorkspace_kms(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_kms(rName1),
+				Config: testAccWorkspaceConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAMPWorkspace_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v types.WorkspaceDescription
-	resourceName := "aws_prometheus_workspace.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWorkspaceConfig_tags1("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccWorkspaceConfig_tags2("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccWorkspaceConfig_tags1("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 		},
@@ -172,7 +130,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Config: testAccWorkspaceConfig_alias(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
 			},
 			{
@@ -185,7 +143,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
 					testAccCheckWorkspaceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName2),
 				),
 			},
 			{
@@ -193,7 +151,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
 					testAccCheckWorkspaceRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
 				),
 			},
 			{
@@ -201,7 +159,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v4),
 					testAccCheckWorkspaceNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
 			},
 		},
@@ -331,27 +289,6 @@ func testAccWorkspaceConfig_basic() string {
 	return `
 resource "aws_prometheus_workspace" "test" {}
 `
-}
-
-func testAccWorkspaceConfig_tags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccWorkspaceConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccWorkspaceConfig_alias(rName string) string {

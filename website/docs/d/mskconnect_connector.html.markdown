@@ -30,4 +30,5 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the connector.
 * `description` - Summary description of the connector.
+* `tags` - A map of tags assigned to the resource.
 * `version` - Current version of the connector.

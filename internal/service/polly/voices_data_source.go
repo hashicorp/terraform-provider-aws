@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Voices")
+// @FrameworkDataSource("aws_polly_voices", name="Voices")
 func newDataSourceVoices(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceVoices{}, nil
 }
@@ -38,15 +38,15 @@ func (d *dataSourceVoices) Metadata(_ context.Context, req datasource.MetadataRe
 func (d *dataSourceVoices) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"engine": schema.StringAttribute{
+			names.AttrEngine: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.Engine](),
 				Optional:   true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"include_additional_language_codes": schema.BoolAttribute{
 				Optional: true,
 			},
-			"language_code": schema.StringAttribute{
+			names.AttrLanguageCode: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LanguageCode](),
 				Optional:   true,
 			},
@@ -64,16 +64,16 @@ func (d *dataSourceVoices) Schema(ctx context.Context, req datasource.SchemaRequ
 						"gender": schema.StringAttribute{
 							Computed: true,
 						},
-						"id": schema.StringAttribute{
+						names.AttrID: schema.StringAttribute{
 							Computed: true,
 						},
-						"language_code": schema.StringAttribute{
+						names.AttrLanguageCode: schema.StringAttribute{
 							Computed: true,
 						},
 						"language_name": schema.StringAttribute{
 							Computed: true,
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Computed: true,
 						},
 						"supported_engines": schema.ListAttribute{
@@ -95,7 +95,7 @@ func (d *dataSourceVoices) Read(ctx context.Context, req datasource.ReadRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(d.Meta().AccountID)
+	data.ID = types.StringValue(d.Meta().AccountID(ctx))
 
 	input := &polly.DescribeVoicesInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)

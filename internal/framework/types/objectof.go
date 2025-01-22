@@ -6,6 +6,7 @@ package types
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -14,11 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// objectTypeOf is the attribute type of an ObjectValueOf.
-type objectTypeOf[T any] struct {
-	basetypes.ObjectType
-}
-
 var (
 	_ basetypes.ObjectTypable  = (*objectTypeOf[struct{}])(nil)
 	_ NestedObjectType         = (*objectTypeOf[struct{}])(nil)
@@ -26,13 +22,29 @@ var (
 	_ NestedObjectValue        = (*ObjectValueOf[struct{}])(nil)
 )
 
+// objectTypeOf is the attribute type of an ObjectValueOf.
+type objectTypeOf[T any] struct {
+	basetypes.ObjectType
+}
+
+func newObjectTypeOf[T any](ctx context.Context) (objectTypeOf[T], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	m, d := AttributeTypes[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return objectTypeOf[T]{}, diags
+	}
+
+	return objectTypeOf[T]{basetypes.ObjectType{AttrTypes: m}}, diags
+}
+
 func NewObjectTypeOf[T any](ctx context.Context) objectTypeOf[T] {
-	return objectTypeOf[T]{basetypes.ObjectType{AttrTypes: AttributeTypesMust[T](ctx)}}
+	return fwdiag.Must(newObjectTypeOf[T](ctx))
 }
 
 func (t objectTypeOf[T]) Equal(o attr.Type) bool {
 	other, ok := o.(objectTypeOf[T])
-
 	if !ok {
 		return false
 	}
@@ -55,14 +67,20 @@ func (t objectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.Objec
 		return NewObjectValueOfUnknown[T](ctx), diags
 	}
 
-	objectValue, d := basetypes.NewObjectValue(AttributeTypesMust[T](ctx), in.Attributes())
+	m, d := AttributeTypes[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewObjectValueOfUnknown[T](ctx), diags
+	}
+
+	v, d := basetypes.NewObjectValue(m, in.Attributes())
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewObjectValueOfUnknown[T](ctx), diags
 	}
 
 	value := ObjectValueOf[T]{
-		ObjectValue: objectValue,
+		ObjectValue: v,
 	}
 
 	return value, diags
@@ -76,13 +94,11 @@ func (t objectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Valu
 	}
 
 	objectValue, ok := attrValue.(basetypes.ObjectValue)
-
 	if !ok {
 		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
 	}
 
 	objectValuable, diags := t.ValueFromObject(ctx, objectValue)
-
 	if diags.HasError() {
 		return nil, fmt.Errorf("unexpected error converting ObjectValue to ObjectValuable: %v", diags)
 	}
@@ -100,7 +116,6 @@ func (t objectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostic
 
 func (t objectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
 	return NewObjectValueOfNull[T](ctx), diags
 }
 
@@ -108,17 +123,53 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
-		return NewObjectValueOf(ctx, v), diags
+		v, d := NewObjectValueOf(ctx, v)
+		diags.Append(d...)
+		return v, diags
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
 	return nil, diags
 }
 
-func objectTypeNewObjectPtr[T any](_ context.Context) (*T, diag.Diagnostics) {
+func objectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
 	return new(T), diags
+}
+
+// NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
+func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
+	var diags diag.Diagnostics
+	val := reflect.ValueOf(t)
+	typ := val.Type().Elem()
+
+	if typ.Kind() != reflect.Struct {
+		return diags
+	}
+
+	val = val.Elem()
+
+	for i := 0; i < typ.NumField(); i++ {
+		val := val.Field(i)
+		if !val.CanInterface() {
+			continue
+		}
+
+		attrValue, err := NullValueOf(ctx, val.Interface())
+
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
+			return diags
+		}
+
+		if attrValue == nil {
+			continue
+		}
+
+		val.Set(reflect.ValueOf(attrValue))
+	}
+
+	return diags
 }
 
 // ObjectValueOf represents a Terraform Plugin Framework Object value whose corresponding Go type is the structure T.
@@ -128,7 +179,6 @@ type ObjectValueOf[T any] struct {
 
 func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ObjectValueOf[T])
-
 	if !ok {
 		return false
 	}
@@ -151,7 +201,12 @@ func (v ObjectValueOf[T]) ToPtr(ctx context.Context) (*T, diag.Diagnostics) {
 func objectValueObjectPtr[T any](ctx context.Context, val attr.Value) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	ptr := new(T)
+	ptr, d := objectTypeNewObjectPtr[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
 	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil, diags
@@ -168,6 +223,24 @@ func NewObjectValueOfUnknown[T any](ctx context.Context) ObjectValueOf[T] {
 	return ObjectValueOf[T]{ObjectValue: basetypes.NewObjectUnknown(AttributeTypesMust[T](ctx))}
 }
 
-func NewObjectValueOf[T any](ctx context.Context, t *T) ObjectValueOf[T] {
-	return ObjectValueOf[T]{ObjectValue: fwdiag.Must(basetypes.NewObjectValueFrom(ctx, AttributeTypesMust[T](ctx), t))}
+func NewObjectValueOf[T any](ctx context.Context, t *T) (ObjectValueOf[T], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	m, d := AttributeTypes[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewObjectValueOfUnknown[T](ctx), diags
+	}
+
+	v, d := basetypes.NewObjectValueFrom(ctx, m, t)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewObjectValueOfUnknown[T](ctx), diags
+	}
+
+	return ObjectValueOf[T]{ObjectValue: v}, diags
+}
+
+func NewObjectValueOfMust[T any](ctx context.Context, t *T) ObjectValueOf[T] {
+	return fwdiag.Must(NewObjectValueOf[T](ctx, t))
 }

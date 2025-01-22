@@ -1,0 +1,31 @@
+```release-note:bug
+resource/aws_securitylake_subscriber: Allow more than one log source
+```
+
+```release-note:bug
+resource/aws_securitylake_aws_log_source: Correctly handles unspecified `source_version`
+```
+
+```release-note:bug
+resource/aws_securitylake_aws_log_source: Prevents errors when creating multiple log sources concurrently
+```
+
+```release-note:bug
+resource/aws_securitylake_custom_log_source: Validates length of `source_name` parameter
+```
+
+```release-note:bug
+resource/aws_securitylake_custom_log_source: Prevents errors when creating multiple log sources concurrently
+```
+
+```release-note:bug
+resource/aws_securitylake_subscriber: Correctly handles unspecified `access_type`
+```
+
+```release-note:bug
+resource/aws_securitylake_subscriber: Correctly requires `source_name` parameter for `aws_log_source_resource` and `custom_log_source_resource`
+```
+
+```release-note:bug
+resource/aws_securitylake_subscriber: Correctly handles unspecified `source_version` parameter for `aws_log_source_resource` and `custom_log_source_resource`
+```

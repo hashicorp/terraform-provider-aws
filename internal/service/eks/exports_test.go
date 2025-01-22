@@ -14,6 +14,7 @@ var (
 	ResourceNodeGroup               = resourceNodeGroup
 	ResourcePodIdentityAssociation  = newPodIdentityAssociationResource
 
+	ClusterStateUpgradeV0                      = clusterStateUpgradeV0
 	FindAccessEntryByTwoPartKey                = findAccessEntryByTwoPartKey
 	FindAccessPolicyAssociationByThreePartKey  = findAccessPolicyAssociationByThreePartKey
 	FindAddonByTwoPartKey                      = findAddonByTwoPartKey

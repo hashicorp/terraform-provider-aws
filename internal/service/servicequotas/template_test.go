@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -44,7 +45,7 @@ func testAccTemplate_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
@@ -56,10 +57,10 @@ func testAccTemplate_basic(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", lambdaStorageValue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaStorageValue),
 				),
 			},
 			{
@@ -79,7 +80,7 @@ func testAccTemplate_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
@@ -108,7 +109,7 @@ func testAccTemplate_value(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
@@ -120,10 +121,10 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaENIValue),
 				),
 			},
 			{
@@ -135,10 +136,10 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValueUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValueUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaENIValueUpdated),
 				),
 			},
 		},

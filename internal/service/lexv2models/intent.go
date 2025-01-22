@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -35,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Intent")
+// @FrameworkResource("aws_lexv2models_intent", name="Intent")
 func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIntent{}
 
@@ -65,7 +66,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"priority": schema.Int64Attribute{
+				names.AttrPriority: schema.Int64Attribute{
 					Required: true,
 				},
 				"slot_id": schema.StringAttribute{
@@ -93,7 +94,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[OutputContext](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 				},
 				"time_to_live_in_seconds": schema.Int64Attribute{
@@ -133,7 +134,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"value": schema.StringAttribute{
+				names.AttrValue: schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -147,7 +148,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				"text": schema.StringAttribute{
 					Required: true,
 				},
-				"value": schema.StringAttribute{
+				names.AttrValue: schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -184,7 +185,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"value": schema.StringAttribute{
+				names.AttrValue: schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -198,7 +199,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"value": schema.StringAttribute{
+				names.AttrValue: schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -221,7 +222,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"message": schema.ListNestedBlock{
+				names.AttrMessage: schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},
@@ -256,7 +257,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 	slotValueOverrideLNB := schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotValueOverride](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required: true,
 				},
@@ -266,7 +267,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"value": slotValueLNB,
+				names.AttrValue: slotValueLNB,
 			},
 		},
 	}
@@ -280,7 +281,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[DialogAction](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"type": schema.StringAttribute{
+				names.AttrType: schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.DialogActionType](),
 				},
@@ -301,7 +302,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentOverride](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Optional: true,
 				},
 			},
@@ -363,12 +364,12 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ConditionalBranch](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"condition": conditionLNB,
+				names.AttrCondition: conditionLNB,
 				"next_step": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
@@ -446,7 +447,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[InputContext](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -576,7 +577,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[PromptAttemptsType](),
@@ -794,7 +795,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				"active": schema.BoolAttribute{
 					Optional: true,
 				},
-				"enabled": schema.BoolAttribute{
+				names.AttrEnabled: schema.BoolAttribute{
 					Required: true,
 				},
 			},
@@ -818,7 +819,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookSettings](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"enabled": schema.BoolAttribute{
+				names.AttrEnabled: schema.BoolAttribute{
 					Required: true,
 				},
 			},
@@ -842,15 +843,15 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"creation_date_time": schema.StringAttribute{
 				Computed:   true,
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"intent_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -859,7 +860,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"last_updated_date_time": schema.StringAttribute{
 				Computed:   true,
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -871,7 +872,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"parent_intent_signature": schema.StringAttribute{
@@ -889,7 +890,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			"output_context":           outputContextLNB,
 			"sample_utterance":         sampleUtteranceLNB,
 			"slot_priority":            slotPriorityLNB,
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -897,6 +898,8 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 	}
 }
+
+var intentFlexOpt = flex.WithFieldNamePrefix(ResNameIntent)
 
 func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
@@ -908,7 +911,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	in := &lexmodelsv2.CreateIntentInput{}
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), &data, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &data, in, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -943,7 +946,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 
 	// get some data from the intent
 	var dataAfter ResourceIntentData
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), intent, &dataAfter)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, intent, &dataAfter, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -984,7 +987,7 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), out, &data)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1052,7 +1055,7 @@ func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	input := &lexmodelsv2.UpdateIntentInput{}
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), &new, input)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &new, input, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1088,10 +1091,10 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &lexmodelsv2.DeleteIntentInput{
-		IntentId:   aws.String(state.IntentID.ValueString()),
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
+		IntentId:   state.IntentID.ValueStringPointer(),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteIntent(ctx, in)
@@ -1499,7 +1502,7 @@ type ResourceIntentData struct {
 	BotVersion             types.String                                                 `tfsdk:"bot_version"`
 	ClosingSetting         fwtypes.ListNestedObjectValueOf[IntentClosingSetting]        `tfsdk:"closing_setting"`
 	ConfirmationSetting    fwtypes.ListNestedObjectValueOf[IntentConfirmationSetting]   `tfsdk:"confirmation_setting"`
-	CreationDateTime       fwtypes.Timestamp                                            `tfsdk:"creation_date_time"`
+	CreationDateTime       timetypes.RFC3339                                            `tfsdk:"creation_date_time"`
 	Description            types.String                                                 `tfsdk:"description"`
 	DialogCodeHook         fwtypes.ListNestedObjectValueOf[DialogCodeHookSettings]      `tfsdk:"dialog_code_hook"`
 	FulfillmentCodeHook    fwtypes.ListNestedObjectValueOf[FulfillmentCodeHookSettings] `tfsdk:"fulfillment_code_hook"`
@@ -1508,7 +1511,7 @@ type ResourceIntentData struct {
 	InitialResponseSetting fwtypes.ListNestedObjectValueOf[InitialResponseSetting]      `tfsdk:"initial_response_setting"`
 	InputContext           fwtypes.ListNestedObjectValueOf[InputContext]                `tfsdk:"input_context"`
 	KendraConfiguration    fwtypes.ListNestedObjectValueOf[KendraConfiguration]         `tfsdk:"kendra_configuration"`
-	LastUpdatedDateTime    fwtypes.Timestamp                                            `tfsdk:"last_updated_date_time"`
+	LastUpdatedDateTime    timetypes.RFC3339                                            `tfsdk:"last_updated_date_time"`
 	LocaleID               types.String                                                 `tfsdk:"locale_id"`
 	Name                   types.String                                                 `tfsdk:"name"`
 	OutputContext          fwtypes.ListNestedObjectValueOf[OutputContext]               `tfsdk:"output_context"`

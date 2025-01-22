@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,17 +22,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Key Value Store")
+// @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
@@ -54,7 +54,7 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 			},
 			"etag": schema.StringAttribute{
@@ -62,7 +62,7 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 			},
 			names.AttrID: framework.IDAttribute(),
 			"last_modified_time": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 			names.AttrName: schema.StringAttribute{
@@ -188,6 +188,14 @@ func (r *keyValueStoreResource) Update(ctx context.Context, request resource.Upd
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
+	kvsARN := old.ARN.ValueString()
+
+	// Updating changes the etag of the key value store.
+	// Use a mutex serialize actions
+	mutexKey := kvsARN
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
+
 	input := &cloudfront.UpdateKeyValueStoreInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 	if response.Diagnostics.HasError() {
@@ -223,6 +231,13 @@ func (r *keyValueStoreResource) Delete(ctx context.Context, request resource.Del
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
+
+	kvsARN := data.ARN.ValueString()
+
+	// Use a mutex serialize actions
+	mutexKey := kvsARN
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	input := &cloudfront.DeleteKeyValueStoreInput{
 		IfMatch: fwflex.StringFromFramework(ctx, data.ETag),
@@ -285,8 +300,8 @@ func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name stri
 
 func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name string, timeout time.Duration) (*cloudfront.DescribeKeyValueStoreOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice("PROVISIONING"),
-		Target:  enum.Slice("READY"),
+		Pending: []string{keyValueStoreStatusProvisioning},
+		Target:  []string{keyValueStoreStatusReady},
 		Refresh: statusKeyValueStore(ctx, conn, name),
 		Timeout: timeout,
 	}
@@ -305,7 +320,7 @@ type keyValueStoreResourceModel struct {
 	Comment          types.String      `tfsdk:"comment"`
 	ETag             types.String      `tfsdk:"etag"`
 	ID               types.String      `tfsdk:"id"`
-	LastModifiedTime fwtypes.Timestamp `tfsdk:"last_modified_time"`
+	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 	Name             types.String      `tfsdk:"name"`
 	Timeouts         timeouts.Value    `tfsdk:"timeouts"`
 }

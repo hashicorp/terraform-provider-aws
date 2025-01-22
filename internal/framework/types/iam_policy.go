@@ -13,10 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+)
+
+var (
+	_ basetypes.StringTypable = (*iamPolicyType)(nil)
 )
 
 type iamPolicyType struct {
@@ -25,13 +28,6 @@ type iamPolicyType struct {
 
 var (
 	IAMPolicyType = iamPolicyType{}
-)
-
-var (
-	_ xattr.TypeWithValidate                     = (*iamPolicyType)(nil)
-	_ basetypes.StringTypable                    = (*iamPolicyType)(nil)
-	_ basetypes.StringValuable                   = (*IAMPolicy)(nil)
-	_ basetypes.StringValuableWithSemanticEquals = (*IAMPolicy)(nil)
 )
 
 func (t iamPolicyType) Equal(o attr.Type) bool {
@@ -87,41 +83,11 @@ func (t iamPolicyType) ValueType(context.Context) attr.Value {
 	return IAMPolicy{}
 }
 
-func (t iamPolicyType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !in.IsKnown() || in.IsNull() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"Invalid Terraform Value",
-			"An unexpected error occurred while attempting to convert a Terraform value to a string. "+
-				"This generally is an issue with the provider schema implementation. "+
-				"Please contact the provider developers.\n\n"+
-				"Path: "+path.String()+"\n"+
-				"Error: "+err.Error(),
-		)
-		return diags
-	}
-
-	if !json.Valid([]byte(value)) {
-		diags.AddAttributeError(
-			path,
-			"Invalid JSON String Value",
-			"A string value was provided that is not valid JSON string format (RFC 7159).\n\n"+
-				"Path: "+path.String()+"\n"+
-				"Given Value: "+value+"\n",
-		)
-		return diags
-	}
-
-	return diags
-}
+var (
+	_ basetypes.StringValuable                   = (*IAMPolicy)(nil)
+	_ basetypes.StringValuableWithSemanticEquals = (*IAMPolicy)(nil)
+	_ xattr.ValidateableAttribute                = (*IAMPolicy)(nil)
+)
 
 func IAMPolicyNull() IAMPolicy {
 	return IAMPolicy{StringValue: basetypes.NewStringNull()}
@@ -189,4 +155,20 @@ func policyStringsEquivalent(s1, s2 string) bool {
 	}
 
 	return equivalent
+}
+
+func (v IAMPolicy) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	if !json.Valid([]byte(v.ValueString())) {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid IAM Policy Value",
+			"The provided value is not valid JSON string format (RFC 7159).\n\n"+
+				"Path: "+req.Path.String()+"\n"+
+				"Value: "+v.ValueString(),
+		)
+	}
 }

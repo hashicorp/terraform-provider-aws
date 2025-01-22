@@ -51,12 +51,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_auditmanager_assessment_delegation.example
-  id = "abcdef-123456,arn:aws:iam::012345678901:role/example,example"
+  id = "abcdef-123456,arn:aws:iam::123456789012:role/example,example"
 }
 ```
 
 Using `terraform import`, import Audit Manager Assessment Delegation using the `id`. For example:
 
 ```console
-% terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example
+% terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::123456789012:role/example,example
 ```

@@ -6,23 +6,31 @@ package shield
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(_ context.Context, config map[string]any) (*shield_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	// Force "global" services to correct Regions.
-	if config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-		cfg.Region = endpoints_sdkv1.UsEast1RegionID
-	}
-
-	return shield_sdkv2.NewFromConfig(cfg, func(o *shield_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
+	return shield.NewFromConfig(cfg,
+		shield.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *shield.Options) {
+			// Force "global" services to correct Regions.
+			if config["partition"].(string) == endpoints.AwsPartitionID {
+				if cfg.Region != endpoints.UsEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": endpoints.UsEast1RegionID,
+					})
+					o.Region = endpoints.UsEast1RegionID
+				}
+			}
+		},
+	), nil
 }

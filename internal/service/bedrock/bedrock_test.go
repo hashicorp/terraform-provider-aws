@@ -13,9 +13,21 @@ func TestAccBedrock_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		// Model customization has a non-adjustable maximum concurrency of 2
+		"CustomModel": {
+			acctest.CtBasic:                         testAccCustomModel_basic,
+			acctest.CtDisappears:                    testAccCustomModel_disappears,
+			"tags":                                  testAccBedrockCustomModel_tagsSerial,
+			"kmsKey":                                testAccCustomModel_kmsKey,
+			"validationDataConfig":                  testAccCustomModel_validationDataConfig,
+			"validationDataConfigWaitForCompletion": testAccCustomModel_validationDataConfigWaitForCompletion,
+			"vpcConfig":                             testAccCustomModel_vpcConfig,
+			"singularDataSourceBasic":               testAccCustomModelDataSource_basic,
+			"pluralDataSourceBasic":                 testAccCustomModelsDataSource_basic,
+		},
 		"ModelInvocationLoggingConfiguration": {
-			"basic":      testAccModelInvocationLoggingConfiguration_basic,
-			"disappears": testAccModelInvocationLoggingConfiguration_disappears,
+			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
+			acctest.CtDisappears: testAccModelInvocationLoggingConfiguration_disappears,
 		},
 	}
 

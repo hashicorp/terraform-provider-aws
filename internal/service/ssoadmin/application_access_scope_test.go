@@ -42,7 +42,7 @@ func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAccessScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, "application_arn"),
-					resource.TestCheckResourceAttr(resourceName, "scope", "sso:account:access"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "sso:account:access"),
 				),
 			},
 			{

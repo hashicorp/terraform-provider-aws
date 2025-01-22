@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Allow table TTL to be disabled by allowing `ttl[0].attribute_name` to be set when `ttl[0].enabled` is false
+```

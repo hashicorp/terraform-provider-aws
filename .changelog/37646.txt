@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_lambda_layer_version: Fix issue when `source_code_hash` forces a replacement even if source code has not changed
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add `code_sha256` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lambda_layer_version: Add `code_sha256` attribute
+```
+
+```release-note:note
+data-source/aws_lambda_layer_version: `source_code_hash` attribute has been deprecated in favor of `code_sha256`. Will be removed in a future major version
+```

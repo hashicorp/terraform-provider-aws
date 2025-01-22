@@ -6,6 +6,9 @@ val services = mapOf(
         {{- if .VpcLock }}, vpcLock = true{{ end -}}
         {{- if ne .Parallelism 0 }}, parallelismOverride = {{ .Parallelism }}{{ end -}}
         {{- if ne .Region "" }}, regionOverride = "{{ .Region }}"{{ end -}}
+        {{- if ne .PatternOverride "" }}, patternOverride = "{{ .PatternOverride }}"{{ end -}}
+        {{- if ne .SplitPackageRealPackage "" }}, splitPackageRealPackage = "{{ .SplitPackageRealPackage }}"{{ end -}}
+        {{- if ne .ExcludePattern "" }}, excludePattern = "{{ .ExcludePattern }}"{{ end -}}
     ),
 {{- end }}
 )

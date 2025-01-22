@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Don't attempt to remove scale-in protection from instances that don't have the feature enabled
+```

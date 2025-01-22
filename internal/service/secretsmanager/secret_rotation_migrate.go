@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func secretRotationStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
@@ -38,11 +39,11 @@ func secretRotationResourceV0() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"duration": {
+						names.AttrDuration: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},

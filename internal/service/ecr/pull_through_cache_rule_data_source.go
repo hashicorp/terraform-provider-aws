@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,7 +50,7 @@ func dataSourcePullThroughCacheRule() *schema.Resource {
 
 func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
 	rule, err := findPullThroughCacheRuleByRepositoryPrefix(ctx, conn, repositoryPrefix)
@@ -59,7 +59,7 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
-	d.SetId(aws.StringValue(rule.EcrRepositoryPrefix))
+	d.SetId(aws.ToString(rule.EcrRepositoryPrefix))
 	d.Set("credential_arn", rule.CredentialArn)
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
 	d.Set("registry_id", rule.RegistryId)

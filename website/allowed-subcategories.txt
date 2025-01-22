@@ -5,8 +5,6 @@ AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
 Account Management
-Agents for Amazon Bedrock
-Amazon Bedrock
 Amazon Q Business
 Amplify
 App Mesh
@@ -18,13 +16,20 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Migration (Mgn)
+Application Signals
 Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Data Exports
 Backup
 Batch
+Bedrock
+Bedrock Agents
+Billing
 CE (Cost Explorer)
+Chatbot
 Chime
 Chime SDK Media Pipelines
 Chime SDK Voice
@@ -43,6 +48,7 @@ CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
+CloudWatch Network Monitor
 CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
@@ -50,6 +56,7 @@ CodeArtifact
 CodeBuild
 CodeCatalyst
 CodeCommit
+CodeConnections
 CodeDeploy
 CodeGuru Profiler
 CodeGuru Reviewer
@@ -69,10 +76,13 @@ Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
 DataSync
+DataZone
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
@@ -103,6 +113,7 @@ Elemental MediaLive
 Elemental MediaPackage
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging SMS
 EventBridge
 EventBridge Pipes
 EventBridge Scheduler
@@ -114,6 +125,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
 Ground Station
 GuardDuty
 HealthLake
@@ -123,6 +135,7 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Invoicing
 IoT Analytics
 IoT Core
 IoT Events
@@ -151,9 +164,10 @@ Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
-MemoryDB for Redis
+MemoryDB
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
@@ -163,6 +177,8 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Parallel Computing Service
+Payment Cryptography Control Plane
 Pinpoint
 Polly
 Pricing Calculator
@@ -176,18 +192,21 @@ Redshift
 Redshift Data
 Redshift Serverless
 Rekognition
+Resilience Hub
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
 Roles Anywhere
 Route 53
 Route 53 Domains
+Route 53 Profiles
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
 S3 Glacier
+S3 Tables
 S3 on Outposts
 SDB (SimpleDB)
 SES (Simple Email)
@@ -198,6 +217,7 @@ SQS (Simple Queue)
 SSM (Systems Manager)
 SSM Contacts
 SSM Incident Manager Incidents
+SSM Quick Setup
 SSO Admin
 SSO Identity Store
 STS (Security Token)
@@ -214,7 +234,10 @@ Shield
 Signer
 Storage Gateway
 Systems Manager for SAP
+Tax Settings
+Timestream Query
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
@@ -233,4 +256,5 @@ Web Services Budgets
 Well-Architected Tool
 WorkLink
 WorkSpaces
+WorkSpaces Web
 X-Ray

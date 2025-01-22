@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Config")
+// @FrameworkDataSource("aws_opensearchserverless_security_config", name="Security Config")
 func newDataSourceSecurityConfig(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSecurityConfig{}, nil
 }
@@ -40,19 +40,19 @@ func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.Sc
 			"config_version": schema.StringAttribute{
 				Computed: true,
 			},
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
 			"last_modified_date": schema.StringAttribute{
 				Computed: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
 		},

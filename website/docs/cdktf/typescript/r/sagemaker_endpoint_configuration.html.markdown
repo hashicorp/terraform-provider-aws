@@ -58,7 +58,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `dataCaptureConfig` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `asyncInferenceConfig` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
-* `shadowProductionVariants` - (Optional) Array of ProductionVariant objects. There is one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants.If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants. Fields are documented below.
+* `shadowProductionVariants` - (Optional) Array of ProductionVariant objects. There is one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants. If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants. Fields are documented below.
 
 ### production_variants
 
@@ -66,12 +66,15 @@ This resource supports the following arguments:
 * `containerStartupHealthCheckTimeoutInSeconds` - (Optional) The timeout value, in seconds, for your inference container to pass health check by SageMaker Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `coreDumpConfig` - (Optional) Specifies configuration for a core dump from the model container when the process crashes. Fields are documented below.
 * `enableSsmAccess` - (Optional) You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoints.
+* `inferenceAmiVersion` - (Optional) Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads.
 * `initialInstanceCount` - (Optional) Initial number of instances used for auto-scaling.
 * `instanceType` - (Optional)  The type of instance to start.
 * `initialVariantWeight` - (Optional) Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
 * `modelDataDownloadTimeoutInSeconds` - (Optional) The timeout value, in seconds, to download and extract the model that you want to host from Amazon S3 to the individual inference instance associated with this production variant. Valid values between `60` and `3600`.
 * `modelName` - (Required) The name of the model to use.
+* `routingConfig` - (Optional) Sets how the endpoint routes incoming traffic. See [routing_config](#routing_config) below.
 * `serverlessConfig` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
+* `managedInstanceScaling` - (Optional) Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
 * `variantName` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volumeSizeInGb` - (Optional) The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
 
@@ -80,11 +83,21 @@ This resource supports the following arguments:
 * `destinationS3Uri` - (Required) The Amazon S3 bucket to send the core dump to.
 * `kmsKeyId` - (Required) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that SageMaker uses to encrypt the core dump data at rest using Amazon S3 server-side encryption.
 
+#### routing_config
+
+* `routingStrategy` - (Required) Sets how the endpoint routes incoming traffic. Valid values are `LEAST_OUTSTANDING_REQUESTS` and `RANDOM`. `LEAST_OUTSTANDING_REQUESTS` routes requests to the specific instances that have more capacity to process them. `RANDOM` routes each request to a randomly chosen instance.
+
 #### serverless_config
 
 * `maxConcurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.
 * `memorySizeInMb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
 * `provisionedConcurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `maxConcurrency`. Valid values are between `1` and `200`.
+
+#### managed_instance_scaling
+
+* `status` - (Optional) Indicates whether managed instance scaling is enabled. Valid values are `ENABLED` and `DISABLED`.
+* `minInstanceCount` - (Optional) The minimum number of instances that the endpoint must retain when it scales down to accommodate a decrease in traffic.
+* `maxInstanceCount` - (Optional) The maximum number of instances that the endpoint can provision when it scales up to accommodate an increase in traffic.
 
 ### data_capture_config
 
@@ -97,7 +110,7 @@ This resource supports the following arguments:
 
 #### capture_options
 
-* `captureMode` - (Required) Specifies the data to be captured. Should be one of `Input` or `Output`.
+* `captureMode` - (Required) Specifies the data to be captured. Should be one of `Input`, `Output` or `InputAndOutput`.
 
 #### capture_content_type_header
 
@@ -166,4 +179,4 @@ Using `terraform import`, import endpoint configurations using the `name`. For e
 % terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a480c542052fe4577930c727244f5ec85cceca16de58e98751ed63acbfadd2a7 -->
+<!-- cache-key: cdktf-0.20.8 input-74160ca7a494fbdfee7a09117b03977ef1e71157bac453042f4a965a4b2af9c8 -->

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_task_definition: Remove `null`s from `container_definition` array fields
+```

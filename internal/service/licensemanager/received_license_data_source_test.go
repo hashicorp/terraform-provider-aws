@@ -27,9 +27,9 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReceivedLicenseDataSourceConfig_arn(licenseARN),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGlobalARN(datasourceName, "beneficiary", "iam", "root"),
+					acctest.CheckResourceAttrGlobalARN(ctx, datasourceName, "beneficiary", "iam", "root"),
 					resource.TestCheckResourceAttr(datasourceName, "consumption_configuration.#", "1"),
-					acctest.CheckResourceAttrRFC3339(datasourceName, "create_time"),
+					acctest.CheckResourceAttrRFC3339(datasourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(datasourceName, "entitlements.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "home_region", homeRegion),
 					resource.TestCheckResourceAttr(datasourceName, "issuer.#", "1"),
@@ -39,9 +39,9 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "product_name"),
 					resource.TestCheckResourceAttrSet(datasourceName, "product_sku"),
 					resource.TestCheckResourceAttr(datasourceName, "received_metadata.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "status"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(datasourceName, "validity.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "version"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrVersion),
 				),
 			},
 		},

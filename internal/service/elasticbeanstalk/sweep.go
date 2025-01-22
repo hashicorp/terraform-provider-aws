@@ -7,13 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -35,39 +33,36 @@ func sweepApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ElasticBeanstalkConn(ctx)
+	conn := client.ElasticBeanstalkClient(ctx)
+	input := &elasticbeanstalk.DescribeApplicationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	resp, err := conn.DescribeApplicationsWithContext(ctx, &elasticbeanstalk.DescribeApplicationsInput{})
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elastic Beanstalk Application sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving beanstalk application: %w", err)
-	}
+	output, err := conn.DescribeApplications(ctx, input)
 
-	if len(resp.Applications) == 0 {
-		log.Print("[DEBUG] No aws beanstalk applications to sweep")
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Elastic Beanstalk Application sweep for %s: %s", region, err)
 		return nil
 	}
 
-	var errors error
-	for _, bsa := range resp.Applications {
-		applicationName := aws.StringValue(bsa.ApplicationName)
-		_, err := conn.DeleteApplicationWithContext(ctx, &elasticbeanstalk.DeleteApplicationInput{
-			ApplicationName: bsa.ApplicationName,
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") || tfawserr.ErrCodeEquals(err, "ValidationError") {
-				log.Printf("[DEBUG] beanstalk application %q not found", applicationName)
-				continue
-			}
-
-			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Application %q: %w", applicationName, err))
-		}
+	if err != nil {
+		return fmt.Errorf("listing Elastic Beanstalk Applications (%s): %w", region, err)
 	}
 
-	return errors
+	for _, v := range output.Applications {
+		r := resourceApplication()
+		d := r.Data(nil)
+		d.SetId(aws.ToString(v.ApplicationName))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Elastic Beanstalk Applications (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepEnvironments(region string) error {
@@ -76,21 +71,21 @@ func sweepEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ElasticBeanstalkConn(ctx)
+	conn := client.ElasticBeanstalkClient(ctx)
 	input := &elasticbeanstalk.DescribeEnvironmentsInput{
 		IncludeDeleted: aws.Bool(false),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeEnvironmentsPages(ctx, conn, input, func(page *elasticbeanstalk.EnvironmentDescriptionsMessage, lastPage bool) bool {
+	err = describeEnvironmentsPages(ctx, conn, input, func(page *elasticbeanstalk.DescribeEnvironmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.Environments {
-			r := ResourceEnvironment()
+			r := resourceEnvironment()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.EnvironmentId))
+			d.SetId(aws.ToString(v.EnvironmentId))
 			d.Set("poll_interval", "10s")
 			d.Set("wait_for_ready_timeout", "5m")
 
@@ -100,7 +95,7 @@ func sweepEnvironments(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elastic Beanstalk Environment sweep for %s: %s", region, err)
 		return nil
 	}

@@ -88,6 +88,7 @@ interpolation.
 * `instance_type` - Type of the Instance.
 * `ipv6_addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `key_name` - Key name of the Instance.
+* `launch_time` - Time the instance was launched.
 * `maintenance_options` - Maintenance and recovery options for the instance.
     * `auto_recovery` - Automatic recovery behavior of the instance.
 * `metadata_options` - Metadata options of the Instance.

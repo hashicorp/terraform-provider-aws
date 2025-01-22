@@ -26,7 +26,7 @@ func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusterAuthDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, names.AttrName, "foobar"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
 					testAccCheckClusterAuthToken(dataSourceResourceName),
 				),
@@ -46,7 +46,7 @@ func testAccCheckClusterAuthToken(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		name := rs.Primary.Attributes["name"]
+		name := rs.Primary.Attributes[names.AttrName]
 		tok := rs.Primary.Attributes["token"]
 		verifier := tfeks.NewVerifier(name)
 		identity, err := verifier.Verify(tok)

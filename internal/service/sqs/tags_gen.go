@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *sqs.Client, identifier string, optFns ...func(*sqs.Options)) (tftags.KeyValueTags, error) {
-	input := &sqs.ListQueueTagsInput{
+	input := sqs.ListQueueTagsInput{
 		QueueUrl: aws.String(identifier),
 	}
 
-	output, err := conn.ListQueueTags(ctx, input, optFns...)
+	output, err := conn.ListQueueTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -80,12 +80,12 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 }
 
 // createTags creates sqs service tags for new resources.
-func createTags(ctx context.Context, conn *sqs.Client, identifier string, tags map[string]string) error {
+func createTags(ctx context.Context, conn *sqs.Client, identifier string, tags map[string]string, optFns ...func(*sqs.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, tags)
+	return updateTags(ctx, conn, identifier, nil, tags, optFns...)
 }
 
 // updateTags updates sqs service tags.
@@ -100,12 +100,12 @@ func updateTags(ctx context.Context, conn *sqs.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.SQS)
 	if len(removedTags) > 0 {
-		input := &sqs.UntagQueueInput{
+		input := sqs.UntagQueueInput{
 			QueueUrl: aws.String(identifier),
 			TagKeys:  removedTags.Keys(),
 		}
 
-		_, err := conn.UntagQueue(ctx, input, optFns...)
+		_, err := conn.UntagQueue(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -115,12 +115,12 @@ func updateTags(ctx context.Context, conn *sqs.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.SQS)
 	if len(updatedTags) > 0 {
-		input := &sqs.TagQueueInput{
+		input := sqs.TagQueueInput{
 			QueueUrl: aws.String(identifier),
 			Tags:     Tags(updatedTags),
 		}
 
-		_, err := conn.TagQueue(ctx, input, optFns...)
+		_, err := conn.TagQueue(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_media_convert_queue", name="Queue")
@@ -21,23 +22,23 @@ func dataSourceQueue() *schema.Resource {
 		ReadWithoutTimeout: dataSourceQueueRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -46,7 +47,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
 	queue, err := findQueueByName(ctx, conn, id)
 
 	if err != nil {
@@ -55,9 +56,9 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := aws.ToString(queue.Name)
 	d.SetId(name)
-	d.Set("arn", queue.Arn)
-	d.Set("name", name)
-	d.Set("status", queue.Status)
+	d.Set(names.AttrARN, queue.Arn)
+	d.Set(names.AttrName, name)
+	d.Set(names.AttrStatus, queue.Status)
 
 	return diags
 }

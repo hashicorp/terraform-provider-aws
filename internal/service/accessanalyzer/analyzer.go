@@ -37,6 +37,7 @@ const (
 
 // @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true", preCheck="true")
 func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
@@ -58,11 +59,11 @@ func resourceAnalyzer() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -89,7 +90,7 @@ func resourceAnalyzer() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -107,21 +108,21 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
-	input := &accessanalyzer.CreateAnalyzerInput{
+	input := accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
 		Tags:         getTagsIn(ctx),
-		Type:         types.Type(d.Get("type").(string)),
+		Type:         types.Type(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandAnalyzerConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	// Handle Organizations eventual consistency.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateAnalyzer(ctx, input)
+			return conn.CreateAnalyzer(ctx, &input)
 		},
 		"You must create an organization",
 	)
@@ -152,15 +153,15 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("analyzer_name", analyzer.Name)
-	d.Set("arn", analyzer.Arn)
+	d.Set(names.AttrARN, analyzer.Arn)
 	if analyzer.Configuration != nil {
-		if err := d.Set("configuration", []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
+		if err := d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	} else {
-		d.Set("configuration", nil)
+		d.Set(names.AttrConfiguration, nil)
 	}
-	d.Set("type", analyzer.Type)
+	d.Set(names.AttrType, analyzer.Type)
 
 	setTagsOut(ctx, analyzer.Tags)
 
@@ -180,10 +181,11 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
-	_, err := conn.DeleteAnalyzer(ctx, &accessanalyzer.DeleteAnalyzerInput{
+	input := accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
 		ClientToken:  aws.String(id.UniqueId()),
-	})
+	}
+	_, err := conn.DeleteAnalyzer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -197,11 +199,11 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name string) (*types.AnalyzerSummary, error) {
-	input := &accessanalyzer.GetAnalyzerInput{
+	input := accessanalyzer.GetAnalyzerInput{
 		AnalyzerName: aws.String(name),
 	}
 
-	output, err := conn.GetAnalyzer(ctx, input)
+	output, err := conn.GetAnalyzer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

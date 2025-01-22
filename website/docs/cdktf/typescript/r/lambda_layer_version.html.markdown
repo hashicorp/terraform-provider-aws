@@ -31,7 +31,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new LambdaLayerVersion(this, "lambda_layer", {
-      compatibleRuntimes: ["nodejs16.x"],
+      compatibleRuntimes: ["nodejs20.x"],
       filename: "lambda_layer_payload.zip",
       layerName: "lambda_layer_name",
     });
@@ -68,13 +68,14 @@ The following arguments are optional:
 * `s3Key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename`.
 * `s3ObjectVersion` - (Optional) Object version containing the function's deployment package. Conflicts with `filename`.
 * `skipDestroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatibleArchitectures`, `compatibleRuntimes`, `description`, `filename`, `layerName`, `licenseInfo`, `s3Bucket`, `s3Key`, `s3ObjectVersion`, or `sourceCodeHash` forces deletion of the existing layer version and creation of a new layer version.
-* `sourceCodeHash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3Key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
+* `sourceCodeHash` - (Optional) Virtual attribute used to trigger replacement when source code changes. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3Key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Lambda Layer with version.
+* `codeSha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `createdDate` - Date this resource was created.
 * `layerArn` - ARN of the Lambda Layer without version.
 * `signingJobArn` - ARN of a signing job.
@@ -121,4 +122,4 @@ Using `terraform import`, import Lambda Layers using `arn`. For example:
     arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-50ef02506e5f8aa941d34a080bbed522b694d49334f23b8e1ff91fdb6b1d0aba -->
+<!-- cache-key: cdktf-0.20.8 input-9c3d90e8ee994e11e67c1e3fc7808bac0321ba6be9b7d3f93e84edae26958ad2 -->

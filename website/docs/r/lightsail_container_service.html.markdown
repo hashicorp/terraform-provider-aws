@@ -96,7 +96,7 @@ resource "aws_ecr_repository_policy" "default" {
 container service. For more information, see
 [Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
@@ -112,7 +112,7 @@ This argument supports the following arguments:
   service. If you don't specify public domain names, then you can use the default domain of the container service.
   Defined below.
 * `private_registry_access` - (Optional) An object to describe the configuration for the container service to access private container image repositories, such as Amazon Elastic Container Registry (Amazon ECR) private repositories. See [Private Registry Access](#private-registry-access) below for more details.
-* `tags` - (Optional) Map of container service tags. To tag at launch, specify the tags in the Launch Template. If
+* `tags` - (Optional) Map of container service tags. To create a key-only tag, use an empty string as the value. To tag at launch, specify the tags in the Launch Template. If
   configured with a provider
   [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
   present, tags with matching keys will overwrite those defined at the provider-level.

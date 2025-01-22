@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,7 @@ import (
 
 func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallConfig
+	var v awstypes.FirewallConfig
 	resourceName := "aws_route53_resolver_firewall_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -37,7 +36,7 @@ func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "firewall_fail_open", "ENABLED"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 				),
 			},
 			{
@@ -51,7 +50,7 @@ func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallConfig
+	var v awstypes.FirewallConfig
 	resourceName := "aws_route53_resolver_firewall_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -75,7 +74,7 @@ func TestAccRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 
 func testAccCheckFirewallConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_firewall_config" {
@@ -92,7 +91,7 @@ func testAccCheckFirewallConfigDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			if aws.StringValue(config.FirewallFailOpen) == route53resolver.FirewallFailOpenStatusDisabled {
+			if config.FirewallFailOpen == awstypes.FirewallFailOpenStatusDisabled {
 				return nil
 			}
 
@@ -103,7 +102,7 @@ func testAccCheckFirewallConfigDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckFirewallConfigExists(ctx context.Context, n string, v *route53resolver.FirewallConfig) resource.TestCheckFunc {
+func testAccCheckFirewallConfigExists(ctx context.Context, n string, v *awstypes.FirewallConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -114,7 +113,7 @@ func testAccCheckFirewallConfigExists(ctx context.Context, n string, v *route53r
 			return fmt.Errorf("No Route53 Resolver Firewall Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		output, err := tfroute53resolver.FindFirewallConfigByID(ctx, conn, rs.Primary.ID)
 

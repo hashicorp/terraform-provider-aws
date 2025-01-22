@@ -42,7 +42,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the environment membership.
-* `user_id` - he user ID in AWS Identity and Access Management (AWS IAM) of the environment member.
+* `user_id` - The user ID in AWS Identity and Access Management (AWS IAM) of the environment member.
 
 ## Import
 

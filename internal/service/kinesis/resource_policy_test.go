@@ -33,14 +33,14 @@ func TestAccKinesisResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"}, // TODO terraform-plugin-testing
+				ImportStateVerifyIgnore: []string{names.AttrPolicy}, // TODO terraform-plugin-testing
 			},
 		},
 	})
@@ -71,14 +71,14 @@ func TestAccKinesisResourcePolicy_disappears(t *testing.T) {
 
 func testAccCheckResourcePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := tfkinesis.FindResourcePolicyByResourceARN(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
+
+		_, err := tfkinesis.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -93,7 +93,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfkinesis.FindResourcePolicyByResourceARN(ctx, conn, rs.Primary.ID)
+			_, err := tfkinesis.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

@@ -29,7 +29,7 @@ No arguments are required.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resouce Name (ARN) of the replication set.
+* `arn` - The Amazon Resource Name (ARN) of the replication set.
 * `tags` - All tags applied to the replication set.
 * `created_by` - The ARN of the user who created the replication set.
 * `deletion_protected` - If `true`, the last remaining Region in a replication set can’t be deleted.
