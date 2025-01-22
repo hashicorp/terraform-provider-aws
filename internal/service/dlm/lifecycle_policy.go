@@ -303,7 +303,8 @@ func resourceLifecyclePolicy() *schema.Resource {
 																Elem: &schema.Schema{
 																	Type:             schema.TypeString,
 																	ValidateDiagFunc: enum.Validate[awstypes.StageValues](),
-																},																						
+																},
+															},																						
 														},
 													},
 												},
@@ -530,7 +531,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
-	}
+	},
 }
 
 const (
