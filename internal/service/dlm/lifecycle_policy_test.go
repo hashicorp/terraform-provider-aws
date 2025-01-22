@@ -37,7 +37,6 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
@@ -142,6 +141,67 @@ func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_scriptsAlias(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_scriptsAlias(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execution_handler", "AWS_VSS_BACKUP"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execute_operation_on_script_failure", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.maximum_retry_count", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_scriptsSSMDocument(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_scriptsSSMDocument(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execution_handler"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execute_operation_on_script_failure", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execution_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.maximum_retry_count", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
@@ -213,7 +273,7 @@ func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_defaultPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
@@ -224,8 +284,8 @@ func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_type", "VOLUME"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.retain_interval", "7"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_language", "SIMPLIFIED"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", "0"),
 				),
 			},
 			{
@@ -824,6 +884,138 @@ resource "aws_dlm_lifecycle_policy" "test" {
       }
 
       deprecate_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_scriptsAlias(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+data "aws_iam_policy" "test" {
+  name = "AWSDataLifecycleManagerSSMFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.id
+  policy_arn = data.aws_iam_policy.test.arn
+}
+
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+	    interval = 12
+        scripts {
+		  execute_operation_on_script_failure = false
+		  execution_handler 				  = "AWS_VSS_BACKUP"
+		  maximum_retry_count				  = 3
+		}
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_scriptsSSMDocument(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+data "aws_iam_policy" "test" {
+  name = "AWSDataLifecycleManagerSSMFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.id
+  policy_arn = data.aws_iam_policy.test.arn
+}
+
+resource "aws_ssm_document" "test" {
+  name          = "tf-acc-basic"
+  document_type = "Command"
+
+  tags = {
+  	DLMScriptsAccess = "true"
+  }
+
+  content =<<DOC
+  {
+    "schemaVersion": "2.2",
+    "description": "SSM Document Template for Amazon Data Lifecycle Manager Pre/Post script feature",
+    "parameters": {
+		"executionId": {
+			"type": "String",
+			"default": "None",
+			"description": "(Required) Specifies the unique identifier associated with a pre and/or post execution",
+			"allowedPattern": "^(None|[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$"
+			},
+		"command": {
+			"type": "String",
+			"default": "dry-run",
+			"description": "(Required) Specifies whether pre-script and/or post-script should be executed.",
+			"allowedValues": [
+				"pre-script",
+				"post-script",
+				"dry-run"
+				]
+			}
+  	},
+   "mainSteps": [
+      {
+      "action": "aws:runShellScript",
+      "description": "Run Database freeze/thaw commands",
+      "name": "run_pre_post_scripts",
+      "inputs": {
+        "runCommand": [ "#!/bin/bash\n\n"]
+	    }
+      }
+    ]
+  }
+DOC
+}
+
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+	    interval = 12
+        scripts {
+		  execute_operation_on_script_failure = false
+		  execution_handler 				  = aws_ssm_document.test.arn
+		  execution_timeout 				  = 60
+		  maximum_retry_count				  = 3
+		  stages 							  = ["PRE"]
+		}
+      }
+
+      retain_rule {
         count = 10
       }
     }

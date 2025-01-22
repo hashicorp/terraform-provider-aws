@@ -218,8 +218,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 						},
 						"resource_types": {
 							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Required: true,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
@@ -335,7 +334,6 @@ func resourceLifecyclePolicy() *schema.Resource {
 															},
 															"execution_handler": {
 																Type:     schema.TypeString,
-																Computed: true,
 																Required: true,
 																ValidateFunc: validation.All(
 																	validation.StringLenBetween(0, 200),
@@ -1212,7 +1210,9 @@ func expandCreateRule(cfg []interface{}) *awstypes.CreateRule {
 		createRule.CronExpression = aws.String(v)
 		createRule.IntervalUnit = "" // sets interval unit to empty string so that all fields related to interval are ignored
 	}
-
+	if v, ok := c["scripts"]; ok {
+		createRule.Scripts = expandScripts(v.([]interface{}))
+	}
 	return createRule
 }
 
@@ -1234,6 +1234,10 @@ func flattenCreateRule(createRule *awstypes.CreateRule) []map[string]interface{}
 
 	if createRule.CronExpression != nil {
 		result["cron_expression"] = aws.ToString(createRule.CronExpression)
+	}
+
+	if createRule.Scripts != nil {
+		result["scripts"] = flattenScripts(createRule.Scripts)
 	}
 
 	return []map[string]interface{}{result}
@@ -1435,4 +1439,51 @@ func flattenParameters(parameters *awstypes.Parameters) []map[string]interface{}
 	}
 
 	return []map[string]interface{}{result}
+}
+
+func expandScripts(cfg []interface{}) []awstypes.Script {
+
+	scripts := make([]awstypes.Script, len(cfg))
+	for i, c := range cfg {
+		m := c.(map[string]interface{})
+		script := awstypes.Script{}
+		if v, ok := m["execute_operation_on_script_failure"].(bool); ok {
+			script.ExecuteOperationOnScriptFailure = aws.Bool(v)
+		}
+		if v, ok := m["execution_handler"].(string); ok {
+			script.ExecutionHandler = aws.String(v)
+		}
+		if v, ok := m["execution_handler_service"].(string); ok && v != "" {
+			script.ExecutionHandlerService = awstypes.ExecutionHandlerServiceValues(v)
+		}
+		if v, ok := m["execution_timeout"].(int); ok && v > 0 {
+			script.ExecutionTimeout = aws.Int32(int32(v))
+		}
+		if v, ok := m["maximum_retry_count"].(int); ok && v > 0 {
+			script.MaximumRetryCount = aws.Int32(int32(v))
+		}
+		if v, ok := m["stages"].([]interface{}); ok && len(v) > 0 {
+			script.Stages = flex.ExpandStringyValueList[awstypes.StageValues](v)
+		}
+		scripts[i] = script
+	}
+
+	return scripts
+}
+
+func flattenScripts(scripts []awstypes.Script) []map[string]interface{} {
+	result := make([]map[string]interface{}, len(scripts))
+	for i, s := range scripts {
+		m := make(map[string]interface{})
+		m["execute_operation_on_script_failure"] = aws.ToBool(s.ExecuteOperationOnScriptFailure)
+		m["execution_handler"] = aws.ToString(s.ExecutionHandler)
+		m["execution_handler_service"] = string(s.ExecutionHandlerService)
+		m["execution_timeout"] = aws.ToInt32(s.ExecutionTimeout)
+		m["maximum_retry_count"] = aws.ToInt32(s.MaximumRetryCount)
+		m["stages"] = flex.FlattenStringyValueList(s.Stages)
+
+		result[i] = m
+	}
+
+	return result
 }
