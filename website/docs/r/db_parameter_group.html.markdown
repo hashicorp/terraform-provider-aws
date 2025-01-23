@@ -54,8 +54,8 @@ name than the existing one. This can be achieved by setting `name_prefix` instea
 
 ```terraform
 resource "aws_db_parameter_group" "example" {
-  name_prefix   = "my-pg"
-  family        = "postgres13"
+  name_prefix = "my-pg"
+  family      = "postgres13"
 
   parameter {
     name  = "log_connections"
