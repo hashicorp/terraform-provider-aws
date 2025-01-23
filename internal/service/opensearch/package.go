@@ -70,6 +70,10 @@ func resourcePackage() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"source_version": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
