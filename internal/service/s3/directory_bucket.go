@@ -78,8 +78,13 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				CustomType:    dataRedundancyType,
 				Optional:      true,
 				Computed:      true,
-				Default:       dataRedundancyType.AttributeDefault(awstypes.DataRedundancySingleAvailabilityZone),
 				PlanModifiers: modifiers.ApplyDataRedundancyPlanModifier(),
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						string(awstypes.DataRedundancySingleAvailabilityZone),
+						string(awstypes.DataRedundancySingleLocalZone),
+					),
+				},
 			},
 			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
@@ -94,12 +99,6 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				Default:    bucketTypeType.AttributeDefault(awstypes.BucketTypeDirectory),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(
-						string(awstypes.DataRedundancySingleAvailabilityZone),
-						string(awstypes.DataRedundancySingleLocalZone),
-					),
 				},
 			},
 		},
@@ -167,6 +166,16 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 		dataRedundancy = awstypes.DataRedundancySingleAvailabilityZone
 	}
 
+	// Should pass the DR value from terraform to S3, if the DR value mismatches with ZoneType
+	// S3 Bucket creation should be throwing an error
+	if ((locationType == awstypes.LocationTypeLocalZone) ||
+		(locationType == awstypes.LocationTypeAvailabilityZone)) &&
+		((data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleAvailabilityZone) ||
+			(data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleLocalZone)) {
+		dataRedundancy = data.DataRedundancy.ValueEnum()
+	}
+
+	data.DataRedundancy = fwtypes.StringEnumValue(dataRedundancy)
 	conn := r.Meta().S3ExpressClient(ctx)
 
 	input := &s3.CreateBucketInput{
@@ -228,24 +237,31 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	locationInfoData, diags := data.Location.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	locationInfoData, _ := data.Location.ToPtr(ctx)
 
-	var locationType awstypes.LocationType
-	if locationInfoData.Type.IsNull() || locationInfoData.Type.ValueEnum() == "" {
-		locationType = awstypes.LocationTypeAvailabilityZone
-	} else {
-		locationType = locationInfoData.Type.ValueEnum()
-	}
+	var locationType = awstypes.LocationTypeAvailabilityZone
+	var dataRedundancy = awstypes.DataRedundancySingleAvailabilityZone
+	if locationInfoData != nil {
 
-	var dataRedundancy awstypes.DataRedundancy
-	if locationType == awstypes.LocationTypeLocalZone {
-		dataRedundancy = awstypes.DataRedundancySingleLocalZone
-	} else {
-		dataRedundancy = awstypes.DataRedundancySingleAvailabilityZone
+		if locationInfoData.Type.IsNull() || locationInfoData.Type.ValueEnum() == "" {
+			locationType = awstypes.LocationTypeAvailabilityZone
+		} else {
+			locationType = locationInfoData.Type.ValueEnum()
+		}
+
+		if locationType == awstypes.LocationTypeLocalZone {
+			dataRedundancy = awstypes.DataRedundancySingleLocalZone
+		} else {
+			dataRedundancy = awstypes.DataRedundancySingleAvailabilityZone
+		}
+
+		if ((locationType == awstypes.LocationTypeLocalZone) ||
+			(locationType == awstypes.LocationTypeAvailabilityZone)) &&
+			(!data.DataRedundancy.IsNull() && (data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleAvailabilityZone) ||
+				(data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleLocalZone)) {
+			dataRedundancy = data.DataRedundancy.ValueEnum()
+		}
+
 	}
 
 	// Set attributes for import.

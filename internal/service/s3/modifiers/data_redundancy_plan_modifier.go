@@ -10,17 +10,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3/models"
 )
 
-type dataRedundancyPlanModifier struct{}
+type DataRedundancyPlanModifier struct{}
 
-func (d dataRedundancyPlanModifier) Description(ctx context.Context) string {
+func (d DataRedundancyPlanModifier) Description(ctx context.Context) string {
 	return "Sets default value for data_redundancy based on location type."
 }
 
-func (d dataRedundancyPlanModifier) MarkdownDescription(ctx context.Context) string {
+func (d DataRedundancyPlanModifier) MarkdownDescription(ctx context.Context) string {
 	return "Sets default value for `data_redundancy` based on the `location` type."
 }
 
-func (d dataRedundancyPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+func (d DataRedundancyPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
 	if !req.ConfigValue.IsNull() {
 		return
 	}
@@ -63,6 +63,6 @@ func (d dataRedundancyPlanModifier) PlanModifyString(ctx context.Context, req pl
 
 func ApplyDataRedundancyPlanModifier() []planmodifier.String {
 	return []planmodifier.String{
-		dataRedundancyPlanModifier{},
+		DataRedundancyPlanModifier{},
 	}
 }

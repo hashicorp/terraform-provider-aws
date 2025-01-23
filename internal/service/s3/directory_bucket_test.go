@@ -6,7 +6,6 @@ package s3_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -48,14 +47,6 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-			{
-				Config: testAccDirectoryBucketConfig_localZone(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_redundancy", "SingleLocalZone"),
-					resource.TestCheckResourceAttr(resourceName, "location.0.type", "LocalZone"),
-				),
 			},
 		},
 	})
@@ -221,7 +212,73 @@ resource "aws_s3_directory_bucket" "test" {
 `)
 }
 
-func TestAccS3DirectoryBucket_localZoneLocationType(t *testing.T) {
+func TestAccS3DirectoryBucket_dataRedundancyValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDirectoryBucketConfig_invalidDataRedundancy(rName, "InvalidRedundancy"),
+				ExpectError: regexache.MustCompile(`Invalid String Enum Value`),
+			},
+		},
+	})
+}
+
+func TestAccS3DirectoryBucket_dataRedundancyEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDirectoryBucketConfig_invalidDataRedundancy(rName, ""),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Value Match`),
+			},
+		},
+	})
+}
+
+func testAccDirectoryBucketConfig_invalidDataRedundancy(rName string, dataRedundancy string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+data_redundancy = "%s"
+  location {
+    name = local.location_name
+  }
+}
+`, dataRedundancy))
+}
+
+func TestAccS3DirectoryBucket_LocationTypeValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDirectoryBucketConfig_withLocationType(rName, "Invalid Type"),
+				ExpectError: regexache.MustCompile(`Invalid String Enum Value`),
+			},
+		},
+	})
+}
+
+func TestAccS3DirectoryBucket_DataRedundancyPlanModifier_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_directory_bucket.test"
@@ -233,52 +290,45 @@ func TestAccS3DirectoryBucket_localZoneLocationType(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_localZone(rName),
+				Config: testAccDirectoryBucketConfig_withLocationType(rName, "AvailabilityZone"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_redundancy", "SingleLocalZone"),
+					resource.TestCheckResourceAttr(resourceName, "data_redundancy", "SingleAvailabilityZone"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "location.0.type", "LocalZone"),
+					resource.TestCheckResourceAttrSet(resourceName, "location.0.name"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.type", "AvailabilityZone"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDirectoryBucketConfig_localZone(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
-resource "aws_s3_directory_bucket" "test" {
-  bucket = local.bucket
-
-  location {
-    name = "apne1-az2" // Example LocalZone
-    type = "LocalZone"
-  }
-}
-`)
-}
-
-func TestAccS3DirectoryBucket_invalidLocationType(t *testing.T) {
+func TestAccS3DirectoryBucket_LocationTypeValidation_Unexpected(t *testing.T) {
 	ctx := acctest.Context(t)
-	invalidConfig := `
-resource "aws_s3_directory_bucket" "test" {
-  bucket = "invalid-bucket"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-  location {
-    name = "invalid-zone"
-    type = "InvalidLocationType"
-  }
-}
-`
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      invalidConfig,
-				ExpectError: regexp.MustCompile("expected location.type to be one of .*"),
+				Config:      testAccDirectoryBucketConfig_withLocationType(rName, ""),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Value Match`),
 			},
 		},
 	})
+}
+
+func testAccDirectoryBucketConfig_withLocationType(rName string, locationType string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+	type = "%s"
+  }
+}
+`, locationType))
 }
