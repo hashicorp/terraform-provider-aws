@@ -441,6 +441,10 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
 resource "aws_cloudwatch_log_delivery" "test" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
+
+  s3_delivery_configuration {
+    suffix_path = "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
+  }
 }
 `, rName))
 }
