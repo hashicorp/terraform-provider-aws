@@ -237,7 +237,7 @@ func (r *resourceServiceNetworkResourceAssociation) Delete(ctx context.Context, 
 }
 
 func (r *resourceServiceNetworkResourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceServiceNetworkResourceAssociation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
