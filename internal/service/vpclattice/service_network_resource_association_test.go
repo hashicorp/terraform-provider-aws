@@ -48,11 +48,11 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_basic(t *testing.T) {
 				Config: testAccServiceNetworkResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkResourceAssociationExists(ctx, resourceName, &servicenetworkresourceassociation),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_identifier", resourceConfigurationName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_network_identifier", resourceServiceNetworkName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_identifier", resourceConfigurationName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_identifier", resourceServiceNetworkName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_entry.0.domain_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_entry.0.hosted_zone_id"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`servicenetworkresourceassociation/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`servicenetworkresourceassociation/+.`)),
 				),
 			},
 			{

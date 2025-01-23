@@ -61,7 +61,7 @@ func (r *resourceServiceNetworkResourceAssociation) Metadata(_ context.Context, 
 func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"dns_entry": schema.ListAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.List{
@@ -72,7 +72,7 @@ func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, 
 					AttrTypes: fwtypes.AttributeTypesMust[dnsEntry](ctx),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"resource_configuration_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -89,7 +89,7 @@ func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, 
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
