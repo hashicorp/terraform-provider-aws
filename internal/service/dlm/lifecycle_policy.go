@@ -160,6 +160,33 @@ func resourceLifecyclePolicy() *schema.Resource {
 								return false
 							},
 						},
+						"exclusions": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MaxItems:      1,
+							RequiredWith:  []string{"default_policy"},
+							ConflictsWith: []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"exclude_boot_volumes": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"exclude_tags": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"exclude_volume_types": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 6,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
 						"extend_deletion": {
 							Type:          schema.TypeBool,
 							Optional:      true,
@@ -800,6 +827,9 @@ func expandPolicyDetails(cfg []interface{}, defaultPolicyValue string) *awstypes
 		if v, ok := m["create_interval"].(int); ok {
 			policyDetails.CreateInterval = aws.Int32(int32(v))
 		}
+		if v, ok := m["exclusions"].([]interface{}); ok && len(v) > 0 {
+			policyDetails.Exclusions = expandExclusions(v)
+		}
 		if v, ok := m["extend_deletion"].(bool); ok {
 			policyDetails.ExtendDeletion = aws.Bool(v)
 		}
@@ -844,6 +874,7 @@ func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]in
 	result["resource_locations"] = flex.FlattenStringyValueList(policyDetails.ResourceLocations)
 	result[names.AttrAction] = flattenActions(policyDetails.Actions)
 	result["event_source"] = flattenEventSource(policyDetails.EventSource)
+	result["exclusions"] = flattenExclusions(policyDetails.Exclusions)
 	result[names.AttrSchedule] = flattenSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenTags(policyDetails.TargetTags)
 	result["policy_type"] = string(policyDetails.PolicyType)
@@ -1607,6 +1638,39 @@ func flattenRetentionArchiveTier(tier *awstypes.RetentionArchiveTier) []map[stri
 	result["count"] = aws.ToInt32(tier.Count)
 	result[names.AttrInterval] = aws.ToInt32(tier.Interval)
 	result["interval_unit"] = string(tier.IntervalUnit)
+
+	return []map[string]interface{}{result}
+}
+
+func expandExclusions(cfg []interface{}) *awstypes.Exclusions {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+	m := cfg[0].(map[string]interface{})
+	exclusions := &awstypes.Exclusions{}
+
+	if v, ok := m["exclude_boot_volumes"].(bool); ok {
+		exclusions.ExcludeBootVolumes = aws.Bool(v)
+	}
+	if v, ok := m["exclude_tags"].(map[string]interface{}); ok {
+		exclusions.ExcludeTags = expandTags(v)
+	}
+	if v, ok := m["exclude_volume_types"].([]interface{}); ok && len(v) > 0 {
+		exclusions.ExcludeVolumeTypes = flex.ExpandStringValueList(v)
+	}
+
+	return exclusions
+}
+
+func flattenExclusions(exclusions *awstypes.Exclusions) []map[string]interface{} {
+	if exclusions == nil {
+		return []map[string]interface{}{}
+	}
+
+	result := make(map[string]interface{})
+	result["exclude_boot_volumes"] = aws.ToBool(exclusions.ExcludeBootVolumes)
+	result["exclude_tags"] = flattenTags(exclusions.ExcludeTags)
+	result["exclude_volume_types"] = flex.FlattenStringValueList(exclusions.ExcludeVolumeTypes)
 
 	return []map[string]interface{}{result}
 }

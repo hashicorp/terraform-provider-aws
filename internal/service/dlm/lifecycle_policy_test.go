@@ -191,6 +191,7 @@ func TestAccDLMLifecyclePolicy_scriptsSSMDocument(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execute_operation_on_script_failure", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execution_timeout", "60"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.maximum_retry_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.stages.0", "PRE"),
 				),
 			},
 			{
@@ -343,6 +344,49 @@ func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_language", "SIMPLIFIED"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"default_policy"},
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_defaultPolicyExclusions(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_defaultPolicyExclusions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "default_policy", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.copy_tags", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.create_interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.extend_deletion", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_type", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.retain_interval", "7"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_language", "SIMPLIFIED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusions.0.exclude_boot_volumes", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusions.0.exclude_tags.test", "exclude"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusions.0.exclude_volume_types.0", "gp2"),
 				),
 			},
 			{
@@ -809,6 +853,38 @@ resource "aws_dlm_lifecycle_policy" "test" {
     create_interval = 5
     resource_type   = "VOLUME"
     policy_language = "SIMPLIFIED"
+
+	exclusions {
+	  exclude_boot_volumes = false
+	  exclude_tags = {
+	     test = "exclude"
+      }
+	  exclude_volume_types = ["gp2"]
+	}
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_defaultPolicyExclusions(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+  default_policy     = "VOLUME"
+
+  policy_details {
+    create_interval = 5
+    resource_type   = "VOLUME"
+    policy_language = "SIMPLIFIED"
+
+	exclusions {
+	  exclude_boot_volumes = false
+	  exclude_tags = {
+	     test = "exclude"
+      }
+	  exclude_volume_types = ["gp2"]
+	}
   }
 }
 `)

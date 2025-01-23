@@ -232,6 +232,7 @@ This resource supports the following arguments:
 * `action` - (Optional) The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`action` configuration](#action-arguments) block.
 * `copy_tags` - (Optional, Default policies only) Indicates whether the policy should copy tags from the source resource to the snapshot or AMI. Default value is `false`.
 * `create_interval` - (Optional, Default policies only) How often the policy should run and create snapshots or AMIs. valid values range from `1` to `7`. Default value is `1`.
+* `exclusions` - (Optional, Default policies only) Specifies exclusion parameters for volumes or instances for which you do not want to create snapshots or AMIs.  See the [`exclusions` configuration](#exclusions-arguments) block.
 * `extend_deletion` - (Optional, Default policies only) snapshot or AMI retention behavior for the policy if the source volume or instance is deleted, or if the policy enters the error, disabled, or deleted state. Default value is `false`.
 * `retain_interval` - (Optional, Default policies only) Specifies how long the policy should retain snapshots or AMIs before deleting them. valid values range from `2` to `14`. Default value is `7`.
 * `event_source` - (Optional) The event that triggers the event-based policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`event_source` configuration](#event-source-arguments) block.
@@ -272,6 +273,12 @@ This resource supports the following arguments:
 * `description_regex` - (Required) The snapshot description that can trigger the policy. The description pattern is specified using a regular expression. The policy runs only if a snapshot with a description that matches the specified pattern is shared with your account.
 * `event_type` - (Required) The type of event. Currently, only `shareSnapshot` events are supported.
 * `snapshot_owner` - (Required) The IDs of the AWS accounts that can trigger policy by sharing snapshots with your account. The policy only runs if one of the specified AWS accounts shares a snapshot with your account.
+
+#### Exclusions arguments
+
+* `exclude_boot_volumes` - (Optional) Indicates whether to exclude volumes that are attached to instances as the boot volume. To exclude boot volumes, specify `true`.
+* `exclude_tags` - (Optional) Map specifies whether to exclude volumes that have specific tags.
+* `exclude_volume_types` - (Optional) List specifies the volume types to exclude.
 
 #### Parameters arguments
 
@@ -364,6 +371,8 @@ This resource supports the following arguments:
 * `execution_timeout` - (Optional) Specifies a timeout period, in seconds, after which Amazon Data Lifecycle Manager fails the script run attempt if it has not completed. In case automating VSS Backups, omit this parameter. The default is `10`.
 
 * `maximum_retry_count` - (Optional) Specifies the number of times Amazon Data Lifecycle Manager should retry scripts that fail. Must be an integer between `0` and `3`. The default is `0`.
+
+* `stages` - (Optional) List to indicate which scripts Amazon Data Lifecycle Manager should run on target instances. Pre scripts run before Amazon Data Lifecycle Manager initiates snapshot creation. Post scripts run after Amazon Data Lifecycle Manager initiates snapshot creation. Valid values: `PRE` and `POST`. The default is `PRE` and `POST`
 
 #### Retention Archive Tier Arguments
 
