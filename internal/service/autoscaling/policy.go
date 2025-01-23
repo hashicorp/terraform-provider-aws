@@ -109,6 +109,11 @@ func resourcePolicy() *schema.Resource {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 100),
 										},
+										"period": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntInSlice([]int{10, 30, 60}),
+										},
 										names.AttrUnit: {
 											Type:     schema.TypeString,
 											Optional: true,
@@ -435,6 +440,11 @@ func resourcePolicy() *schema.Resource {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 100),
+																},
+																"period": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntInSlice([]int{10, 30, 60}),
 																},
 																names.AttrUnit: {
 																	Type:     schema.TypeString,
@@ -862,6 +872,9 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 			if v, ok := metricStatSpec[names.AttrUnit]; ok && len(v.(string)) > 0 {
 				metricStat.Unit = aws.String(v.(string))
 			}
+			if v, ok := metricSpec["period"]; ok {
+				metricStat.Period = aws.Int32(int32(v.(int)))
+			}
 			metricDataQuery.MetricStat = metricStat
 		}
 		if val, ok := metricDataQueryFlat[names.AttrExpression]; ok && val.(string) != "" {
@@ -1119,6 +1132,9 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []awstypes.TargetT
 			metricSpec[names.AttrNamespace] = aws.ToString(rawMetric.Namespace)
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
 			metricStatSpec["stat"] = aws.ToString(rawMetricStat.Stat)
+			if rawMetricStat.Period != nil {
+				metricStatSpec["period"] = aws.ToInt32(rawMetricStat.Period)
+			}
 			if rawMetricStat.Unit != nil {
 				metricStatSpec[names.AttrUnit] = aws.ToString(rawMetricStat.Unit)
 			}

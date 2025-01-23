@@ -974,6 +974,7 @@ resource "aws_autoscaling_policy" "test" {
           }
           unit = "Percent"
           stat = "Sum"
+          period = 10
         }
         return_data = false
       }
