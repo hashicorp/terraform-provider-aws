@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
@@ -127,6 +128,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotevents"
@@ -288,6 +290,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bcmdataexports.ServicePackage(ctx),
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
+		billing.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
 		chatbot.ServicePackage(ctx),
@@ -380,6 +383,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		inspector.ServicePackage(ctx),
 		inspector2.ServicePackage(ctx),
 		internetmonitor.ServicePackage(ctx),
+		invoicing.ServicePackage(ctx),
 		iot.ServicePackage(ctx),
 		iotanalytics.ServicePackage(ctx),
 		iotevents.ServicePackage(ctx),

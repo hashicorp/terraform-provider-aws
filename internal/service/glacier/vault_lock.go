@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glacier_vault_lock")
+// @SDKResource("aws_glacier_vault_lock", name="Vault Lock")
 func resourceVaultLock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultLockCreate,

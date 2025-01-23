@@ -226,6 +226,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// billing
+
+				"billing": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// budgets
 
 				"budgets": schema.StringAttribute{
@@ -976,6 +983,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// internetmonitor
 
 				"internetmonitor": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// invoicing
+
+				"invoicing": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

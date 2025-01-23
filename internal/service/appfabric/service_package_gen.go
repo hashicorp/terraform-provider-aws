@@ -21,33 +21,38 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAppAuthorizationConnectionResource,
-			Name:    "App Authorization Connection",
-		},
-		{
-			Factory: newAppAuthorizationResource,
-			Name:    "App Authorization",
+			Factory:  newAppAuthorizationResource,
+			TypeName: "aws_appfabric_app_authorization",
+			Name:     "App Authorization",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newAppBundleResource,
-			Name:    "App Bundle",
+			Factory:  newAppAuthorizationConnectionResource,
+			TypeName: "aws_appfabric_app_authorization_connection",
+			Name:     "App Authorization Connection",
+		},
+		{
+			Factory:  newAppBundleResource,
+			TypeName: "aws_appfabric_app_bundle",
+			Name:     "App Bundle",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory: newIngestionDestinationResource,
-			Name:    "Ingestion Destination",
+			Factory:  newIngestionResource,
+			TypeName: "aws_appfabric_ingestion",
+			Name:     "Ingestion",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newIngestionResource,
-			Name:    "Ingestion",
+			Factory:  newIngestionDestinationResource,
+			TypeName: "aws_appfabric_ingestion_destination",
+			Name:     "Ingestion Destination",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

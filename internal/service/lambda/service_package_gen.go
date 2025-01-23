@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
 	return []*types.ServicePackageEphemeralResource{
 		{
-			Factory: newEphemeralInvocation,
-			Name:    "Invocation",
+			Factory:  newEphemeralInvocation,
+			TypeName: "aws_lambda_invocation",
+			Name:     "Invocation",
 		},
 	}
 }
@@ -30,12 +31,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceFunctionRecursionConfig,
-			Name:    "Function Recursion Config",
+			Factory:  newResourceFunctionRecursionConfig,
+			TypeName: "aws_lambda_function_recursion_config",
+			Name:     "Function Recursion Config",
 		},
 		{
-			Factory: newResourceRuntimeManagementConfig,
-			Name:    "Runtime Management Config",
+			Factory:  newResourceRuntimeManagementConfig,
+			TypeName: "aws_lambda_runtime_management_config",
+			Name:     "Runtime Management Config",
 		},
 	}
 }
@@ -45,6 +48,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceAlias,
 			TypeName: "aws_lambda_alias",
+			Name:     "Alias",
 		},
 		{
 			Factory:  dataSourceCodeSigningConfig,

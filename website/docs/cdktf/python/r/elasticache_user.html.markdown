@@ -90,7 +90,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `access_string` - (Required) Access permissions string used for this user. See [Specifying Permissions Using an Access String](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.RBAC.html#Access-string) for more details.
-* `engine` - (Required) The current supported value is `REDIS`.
+* `engine` - (Required) The current supported values are `REDIS`, `VALKEY`.
 * `user_id` - (Required) The ID of the user.
 * `user_name` - (Required) The username of the user.
 
@@ -146,4 +146,4 @@ Using `terraform import`, import ElastiCache users using the `user_id`. For exam
 % terraform import aws_elasticache_user.my_user userId1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-87b0ec5515f9f28ca247cfa029873c8c947e12874fa62d10b3b525c5e12add62 -->
+<!-- cache-key: cdktf-0.20.8 input-feee5459f755de2c1b960e96f1cab1eff6d80cd3a3b572cad808a7d31fb9009f -->

@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sqs_queue")
+// @SDKDataSource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="url")
 func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{

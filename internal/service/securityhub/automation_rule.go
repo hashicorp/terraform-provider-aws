@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Automation Rule")
+// @FrameworkResource("aws_securityhub_automation_rule", name="Automation Rule")
 // @Tags(identifierAttribute="arn")
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &automationRuleResource{}, nil

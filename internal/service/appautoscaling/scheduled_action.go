@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appautoscaling_scheduled_action", namae="Scheduled Action")
+// @SDKResource("aws_appautoscaling_scheduled_action", name="Scheduled Action")
 func resourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduledActionPut,

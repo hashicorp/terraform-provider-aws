@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lakeformation_permissions")
+// @SDKResource("aws_lakeformation_permissions", name="Permissions")
 func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsCreate,

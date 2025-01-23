@@ -922,6 +922,34 @@ service "bcmdataexports" {
   brand                    = "AWS"
 }
 
+service "billing" {
+  sdk {
+    id = "Billing"
+  }
+
+  names {
+    provider_name_upper = "Billing"
+    human_friendly      = "Billing"
+  }
+
+  client {
+    skip_client_generate = true
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListBillingViews"
+    endpoint_region_override = "us-east-1"
+  }
+
+  resource_prefix {
+    correct = "aws_billing_"
+  }
+
+  provider_package_correct = "billing"
+  doc_prefix               = ["billing_"]
+  brand                    = "AWS"
+}
+
 service "billingconductor" {
   go_packages {
     v1_package = "billingconductor"
@@ -3321,6 +3349,29 @@ service "elb" {
 
   provider_package_correct = "elb"
   doc_prefix               = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
+}
+
+service "invoicing" {
+  sdk {
+    id = "Invoicing"
+  }
+
+  names {
+    provider_name_upper = "Invoicing"
+    human_friendly      = "Invoicing"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListInvoiceUnits"
+  }
+
+  resource_prefix {
+    correct = "aws_invoicing_"
+  }
+
+  provider_package_correct = "invoicing"
+  doc_prefix               = ["invoicing_"]
+  brand                    = "AWS"
 }
 
 service "mediaconnect" {

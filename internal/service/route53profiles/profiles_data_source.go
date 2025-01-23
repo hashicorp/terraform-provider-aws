@@ -16,7 +16,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @FrameworkDataSource(name="Profiles")
+// @FrameworkDataSource("aws_route53profiles_profiles", name="Profiles")
 func newDataSourceProfiles(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProfiles{}, nil
 }

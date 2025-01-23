@@ -39,18 +39,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceInvitationAccepter,
 			TypeName: "aws_detective_invitation_accepter",
+			Name:     "Invitation Accepter",
 		},
 		{
 			Factory:  ResourceMember,
 			TypeName: "aws_detective_member",
+			Name:     "Member",
 		},
 		{
 			Factory:  ResourceOrganizationAdminAccount,
 			TypeName: "aws_detective_organization_admin_account",
+			Name:     "Organization Admin Account",
 		},
 		{
 			Factory:  ResourceOrganizationConfiguration,
 			TypeName: "aws_detective_organization_configuration",
+			Name:     "Organization Configuration",
 		},
 	}
 }

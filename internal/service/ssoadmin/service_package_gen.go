@@ -15,24 +15,29 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceApplication,
-			Name:    "Application",
+			Factory:  newDataSourceApplication,
+			TypeName: "aws_ssoadmin_application",
+			Name:     "Application",
 		},
 		{
-			Factory: newDataSourceApplicationAssignments,
-			Name:    "Application Assignments",
+			Factory:  newDataSourceApplicationAssignments,
+			TypeName: "aws_ssoadmin_application_assignments",
+			Name:     "Application Assignments",
 		},
 		{
-			Factory: newDataSourceApplicationProviders,
-			Name:    "Application Providers",
+			Factory:  newDataSourceApplicationProviders,
+			TypeName: "aws_ssoadmin_application_providers",
+			Name:     "Application Providers",
 		},
 		{
-			Factory: newDataSourcePrincipalApplicationAssignments,
-			Name:    "Principal Application Assignments",
+			Factory:  newPermissionSetsDataSource,
+			TypeName: "aws_ssoadmin_permission_sets",
+			Name:     "Permission Sets",
 		},
 		{
-			Factory: newPermissionSetsDataSource,
-			Name:    "Permission Sets",
+			Factory:  newDataSourcePrincipalApplicationAssignments,
+			TypeName: "aws_ssoadmin_principal_application_assignments",
+			Name:     "Principal Application Assignments",
 		},
 	}
 }
@@ -40,26 +45,31 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceApplication,
-			Name:    "Application",
-			Tags:    &types.ServicePackageResourceTags{},
+			Factory:  newResourceApplication,
+			TypeName: "aws_ssoadmin_application",
+			Name:     "Application",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory: newResourceApplicationAccessScope,
-			Name:    "Application Access Scope",
+			Factory:  newResourceApplicationAccessScope,
+			TypeName: "aws_ssoadmin_application_access_scope",
+			Name:     "Application Access Scope",
 		},
 		{
-			Factory: newResourceApplicationAssignment,
-			Name:    "Application Assignment",
+			Factory:  newResourceApplicationAssignment,
+			TypeName: "aws_ssoadmin_application_assignment",
+			Name:     "Application Assignment",
 		},
 		{
-			Factory: newResourceApplicationAssignmentConfiguration,
-			Name:    "Application Assignment Configuration",
+			Factory:  newResourceApplicationAssignmentConfiguration,
+			TypeName: "aws_ssoadmin_application_assignment_configuration",
+			Name:     "Application Assignment Configuration",
 		},
 		{
-			Factory: newResourceTrustedTokenIssuer,
-			Name:    "Trusted Token Issuer",
-			Tags:    &types.ServicePackageResourceTags{},
+			Factory:  newResourceTrustedTokenIssuer,
+			TypeName: "aws_ssoadmin_trusted_token_issuer",
+			Name:     "Trusted Token Issuer",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -69,10 +79,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceInstances,
 			TypeName: "aws_ssoadmin_instances",
+			Name:     "Instances",
 		},
 		{
 			Factory:  DataSourcePermissionSet,
 			TypeName: "aws_ssoadmin_permission_set",
+			Name:     "Permission Set",
 		},
 	}
 }
@@ -82,18 +94,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccountAssignment,
 			TypeName: "aws_ssoadmin_account_assignment",
+			Name:     "Account Assignment",
 		},
 		{
 			Factory:  ResourceCustomerManagedPolicyAttachment,
 			TypeName: "aws_ssoadmin_customer_managed_policy_attachment",
+			Name:     "Customer Managed Policy Attachment",
 		},
 		{
 			Factory:  ResourceAccessControlAttributes,
 			TypeName: "aws_ssoadmin_instance_access_control_attributes",
+			Name:     "Instance Access Control Attributes",
 		},
 		{
 			Factory:  ResourceManagedPolicyAttachment,
 			TypeName: "aws_ssoadmin_managed_policy_attachment",
+			Name:     "Managed Policy Attachment",
 		},
 		{
 			Factory:  ResourcePermissionSet,
@@ -104,10 +120,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePermissionSetInlinePolicy,
 			TypeName: "aws_ssoadmin_permission_set_inline_policy",
+			Name:     "Permission Set Inline Policy",
 		},
 		{
 			Factory:  ResourcePermissionsBoundaryAttachment,
 			TypeName: "aws_ssoadmin_permissions_boundary_attachment",
+			Name:     "Permissions Boundary Attachment",
 		},
 	}
 }

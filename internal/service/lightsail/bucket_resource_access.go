@@ -26,7 +26,7 @@ const (
 	BucketResourceAccessIdPartsCount = 2
 )
 
-// @SDKResource("aws_lightsail_bucket_resource_access")
+// @SDKResource("aws_lightsail_bucket_resource_access", name="Bucket Resource Access")
 func ResourceBucketResourceAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketResourceAccessCreate,

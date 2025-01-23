@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3control_object_lambda_access_point")
+// @SDKResource("aws_s3control_object_lambda_access_point", name="Object Lambda Access Point")
 func resourceObjectLambdaAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectLambdaAccessPointCreate,

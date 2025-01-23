@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Delegation Signer Record")
+// @FrameworkResource("aws_route53domains_delegation_signer_record", name="Delegation Signer Record")
 func newDelegationSignerRecordResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &delegationSignerRecordResource{}
 

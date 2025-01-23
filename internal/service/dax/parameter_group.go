@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dax_parameter_group")
+// @SDKResource("aws_dax_parameter_group", name="Parameter Group")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,

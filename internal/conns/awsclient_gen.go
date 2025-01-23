@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	"github.com/aws/aws-sdk-go-v2/service/chime"
@@ -125,6 +126,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	"github.com/aws/aws-sdk-go-v2/service/iotanalytics"
 	"github.com/aws/aws-sdk-go-v2/service/iotevents"
@@ -365,6 +367,10 @@ func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock.Client {
 
 func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client {
 	return errs.Must(client[*bedrockagent.Client](ctx, c, names.BedrockAgent, make(map[string]any)))
+}
+
+func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
+	return errs.Must(client[*billing.Client](ctx, c, names.Billing, make(map[string]any)))
 }
 
 func (c *AWSClient) BudgetsClient(ctx context.Context) *budgets.Client {
@@ -741,6 +747,10 @@ func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2.Client {
 
 func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor.Client {
 	return errs.Must(client[*internetmonitor.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
+}
+
+func (c *AWSClient) InvoicingClient(ctx context.Context) *invoicing.Client {
+	return errs.Must(client[*invoicing.Client](ctx, c, names.Invoicing, make(map[string]any)))
 }
 
 func (c *AWSClient) IoTClient(ctx context.Context) *iot.Client {

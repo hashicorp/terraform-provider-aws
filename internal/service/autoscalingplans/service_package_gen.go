@@ -31,6 +31,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceScalingPlan,
 			TypeName: "aws_autoscalingplans_scaling_plan",
+			Name:     "Scaling Plan",
 		},
 	}
 }

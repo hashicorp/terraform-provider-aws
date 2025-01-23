@@ -337,7 +337,7 @@ func accountCleanup(ctx context.Context, t *testing.T) func() {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		input := &apigateway.UpdateAccountInput{
+		input := apigateway.UpdateAccountInput{
 			PatchOperations: []awstypes.PatchOperation{
 				{
 					Op:    awstypes.OpReplace,
@@ -347,7 +347,7 @@ func accountCleanup(ctx context.Context, t *testing.T) func() {
 			},
 		}
 
-		if _, err := conn.UpdateAccount(ctx, input); err != nil {
+		if _, err := conn.UpdateAccount(ctx, &input); err != nil {
 			t.Errorf("API Gateway Account cleanup: %s", err)
 		}
 	}

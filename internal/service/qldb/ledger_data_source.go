@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_qldb_ledger")
+// @SDKDataSource("aws_qldb_ledger", name="Ledger")
 func dataSourceLedger() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLedgerRead,
