@@ -97,6 +97,30 @@ resource "aws_dlm_lifecycle_policy" "example" {
 }
 ```
 
+### Example Default Policy
+
+```
+resource "aws_dlm_lifecycle_policy" "example" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.example.arn
+  default_policy     = "VOLUME"
+
+  policy_details {
+    create_interval = 5
+    resource_type   = "VOLUME"
+    policy_language = "SIMPLIFIED"
+
+    exclusions {
+      exclude_boot_volumes = false
+      exclude_tags = {
+        test = "exclude"
+      }
+      exclude_volume_types = ["gp2"]
+    }
+  }
+}
+```
+
 ### Example Cross-Region Snapshot Copy Usage
 
 ```terraform
@@ -213,6 +237,49 @@ data "aws_iam_policy" "example" {
 resource "aws_iam_role_policy_attachment" "example" {
   role       = aws_iam_role.example.id
   policy_arn = data.aws_iam_policy.example.arn
+}
+```
+
+### Example Post/Pre Scripts
+
+```
+data "aws_iam_policy" "test" {
+  name = "AWSDataLifecycleManagerSSMFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "example" {
+  role       = aws_iam_role.test.id
+  policy_arn = data.aws_iam_policy.example.arn
+}
+
+resource "aws_dlm_lifecycle_policy" "example" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.example.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+
+    schedule {
+      name = "Windows VSS"
+
+      create_rule {
+        interval = 12
+        scripts {
+          execute_operation_on_script_failure = false
+          execution_handler                   = "AWS_VSS_BACKUP"
+          maximum_retry_count                 = 2
+        }
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tag1 = "Windows"
+    }
+  }
 }
 ```
 

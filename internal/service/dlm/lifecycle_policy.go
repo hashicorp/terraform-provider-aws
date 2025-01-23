@@ -1519,7 +1519,6 @@ func flattenParameters(parameters *awstypes.Parameters) []map[string]interface{}
 }
 
 func expandScripts(cfg []interface{}) []awstypes.Script {
-
 	scripts := make([]awstypes.Script, len(cfg))
 	for i, c := range cfg {
 		m := c.(map[string]interface{})

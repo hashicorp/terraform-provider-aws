@@ -853,14 +853,6 @@ resource "aws_dlm_lifecycle_policy" "test" {
     create_interval = 5
     resource_type   = "VOLUME"
     policy_language = "SIMPLIFIED"
-
-	exclusions {
-	  exclude_boot_volumes = false
-	  exclude_tags = {
-	     test = "exclude"
-      }
-	  exclude_volume_types = ["gp2"]
-	}
   }
 }
 `)
@@ -878,13 +870,13 @@ resource "aws_dlm_lifecycle_policy" "test" {
     resource_type   = "VOLUME"
     policy_language = "SIMPLIFIED"
 
-	exclusions {
-	  exclude_boot_volumes = false
-	  exclude_tags = {
-	     test = "exclude"
+    exclusions {
+      exclude_boot_volumes = false
+      exclude_tags = {
+        test = "exclude"
       }
-	  exclude_volume_types = ["gp2"]
-	}
+      exclude_volume_types = ["gp2"]
+    }
   }
 }
 `)
@@ -1041,16 +1033,16 @@ resource "aws_dlm_lifecycle_policy" "test" {
     schedule {
       name = "tf-acc-basic"
 
-	  create_rule {
+      create_rule {
         cron_expression = "cron(5 14 3 * ? *)"
       }
 
-	  archive_rule {
-	    archive_retain_rule {
-		  retention_archive_tier {
-		 	 count = 10
-		  }
-		}
+      archive_rule {
+        archive_retain_rule {
+          retention_archive_tier {
+            count = 10
+          }
+        }
       }
 
       retain_rule {
@@ -1078,22 +1070,22 @@ resource "aws_dlm_lifecycle_policy" "test" {
     schedule {
       name = "tf-acc-basic"
 
-	  create_rule {
+      create_rule {
         cron_expression = "cron(5 14 3 * ? *)"
       }
 
-	  archive_rule {
-	    archive_retain_rule {
-		  retention_archive_tier {
-		 	 interval = 6
-			 interval_unit = "MONTHS"
-		  }
-		}
+      archive_rule {
+        archive_retain_rule {
+          retention_archive_tier {
+            interval      = 6
+            interval_unit = "MONTHS"
+          }
+        }
       }
 
       retain_rule {
-		interval = 12
-		interval_unit = "MONTHS"
+        interval      = 12
+        interval_unit = "MONTHS"
       }
     }
 
@@ -1127,12 +1119,12 @@ resource "aws_dlm_lifecycle_policy" "test" {
       name = "tf-acc-basic"
 
       create_rule {
-	    interval = 12
+        interval = 12
         scripts {
-		  execute_operation_on_script_failure = false
-		  execution_handler 				  = "AWS_VSS_BACKUP"
-		  maximum_retry_count				  = 3
-		}
+          execute_operation_on_script_failure = false
+          execution_handler                   = "AWS_VSS_BACKUP"
+          maximum_retry_count                 = 3
+        }
       }
 
       retain_rule {
@@ -1164,10 +1156,10 @@ resource "aws_ssm_document" "test" {
   document_type = "Command"
 
   tags = {
-  	DLMScriptsAccess = "true"
+    DLMScriptsAccess = "true"
   }
 
-  content =<<DOC
+  content = <<DOC
   {
     "schemaVersion": "2.2",
     "description": "SSM Document Template for Amazon Data Lifecycle Manager Pre/Post script feature",
@@ -1214,14 +1206,14 @@ resource "aws_dlm_lifecycle_policy" "test" {
       name = "tf-acc-basic"
 
       create_rule {
-	    interval = 12
+        interval = 12
         scripts {
-		  execute_operation_on_script_failure = false
-		  execution_handler 				  = aws_ssm_document.test.arn
-		  execution_timeout 				  = 60
-		  maximum_retry_count				  = 3
-		  stages 							  = ["PRE"]
-		}
+          execute_operation_on_script_failure = false
+          execution_handler                   = aws_ssm_document.test.arn
+          execution_timeout                   = 60
+          maximum_retry_count                 = 3
+          stages                              = ["PRE"]
+        }
       }
 
       retain_rule {
