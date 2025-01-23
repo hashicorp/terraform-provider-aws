@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -62,7 +63,10 @@ func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, 
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"dns_entry": schema.ListAttribute{
-				Computed:   true,
+				Computed: true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dnsEntry](ctx),
 				ElementType: types.ObjectType{
 					AttrTypes: fwtypes.AttributeTypesMust[dnsEntry](ctx),
@@ -186,6 +190,13 @@ func (r *resourceServiceNetworkResourceAssociation) Read(ctx context.Context, re
 }
 
 func (r *resourceServiceNetworkResourceAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan resourceServiceNetworkResourceAssociationModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceServiceNetworkResourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
