@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,7 +33,7 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_vpclattice_service_network_resource_association", name="Service Network Resource Association")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetServiceNetworkServiceAssociationOutput")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetServiceNetworkResourceAssociationOutput")
 func newResourceServiceNetworkResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceServiceNetworkResourceAssociation{}
 
@@ -60,7 +61,14 @@ func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
+			"dns_entry": schema.ListAttribute{
+				Computed:   true,
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dnsEntry](ctx),
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[dnsEntry](ctx),
+				},
+			},
+			"id": framework.IDAttribute(),
 			"resource_configuration_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -75,9 +83,6 @@ func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, 
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
-				Required: true,
-			},
 		},
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
@@ -128,12 +133,19 @@ func (r *resourceServiceNetworkResourceAssociation) Create(ctx context.Context, 
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitServiceNetworkResourceAssociationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	created, err := waitServiceNetworkResourceAssociationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkResourceAssociation, plan.ResourceConfigurationIdentifier.String(), err),
 			err.Error(),
 		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, created, &plan)...)
+	plan.ResourceConfigurationIdentifier = flex.StringToFramework(ctx, created.ResourceConfigurationId)
+	plan.ServiceNetworkIdentifier = flex.StringToFramework(ctx, created.ServiceNetworkId)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -163,6 +175,9 @@ func (r *resourceServiceNetworkResourceAssociation) Read(ctx context.Context, re
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	state.ResourceConfigurationIdentifier = flex.StringToFramework(ctx, out.ResourceConfigurationId)
+	state.ServiceNetworkIdentifier = flex.StringToFramework(ctx, out.ServiceNetworkId)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -218,7 +233,7 @@ func (r *resourceServiceNetworkResourceAssociation) ModifyPlan(ctx context.Conte
 	r.SetTagsAll(ctx, request, response)
 }
 
-func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
+func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive),
@@ -229,14 +244,14 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetServiceNetworkServiceAssociationOutput); ok {
+	if out, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
+func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive, awstypes.ServiceNetworkServiceAssociationStatusDeleteInProgress),
 		Target:  []string{},
@@ -245,7 +260,7 @@ func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpc
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetServiceNetworkServiceAssociationOutput); ok {
+	if out, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
 		return out, err
 	}
 
@@ -292,11 +307,17 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 }
 
 type resourceServiceNetworkResourceAssociationModel struct {
-	ARN                             types.String   `tfsdk:"arn"`
-	ID                              types.String   `tfsdk:"id"`
-	ResourceConfigurationIdentifier types.String   `tfsdk:"resource_configuration_identifier"`
-	ServiceNetworkIdentifier        types.String   `tfsdk:"service_network_identifier"`
-	Tags                            tftags.Map     `tfsdk:"tags"`
-	TagsAll                         tftags.Map     `tfsdk:"tags_all"`
-	Timeouts                        timeouts.Value `tfsdk:"timeouts"`
+	ARN                             types.String                              `tfsdk:"arn"`
+	ID                              types.String                              `tfsdk:"id"`
+	DnsEntry                        fwtypes.ListNestedObjectValueOf[dnsEntry] `tfsdk:"dns_entry"`
+	ResourceConfigurationIdentifier types.String                              `tfsdk:"resource_configuration_identifier"`
+	ServiceNetworkIdentifier        types.String                              `tfsdk:"service_network_identifier"`
+	Tags                            tftags.Map                                `tfsdk:"tags"`
+	TagsAll                         tftags.Map                                `tfsdk:"tags_all"`
+	Timeouts                        timeouts.Value                            `tfsdk:"timeouts"`
+}
+
+type dnsEntry struct {
+	DomainName   types.String `tfsdk:"domain_name"`
+	HostedZoneId types.String `tfsdk:"hosted_zone_id"`
 }

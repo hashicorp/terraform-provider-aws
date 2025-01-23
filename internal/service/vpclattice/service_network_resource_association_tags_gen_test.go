@@ -19,7 +19,7 @@ import (
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -201,7 +201,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -263,7 +263,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_null(t *testing.T) 
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -313,7 +313,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyMap(t *testing
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -393,7 +393,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_AddOnUpdate(t *test
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -483,7 +483,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnCreate(t
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -622,7 +622,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnUpdate_A
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -712,7 +712,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnUpdate_R
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -893,7 +893,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_provide
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1053,7 +1053,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nonOver
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1229,7 +1229,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_overlap
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1319,7 +1319,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_updateT
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1408,7 +1408,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_updateT
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1474,7 +1474,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_emptyRe
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1532,7 +1532,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_emptyPr
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1601,7 +1601,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nullOve
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1672,7 +1672,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nullNon
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1727,7 +1727,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnCreat
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1824,7 +1824,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnUpdat
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1911,7 +1911,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnUpdat
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2073,7 +2073,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_IgnoreTags_Overlap_
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v vpclattice.GetServiceNetworkServiceAssociationOutput
+	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

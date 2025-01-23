@@ -10,68 +10,17 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestServiceNetworkResourceAssociationExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfvpclattice.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestAccVPCLatticeServiceNetworkResourceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -79,9 +28,11 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var servicenetworkresourceassociation vpclattice.DescribeServiceNetworkResourceAssociationResponse
+	var servicenetworkresourceassociation vpclattice.GetServiceNetworkResourceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
+	resourceServiceNetworkName := "aws_vpclattice_service_network.test"
+	resourceConfigurationName := "aws_vpclattice_resource_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -97,22 +48,17 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_basic(t *testing.T) {
 				Config: testAccServiceNetworkResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkResourceAssociationExists(ctx, resourceName, &servicenetworkresourceassociation),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpclattice", regexache.MustCompile(`servicenetworkresourceassociation:+.`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_identifier", resourceConfigurationName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_identifier", resourceServiceNetworkName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_entry.0.domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_entry.0.hosted_zone_id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "vpc-lattice", regexache.MustCompile(`servicenetworkresourceassociation/+.`)),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -124,7 +70,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_disappears(t *testing.T)
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var servicenetworkresourceassociation vpclattice.DescribeServiceNetworkResourceAssociationResponse
+	var servicenetworkresourceassociation vpclattice.GetServiceNetworkResourceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
 
@@ -139,7 +85,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_disappears(t *testing.T)
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkResourceAssociationConfig_basic(rName, testAccServiceNetworkResourceAssociationVersionNewer),
+				Config: testAccServiceNetworkResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkResourceAssociationExists(ctx, resourceName, &servicenetworkresourceassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceServiceNetworkResourceAssociation, resourceName),
@@ -159,13 +105,12 @@ func testAccCheckServiceNetworkResourceAssociationDestroy(ctx context.Context) r
 				continue
 			}
 
-			
 			_, err := tfvpclattice.FindServiceNetworkResourceAssociationByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameServiceNetworkResourceAssociation, rs.Primary.ID, err)
+				return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameServiceNetworkResourceAssociation, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameServiceNetworkResourceAssociation, rs.Primary.ID, errors.New("not destroyed"))
@@ -175,7 +120,7 @@ func testAccCheckServiceNetworkResourceAssociationDestroy(ctx context.Context) r
 	}
 }
 
-func testAccCheckServiceNetworkResourceAssociationExists(ctx context.Context, name string, servicenetworkresourceassociation *vpclattice.DescribeServiceNetworkResourceAssociationResponse) resource.TestCheckFunc {
+func testAccCheckServiceNetworkResourceAssociationExists(ctx context.Context, name string, servicenetworkresourceassociation *vpclattice.GetServiceNetworkResourceAssociationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -199,54 +144,23 @@ func testAccCheckServiceNetworkResourceAssociationExists(ctx context.Context, na
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-
-	input := &vpclattice.ListServiceNetworkResourceAssociationsInput{}
-
-	_, err := conn.ListServiceNetworkResourceAssociations(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckServiceNetworkResourceAssociationNotRecreated(before, after *vpclattice.DescribeServiceNetworkResourceAssociationResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.ServiceNetworkResourceAssociationId), aws.ToString(after.ServiceNetworkResourceAssociationId); before != after {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingNotRecreated, tfvpclattice.ResNameServiceNetworkResourceAssociation, aws.ToString(before.ServiceNetworkResourceAssociationId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccServiceNetworkResourceAssociationConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
+func testAccServiceNetworkResourceAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccResourceConfigurationConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_service_network_resource_association" "test" {
-  service_network_resource_association_name             = %[1]q
-  engine_type             = "ActiveVPCLattice"
-  engine_version          = %[2]q
-  host_instance_type      = "vpclattice.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
+  service_network_identifier        = aws_vpclattice_service_network.test.id
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  tags = {
+    Name = %[1]q
   }
 }
-`, rName, version)
+
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
