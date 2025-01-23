@@ -202,6 +202,63 @@ func TestAccDLMLifecyclePolicy_scriptsSSMDocument(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_archiveRuleCount(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_archiveRuleCount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.archive_rule.0.archive_retain_rule.0.retention_archive_tier.0.count", "10"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_archiveRuleInterval(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_archiveRuleInterval(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.archive_rule.0.archive_retain_rule.0.retention_archive_tier.0.interval", "6"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.archive_rule.0.archive_retain_rule.0.retention_archive_tier.0.interval_unit", "MONTHS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
@@ -885,6 +942,82 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
       deprecate_rule {
         count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_archiveRuleCount(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = "tf-acc-basic"
+
+	  create_rule {
+        cron_expression = "cron(5 14 3 * ? *)"
+      }
+
+	  archive_rule {
+	    archive_retain_rule {
+		  retention_archive_tier {
+		 	 count = 10
+		  }
+		}
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_archiveRuleInterval(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = "tf-acc-basic"
+
+	  create_rule {
+        cron_expression = "cron(5 14 3 * ? *)"
+      }
+
+	  archive_rule {
+	    archive_retain_rule {
+		  retention_archive_tier {
+		 	 interval = 6
+			 interval_unit = "MONTHS"
+		  }
+		}
+      }
+
+      retain_rule {
+		interval = 12
+		interval_unit = "MONTHS"
       }
     }
 

@@ -280,6 +280,7 @@ This resource supports the following arguments:
 
 #### Schedule arguments
 
+* `archive_rule` - (Optional) Specifies a snapshot archiving rule for a schedule. See [`archive_rule`](#archive-rule-arguments) block.
 * `copy_tags` - (Optional) Copy all user-defined tags on a source volume to snapshots of the volume created by this policy.
 * `create_rule` - (Required) See the [`create_rule`](#create-rule-arguments) block. Max of 1 per schedule.
 * `cross_region_copy_rule` (Optional) - See the [`cross_region_copy_rule`](#cross-region-copy-rule-arguments) block. Max of 3 per schedule.
@@ -290,6 +291,14 @@ This resource supports the following arguments:
 * `share_rule` - (Required) See the [`share_rule`](#share-rule-arguments) block. Max of 1 per schedule.
 * `tags_to_add` - (Optional) A map of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
 * `variable_tags` - (Optional) A map of tag keys and variable values, where the values are determined when the policy is executed. Only `$(instance-id)` or `$(timestamp)` are valid values. Can only be used when `resource_types` is `INSTANCE`.
+
+#### Archive Rule Arguments
+
+* `archive_retain_rule` - (Required) Information about the retention period for the snapshot archiving rule. See the [`archive_retain_rule`](#archive-retain-rule-arguments) block.
+
+#### Archive Retain Rule Arguments
+
+* `retention_archive_tier` - (Required) Information about retention period in the Amazon EBS Snapshots Archive. See the [`retention_archive_tier`](#retention-archive-tier-arguments) block.
 
 #### Create Rule arguments
 
@@ -355,6 +364,12 @@ This resource supports the following arguments:
 * `execution_timeout` - (Optional) Specifies a timeout period, in seconds, after which Amazon Data Lifecycle Manager fails the script run attempt if it has not completed. In case automating VSS Backups, omit this parameter. The default is `10`.
 
 * `maximum_retry_count` - (Optional) Specifies the number of times Amazon Data Lifecycle Manager should retry scripts that fail. Must be an integer between `0` and `3`. The default is `0`.
+
+#### Retention Archive Tier Arguments
+
+* `count` - (Optional)The maximum number of snapshots to retain in the archive storage tier for each volume. Must be an integer between `1` and `1000`. Conflicts with `interval` and `interval_unit`.
+* `interval` - (Optional) Specifies the period of time to retain snapshots in the archive tier. After this period expires, the snapshot is permanently deleted. Conflicts with `count`. If set, `interval_unit` must also be set.
+* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 ## Attribute Reference
 

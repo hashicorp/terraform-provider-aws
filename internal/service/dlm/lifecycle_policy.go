@@ -218,7 +218,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 						},
 						"resource_types": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
@@ -287,6 +287,48 @@ func resourceLifecyclePolicy() *schema.Resource {
 							MaxItems: 4,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"archive_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"archive_retain_rule": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"retention_archive_tier": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"count": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntBetween(1, 1000),
+																		},
+																		names.AttrInterval: {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																		"interval_unit": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"copy_tags": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -824,6 +866,9 @@ func expandSchedules(cfg []interface{}) []awstypes.Schedule {
 	for i, c := range cfg {
 		schedule := awstypes.Schedule{}
 		m := c.(map[string]interface{})
+		if v, ok := m["archive_rule"].([]interface{}); ok && len(v) > 0 {
+			schedule.ArchiveRule = expandArchiveRule(v)
+		}
 		if v, ok := m["copy_tags"]; ok {
 			schedule.CopyTags = aws.Bool(v.(bool))
 		}
@@ -865,6 +910,7 @@ func flattenSchedules(schedules []awstypes.Schedule) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(schedules))
 	for i, s := range schedules {
 		m := make(map[string]interface{})
+		m["archive_rule"] = flattenArchiveRule(s.ArchiveRule)
 		m["copy_tags"] = aws.ToBool(s.CopyTags)
 		m["create_rule"] = flattenCreateRule(s.CreateRule)
 		m["cross_region_copy_rule"] = flattenCrossRegionCopyRules(s.CrossRegionCopyRules)
@@ -1486,4 +1532,81 @@ func flattenScripts(scripts []awstypes.Script) []map[string]interface{} {
 	}
 
 	return result
+}
+
+func expandArchiveRule(v []interface{}) *awstypes.ArchiveRule {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	m := v[0].(map[string]interface{})
+	return &awstypes.ArchiveRule{
+		RetainRule: expandArchiveRetainRule(m["archive_retain_rule"].([]interface{})),
+	}
+}
+
+func flattenArchiveRule(rule *awstypes.ArchiveRule) []map[string]interface{} {
+	if rule == nil {
+		return []map[string]interface{}{}
+	}
+
+	result := make(map[string]interface{})
+	result["archive_retain_rule"] = flattenArchiveRetainRule(rule.RetainRule)
+
+	return []map[string]interface{}{result}
+}
+
+func expandArchiveRetainRule(cfg []interface{}) *awstypes.ArchiveRetainRule {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+	m := cfg[0].(map[string]interface{})
+	return &awstypes.ArchiveRetainRule{
+		RetentionArchiveTier: expandRetentionArchiveTier(m["retention_archive_tier"].([]interface{})),
+	}
+}
+
+func flattenArchiveRetainRule(rule *awstypes.ArchiveRetainRule) []map[string]interface{} {
+	if rule == nil {
+		return []map[string]interface{}{}
+	}
+
+	result := make(map[string]interface{})
+	result["retention_archive_tier"] = flattenRetentionArchiveTier(rule.RetentionArchiveTier)
+
+	return []map[string]interface{}{result}
+}
+
+func expandRetentionArchiveTier(cfg []interface{}) *awstypes.RetentionArchiveTier {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+	m := cfg[0].(map[string]interface{})
+	retention_archive_tier := &awstypes.RetentionArchiveTier{}
+
+	if v, ok := m["count"].(int); ok && v > 0 {
+		retention_archive_tier.Count = aws.Int32(int32(v))
+	}
+
+	if v, ok := m[names.AttrInterval].(int); ok && v > 0 {
+		retention_archive_tier.Interval = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["interval_unit"].(string); ok && v != "" {
+		retention_archive_tier.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
+	}
+
+	return retention_archive_tier
+}
+
+func flattenRetentionArchiveTier(tier *awstypes.RetentionArchiveTier) []map[string]interface{} {
+	if tier == nil {
+		return []map[string]interface{}{}
+	}
+
+	result := make(map[string]interface{})
+	result["count"] = aws.ToInt32(tier.Count)
+	result[names.AttrInterval] = aws.ToInt32(tier.Interval)
+	result["interval_unit"] = string(tier.IntervalUnit)
+
+	return []map[string]interface{}{result}
 }
