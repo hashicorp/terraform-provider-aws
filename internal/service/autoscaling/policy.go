@@ -850,8 +850,8 @@ func expandTargetTrackingMetricDataQueries(tfList []interface{}) []awstypes.Targ
 				Metric: metric,
 				Stat:   aws.String(tfMapMetricStat["stat"].(string)),
 			}
-			if v, ok := tfMapMetric["period"]; ok {
-				targetTrackingMetricStat.Period = aws.Int32(int32(v.(int)))
+			if v, ok := tfMapMetricStat["period"].(int); ok && v != 0 {
+				targetTrackingMetricStat.Period = aws.Int32(int32(v))
 			}
 			if v, ok := tfMapMetricStat[names.AttrUnit]; ok && len(v.(string)) > 0 {
 				targetTrackingMetricStat.Unit = aws.String(v.(string))
