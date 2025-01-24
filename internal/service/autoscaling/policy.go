@@ -104,6 +104,7 @@ func resourcePolicy() *schema.Resource {
 										"period": {
 											Type:         schema.TypeInt,
 											Optional:     true,
+											Computed:     true,
 											ValidateFunc: validation.IntInSlice([]int{10, 30, 60}),
 										},
 										"stat": {
@@ -435,6 +436,7 @@ func resourcePolicy() *schema.Resource {
 																"period": {
 																	Type:         schema.TypeInt,
 																	Optional:     true,
+																	Computed:     true,
 																	ValidateFunc: validation.IntInSlice([]int{10, 30, 60}),
 																},
 																"stat": {
