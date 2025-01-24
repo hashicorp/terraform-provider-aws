@@ -252,47 +252,6 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 
 func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
-
-	// TODO Default for s3_delivery_configuration.enable_hive_compatible_path is false
-	// TODO If Delivery Source is CloudWatch Distribution then s3_delivery_configuration.suffix_path
-	// TODO prefix of "AWSLogs/{account-id}/CloudFront" is enforced.
-
-	if !request.Plan.Raw.IsNull() {
-		var data fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]
-		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("s3_delivery_configuration"), &data)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if !data.IsUnknown() {
-			v, diags := data.ToPtr(ctx)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			if v.EnableHiveCompatiblePath.IsNull() {
-				v.EnableHiveCompatiblePath = types.BoolValue(false)
-			}
-
-			if request.State.Raw.IsNull() {
-				// Create.
-			} else {
-
-			}
-
-			data, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, v)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("s3_delivery_configuration"), data)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-		}
-	}
 }
 
 func findDeliveryByID(ctx context.Context, conn *cloudwatchlogs.Client, id string) (*awstypes.Delivery, error) {
