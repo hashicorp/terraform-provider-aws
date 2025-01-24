@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_autoscaling_policy: Add support for high-resolution metrics in `customized_metric_specification`.
+```
