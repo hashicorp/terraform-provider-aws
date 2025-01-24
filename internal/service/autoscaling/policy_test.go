@@ -496,6 +496,16 @@ func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"target_tracking_configuration.0.customized_metric_specification.0.metrics.0.metric_stat.0.period",
+					"target_tracking_configuration.0.customized_metric_specification.0.metrics.1.metric_stat.0.period",
+				},
+			},
+			{
+				Config: testAccPolicyConfig_targetTrackingMetricMathWithPeriod(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})
@@ -972,9 +982,8 @@ resource "aws_autoscaling_policy" "test" {
             namespace   = "foo"
             metric_name = "bar"
           }
-          unit   = "Percent"
-          stat   = "Sum"
-          period = 10
+          unit = "Percent"
+          stat = "Sum"
         }
         return_data = false
       }
@@ -1001,6 +1010,57 @@ resource "aws_autoscaling_policy" "test" {
       metrics {
         id          = "e1"
         expression  = "m1 + m2 + m3"
+        return_data = true
+      }
+    }
+
+    target_value = 12.3
+  }
+}
+`, rName))
+}
+
+func testAccPolicyConfig_targetTrackingMetricMathWithPeriod(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-tracking"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+
+  target_tracking_configuration {
+    customized_metric_specification {
+      metrics {
+        id = "m2"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+          }
+          unit   = "Percent"
+          stat   = "Sum"
+          period = 10
+        }
+        return_data = false
+      }
+      metrics {
+        id = "m3"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+            dimensions {
+              name  = "x"
+              value = "y"
+            }
+            dimensions {
+              name  = "y"
+              value = "x"
+            }
+          }
+          unit   = "Percent"
+          stat   = "Sum"
+          period = 10
+        }
         return_data = true
       }
     }
