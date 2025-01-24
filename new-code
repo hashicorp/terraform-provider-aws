@@ -1,0 +1,60 @@
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const bodyParser = require('body-parser');
+
+// Create the Express app
+const app = express();
+app.use(bodyParser.json());
+
+// Sample user data (mocked database)
+const users = [
+    { id: 1, username: 'demoUser', password: 'password123' },
+];
+
+// Secret key for JWT
+const SECRET_KEY = 'your_secret_key';
+
+// Login endpoint
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+
+    // Validate username and password
+    const user = users.find(
+        (u) => u.username === username && u.password === password
+    );
+
+    if (!user) {
+        return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // Generate a JWT token
+    const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, {
+        expiresIn: '1h', // Token expires in 1 hour
+    });
+
+    res.json({ message: 'Login successful', token });
+});
+
+// Protected route (example of using the token)
+app.get('/api/dashboard', (req, res) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        res.json({ message: 'Welcome to the dashboard', user: decoded });
+    } catch (err) {
+        res.status(401).json({ message: 'Invalid token' });
+    }
+});
+
+// Start the server
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
