@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_autoscaling_policy: Add support for high-resolution metrics in `customized_metric_specification`.
+Add `predictive_scaling_configuration.metric_specification.customized_capacity_metric_specification.metric_data_queries.metric_stat.period`, `predictive_scaling_configuration.metric_specification.customized_load_metric_specification.metric_data_queries.metric_stat.period`, `predictive_scaling_configuration.metric_specification.customized_scaling_metric_specification.metric_data_queries.metric_stat.period`, and `target_tracking_configuration.customized_metric_specification.metrics.metric_stat.period` arguments
 ```
