@@ -609,7 +609,7 @@ func testAccPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdF
 	}
 }
 
-func testAccPolicyConfigBase(rName string) string {
+func testAccPolicyConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
@@ -632,7 +632,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccPolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test_simple" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ChangeInCapacity"
@@ -676,7 +676,7 @@ resource "aws_autoscaling_policy" "test_tracking" {
 }
 
 func testAccPolicyConfig_predictiveScalingPredefined(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -703,7 +703,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingPredefined_resourceLabel(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -728,7 +728,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingCustom(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -798,7 +798,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingRemoved(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ChangeInCapacity"
@@ -811,7 +811,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -836,7 +836,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingFloatTargetValue(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -855,7 +855,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_basicUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test_simple" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ChangeInCapacity"
@@ -906,7 +906,7 @@ resource "aws_autoscaling_policy" "test_tracking" {
 }
 
 func testAccPolicyConfig_simpleScalingStepAdjustment(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ExactCapacity"
@@ -919,7 +919,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_targetTrackingPredefined(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
@@ -937,7 +937,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_targetTrackingCustom(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
@@ -962,7 +962,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
@@ -1021,7 +1021,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_targetTrackingMetricMathWithPeriod(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
@@ -1072,7 +1072,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_zeroValue(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test_simple" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ExactCapacity"
