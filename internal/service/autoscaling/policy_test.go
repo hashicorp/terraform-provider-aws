@@ -72,19 +72,19 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceStepName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceStepName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceStepName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceTargetTrackingName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceTargetTrackingName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceTargetTrackingName),
 				ImportStateVerify: true,
 			},
 			{
@@ -171,7 +171,7 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -208,7 +208,7 @@ func TestAccAutoScalingPolicy_predictiveScalingResourceLabel(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -261,7 +261,7 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -297,7 +297,7 @@ func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -349,7 +349,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -380,7 +380,7 @@ func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -410,7 +410,7 @@ func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -438,7 +438,7 @@ func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -466,7 +466,7 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -494,7 +494,7 @@ func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -528,13 +528,13 @@ func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceStepName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceStepName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceStepName),
 				ImportStateVerify: true,
 			},
 		},
@@ -588,7 +588,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
