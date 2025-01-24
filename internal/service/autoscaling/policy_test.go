@@ -972,8 +972,8 @@ resource "aws_autoscaling_policy" "test" {
             namespace   = "foo"
             metric_name = "bar"
           }
-          unit = "Percent"
-          stat = "Sum"
+          unit   = "Percent"
+          stat   = "Sum"
           period = 10
         }
         return_data = false
