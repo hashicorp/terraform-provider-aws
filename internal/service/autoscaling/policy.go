@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -558,7 +557,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
 	d.Set(names.AttrName, p.PolicyName)
 	d.Set("policy_type", p.PolicyType)
-	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
+	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfiguration(p.PredictiveScalingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting predictive_scaling_configuration: %s", err)
 	}
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
@@ -1055,249 +1054,6 @@ func expandMetricDataQueries(tfList []interface{}) []awstypes.MetricDataQuery {
 	return apiObjects
 }
 
-func flattenTargetTrackingConfiguration(config *awstypes.TargetTrackingConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
-	}
-
-	result := map[string]interface{}{}
-	result["disable_scale_in"] = aws.ToBool(config.DisableScaleIn)
-	result["target_value"] = aws.ToFloat64(config.TargetValue)
-	if config.PredefinedMetricSpecification != nil {
-		spec := map[string]interface{}{}
-		spec["predefined_metric_type"] = string(config.PredefinedMetricSpecification.PredefinedMetricType)
-		if config.PredefinedMetricSpecification.ResourceLabel != nil {
-			spec["resource_label"] = aws.ToString(config.PredefinedMetricSpecification.ResourceLabel)
-		}
-		result["predefined_metric_specification"] = []map[string]interface{}{spec}
-	}
-	if config.CustomizedMetricSpecification != nil {
-		spec := map[string]interface{}{}
-		if config.CustomizedMetricSpecification.Metrics != nil {
-			spec["metrics"] = flattenTargetTrackingMetricDataQueries(config.CustomizedMetricSpecification.Metrics)
-		} else {
-			spec[names.AttrMetricName] = aws.ToString(config.CustomizedMetricSpecification.MetricName)
-			spec[names.AttrNamespace] = aws.ToString(config.CustomizedMetricSpecification.Namespace)
-			spec["statistic"] = string(config.CustomizedMetricSpecification.Statistic)
-			if config.CustomizedMetricSpecification.Unit != nil {
-				spec[names.AttrUnit] = aws.ToString(config.CustomizedMetricSpecification.Unit)
-			}
-			if config.CustomizedMetricSpecification.Dimensions != nil {
-				dimSpec := make([]interface{}, len(config.CustomizedMetricSpecification.Dimensions))
-				for i := range dimSpec {
-					dim := map[string]interface{}{}
-					rawDim := config.CustomizedMetricSpecification.Dimensions[i]
-					dim[names.AttrName] = aws.ToString(rawDim.Name)
-					dim[names.AttrValue] = aws.ToString(rawDim.Value)
-					dimSpec[i] = dim
-				}
-				spec["metric_dimension"] = dimSpec
-			}
-		}
-		result["customized_metric_specification"] = []map[string]interface{}{spec}
-	}
-	return []interface{}{result}
-}
-
-func flattenTargetTrackingMetricDataQueries(metricDataQueries []awstypes.TargetTrackingMetricDataQuery) []interface{} {
-	metricDataQueriesSpec := make([]interface{}, len(metricDataQueries))
-	for i := range metricDataQueriesSpec {
-		metricDataQuery := map[string]interface{}{}
-		rawMetricDataQuery := metricDataQueries[i]
-		metricDataQuery[names.AttrID] = aws.ToString(rawMetricDataQuery.Id)
-		if rawMetricDataQuery.Expression != nil {
-			metricDataQuery[names.AttrExpression] = aws.ToString(rawMetricDataQuery.Expression)
-		}
-		if rawMetricDataQuery.Label != nil {
-			metricDataQuery["label"] = aws.ToString(rawMetricDataQuery.Label)
-		}
-		if rawMetricDataQuery.MetricStat != nil {
-			metricStatSpec := map[string]interface{}{}
-			rawMetricStat := rawMetricDataQuery.MetricStat
-			rawMetric := rawMetricStat.Metric
-			metricSpec := map[string]interface{}{}
-			if rawMetric.Dimensions != nil {
-				dimSpec := make([]interface{}, len(rawMetric.Dimensions))
-				for i := range dimSpec {
-					dim := map[string]interface{}{}
-					rawDim := rawMetric.Dimensions[i]
-					dim[names.AttrName] = aws.ToString(rawDim.Name)
-					dim[names.AttrValue] = aws.ToString(rawDim.Value)
-					dimSpec[i] = dim
-				}
-				metricSpec["dimensions"] = dimSpec
-			}
-			metricSpec[names.AttrMetricName] = aws.ToString(rawMetric.MetricName)
-			metricSpec[names.AttrNamespace] = aws.ToString(rawMetric.Namespace)
-			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
-			if rawMetricStat.Period != nil {
-				metricStatSpec["period"] = aws.ToInt32(rawMetricStat.Period)
-			}
-			metricStatSpec["stat"] = aws.ToString(rawMetricStat.Stat)
-			if rawMetricStat.Unit != nil {
-				metricStatSpec[names.AttrUnit] = aws.ToString(rawMetricStat.Unit)
-			}
-			metricDataQuery["metric_stat"] = []map[string]interface{}{metricStatSpec}
-		}
-		if rawMetricDataQuery.ReturnData != nil {
-			metricDataQuery["return_data"] = aws.ToBool(rawMetricDataQuery.ReturnData)
-		}
-		metricDataQueriesSpec[i] = metricDataQuery
-	}
-	return metricDataQueriesSpec
-}
-
-func flattenPredictiveScalingConfig(predictiveScalingConfig *awstypes.PredictiveScalingConfiguration) []map[string]interface{} {
-	predictiveScalingConfigFlat := map[string]interface{}{}
-	if predictiveScalingConfig == nil {
-		return nil
-	}
-	if len(predictiveScalingConfig.MetricSpecifications) > 0 {
-		predictiveScalingConfigFlat["metric_specification"] = flattenPredictiveScalingMetricSpecifications(predictiveScalingConfig.MetricSpecifications)
-	}
-	predictiveScalingConfigFlat[names.AttrMode] = string(predictiveScalingConfig.Mode)
-	if predictiveScalingConfig.SchedulingBufferTime != nil {
-		predictiveScalingConfigFlat["scheduling_buffer_time"] = strconv.FormatInt(int64(aws.ToInt32(predictiveScalingConfig.SchedulingBufferTime)), 10)
-	}
-	predictiveScalingConfigFlat["max_capacity_breach_behavior"] = string(predictiveScalingConfig.MaxCapacityBreachBehavior)
-	if predictiveScalingConfig.MaxCapacityBuffer != nil {
-		predictiveScalingConfigFlat["max_capacity_buffer"] = strconv.FormatInt(int64(aws.ToInt32(predictiveScalingConfig.MaxCapacityBuffer)), 10)
-	}
-	return []map[string]interface{}{predictiveScalingConfigFlat}
-}
-
-func flattenPredictiveScalingMetricSpecifications(metricSpecification []awstypes.PredictiveScalingMetricSpecification) []map[string]interface{} {
-	metricSpecificationFlat := map[string]interface{}{}
-	if metricSpecification == nil || len(metricSpecification) < 1 {
-		return []map[string]interface{}{metricSpecificationFlat}
-	}
-	if metricSpecification[0].TargetValue != nil {
-		metricSpecificationFlat["target_value"] = aws.ToFloat64(metricSpecification[0].TargetValue)
-	}
-	if metricSpecification[0].CustomizedCapacityMetricSpecification != nil {
-		metricSpecificationFlat["customized_capacity_metric_specification"] = flattenCustomizedCapacityMetricSpecification(metricSpecification[0].CustomizedCapacityMetricSpecification)
-	}
-	if metricSpecification[0].CustomizedLoadMetricSpecification != nil {
-		metricSpecificationFlat["customized_load_metric_specification"] = flattenCustomizedLoadMetricSpecification(metricSpecification[0].CustomizedLoadMetricSpecification)
-	}
-	if metricSpecification[0].CustomizedScalingMetricSpecification != nil {
-		metricSpecificationFlat["customized_scaling_metric_specification"] = flattenCustomizedScalingMetricSpecification(metricSpecification[0].CustomizedScalingMetricSpecification)
-	}
-	if metricSpecification[0].PredefinedLoadMetricSpecification != nil {
-		metricSpecificationFlat["predefined_load_metric_specification"] = flattenPredefinedLoadMetricSpecification(metricSpecification[0].PredefinedLoadMetricSpecification)
-	}
-	if metricSpecification[0].PredefinedMetricPairSpecification != nil {
-		metricSpecificationFlat["predefined_metric_pair_specification"] = flattenPredefinedMetricPairSpecification(metricSpecification[0].PredefinedMetricPairSpecification)
-	}
-	if metricSpecification[0].PredefinedScalingMetricSpecification != nil {
-		metricSpecificationFlat["predefined_scaling_metric_specification"] = flattenPredefinedScalingMetricSpecification(metricSpecification[0].PredefinedScalingMetricSpecification)
-	}
-	return []map[string]interface{}{metricSpecificationFlat}
-}
-
-func flattenPredefinedScalingMetricSpecification(predefinedScalingMetricSpecification *awstypes.PredictiveScalingPredefinedScalingMetric) []map[string]interface{} {
-	predefinedScalingMetricSpecificationFlat := map[string]interface{}{}
-	if predefinedScalingMetricSpecification == nil {
-		return []map[string]interface{}{predefinedScalingMetricSpecificationFlat}
-	}
-	predefinedScalingMetricSpecificationFlat["predefined_metric_type"] = string(predefinedScalingMetricSpecification.PredefinedMetricType)
-	predefinedScalingMetricSpecificationFlat["resource_label"] = aws.ToString(predefinedScalingMetricSpecification.ResourceLabel)
-	return []map[string]interface{}{predefinedScalingMetricSpecificationFlat}
-}
-
-func flattenPredefinedLoadMetricSpecification(predefinedLoadMetricSpecification *awstypes.PredictiveScalingPredefinedLoadMetric) []map[string]interface{} {
-	predefinedLoadMetricSpecificationFlat := map[string]interface{}{}
-	if predefinedLoadMetricSpecification == nil {
-		return []map[string]interface{}{predefinedLoadMetricSpecificationFlat}
-	}
-	predefinedLoadMetricSpecificationFlat["predefined_metric_type"] = string(predefinedLoadMetricSpecification.PredefinedMetricType)
-	predefinedLoadMetricSpecificationFlat["resource_label"] = aws.ToString(predefinedLoadMetricSpecification.ResourceLabel)
-	return []map[string]interface{}{predefinedLoadMetricSpecificationFlat}
-}
-
-func flattenPredefinedMetricPairSpecification(predefinedMetricPairSpecification *awstypes.PredictiveScalingPredefinedMetricPair) []map[string]interface{} {
-	predefinedMetricPairSpecificationFlat := map[string]interface{}{}
-	if predefinedMetricPairSpecification == nil {
-		return []map[string]interface{}{predefinedMetricPairSpecificationFlat}
-	}
-	predefinedMetricPairSpecificationFlat["predefined_metric_type"] = string(predefinedMetricPairSpecification.PredefinedMetricType)
-	predefinedMetricPairSpecificationFlat["resource_label"] = aws.ToString(predefinedMetricPairSpecification.ResourceLabel)
-	return []map[string]interface{}{predefinedMetricPairSpecificationFlat}
-}
-
-func flattenCustomizedScalingMetricSpecification(customizedScalingMetricSpecification *awstypes.PredictiveScalingCustomizedScalingMetric) []map[string]interface{} {
-	customizedScalingMetricSpecificationFlat := map[string]interface{}{}
-	if customizedScalingMetricSpecification == nil {
-		return []map[string]interface{}{customizedScalingMetricSpecificationFlat}
-	}
-	customizedScalingMetricSpecificationFlat["metric_data_queries"] = flattenMetricDataQueries(customizedScalingMetricSpecification.MetricDataQueries)
-	return []map[string]interface{}{customizedScalingMetricSpecificationFlat}
-}
-
-func flattenCustomizedLoadMetricSpecification(customizedLoadMetricSpecification *awstypes.PredictiveScalingCustomizedLoadMetric) []map[string]interface{} {
-	customizedLoadMetricSpecificationFlat := map[string]interface{}{}
-	if customizedLoadMetricSpecification == nil {
-		return []map[string]interface{}{customizedLoadMetricSpecificationFlat}
-	}
-	customizedLoadMetricSpecificationFlat["metric_data_queries"] = flattenMetricDataQueries(customizedLoadMetricSpecification.MetricDataQueries)
-	return []map[string]interface{}{customizedLoadMetricSpecificationFlat}
-}
-
-func flattenCustomizedCapacityMetricSpecification(customizedCapacityMetricSpecification *awstypes.PredictiveScalingCustomizedCapacityMetric) []map[string]interface{} {
-	customizedCapacityMetricSpecificationFlat := map[string]interface{}{}
-	if customizedCapacityMetricSpecification == nil {
-		return []map[string]interface{}{customizedCapacityMetricSpecificationFlat}
-	}
-	customizedCapacityMetricSpecificationFlat["metric_data_queries"] = flattenMetricDataQueries(customizedCapacityMetricSpecification.MetricDataQueries)
-
-	return []map[string]interface{}{customizedCapacityMetricSpecificationFlat}
-}
-
-func flattenMetricDataQueries(metricDataQueries []awstypes.MetricDataQuery) []interface{} {
-	metricDataQueriesSpec := make([]interface{}, len(metricDataQueries))
-	for i := range metricDataQueriesSpec {
-		metricDataQuery := map[string]interface{}{}
-		rawMetricDataQuery := metricDataQueries[i]
-		metricDataQuery[names.AttrID] = aws.ToString(rawMetricDataQuery.Id)
-		if rawMetricDataQuery.Expression != nil {
-			metricDataQuery[names.AttrExpression] = aws.ToString(rawMetricDataQuery.Expression)
-		}
-		if rawMetricDataQuery.Label != nil {
-			metricDataQuery["label"] = aws.ToString(rawMetricDataQuery.Label)
-		}
-		if rawMetricDataQuery.MetricStat != nil {
-			metricStatSpec := map[string]interface{}{}
-			rawMetricStat := rawMetricDataQuery.MetricStat
-			rawMetric := rawMetricStat.Metric
-			metricSpec := map[string]interface{}{}
-			if rawMetric.Dimensions != nil {
-				dimSpec := make([]interface{}, len(rawMetric.Dimensions))
-				for i := range dimSpec {
-					dim := map[string]interface{}{}
-					rawDim := rawMetric.Dimensions[i]
-					dim[names.AttrName] = aws.ToString(rawDim.Name)
-					dim[names.AttrValue] = aws.ToString(rawDim.Value)
-					dimSpec[i] = dim
-				}
-				metricSpec["dimensions"] = dimSpec
-			}
-			metricSpec[names.AttrMetricName] = aws.ToString(rawMetric.MetricName)
-			metricSpec[names.AttrNamespace] = aws.ToString(rawMetric.Namespace)
-			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
-			metricStatSpec["stat"] = aws.ToString(rawMetricStat.Stat)
-			if rawMetricStat.Unit != nil {
-				metricStatSpec[names.AttrUnit] = aws.ToString(rawMetricStat.Unit)
-			}
-			metricDataQuery["metric_stat"] = []map[string]interface{}{metricStatSpec}
-		}
-		if rawMetricDataQuery.ReturnData != nil {
-			metricDataQuery["return_data"] = aws.ToBool(rawMetricDataQuery.ReturnData)
-		}
-		metricDataQueriesSpec[i] = metricDataQuery
-	}
-	return metricDataQueriesSpec
-}
-
 func expandStepAdjustments(tfList []interface{}) []awstypes.StepAdjustment {
 	if len(tfList) == 0 {
 		return nil
@@ -1333,6 +1089,271 @@ func expandStepAdjustments(tfList []interface{}) []awstypes.StepAdjustment {
 	return apiObjects
 }
 
+func flattenTargetTrackingConfiguration(apiObject *awstypes.TargetTrackingConfiguration) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject := apiObject.CustomizedMetricSpecification; apiObject != nil {
+		tfMapCustomizedMetricSpecification := map[string]interface{}{}
+		if v := apiObject.Metrics; v != nil {
+			tfMapCustomizedMetricSpecification["metrics"] = flattenTargetTrackingMetricDataQueries(v)
+		} else {
+			if apiObjects := apiObject.Dimensions; apiObjects != nil {
+				tfList := make([]interface{}, len(apiObjects))
+				for i := range tfList {
+					tfMap := map[string]interface{}{}
+					apiObject := apiObjects[i]
+					tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+					tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
+					tfList[i] = tfMap
+				}
+				tfMapCustomizedMetricSpecification["metric_dimension"] = tfList
+			}
+			tfMapCustomizedMetricSpecification[names.AttrMetricName] = aws.ToString(apiObject.MetricName)
+			tfMapCustomizedMetricSpecification[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
+			tfMapCustomizedMetricSpecification["statistic"] = apiObject.Statistic
+			if v := apiObject.Unit; v != nil {
+				tfMapCustomizedMetricSpecification[names.AttrUnit] = aws.ToString(v)
+			}
+		}
+		tfMap["customized_metric_specification"] = []map[string]interface{}{tfMapCustomizedMetricSpecification}
+	}
+	tfMap["disable_scale_in"] = aws.ToBool(apiObject.DisableScaleIn)
+	if apiObject := apiObject.PredefinedMetricSpecification; apiObject != nil {
+		tfMapPredefinedMetricSpecification := map[string]interface{}{}
+		tfMapPredefinedMetricSpecification["predefined_metric_type"] = apiObject.PredefinedMetricType
+		if v := apiObject.ResourceLabel; v != nil {
+			tfMapPredefinedMetricSpecification["resource_label"] = aws.ToString(v)
+		}
+		tfMap["predefined_metric_specification"] = []map[string]interface{}{tfMapPredefinedMetricSpecification}
+	}
+	tfMap["target_value"] = aws.ToFloat64(apiObject.TargetValue)
+
+	return []interface{}{tfMap}
+}
+
+func flattenTargetTrackingMetricDataQueries(apiObjects []awstypes.TargetTrackingMetricDataQuery) []interface{} {
+	tfList := make([]interface{}, len(apiObjects))
+
+	for i := range tfList {
+		tfMap := map[string]interface{}{}
+		apiObject := apiObjects[i]
+		if v := apiObject.Expression; v != nil {
+			tfMap[names.AttrExpression] = aws.ToString(v)
+		}
+		tfMap[names.AttrID] = aws.ToString(apiObject.Id)
+		if v := apiObject.Label; v != nil {
+			tfMap["label"] = aws.ToString(v)
+		}
+		if apiObject := apiObject.MetricStat; apiObject != nil {
+			tfMapMetricStat := map[string]interface{}{}
+			if apiObject := apiObject.Metric; apiObject != nil {
+				tfMapMetric := map[string]interface{}{}
+				if apiObjects := apiObject.Dimensions; apiObjects != nil {
+					tfList := make([]interface{}, len(apiObjects))
+					for i := range tfList {
+						tfMap := map[string]interface{}{}
+						apiObject := apiObject.Dimensions[i]
+						tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+						tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
+						tfList[i] = tfMap
+					}
+					tfMapMetric["dimensions"] = tfList
+				}
+				tfMapMetric[names.AttrMetricName] = aws.ToString(apiObject.MetricName)
+				tfMapMetric[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
+				tfMapMetricStat["metric"] = []map[string]interface{}{tfMapMetric}
+			}
+			if v := apiObject.Period; v != nil {
+				tfMapMetricStat["period"] = aws.ToInt32(v)
+			}
+			tfMapMetricStat["stat"] = aws.ToString(apiObject.Stat)
+			if v := apiObject.Unit; v != nil {
+				tfMapMetricStat[names.AttrUnit] = aws.ToString(v)
+			}
+			tfMap["metric_stat"] = []map[string]interface{}{tfMapMetricStat}
+		}
+		if v := apiObject.ReturnData; v != nil {
+			tfMap["return_data"] = aws.ToBool(v)
+		}
+		tfList[i] = tfMap
+	}
+
+	return tfList
+}
+
+func flattenPredictiveScalingConfiguration(apiObject *awstypes.PredictiveScalingConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	tfMap["max_capacity_breach_behavior"] = string(apiObject.MaxCapacityBreachBehavior)
+	if v := apiObject.MaxCapacityBuffer; v != nil {
+		tfMap["max_capacity_buffer"] = flex.Int32ToStringValue(v)
+	}
+	if v := apiObject.MetricSpecifications; len(v) > 0 {
+		tfMap["metric_specification"] = flattenPredictiveScalingMetricSpecifications(v)
+	}
+	tfMap[names.AttrMode] = apiObject.Mode
+	if v := apiObject.SchedulingBufferTime; v != nil {
+		tfMap["scheduling_buffer_time"] = flex.Int32ToStringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredictiveScalingMetricSpecifications(apiObjects []awstypes.PredictiveScalingMetricSpecification) []interface{} {
+	tfMap := map[string]interface{}{}
+	if apiObjects == nil || len(apiObjects) < 1 {
+		return []interface{}{tfMap}
+	}
+
+	apiObject := apiObjects[0]
+	if v := apiObject.CustomizedCapacityMetricSpecification; v != nil {
+		tfMap["customized_capacity_metric_specification"] = flattenPredictiveScalingCustomizedCapacityMetric(v)
+	}
+	if v := apiObject.CustomizedLoadMetricSpecification; v != nil {
+		tfMap["customized_load_metric_specification"] = flattenPredictiveScalingCustomizedLoadMetric(v)
+	}
+	if v := apiObject.CustomizedScalingMetricSpecification; v != nil {
+		tfMap["customized_scaling_metric_specification"] = flattenPredictiveScalingCustomizedScalingMetric(v)
+	}
+	if v := apiObject.PredefinedLoadMetricSpecification; v != nil {
+		tfMap["predefined_load_metric_specification"] = flattenPredictiveScalingPredefinedLoadMetric(v)
+	}
+	if v := apiObject.PredefinedMetricPairSpecification; v != nil {
+		tfMap["predefined_metric_pair_specification"] = flattenPredictiveScalingPredefinedMetricPair(v)
+	}
+	if v := apiObject.PredefinedScalingMetricSpecification; v != nil {
+		tfMap["predefined_scaling_metric_specification"] = flattenPredictiveScalingPredefinedScalingMetric(v)
+	}
+	if v := apiObject.TargetValue; v != nil {
+		tfMap["target_value"] = aws.ToFloat64(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredictiveScalingPredefinedScalingMetric(apiObject *awstypes.PredictiveScalingPredefinedScalingMetric) []interface{} {
+	tfMap := map[string]interface{}{}
+	if apiObject == nil {
+		return []interface{}{tfMap}
+	}
+
+	tfMap["predefined_metric_type"] = apiObject.PredefinedMetricType
+	tfMap["resource_label"] = aws.ToString(apiObject.ResourceLabel)
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredictiveScalingPredefinedLoadMetric(apiObject *awstypes.PredictiveScalingPredefinedLoadMetric) []interface{} {
+	tfMap := map[string]interface{}{}
+	if apiObject == nil {
+		return []interface{}{tfMap}
+	}
+
+	tfMap["predefined_metric_type"] = apiObject.PredefinedMetricType
+	tfMap["resource_label"] = aws.ToString(apiObject.ResourceLabel)
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredictiveScalingPredefinedMetricPair(apiObject *awstypes.PredictiveScalingPredefinedMetricPair) []interface{} {
+	tfMap := map[string]interface{}{}
+	if apiObject == nil {
+		return []interface{}{tfMap}
+	}
+
+	tfMap["predefined_metric_type"] = apiObject.PredefinedMetricType
+	tfMap["resource_label"] = aws.ToString(apiObject.ResourceLabel)
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredictiveScalingCustomizedScalingMetric(apiObject *awstypes.PredictiveScalingCustomizedScalingMetric) []interface{} {
+	tfMap := map[string]interface{}{}
+	if apiObject == nil {
+		return []interface{}{tfMap}
+	}
+
+	tfMap["metric_data_queries"] = flattenMetricDataQueries(apiObject.MetricDataQueries)
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredictiveScalingCustomizedLoadMetric(apiObject *awstypes.PredictiveScalingCustomizedLoadMetric) []interface{} {
+	tfMap := map[string]interface{}{}
+	if apiObject == nil {
+		return []interface{}{tfMap}
+	}
+
+	tfMap["metric_data_queries"] = flattenMetricDataQueries(apiObject.MetricDataQueries)
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredictiveScalingCustomizedCapacityMetric(apiObject *awstypes.PredictiveScalingCustomizedCapacityMetric) []interface{} {
+	tfMap := map[string]interface{}{}
+	if apiObject == nil {
+		return []interface{}{tfMap}
+	}
+
+	tfMap["metric_data_queries"] = flattenMetricDataQueries(apiObject.MetricDataQueries)
+
+	return []interface{}{tfMap}
+}
+
+func flattenMetricDataQueries(apiObjects []awstypes.MetricDataQuery) []interface{} {
+	tfList := make([]interface{}, len(apiObjects))
+
+	for i := range tfList {
+		tfMap := map[string]interface{}{}
+		apiObject := apiObjects[i]
+
+		if v := apiObject.Expression; v != nil {
+			tfMap[names.AttrExpression] = aws.ToString(v)
+		}
+		tfMap[names.AttrID] = aws.ToString(apiObject.Id)
+		if v := apiObject.Label; v != nil {
+			tfMap["label"] = aws.ToString(v)
+		}
+		if apiObject := apiObject.MetricStat; apiObject != nil {
+			tfMapMetricStat := map[string]interface{}{}
+			if apiObject := apiObject.Metric; apiObject != nil {
+				tfMapMetric := map[string]interface{}{}
+				if apiObjects := apiObject.Dimensions; apiObjects != nil {
+					tfList := make([]interface{}, len(apiObjects))
+					for i := range tfList {
+						tfMap := map[string]interface{}{}
+						apiObject := apiObject.Dimensions[i]
+						tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+						tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
+						tfList[i] = tfMap
+					}
+					tfMapMetric["dimensions"] = tfList
+				}
+				tfMapMetric[names.AttrMetricName] = aws.ToString(apiObject.MetricName)
+				tfMapMetric[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
+				tfMapMetricStat["metric"] = []map[string]interface{}{tfMapMetric}
+			}
+			tfMapMetricStat["stat"] = aws.ToString(apiObject.Stat)
+			if v := apiObject.Unit; v != nil {
+				tfMapMetricStat[names.AttrUnit] = aws.ToString(v)
+			}
+			tfMap["metric_stat"] = []map[string]interface{}{tfMapMetricStat}
+		}
+		if v := apiObject.ReturnData; v != nil {
+			tfMap["return_data"] = aws.ToBool(v)
+		}
+		tfList[i] = tfMap
+	}
+
+	return tfList
+}
+
 func flattenStepAdjustments(apiObjects []awstypes.StepAdjustment) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
@@ -1345,12 +1366,12 @@ func flattenStepAdjustments(apiObjects []awstypes.StepAdjustment) []interface{} 
 			"scaling_adjustment": aws.ToInt32(apiObject.ScalingAdjustment),
 		}
 
-		if v := apiObject.MetricIntervalUpperBound; v != nil {
-			tfMap["metric_interval_upper_bound"] = flex.Float64ToStringValue(v)
-		}
-
 		if v := apiObject.MetricIntervalLowerBound; v != nil {
 			tfMap["metric_interval_lower_bound"] = flex.Float64ToStringValue(v)
+		}
+
+		if v := apiObject.MetricIntervalUpperBound; v != nil {
+			tfMap["metric_interval_upper_bound"] = flex.Float64ToStringValue(v)
 		}
 
 		tfList = append(tfList, tfMap)
