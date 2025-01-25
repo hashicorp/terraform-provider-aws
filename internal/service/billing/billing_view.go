@@ -6,6 +6,7 @@ package billing
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -200,6 +201,10 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	input := new(billing.CreateBillingViewInput)
+
+	tflog.Debug(ctx, "plan", map[string]interface{}{
+		"plan": plan,
+	})
 
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
