@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -233,7 +234,7 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitViewCreated(ctx, conn, plan.ARN.ValueStringPointer(), createTimeout)
+	_, err = waitViewCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionWaitingForCreation, ResNameView, plan.Name.String(), err),
@@ -255,7 +256,7 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	out, err := findViewByARN(ctx, conn, state.ARN.ValueStringPointer())
+	out, err := findViewByARN(ctx, conn, state.ARN.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -319,7 +320,7 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitViewUpdated(ctx, conn, plan.ARN.ValueStringPointer(), updateTimeout)
+	_, err := waitViewUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionWaitingForUpdate, ResNameView, plan.ARN.String(), err),
@@ -358,7 +359,7 @@ func (r *resourceView) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitViewDeleted(ctx, conn, state.ARN.ValueStringPointer(), deleteTimeout)
+	_, err = waitViewDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionWaitingForDeletion, ResNameView, state.ARN.String(), err),
@@ -380,7 +381,7 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func waitViewCreated(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewCreated(ctx context.Context, conn *billing.Client, id string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -398,7 +399,7 @@ func waitViewCreated(ctx context.Context, conn *billing.Client, id *string, time
 	return nil, err
 }
 
-func waitViewUpdated(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewUpdated(ctx context.Context, conn *billing.Client, id string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -416,7 +417,7 @@ func waitViewUpdated(ctx context.Context, conn *billing.Client, id *string, time
 	return nil, err
 }
 
-func waitViewDeleted(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewDeleted(ctx context.Context, conn *billing.Client, id string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
@@ -432,7 +433,7 @@ func waitViewDeleted(ctx context.Context, conn *billing.Client, id *string, time
 	return nil, err
 }
 
-func statusView(ctx context.Context, conn *billing.Client, id *string) retry.StateRefreshFunc {
+func statusView(ctx context.Context, conn *billing.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findViewByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -447,9 +448,9 @@ func statusView(ctx context.Context, conn *billing.Client, id *string) retry.Sta
 	}
 }
 
-func findViewByARN(ctx context.Context, conn *billing.Client, arn *string) (*awstypes.BillingViewElement, error) {
+func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awstypes.BillingViewElement, error) {
 	in := new(billing.GetBillingViewInput)
-	in.Arn = arn
+	in.Arn = aws.String(arn)
 
 	out, err := conn.GetBillingView(ctx, in)
 	if err != nil {

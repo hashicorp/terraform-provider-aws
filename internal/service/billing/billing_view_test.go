@@ -51,10 +51,11 @@ func TestAccBillingView_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -105,7 +106,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 				return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
 			}
 
-			_, err := tfbilling.FindViewByARN(ctx, conn, &arn)
+			_, err := tfbilling.FindViewByARN(ctx, conn, arn)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -134,7 +135,7 @@ func testAccCheckViewExists(ctx context.Context, name string, view *awstypes.Bil
 			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
 		}
 
-		resp, err := tfbilling.FindViewByARN(ctx, conn, &arn)
+		resp, err := tfbilling.FindViewByARN(ctx, conn, arn)
 		if err != nil {
 			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, err)
 		}
