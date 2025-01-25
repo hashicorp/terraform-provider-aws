@@ -217,6 +217,8 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+
+	fmt.Printf("Out: %v\n", out)
 	if out == nil || out.Arn == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionCreating, ResNameView, plan.Name.String(), nil),

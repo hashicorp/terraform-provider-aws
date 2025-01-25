@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/billing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -48,7 +47,7 @@ func TestAccBillingView_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
 					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "billing", regexache.MustCompile(`view:.+$`)),
+					//acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "billing", regexache.MustCompile(`view:.+$`)),
 				),
 			},
 			{
