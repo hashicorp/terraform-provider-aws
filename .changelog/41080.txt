@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aaws_securityhub_organization_configuratio: Add control_finding_generator field for resource
+```%  
