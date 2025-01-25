@@ -787,3 +787,66 @@ resource "null_resource" "db_setup" {
 }
 `, rName, model))
 }
+
+func ConfigBedrockAgentKnowledgeBaseRDSUpdateBase(rName, model string) string {
+	return ConfigCompose(
+		ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), //nolint:mnd
+		fmt.Sprintf(`
+resource "aws_iam_role" "test_update" {
+  name               = "%[1]s-update"
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+		"Service": "bedrock.amazonaws.com"
+		},
+		"Effect": "Allow"
+	}]
+}
+POLICY
+}
+
+# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
+resource "aws_iam_role_policy" "test_update" {
+  name   = "%[1]s-update"
+  role   = aws_iam_role.test_update.name
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:ListFoundationModels",
+        "bedrock:ListCustomModels"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "rds_data_full_access_update" {
+  role       = aws_iam_role.test_update.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/AmazonRDSDataFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
+  role       = aws_iam_role.test_update.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
+}
+`, rName, model))
+}
