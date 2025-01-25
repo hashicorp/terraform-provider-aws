@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -203,8 +204,6 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 
 	input := new(billing.CreateBillingViewInput)
 
-	fmt.Printf("Plan: %v\n", plan)
-
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -219,7 +218,6 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	fmt.Printf("Out: %v\n", out)
 	if out == nil || out.Arn == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionCreating, ResNameView, plan.Name.String(), nil),
@@ -249,7 +247,6 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BillingClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceViewModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -273,6 +270,17 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	sourceViews, err := findSourceViewsByARN(ctx, conn, state.ARN.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Billing, create.ErrActionSetting, ResNameView, state.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	state.SourceViews = flex.FlattenFrameworkStringValueListOfString(ctx, sourceViews)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -469,6 +477,29 @@ func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awst
 	}
 
 	return out.BillingView, nil
+}
+
+func findSourceViewsByARN(ctx context.Context, conn *billing.Client, arn string) ([]string, error) {
+	sourceViews := make([]string, 0)
+
+	sourceViewsPag := billing.NewListSourceViewsForBillingViewPaginator(conn, &billing.ListSourceViewsForBillingViewInput{
+		Arn: aws.String(arn),
+	})
+
+	for sourceViewsPag.HasMorePages() {
+		sourceView, err := sourceViewsPag.NextPage(ctx)
+		if err != nil {
+			tflog.Error(ctx, "Error listing source views for billing view", map[string]interface{}{
+				"arn":   arn,
+				"error": err.Error(),
+			})
+			return nil, err
+		}
+
+		sourceViews = append(sourceViews, sourceView.SourceViews...)
+	}
+
+	return sourceViews, nil
 }
 
 type resourceViewModel struct {
