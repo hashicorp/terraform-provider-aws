@@ -7,30 +7,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/billing/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/billing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfbilling "github.com/hashicorp/terraform-provider-aws/internal/service/billing"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBillingView_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var view awstypes.BillingViewElement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,7 +105,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfbilling.FindBillingViewByARN(ctx, conn, &rs.Primary.ID)
+			_, err := tfbilling.FindViewByARN(ctx, conn, &rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -139,7 +133,7 @@ func testAccCheckViewExists(ctx context.Context, name string, view *awstypes.Bil
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BillingClient(ctx)
 
-		resp, err := tfbilling.FindBillingViewByARN(ctx, conn, &rs.Primary.ID)
+		resp, err := tfbilling.FindViewByARN(ctx, conn, &rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, err)
 		}
@@ -168,8 +162,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccViewConfig_basic(rName, accountID string) string {
 	return fmt.Sprintf(`
 resource "aws_billing_view" "test" {
-  name = "%s"
-  description = "Test description"
+  name         = "%s"
+  description  = "Test description"
   source_views = ["arn:aws:billing::%s:billingview/primary"]
 }
 `, rName, accountID)

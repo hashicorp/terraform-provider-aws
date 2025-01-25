@@ -4,18 +4,6 @@
 package billing
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/billing/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"github.com/YakDriver/regexache"
@@ -45,27 +33,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_billing_view", name="View")
-// @Tags(identifierAttribute="arn")
 func newResourceView(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceView{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -86,64 +58,20 @@ func (r *resourceView) Metadata(_ context.Context, req resource.MetadataRequest,
 	resp.TypeName = "aws_billing_view"
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"client_token": schema.StringAttribute{
 				Optional: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1024),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -291,7 +219,7 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitBillingViewCreated(ctx, conn, plan.ARN.ValueStringPointer(), createTimeout)
+	_, err = waitViewCreated(ctx, conn, plan.ARN.ValueStringPointer(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionWaitingForCreation, ResNameView, plan.Name.String(), err),
@@ -313,7 +241,7 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	out, err := findBillingViewByARN(ctx, conn, state.ARN.ValueStringPointer())
+	out, err := findViewByARN(ctx, conn, state.ARN.ValueStringPointer())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -347,7 +275,6 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 	if !plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) ||
 		!plan.DataFilterExpression.Equal(state.DataFilterExpression) {
-
 		input := new(billing.UpdateBillingViewInput)
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
@@ -378,7 +305,7 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitBillingViewUpdated(ctx, conn, plan.ARN.ValueStringPointer(), updateTimeout)
+	_, err := waitViewUpdated(ctx, conn, plan.ARN.ValueStringPointer(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionWaitingForUpdate, ResNameView, plan.ARN.String(), err),
@@ -391,40 +318,19 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 }
 
 func (r *resourceView) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BillingClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceViewModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	input := billing.DeleteBillingViewInput{
 		Arn: state.ARN.ValueStringPointer(),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteBillingView(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -438,7 +344,7 @@ func (r *resourceView) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBillingViewDeleted(ctx, conn, state.ARN.ValueStringPointer(), deleteTimeout)
+	_, err = waitViewDeleted(ctx, conn, state.ARN.ValueStringPointer(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Billing, create.ErrActionWaitingForDeletion, ResNameView, state.ARN.String(), err),
@@ -452,14 +358,6 @@ func (r *resourceView) ImportState(ctx context.Context, req resource.ImportState
 	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
 }
 
-func (r *resourceView) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
 const (
 	statusChangePending = "Pending"
 	statusDeleting      = "Deleting"
@@ -467,20 +365,7 @@ const (
 	statusUpdated       = "Updated"
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitBillingViewCreated(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewCreated(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -498,11 +383,7 @@ func waitBillingViewCreated(ctx context.Context, conn *billing.Client, id *strin
 	return nil, err
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitBillingViewUpdated(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewUpdated(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -520,9 +401,7 @@ func waitBillingViewUpdated(ctx context.Context, conn *billing.Client, id *strin
 	return nil, err
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitBillingViewDeleted(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewDeleted(ctx context.Context, conn *billing.Client, id *string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
@@ -538,16 +417,9 @@ func waitBillingViewDeleted(ctx context.Context, conn *billing.Client, id *strin
 	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
 func statusView(ctx context.Context, conn *billing.Client, id *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findBillingViewByARN(ctx, conn, id)
+		out, err := findViewByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -560,7 +432,7 @@ func statusView(ctx context.Context, conn *billing.Client, id *string) retry.Sta
 	}
 }
 
-func findBillingViewByARN(ctx context.Context, conn *billing.Client, arn *string) (*awstypes.BillingViewElement, error) {
+func findViewByARN(ctx context.Context, conn *billing.Client, arn *string) (*awstypes.BillingViewElement, error) {
 	in := new(billing.GetBillingViewInput)
 	in.Arn = arn
 

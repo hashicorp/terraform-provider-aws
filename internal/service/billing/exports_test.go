@@ -4,6 +4,6 @@
 package billing
 
 var (
-	FindBillingViewByARN = findBillingViewByARN
-	ResourceView         = newResourceView
+	FindViewByARN = findViewByARN
+	ResourceView  = newResourceView
 )
