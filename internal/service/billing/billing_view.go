@@ -65,6 +65,10 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"client_token": schema.StringAttribute{
 				Optional: true,
 			},
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
