@@ -100,7 +100,12 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfbilling.FindViewByARN(ctx, conn, &rs.Primary.ID)
+			arn := rs.Primary.Attributes["arn"]
+			if arn == "" {
+				return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
+			}
+
+			_, err := tfbilling.FindViewByARN(ctx, conn, &arn)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -122,13 +127,14 @@ func testAccCheckViewExists(ctx context.Context, name string, view *awstypes.Bil
 			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, name, errors.New("not set"))
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BillingClient(ctx)
 
-		resp, err := tfbilling.FindViewByARN(ctx, conn, &rs.Primary.ID)
+		arn := rs.Primary.Attributes["arn"]
+		if arn == "" {
+			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
+		}
+
+		resp, err := tfbilling.FindViewByARN(ctx, conn, &arn)
 		if err != nil {
 			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, err)
 		}

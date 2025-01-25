@@ -369,6 +369,7 @@ func (r *resourceView) Delete(ctx context.Context, req resource.DeleteRequest, r
 }
 
 func (r *resourceView) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	fmt.Printf("ImportState %v\n", req.ID)
 	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
 }
 
