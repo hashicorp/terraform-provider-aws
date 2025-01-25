@@ -39,6 +39,32 @@ resource "aws_securityhub_organization_configuration" "example" {
 }
 ```
 
+### Central Configuration with Control Finding Generator
+
+```terraform
+resource "aws_securityhub_organization_admin_account" "example" {
+  depends_on = [aws_organizations_organization.example]
+
+  admin_account_id = "123456789012"
+}
+
+resource "aws_securityhub_finding_aggregator" "example" {
+  linking_mode = "ALL_REGIONS"
+
+  depends_on = [aws_securityhub_organization_admin_account.example]
+}
+
+resource "aws_securityhub_organization_configuration" "example" {
+  auto_enable           = false
+  auto_enable_standards = "NONE"
+  organization_configuration {
+    configuration_type = "CENTRAL"
+  }
+
+  depends_on = [aws_securityhub_finding_aggregator.example]
+}
+```
+
 ### Central Configuration
 
 ```terraform
@@ -71,6 +97,7 @@ This resource supports the following arguments:
 
 * `auto_enable` - (Required) Whether to automatically enable Security Hub for new accounts in the organization.
 * `auto_enable_standards` - (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to `DEFAULT`, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to `NONE`.
+* `control_finding_generator` - (Optional) Updates whether the calling account has consolidated control findings turned on. If the value for this field is set to `SECURITY_CONTROL`, Security Hub generates a single finding for a control check even when the check applies to multiple enabled standards. If the value for this field is set to `STANDARD_CONTROL`, Security Hub generates separate findings for a control check when the check applies to multiple enabled standards. For accounts that are part of an organization, this value can only be updated in the administrator account.
 * `organization_configuration` - (Optional) Provides information about the way an organization is configured in Security Hub.
 
 `organization_configuration` supports the following:
