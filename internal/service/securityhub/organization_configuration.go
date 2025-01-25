@@ -6,6 +6,7 @@ package securityhub
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -21,6 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func validateControlFindingGenerator(val interface{}, key string) ([]string, []error) {
+	v, ok := val.(string)
+	if !ok {
+		return nil, []error{fmt.Errorf("expected string, got %T", val)}
+	}
+	validValues := []string{"SECURITY_CONTROL", "STANDARD_CONTROL"}
+	for _, valid := range validValues {
+		if v == valid {
+			return nil, nil
+		}
+	}
+	return nil, []error{fmt.Errorf("%q is not a valid value for %s. Valid values are: %v", v, key, validValues)}
+}
 
 // @SDKResource("aws_securityhub_organization_configuration", name="Organization Configuration")
 func resourceOrganizationConfiguration() *schema.Resource {
@@ -50,6 +65,13 @@ func resourceOrganizationConfiguration() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
+			},
+			"control_finding_generator": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "SECURITY_CONTROL", // Default to SECURITY_CONTROL
+				ValidateFunc: validateControlFindingGenerator,
+				Description:  "Defines the control finding generator setting (SECURITY_CONTROL or STANDARD_CONTROL).",
 			},
 			"organization_configuration": {
 				Type:        schema.TypeList,

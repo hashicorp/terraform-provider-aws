@@ -30,11 +30,12 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfigurationConfig_basic(true),
+				Config: testAccOrganizationConfigurationConfig_basic(true, "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
 			{
@@ -43,11 +44,12 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationConfigurationConfig_basic(false),
+				Config: testAccOrganizationConfigurationConfig_basic(false, "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
 		},
@@ -65,11 +67,12 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("DEFAULT"),
+				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("DEFAULT", "SECURITY_STANDARD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
 			{
@@ -78,11 +81,12 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("NONE"),
+				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("NONE", "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
 		},
@@ -113,11 +117,12 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 					// Can only run check here because the provider is not available until the previous step.
 					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
 				},
-				Config: testAccOrganizationConfigurationConfig_centralConfiguration(false, "NONE", "CENTRAL"),
+				Config: testAccOrganizationConfigurationConfig_centralConfiguration(false, "NONE", "CENTRAL", "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "CENTRAL"),
 				),
@@ -128,11 +133,12 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationConfigurationConfig_centralConfiguration(true, "DEFAULT", "LOCAL"),
+				Config: testAccOrganizationConfigurationConfig_centralConfiguration(true, "DEFAULT", "LOCAL", "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "LOCAL"),
 				),
@@ -199,25 +205,27 @@ resource "aws_securityhub_organization_admin_account" "test" {
 }
 `
 
-func testAccOrganizationConfigurationConfig_basic(autoEnable bool) string {
+func testAccOrganizationConfigurationConfig_basic(autoEnable bool, controlFindingGenerator string) string {
 	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_securityhub_organization_configuration" "test" {
-  auto_enable = %[1]t
+  auto_enable           = %[1]t
+  control_finding_generator = %[2]q
 
   depends_on = [aws_securityhub_organization_admin_account.test]
 }
-`, autoEnable))
+`, autoEnable, controlFindingGenerator))
 }
 
-func testAccOrganizationConfigurationConfig_autoEnableStandards(autoEnableStandards string) string {
+func testAccOrganizationConfigurationConfig_autoEnableStandards(autoEnableStandards string, controlFindingGenerator string) string {
 	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_securityhub_organization_configuration" "test" {
   auto_enable           = true
   auto_enable_standards = %[1]q
+  control_finding_generator = %[2]q
 
   depends_on = [aws_securityhub_organization_admin_account.test]
 }
-`, autoEnableStandards))
+`, autoEnableStandards, controlFindingGenerator)) // Pass both arguments here
 }
 
 // Central configuration can only be enabled from a *member* delegated admin account.
@@ -241,7 +249,7 @@ data "aws_caller_identity" "management" {
 }
 `)
 
-func testAccOrganizationConfigurationConfig_centralConfiguration(autoEnable bool, autoEnableStandards, configType string) string {
+func testAccOrganizationConfigurationConfig_centralConfiguration(autoEnable bool, autoEnableStandards, configType, controlFindingGenerator string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		testAccMemberAccountDelegatedAdminConfig_base,
@@ -255,11 +263,12 @@ resource "aws_securityhub_finding_aggregator" "test" {
 resource "aws_securityhub_organization_configuration" "test" {
   auto_enable           = %[1]t
   auto_enable_standards = %[2]q
+  control_finding_generator = %[3]q
   organization_configuration {
-    configuration_type = %[3]q
+    configuration_type = %[4]q
   }
 
   depends_on = [aws_securityhub_finding_aggregator.test]
 }
-`, autoEnable, autoEnableStandards, configType))
+`, autoEnable, autoEnableStandards, controlFindingGenerator, configType))
 }
