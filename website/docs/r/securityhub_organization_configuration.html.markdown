@@ -57,6 +57,7 @@ resource "aws_securityhub_finding_aggregator" "example" {
 resource "aws_securityhub_organization_configuration" "example" {
   auto_enable           = false
   auto_enable_standards = "NONE"
+  control_finding_generator = "SECURITY_CONTROL"
   organization_configuration {
     configuration_type = "CENTRAL"
   }
