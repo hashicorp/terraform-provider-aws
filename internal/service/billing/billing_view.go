@@ -6,16 +6,15 @@ package billing
 import (
 	"context"
 	"errors"
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/billing/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -87,6 +87,7 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"source_views": schema.ListAttribute{
 				Required:    true,
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Validators: []validator.List{
 					listvalidator.ValueStringsAre(validators.ARN()),
@@ -114,6 +115,7 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 									"values": schema.ListAttribute{
 										Required:    true,
+										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
 										Validators: []validator.List{
 											listvalidator.SizeBetween(1, 200),
@@ -142,6 +144,7 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 									"values": schema.ListAttribute{
 										Required:    true,
+										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
 										Validators: []validator.List{
 											listvalidator.SizeBetween(1, 200),

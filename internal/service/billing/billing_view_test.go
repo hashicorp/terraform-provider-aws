@@ -30,8 +30,6 @@ func TestAccBillingView_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_billing_view.test"
 
-	accountID := acctest.Provider.Meta().(*conns.AWSClient).AccountID(ctx)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -42,7 +40,7 @@ func TestAccBillingView_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccViewConfig_basic(rName, accountID),
+				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -73,8 +71,6 @@ func TestAccBillingView_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_billing_view.test"
 
-	accountID := acctest.Provider.Meta().(*conns.AWSClient).AccountID(ctx)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -85,7 +81,7 @@ func TestAccBillingView_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccViewConfig_basic(rName, accountID),
+				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbilling.ResourceView, resourceName),
@@ -159,12 +155,16 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccViewConfig_basic(rName, accountID string) string {
+func testAccViewConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
 resource "aws_billing_view" "test" {
   name         = "%s"
   description  = "Test description"
-  source_views = ["arn:aws:billing::%s:billingview/primary"]
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
 }
-`, rName, accountID)
+`, rName)
 }
