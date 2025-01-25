@@ -109,7 +109,8 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 										CustomType: fwtypes.StringEnumType[awstypes.Dimension](),
 									},
 									"values": schema.ListAttribute{
-										Required: true,
+										Required:    true,
+										ElementType: types.StringType,
 										Validators: []validator.List{
 											listvalidator.SizeBetween(1, 200),
 											listvalidator.ValueStringsAre(
@@ -136,7 +137,8 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 										},
 									},
 									"values": schema.ListAttribute{
-										Required: true,
+										Required:    true,
+										ElementType: types.StringType,
 										Validators: []validator.List{
 											listvalidator.SizeBetween(1, 200),
 											listvalidator.ValueStringsAre(
