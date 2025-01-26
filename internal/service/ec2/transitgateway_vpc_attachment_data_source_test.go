@@ -33,6 +33,7 @@ func testAccTransitGatewayVPCAttachmentDataSource_Filter(t *testing.T, semaphore
 			{
 				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
@@ -67,6 +68,7 @@ func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T, semaphore tfs
 			{
 				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
