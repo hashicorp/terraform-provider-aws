@@ -357,23 +357,26 @@ func testAccKnowledgeBase_updateOpenSearch(t *testing.T) {
 	})
 }
 
-// Prerequisites:
-// * comment out acctest.Skip
-// * you will need an OpenSearch Serverless Collection whose index matches what we will tell a Bedrock Knowledge Base to expect, so...
-// * follow the guide here with the following details ==> https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-create.html
-// * when you press the "Create" button for a Knowledge Base choose "Knowledge Base With Vector Store"
-// * allow the process to create a role for you (which you will insert later for FANCY_OSSC_TEST_ROLE_ARN)
-// * choose S3 as a data source and enter any valid s3 URI for its location (bucket doesn't need to actually exist)
-// * choose Titan Text Embedding v2 as the embedding model and under additional configs choose floating point for type and 1024 for dimensions
-// * choose the "quick create a new vector store" option and choose Amazon OpenSearch Serverless
-// * note the service role that was created for the Bedrock Knowledge Base and plug it into the hard coded FANCY_OSSC_TEST_ROLE_ARN in testAccKnowledgeBaseConfig_fancyOpenSearch
-// * also add S3FullAccess to that role so that it can validate access to a bucket that will underpin supplemental data storage
-// * note the ARN of the created OpenSearch Serverless Collection and plug it into FANCY_OSSC_VDB_ARN in testAccKnowledgeBaseConfig_fancyOpenSearch
-// * create an S3 bucket, note its name, and fill SDS_BUCKET_NAME with it
-// * make sure your shell env has set AWS_DEFAULT_REGION to whatever region you use in the console to set up BKB and OSSC stuffs
-// * run this test with ==> make testacc TESTS=TestAccBedrockAgent_serial/KnowledgeBase/fancyOpenSearch PKG=bedrockagent
-// * clean up after yourself by deleting the BKB, the OSSC, the IAM Role, and the S3 bucket
 func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
+	// To create a collection to be used with this test, do the following.
+	//
+	// 1. In the AWS console, navigate to the OpenSearch service. Choose the "Collections"
+	// entry on the left navbar and select "Create collection" above the collections table.
+	// 2. Enter a collection name. Choose "Vector search" as the collection type. Choose
+	// "Easy create" in the security section. Click "Next" to review, then click "Submit".
+	// 3. Once the collection is available, select the "Indexes" tab. Click "Create vector
+	// index". Name the index "bedrock-knowledge-base-default-index".
+	// 4. In the "Vector fields" section, click "Add vector field".  Name the field
+	// "bedrock-knowledge-base-default-vector". Choose "faiss" for engine, "FP32" for
+	// precision, "1024" for dimensions, and "Euclidean" for distance metric. Click
+	// "Confirm" to create the field.
+	// 5. In the "Metadata management" section, add two fields.
+	//   "AMAZON_BEDROCK_METADATA" - string type, filterable is false.
+	//   "AMAZON_BEDROCK_TEXT_CHUNK" - string type, filterable is true.
+	// 6. Click "Create" to finish index creation.
+	//
+	// At this point the collection is usable with this test. Set the collection name to the
+	// environment variable below.
 	collectionName := os.Getenv("TF_ACC_BEDROCK_OSS_COLLECTION_NAME")
 	if collectionName == "" {
 		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
@@ -879,7 +882,7 @@ resource "aws_opensearchserverless_access_policy" "test" {
         {
           ResourceType = "index",
           Resource = [
-            "index/bedrock-knowledge-base-sh5068/*"
+            "index/%[2]s/*"
           ],
           Permission = [
             "aoss:*",
@@ -888,7 +891,7 @@ resource "aws_opensearchserverless_access_policy" "test" {
         {
           ResourceType = "collection",
           Resource = [
-            "collection/bedrock-knowledge-base-sh5068"
+            "collection/%[2]s"
           ],
           Permission = [
             "aoss:*",
