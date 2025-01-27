@@ -218,6 +218,7 @@ const (
 	exportableLogTypeError          = "error"
 	exportableLogTypeGeneral        = "general"
 	exportableLogTypeIAMDBAuthError = "iam-db-auth-error"
+	exportableLogTypeInstance       = "instance"
 	exportableLogTypeListener       = "listener"
 	exportableLogTypeNotifyLog      = "notify.log"
 	exportableLogTypeOEMAgent       = "oemagent"
@@ -233,6 +234,7 @@ func clusterExportableLogType_Values() []string {
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
 		exportableLogTypeIAMDBAuthError,
+		exportableLogTypeInstance,
 		exportableLogTypePostgreSQL,
 		exportableLogTypeSlowQuery,
 		exportableLogTypeUpgrade,
