@@ -5,20 +5,18 @@ package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,10 +24,6 @@ import (
 
 func TestAccVPCLatticeResourceConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
@@ -56,6 +50,11 @@ func TestAccVPCLatticeResourceConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -68,10 +67,6 @@ func TestAccVPCLatticeResourceConfiguration_basic(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v1, v2 vpclattice.GetResourceConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
@@ -99,6 +94,11 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -109,7 +109,6 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 				Config: testAccResourceConfigurationConfig_update(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceConfigurationExists(ctx, resourceName, &v2),
-					testAccCheckResourceConfigurationNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
@@ -119,6 +118,11 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.ip_address_type", "IPV4"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -131,10 +135,6 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v1, v2 vpclattice.GetResourceConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
@@ -161,6 +161,11 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.ip_resource.0.ip_address", "10.0.0.1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -171,7 +176,6 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 				Config: testAccResourceConfigurationConfig_ipAddress(rName, "10.0.0.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceConfigurationExists(ctx, resourceName, &v2),
-					testAccCheckResourceConfigurationNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
@@ -179,6 +183,11 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.ip_resource.0.ip_address", "10.0.0.2"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -191,10 +200,6 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
@@ -224,6 +229,11 @@ func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.ip_resource.0.ip_address", "10.0.0.1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -236,10 +246,6 @@ func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
@@ -265,6 +271,11 @@ func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_definition.0.arn_resource.0.arn", resourceArnName, names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -277,10 +288,6 @@ func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
@@ -317,49 +324,38 @@ func testAccCheckResourceConfigurationDestroy(ctx context.Context) resource.Test
 			}
 
 			_, err := tfvpclattice.FindResourceConfigurationByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameResourceConfiguration, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameResourceConfiguration, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("VPC Lattice Resource Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckResourceConfigurationExists(ctx context.Context, name string, resourceconfiguration *vpclattice.GetResourceConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckResourceConfigurationExists(ctx context.Context, n string, v *vpclattice.GetResourceConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameResourceConfiguration, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameResourceConfiguration, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
-		resp, err := tfvpclattice.FindResourceConfigurationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfvpclattice.FindResourceConfigurationByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameResourceConfiguration, rs.Primary.ID, err)
+			return err
 		}
 
-		*resourceconfiguration = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckResourceConfigurationNotRecreated(before, after *vpclattice.GetResourceConfigurationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingNotRecreated, tfvpclattice.ResNameResourceConfiguration, before, errors.New("recreated"))
-		}
+		*v = *output
 
 		return nil
 	}
