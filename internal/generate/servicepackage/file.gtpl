@@ -9,6 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 {{- end }}
+{{- if gt (len .EndpointRegionOverrides) 0 }}
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
@@ -139,8 +142,8 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *{{ .GoV2Package }}.Options) {
 			switch partition := config["partition"].(string); partition {
 	{{- range $k, $v := .EndpointRegionOverrides }}
-			case "{{ $k }}":
-				if region := "{{ $v }}"; cfg.Region != region {
+			case endpoints.{{ $k | Camel }}PartitionID:
+				if region := endpoints.{{ $v | Camel }}RegionID; cfg.Region != region {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
 						"override_region": region,

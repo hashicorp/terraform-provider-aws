@@ -15,9 +15,11 @@ import (
 	"go/token"
 	"os"
 	"strings"
+	"text/template"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -81,10 +83,12 @@ func main() {
 			SDKDataSources:          v.sdkDataSources,
 			SDKResources:            v.sdkResources,
 		}
-
+		templateFuncMap := template.FuncMap{
+			"Camel": names.ToCamelCase,
+		}
 		d := g.NewGoFileDestination(filename)
 
-		if err := d.BufferTemplate("servicepackagedata", tmpl, s); err != nil {
+		if err := d.BufferTemplate("servicepackagedata", tmpl, s, templateFuncMap); err != nil {
 			g.Fatalf("generating %s service package data: %s", p, err)
 		}
 
