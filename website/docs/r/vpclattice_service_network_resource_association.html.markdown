@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Service Network Resource Association using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Service Network Resource Association using the `id`. For example:
 
 ```terraform
 import {
@@ -65,7 +65,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC Lattice Service Network Resource Association using the `snra-1234567890abcef12`. For example:
+Using `terraform import`, import VPC Lattice Service Network Resource Association using the `id`. For example:
 
 ```console
 % terraform import aws_vpclattice_service_network_resource_association.example snra-1234567890abcef12
