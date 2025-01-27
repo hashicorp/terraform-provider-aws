@@ -84,7 +84,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel, "test description"),
+				Config: testAccKnowledgeBaseConfig_updateRDS(rName, foundationModel, "test description"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -96,8 +96,8 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-update"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_update", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "RDS"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.#", "1"),
@@ -441,6 +441,42 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+}
+`, rName, model, description))
+}
+
+func testAccKnowledgeBaseConfig_updateRDS(rName, model, description string) string {
+	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSUpdateBase(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = "%[1]s-update"
+  role_arn = aws_iam_role.test_update.arn
+
+  description = %[3]q
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "RDS"
+    rds_configuration {
+      resource_arn           = aws_rds_cluster.test.arn
+      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
+      database_name          = aws_rds_cluster.test.database_name
+      table_name             = "bedrock_integration.bedrock_kb"
+      field_mapping {
+        vector_field      = "embedding"
+        text_field        = "chunks"
+        metadata_field    = "metadata"
+        primary_key_field = "id"
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test_update, null_resource.db_setup]
 }
 `, rName, model, description))
 }
