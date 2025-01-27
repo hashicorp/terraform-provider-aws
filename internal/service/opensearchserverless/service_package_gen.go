@@ -25,6 +25,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory:  newDataSourceCollection,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  newDataSourceLifecyclePolicy,
