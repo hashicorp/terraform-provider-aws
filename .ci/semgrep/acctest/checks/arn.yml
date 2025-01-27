@@ -7,7 +7,6 @@ rules:
         - "internal/service/controltower"
         - "internal/service/organizations"
         - "internal/service/redshift"
-        - "internal/service/rekognition"
         - "internal/service/resourcegroups"
         - "internal/service/route53resolver"
         - "internal/service/s3"
