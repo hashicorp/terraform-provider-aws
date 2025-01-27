@@ -25,7 +25,7 @@ func GetWriteOnlyValue(d writeOnlyAttrGetter, path cty.Path, attrType cty.Type) 
 	}
 
 	if !valueWO.Type().Equals(attrType) {
-		return cty.Value{}, sdkdiag.AppendErrorf(diags, "SSM Parameter (%s): invalid value_wo type", d.Id())
+		return cty.Value{}, sdkdiag.AppendErrorf(diags, "invalid type (%s) for resource(%s)", attrType, d.Id())
 	}
 
 	return valueWO, diags
