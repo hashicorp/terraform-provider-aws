@@ -179,7 +179,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.11
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.12
-	github.com/aws/aws-sdk-go-v2/service/oam v1.15.13
+	github.com/aws/aws-sdk-go-v2/service/oam v1.15.14
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.6
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.9
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.12
