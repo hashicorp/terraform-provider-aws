@@ -58,7 +58,7 @@ func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, 
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"dns_entry":   framework.ResourceComputedListOfObjectAttribute[dnsEntryModel](ctx),
+			"dns_entry":   framework.ResourceComputedListOfObjectsAttribute[dnsEntryModel](ctx),
 			names.AttrID:  framework.IDAttribute(),
 			"resource_configuration_identifier": schema.StringAttribute{
 				Required: true,
