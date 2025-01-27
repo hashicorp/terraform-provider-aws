@@ -129,7 +129,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glue v1.105.5
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.26.12
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.27.12
-	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.12
+	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.13
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.52.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.11
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.7
