@@ -187,15 +187,20 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 															},
 														},
 														Blocks: map[string]schema.Block{
-															"s3_location": schema.SingleNestedBlock{
-																Attributes: map[string]schema.Attribute{
-																	names.AttrURI: schema.StringAttribute{
-																		Required: true,
-																		Validators: []validator.String{
-																			stringvalidator.RegexMatches(
-																				regexache.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
-																				"must be a valid S3 URI",
-																			),
+															"s3_location": schema.ListNestedBlock{
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrURI: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.RegexMatches(
+																					regexache.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
+																					"must be a valid S3 URI",
+																				),
+																			},
 																		},
 																	},
 																},
@@ -834,8 +839,8 @@ type supplementalDataStorageConfigurationModel struct {
 }
 
 type storageLocationModel struct {
-	Type       types.String                           `tfsdk:"type"`
-	S3Location fwtypes.ObjectValueOf[s3LocationModel] `tfsdk:"s3_location"` // Use a pointer to denote optional nested block
+	Type       types.String                                     `tfsdk:"type"`
+	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
 }
 
 type storageConfigurationModel struct {
