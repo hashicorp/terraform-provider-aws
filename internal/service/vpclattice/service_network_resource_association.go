@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -58,7 +59,7 @@ func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, 
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"dns_entry":   framework.ResourceComputedListOfObjectsAttribute[dnsEntryModel](ctx),
+			"dns_entry":   framework.ResourceComputedListOfObjectsAttribute[dnsEntryModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrID:  framework.IDAttribute(),
 			"resource_configuration_identifier": schema.StringAttribute{
 				Required: true,
