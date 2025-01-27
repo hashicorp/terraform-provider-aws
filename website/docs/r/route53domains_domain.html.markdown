@@ -152,7 +152,7 @@ import {
 }
 ```
 
-Using `terraform import`, import domains using the domain name. For example:
+Using `terraform import`, import domains using the `domain_name`. For example:
 
 ```console
 % terraform import aws_route53domains_domain.example example.com
