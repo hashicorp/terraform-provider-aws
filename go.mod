@@ -383,5 +383,4 @@ require (
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
 
-// github.com/hashicorp/terraform-plugin-go => github.com/hashicorp/terraform-plugin-go v0.25.1-0.20241217173851-dcf8f64dbfaa
 replace github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.1-0.20250103201413-5f29273ad6f0
