@@ -23,10 +23,6 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019: \\w+.\\w+ is deprecated: Use \\w+Context or \\w+WithoutTimeout instead"
-      # go: strings.Title
-    - linters:
-        - staticcheck
-      text: "SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0"
     # Per-Service
     - linters:
         - staticcheck

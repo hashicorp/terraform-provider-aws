@@ -41,10 +41,10 @@ resource "aws_bedrockagent_knowledge_base" "example" {
 
 The following arguments are required:
 
-* `knowledge_base_configuration` - (Required) Details about the embeddings configuration of the knowledge base. See [`knowledge_base_configuration` block](#knowledge_base_configuration-block) for details.
-* `name` - (Required, Forces new resource) Name of the knowledge base.
+* `knowledge_base_configuration` - (Required, Forces new resource) Details about the embeddings configuration of the knowledge base. See [`knowledge_base_configuration` block](#knowledge_base_configuration-block) for details.
+* `name` - (Required) Name of the knowledge base.
 * `role_arn` - (Required) ARN of the IAM role with permissions to invoke API operations on the knowledge base.
-* `storage_configuration` - (Required) Details about the storage configuration of the knowledge base. See [`storage_configuration` block](#storage_configuration-block) for details.
+* `storage_configuration` - (Required, Forces new resource) Details about the storage configuration of the knowledge base. See [`storage_configuration` block](#storage_configuration-block) for details.
 
 The following arguments are optional:
 

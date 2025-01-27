@@ -7,7 +7,7 @@ package vpclattice
 var (
 	ResourceAccessLogSubscription             = resourceAccessLogSubscription
 	ResourceListener                          = resourceListener
-	ResourceConfiguration                     = newResourceResourceConfiguration
+	ResourceResourceConfiguration             = newResourceConfigurationResource
 	ResourceResourceGateway                   = newResourceGatewayResource
 	ResourceService                           = resourceService
 	ResourceServiceNetwork                    = resourceServiceNetwork

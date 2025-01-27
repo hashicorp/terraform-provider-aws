@@ -138,7 +138,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Resource Configuration using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Resource Configuration using the `id`. For example:
 
 ```terraform
 import {
@@ -147,7 +147,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC Lattice Resource Configuration using the `rcfg-1234567890abcdef1`. For example:
+Using `terraform import`, import VPC Lattice Resource Configuration using the `id`. For example:
 
 ```console
 % terraform import aws_vpclattice_resource_configuration.example rcfg-1234567890abcdef1
