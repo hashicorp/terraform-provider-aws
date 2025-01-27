@@ -232,7 +232,7 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 }
 
 func (sr ServiceRecord) EndpointRegionOverrides() map[string]string {
-	if len(sr.service.ServiceEndpoints.EndpointRegionOverrides) > 0 {
+	if sr.service.ServiceEndpoints != nil && len(sr.service.ServiceEndpoints.EndpointRegionOverrides) > 0 {
 		return maps.Clone(sr.service.ServiceEndpoints.EndpointRegionOverrides)
 	}
 	return nil
