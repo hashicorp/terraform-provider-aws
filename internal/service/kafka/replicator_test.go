@@ -24,7 +24,7 @@ import (
 const (
 	// The ARN format documentation (https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedstreamingforapachekafka.html#amazonmanagedstreamingforapachekafka-resources-for-iam-policies)
 	// shows ARNs having a UUID component, but in testing there is an additional component.
-	kafkaUUIDRegexPattern = verify.UUIDRegexPattern + `-\w+`
+	kafkaUUIDRegexPattern = verify.UUIDRegexPattern + `-\w+` // nosemgrep:ci.kafka-in-const-name,ci.kafka-in-var-name
 )
 
 func TestAccKafkaReplicator_basic(t *testing.T) {

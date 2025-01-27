@@ -23,7 +23,7 @@ import (
 const (
 	// The ARN format documentation (https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedstreamingforkafkaconnect.html#amazonmanagedstreamingforkafkaconnect-resources-for-iam-policies)
 	// shows ARNs having a UUID component, but in testing there is an additional component.
-	kafkaConnectUUIDRegexPattern = verify.UUIDRegexPattern + `-\w+`
+	kafkaConnectUUIDRegexPattern = verify.UUIDRegexPattern + `-\w+` // nosemgrep:ci.kafkaconnect-in-const-name,ci.kafkaconnect-in-var-name
 )
 
 func TestAccKafkaConnectConnector_basic(t *testing.T) {
