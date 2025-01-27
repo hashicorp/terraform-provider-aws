@@ -156,9 +156,21 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 {{- end }}
 	}
 
+	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
+
 	return {{ .GoV2Package }}.NewFromConfig(cfg, optFns...), nil
 }
 {{- end }}
+
+func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*{{ .GoV2Package }}.Options) {
+	if v, ok := sp.(interface {
+		extraOptFns(context.Context, map[string]any) []func(*{{ .GoV2Package }}.Options)
+	}); ok {
+		return v.extraOptFns(ctx, config)
+	}
+
+	return nil
+}
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
 	return &servicePackage{}
