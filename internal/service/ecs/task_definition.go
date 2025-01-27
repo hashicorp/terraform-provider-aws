@@ -118,7 +118,7 @@ func resourceTaskDefinition() *schema.Resource {
 			"enable_fault_injection": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 				ForceNew: true,
 			},
 			"ephemeral_storage": {
