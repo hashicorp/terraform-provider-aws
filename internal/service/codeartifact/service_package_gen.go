@@ -80,7 +80,19 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	}
 
+	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
+
 	return codeartifact.NewFromConfig(cfg, optFns...), nil
+}
+
+func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*codeartifact.Options) {
+	if v, ok := sp.(interface {
+		extraOptFns(context.Context, map[string]any) []func(*codeartifact.Options)
+	}); ok {
+		return v.extraOptFns(ctx, config)
+	}
+
+	return nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

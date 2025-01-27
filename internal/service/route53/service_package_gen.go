@@ -174,7 +174,19 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		},
 	}
 
+	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
+
 	return route53.NewFromConfig(cfg, optFns...), nil
+}
+
+func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*route53.Options) {
+	if v, ok := sp.(interface {
+		extraOptFns(context.Context, map[string]any) []func(*route53.Options)
+	}); ok {
+		return v.extraOptFns(ctx, config)
+	}
+
+	return nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

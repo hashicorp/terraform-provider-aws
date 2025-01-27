@@ -69,7 +69,19 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	}
 
+	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
+
 	return datapipeline.NewFromConfig(cfg, optFns...), nil
+}
+
+func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*datapipeline.Options) {
+	if v, ok := sp.(interface {
+		extraOptFns(context.Context, map[string]any) []func(*datapipeline.Options)
+	}); ok {
+		return v.extraOptFns(ctx, config)
+	}
+
+	return nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
