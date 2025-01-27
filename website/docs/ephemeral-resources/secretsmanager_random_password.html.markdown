@@ -15,24 +15,24 @@ Terraform ephemeral resource for managing an AWS Secrets Manager Random Password
 ### Basic Usage
 
 ```terraform
-ephemeral "aws_secretsmanager_random_password" "example" {
-  name = "example"
-}
+ephemeral "aws_secretsmanager_random_password" "example" {}
 ```
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `exclude_characters` - (Optional) String of the characters that you don't want in the password.
+* `exclude_lowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
+* `exclude_numbers` - (Optional) Specifies whether to exclude numbers from the password.
+* `exclude_punctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: ``! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .``
+* `exclude_uppercase` - (Optional) Specifies whether to exclude uppercase letters from the password.
+* `include_space` - (Optional) Specifies whether to include the space character.
+* `password_length` - (Optional) Length of the password.
+* `require_each_included_type` - (Optional) Specifies whether to include at least one upper and lowercase letter, one number, and one punctuation.
 
 ## Attribute Reference
 
 This ephemeral resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Random Password. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `random_password` - Random password.
