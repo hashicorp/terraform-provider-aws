@@ -106,11 +106,11 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceConfigurationConfig_update(rName, acctest.CtTrue),
+				Config: testAccResourceConfigurationConfig_update(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceConfigurationExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.1", "8080"),

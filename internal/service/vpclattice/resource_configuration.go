@@ -320,7 +320,8 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, request reso
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	if !new.PortRanges.Equal(old.PortRanges) ||
+	if !new.AllowAssociationToShareableServiceNetwork.Equal(old.AllowAssociationToShareableServiceNetwork) ||
+		!new.PortRanges.Equal(old.PortRanges) ||
 		!new.ResourceConfigurationDefinition.Equal(old.ResourceConfigurationDefinition) {
 		var input vpclattice.UpdateResourceConfigurationInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
@@ -330,6 +331,19 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, request reso
 
 		// Additional fields.
 		input.ResourceConfigurationIdentifier = fwflex.StringFromFramework(ctx, new.ID)
+
+		// "ValidationException: cannot modify resource configuration DNS or ARN".
+		if input.ResourceConfigurationDefinition != nil {
+			resourceConfigurationDefinition, diags := new.ResourceConfigurationDefinition.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if resourceConfigurationDefinition.IPResource.IsNull() {
+				input.ResourceConfigurationDefinition = nil
+			}
+		}
 
 		_, err := conn.UpdateResourceConfiguration(ctx, &input)
 
