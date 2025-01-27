@@ -33,6 +33,6 @@ The following arguments are required:
 
 ## Attribute Reference
 
-This ephemeral resource exports the following attributes in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `random_password` - Random password.
