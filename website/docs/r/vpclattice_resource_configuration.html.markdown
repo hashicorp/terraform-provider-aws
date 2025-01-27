@@ -147,7 +147,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC Lattice Resource Configuration using the `rcfg-1234567890abcdef1`. For example:
+Using `terraform import`, import VPC Lattice Resource Configuration using the `id`. For example:
 
 ```console
 % terraform import aws_vpclattice_resource_configuration.example rcfg-1234567890abcdef1
