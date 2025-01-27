@@ -186,7 +186,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.14.12
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.48.4
-	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.16.6
+	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.11
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.2.12
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.11
