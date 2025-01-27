@@ -377,10 +377,10 @@ func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
 	//
 	// At this point the collection is usable with this test. Set the collection name to the
 	// environment variable below.
-	collectionName := os.Getenv("TF_ACC_BEDROCK_OSS_COLLECTION_NAME")
+	collectionName := os.Getenv("TF_AWS_BEDROCK_OSS_COLLECTION_NAME")
 	if collectionName == "" {
 		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
-			"Set the TF_ACC_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
+			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
 			"where the vector index is configured.")
 	}
 
