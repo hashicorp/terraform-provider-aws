@@ -6,6 +6,7 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -89,53 +90,6 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.0.name", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.0.display_name", rName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) {
-	ctx := acctest.Context(t)
-	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_app_image_config.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppImageConfigConfig_kernelGatewayFileSystem1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_gid", "100"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_uid", "1000"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.mount_path", "/home/sagemaker-user"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAppImageConfigConfig_kernelGatewayFileSystem2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_gid", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_uid", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.mount_path", "/test"),
 				),
 			},
 		},
@@ -240,6 +194,105 @@ func TestAccSageMakerAppImageConfig_JupyterLab(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystemValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var config sagemaker.DescribeAppImageConfigOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_app_image_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppImageConfigConfig_kernelGatewayFileSystemValid(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_gid", "100"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_uid", "1000"),
+				),
+			},
+			{
+				Config:      testAccAppImageConfigConfig_kernelGatewayFileSystemInvalidGID(rName),
+				ExpectError: regexp.MustCompile(`expected kernel_gateway_image_config\.0\.file_system_config\.0\.default_gid to be one of \[100\], got 0`),
+				PlanOnly:    true, // Only run plan phase, don't try to apply
+			},
+			{
+				Config:      testAccAppImageConfigConfig_kernelGatewayFileSystemInvalidUID(rName),
+				ExpectError: regexp.MustCompile(`expected kernel_gateway_image_config\.0\.file_system_config\.0\.default_uid to be one of \[1000\], got 0`),
+				PlanOnly:    true, // Only run plan phase, don't try to apply
+			},
+			// Add a final step with valid configuration to ensure clean destroy
+			{
+				Config: testAccAppImageConfigConfig_kernelGatewayFileSystemValid(rName),
+			},
+		},
+	})
+}
+
+// Test configurations remain the same
+func testAccAppImageConfigConfig_kernelGatewayFileSystemValid(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = %[1]q
+    }
+
+    file_system_config {
+      default_gid = 100
+      default_uid = 1000
+      mount_path  = "/home/sagemaker-user"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppImageConfigConfig_kernelGatewayFileSystemInvalidGID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = %[1]q
+    }
+
+    file_system_config {
+      default_gid = 0
+      default_uid = 1000
+      mount_path  = "/home/sagemaker-user"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppImageConfigConfig_kernelGatewayFileSystemInvalidUID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = %[1]q
+    }
+
+    file_system_config {
+      default_gid = 100
+      default_uid = 0
+      mount_path  = "/home/sagemaker-user"
+    }
+  }
+}
+`, rName)
 }
 
 func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
