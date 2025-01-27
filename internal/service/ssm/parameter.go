@@ -500,24 +500,3 @@ func shouldUpdateParameter(d *schema.ResourceData) bool {
 	// if it is not a new resource, otherwise overwrite should be set to false.
 	return !d.IsNewResource()
 }
-
-//type writeOnlyAttrGetter interface {
-//	GetRawConfigAt(path cty.Path) (cty.Value, diag.Diagnostics)
-//	Id() string
-//}
-//
-//func getWriteOnlyValue(d writeOnlyAttrGetter, attrType cty.Type) (cty.Value, diag.Diagnostics) {
-//	var diags diag.Diagnostics
-//
-//	valueWO, di := d.GetRawConfigAt(cty.GetAttrPath("value_wo"))
-//	if di.HasError() {
-//		diags = append(diags, di...)
-//		return cty.Value{}, diags
-//	}
-//
-//	if !valueWO.Type().Equals(attrType) {
-//		return cty.Value{}, sdkdiag.AppendErrorf(diags, "SSM Parameter (%s): invalid value_wo type", d.Id())
-//	}
-//
-//	return valueWO, diags
-//}
