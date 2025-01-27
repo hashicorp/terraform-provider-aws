@@ -459,8 +459,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.52.7 h1:cewH1fJ35N26pujUo8pXtq
 github.com/aws/aws-sdk-go-v2/service/s3control v1.52.7/go.mod h1:zZ6ah0Hp8TqLZERFcwSQ2T5A4lMkX5vujkDvSkFiXh8=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.12 h1:SEgjbn9G9/NN3pEl5z178aYsRHJH57KMy6tAba+Vrzk=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.12/go.mod h1:3bKwli4C6IgEcgE2sCwVbHJIIdqlIHSKOrKeIcKaIw8=
-github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.4 h1:ILVIsdrw7y3hDYKZMQPNJrpcTfwiGu/Cp2vQyq+QWJw=
-github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.4/go.mod h1:DPqX/ej88UobWgx9bjJTCnl4JrecW1OlOFxIQ/w2RZc=
+github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.5 h1:b4vMWPIYJrjoOMYugxWKmJAuUINWbAbHrfJ+2meTRm0=
+github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.5/go.mod h1:8LZ0b8ywJ3jY1sNeBV+WD7KESxagwNBUrunuala+584=
 github.com/aws/aws-sdk-go-v2/service/sagemaker v1.173.1 h1:xyhw8ezgVvWnuiggV4f9HBSqytzSBSduk9MAx/nq3yA=
 github.com/aws/aws-sdk-go-v2/service/sagemaker v1.173.1/go.mod h1:IBmnlpEZrRKM4MHXgmvbS+WylTY+emqQjmBXI4FiIQE=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.12 h1:rLoKjyqe7gCtebgxOytCZdpT6pptU25n+BiLj+YSfX8=
