@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"io"
 	"log"
 	"net/http"
@@ -19,10 +18,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +35,7 @@ func TestAccDataExchangeJob_importAssetsFromS3basic(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	var job dataexchange.GetJobOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,7 +58,7 @@ func TestAccDataExchangeJob_importAssetsFromS3PostponeStart(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	var job dataexchange.GetJobOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -88,7 +89,7 @@ func TestAccDataExchangeJob_exportAssetsToS3Basic(t *testing.T) {
 	resourceName := "aws_dataexchange_job.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -112,7 +113,7 @@ func TestAccDataExchangeJob_exportAssetsToSignedUrl(t *testing.T) {
 	}
 	resourceName := "aws_dataexchange_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -123,7 +124,6 @@ func TestAccDataExchangeJob_exportAssetsToSignedUrl(t *testing.T) {
 					testAccCheckJobExists(ctx, resourceName, &dataexchange.GetJobOutput{}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -144,7 +144,6 @@ func TestAccDataExchangeJob_importAssetFromSignedUrl(t *testing.T) {
 					testAccCheckJobExists(ctx, resourceName, &dataexchange.GetJobOutput{}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -236,11 +235,16 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_dataexchange_job" "test" {
   type  = "IMPORT_ASSETS_FROM_S3"
   start_on_creation = %t
-  data_set_id = aws_dataexchange_data_set.test.id
-  revision_id = aws_dataexchange_revision.test.revision_id
-  s3_asset_sources {
-      bucket = aws_s3_bucket.test.id
-      key = "test"
+
+  details {
+      import_assets_from_s3 {
+      data_set_id = aws_dataexchange_data_set.test.id
+      revision_id = aws_dataexchange_revision.test.revision_id
+      asset_sources {
+        bucket = aws_s3_bucket.test.id
+        key = "test"
+      }
+    }
   }
 }
 `, bucketName, start)
@@ -256,12 +260,16 @@ resource "aws_s3_bucket" "test" {
 resource "aws_dataexchange_job" "test" {
   type  = "EXPORT_ASSETS_TO_S3"
 
-  data_set_id = "%s"
-  revision_id = "%s"
-  s3_asset_destinations {
-      bucket = aws_s3_bucket.test.id
-      key = "test"
-      asset_id = "%s"
+  details {
+    export_assets_to_s3 {
+      data_set_id = "%s"
+      revision_id = "%s"
+      asset_destinations {
+        bucket = aws_s3_bucket.test.id
+        key = "test"
+        asset_id = "%s"
+      }
+    }
   }
 }
 `, bucketName, data.dataSetId, data.revisionId, data.assetId)
@@ -282,10 +290,14 @@ resource "aws_dataexchange_revision" "test" {
 resource "aws_dataexchange_job" "test" {
   type  = "IMPORT_ASSET_FROM_SIGNED_URL"
 
-  data_set_id = aws_dataexchange_data_set.test.id
-  revision_id = aws_dataexchange_revision.test.revision_id
-  url_asset_name = "test"
-  url_asset_md5_hash = "NTdmMmNkNmVkNzZlY2IyNTUK"
+  details {
+    import_asset_from_signed_url {
+      data_set_id = aws_dataexchange_data_set.test.id
+      revision_id = aws_dataexchange_revision.test.revision_id
+      asset_name = "test"
+      md5_hash = "NTdmMmNkNmVkNzZlY2IyNTUK"
+    }
+  }
 }
 `
 }
@@ -294,10 +306,14 @@ func testAccJobConfig_exportAssetToSignedUrl(data testAsset) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_job" "test" {
   type  = "EXPORT_ASSET_TO_SIGNED_URL"
-
-  data_set_id = "%s"
-  revision_id = "%s"
-  asset_id = "%s"
+  
+  details {
+    export_asset_to_signed_url {
+      data_set_id = "%s"
+      revision_id = "%s"
+      asset_id = "%s"
+    }
+  }
 }
 `, data.dataSetId, data.revisionId, data.assetId)
 }
