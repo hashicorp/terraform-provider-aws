@@ -70,16 +70,16 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			GenerateClient:       l.GenerateClient(),
-			ClientSDKV2:          l.IsClientSDKV2(),
-			GoV2Package:          l.GoV2Package(),
-			ProviderPackage:      p,
-			ProviderNameUpper:    l.ProviderNameUpper(),
-			EphemeralResources:   v.ephemeralResources,
-			FrameworkDataSources: v.frameworkDataSources,
-			FrameworkResources:   v.frameworkResources,
-			SDKDataSources:       v.sdkDataSources,
-			SDKResources:         v.sdkResources,
+			GenerateClient:          l.GenerateClient(),
+			EndpointRegionOverrides: l.EndpointRegionOverrides(),
+			GoV2Package:             l.GoV2Package(),
+			ProviderPackage:         p,
+			ProviderNameUpper:       l.ProviderNameUpper(),
+			EphemeralResources:      v.ephemeralResources,
+			FrameworkDataSources:    v.frameworkDataSources,
+			FrameworkResources:      v.frameworkResources,
+			SDKDataSources:          v.sdkDataSources,
+			SDKResources:            v.sdkResources,
 		}
 
 		d := g.NewGoFileDestination(filename)
@@ -119,16 +119,16 @@ type ResourceDatum struct {
 }
 
 type ServiceDatum struct {
-	GenerateClient       bool
-	ClientSDKV2          bool
-	GoV2Package          string // AWS SDK for Go v2 package name
-	ProviderPackage      string
-	ProviderNameUpper    string
-	EphemeralResources   map[string]ResourceDatum
-	FrameworkDataSources map[string]ResourceDatum
-	FrameworkResources   map[string]ResourceDatum
-	SDKDataSources       map[string]ResourceDatum
-	SDKResources         map[string]ResourceDatum
+	GenerateClient          bool
+	EndpointRegionOverrides map[string]string
+	GoV2Package             string // AWS SDK for Go v2 package name
+	ProviderPackage         string
+	ProviderNameUpper       string
+	EphemeralResources      map[string]ResourceDatum
+	FrameworkDataSources    map[string]ResourceDatum
+	FrameworkResources      map[string]ResourceDatum
+	SDKDataSources          map[string]ResourceDatum
+	SDKResources            map[string]ResourceDatum
 }
 
 //go:embed file.gtpl

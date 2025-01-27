@@ -135,6 +135,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*{{ .GoV2Package }}.Options){
 		{{ .GoV2Package }}.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+{{- if gt (len .EndpointRegionOverrides) 0 }}
+		func(o *{{ .GoV2Package }}.Options) {
+			switch partition := config["partition"].(string); partition {
+	{{- range $k, $v := .EndpointRegionOverrides }}
+			case "{{ $k }}":
+				if region := "{{ $v }}"; cfg.Region != region {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": region,
+					})
+					o.Region = region
+				}
+	{{- end }}
+			}
+		},
+{{- end }}
 	}
 
 	return {{ .GoV2Package }}.NewFromConfig(cfg, optFns...), nil

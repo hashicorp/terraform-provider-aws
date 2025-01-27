@@ -884,10 +884,6 @@ service "billing" {
     human_friendly      = "Billing"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListBillingViews"
     endpoint_region_overrides = {
@@ -2343,10 +2339,6 @@ service "costoptimizationhub" {
     human_friendly      = "Cost Optimization Hub"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "GetPreferences"
     endpoint_region_overrides = {
@@ -2377,10 +2369,6 @@ service "cur" {
     aliases             = ["costandusagereportservice"]
     provider_name_upper = "CUR"
     human_friendly      = "Cost and Usage Report"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -3744,10 +3732,6 @@ service "globalaccelerator" {
   names {
     provider_name_upper = "GlobalAccelerator"
     human_friendly      = "Global Accelerator"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -6769,14 +6753,12 @@ service "route53" {
     human_friendly      = "Route 53"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListHostedZones"
     endpoint_region_overrides = {
-      "aws" = "us-east-1"
+      "aws"        = "us-east-1"
+      "aws-us-gov" = "us-gov-west-1"
+      "aws-cn"     = "cn-northwest-1"
     }
   }
 
@@ -6798,10 +6780,6 @@ service "route53domains" {
   names {
     provider_name_upper = "Route53Domains"
     human_friendly      = "Route 53 Domains"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -7585,10 +7563,6 @@ service "shield" {
   names {
     provider_name_upper = "Shield"
     human_friendly      = "Shield"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
