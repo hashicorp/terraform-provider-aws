@@ -7,6 +7,7 @@ package vpclattice
 var (
 	ResourceAccessLogSubscription            = resourceAccessLogSubscription
 	ResourceListener                         = resourceListener
+	ResourceResourceConfiguration            = newResourceConfigurationResource
 	ResourceResourceGateway                  = newResourceGatewayResource
 	ResourceService                          = resourceService
 	ResourceServiceNetwork                   = resourceServiceNetwork
@@ -16,6 +17,7 @@ var (
 
 	FindAccessLogSubscriptionByID            = findAccessLogSubscriptionByID
 	FindListenerByTwoPartKey                 = findListenerByTwoPartKey
+	FindResourceConfigurationByID            = findResourceConfigurationByID
 	FindResourceGatewayByID                  = findResourceGatewayByID
 	FindServiceByID                          = findServiceByID
 	FindServiceNetworkByID                   = findServiceNetworkByID

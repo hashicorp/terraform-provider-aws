@@ -17,7 +17,8 @@ import (
 )
 
 // @SDKDataSource("aws_vpclattice_service_network", name="Service Network")
-// @Tags
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func dataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceNetworkRead,

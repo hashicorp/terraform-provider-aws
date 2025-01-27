@@ -62,7 +62,7 @@ func (r *resourceInferenceProfile) Metadata(_ context.Context, req resource.Meta
 }
 
 func (r *resourceInferenceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	modelsAttribute := framework.ResourceComputedListOfObjectAttribute[resourceInferenceProfileModelModel](ctx)
+	modelsAttribute := framework.ResourceComputedListOfObjectsAttribute[resourceInferenceProfileModelModel](ctx)
 	modelsAttribute.PlanModifiers = []planmodifier.List{
 		listplanmodifier.UseStateForUnknown(),
 	}

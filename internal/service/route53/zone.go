@@ -287,47 +287,8 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	if d.Get(names.AttrForceDestroy).(bool) {
-		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		hostedZoneDNSSEC, err := findHostedZoneDNSSECByZoneID(ctx, conn, d.Id())
-
-		switch {
-		case tfresource.NotFound(err),
-			errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "Operation is unsupported for private"),
-			tfawserr.ErrMessageContains(err, errCodeAccessDenied, "The operation GetDNSSEC is not available for the current AWS account"):
-		case err != nil:
-			return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zone DNSSEC (%s): %s", d.Id(), err)
-		case aws.ToString(hostedZoneDNSSEC.Status.ServeSignature) == serveSignatureSigning:
-			err := hostedZoneDNSSECDisable(ctx, conn, d.Id())
-
-			switch {
-			case errs.IsA[*awstypes.DNSSECNotFound](err), errs.IsA[*awstypes.NoSuchHostedZone](err), errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "Operation is unsupported for private"):
-			case err != nil:
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-	}
-
-	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", d.Id())
-	output, err := conn.DeleteHostedZone(ctx, &route53.DeleteHostedZoneInput{
-		Id: aws.String(d.Id()),
-	})
-
-	if errs.IsA[*awstypes.NoSuchHostedZone](err) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Route53 Hosted Zone (%s): %s", d.Id(), err)
-	}
-
-	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Hosted Zone (%s) synchronize: %s", d.Id(), err)
-		}
+	if err := deleteHostedZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrForceDestroy).(bool)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -356,6 +317,49 @@ func findHostedZoneByID(ctx context.Context, conn *route53.Client, id string) (*
 	}
 
 	return output, nil
+}
+
+func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, hostedZoneName string, force bool) error {
+	if force {
+		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, hostedZoneID, hostedZoneName); err != nil {
+			return err
+		}
+
+		hostedZoneDNSSEC, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
+
+		switch {
+		case tfresource.NotFound(err),
+			errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "Operation is unsupported for private"),
+			tfawserr.ErrMessageContains(err, errCodeAccessDenied, "The operation GetDNSSEC is not available for the current AWS account"):
+		case err != nil:
+			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", hostedZoneID, err)
+		case aws.ToString(hostedZoneDNSSEC.Status.ServeSignature) == serveSignatureSigning:
+			err := hostedZoneDNSSECDisable(ctx, conn, hostedZoneID)
+
+			switch {
+			case errs.IsA[*awstypes.DNSSECNotFound](err), errs.IsA[*awstypes.NoSuchHostedZone](err), errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "Operation is unsupported for private"):
+			case err != nil:
+				return err
+			}
+		}
+	}
+
+	input := route53.DeleteHostedZoneInput{
+		Id: aws.String(hostedZoneID),
+	}
+	output, err := conn.DeleteHostedZone(ctx, &input)
+
+	if errs.IsA[*awstypes.NoSuchHostedZone](err) {
+		return nil
+	}
+
+	if output.ChangeInfo != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			return fmt.Errorf("waiting for Route 53 Hosted Zone (%s) synchronize: %w", hostedZoneID, err)
+		}
+	}
+
+	return nil
 }
 
 func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, hostedZoneName string) error {
@@ -525,4 +529,20 @@ func flattenVPCs(apiObjects []awstypes.VPC) []interface{} {
 	}
 
 	return tfList
+}
+
+func findPublicHostedZoneIDByDomainName(ctx context.Context, conn *route53.Client, domainName string) (*string, error) {
+	input := route53.ListHostedZonesInput{}
+
+	hostedZone, err := findHostedZone(ctx, conn, &input, func(v *awstypes.HostedZone) bool {
+		return !v.Config.PrivateZone && normalizeDomainName(v.Name) == normalizeDomainName(domainName)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
+
+	return &hostedZoneID, nil
 }

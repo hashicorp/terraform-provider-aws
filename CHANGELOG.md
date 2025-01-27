@@ -2,7 +2,11 @@
 
 ENHANCEMENTS:
 
+* resource/aws_media_convert_queue: Add `concurrent_jobs` argument ([#41012](https://github.com/hashicorp/terraform-provider-aws/issues/41012))
 * resource/aws_medialive_multiplex_program: Add configurable `create` timeout ([#40972](https://github.com/hashicorp/terraform-provider-aws/issues/40972))
+* resource/aws_organizations_account: Add configurable timeouts for Create and Delete ([#41059](https://github.com/hashicorp/terraform-provider-aws/issues/41059))
+* resource/aws_pinpoint_email_channel: Add `orchestration_sending_role_arn` argument ([#41043](https://github.com/hashicorp/terraform-provider-aws/issues/41043))
+* resource/aws_vpc_endpoint_security_group_association: Add import support ([#41042](https://github.com/hashicorp/terraform-provider-aws/issues/41042))
 
 BUG FIXES:
 
