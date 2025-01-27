@@ -5,7 +5,7 @@ package vpclattice
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,64 +15,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_vpclattice_service_network_resource_association", name="Service Network Resource Association")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetServiceNetworkResourceAssociationOutput")
-func newResourceServiceNetworkResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceServiceNetworkResourceAssociation{}
+func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &serviceNetworkResourceAssociationResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
-	r.SetDefaultUpdateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameServiceNetworkResourceAssociation = "Service Network Resource Association"
-)
-
-type resourceServiceNetworkResourceAssociation struct {
+type serviceNetworkResourceAssociationResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[serviceNetworkResourceAssociationResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceServiceNetworkResourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_vpclattice_service_network_resource_association"
+func (*serviceNetworkResourceAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_vpclattice_service_network_resource_association"
 }
 
-func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"dns_entry": schema.ListAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dnsEntry](ctx),
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[dnsEntry](ctx),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
+			"dns_entry":   framework.ResourceComputedListOfObjectAttribute[dnsEntryModel](ctx),
+			names.AttrID:  framework.IDAttribute(),
 			"resource_configuration_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -91,157 +78,167 @@ func (r *resourceServiceNetworkResourceAssociation) Schema(ctx context.Context, 
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
 	}
 }
 
-func (r *resourceServiceNetworkResourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().VPCLatticeClient(ctx)
-
-	var plan resourceServiceNetworkResourceAssociationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *serviceNetworkResourceAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data serviceNetworkResourceAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().VPCLatticeClient(ctx)
 
 	var input vpclattice.CreateServiceNetworkResourceAssociationInput
-
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("ServiceNetworkResourceAssociation"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ResourceConfigurationIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationID)
+	input.ServiceNetworkIdentifier = fwflex.StringFromFramework(ctx, data.ServiceNetworkID)
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateServiceNetworkResourceAssociation(ctx, &input)
+	outputCSNRA, err := conn.CreateServiceNetworkResourceAssociation(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkResourceAssociation, plan.ResourceConfigurationIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkResourceAssociation, plan.ResourceConfigurationIdentifier.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating VPCLattice Service Network Resource Association", err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Set values for unknowns.
+	data.ID = fwflex.StringToFramework(ctx, outputCSNRA.Id)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	created, err := waitServiceNetworkResourceAssociationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	outputGSNRA, err := waitServiceNetworkResourceAssociationCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkResourceAssociation, plan.ResourceConfigurationIdentifier.String(), err),
-			err.Error(),
-		)
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPCLattice Service Network Resource Association (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, created, &plan)...)
-	plan.ResourceConfigurationIdentifier = flex.StringToFramework(ctx, created.ResourceConfigurationId)
-	plan.ServiceNetworkIdentifier = flex.StringToFramework(ctx, created.ServiceNetworkId)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGSNRA, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceServiceNetworkResourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().VPCLatticeClient(ctx)
-
-	var state resourceServiceNetworkResourceAssociationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *serviceNetworkResourceAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data serviceNetworkResourceAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findServiceNetworkResourceAssociationByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().VPCLatticeClient(ctx)
+
+	output, err := findServiceNetworkResourceAssociationByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionSetting, ResNameServiceNetworkResourceAssociation, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading VPCLattice Resource Gateway (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	state.ResourceConfigurationIdentifier = flex.StringToFramework(ctx, out.ResourceConfigurationId)
-	state.ServiceNetworkIdentifier = flex.StringToFramework(ctx, out.ServiceNetworkId)
-
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceServiceNetworkResourceAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceServiceNetworkResourceAssociationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *serviceNetworkResourceAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data serviceNetworkResourceAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceServiceNetworkResourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	var state resourceServiceNetworkResourceAssociationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	_, err := conn.DeleteServiceNetworkResourceAssociation(ctx, &vpclattice.DeleteServiceNetworkResourceAssociationInput{
+		ServiceNetworkResourceAssociationIdentifier: data.ID.ValueStringPointer(),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	input := vpclattice.DeleteServiceNetworkResourceAssociationInput{
-		ServiceNetworkResourceAssociationIdentifier: state.ID.ValueStringPointer(),
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting VPCLattice Service Network Resource Association (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
-	_, err := conn.DeleteServiceNetworkResourceAssociation(ctx, &input)
+	if _, err := waitServiceNetworkResourceAssociationDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPCLattice Service Network Resource Association (%s) delete", data.ID.ValueString()), err.Error())
+
+		return
+	}
+}
+
+func (r *serviceNetworkResourceAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
+	input := vpclattice.GetServiceNetworkResourceAssociationInput{
+		ServiceNetworkResourceAssociationIdentifier: aws.String(id),
+	}
+
+	output, err := conn.GetServiceNetworkResourceAssociation(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkResourceAssociation, state.ID.String(), err),
-			err.Error(),
-		)
-		return
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
 	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitServiceNetworkResourceAssociationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkResourceAssociation, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceServiceNetworkResourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceServiceNetworkResourceAssociation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
@@ -250,13 +247,15 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 		Target:                    enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive),
 		Refresh:                   statusServiceNetworkResourceAssociation(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -271,64 +270,28 @@ func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpc
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+
+		return output, err
 	}
 
 	return nil, err
 }
 
-func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
+type serviceNetworkResourceAssociationResourceModel struct {
+	ARN                     types.String                                   `tfsdk:"arn"`
+	ID                      types.String                                   `tfsdk:"id"`
+	DNSEntry                fwtypes.ListNestedObjectValueOf[dnsEntryModel] `tfsdk:"dns_entry"`
+	ResourceConfigurationID types.String                                   `tfsdk:"resource_configuration_identifier"`
+	ServiceNetworkID        types.String                                   `tfsdk:"service_network_identifier"`
+	Tags                    tftags.Map                                     `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                     `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                 `tfsdk:"timeouts"`
 }
 
-func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
-	in := &vpclattice.GetServiceNetworkResourceAssociationInput{
-		ServiceNetworkResourceAssociationIdentifier: aws.String(id),
-	}
-
-	out, err := conn.GetServiceNetworkResourceAssociation(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
-type resourceServiceNetworkResourceAssociationModel struct {
-	ARN                             types.String                              `tfsdk:"arn"`
-	ID                              types.String                              `tfsdk:"id"`
-	DnsEntry                        fwtypes.ListNestedObjectValueOf[dnsEntry] `tfsdk:"dns_entry"`
-	ResourceConfigurationIdentifier types.String                              `tfsdk:"resource_configuration_identifier"`
-	ServiceNetworkIdentifier        types.String                              `tfsdk:"service_network_identifier"`
-	Tags                            tftags.Map                                `tfsdk:"tags"`
-	TagsAll                         tftags.Map                                `tfsdk:"tags_all"`
-	Timeouts                        timeouts.Value                            `tfsdk:"timeouts"`
-}
-
-type dnsEntry struct {
+type dnsEntryModel struct {
 	DomainName   types.String `tfsdk:"domain_name"`
-	HostedZoneId types.String `tfsdk:"hosted_zone_id"`
+	HostedZoneID types.String `tfsdk:"hosted_zone_id"`
 }

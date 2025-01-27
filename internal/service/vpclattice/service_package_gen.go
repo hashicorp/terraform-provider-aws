@@ -37,7 +37,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory:  newResourceServiceNetworkResourceAssociation,
+			Factory:  newServiceNetworkResourceAssociationResource,
 			TypeName: "aws_vpclattice_service_network_resource_association",
 			Name:     "Service Network Resource Association",
 			Tags: &types.ServicePackageResourceTags{

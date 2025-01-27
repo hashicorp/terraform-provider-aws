@@ -11,7 +11,7 @@ var (
 	ResourceResourceGateway                   = newResourceGatewayResource
 	ResourceService                           = resourceService
 	ResourceServiceNetwork                    = resourceServiceNetwork
-	ResourceServiceNetworkResourceAssociation = newResourceServiceNetworkResourceAssociation
+	ResourceServiceNetworkResourceAssociation = newServiceNetworkResourceAssociationResource
 	ResourceServiceNetworkServiceAssociation  = resourceServiceNetworkServiceAssociation
 	ResourceServiceNetworkVPCAssociation      = resourceServiceNetworkVPCAssociation
 	ResourceTargetGroupAttachment             = resourceTargetGroupAttachment
