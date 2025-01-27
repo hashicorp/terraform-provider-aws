@@ -19,7 +19,8 @@ import (
 )
 
 // @SDKDataSource("aws_vpclattice_service", name="Service")
-// @Tags
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
