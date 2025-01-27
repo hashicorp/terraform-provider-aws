@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.24.12
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/mgn v1.32.11
+	github.com/aws/aws-sdk-go-v2/service/mgn v1.32.12
 	github.com/aws/aws-sdk-go-v2/service/mq v1.27.12
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.12
