@@ -34,6 +34,7 @@ func init() {
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"gp3 is invalid",
+		"The Launch Configuration creation operation is not available in your account",
 	)
 }
 
