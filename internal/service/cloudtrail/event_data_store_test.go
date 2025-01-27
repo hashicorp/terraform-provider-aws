@@ -125,7 +125,7 @@ func TestAccCloudTrailEventDataStore_suspend(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suspend"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suspend"), knownvalue.StringExact(acctest.CtTrue)),
 				},
 			},
 			{
@@ -139,7 +139,7 @@ func TestAccCloudTrailEventDataStore_suspend(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suspend"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suspend"), knownvalue.StringExact(acctest.CtFalse)),
 				},
 			},
 			{
@@ -149,8 +149,11 @@ func TestAccCloudTrailEventDataStore_suspend(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suspend"), knownvalue.StringExact("")),
 				},
 			},
 			{
@@ -164,7 +167,7 @@ func TestAccCloudTrailEventDataStore_suspend(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suspend"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suspend"), knownvalue.StringExact(acctest.CtTrue)),
 				},
 			},
 		},

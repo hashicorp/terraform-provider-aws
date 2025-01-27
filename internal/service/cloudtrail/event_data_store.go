@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -179,9 +180,9 @@ func resourceEventDataStore() *schema.Resource {
 				),
 			},
 			"suspend": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -205,7 +206,6 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		Name:                         aws.String(name),
 		OrganizationEnabled:          aws.Bool(d.Get("organization_enabled").(bool)),
 		RetentionPeriod:              aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int))),
-		StartIngestion:               aws.Bool(!d.Get("suspend").(bool)),
 		TagsList:                     getTagsIn(ctx),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
 	}
@@ -216,6 +216,12 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("suspend"); ok {
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			input.StartIngestion = aws.Bool(!v)
+		}
 	}
 
 	output, err := conn.CreateEventDataStore(ctx, input)
@@ -313,13 +319,16 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("suspend") {
-		if d.Get("suspend").(bool) {
-			if err := stopEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		} else {
-			if err := startEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		v := d.Get("suspend")
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			if v {
+				if err := stopEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			} else {
+				if err := startEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
 			}
 		}
 	}
