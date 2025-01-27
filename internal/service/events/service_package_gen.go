@@ -111,11 +111,12 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*eventbridge.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return eventbridge.NewFromConfig(cfg,
+	optFns := []func(*eventbridge.Options){
 		eventbridge.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+	}
+
+	return eventbridge.NewFromConfig(cfg, optFns...), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

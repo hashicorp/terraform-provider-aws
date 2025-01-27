@@ -266,11 +266,12 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sagemaker.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return sagemaker.NewFromConfig(cfg,
+	optFns := []func(*sagemaker.Options){
 		sagemaker.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+	}
+
+	return sagemaker.NewFromConfig(cfg, optFns...), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

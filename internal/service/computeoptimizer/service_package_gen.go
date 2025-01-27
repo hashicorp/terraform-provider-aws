@@ -48,11 +48,12 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*computeoptimizer.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return computeoptimizer.NewFromConfig(cfg,
+	optFns := []func(*computeoptimizer.Options){
 		computeoptimizer.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+	}
+
+	return computeoptimizer.NewFromConfig(cfg, optFns...), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

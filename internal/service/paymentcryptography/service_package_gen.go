@@ -51,11 +51,12 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*paymentcryptography.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return paymentcryptography.NewFromConfig(cfg,
+	optFns := []func(*paymentcryptography.Options){
 		paymentcryptography.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+	}
+
+	return paymentcryptography.NewFromConfig(cfg, optFns...), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
