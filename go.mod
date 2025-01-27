@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.54
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/account v1.22.5
-	github.com/aws/aws-sdk-go-v2/service/acm v1.30.13
+	github.com/aws/aws-sdk-go-v2/service/acm v1.30.14
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.13
 	github.com/aws/aws-sdk-go-v2/service/amp v1.30.9
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.28.4
