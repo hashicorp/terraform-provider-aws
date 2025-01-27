@@ -383,8 +383,8 @@ github.com/aws/aws-sdk-go-v2/service/oam v1.15.14 h1:t1CWHxG+FP9uBSdpJI1UqpyP9ZN
 github.com/aws/aws-sdk-go-v2/service/oam v1.15.14/go.mod h1:+PxHi54X1IRdVuVHQ7PP28Ma2AbCsaTsplGxqRTcOcM=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.7 h1:crIK/B9joI9HCDI/zcI+3+lRUxj98j01vL8nIsGa7cw=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.7/go.mod h1:4CQtmzSmvVE+KwRT35ioBIBsCH9bdlrfD22Z19xxCgU=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.9 h1:kCujDGCSkiT8ML6V/kU0QqGl6rIZlHpWJL8jU3pAe9o=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.9/go.mod h1:P+Yfqk23Rnh/NXahCyhQ0GjkfZb3Rf1X7Hwoce3ZFFU=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.10 h1:vEoutBdj08/FcIfAyHxgNTBzapoOaztjQySke0T6ZGk=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.10/go.mod h1:aqv6INgDdgVg6faZp89OLezJdb0MviSJhEntZJL9alw=
 github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.12 h1:w2TsRnHzYfydVNwsbdkBV8FHFzyuppK5qhH8fcCR7Gg=
 github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.12/go.mod h1:wkQq1JzAJKZyymbJ9/q087KHnk0t6e8Ux/gl+r+/1Zg=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.37.3 h1:gf03Pk8b4W7IVVwsCUUjdd6QEVN9ibJyfac72VsxzyQ=
