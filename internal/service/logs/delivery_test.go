@@ -443,7 +443,7 @@ resource "aws_cloudwatch_log_delivery" "test" {
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
 
   s3_delivery_configuration {
-    suffix_path = "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
+    suffix_path = "AWSLogs/{account-id}/CloudFront/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
   }
 }
 `, rName))
