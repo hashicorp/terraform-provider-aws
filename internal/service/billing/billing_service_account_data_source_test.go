@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package meta_test
+package billing_test
 
 import (
 	"testing"
@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
+func TestAccBillingServiceAccountDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_billing_service_account.test"
 	billingAccountID := "386209384616"
@@ -23,7 +23,7 @@ func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBillingServiceAccountDataSourceConfig_basic,
+				Config: testAccServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, billingAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, names.AttrARN, billingAccountID, "iam", "root"),
@@ -33,6 +33,6 @@ func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccBillingServiceAccountDataSourceConfig_basic = `
+const testAccServiceAccountDataSourceConfig_basic = `
 data "aws_billing_service_account" "test" {}
 `
