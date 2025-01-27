@@ -55,19 +55,31 @@ func taskSettingsEqual(state, proposed any) bool {
 
 	switch x := state.(type) {
 	case bool:
-		p := proposed.(bool)
+		p, ok := proposed.(bool)
+		if !ok {
+			return false
+		}
 		return x == p
 
 	case float64:
-		p := proposed.(float64)
+		p, ok := proposed.(float64)
+		if !ok {
+			return false
+		}
 		return x == p
 
 	case string:
-		p := proposed.(string)
+		p, ok := proposed.(string)
+		if !ok {
+			return false
+		}
 		return x == p
 
 	case map[string]any:
-		proposedMap := proposed.(map[string]any)
+		proposedMap, ok := proposed.(map[string]any)
+		if !ok {
+			return false
+		}
 		for k, v := range x {
 			if !taskSettingsEqual(v, proposedMap[k]) {
 				return false
