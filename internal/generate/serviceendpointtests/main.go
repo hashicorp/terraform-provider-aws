@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -70,7 +71,7 @@ func main() {
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
 			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),
-			OverrideRegion:    l.EndpointOverrideRegion(),
+			OverrideRegion:    l.EndpointRegionOverrides()[endpoints.AwsPartitionID],
 		}
 		if strings.Contains(td.APICallParams, "awstypes") {
 			td.ImportAwsTypes = true

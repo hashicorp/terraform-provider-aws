@@ -889,8 +889,10 @@ service "billing" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListBillingViews"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "ListBillingViews"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -2346,8 +2348,10 @@ service "costoptimizationhub" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "GetPreferences"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "GetPreferences"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -2380,8 +2384,10 @@ service "cur" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeReportDefinitions"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "DescribeReportDefinitions"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -3745,8 +3751,10 @@ service "globalaccelerator" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAccelerators"
-    endpoint_region_override = "us-west-2"
+    endpoint_api_call = "ListAccelerators"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
@@ -6766,8 +6774,10 @@ service "route53" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListHostedZones"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "ListHostedZones"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -6795,8 +6805,10 @@ service "route53domains" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "ListDomains"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -7580,8 +7592,10 @@ service "shield" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListProtectionGroups"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "ListProtectionGroups"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
