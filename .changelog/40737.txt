@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_bedrockagent_knowledge_base: Add `embedding_model_configuration` and `supplemental_data_storage_configuration` blocks
+resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.vector_knowledge_base_configuration.embedding_model_configuration` and `knowledge_base_configuration.vector_knowledge_base_configuration.supplemental_data_storage_configuration` arguments
 ```
