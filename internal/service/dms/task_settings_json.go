@@ -76,18 +76,19 @@ func taskSettingsEqual(state, proposed any) bool {
 		return x == p
 
 	case map[string]any:
-		proposedMap, ok := proposed.(map[string]any)
+		p, ok := proposed.(map[string]any)
 		if !ok {
 			return false
 		}
 		for k, v := range x {
-			if !taskSettingsEqual(v, proposedMap[k]) {
+			if !taskSettingsEqual(v, p[k]) {
 				return false
 			}
-			delete(proposedMap, k)
+			delete(p, k)
 		}
-		return len(proposedMap) == 0
+		return len(p) == 0
 	}
+
 	return false
 }
 
