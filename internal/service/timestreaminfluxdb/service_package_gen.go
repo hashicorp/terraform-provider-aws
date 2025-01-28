@@ -49,21 +49,28 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*timestreaminfluxdb.Options){
 		timestreaminfluxdb.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		withExtraOptions(ctx, p, config),
 	}
-
-	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
 
 	return timestreaminfluxdb.NewFromConfig(cfg, optFns...), nil
 }
 
-func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*timestreaminfluxdb.Options) {
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*timestreaminfluxdb.Options) {
 	if v, ok := sp.(interface {
-		extraOptFns(context.Context, map[string]any) []func(*timestreaminfluxdb.Options)
+		withExtraOptions(context.Context, map[string]any) []func(*timestreaminfluxdb.Options)
 	}); ok {
-		return v.extraOptFns(ctx, config)
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *timestreaminfluxdb.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
 	}
 
-	return nil
+	return func(*timestreaminfluxdb.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

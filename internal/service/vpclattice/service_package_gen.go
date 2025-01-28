@@ -157,21 +157,28 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*vpclattice.Options){
 		vpclattice.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		withExtraOptions(ctx, p, config),
 	}
-
-	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
 
 	return vpclattice.NewFromConfig(cfg, optFns...), nil
 }
 
-func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*vpclattice.Options) {
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*vpclattice.Options) {
 	if v, ok := sp.(interface {
-		extraOptFns(context.Context, map[string]any) []func(*vpclattice.Options)
+		withExtraOptions(context.Context, map[string]any) []func(*vpclattice.Options)
 	}); ok {
-		return v.extraOptFns(ctx, config)
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *vpclattice.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
 	}
 
-	return nil
+	return func(*vpclattice.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

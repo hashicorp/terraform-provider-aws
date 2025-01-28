@@ -40,21 +40,28 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*iotanalytics.Options){
 		iotanalytics.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		withExtraOptions(ctx, p, config),
 	}
-
-	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
 
 	return iotanalytics.NewFromConfig(cfg, optFns...), nil
 }
 
-func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*iotanalytics.Options) {
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*iotanalytics.Options) {
 	if v, ok := sp.(interface {
-		extraOptFns(context.Context, map[string]any) []func(*iotanalytics.Options)
+		withExtraOptions(context.Context, map[string]any) []func(*iotanalytics.Options)
 	}); ok {
-		return v.extraOptFns(ctx, config)
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *iotanalytics.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
 	}
 
-	return nil
+	return func(*iotanalytics.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
