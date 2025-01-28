@@ -39,7 +39,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Service Network Resource Association. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Service Network Resource Association.
 * `id` - ID of the association.
 * `dns_entry` DNS entry of the association in the service network.
     * `domain_name` The domain name of the association in the service network.
