@@ -265,16 +265,20 @@ func dataSourceListener() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_trust_store_ca_names": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"trust_store_arn": {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ignore_client_certificate_expiry": {
-							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},

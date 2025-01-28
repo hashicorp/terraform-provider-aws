@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Index")
+// @FrameworkResource("aws_resourceexplorer2_index", name="Index")
 // @Tags(identifierAttribute="id")
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}

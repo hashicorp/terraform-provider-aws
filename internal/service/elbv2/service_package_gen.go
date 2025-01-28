@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceListenerRule,
-			Name:    "Listener Rule",
+			Factory:  newDataSourceListenerRule,
+			TypeName: "aws_lb_listener_rule",
+			Name:     "Listener Rule",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

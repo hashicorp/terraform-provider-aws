@@ -52,6 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceBot,
 			TypeName: "aws_lex_bot",
+			Name:     "Bot",
 		},
 		{
 			Factory:  resourceBotAlias,

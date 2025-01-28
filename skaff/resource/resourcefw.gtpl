@@ -159,6 +159,13 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
+			{{- if .IncludeComments }}
+			// TIP: ==== "ID" ATTRIBUTE ====
+			// When using the Terraform Plugin Framework, there is no required "id" attribute.
+			// This is different from the Terraform Plugin SDK. 
+			//
+			// Only include an "id" attribute if the AWS API has an "Id" field, such as "{{ .Resource }}Id"
+			{{- end }}
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,

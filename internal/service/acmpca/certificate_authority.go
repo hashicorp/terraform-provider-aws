@@ -340,7 +340,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	input := &acmpca.CreateCertificateAuthorityInput{
+	input := acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          types.CertificateAuthorityType(d.Get(names.AttrType).(string)),
 		IdempotencyToken:                  aws.String(id.UniqueId()),
@@ -358,7 +358,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 
 	// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func() (interface{}, error) {
-		return conn.CreateCertificateAuthority(ctx, input)
+		return conn.CreateCertificateAuthority(ctx, &input)
 	}, "ValidationException", "Check your S3 bucket permissions and try again")
 
 	if err != nil {
@@ -405,9 +405,10 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrType, certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
-	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
+	getCACertInput := acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
-	})
+	}
+	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &getCACertInput)
 
 	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
@@ -428,9 +429,10 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
-	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
+	getCACSRInput := acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
-	})
+	}
+	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &getCACSRInput)
 
 	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
@@ -457,7 +459,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &acmpca.UpdateCertificateAuthorityInput{
+		input := acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(d.Id()),
 		}
 
@@ -472,7 +474,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 			input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
 		}
 
-		_, err := conn.UpdateCertificateAuthority(ctx, input)
+		_, err := conn.UpdateCertificateAuthority(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ACM PCA Certificate Authority (%s): %s", d.Id(), err)
@@ -487,12 +489,12 @@ func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
-	inputU := &acmpca.UpdateCertificateAuthorityInput{
+	inputU := acmpca.UpdateCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
 		Status:                  types.CertificateAuthorityStatusDisabled,
 	}
 
-	_, err := conn.UpdateCertificateAuthority(ctx, inputU)
+	_, err := conn.UpdateCertificateAuthority(ctx, &inputU)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -502,7 +504,7 @@ func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting ACM PCA Certificate Authority (%s) to DISABLED status before deleting: %s", d.Id(), err)
 	}
 
-	inputD := &acmpca.DeleteCertificateAuthorityInput{
+	inputD := acmpca.DeleteCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
 
@@ -511,7 +513,7 @@ func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Deleting ACM PCA Certificate Authority: %s", d.Id())
-	_, err = conn.DeleteCertificateAuthority(ctx, inputD)
+	_, err = conn.DeleteCertificateAuthority(ctx, &inputD)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -525,11 +527,11 @@ func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func findCertificateAuthorityByARN(ctx context.Context, conn *acmpca.Client, arn string) (*types.CertificateAuthority, error) {
-	input := &acmpca.DescribeCertificateAuthorityInput{
+	input := acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(arn),
 	}
 
-	output, err := findCertificateAuthority(ctx, conn, input)
+	output, err := findCertificateAuthority(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

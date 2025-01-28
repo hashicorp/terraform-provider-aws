@@ -14,6 +14,7 @@ var (
 	ResourceRepositoryCreationTemplate    = resourceRepositoryCreationTemplate
 	ResourceRepositoryPolicy              = resourceRepositoryPolicy
 
+	FindAccountSettingByName                         = findAccountSettingByName
 	FindLifecyclePolicyByRepositoryName              = findLifecyclePolicyByRepositoryName
 	FindPullThroughCacheRuleByRepositoryPrefix       = findPullThroughCacheRuleByRepositoryPrefix
 	FindRegistryPolicy                               = findRegistryPolicy

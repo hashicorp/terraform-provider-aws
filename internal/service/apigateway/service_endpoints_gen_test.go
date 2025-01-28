@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.GetAccount(ctx, &apigateway.GetAccountInput{},
+	input := apigateway.GetAccountInput{}
+	_, err := client.GetAccount(ctx, &input,
 		func(opts *apigateway.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

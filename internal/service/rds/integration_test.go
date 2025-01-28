@@ -47,6 +47,7 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
@@ -123,6 +124,7 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.mytable"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
@@ -452,6 +454,8 @@ resource "aws_rds_integration" "test" {
   additional_encryption_context = {
     "department" : "test",
   }
+
+  data_filter = "include: test.mytable"
 
   tags = {
     Name = %[1]q

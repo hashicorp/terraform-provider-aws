@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newRetentionConfigurationResource,
-			Name:    "Retention Configuration",
+			Factory:  newRetentionConfigurationResource,
+			TypeName: "aws_config_retention_configuration",
+			Name:     "Retention Configuration",
 		},
 	}
 }

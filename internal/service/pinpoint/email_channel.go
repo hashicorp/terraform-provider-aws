@@ -56,6 +56,11 @@ func resourceEmailChannel() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"orchestration_sending_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -80,6 +85,10 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 	params.FromAddress = aws.String(d.Get("from_address").(string))
 	params.Identity = aws.String(d.Get("identity").(string))
+
+	if v, ok := d.GetOk("orchestration_sending_role_arn"); ok {
+		params.OrchestrationSendingRoleArn = aws.String(v.(string))
+	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		params.RoleArn = aws.String(v.(string))
@@ -126,6 +135,7 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set("from_address", output.FromAddress)
 	d.Set("identity", output.Identity)
+	d.Set("orchestration_sending_role_arn", output.OrchestrationSendingRoleArn)
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("configuration_set", output.ConfigurationSet)
 	d.Set("messages_per_second", output.MessagesPerSecond)

@@ -197,9 +197,9 @@ func TestAccS3BucketRequestPaymentConfiguration_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketRequestPaymentConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_request_payment_configuration" {
 				continue
 			}
@@ -207,6 +207,10 @@ func testAccCheckBucketRequestPaymentConfigurationDestroy(ctx context.Context) r
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindBucketRequestPayment(ctx, conn, bucket, expectedBucketOwner)
@@ -239,6 +243,9 @@ func testAccCheckBucketRequestPaymentConfigurationExists(ctx context.Context, n 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindBucketRequestPayment(ctx, conn, bucket, expectedBucketOwner)
 

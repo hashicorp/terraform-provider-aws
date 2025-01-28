@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_appstream_fleet_stack_association")
+// @SDKResource("aws_appstream_fleet_stack_association", name="Fleet Stack Association")
 func ResourceFleetStackAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetStackAssociationCreate,

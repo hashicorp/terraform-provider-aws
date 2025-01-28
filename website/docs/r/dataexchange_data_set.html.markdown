@@ -37,17 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataExchange DataSets using their ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataExchange DataSets using their `id`. For example:
 
 ```terraform
 import {
   to = aws_dataexchange_data_set.example
-  id = "arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+  id = "4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
 }
 ```
 
-Using `terraform import`, import DataExchange DataSets using their ARN. For example:
+Using `terraform import`, import DataExchange DataSets using their `id`. For example:
 
 ```console
-% terraform import aws_dataexchange_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+% terraform import aws_dataexchange_data_set.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```

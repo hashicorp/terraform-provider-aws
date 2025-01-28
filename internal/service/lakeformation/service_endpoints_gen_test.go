@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListResources(ctx, &lakeformation.ListResourcesInput{},
+	input := lakeformation.ListResourcesInput{}
+	_, err := client.ListResources(ctx, &input,
 		func(opts *lakeformation.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

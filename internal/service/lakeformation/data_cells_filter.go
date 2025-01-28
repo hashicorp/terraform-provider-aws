@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Cells Filter")
+// @FrameworkResource("aws_lakeformation_data_cells_filter", name="Data Cells Filter")
 func newResourceDataCellsFilter(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDataCellsFilter{}
 	r.SetDefaultCreateTimeout(2 * time.Minute)

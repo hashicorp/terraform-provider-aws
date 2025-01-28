@@ -339,9 +339,9 @@ func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) r
 	}
 }
 
-func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterSnapshot, error) {
+func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterSnapshot, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{clusterSnapshotStatusCreating},
+		Pending:    []string{clusterSnapshotStatusCreating, clusterSnapshotStatusCopying},
 		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusDBClusterSnapshot(ctx, conn, id),
 		Timeout:    timeout,

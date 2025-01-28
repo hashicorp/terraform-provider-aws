@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_chime_voice_connector_logging")
+// @SDKResource("aws_chime_voice_connector_logging", name="Voice Connector Logging")
 func ResourceVoiceConnectorLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorLoggingCreate,

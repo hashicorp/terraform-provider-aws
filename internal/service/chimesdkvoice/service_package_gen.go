@@ -31,6 +31,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceGlobalSettings,
 			TypeName: "aws_chimesdkvoice_global_settings",
+			Name:     "Global Settings",
 		},
 		{
 			Factory:  ResourceSipMediaApplication,

@@ -21,32 +21,39 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newOrganizationsFeaturesResource,
-			Name:    "Organizations Features",
+			Factory:  newResourceGroupPoliciesExclusive,
+			TypeName: "aws_iam_group_policies_exclusive",
+			Name:     "Group Policies Exclusive",
 		},
 		{
-			Factory: newResourceGroupPoliciesExclusive,
-			Name:    "Group Policies Exclusive",
+			Factory:  newResourceGroupPolicyAttachmentsExclusive,
+			TypeName: "aws_iam_group_policy_attachments_exclusive",
+			Name:     "Group Policy Attachments Exclusive",
 		},
 		{
-			Factory: newResourceGroupPolicyAttachmentsExclusive,
-			Name:    "Group Policy Attachments Exclusive",
+			Factory:  newOrganizationsFeaturesResource,
+			TypeName: "aws_iam_organizations_features",
+			Name:     "Organizations Features",
 		},
 		{
-			Factory: newResourceRolePoliciesExclusive,
-			Name:    "Role Policies Exclusive",
+			Factory:  newResourceRolePoliciesExclusive,
+			TypeName: "aws_iam_role_policies_exclusive",
+			Name:     "Role Policies Exclusive",
 		},
 		{
-			Factory: newResourceRolePolicyAttachmentsExclusive,
-			Name:    "Role Policy Attachments Exclusive",
+			Factory:  newResourceRolePolicyAttachmentsExclusive,
+			TypeName: "aws_iam_role_policy_attachments_exclusive",
+			Name:     "Role Policy Attachments Exclusive",
 		},
 		{
-			Factory: newResourceUserPoliciesExclusive,
-			Name:    "User Policies Exclusive",
+			Factory:  newResourceUserPoliciesExclusive,
+			TypeName: "aws_iam_user_policies_exclusive",
+			Name:     "User Policies Exclusive",
 		},
 		{
-			Factory: newResourceUserPolicyAttachmentsExclusive,
-			Name:    "User Policy Attachments Exclusive",
+			Factory:  newResourceUserPolicyAttachmentsExclusive,
+			TypeName: "aws_iam_user_policy_attachments_exclusive",
+			Name:     "User Policy Attachments Exclusive",
 		},
 	}
 }

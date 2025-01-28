@@ -283,9 +283,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListIdentityPools(ctx, &cognitoidentity.ListIdentityPoolsInput{
+	input := cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int32(1),
-	},
+	}
+	_, err := client.ListIdentityPools(ctx, &input,
 		func(opts *cognitoidentity.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

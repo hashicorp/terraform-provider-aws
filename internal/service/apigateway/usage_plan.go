@@ -152,7 +152,7 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &apigateway.CreateUsagePlanInput{
+	input := apigateway.CreateUsagePlanInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
@@ -184,7 +184,7 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Throttle = expandThrottleSettings(v.([]interface{}))
 	}
 
-	output, err := conn.CreateUsagePlan(ctx, input)
+	output, err := conn.CreateUsagePlan(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Usage Plan (%s): %s", name, err)
@@ -195,7 +195,7 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 	// Handle case of adding the product code since not addable when
 	// creating the Usage Plan initially.
 	if v, ok := d.GetOk("product_code"); ok {
-		input := &apigateway.UpdateUsagePlanInput{
+		input := apigateway.UpdateUsagePlanInput{
 			PatchOperations: []types.PatchOperation{
 				{
 					Op:    types.OpAdd,
@@ -206,7 +206,7 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 			UsagePlanId: aws.String(d.Id()),
 		}
 
-		_, err = conn.UpdateUsagePlan(ctx, input)
+		_, err = conn.UpdateUsagePlan(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding API Gateway Usage Plan (%s) product code: %s", d.Id(), err)
@@ -450,12 +450,12 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			}
 		}
 
-		input := &apigateway.UpdateUsagePlanInput{
+		input := apigateway.UpdateUsagePlanInput{
 			PatchOperations: operations,
 			UsagePlanId:     aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateUsagePlan(ctx, input)
+		_, err := conn.UpdateUsagePlan(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Usage Plan (%s): %s", d.Id(), err)
@@ -484,10 +484,11 @@ func resourceUsagePlanDelete(ctx context.Context, d *schema.ResourceData, meta i
 			})
 		}
 
-		_, err := conn.UpdateUsagePlan(ctx, &apigateway.UpdateUsagePlanInput{
+		input := apigateway.UpdateUsagePlanInput{
 			PatchOperations: operations,
 			UsagePlanId:     aws.String(d.Id()),
-		})
+		}
+		_, err := conn.UpdateUsagePlan(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "removing API Gateway Usage Plan (%s) API stages: %s", d.Id(), err)
@@ -495,9 +496,10 @@ func resourceUsagePlanDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan: %s", d.Id())
-	_, err := conn.DeleteUsagePlan(ctx, &apigateway.DeleteUsagePlanInput{
+	input := apigateway.DeleteUsagePlanInput{
 		UsagePlanId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteUsagePlan(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -511,11 +513,11 @@ func resourceUsagePlanDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func findUsagePlanByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetUsagePlanOutput, error) {
-	input := &apigateway.GetUsagePlanInput{
+	input := apigateway.GetUsagePlanInput{
 		UsagePlanId: aws.String(id),
 	}
 
-	output, err := conn.GetUsagePlan(ctx, input)
+	output, err := conn.GetUsagePlan(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

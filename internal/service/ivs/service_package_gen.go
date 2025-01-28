@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceStreamKey,
 			TypeName: "aws_ivs_stream_key",
+			Name:     "Stream Key",
 		},
 	}
 }

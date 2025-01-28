@@ -23,7 +23,7 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optFns ...func(*ec2.Options)) (*string, error) {
-	input := &ec2.DescribeTagsInput{
+	input := ec2.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("resource-id"),
@@ -36,7 +36,7 @@ func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optF
 		},
 	}
 
-	output, err := conn.DescribeTags(ctx, input, optFns...)
+	output, err := conn.DescribeTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optF
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns ...func(*ec2.Options)) (tftags.KeyValueTags, error) {
-	input := &ec2.DescribeTagsInput{
+	input := ec2.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("resource-id"),
@@ -65,7 +65,7 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 	}
 	var output []awstypes.TagDescription
 
-	pages := ec2.NewDescribeTagsPaginator(conn, input)
+	pages := ec2.NewDescribeTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -174,12 +174,12 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.EC2)
 	if len(removedTags) > 0 {
-		input := &ec2.DeleteTagsInput{
+		input := ec2.DeleteTagsInput{
 			Resources: []string{identifier},
 			Tags:      Tags(removedTags),
 		}
 
-		_, err := conn.DeleteTags(ctx, input, optFns...)
+		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -189,12 +189,12 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.EC2)
 	if len(updatedTags) > 0 {
-		input := &ec2.CreateTagsInput{
+		input := ec2.CreateTagsInput{
 			Resources: []string{identifier},
 			Tags:      Tags(updatedTags),
 		}
 
-		_, err := conn.CreateTags(ctx, input, optFns...)
+		_, err := conn.CreateTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

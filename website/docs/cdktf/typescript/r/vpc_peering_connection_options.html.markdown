@@ -170,8 +170,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `vpcPeeringConnectionId` - (Required) The ID of the requester VPC peering connection.
-* `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that acceptsthe peering connection (a maximum of one).
-* `requester` (Optional) - A optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that requeststhe peering connection (a maximum of one).
+* `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that accepts the peering connection (a maximum of one).
+* `requester` (Optional) - A optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that requests the peering connection (a maximum of one).
 
 #### Accepter and Requester Arguments
 
@@ -217,4 +217,4 @@ Using `terraform import`, import VPC Peering Connection Options using the VPC pe
 % terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0062ec18a4f742aa15c04ce7c0dc2438cb0c8699001025a2f42368b3d237e0ac -->
+<!-- cache-key: cdktf-0.20.8 input-6ec91844b8fe040be8bdaa6fedfe78ce6d155f95d1258d7182e6ce5f3573c4a7 -->

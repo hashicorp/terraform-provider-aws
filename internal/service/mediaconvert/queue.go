@@ -41,6 +41,11 @@ func resourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"concurrent_jobs": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -107,6 +112,10 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:        getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("concurrent_jobs"); ok {
+		input.ConcurrentJobs = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -143,6 +152,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, queue.Arn)
+	d.Set("concurrent_jobs", queue.ConcurrentJobs)
 	d.Set(names.AttrDescription, queue.Description)
 	d.Set(names.AttrName, queue.Name)
 	d.Set("pricing_plan", queue.PricingPlan)
@@ -166,6 +176,10 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
 			Status: types.QueueStatus(d.Get(names.AttrStatus).(string)),
+		}
+
+		if v, ok := d.GetOk("concurrent_jobs"); ok {
+			input.ConcurrentJobs = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {

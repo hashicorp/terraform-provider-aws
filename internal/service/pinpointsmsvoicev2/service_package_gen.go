@@ -21,22 +21,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newConfigurationSetResource,
-			Name:    "Configuration Set",
+			Factory:  newConfigurationSetResource,
+			TypeName: "aws_pinpointsmsvoicev2_configuration_set",
+			Name:     "Configuration Set",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newOptOutListResource,
-			Name:    "Opt-out List",
+			Factory:  newOptOutListResource,
+			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
+			Name:     "Opt-out List",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newPhoneNumberResource,
-			Name:    "Phone Number",
+			Factory:  newPhoneNumberResource,
+			TypeName: "aws_pinpointsmsvoicev2_phone_number",
+			Name:     "Phone Number",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

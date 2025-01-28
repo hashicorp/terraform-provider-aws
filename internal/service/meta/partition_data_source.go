@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Partition")
+// @FrameworkDataSource("aws_partition", name="Partition")
 func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &partitionDataSource{}
 

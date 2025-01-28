@@ -39,10 +39,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceParameterGroup,
 			TypeName: "aws_dax_parameter_group",
+			Name:     "Parameter Group",
 		},
 		{
 			Factory:  ResourceSubnetGroup,
 			TypeName: "aws_dax_subnet_group",
+			Name:     "Subnet Group",
 		},
 	}
 }

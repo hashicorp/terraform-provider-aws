@@ -70,7 +70,7 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
 
 ### EKS Cluster with EKS Auto Mode
 
-~> **NOTE:** When using EKS Auto Mode `compute_config.enabled`, `kubernetes_network_config.elastic_load_balancing.enabled`, and `storage_config.block_storage.enabled` must *ALL be set to `true`. Likewise for disabling EKS Auto Mode, all three arguments must be set to `false`.
+~> **NOTE:** When using EKS Auto Mode `compute_config.enabled`, `kubernetes_network_config.elastic_load_balancing.enabled`, and `storage_config.block_storage.enabled` must *ALL be set to `true`. Likewise for disabling EKS Auto Mode, all three arguments must be set to `false`. Enabling EKS Auto Mode also requires that `bootstrap_self_managed_addons` is set to `false`.
 
 ```terraform
 resource "aws_eks_cluster" "example" {
@@ -82,6 +82,8 @@ resource "aws_eks_cluster" "example" {
 
   role_arn = aws_iam_role.cluster.arn
   version  = "1.31"
+
+  bootstrap_self_managed_addons = false
 
   compute_config {
     enabled       = true

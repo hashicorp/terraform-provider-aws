@@ -16,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpclattice_service_network")
-// @Tags
+// @SDKDataSource("aws_vpclattice_service_network", name="Service Network")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func dataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceNetworkRead,

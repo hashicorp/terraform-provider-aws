@@ -326,7 +326,7 @@ func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}
 
 	apiObject := &awstypes.ParametersInCacheKeyAndForwardedToOrigin{}
 
-	if v, ok := tfMap["cookies_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cookies_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CookiesConfig = expandCachePolicyCookiesConfig(v[0].(map[string]interface{}))
 	}
 
@@ -338,11 +338,11 @@ func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}
 		apiObject.EnableAcceptEncodingGzip = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["headers_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["headers_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.HeadersConfig = expandCachePolicyHeadersConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["query_strings_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["query_strings_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.QueryStringsConfig = expandCachePolicyQueryStringsConfig(v[0].(map[string]interface{}))
 	}
 

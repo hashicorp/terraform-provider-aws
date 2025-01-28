@@ -54,6 +54,11 @@ func TestTaskSettingsEqual(t *testing.T) {
 				b:        false,
 				expected: false,
 			},
+			"incompatible types": {
+				a:        true,
+				b:        acctest.CtTrue,
+				expected: false,
+			},
 		},
 		"float64": {
 			"equal": {
@@ -74,6 +79,11 @@ func TestTaskSettingsEqual(t *testing.T) {
 			"null proposed value": {
 				a:        nil,
 				b:        float64(1),
+				expected: false,
+			},
+			"incompatible types": {
+				a:        float64(1),
+				b:        "1",
 				expected: false,
 			},
 		},
@@ -101,6 +111,11 @@ func TestTaskSettingsEqual(t *testing.T) {
 			"null proposed value": {
 				a:        nil,
 				b:        names.AttrValue,
+				expected: false,
+			},
+			"incompatible types": {
+				a:        names.AttrValue,
+				b:        false,
 				expected: false,
 			},
 		},
@@ -149,6 +164,21 @@ func TestTaskSettingsEqual(t *testing.T) {
 					},
 				},
 				expected: true,
+			},
+			"incompatible types": {
+				a: map[string]any{
+					acctest.CtKey1: names.AttrValue,
+					acctest.CtKey2: map[string]any{
+						"key3": names.AttrValue,
+					},
+				},
+				b: map[int]any{
+					0: names.AttrValue,
+					1: map[int]any{
+						10: names.AttrValue,
+					},
+				},
+				expected: false,
 			},
 		},
 	}

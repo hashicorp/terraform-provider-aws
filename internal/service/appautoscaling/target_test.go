@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,9 +35,9 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "application-autoscaling", regexache.MustCompile(`scalable-target/\w+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "3"),
 					resource.TestCheckResourceAttr(resourceName, "min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),

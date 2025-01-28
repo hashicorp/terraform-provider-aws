@@ -97,6 +97,63 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 							Required:   true,
 						},
 					},
+					Blocks: map[string]schema.Block{
+						"retention_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[retentionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergRetentionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"snapshot_retention_period_in_days": schema.Int32Attribute{
+													Optional: true,
+												},
+												"number_of_snapshots_to_retain": schema.Int32Attribute{
+													Optional: true,
+												},
+												"clean_expired_files": schema.BoolAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"orphan_file_deletion_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[orphanFileDeletionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergOrphanFileDeletionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"orphan_file_retention_period_in_days": schema.Int32Attribute{
+													Optional: true,
+												},
+												names.AttrLocation: schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -315,8 +372,29 @@ type resourceCatalogTableOptimizerData struct {
 }
 
 type configurationData struct {
-	Enabled types.Bool  `tfsdk:"enabled"`
-	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
+	Enabled                         types.Bool                                                           `tfsdk:"enabled"`
+	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
+	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
+	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
+}
+
+type retentionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergRetentionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergRetentionConfigurationData struct {
+	SnapshotRetentionPeriodInDays types.Int32 `tfsdk:"snapshot_retention_period_in_days"`
+	NumberOfSnapshotsToRetain     types.Int32 `tfsdk:"number_of_snapshots_to_retain"`
+	CleanExpiredFiles             types.Bool  `tfsdk:"clean_expired_files"`
+}
+
+type orphanFileDeletionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergOrphanFileDeletionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergOrphanFileDeletionConfigurationData struct {
+	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
+	Location                        types.String `tfsdk:"location"`
 }
 
 func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListClusters(ctx, &docdbelastic.ListClustersInput{},
+	input := docdbelastic.ListClustersInput{}
+	_, err := client.ListClusters(ctx, &input,
 		func(opts *docdbelastic.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

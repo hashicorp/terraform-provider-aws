@@ -19,8 +19,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newSourceAPIAssociationResource,
-			Name:    "Source API Association",
+			Factory:  newSourceAPIAssociationResource,
+			TypeName: "aws_appsync_source_api_association",
+			Name:     "Source API Association",
 		},
 	}
 }

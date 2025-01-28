@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAccountSuppressionAttributesResource,
-			Name:    "Account Suppression Attributes",
+			Factory:  newAccountSuppressionAttributesResource,
+			TypeName: "aws_sesv2_account_suppression_attributes",
+			Name:     "Account Suppression Attributes",
 		},
 	}
 }

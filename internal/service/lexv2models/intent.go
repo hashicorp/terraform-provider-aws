@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Intent")
+// @FrameworkResource("aws_lexv2models_intent", name="Intent")
 func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIntent{}
 

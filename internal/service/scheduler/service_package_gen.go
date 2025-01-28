@@ -31,6 +31,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceSchedule,
 			TypeName: "aws_scheduler_schedule",
+			Name:     "Schedule",
 		},
 		{
 			Factory:  ResourceScheduleGroup,

@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *directoryservice.Client, identifier string, optFns ...func(*directoryservice.Options)) (tftags.KeyValueTags, error) {
-	input := &directoryservice.ListTagsForResourceInput{
+	input := directoryservice.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -118,12 +118,12 @@ func updateTags(ctx context.Context, conn *directoryservice.Client, identifier s
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DS)
 	if len(removedTags) > 0 {
-		input := &directoryservice.RemoveTagsFromResourceInput{
+		input := directoryservice.RemoveTagsFromResourceInput{
 			ResourceId: aws.String(identifier),
 			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsFromResource(ctx, input, optFns...)
+		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -133,12 +133,12 @@ func updateTags(ctx context.Context, conn *directoryservice.Client, identifier s
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DS)
 	if len(updatedTags) > 0 {
-		input := &directoryservice.AddTagsToResourceInput{
+		input := directoryservice.AddTagsToResourceInput{
 			ResourceId: aws.String(identifier),
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToResource(ctx, input, optFns...)
+		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

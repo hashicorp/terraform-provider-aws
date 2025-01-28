@@ -14,8 +14,8 @@ Terraform resource for managing an AWS Resilience Hub Resiliency Policy.
 
 ```terraform
 resource "aws_resiliencehub_resiliency_policy" "example" {
-  policy_name        = "testexample"
-  policy_description = "testexample"
+  name        = "testexample"
+  description = "testexample"
 
   tier = "NonCritical"
 

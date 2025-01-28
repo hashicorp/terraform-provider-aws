@@ -521,9 +521,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.{{ .APICall }}(ctx, &{{ .GoPackage }}.{{ .APICall }}Input{
+	input := {{ .GoPackage }}.{{ .APICall }}Input{
 	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
-	},
+	}
+	_, err := client.{{ .APICall }}(ctx, &input,
 		func(opts *{{ .GoPackage }}.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

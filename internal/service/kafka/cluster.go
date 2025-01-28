@@ -221,9 +221,10 @@ func resourceCluster() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"provisioned_throughput": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
+													Type:             schema.TypeList,
+													Optional:         true,
+													MaxItems:         1,
+													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															// This feature is available for
@@ -788,6 +789,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+		} else if o, n := d.GetChange("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); len(o.([]interface{})) > 0 && len(n.([]interface{})) == 0 {
+			// Disable when a previously configured provisioned_throughput block is removed
+			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = &types.ProvisionedThroughput{Enabled: aws.Bool(false)}
 		}
 
 		output, err := conn.UpdateBrokerStorage(ctx, input)

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Voices")
+// @FrameworkDataSource("aws_polly_voices", name="Voices")
 func newDataSourceVoices(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceVoices{}, nil
 }

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListCertificates(ctx, &acm.ListCertificatesInput{},
+	input := acm.ListCertificatesInput{}
+	_, err := client.ListCertificates(ctx, &input,
 		func(opts *acm.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

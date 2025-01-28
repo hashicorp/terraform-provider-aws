@@ -37,7 +37,7 @@ func TestAccIPAM_basic(t *testing.T) {
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "ipam/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),

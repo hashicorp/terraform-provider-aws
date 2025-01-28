@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDefaultScraperConfigurationDataSource,
-			Name:    "Default Scraper Configuration",
+			Factory:  newDefaultScraperConfigurationDataSource,
+			TypeName: "aws_prometheus_default_scraper_configuration",
+			Name:     "Default Scraper Configuration",
 		},
 	}
 }
@@ -26,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newScraperResource,
-			Name:    "Scraper",
+			Factory:  newScraperResource,
+			TypeName: "aws_prometheus_scraper",
+			Name:     "Scraper",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

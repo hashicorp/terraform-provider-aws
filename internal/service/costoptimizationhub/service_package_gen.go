@@ -19,12 +19,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceEnrollmentStatus,
-			Name:    "Enrollment Status",
+			Factory:  newResourceEnrollmentStatus,
+			TypeName: "aws_costoptimizationhub_enrollment_status",
+			Name:     "Enrollment Status",
 		},
 		{
-			Factory: newResourcePreferences,
-			Name:    "Preferences",
+			Factory:  newResourcePreferences,
+			TypeName: "aws_costoptimizationhub_preferences",
+			Name:     "Preferences",
 		},
 	}
 }

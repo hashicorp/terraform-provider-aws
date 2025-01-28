@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListOfferings(ctx, &medialive.ListOfferingsInput{},
+	input := medialive.ListOfferingsInput{}
+	_, err := client.ListOfferings(ctx, &input,
 		func(opts *medialive.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

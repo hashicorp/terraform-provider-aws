@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Resource Collection")
+// @FrameworkDataSource("aws_devopsguru_resource_collection", name="Resource Collection")
 func newDataSourceResourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceResourceCollection{}, nil
 }

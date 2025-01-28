@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Slack Channel Configuration")
+// @FrameworkResource("aws_chatbot_slack_channel_configuration", name="Slack Channel Configuration")
 // @Tags(identifierAttribute="chat_configuration_arn")
 func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &slackChannelConfigurationResource{}

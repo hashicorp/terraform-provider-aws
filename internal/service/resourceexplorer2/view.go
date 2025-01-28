@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="View")
+// @FrameworkResource("aws_resourceexplorer2_view", name="View")
 // @Tags(identifierAttribute="id")
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil

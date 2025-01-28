@@ -1119,7 +1119,7 @@ func expandColumnTag(tfMap map[string]interface{}) *awstypes.ColumnTag {
 
 	apiObject := &awstypes.ColumnTag{}
 
-	if v, ok := tfMap["column_description"].(map[string]interface{}); ok {
+	if v, ok := tfMap["column_description"].([]interface{}); ok {
 		apiObject.ColumnDescription = expandColumnDescription(v)
 	}
 	if v, ok := tfMap["column_geographic_role"].(string); ok {
@@ -1129,13 +1129,17 @@ func expandColumnTag(tfMap map[string]interface{}) *awstypes.ColumnTag {
 	return apiObject
 }
 
-func expandColumnDescription(tfMap map[string]interface{}) *awstypes.ColumnDescription {
-	if tfMap == nil {
+func expandColumnDescription(tfList []interface{}) *awstypes.ColumnDescription {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ColumnDescription{}
-
 	if v, ok := tfMap["text"].(string); ok {
 		apiObject.Text = aws.String(v)
 	}

@@ -124,27 +124,7 @@ func (OnceAWeekWindow) Type(context.Context) attr.Type {
 }
 
 func (v OnceAWeekWindow) StringSemanticEquals(ctx context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	newValue, ok := newValuable.(OnceAWeekWindow)
-	if !ok {
-		return false, diags
-	}
-
-	old, d := v.ToStringValue(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return false, diags
-	}
-
-	new, d := newValue.ToStringValue(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return false, diags
-	}
-
-	// Case insensitive comparison.
-	return strings.EqualFold(old.ValueString(), new.ValueString()), diags
+	return caseInsensitiveStringSemanticEquals(ctx, v, newValuable)
 }
 
 func (v OnceAWeekWindow) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {

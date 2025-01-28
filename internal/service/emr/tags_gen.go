@@ -76,12 +76,12 @@ func updateTags(ctx context.Context, conn *emr.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.EMR)
 	if len(removedTags) > 0 {
-		input := &emr.RemoveTagsInput{
+		input := emr.RemoveTagsInput{
 			ResourceId: aws.String(identifier),
 			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTags(ctx, input, optFns...)
+		_, err := conn.RemoveTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *emr.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.EMR)
 	if len(updatedTags) > 0 {
-		input := &emr.AddTagsInput{
+		input := emr.AddTagsInput{
 			ResourceId: aws.String(identifier),
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.AddTags(ctx, input, optFns...)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

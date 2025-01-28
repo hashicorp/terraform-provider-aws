@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_budgets_budget_action")
+// @SDKResource("aws_budgets_budget_action", name="Budget Action")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
 func ResourceBudgetAction() *schema.Resource {

@@ -70,8 +70,10 @@ This resource supports the following arguments:
 
 The `certificate_settings` configuration block supports the following arguments:
 
-* `type` - (Required) The certificate type. Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
+* `type` - (Required) The certificate type.
+  Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
 * `custom_certificate_arn` - (Optional) The Amazon resource name (ARN) for the custom certificate.
+  Required when `type` is `CUSTOM`.
 
 The `sub_domain` configuration block supports the following arguments:
 
@@ -115,4 +117,4 @@ Using `terraform import`, import Amplify domain association using `app_id` and `
 % terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-be62188dd78c2bc3fe33b226ce5b4ddaa94e43d964007891a09d32a8b7f4f2bc -->
+<!-- cache-key: cdktf-0.20.8 input-f4367c495f17b7a9ed09ceed92c8a0d9b846c5bd10d3638b3ba16b12ccfaa9ab -->

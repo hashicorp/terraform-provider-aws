@@ -28,11 +28,11 @@ func sweepCertificateAuthorities(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	input := &acmpca.ListCertificateAuthoritiesInput{}
 	conn := client.ACMPCAClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	paginator := acmpca.NewListCertificateAuthoritiesPaginator(conn, input)
+	input := acmpca.ListCertificateAuthoritiesInput{}
+	paginator := acmpca.NewListCertificateAuthoritiesPaginator(conn, &input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 

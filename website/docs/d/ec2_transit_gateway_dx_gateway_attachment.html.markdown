@@ -41,8 +41,9 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway Attachment
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier,
+* `tags` - Key-value tags for the EC2 Transit Gateway Attachment.
 
 ## Timeouts
 

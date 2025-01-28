@@ -84,7 +84,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the notebook instance (must be unique).
 * `roleArn` - (Required) The ARN of the IAM role to be used by the notebook instance which allows SageMaker to call other services on your behalf.
 * `instanceType` - (Required) The name of ML compute instance type.
-* `platformIdentifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebook-al1-v1`, `notebook-al2-v1`, or  `notebook-al2-v2`, depending on which version of Amazon Linux you require.
+* `platformIdentifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebook-al1-v1`, `notebook-al2-v1`, `notebook-al2-v2`, or `notebook-al2-v3`, depending on which version of Amazon Linux you require.
 * `volumeSize` - (Optional) The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
 * `subnetId` - (Optional) The VPC subnet ID.
 * `securityGroups` - (Optional) The associated security groups.
@@ -145,4 +145,4 @@ Using `terraform import`, import SageMaker Notebook Instances using the `name`. 
 % terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7b793590709519efd0f96bd3612e9c4d048d225f9ade368bd3db9274a33268bd -->
+<!-- cache-key: cdktf-0.20.8 input-55d9c13dc7ea01bee62f57a843316c947ec08cf7ff5b127baeb41b4931d8a93d -->

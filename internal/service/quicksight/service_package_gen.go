@@ -21,35 +21,42 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newFolderMembershipResource,
-			Name:    "Folder Membership",
+			Factory:  newFolderMembershipResource,
+			TypeName: "aws_quicksight_folder_membership",
+			Name:     "Folder Membership",
 		},
 		{
-			Factory: newIAMPolicyAssignmentResource,
-			Name:    "IAM Policy Assignment",
+			Factory:  newIAMPolicyAssignmentResource,
+			TypeName: "aws_quicksight_iam_policy_assignment",
+			Name:     "IAM Policy Assignment",
 		},
 		{
-			Factory: newIngestionResource,
-			Name:    "Ingestion",
+			Factory:  newIngestionResource,
+			TypeName: "aws_quicksight_ingestion",
+			Name:     "Ingestion",
 		},
 		{
-			Factory: newNamespaceResource,
-			Name:    "Namespace",
+			Factory:  newNamespaceResource,
+			TypeName: "aws_quicksight_namespace",
+			Name:     "Namespace",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newRefreshScheduleResource,
-			Name:    "Refresh Schedule",
+			Factory:  newRefreshScheduleResource,
+			TypeName: "aws_quicksight_refresh_schedule",
+			Name:     "Refresh Schedule",
 		},
 		{
-			Factory: newTemplateAliasResource,
-			Name:    "Template Alias",
+			Factory:  newTemplateAliasResource,
+			TypeName: "aws_quicksight_template_alias",
+			Name:     "Template Alias",
 		},
 		{
-			Factory: newVPCConnectionResource,
-			Name:    "VPC Connection",
+			Factory:  newVPCConnectionResource,
+			TypeName: "aws_quicksight_vpc_connection",
+			Name:     "VPC Connection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

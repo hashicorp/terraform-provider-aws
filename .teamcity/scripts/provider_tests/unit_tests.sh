@@ -33,4 +33,5 @@ go test \
     ./internal/types/... \
     ./internal/vault/... \
     ./internal/verify/... \
+    ./internal/yaml/... \
     -json

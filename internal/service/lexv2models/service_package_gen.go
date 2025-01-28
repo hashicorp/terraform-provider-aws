@@ -21,31 +21,37 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceBot,
-			Name:    "Bot",
+			Factory:  newResourceBot,
+			TypeName: "aws_lexv2models_bot",
+			Name:     "Bot",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceBotLocale,
-			Name:    "Bot Locale",
+			Factory:  newResourceBotLocale,
+			TypeName: "aws_lexv2models_bot_locale",
+			Name:     "Bot Locale",
 		},
 		{
-			Factory: newResourceBotVersion,
-			Name:    "Bot Version",
+			Factory:  newResourceBotVersion,
+			TypeName: "aws_lexv2models_bot_version",
+			Name:     "Bot Version",
 		},
 		{
-			Factory: newResourceIntent,
-			Name:    "Intent",
+			Factory:  newResourceIntent,
+			TypeName: "aws_lexv2models_intent",
+			Name:     "Intent",
 		},
 		{
-			Factory: newResourceSlot,
-			Name:    "Slot",
+			Factory:  newResourceSlot,
+			TypeName: "aws_lexv2models_slot",
+			Name:     "Slot",
 		},
 		{
-			Factory: newResourceSlotType,
-			Name:    "Slot Type",
+			Factory:  newResourceSlotType,
+			TypeName: "aws_lexv2models_slot_type",
+			Name:     "Slot Type",
 		},
 	}
 }

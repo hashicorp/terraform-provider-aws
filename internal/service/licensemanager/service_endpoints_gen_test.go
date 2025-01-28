@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListLicenseConfigurations(ctx, &licensemanager.ListLicenseConfigurationsInput{},
+	input := licensemanager.ListLicenseConfigurationsInput{}
+	_, err := client.ListLicenseConfigurations(ctx, &input,
 		func(opts *licensemanager.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

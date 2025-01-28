@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Schema")
+// @FrameworkResource("aws_verifiedpermissions_schema", name="Schema")
 func newResourceSchema(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSchema{}
 

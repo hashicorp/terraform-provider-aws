@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceQueue,
 			TypeName: "aws_sqs_queue",
+			Name:     "Queue",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrURL,
 			},
@@ -34,6 +35,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceQueues,
 			TypeName: "aws_sqs_queues",
+			Name:     "Queues",
 		},
 	}
 }
@@ -51,14 +53,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceQueuePolicy,
 			TypeName: "aws_sqs_queue_policy",
+			Name:     "Queue Policy",
 		},
 		{
 			Factory:  resourceQueueRedriveAllowPolicy,
 			TypeName: "aws_sqs_queue_redrive_allow_policy",
+			Name:     "Queue Redrive Allow Policy",
 		},
 		{
 			Factory:  resourceQueueRedrivePolicy,
 			TypeName: "aws_sqs_queue_redrive_policy",
+			Name:     "Queue Redrive Policy",
 		},
 	}
 }

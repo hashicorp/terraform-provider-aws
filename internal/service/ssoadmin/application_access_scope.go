@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Access Scope")
+// @FrameworkResource("aws_ssoadmin_application_access_scope", name="Application Access Scope")
 func newResourceApplicationAccessScope(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAccessScope{}, nil
 }

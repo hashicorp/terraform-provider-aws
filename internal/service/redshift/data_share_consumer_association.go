@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Share Consumer Association")
+// @FrameworkResource("aws_redshift_data_share_consumer_association", name="Data Share Consumer Association")
 func newResourceDataShareConsumerAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceDataShareConsumerAssociation{}, nil
 }

@@ -31,6 +31,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceEncryptionConfig,
 			TypeName: "aws_xray_encryption_config",
+			Name:     "Encryption Config",
 		},
 		{
 			Factory:  resourceGroup,

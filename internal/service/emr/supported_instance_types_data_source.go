@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Supported Instance Types")
+// @FrameworkDataSource("aws_emr_supported_instance_types", name="Supported Instance Types")
 func newDataSourceSupportedInstanceTypes(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSupportedInstanceTypes{}, nil
 }

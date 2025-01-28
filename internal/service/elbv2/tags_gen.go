@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identifier string, optFns ...func(*elasticloadbalancingv2.Options)) (tftags.KeyValueTags, error) {
-	input := &elasticloadbalancingv2.DescribeTagsInput{
+	input := elasticloadbalancingv2.DescribeTagsInput{
 		ResourceArns: []string{identifier},
 	}
 
-	output, err := conn.DescribeTags(ctx, input, optFns...)
+	output, err := conn.DescribeTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -118,12 +118,12 @@ func updateTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identi
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ELBV2)
 	if len(removedTags) > 0 {
-		input := &elasticloadbalancingv2.RemoveTagsInput{
+		input := elasticloadbalancingv2.RemoveTagsInput{
 			ResourceArns: []string{identifier},
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTags(ctx, input, optFns...)
+		_, err := conn.RemoveTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -133,12 +133,12 @@ func updateTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identi
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.ELBV2)
 	if len(updatedTags) > 0 {
-		input := &elasticloadbalancingv2.AddTagsInput{
+		input := elasticloadbalancingv2.AddTagsInput{
 			ResourceArns: []string{identifier},
 			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.AddTags(ctx, input, optFns...)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

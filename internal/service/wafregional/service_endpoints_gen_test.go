@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListRules(ctx, &wafregional.ListRulesInput{},
+	input := wafregional.ListRulesInput{}
+	_, err := client.ListRules(ctx, &input,
 		func(opts *wafregional.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

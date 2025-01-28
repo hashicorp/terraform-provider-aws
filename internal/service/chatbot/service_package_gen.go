@@ -15,8 +15,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceSlackWorkspace,
-			Name:    "Slack Workspace",
+			Factory:  newDataSourceSlackWorkspace,
+			TypeName: "aws_chatbot_slack_workspace",
+			Name:     "Slack Workspace",
 		},
 	}
 }
@@ -24,15 +25,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newSlackChannelConfigurationResource,
-			Name:    "Slack Channel Configuration",
+			Factory:  newSlackChannelConfigurationResource,
+			TypeName: "aws_chatbot_slack_channel_configuration",
+			Name:     "Slack Channel Configuration",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "chat_configuration_arn",
 			},
 		},
 		{
-			Factory: newTeamsChannelConfigurationResource,
-			Name:    "Teams Channel Configuration",
+			Factory:  newTeamsChannelConfigurationResource,
+			TypeName: "aws_chatbot_teams_channel_configuration",
+			Name:     "Teams Channel Configuration",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "chat_configuration_arn",
 			},

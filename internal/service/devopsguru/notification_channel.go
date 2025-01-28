@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Notification Channel")
+// @FrameworkResource("aws_devopsguru_notification_channel", name="Notification Channel")
 func newResourceNotificationChannel(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceNotificationChannel{}, nil
 }

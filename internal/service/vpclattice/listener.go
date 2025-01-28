@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_vpclattice_listener", name="Listener")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,

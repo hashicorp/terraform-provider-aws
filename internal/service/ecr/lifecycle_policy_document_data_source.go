@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Lifecycle Policy Document")
+// @FrameworkDataSource("aws_ecr_lifecycle_policy_document", name="Lifecycle Policy Document")
 func newLifecyclePolicyDocumentDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &lifecyclePolicyDocumentDataSource{}, nil
 }

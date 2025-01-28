@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceRegistry,
-			Name:    "Registry",
+			Factory:  newDataSourceRegistry,
+			TypeName: "aws_glue_registry",
+			Name:     "Registry",
 		},
 	}
 }
@@ -26,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceCatalogTableOptimizer,
-			Name:    "Catalog Table Optimizer",
+			Factory:  newResourceCatalogTableOptimizer,
+			TypeName: "aws_glue_catalog_table_optimizer",
+			Name:     "Catalog Table Optimizer",
 		},
 	}
 }
@@ -37,18 +39,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
+			Name:     "Catalog Table",
 		},
 		{
 			Factory:  DataSourceConnection,
 			TypeName: "aws_glue_connection",
+			Name:     "Connection",
 		},
 		{
 			Factory:  DataSourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
+			Name:     "Data Catalog Encryption Settings",
 		},
 		{
 			Factory:  DataSourceScript,
 			TypeName: "aws_glue_script",
+			Name:     "Script",
 		},
 	}
 }
@@ -66,10 +72,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
+			Name:     "Catalog Table",
 		},
 		{
 			Factory:  ResourceClassifier,
 			TypeName: "aws_glue_classifier",
+			Name:     "Classifier",
 		},
 		{
 			Factory:  ResourceConnection,
@@ -90,6 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
+			Name:     "Data Catalog Encryption Settings",
 		},
 		{
 			Factory:  ResourceDataQualityRuleset,
@@ -126,10 +135,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePartition,
 			TypeName: "aws_glue_partition",
+			Name:     "Partition",
 		},
 		{
 			Factory:  ResourcePartitionIndex,
 			TypeName: "aws_glue_partition_index",
+			Name:     "Partition Index",
 		},
 		{
 			Factory:  ResourceRegistry,
@@ -142,6 +153,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResourcePolicy,
 			TypeName: "aws_glue_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
 			Factory:  ResourceSchema,
@@ -154,6 +166,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSecurityConfiguration,
 			TypeName: "aws_glue_security_configuration",
+			Name:     "Security Configuration",
 		},
 		{
 			Factory:  ResourceTrigger,
@@ -166,6 +179,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUserDefinedFunction,
 			TypeName: "aws_glue_user_defined_function",
+			Name:     "User Defined Function",
 		},
 		{
 			Factory:  ResourceWorkflow,

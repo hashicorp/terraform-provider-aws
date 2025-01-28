@@ -77,7 +77,15 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			"data_filter": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
 			"integration_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -160,6 +168,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	data.KMSKeyID = fwflex.StringToFramework(ctx, integration.KMSKeyId)
+	data.DataFilter = fwflex.StringToFramework(ctx, integration.DataFilter)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -352,6 +361,7 @@ func integrationError(v awstypes.IntegrationError) error {
 
 type integrationResourceModel struct {
 	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
+	DataFilter                  types.String                     `tfsdk:"data_filter"`
 	ID                          types.String                     `tfsdk:"id"`
 	IntegrationARN              types.String                     `tfsdk:"arn"`
 	IntegrationName             types.String                     `tfsdk:"integration_name"`

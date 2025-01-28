@@ -15,8 +15,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newAcceleratorDataSource,
-			Name:    "Accelerator",
+			Factory:  newAcceleratorDataSource,
+			TypeName: "aws_globalaccelerator_accelerator",
+			Name:     "Accelerator",
 		},
 	}
 }
@@ -24,8 +25,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newCrossAccountAttachmentResource,
-			Name:    "Cross-account Attachment",
+			Factory:  newCrossAccountAttachmentResource,
+			TypeName: "aws_globalaccelerator_cross_account_attachment",
+			Name:     "Cross-account Attachment",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},

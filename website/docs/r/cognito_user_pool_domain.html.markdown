@@ -29,7 +29,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool_domain" "main" {
-  domain          = "example-domain"
+  domain          = "auth.example.com"
   certificate_arn = aws_acm_certificate.cert.arn
   user_pool_id    = aws_cognito_user_pool.example.id
 }

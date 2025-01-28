@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceAgentVersions,
-			Name:    "Agent Versions",
+			Factory:  newDataSourceAgentVersions,
+			TypeName: "aws_bedrockagent_agent_versions",
+			Name:     "Agent Versions",
 		},
 	}
 }
@@ -26,34 +27,45 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAgentActionGroupResource,
-			Name:    "Agent Action Group",
-		},
-		{
-			Factory: newAgentAliasResource,
-			Name:    "Agent Alias",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "agent_alias_arn",
-			},
-		},
-		{
-			Factory: newAgentKnowledgeBaseAssociationResource,
-			Name:    "Agent Knowledge Base Association",
-		},
-		{
-			Factory: newAgentResource,
-			Name:    "Agent",
+			Factory:  newAgentResource,
+			TypeName: "aws_bedrockagent_agent",
+			Name:     "Agent",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_arn",
 			},
 		},
 		{
-			Factory: newDataSourceResource,
-			Name:    "Data Source",
+			Factory:  newAgentActionGroupResource,
+			TypeName: "aws_bedrockagent_agent_action_group",
+			Name:     "Agent Action Group",
 		},
 		{
-			Factory: newKnowledgeBaseResource,
-			Name:    "Knowledge Base",
+			Factory:  newAgentAliasResource,
+			TypeName: "aws_bedrockagent_agent_alias",
+			Name:     "Agent Alias",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_alias_arn",
+			},
+		},
+		{
+			Factory:  newAgentCollaboratorResource,
+			TypeName: "aws_bedrockagent_agent_collaborator",
+			Name:     "Agent Collaborator",
+		},
+		{
+			Factory:  newAgentKnowledgeBaseAssociationResource,
+			TypeName: "aws_bedrockagent_agent_knowledge_base_association",
+			Name:     "Agent Knowledge Base Association",
+		},
+		{
+			Factory:  newDataSourceResource,
+			TypeName: "aws_bedrockagent_data_source",
+			Name:     "Data Source",
+		},
+		{
+			Factory:  newKnowledgeBaseResource,
+			TypeName: "aws_bedrockagent_knowledge_base",
+			Name:     "Knowledge Base",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

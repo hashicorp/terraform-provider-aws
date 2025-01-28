@@ -28,7 +28,7 @@ const (
 	scramSecretBatchSize = 10
 )
 
-// @SDKResource("aws_msk_scram_secret_association", name="SCRAM Secret Association)
+// @SDKResource("aws_msk_scram_secret_association", name="SCRAM Secret Association")
 func resourceSCRAMSecretAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSCRAMSecretAssociationCreate,
@@ -78,7 +78,7 @@ func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	scramSecrets, err := findSCRAMSecretsByClusterARN(ctx, conn, d.Id())
+	scramSecrets, err := findSCRAMSecretAssociation(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK SCRAM Secret Association (%s) not found, removing from state", d.Id())
@@ -135,10 +135,29 @@ func resourceSCRAMSecretAssociationDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
+func findSCRAMSecretAssociation(ctx context.Context, conn *kafka.Client, clusterARN string) ([]string, error) {
+	output, err := findSCRAMSecretsByClusterARN(ctx, conn, clusterARN)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output, nil
+}
+
 func findSCRAMSecretsByClusterARN(ctx context.Context, conn *kafka.Client, clusterARN string) ([]string, error) {
 	input := &kafka.ListScramSecretsInput{
 		ClusterArn: aws.String(clusterARN),
 	}
+
+	return findSCRAMSecrets(ctx, conn, input)
+}
+
+func findSCRAMSecrets(ctx context.Context, conn *kafka.Client, input *kafka.ListScramSecretsInput) ([]string, error) {
 	var output []string
 
 	pages := kafka.NewListScramSecretsPaginator(conn, input)

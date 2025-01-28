@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_elasticache_reserved_cache_node_offering")
+// @FrameworkDataSource("aws_elasticache_reserved_cache_node_offering", name="Reserved Cache Node Offering")
 func newDataSourceReservedCacheNodeOffering(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceReservedCacheNodeOffering{}, nil
 }

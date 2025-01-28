@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Environment Blueprint")
+// @FrameworkDataSource("aws_datazone_environment_blueprint", name="Environment Blueprint")
 func newDataSourceEnvironmentBlueprint(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceEnvironmentBlueprint{}, nil
 }

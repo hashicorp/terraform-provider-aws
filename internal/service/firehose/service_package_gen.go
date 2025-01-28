@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceDeliveryStream,
 			TypeName: "aws_kinesis_firehose_delivery_stream",
+			Name:     "Delivery Stream",
 		},
 	}
 }

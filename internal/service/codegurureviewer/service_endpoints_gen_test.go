@@ -284,9 +284,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListCodeReviews(ctx, &codegurureviewer.ListCodeReviewsInput{
+	input := codegurureviewer.ListCodeReviewsInput{
 		Type: awstypes.TypePullRequest,
-	},
+	}
+	_, err := client.ListCodeReviews(ctx, &input,
 		func(opts *codegurureviewer.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

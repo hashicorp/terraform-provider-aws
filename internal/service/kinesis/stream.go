@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,12 +46,7 @@ func resourceStream() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				shardCount := diff.Get("shard_count").(int)
-				streamMode := types.StreamModeProvisioned
-				if v, ok := diff.GetOk("stream_mode_details.0.stream_mode"); ok {
-					streamMode = types.StreamMode(v.(string))
-				}
-				switch streamMode {
+				switch streamMode, shardCount := getStreamMode(diff), diff.Get("shard_count").(int); streamMode {
 				case types.StreamModeOnDemand:
 					if shardCount > 0 {
 						return fmt.Errorf("shard_count must not be set when stream_mode is %s", streamMode)
@@ -59,8 +55,31 @@ func resourceStream() *schema.Resource {
 					if shardCount < 1 {
 						return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
 					}
-				default:
-					return fmt.Errorf("unsupported stream mode %s", streamMode)
+				}
+
+				return nil
+			},
+			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
+
+				output, err := findLimits(ctx, conn)
+
+				if err != nil {
+					return nil //nolint:nilerr // Explicitly OK if IAM permissions not set (or any other error)
+				}
+
+				switch streamMode := getStreamMode(diff); streamMode {
+				case types.StreamModeOnDemand:
+					if diff.Id() == "" {
+						if streamCount, streamLimit := aws.ToInt32(output.OnDemandStreamCount)+1, aws.ToInt32(output.OnDemandStreamCountLimit); streamCount > streamLimit {
+							return fmt.Errorf("on-demand stream count (%d) would exceed the Kinesis account limit (%d)", streamCount, streamLimit)
+						}
+					}
+				case types.StreamModeProvisioned:
+					o, n := diff.GetChange("shard_count")
+					if shardCount, shardLimit := aws.ToInt32(output.OpenShardCount)+int32(n.(int)-o.(int)), aws.ToInt32(output.ShardLimit); shardCount > shardLimit {
+						return fmt.Errorf("open shard count (%d) would exceed the Kinesis account limit (%d)", shardCount, shardLimit)
+					}
 				}
 
 				return nil
@@ -505,6 +524,21 @@ func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta inte
 	return []*schema.ResourceData{d}, nil
 }
 
+func findLimits(ctx context.Context, conn *kinesis.Client) (*kinesis.DescribeLimitsOutput, error) {
+	input := &kinesis.DescribeLimitsInput{}
+	output, err := conn.DescribeLimits(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*types.StreamDescriptionSummary, error) {
 	input := &kinesis.DescribeStreamSummaryInput{
 		StreamName: aws.String(name),
@@ -603,7 +637,7 @@ func waitStreamUpdated(ctx context.Context, conn *kinesis.Client, name string, t
 	return nil, err
 }
 
-func getStreamMode(d *schema.ResourceData) types.StreamMode {
+func getStreamMode(d sdkv2.ResourceDiffer) types.StreamMode {
 	streamMode, ok := d.GetOk("stream_mode_details.0.stream_mode")
 	if !ok {
 		return types.StreamModeProvisioned

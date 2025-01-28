@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Domain Association")
+// @FrameworkResource("aws_redshiftserverless_custom_domain_association", name="Custom Domain Association")
 func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customDomainAssociationResource{}
 

@@ -318,7 +318,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &amplify.CreateAppInput{
+	input := amplify.CreateAppInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
@@ -395,7 +395,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Repository = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateApp(ctx, input)
+	output, err := conn.CreateApp(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify App (%s): %s", name, err)
@@ -471,7 +471,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &amplify.UpdateAppInput{
+		input := amplify.UpdateAppInput{
 			AppId: aws.String(d.Id()),
 		}
 
@@ -572,7 +572,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			input.Repository = aws.String(d.Get("repository").(string))
 		}
 
-		_, err := conn.UpdateApp(ctx, input)
+		_, err := conn.UpdateApp(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify App (%s): %s", d.Id(), err)
@@ -587,9 +587,10 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Amplify App: %s", d.Id())
-	_, err := conn.DeleteApp(ctx, &amplify.DeleteAppInput{
+	input := amplify.DeleteAppInput{
 		AppId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApp(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -603,16 +604,16 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.App, error) {
-	input := &amplify.GetAppInput{
+	input := amplify.GetAppInput{
 		AppId: aws.String(id),
 	}
 
-	output, err := conn.GetApp(ctx, input)
+	output, err := conn.GetApp(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -621,7 +622,7 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 	}
 
 	if output == nil || output.App == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return output.App, nil

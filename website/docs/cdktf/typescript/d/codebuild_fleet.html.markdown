@@ -92,6 +92,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Fleet.
 * `baseCapacity` - Number of machines allocated to the ﬂeet.
+* `compute_configuration` - Compute configuration of the compute fleet.
+    * `disk` - Amount of disk space of the instance type included in the fleet.
+    * `machine_type` - Machine type of the instance type included in the fleet.
+    * `memory` - Amount of memory of the instance type included in the fleet.
+    * `vcpu` - Number of vCPUs of the instance type included in the fleet.
 * `computeType` - Compute resources the compute fleet uses.
 * `created` - Creation time of the fleet.
 * `environmentType` - Environment type of the compute fleet.
@@ -117,4 +122,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnets` - A list of one or more subnet IDs in your Amazon VPC.
     * `vpcId` - The ID of the Amazon VPC.
 
-<!-- cache-key: cdktf-0.20.8 input-1dd0c64b00818aba259878581a28993546ff6920dd1e6d4faaf8fd87b76f41ae -->
+<!-- cache-key: cdktf-0.20.8 input-491769edc9be1c75876e7a5a84dad33645eb6230108b9cd1455d98c4aa15d046 -->

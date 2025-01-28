@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Service Integration")
+// @FrameworkResource("aws_devopsguru_service_integration", name="Service Integration")
 func newResourceServiceIntegration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceServiceIntegration{}, nil
 }

@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -139,23 +138,16 @@ func testAccCheckDelegationSetDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccCheckDelegationSetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		output, err := tfroute53.FindDelegationSetByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		if err != nil {
-			return err
-		}
+		_, err := tfroute53.FindDelegationSetByID(ctx, conn, rs.Primary.ID)
 
-		if setID := tfroute53.CleanDelegationSetID(aws.ToString(output.Id)); setID != rs.Primary.ID {
-			return fmt.Errorf("Route53 Reusable Delegation Set ID does not match:\nExpected: %#v\nReturned: %#v", rs.Primary.ID, setID)
-		}
-
-		return nil
+		return err
 	}
 }
 

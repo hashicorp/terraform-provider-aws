@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Access Policy")
+// @FrameworkDataSource("aws_opensearchserverless_access_policy", name="Access Policy")
 func newDataSourceAccessPolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceAccessPolicy{}, nil
 }

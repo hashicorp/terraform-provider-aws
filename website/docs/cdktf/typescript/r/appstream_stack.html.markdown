@@ -46,6 +46,10 @@ class MyConvertedCode extends TerraformStack {
       },
       userSettings: [
         {
+          action: "AUTO_TIME_ZONE_REDIRECTION",
+          permission: "DISABLED",
+        },
+        {
           action: "CLIPBOARD_COPY_FROM_LOCAL_DEVICE",
           permission: "ENABLED",
         },
@@ -128,7 +132,7 @@ The following arguments are optional:
 ### `userSettings`
 
 * `action` - (Required) Action that is enabled or disabled.
-  Valid values are `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, or `DOMAIN_SMART_CARD_SIGNIN`.
+  Valid values are `AUTO_TIME_ZONE_REDIRECTION`, `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`, `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, `DOMAIN_SMART_CARD_SIGNIN`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, or `PRINTING_TO_LOCAL_DEVICE`.
 * `permission` - (Required) Whether the action is enabled or disabled.
   Valid values are `ENABLED` or `DISABLED`.
 
@@ -173,4 +177,4 @@ Using `terraform import`, import `aws_appstream_stack` using the id. For example
 % terraform import aws_appstream_stack.example stackID
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-47da4616e548607a748b0c74b6e276c2936292671693468cbdab004d2cb5d071 -->
+<!-- cache-key: cdktf-0.20.8 input-858ba96061de489da95e152e74e50a69c0d660931c493804bc82ecc05dea7905 -->

@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Log Source")
+// @FrameworkResource("aws_securitylake_custom_log_source", name="Custom Log Source")
 func newCustomLogSourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customLogSourceResource{}
 

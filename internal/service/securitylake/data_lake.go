@@ -39,7 +39,7 @@ import (
 
 const dataLakeMutexKey = "aws_securitylake_data_lake"
 
-// @FrameworkResource(name="Data Lake")
+// @FrameworkResource("aws_securitylake_data_lake", name="Data Lake")
 // @Tags(identifierAttribute="arn")
 func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataLakeResource{}

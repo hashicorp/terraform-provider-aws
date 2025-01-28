@@ -47,7 +47,7 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "8"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -117,7 +117,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "8"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -422,6 +422,10 @@ resource "aws_appstream_stack" "test" {
     connector_type = "HOMEFOLDERS"
   }
 
+  user_settings {
+    action     = "AUTO_TIME_ZONE_REDIRECTION"
+    permission = "DISABLED"
+  }
   user_settings {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"

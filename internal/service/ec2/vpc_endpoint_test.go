@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -862,6 +863,75 @@ func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpoint_crossRegionService(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	var svcCfg awstypes.ServiceConfiguration
+	serviceResourceName := "aws_vpc_endpoint_service.test"
+	endpointResourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+
+	// record the initialized providers so that we can use them to
+	// check for the vpc endpoints in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckVPCEndpointDestroy(ctx),
+			testAccCheckVPCEndpointServiceDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_crossRegionService(rName, acctest.Region()), // Cross-region
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExistsWithProvider(ctx, endpointResourceName, &endpoint, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					testAccCheckVPCEndpointServiceExists(ctx, serviceResourceName, &svcCfg),
+					resource.TestCheckResourceAttr(endpointResourceName, "service_region", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:      endpointResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_invalidCrossRegionService(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+
+	// record the initialized providers so that we can use them to
+	// check for the vpc endpoints in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckVPCEndpointDestroy(ctx),
+			testAccCheckVPCEndpointServiceDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCEndpointConfig_crossRegionService(rName, acctest.ThirdRegion()), // Cross-region
+				ExpectError: regexache.MustCompile(`The Vpc Endpoint Service 'com\.amazonaws\.vpce\.([A-Za-z0-9]+(-[A-Za-z0-9]+)+)\.vpce-svc-[A-Za-z0-9]+' does not exist`),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -898,6 +968,31 @@ func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.Vp
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckVPCEndpointExistsWithProvider(ctx context.Context, n string, v *awstypes.VpcEndpoint, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 VPC Endpoint ID is set")
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -1680,4 +1775,34 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName)
+}
+
+func testAccVPCEndpointConfig_crossRegionService(rName, serviceRegion string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccVPCEndpointServiceConfig_crossRegion(rName, acctest.Region(), acctest.AlternateRegion()),
+		fmt.Sprintf(`
+
+resource "aws_vpc" "endpoint" {
+  provider   = "awsalternate"
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  provider          = "awsalternate"
+  vpc_id            = aws_vpc.endpoint.id
+  vpc_endpoint_type = "Interface"
+  service_name      = aws_vpc_endpoint_service.test.service_name
+  service_region    = "%[2]s"
+
+  tags = {
+    Name = "%[1]s"
+  }
+}
+`, rName, serviceRegion),
+	)
 }

@@ -26,6 +26,7 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_vpclattice_resource_policy", name="Resource Policy")
+// @Testing(tagsTest=false)
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,

@@ -2653,8 +2653,6 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var group awstypes.SecurityGroup
-	resourceName := "aws_security_group.allow_access"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2664,17 +2662,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupConfig_emrLinkedRulesDestroy(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`security-group/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
-				),
+				Config:      testAccVPCSecurityGroupConfig_emrLinkedRulesDestroy(rName),
 				ExpectError: regexache.MustCompile("unexpected state"),
 			},
 		},

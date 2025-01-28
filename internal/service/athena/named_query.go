@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_athena_named_query")
+// @SDKResource("aws_athena_named_query", name="Named Query")
 func resourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamedQueryCreate,

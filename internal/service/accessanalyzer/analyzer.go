@@ -108,7 +108,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
-	input := &accessanalyzer.CreateAnalyzerInput{
+	input := accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
 		Tags:         getTagsIn(ctx),
@@ -122,7 +122,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// Handle Organizations eventual consistency.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateAnalyzer(ctx, input)
+			return conn.CreateAnalyzer(ctx, &input)
 		},
 		"You must create an organization",
 	)
@@ -181,10 +181,11 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
-	_, err := conn.DeleteAnalyzer(ctx, &accessanalyzer.DeleteAnalyzerInput{
+	input := accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
 		ClientToken:  aws.String(id.UniqueId()),
-	})
+	}
+	_, err := conn.DeleteAnalyzer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -198,11 +199,11 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name string) (*types.AnalyzerSummary, error) {
-	input := &accessanalyzer.GetAnalyzerInput{
+	input := accessanalyzer.GetAnalyzerInput{
 		AnalyzerName: aws.String(name),
 	}
 
-	output, err := conn.GetAnalyzer(ctx, input)
+	output, err := conn.GetAnalyzer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

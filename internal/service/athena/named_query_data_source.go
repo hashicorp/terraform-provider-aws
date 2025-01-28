@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_athena_named_query")
+// @SDKDataSource("aws_athena_named_query", name="Named Query")
 func dataSourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNamedQueryRead,

@@ -73,7 +73,7 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 	igwID, vpcID, err := internetGatewayAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
@@ -103,11 +103,17 @@ func resourceInternetGatewayAttachmentDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	igwID, vpcID, err := internetGatewayAttachmentParseResourceID(d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := detachInternetGateway(ctx, conn, igwID, vpcID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	err = detachInternetGateway(ctx, conn, igwID, vpcID, d.Timeout(schema.TimeoutDelete))
+
+	switch {
+	case tfresource.NotFound(err):
+		return diags
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 

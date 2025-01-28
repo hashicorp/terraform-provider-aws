@@ -277,6 +277,11 @@ func resourceAMI() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TpmSupportValues](),
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -360,6 +365,10 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("ephemeral_block_device"); ok && v.(*schema.Set).Len() > 0 {
 		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForAMIEphemeralBlockDevice(v.(*schema.Set).List())...)
+	}
+
+	if uefiData := d.Get("uefi_data").(string); uefiData != "" {
+		input.UefiData = aws.String(uefiData)
 	}
 
 	output, err := conn.RegisterImage(ctx, input)
@@ -457,6 +466,13 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	if err := d.Set("ephemeral_block_device", flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(image.BlockDeviceMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
+	}
+
+	instanceData, err := conn.GetInstanceUefiData(ctx, &ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	})
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
 	}
 
 	setTagsOut(ctx, image.Tags)

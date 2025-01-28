@@ -40,14 +40,20 @@ func dataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"default_for_new_launches": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"latest_valid_till"},
+			},
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			"latest_valid_till": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"default_for_new_launches"},
 			},
 			"thumbprint": {
 				Type:     schema.TypeString,
@@ -76,13 +82,19 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	var certificates []types.Certificate
-
+	var hasDefault bool
+	var defaultCertificate string
 	pages := rds.NewDescribeCertificatesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading RDS Certificates: %s", err)
+		}
+
+		if page.DefaultCertificateForNewLaunches != nil && aws.ToString(page.DefaultCertificateForNewLaunches) != "" && !hasDefault {
+			hasDefault = true
+			defaultCertificate = aws.ToString(page.DefaultCertificateForNewLaunches)
 		}
 
 		certificates = append(certificates, page.Certificates...)
@@ -100,6 +112,16 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			return a.ValidTill.Compare(*b.ValidTill)
 		})
 		certificate = &certificates[len(certificates)-1]
+	} else if d.Get("default_for_new_launches").(bool) {
+		i := slices.IndexFunc(certificates, func(c types.Certificate) bool {
+			return aws.ToString(c.CertificateIdentifier) == defaultCertificate
+		})
+
+		if i != -1 {
+			certificate = &certificates[i]
+		} else {
+			return sdkdiag.AppendErrorf(diags, "no default RDS Certificate found")
+		}
 	} else {
 		if len(certificates) > 1 {
 			return sdkdiag.AppendErrorf(diags, "multiple RDS Certificates match the criteria; try changing search query")

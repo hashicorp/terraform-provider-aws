@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Subscriber Notification")
+// @FrameworkResource("aws_securitylake_subscriber_notification", name="Subscriber Notification")
 func newSubscriberNotificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriberNotificationResource{}
 

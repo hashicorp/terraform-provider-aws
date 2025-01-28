@@ -37,8 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Domain")
+// @FrameworkResource( "aws_datazone_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 func newResourceDomain(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDomain{}

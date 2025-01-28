@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_autoscalingplans_scaling_plan")
+// @SDKResource("aws_autoscalingplans_scaling_plan", name="Scaling Plan")
 func ResourceScalingPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScalingPlanCreate,

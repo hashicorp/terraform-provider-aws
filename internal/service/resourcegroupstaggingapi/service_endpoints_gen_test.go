@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.GetResources(ctx, &resourcegroupstaggingapi.GetResourcesInput{},
+	input := resourcegroupstaggingapi.GetResourcesInput{}
+	_, err := client.GetResources(ctx, &input,
 		func(opts *resourcegroupstaggingapi.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

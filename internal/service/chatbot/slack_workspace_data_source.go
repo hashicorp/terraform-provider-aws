@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Slack Workspace")
+// @FrameworkDataSource("aws_chatbot_slack_workspace", name="Slack Workspace")
 func newDataSourceSlackWorkspace(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSlackWorkspace{}, nil
 }

@@ -74,7 +74,11 @@ func resourcePipe() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 				"enrichment_parameters": enrichmentParametersSchema(),
-				"log_configuration":     logConfigurationSchema(),
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"log_configuration": logConfigurationSchema(),
 				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -155,6 +159,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("kms_key_identifier"); ok && v != "" {
+		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.SourceParameters = expandPipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -209,6 +217,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set("enrichment_parameters", nil)
 	}
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	if v := output.LogConfiguration; !types.IsZero(v) {
 		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfiguration(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
@@ -260,6 +269,10 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		if d.HasChange("kms_key_identifier") {
+			input.KmsKeyIdentifier = aws.String(d.Get("kms_key_identifier").(string))
 		}
 
 		if d.HasChange("log_configuration") {

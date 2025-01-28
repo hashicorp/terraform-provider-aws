@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListCollections(ctx, &rekognition.ListCollectionsInput{},
+	input := rekognition.ListCollectionsInput{}
+	_, err := client.ListCollections(ctx, &input,
 		func(opts *rekognition.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

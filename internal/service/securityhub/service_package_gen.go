@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newStandardsControlAssociationsDataSource,
-			Name:    "Standards Control Associations",
+			Factory:  newStandardsControlAssociationsDataSource,
+			TypeName: "aws_securityhub_standards_control_associations",
+			Name:     "Standards Control Associations",
 		},
 	}
 }
@@ -26,15 +27,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAutomationRuleResource,
-			Name:    "Automation Rule",
+			Factory:  newAutomationRuleResource,
+			TypeName: "aws_securityhub_automation_rule",
+			Name:     "Automation Rule",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newStandardsControlAssociationResource,
-			Name:    "Standards Control Association",
+			Factory:  newStandardsControlAssociationResource,
+			TypeName: "aws_securityhub_standards_control_association",
+			Name:     "Standards Control Association",
 		},
 	}
 }

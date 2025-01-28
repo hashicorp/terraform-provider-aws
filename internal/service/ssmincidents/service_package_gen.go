@@ -27,10 +27,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceReplicationSet,
 			TypeName: "aws_ssmincidents_replication_set",
+			Name:     "Replication Set",
 		},
 		{
 			Factory:  DataSourceResponsePlan,
 			TypeName: "aws_ssmincidents_response_plan",
+			Name:     "Response Plan",
 		},
 	}
 }

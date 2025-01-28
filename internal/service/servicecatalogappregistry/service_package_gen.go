@@ -17,8 +17,25 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceApplication,
-			Name:    "Application",
+			Factory:  newDataSourceApplication,
+			TypeName: "aws_servicecatalogappregistry_application",
+			Name:     "Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newDataSourceAttributeGroup,
+			TypeName: "aws_servicecatalogappregistry_attribute_group",
+			Name:     "Attribute Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newDataSourceAttributeGroupAssociations,
+			TypeName: "aws_servicecatalogappregistry_attribute_group_associations",
+			Name:     "Attribute Group Associations",
 		},
 	}
 }
@@ -26,8 +43,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceApplication,
-			Name:    "Application",
+			Factory:  newResourceApplication,
+			TypeName: "aws_servicecatalogappregistry_application",
+			Name:     "Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newResourceAttributeGroup,
+			TypeName: "aws_servicecatalogappregistry_attribute_group",
+			Name:     "Attribute Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newResourceAttributeGroupAssociation,
+			TypeName: "aws_servicecatalogappregistry_attribute_group_association",
+			Name:     "Attribute Group Association",
 		},
 	}
 }

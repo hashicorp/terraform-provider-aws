@@ -54,6 +54,7 @@ The following arguments are optional:
 * `driveCacheType` - (Optional) - The type of drive cache used by `PERSISTENT_1` filesystems that are provisioned with `HDD` storage_type. Required for `HDD` storage_type, set to either `READ` or `NONE`.
 * `dataCompressionType` - (Optional) Sets the data compression configuration for the file system. Valid values are `LZ4` and `NONE`. Default value is `NONE`. Unsetting this value reverts the compression type back to `NONE`.
 * `deploymentType` - (Optional) - The filesystem deployment type. One of: `SCRATCH_1`, `SCRATCH_2`, `PERSISTENT_1`, `PERSISTENT_2`.
+* `efaEnabled` - (Optional) Adds support for Elastic Fabric Adapter (EFA) and GPUDirect Storage (GDS) to Lustre. This must be set at creation. If set this cannot be changed and this prevents changes to `perUnitStorageThroughput`. This is only supported when deployment_type is set to `PERSISTENT_2`, `metadataConfiguration` is used, and an EFA-enabled security group is attached.
 * `exportPath` - (Optional) S3 URI (with optional prefix) where the root of your Amazon FSx file system is exported. Can only be specified with `importPath` argument and the path must use the same Amazon S3 bucket as specified in `importPath`. Set equal to `importPath` to overwrite files on export. Defaults to `s3://{IMPORT BUCKET}/FSxLustre{CREATION TIMESTAMP}`. Only supported on `PERSISTENT_1` deployment types.
 * `fileSystemTypeVersion` - (Optional) Sets the Lustre version for the file system that you're creating. Valid values are 2.10 for `SCRATCH_1`, `SCRATCH_2` and `PERSISTENT_1` deployment types. Valid values for 2.12 include all deployment types.
 * `finalBackupTags` - (Optional) A map of tags to apply to the file system's final backup.
@@ -180,4 +181,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d6922999aa0da0a59deb5a626b821bb0158e13bdb7661e4a1f001e04aa9c7a52 -->
+<!-- cache-key: cdktf-0.20.8 input-265191d1ab07daf1f99cff10cad7a90125266fe16eaab994af6eecb271489020 -->

@@ -87,7 +87,7 @@ class MyConvertedCode(TerraformStack):
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_ssoadmin_permission_set_example.override_logical_id("example")
-        SsoadminAccountAssignment(self, "account_assignment",
+        aws_ssoadmin_account_assignment_example = SsoadminAccountAssignment(self, "example_3",
             instance_arn=Token.as_string(
                 Fn.lookup_nested(Fn.tolist(example.arns), ["0"])),
             permission_set_arn=Token.as_string(aws_ssoadmin_permission_set_example.arn),
@@ -96,6 +96,8 @@ class MyConvertedCode(TerraformStack):
             target_id="123456789012",
             target_type="AWS_ACCOUNT"
         )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_ssoadmin_account_assignment_example.override_logical_id("example")
         aws_ssoadmin_managed_policy_attachment_example =
         SsoadminManagedPolicyAttachment(self, "example_4",
             depends_on=[aws_ssoadmin_account_assignment_example],
@@ -155,4 +157,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `manag
 % terraform import aws_ssoadmin_managed_policy_attachment.example arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-73fefc01b46b4cf4489868580522a20327e26c603ae4140b5374affcfb50ca7b -->
+<!-- cache-key: cdktf-0.20.8 input-8a4fcc281822d93bd1147a646476817fcf4960f012d3151577f2009841e28302 -->

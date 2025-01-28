@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3control_multi_region_access_point")
+// @SDKResource("aws_s3control_multi_region_access_point", name="Multi-Region Access Point")
 func resourceMultiRegionAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiRegionAccessPointCreate,

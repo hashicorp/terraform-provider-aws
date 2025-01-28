@@ -61,6 +61,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceLambdaFunctionAssociation,
 			TypeName: "aws_connect_lambda_function_association",
+			Name:     "Lambda Function Association",
 		},
 		{
 			Factory:  dataSourcePrompt,

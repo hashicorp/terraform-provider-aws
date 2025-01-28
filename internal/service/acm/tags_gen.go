@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *acm.Client, identifier string, optFns ...func(*acm.Options)) (tftags.KeyValueTags, error) {
-	input := &acm.ListTagsForCertificateInput{
+	input := acm.ListTagsForCertificateInput{
 		CertificateArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForCertificate(ctx, input, optFns...)
+	output, err := conn.ListTagsForCertificate(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -109,12 +109,12 @@ func updateTags(ctx context.Context, conn *acm.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ACM)
 	if len(removedTags) > 0 {
-		input := &acm.RemoveTagsFromCertificateInput{
+		input := acm.RemoveTagsFromCertificateInput{
 			CertificateArn: aws.String(identifier),
 			Tags:           Tags(removedTags),
 		}
 
-		_, err := conn.RemoveTagsFromCertificate(ctx, input, optFns...)
+		_, err := conn.RemoveTagsFromCertificate(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +124,12 @@ func updateTags(ctx context.Context, conn *acm.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.ACM)
 	if len(updatedTags) > 0 {
-		input := &acm.AddTagsToCertificateInput{
+		input := acm.AddTagsToCertificateInput{
 			CertificateArn: aws.String(identifier),
 			Tags:           Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToCertificate(ctx, input, optFns...)
+		_, err := conn.AddTagsToCertificate(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

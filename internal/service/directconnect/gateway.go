@@ -45,6 +45,10 @@ func resourceGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAmazonSideASN,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -107,6 +111,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("amazon_side_asn", flex.Int64ToStringValue(output.AmazonSideAsn))
+	d.Set(names.AttrARN, gatewayARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, output.DirectConnectGatewayName)
 	d.Set(names.AttrOwnerAccountID, output.OwnerAccount)
 
@@ -263,4 +268,9 @@ func waitGatewayDeleted(ctx context.Context, conn *directconnect.Client, id stri
 	}
 
 	return nil, err
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsdirectconnect.html#awsdirectconnect-resources-for-iam-policies.
+func gatewayARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "directconnect", "dx-gateway/"+id)
 }

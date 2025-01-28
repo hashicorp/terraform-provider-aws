@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -165,6 +166,12 @@ func resourceHealthCheck() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTriggers: {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -176,7 +183,10 @@ func resourceHealthCheck() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			triggersCustomizeDiff,
+		),
 	}
 }
 
@@ -336,6 +346,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("resource_path", healthCheckConfig.ResourcePath)
 	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
 	d.Set("search_string", healthCheckConfig.SearchString)
+	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
 	d.Set(names.AttrType, healthCheckConfig.Type)
 
 	return diags
@@ -358,7 +369,8 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.ChildHealthChecks = flex.ExpandStringValueSet(d.Get("child_healthchecks").(*schema.Set))
 		}
 
-		if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") {
+		if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") ||
+			d.HasChange(names.AttrTriggers) && d.Get("cloudwatch_alarm_name").(string) != "" {
 			alarmIdentifier := &awstypes.AlarmIdentifier{
 				Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
 				Region: awstypes.CloudWatchRegion(d.Get("cloudwatch_alarm_region").(string)),
@@ -464,4 +476,16 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	}
 
 	return output.HealthCheck, nil
+}
+
+func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// Removal of the triggers argument should _not_ trigger an update
+	if d.HasChange(names.AttrTriggers) {
+		o, n := d.GetChange(names.AttrTriggers)
+		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
+			return d.Clear(names.AttrTriggers)
+		}
+	}
+
+	return nil
 }

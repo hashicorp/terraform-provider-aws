@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lakeformation_permissions")
+// @SDKDataSource("aws_lakeformation_permissions", name="Permissions")
 func DataSourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePermissionsRead,

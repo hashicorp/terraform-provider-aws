@@ -21,30 +21,35 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAWSLogSourceResource,
-			Name:    "AWS Log Source",
+			Factory:  newAWSLogSourceResource,
+			TypeName: "aws_securitylake_aws_log_source",
+			Name:     "AWS Log Source",
 		},
 		{
-			Factory: newCustomLogSourceResource,
-			Name:    "Custom Log Source",
+			Factory:  newCustomLogSourceResource,
+			TypeName: "aws_securitylake_custom_log_source",
+			Name:     "Custom Log Source",
 		},
 		{
-			Factory: newDataLakeResource,
-			Name:    "Data Lake",
+			Factory:  newDataLakeResource,
+			TypeName: "aws_securitylake_data_lake",
+			Name:     "Data Lake",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newSubscriberNotificationResource,
-			Name:    "Subscriber Notification",
-		},
-		{
-			Factory: newSubscriberResource,
-			Name:    "Subscriber",
+			Factory:  newSubscriberResource,
+			TypeName: "aws_securitylake_subscriber",
+			Name:     "Subscriber",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory:  newSubscriberNotificationResource,
+			TypeName: "aws_securitylake_subscriber_notification",
+			Name:     "Subscriber Notification",
 		},
 	}
 }

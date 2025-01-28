@@ -27,30 +27,37 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceGeofenceCollection,
 			TypeName: "aws_location_geofence_collection",
+			Name:     "Geofence Collection",
 		},
 		{
 			Factory:  DataSourceMap,
 			TypeName: "aws_location_map",
+			Name:     "Map",
 		},
 		{
 			Factory:  DataSourcePlaceIndex,
 			TypeName: "aws_location_place_index",
+			Name:     "Place Index",
 		},
 		{
 			Factory:  DataSourceRouteCalculator,
 			TypeName: "aws_location_route_calculator",
+			Name:     "Route Calculator",
 		},
 		{
 			Factory:  DataSourceTracker,
 			TypeName: "aws_location_tracker",
+			Name:     "Tracker",
 		},
 		{
 			Factory:  DataSourceTrackerAssociation,
 			TypeName: "aws_location_tracker_association",
+			Name:     "Tracker Association",
 		},
 		{
 			Factory:  DataSourceTrackerAssociations,
 			TypeName: "aws_location_tracker_associations",
+			Name:     "Tracker Associations",
 		},
 	}
 }
@@ -100,6 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrackerAssociation,
 			TypeName: "aws_location_tracker_association",
+			Name:     "Tracker Association",
 		},
 	}
 }

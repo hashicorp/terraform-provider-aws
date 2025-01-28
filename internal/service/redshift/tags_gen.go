@@ -76,12 +76,12 @@ func updateTags(ctx context.Context, conn *redshift.Client, identifier string, o
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Redshift)
 	if len(removedTags) > 0 {
-		input := &redshift.DeleteTagsInput{
+		input := redshift.DeleteTagsInput{
 			ResourceName: aws.String(identifier),
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.DeleteTags(ctx, input, optFns...)
+		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *redshift.Client, identifier string, o
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Redshift)
 	if len(updatedTags) > 0 {
-		input := &redshift.CreateTagsInput{
+		input := redshift.CreateTagsInput{
 			ResourceName: aws.String(identifier),
 			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.CreateTags(ctx, input, optFns...)
+		_, err := conn.CreateTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

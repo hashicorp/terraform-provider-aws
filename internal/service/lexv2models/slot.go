@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Slot")
+// @FrameworkResource("aws_lexv2models_slot", name="Slot")
 func newResourceSlot(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSlot{}
 

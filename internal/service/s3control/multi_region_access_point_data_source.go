@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_s3control_multi_region_access_point")
+// @SDKDataSource("aws_s3control_multi_region_access_point", name="Multi-Region Access Point")
 func dataSourceMultiRegionAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMultiRegionAccessPointBlockRead,

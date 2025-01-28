@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Action Group")
+// @FrameworkResource("aws_bedrockagent_agent_action_group", name="Agent Action Group")
 func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentActionGroupResource{}
 

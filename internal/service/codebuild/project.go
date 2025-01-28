@@ -1020,6 +1020,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("file_system_locations") {
 			if v, ok := d.GetOk("file_system_locations"); ok && v.(*schema.Set).Len() > 0 {
 				input.FileSystemLocations = expandProjectFileSystemLocations(v.(*schema.Set).List())
+			} else {
+				input.FileSystemLocations = []types.ProjectFileSystemLocation{}
 			}
 		}
 

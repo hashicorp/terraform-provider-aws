@@ -14,11 +14,22 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource{
+		{
+			Factory:  newEphemeralParameter,
+			TypeName: "aws_ssm_parameter",
+			Name:     "Parameter",
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourcePatchBaselines,
-			Name:    "Patch Baselines",
+			Factory:  newDataSourcePatchBaselines,
+			TypeName: "aws_ssm_patch_baselines",
+			Name:     "Patch Baselines",
 		},
 	}
 }

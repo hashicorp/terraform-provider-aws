@@ -99,8 +99,11 @@ This data source exports the following attributes in addition to the arguments a
 * `supportedFeatureNames` - Set of features supported by the engine version.
 * `supportedModes` - Set of supported engine version modes.
 * `supportedTimezones` - Set of the time zones supported by the engine version.
+* `supports_certificate_rotation_without_restart` - Whether the certificates can be rotated without restarting the Aurora instance.
 * `supportsGlobalDatabases` - Whether you can use Aurora global databases with the engine version.
+* `supports_integrations` - Whether the engine version supports integrations with other AWS services.
 * `supportsLogExportsToCloudwatch` - Whether the engine version supports exporting the log types specified by `exportableLogTypes` to CloudWatch Logs.
+* `supports_local_write_forwarding` - Whether the engine version supports local write forwarding or not.
 * `supportsLimitlessDatabase` - Whether the engine version supports Aurora Limitless Database.
 * `supportsParallelQuery` - Whether you can use Aurora parallel query with the engine version.
 * `supportsReadReplica` - Whether the engine version supports read replicas.
@@ -110,4 +113,4 @@ This data source exports the following attributes in addition to the arguments a
 * `versionActual` - Complete engine version.
 * `versionDescription` - Description of the engine version.
 
-<!-- cache-key: cdktf-0.20.8 input-c79463a69506695ed29ad8f547a90f667cebfb0ef7c37e26376a528db05d0b20 -->
+<!-- cache-key: cdktf-0.20.8 input-c1c417ee20b29b9a30a8535daa2a033b1c6d977270f8d5c04d0dce74533ece46 -->

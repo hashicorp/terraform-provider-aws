@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appconfig_hosted_configuration_version")
+// @SDKResource("aws_appconfig_hosted_configuration_version", name="Hosted Configuration Version")
 func ResourceHostedConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedConfigurationVersionCreate,

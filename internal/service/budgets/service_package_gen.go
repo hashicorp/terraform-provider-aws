@@ -48,6 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBudgetAction,
 			TypeName: "aws_budgets_budget_action",
+			Name:     "Budget Action",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

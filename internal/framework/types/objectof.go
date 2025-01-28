@@ -132,9 +132,16 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 	return nil, diags
 }
 
-func objectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
+func objectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	return new(T), diags
+
+	t := new(T)
+	diags.Append(NullOutObjectPtrFields(ctx, t)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return t, diags
 }
 
 // NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDetectors(ctx, &guardduty.ListDetectorsInput{},
+	input := guardduty.ListDetectorsInput{}
+	_, err := client.ListDetectors(ctx, &input,
 		func(opts *guardduty.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_chime_voice_connector_termination")
+// @SDKResource("aws_chime_voice_connector_termination", name="Voice Connector Termination")
 func ResourceVoiceConnectorTermination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorTerminationCreate,

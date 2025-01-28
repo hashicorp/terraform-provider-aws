@@ -1,8 +1,10 @@
 # Unit Tests
 
-Unlike acceptance tests, unit tests do not access AWS and are focused on a function (or method). Because of this, they are quick and cheap to run.
+Unlike acceptance tests, unit tests do not access AWS and are focused on a function or method.
+Because of this, they are quick and cheap to run.
 
-In designing a resource's implementation, isolate complex bits from AWS bits so that they can be tested through a unit test. We encourage more unit tests in the provider.
+In designing a resource's implementation, isolate complex bits from AWS bits so that they can be tested through a unit test.
+We encourage more unit tests in the provider.
 
 ## In context
 
@@ -14,23 +16,25 @@ To help place unit testing in context, here is an overview of the Terraform AWS 
 
 ## What to test
 
-Utilitarian functions that carry out processing within the provider, that don't need contact with AWS, are candidates for unit testing. In specific, any moderately to very complex utilitarian function should have a corresponding unit test.
+Utilitarian functions that carry out processing within the provider and don't need contact with AWS are candidates for unit testing.
+Any moderate to very complex utilitarian function should have a corresponding unit test.
 
-Rather than being a burden, using unit tests often saves time (and money) during development because they can be run quickly and locally. In addition, rather than mentally processing all edge cases, you can use test cases to refine the function's behavior.
+Rather than being a burden, using unit tests often save time and money during development because they can be run quickly and locally.
+In addition, rather than mentally processing all edge cases, you can use test cases to refine a function's behavior.
 
-Cut and dry functions using well-used patterns, like typical flatteners and expanders (flex functions), don't need unit testing. However, if the flex functions are complex or intricate, they should be unit tested.
+Cut and dry functions using well-used patterns, like typical flatteners and expanders (flex functions) don't need unit testing.
+However, if the flex functions are complex or intricate, they should be unit tested.
 
 ## Where they go
 
-Unit tests can be placed in a test file with acceptance tests if they mainly relate to a single resource. However, if it makes sense to do so, functions and their unit tests can be moved to their files. Reasons you might split them from acceptance test files include length of the acceptance test files, or several resources using them.
-
-Where unit tests are included with acceptance tests in resource test files, they should be placed at the top of the file, before the first acceptance test.
+Unit tests can be placed in a test file with acceptance tests if they mainly relate to a single resource.
+If a function is used across resources or is significantly complex, the function and it's unit tests can be moved to a standalone file.
+If unit tests are included with resource acceptance tests, they should be placed at the top before the first acceptance test.
 
 ## Example
 
 This is an example of a unit test.
-
-Its name is prefixed with "Test" but not "TestAcc" like an acceptance test.
+Its name is prefixed with `Test` but not `TestAcc` like an acceptance test.
 
 ```go
 func TestExampleUnitTest(t *testing.T) {

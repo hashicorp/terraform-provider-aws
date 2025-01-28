@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="VPC Endpoint")
+// @FrameworkResource("aws_opensearchserverless_vpc_endpoint", name="VPC Endpoint")
 func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := vpcEndpointResource{}
 

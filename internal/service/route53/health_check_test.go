@@ -288,6 +288,46 @@ func TestAccRoute53HealthCheck_cloudWatchAlarmCheck(t *testing.T) {
 	})
 }
 
+func TestAccRoute53HealthCheck_triggers(t *testing.T) {
+	ctx := acctest.Context(t)
+	var check awstypes.HealthCheck
+	resourceName := "aws_route53_health_check.test"
+	alarmResourceName := "aws_cloudwatch_metric_alarm.test"
+	threshold := "80"
+	thresholdUpdated := "90"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHealthCheckConfig_triggers(threshold),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_alarm_name", alarmResourceName, "alarm_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "triggers.threshold", alarmResourceName, "threshold"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrTriggers},
+			},
+			{
+				Config: testAccHealthCheckConfig_triggers(thresholdUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_alarm_name", alarmResourceName, "alarm_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "triggers.threshold", alarmResourceName, "threshold"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 	ctx := acctest.Context(t)
 	var check awstypes.HealthCheck
@@ -604,6 +644,35 @@ resource "aws_route53_health_check" "test" {
   insufficient_data_health_status = "Healthy"
 }
 `
+
+func testAccHealthCheckConfig_triggers(threshold string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = "cloudwatch-healthcheck-alarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = %[1]q
+  alarm_description   = "This metric monitors ec2 cpu utilization"
+}
+
+data "aws_region" "current" {}
+
+resource "aws_route53_health_check" "test" {
+  type                            = "CLOUDWATCH_METRIC"
+  cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.test.alarm_name
+  cloudwatch_alarm_region         = data.aws_region.current.name
+  insufficient_data_health_status = "Healthy"
+
+  triggers = {
+    threshold = aws_cloudwatch_metric_alarm.test.threshold
+  }
+}
+`, threshold)
+}
 
 func testAccHealthCheckConfig_searchString(search string, invert bool) string {
 	return fmt.Sprintf(`

@@ -21,15 +21,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceKey,
-			Name:    "Key",
+			Factory:  newResourceKey,
+			TypeName: "aws_paymentcryptography_key",
+			Name:     "Key",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceKeyAlias,
-			Name:    "Key Alias",
+			Factory:  newResourceKeyAlias,
+			TypeName: "aws_paymentcryptography_key_alias",
+			Name:     "Key Alias",
 		},
 	}
 }

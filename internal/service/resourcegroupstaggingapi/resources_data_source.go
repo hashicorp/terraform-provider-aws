@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_resourcegroupstaggingapi_resources")
+// @SDKDataSource("aws_resourcegroupstaggingapi_resources", name="Resources")
 func dataSourceResources() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcesRead,

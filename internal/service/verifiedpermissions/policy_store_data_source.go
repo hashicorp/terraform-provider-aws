@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Policy Store")
+// @FrameworkDataSource("aws_verifiedpermissions_policy_store", name="Policy Store")
 func newDataSourcePolicyStore(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourcePolicyStore{}, nil
 }

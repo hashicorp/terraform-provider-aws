@@ -17,18 +17,26 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newLifecyclePolicyDocumentDataSource,
-			Name:    "Lifecycle Policy Document",
+			Factory:  newLifecyclePolicyDocumentDataSource,
+			TypeName: "aws_ecr_lifecycle_policy_document",
+			Name:     "Lifecycle Policy Document",
 		},
 		{
-			Factory: newRepositoriesDataSource,
-			Name:    "Repositories",
+			Factory:  newRepositoriesDataSource,
+			TypeName: "aws_ecr_repositories",
+			Name:     "Repositories",
 		},
 	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory:  newAccountSettingResource,
+			TypeName: "aws_ecr_account_setting",
+			Name:     "Account Setting",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

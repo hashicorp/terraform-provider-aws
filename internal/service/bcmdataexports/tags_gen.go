@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *bcmdataexports.Client, identifier string, optFns ...func(*bcmdataexports.Options)) (tftags.KeyValueTags, error) {
-	input := &bcmdataexports.ListTagsForResourceInput{
+	input := bcmdataexports.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -109,12 +109,12 @@ func updateTags(ctx context.Context, conn *bcmdataexports.Client, identifier str
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.BCMDataExports)
 	if len(removedTags) > 0 {
-		input := &bcmdataexports.UntagResourceInput{
+		input := bcmdataexports.UntagResourceInput{
 			ResourceArn:     aws.String(identifier),
 			ResourceTagKeys: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +124,12 @@ func updateTags(ctx context.Context, conn *bcmdataexports.Client, identifier str
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.BCMDataExports)
 	if len(updatedTags) > 0 {
-		input := &bcmdataexports.TagResourceInput{
+		input := bcmdataexports.TagResourceInput{
 			ResourceArn:  aws.String(identifier),
 			ResourceTags: Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

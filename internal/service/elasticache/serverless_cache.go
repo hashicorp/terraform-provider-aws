@@ -37,7 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Serverless Cache")
+// @FrameworkResource("aws_elasticache_serverless_cache", name="Serverless Cache")
 // @Tags(identifierAttribute="arn")
 func newServerlessCacheResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &serverlessCacheResource{}
@@ -340,9 +340,20 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	if serverlessCacheHasChanges(ctx, new, old) {
-		input := &elasticache.ModifyServerlessCacheInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	diff, d := fwflex.Calculate(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, diff.IgnoredFieldNamesOpts()...)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 		// Unset engine related stuff to prevent the following error:
 		// This API supports only cross-engine upgrades to Valkey engine currently.
 		if new.Engine.Equal(old.Engine) {
@@ -351,11 +362,8 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
 			input.MajorEngineVersion = nil
 		}
-		if response.Diagnostics.HasError() {
-			return
-		}
 
-		_, err := conn.ModifyServerlessCache(ctx, input)
+		_, err := conn.ModifyServerlessCache(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", new.ID.ValueString()), err.Error())
@@ -595,13 +603,4 @@ type ecpuPerSecondModel struct {
 type endpointModel struct {
 	Address types.String `tfsdk:"address"`
 	Port    types.Int64  `tfsdk:"port"`
-}
-
-func serverlessCacheHasChanges(_ context.Context, plan, state serverlessCacheResourceModel) bool {
-	return !plan.CacheUsageLimits.Equal(state.CacheUsageLimits) ||
-		!plan.DailySnapshotTime.Equal(state.DailySnapshotTime) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.UserGroupID.Equal(state.UserGroupID) ||
-		!plan.SecurityGroupIDs.Equal(state.SecurityGroupIDs) ||
-		!plan.SnapshotRetentionLimit.Equal(state.SnapshotRetentionLimit)
 }

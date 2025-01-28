@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Principal Application Assignments")
+// @FrameworkDataSource("aws_ssoadmin_principal_application_assignments", name="Principal Application Assignments")
 func newDataSourcePrincipalApplicationAssignments(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourcePrincipalApplicationAssignments{}, nil
 }

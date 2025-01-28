@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Retention Configuration")
+// @FrameworkResource("aws_config_retention_configuration", name="Retention Configuration")
 func newRetentionConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &retentionConfigurationResource{}, nil
 }

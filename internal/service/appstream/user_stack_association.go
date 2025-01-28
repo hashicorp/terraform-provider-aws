@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appstream_user_stack_association")
+// @SDKResource("aws_appstream_user_stack_association", name="User Stack Association")
 func ResourceUserStackAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserStackAssociationCreate,

@@ -26,7 +26,7 @@ const (
 	globalSettingsPropagationTimeout = 20 * time.Second
 )
 
-// @SDKResource("aws_chimesdkvoice_global_settings")
+// @SDKResource("aws_chimesdkvoice_global_settings", name="Global Settings")
 func ResourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,

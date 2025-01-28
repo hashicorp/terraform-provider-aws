@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssoadmin_customer_managed_policy_attachment")
+// @SDKResource("aws_ssoadmin_customer_managed_policy_attachment", name="Customer Managed Policy Attachment")
 func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerManagedPolicyAttachmentCreate,

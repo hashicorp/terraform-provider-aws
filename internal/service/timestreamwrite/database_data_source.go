@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Database")
+// @FrameworkDataSource("aws_timestreamwrite_database", name="Database")
 func newDataSourceDatabase(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDatabase{}, nil
 }

@@ -300,8 +300,10 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 			return conn.CreateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
-				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidLambdaConfiguration, "Could not invoke Lambda function") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidS3Configuration, "Could not write to bucket") {
 				return true, err
 			}
 
@@ -500,8 +502,10 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return conn.UpdateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
-				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidLambdaConfiguration, "Could not invoke Lambda function") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidS3Configuration, "Could not write to bucket") {
 				return true, err
 			}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -78,14 +79,14 @@ func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.Resourc
 		inputSINT.SnsTopic = aws.String(v.(string))
 	}
 
-	if d.IsNewResource() {
-		d.SetId(id)
-	}
-
 	_, err := conn.SetIdentityNotificationTopic(ctx, inputSINT)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting SES Identity Notification Topic (%s): %s", id, err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId(id)
 	}
 
 	inputSIHINE := &ses.SetIdentityHeadersInNotificationsEnabledInput{
@@ -157,11 +158,15 @@ func resourceIdentityNotificationTopicDelete(ctx context.Context, d *schema.Reso
 		NotificationType: notificationType,
 	})
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Must be a verified email address or domain") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Identity Notification Topic (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceIdentityNotificationTopicRead(ctx, d, meta)...)
+	return diags
 }
 
 const identityNotificationTopicResourceIDSeparator = "|"

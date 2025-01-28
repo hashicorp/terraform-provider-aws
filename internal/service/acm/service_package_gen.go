@@ -48,6 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceCertificateValidation,
 			TypeName: "aws_acm_certificate_validation",
+			Name:     "Certificate Validation",
 		},
 	}
 }

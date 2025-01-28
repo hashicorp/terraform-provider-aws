@@ -4,12 +4,17 @@
 package kinesis_test
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,6 +82,51 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 			},
 		},
 	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/40494
+func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+	const shardCount = 1100
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckShardLimitGreaterThanOrEqual(ctx, t, shardCount)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamDataSourceConfig_basic(rName, 1100),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", strconv.Itoa(shardCount)),
+				),
+			},
+		},
+	})
+}
+
+func testAccPreCheckShardLimitGreaterThanOrEqual(ctx context.Context, t *testing.T, n int) {
+	t.Helper()
+
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
+	output, err := tfkinesis.FindLimits(ctx, conn)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	if shardLimit := int(aws.ToInt32(output.ShardLimit)); n > shardLimit {
+		t.Skipf("skipping tests; shard count (%d) > shard limit quota (%d)", n, shardLimit)
+	}
 }
 
 func testAccStreamDataSourceConfig_basic(rName string, shardCount int) string {

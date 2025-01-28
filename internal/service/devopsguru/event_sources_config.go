@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Event Sources Config")
+// @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
 func newResourceEventSourcesConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceEventSourcesConfig{}, nil
 }

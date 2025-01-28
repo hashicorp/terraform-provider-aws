@@ -43,14 +43,14 @@ type fwprovider struct {
 	Primary interface{ Meta() interface{} }
 }
 
-func (p *fwprovider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "aws"
+func (*fwprovider) Metadata(ctx context.Context, request provider.MetadataRequest, response *provider.MetadataResponse) {
+	response.TypeName = "aws"
 }
 
 // Schema returns the schema for this provider's configuration.
-func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (*fwprovider) Schema(ctx context.Context, request provider.SchemaRequest, response *provider.SchemaResponse) {
 	// This schema must match exactly the Terraform Protocol v5 (Terraform Plugin SDK v2) provider's schema.
-	resp.Schema = schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_key": schema.StringAttribute{
 				Optional:    true,
@@ -316,7 +316,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 	var errs []error
 	var dataSources []func() datasource.DataSource
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
@@ -334,6 +334,11 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			metadataResponse := datasource.MetadataResponse{}
 			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
 			typeName := metadataResponse.TypeName
+
+			// Temporary check that type name from annotation equals Metadata response.
+			if typeName != v.TypeName {
+				errs = append(errs, fmt.Errorf("data source %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
+			}
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
@@ -391,7 +396,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var errs []error
 	var resources []func() resource.Resource
 
-	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkResources(ctx) {
@@ -405,6 +410,11 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			metadataResponse := resource.MetadataResponse{}
 			inner.Metadata(ctx, resource.MetadataRequest{}, &metadataResponse)
 			typeName := metadataResponse.TypeName
+
+			// Temporary check that type name from annotation equals Metadata response.
+			if typeName != v.TypeName {
+				errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
+			}
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
@@ -471,7 +481,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 	var errs []error
 	var ephemeralResources []func() ephemeral.EphemeralResource
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
 		if data, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
 			servicePackageName := data.ServicePackageName()
 
@@ -485,6 +495,15 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					})
 
 					continue
+				}
+
+				metadataResponse := ephemeral.MetadataResponse{}
+				inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
+				typeName := metadataResponse.TypeName
+
+				// Temporary check that type name from annotation equals Metadata response.
+				if typeName != v.TypeName {
+					errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
 				}
 
 				// bootstrapContext is run on all wrapped methods before any interceptors.

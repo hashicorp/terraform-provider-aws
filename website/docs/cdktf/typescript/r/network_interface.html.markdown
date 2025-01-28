@@ -69,17 +69,18 @@ The following arguments are optional:
 
 * `attachment` - (Optional) Configuration block to define the attachment of the ENI. See [Attachment](#attachment) below for more details!
 * `description` - (Optional) Description for the network interface.
+* `enablePrimaryIpv6` - (Optional) Enables assigning a primary IPv6 Global Unicast Address (GUA) to the network interface (ENI) in dual-stack or IPv6-only subnets. This ensures the instance attached to the ENI retains a consistent IPv6 address. Once enabled, the first IPv6 GUA becomes the primary IPv6 address and cannot be disabled. The primary IPv6 address remains assigned until the instance is terminated or the ENI is detached. Enabling and subsequent disabling forces recreation of the ENI.
 * `interfaceType` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interfaceType` will cause the resource to be destroyed and re-created.
 * `ipv4PrefixCount` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
 * `ipv4Prefixes` - (Optional) One or more IPv4 prefixes assigned to the network interface.
 * `ipv6AddressCount` - (Optional) Number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6Addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
-* `ipv6AddressListEnabled` - (Optional) Whether `ipv6AddressList` is allowed and controls the IPs to assign to the ENI and `ipv6Addresses` and `ipv6AddressCount` become read-only. Default false.
+* `ipv6AddressListEnabled` - (Optional) Whether `ipv6AddressList` is allowed and controls the IPs to assign to the ENI and `ipv6Addresses` and `ipv6AddressCount` become read-only. Default is `false`.
 * `ipv6AddressList` - (Optional) List of private IPs to assign to the ENI in sequential order.
 * `ipv6Addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6AddressCount`.
 * `ipv6PrefixCount` - (Optional) Number of IPv6 prefixes that AWS automatically assigns to the network interface.
 * `ipv6Prefixes` - (Optional) One or more IPv6 prefixes assigned to the network interface.
 * `privateIpList` - (Optional) List of private IPs to assign to the ENI in sequential order. Requires setting `privateIpListEnabled` to `true`.
-* `privateIpListEnabled` - (Optional) Whether `privateIpList` is allowed and controls the IPs to assign to the ENI and `privateIps` and `privateIpsCount` become read-only. Default false.
+* `privateIpListEnabled` - (Optional) Whether `privateIpList` is allowed and controls the IPs to assign to the ENI and `privateIps` and `privateIpsCount` become read-only. Default is `false`.
 * `privateIps` - (Optional) List of private IPs to assign to the ENI without regard to order.
 * `privateIpsCount` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + `privateIpsCount`, as a primary private IP will be assiged to an ENI by default.
 * `securityGroups` - (Optional) List of security group IDs to assign to the ENI.
@@ -132,4 +133,4 @@ Using `terraform import`, import Network Interfaces using the `id`. For example:
 % terraform import aws_network_interface.test eni-e5aa89a3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7f2ff19c4ccb49477839bee2fe3fa02741d97eacf5edb9c2e7ff7560c3a15031 -->
+<!-- cache-key: cdktf-0.20.8 input-3e7fa1c8b535d26eea275b04c66b97987f715c965d8cbce47d253c1c8c5cbeee -->

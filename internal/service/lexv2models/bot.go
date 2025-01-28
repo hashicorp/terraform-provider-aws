@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bot")
+// @FrameworkResource("aws_lexv2models_bot", name="Bot")
 // @Tags(identifierAttribute="arn")
 func newResourceBot(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBot{}

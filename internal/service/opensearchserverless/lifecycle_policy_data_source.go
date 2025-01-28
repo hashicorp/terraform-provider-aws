@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Lifecycle Policy")
+// @FrameworkDataSource("aws_opensearchserverless_lifecycle_policy", name="Lifecycle Policy")
 func newDataSourceLifecyclePolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceLifecyclePolicy{}, nil
 }

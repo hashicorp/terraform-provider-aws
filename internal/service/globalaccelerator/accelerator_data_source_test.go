@@ -84,7 +84,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 data "aws_globalaccelerator_accelerator" "test_by_arn" {
-  arn = aws_globalaccelerator_accelerator.test.id
+  arn = aws_globalaccelerator_accelerator.test.arn
 }
 
 data "aws_globalaccelerator_accelerator" "test_by_name" {

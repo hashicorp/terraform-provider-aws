@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDocuments(ctx, &ssm.ListDocumentsInput{},
+	input := ssm.ListDocumentsInput{}
+	_, err := client.ListDocuments(ctx, &input,
 		func(opts *ssm.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

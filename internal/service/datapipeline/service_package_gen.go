@@ -27,11 +27,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
+			Name:     "Pipeline",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourcePipelineDefinition,
 			TypeName: "aws_datapipeline_pipeline_definition",
+			Name:     "Pipeline Definition",
 		},
 	}
 }
@@ -50,6 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePipelineDefinition,
 			TypeName: "aws_datapipeline_pipeline_definition",
+			Name:     "Pipeline Definition",
 		},
 	}
 }

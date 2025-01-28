@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sesv2_configuration_set: Add `delivery_options.max_delivery_seconds` and `tracking_options.https_policy` arguments
+```
+
+```release-note:enhancement
+data-source/aws_sesv2_configuration_set: Add `delivery_options.max_delivery_seconds` and `tracking_options.https_policy` attributes
+```

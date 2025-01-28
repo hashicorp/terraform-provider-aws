@@ -21,19 +21,22 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceCollection,
-			Name:    "Collection",
+			Factory:  newResourceCollection,
+			TypeName: "aws_rekognition_collection",
+			Name:     "Collection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceProject,
-			Name:    "Project",
+			Factory:  newResourceProject,
+			TypeName: "aws_rekognition_project",
+			Name:     "Project",
 		},
 		{
-			Factory: newResourceStreamProcessor,
-			Name:    "Stream Processor",
+			Factory:  newResourceStreamProcessor,
+			TypeName: "aws_rekognition_stream_processor",
+			Name:     "Stream Processor",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "stream_processor_arn",
 			},

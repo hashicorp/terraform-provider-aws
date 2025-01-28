@@ -78,6 +78,22 @@ func resourceGroup() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"vpc_zone_identifier"},
 			},
+			"availability_zone_distribution": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_distribution_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
+						},
+					},
+				},
+			},
 			"capacity_rebalance": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1074,6 +1090,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		inputCASG.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		inputCASG.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
 		inputCASG.CapacityRebalance = aws.Bool(v.(bool))
 	}
@@ -1274,6 +1294,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
+	d.Set("availability_zone_distribution", []interface{}{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
@@ -1377,6 +1398,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange(names.AttrAvailabilityZones) {
 			if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 				input.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
+			}
+		}
+
+		if d.HasChange("availability_zone_distribution") {
+			if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -3380,6 +3407,20 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 	return aws.String(strings.Join(vpcZoneIDs, ","))
 }
 
+func expandAvailabilityZoneDistribution(tfMap map[string]interface{}) *awstypes.AvailabilityZoneDistribution {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AvailabilityZoneDistribution{}
+
+	if v, ok := tfMap["capacity_distribution_strategy"].(string); ok && v != "" {
+		apiObject.CapacityDistributionStrategy = awstypes.CapacityDistributionStrategy(v)
+	}
+
+	return apiObject
+}
+
 func expandTrafficSourceIdentifier(tfMap map[string]interface{}) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
@@ -3413,6 +3454,19 @@ func expandTrafficSourceIdentifiers(tfList []interface{}) []awstypes.TrafficSour
 	}
 
 	return apiObjects
+}
+
+func flattenAvailabilityZoneDistribution(apiObject *awstypes.AvailabilityZoneDistribution) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.CapacityDistributionStrategy; v != "" {
+		tfMap["capacity_distribution_strategy"] = string(v)
+	}
+
+	return tfMap
 }
 
 func flattenEnabledMetrics(apiObjects []awstypes.EnabledMetric) []string {

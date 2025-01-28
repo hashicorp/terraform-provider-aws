@@ -5,7 +5,6 @@ package datasync
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -175,7 +174,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	s3BucketName, err := globalIDFromLocationURI(aws.ToString(output.LocationUri))
+	globalID, err := globalIDFromLocationURI(aws.ToString(output.LocationUri))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -190,8 +189,16 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("agent_arns", output.AgentArns)
 	d.Set(names.AttrARN, output.LocationArn)
-	s3BucketArn := fmt.Sprintf("arn:%s:s3:::%s", locationARN.Partition, s3BucketName)
-	d.Set("s3_bucket_arn", s3BucketArn)
+	if arn.IsARN(globalID) {
+		d.Set("s3_bucket_arn", globalID)
+	} else {
+		arn := arn.ARN{
+			Partition: locationARN.Partition,
+			Service:   "s3",
+			Resource:  globalID,
+		}.String()
+		d.Set("s3_bucket_arn", arn)
+	}
 	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_config: %s", err)
 	}

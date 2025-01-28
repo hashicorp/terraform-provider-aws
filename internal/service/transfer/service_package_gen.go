@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceConnector,
-			Name:    "Connector",
+			Factory:  newDataSourceConnector,
+			TypeName: "aws_transfer_connector",
+			Name:     "Connector",
 		},
 	}
 }

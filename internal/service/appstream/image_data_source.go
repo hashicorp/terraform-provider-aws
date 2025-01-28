@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Image")
+// @FrameworkDataSource("aws_appstream_image", name="Image")
 func newDataSourceImage(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceImage{}, nil
 }

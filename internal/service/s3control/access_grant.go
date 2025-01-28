@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grant")
+// @FrameworkResource("aws_s3control_access_grant", name="Access Grant")
 // @Tags
 func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantResource{}

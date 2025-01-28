@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sqs_queue: Fix timeout error on creation if `sqs_managed_sse_enabled=true` and `kms_data_key_reuse_period_seconds` is configured
+```

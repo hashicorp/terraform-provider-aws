@@ -88,6 +88,24 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
 			},
+			{
+				Config: testAccUserGroupConfig_engineValkey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+				),
+			},
+			{
+				Config: testAccUserGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+			},
 		},
 	})
 }
@@ -190,10 +208,6 @@ func testAccCheckUserGroupExists(ctx context.Context, n string, v *awstypes.User
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache User Group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindUserGroupByID(ctx, conn, rs.Primary.ID)
@@ -256,6 +270,24 @@ resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
   engine        = "REDIS"
   user_ids      = [aws_elasticache_user.test1.user_id, aws_elasticache_user.test2.user_id]
+}
+`, rName))
+}
+
+func testAccUserGroupConfig_engineValkey(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[1]q
+  engine        = "VALKEY"
+  user_ids      = [aws_elasticache_user.test1.user_id]
 }
 `, rName))
 }

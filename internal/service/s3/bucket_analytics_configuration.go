@@ -149,6 +149,9 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	}
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketAnalyticsConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
@@ -191,6 +194,10 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	ac, err := findAnalyticsConfiguration(ctx, conn, bucket, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -222,6 +229,10 @@ func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.R
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Analytics Configuration: %s", d.Id())

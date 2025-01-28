@@ -73,4 +73,6 @@ var (
 	ParseObjectARN = parseObjectARN
 )
 
-type ObjectARN = objectARN
+type (
+	ObjectARN = objectARN
+)

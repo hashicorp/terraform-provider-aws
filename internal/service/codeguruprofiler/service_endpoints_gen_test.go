@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListProfilingGroups(ctx, &codeguruprofiler.ListProfilingGroupsInput{},
+	input := codeguruprofiler.ListProfilingGroupsInput{}
+	_, err := client.ListProfilingGroups(ctx, &input,
 		func(opts *codeguruprofiler.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

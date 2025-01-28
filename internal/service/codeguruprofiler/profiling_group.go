@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Profiling Group")
+// @FrameworkResource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
 // @Tags(identifierAttribute="arn")
 func newResourceProfilingGroup(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProfilingGroup{}

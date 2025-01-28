@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_route_calculator")
+// @SDKDataSource("aws_location_route_calculator", name="Route Calculator")
 func DataSourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteCalculatorRead,

@@ -28,7 +28,7 @@ import (
 
 const reportCompletionTimeout = 5 * time.Minute
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_assessment_report", name="Assessment Report")
 func newResourceAssessmentReport(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentReport{}, nil
 }

@@ -47,6 +47,10 @@ func resourceAccelerator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrAttributes: {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -202,6 +206,7 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, accelerator.AcceleratorArn)
 	d.Set(names.AttrDNSName, accelerator.DnsName)
 	d.Set("dual_stack_dns_name", accelerator.DualStackDnsName)
 	d.Set(names.AttrEnabled, accelerator.Enabled)

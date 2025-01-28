@@ -51,9 +51,7 @@ func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.
 
 func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data directoryBucketsDataSourceModel
-
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}

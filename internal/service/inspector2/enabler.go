@@ -34,7 +34,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// @SDKResource("aws_inspector2_enabler")
+// @SDKResource("aws_inspector2_enabler", name="Enabler")
 func ResourceEnabler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnablerCreate,

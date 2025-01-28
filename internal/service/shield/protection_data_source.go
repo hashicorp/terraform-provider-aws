@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Protection")
+// @FrameworkDataSource("aws_shield_protection", name="Protection")
 func newDataSourceProtection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProtection{}, nil
 }

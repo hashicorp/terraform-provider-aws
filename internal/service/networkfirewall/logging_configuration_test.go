@@ -37,6 +37,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGrou
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":        "1",
 						"log_destination.logGroup": logGroupName,
@@ -49,6 +50,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGrou
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":        "1",
 						"log_destination.logGroup": updatedLogGroupName,
@@ -61,6 +63,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGrou
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":        "1",
 						"log_destination.logGroup": updatedLogGroupName,
@@ -94,6 +97,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logType
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeFlow),
 					}),
@@ -104,6 +108,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logType
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeAlert),
 					}),
@@ -114,6 +119,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logType
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeTls),
 					}),
@@ -146,6 +152,7 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_deliverySt
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              "1",
 						"log_destination.deliveryStream": streamName,
@@ -158,6 +165,7 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_deliverySt
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              "1",
 						"log_destination.deliveryStream": updatedStreamName,
@@ -170,6 +178,7 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_deliverySt
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              "1",
 						"log_destination.deliveryStream": updatedStreamName,
@@ -203,6 +212,7 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_logType(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeFlow),
 					}),
@@ -213,6 +223,7 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_logType(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeAlert),
 					}),
@@ -223,6 +234,7 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_logType(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeTls),
 					}),
@@ -256,6 +268,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_bucketName(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "1",
 						"log_destination.bucketName": bucketName,
@@ -267,6 +280,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_bucketName(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "1",
 						"log_destination.bucketName": updatedBucketName,
@@ -278,6 +292,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_bucketName(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "1",
 						"log_destination.bucketName": updatedBucketName,
@@ -311,6 +326,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_logType(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeFlow),
 					}),
@@ -321,6 +337,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_logType(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeAlert),
 					}),
@@ -331,6 +348,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_logType(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_type": string(awstypes.LogTypeTls),
 					}),
@@ -363,6 +381,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "1",
 						"log_destination.bucketName": bucketName,
@@ -374,6 +393,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "2",
 						"log_destination.bucketName": bucketName,
@@ -447,6 +467,7 @@ func TestAccNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":        "1",
 						"log_destination.logGroup": logGroupName,
@@ -460,6 +481,7 @@ func TestAccNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              "1",
 						"log_destination.deliveryStream": streamName,
@@ -473,6 +495,7 @@ func TestAccNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination_type": string(awstypes.LogDestinationTypeS3),
 						"log_type":             string(awstypes.LogTypeFlow),
@@ -505,14 +528,15 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinations(
 				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow)),
+				Config: testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow), string(awstypes.LogTypeTls)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              "1",
 						"log_destination.deliveryStream": streamName,
@@ -524,6 +548,12 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinations(
 						"log_destination.bucketName": bucketName,
 						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
 						"log_type":                   string(awstypes.LogTypeAlert),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":              "1",
+						"log_destination.deliveryStream": streamName,
+						"log_destination_type":           string(awstypes.LogDestinationTypeKinesisDataFirehose),
+						"log_type":                       string(awstypes.LogTypeTls),
 					}),
 				),
 			},
@@ -961,12 +991,12 @@ resource "aws_networkfirewall_logging_configuration" "test" {
       log_destination = {
         bucketName = aws_s3_bucket.test.bucket
       }
-      log_destination_type = %[2]q
-      log_type             = %[3]q
+      log_destination_type = %[1]q
+      log_type             = %[2]q
     }
   }
 }
-`, rName, destinationType, logType))
+`, destinationType, logType))
 }
 
 func testAccLoggingConfigurationConfig_s3UpdateFirewallARN(bucketName, rName, destinationType, logType string) string {
@@ -982,12 +1012,12 @@ resource "aws_networkfirewall_logging_configuration" "test" {
       log_destination = {
         bucketName = aws_s3_bucket.test.bucket
       }
-      log_destination_type = %[2]q
-      log_type             = %[3]q
+      log_destination_type = %[1]q
+      log_type             = %[2]q
     }
   }
 }
-`, rName, destinationType, logType))
+`, destinationType, logType))
 }
 
 func testAccLoggingConfigurationConfig_s3UpdatePrefix(bucketName, rName, destinationType, logType string) string {
@@ -1004,12 +1034,12 @@ resource "aws_networkfirewall_logging_configuration" "test" {
         bucketName = aws_s3_bucket.test.bucket
         prefix     = "update-prefix"
       }
-      log_destination_type = %[2]q
-      log_type             = %[3]q
+      log_destination_type = %[1]q
+      log_type             = %[2]q
     }
   }
 }
-`, rName, destinationType, logType))
+`, destinationType, logType))
 }
 
 func testAccLoggingConfigurationConfig_kinesis(streamName, rName, destinationType, logType string) string {
@@ -1025,12 +1055,12 @@ resource "aws_networkfirewall_logging_configuration" "test" {
       log_destination = {
         deliveryStream = aws_kinesis_firehose_delivery_stream.test.name
       }
-      log_destination_type = %[2]q
-      log_type             = %[3]q
+      log_destination_type = %[1]q
+      log_type             = %[2]q
     }
   }
 }
-`, rName, destinationType, logType))
+`, destinationType, logType))
 }
 
 func testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, destinationType, logType string) string {
@@ -1046,15 +1076,15 @@ resource "aws_networkfirewall_logging_configuration" "test" {
       log_destination = {
         logGroup = aws_cloudwatch_log_group.test.name
       }
-      log_destination_type = %[2]q
-      log_type             = %[3]q
+      log_destination_type = %[1]q
+      log_type             = %[2]q
     }
   }
 }
-`, rName, destinationType, logType))
+`, destinationType, logType))
 }
 
-func testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, logTypeS3, logTypeKinesis string) string {
+func testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, logTypeS3, logTypeKinesis1, logTypeKinesis2 string) string {
 	return acctest.ConfigCompose(
 		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
 		testAccLoggingConfigurationConfig_baseFirehose(rName, streamName),
@@ -1069,6 +1099,14 @@ resource "aws_networkfirewall_logging_configuration" "test" {
         bucketName = aws_s3_bucket.test.bucket
       }
       log_destination_type = "S3"
+      log_type             = %[1]q
+    }
+
+    log_destination_config {
+      log_destination = {
+        deliveryStream = aws_kinesis_firehose_delivery_stream.test.name
+      }
+      log_destination_type = "KinesisDataFirehose"
       log_type             = %[2]q
     }
 
@@ -1081,7 +1119,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
     }
   }
 }
-`, rName, logTypeS3, logTypeKinesis))
+`, logTypeS3, logTypeKinesis1, logTypeKinesis2))
 }
 
 func testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, logTypeS3, logTypeCloudWatch string) string {
@@ -1099,7 +1137,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
         bucketName = aws_s3_bucket.test.bucket
       }
       log_destination_type = "S3"
-      log_type             = %[2]q
+      log_type             = %[1]q
     }
 
     log_destination_config {
@@ -1107,9 +1145,9 @@ resource "aws_networkfirewall_logging_configuration" "test" {
         logGroup = aws_cloudwatch_log_group.test.name
       }
       log_destination_type = "CloudWatchLogs"
-      log_type             = %[3]q
+      log_type             = %[2]q
     }
   }
 }
-`, rName, logTypeS3, logTypeCloudWatch))
+`, logTypeS3, logTypeCloudWatch))
 }

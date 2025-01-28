@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeClusters(ctx, &cloudhsmv2.DescribeClustersInput{},
+	input := cloudhsmv2.DescribeClustersInput{}
+	_, err := client.DescribeClusters(ctx, &input,
 		func(opts *cloudhsmv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

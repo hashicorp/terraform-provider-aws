@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Application Providers")
+// @FrameworkDataSource("aws_ssoadmin_application_providers", name="Application Providers")
 func newDataSourceApplicationProviders(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplicationProviders{}, nil
 }

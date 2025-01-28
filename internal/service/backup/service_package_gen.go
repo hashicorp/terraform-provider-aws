@@ -21,22 +21,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newLogicallyAirGappedVaultResource,
-			Name:    "Logically Air Gapped Vault",
+			Factory:  newLogicallyAirGappedVaultResource,
+			TypeName: "aws_backup_logically_air_gapped_vault",
+			Name:     "Logically Air Gapped Vault",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newRestoreTestingPlanResource,
-			Name:    "Restore Testing Plan",
+			Factory:  newRestoreTestingPlanResource,
+			TypeName: "aws_backup_restore_testing_plan",
+			Name:     "Restore Testing Plan",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newRestoreTestingSelectionResource,
-			Name:    "Restore Testing Plan Selection",
+			Factory:  newRestoreTestingSelectionResource,
+			TypeName: "aws_backup_restore_testing_selection",
+			Name:     "Restore Testing Plan Selection",
 		},
 	}
 }

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListChannelGroups(ctx, &mediapackagev2.ListChannelGroupsInput{},
+	input := mediapackagev2.ListChannelGroupsInput{}
+	_, err := client.ListChannelGroups(ctx, &input,
 		func(opts *mediapackagev2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

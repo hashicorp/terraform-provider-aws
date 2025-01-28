@@ -40,7 +40,7 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, busName),
 					resource.TestCheckResourceAttr(dataSourceName, "created_by", createdBy),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need event source for testing
 				),
 			},
 		},

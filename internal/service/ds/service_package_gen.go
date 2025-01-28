@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newTrustResource,
-			Name:    "Trust",
+			Factory:  newTrustResource,
+			TypeName: "aws_directory_service_trust",
+			Name:     "Trust",
 		},
 	}
 }

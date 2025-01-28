@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Logging")
+// @FrameworkResource("aws_redshift_logging", name="Logging")
 func newResourceLogging(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLogging{}, nil
 }

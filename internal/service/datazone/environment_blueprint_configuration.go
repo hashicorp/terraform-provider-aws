@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Environment Blueprint Configuration")
+// @FrameworkResource("aws_datazone_environment_blueprint_configuration", name="Environment Blueprint Configuration")
 func newResourceEnvironmentBlueprintConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironmentBlueprintConfiguration{}
 	return r, nil

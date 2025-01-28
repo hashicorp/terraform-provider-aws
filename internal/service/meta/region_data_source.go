@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Region")
+// @FrameworkDataSource("aws_region", name="Region")
 func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &regionDataSource{}
 

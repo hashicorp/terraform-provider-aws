@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_elasticache_reserved_cache_node")
+// @FrameworkResource("aws_elasticache_reserved_cache_node", name="Reserved Cache Node")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTests=false)
 func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigure, error) {

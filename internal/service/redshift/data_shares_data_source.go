@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Data Shares")
+// @FrameworkDataSource("aws_redshift_data_shares", name="Data Shares")
 func newDataSourceDataShares(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDataShares{}, nil
 }

@@ -462,7 +462,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta.ServicePackages = servicePackageMap
+	meta.SetServicePackages(ctx, servicePackageMap)
 	provider.SetMeta(meta)
 
 	return provider, nil

@@ -15,7 +15,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @FrameworkDataSource(name="Groups")
+// @FrameworkDataSource("aws_identitystore_groups", name="Groups")
 func newGroupsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &groupsDataSource{}, nil
 }
