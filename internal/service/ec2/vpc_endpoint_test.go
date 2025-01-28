@@ -936,6 +936,7 @@ func TestAccVPCEndpoint_resourceConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
+	resourceConfigurationName := "aws_vpclattice_resource_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -963,6 +964,51 @@ func TestAccVPCEndpoint_resourceConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Resource"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_arn", resourceConfigurationName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_serviceNetwork(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	serviceNetworkName := "aws_vpclattice_service_network.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_serviceNetwork(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "ServiceNetwork"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_arn", serviceNetworkName, names.AttrARN),
 				),
 			},
 			{
@@ -1852,7 +1898,7 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_resourceConfiguration(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block                       = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -1901,7 +1947,7 @@ resource "aws_vpclattice_resource_configuration" "test" {
 }
 
 resource "aws_vpc" "endpoint" {
-  cidr_block                       = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -1920,9 +1966,9 @@ resource "aws_subnet" "endpoint" {
 
 resource "aws_vpc_endpoint" "test" {
   resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
-  subnet_ids        = [aws_subnet.endpoint.id]
-  vpc_endpoint_type = "Resource"
-  vpc_id       = aws_vpc.endpoint.id
+  subnet_ids                 = [aws_subnet.endpoint.id]
+  vpc_endpoint_type          = "Resource"
+  vpc_id                     = aws_vpc.endpoint.id
 
   tags = {
     Name = %[1]q
@@ -1931,10 +1977,10 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVPCEndpointConfig_sericeNetwork(rName string) string {
+func testAccVPCEndpointConfig_serviceNetwork(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block                       = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -1954,14 +2000,16 @@ resource "aws_subnet" "test" {
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
 
-tags 
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
-  resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
-  subnet_ids        = [aws_subnet.test.id]
-  vpc_endpoint_type = "ServiceNetwork"
-  vpc_id       = aws_vpc.test.id
+  service_network_arn = aws_vpclattice_service_network.test.arn
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "ServiceNetwork"
+  vpc_id              = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
