@@ -17,6 +17,11 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
 	return []*types.ServicePackageEphemeralResource{
 		{
+			Factory:  newEphemeralRandomPassword,
+			TypeName: "aws_secretsmanager_random_password",
+			Name:     "Random Password",
+		},
+		{
 			Factory:  newEphemeralSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",

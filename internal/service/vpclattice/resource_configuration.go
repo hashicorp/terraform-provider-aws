@@ -45,7 +45,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceConfigurationOutput")
 func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourceConfiguration{}
+	r := &resourceConfigurationResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
@@ -54,17 +54,17 @@ func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithC
 	return r, nil
 }
 
-type resourceResourceConfiguration struct {
+type resourceConfigurationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (*resourceResourceConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*resourceConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_vpclattice_resource_configuration"
 }
 
-func (r *resourceResourceConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *resourceConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	typeType := fwtypes.StringEnumType[awstypes.ResourceConfigurationType]()
 
 	response.Schema = schema.Schema{
@@ -225,7 +225,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, request reso
 	}
 }
 
-func (r *resourceResourceConfiguration) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *resourceConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -274,7 +274,7 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceResourceConfiguration) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *resourceConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -307,7 +307,7 @@ func (r *resourceResourceConfiguration) Read(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceResourceConfiguration) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *resourceConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
@@ -363,7 +363,7 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceResourceConfiguration) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *resourceConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -393,7 +393,7 @@ func (r *resourceResourceConfiguration) Delete(ctx context.Context, request reso
 	}
 }
 
-func (r *resourceResourceConfiguration) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *resourceConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
