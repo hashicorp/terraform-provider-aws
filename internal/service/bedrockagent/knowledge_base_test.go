@@ -241,14 +241,9 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 }
 
 func testAccKnowledgeBase_OpenSearch_basic(t *testing.T) {
-	collectionName := os.Getenv("TF_AWS_BEDROCK_OSS_COLLECTION_NAME")
-	if collectionName == "" {
-		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
-			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
-			"where the vector index is configured.")
-	}
-
 	ctx := acctest.Context(t)
+	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
+
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
@@ -290,14 +285,9 @@ func testAccKnowledgeBase_OpenSearch_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_OpenSearch_update(t *testing.T) {
-	collectionName := os.Getenv("TF_AWS_BEDROCK_OSS_COLLECTION_NAME")
-	if collectionName == "" {
-		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
-			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
-			"where the vector index is configured.")
-	}
-
 	ctx := acctest.Context(t)
+	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
+
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
@@ -365,33 +355,9 @@ func testAccKnowledgeBase_OpenSearch_update(t *testing.T) {
 }
 
 func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
-	// To create a collection to be used with this test, do the following.
-	//
-	// 1. In the AWS console, navigate to the OpenSearch service. Choose the "Collections"
-	// entry on the left navbar and select "Create collection" above the collections table.
-	// 2. Enter a collection name. Choose "Vector search" as the collection type. Choose
-	// "Easy create" in the security section. Click "Next" to review, then click "Submit".
-	// 3. Once the collection is available, select the "Indexes" tab. Click "Create vector
-	// index". Name the index "bedrock-knowledge-base-default-index".
-	// 4. In the "Vector fields" section, click "Add vector field".  Name the field
-	// "bedrock-knowledge-base-default-vector". Choose "faiss" for engine, "FP32" for
-	// precision, "1024" for dimensions, and "Euclidean" for distance metric. Click
-	// "Confirm" to create the field.
-	// 5. In the "Metadata management" section, add two fields.
-	//   "AMAZON_BEDROCK_METADATA" - string type, filterable is false.
-	//   "AMAZON_BEDROCK_TEXT_CHUNK" - string type, filterable is true.
-	// 6. Click "Create" to finish index creation.
-	//
-	// At this point the collection is usable with this test. Set the collection name to the
-	// environment variable below.
-	collectionName := os.Getenv("TF_AWS_BEDROCK_OSS_COLLECTION_NAME")
-	if collectionName == "" {
-		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
-			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
-			"where the vector index is configured.")
-	}
-
 	ctx := acctest.Context(t)
+	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
+
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
@@ -481,6 +447,43 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 
 		return nil
 	}
+}
+
+// skipIfOSSCollectionNameEnvVarNotSet handles skipping tests when an environment
+// variable providing a valid OSS collection name is unset
+//
+// This should be called in all acceptance tests currently dependent on an OpenSearch
+// Serverless vector collection.
+//
+// To create a collection to be used with this environment variable, do the following.
+//
+// 1. In the AWS console, navigate to the OpenSearch service. Choose the "Collections"
+// entry on the left navbar and select "Create collection" above the collections table.
+// 2. Enter a collection name. Choose "Vector search" as the collection type. Choose
+// "Easy create" in the security section. Click "Next" to review, then click "Submit".
+// 3. Once the collection is available, select the "Indexes" tab. Click "Create vector
+// index". Name the index "bedrock-knowledge-base-default-index".
+// 4. In the "Vector fields" section, click "Add vector field".  Name the field
+// "bedrock-knowledge-base-default-vector". Choose "faiss" for engine, "FP32" for
+// precision, "1024" for dimensions, and "Euclidean" for distance metric. Click
+// "Confirm" to create the field.
+//  5. In the "Metadata management" section, add two fields.
+//     "AMAZON_BEDROCK_METADATA" - string type, filterable is false.
+//     "AMAZON_BEDROCK_TEXT_CHUNK" - string type, filterable is true.
+//  6. Click "Create" to finish index creation.
+//
+// At this point the collection is usable with this test. Set the collection name to the
+// environment variable below.
+func skipIfOSSCollectionNameEnvVarNotSet(t *testing.T) string {
+	t.Helper()
+
+	v := os.Getenv("TF_AWS_BEDROCK_OSS_COLLECTION_NAME")
+	if v == "" {
+		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
+			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
+			"where the vector index is configured.")
+	}
+	return v
 }
 
 func testAccKnowledgeBaseConfig_basicRDS(rName, model, description string) string {
