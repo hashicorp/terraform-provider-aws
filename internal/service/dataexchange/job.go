@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -319,7 +318,7 @@ func (r *resourceJob) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	if state.StartOnCreation.ValueBool() == false && plan.StartOnCreation.ValueBool() == true {
+	if !state.StartOnCreation.ValueBool() && plan.StartOnCreation.ValueBool() {
 		err := startJobById(ctx, conn, state.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(

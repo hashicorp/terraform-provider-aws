@@ -23,13 +23,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataExchangeJob_importAssetsFromS3basic(t *testing.T) {
+func TestAccDataExchangeJob_assetsFromS3Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dataexchange_job.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
@@ -52,7 +51,7 @@ func TestAccDataExchangeJob_importAssetsFromS3basic(t *testing.T) {
 	})
 }
 
-func TestAccDataExchangeJob_importAssetsFromS3PostponeStart(t *testing.T) {
+func TestAccDataExchangeJob_assetsFromS3PostponeStart(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dataexchange_job.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
@@ -129,7 +128,7 @@ func TestAccDataExchangeJob_exportAssetsToSignedUrl(t *testing.T) {
 	})
 }
 
-func TestAccDataExchangeJob_importAssetFromSignedUrl(t *testing.T) {
+func TestAccDataExchangeJob_assetFromSignedURL(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dataexchange_job.test"
 
@@ -325,7 +324,7 @@ type testAsset struct {
 }
 
 func helperAccJobCreateDefaultAsset(ctx context.Context, assetType awstypes.AssetType) (*testAsset, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -377,7 +376,7 @@ func helperAccJobCreateDefaultAsset(ctx context.Context, assetType awstypes.Asse
 		return nil, err
 	}
 
-	req, err := http.NewRequest("PUT", baseUrl.String(), strings.NewReader("test"))
+	req, err := http.NewRequest(http.MethodPut, baseUrl.String(), strings.NewReader("test"))
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +428,7 @@ func helperAccJobCreateDefaultAsset(ctx context.Context, assetType awstypes.Asse
 	}, nil
 }
 
-func TestAccHelperJobAccCreateDefaultAsset(t *testing.T) {
+func TestAccDataExchangeJob_helperCreateDefaultAsset(t *testing.T) {
 	ctx := context.Background()
 	data, err := helperAccJobCreateDefaultAsset(ctx, awstypes.AssetTypeS3Snapshot)
 	if err != nil {
