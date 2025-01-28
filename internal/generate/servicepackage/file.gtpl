@@ -154,21 +154,28 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			}
 		},
 {{- end }}
+		withExtraOptions(ctx, p, config),
 	}
-
-	optFns = append(optFns, servicePackageExtraOptFns(ctx, p, config)...)
 
 	return {{ .GoV2Package }}.NewFromConfig(cfg, optFns...), nil
 }
 
-func servicePackageExtraOptFns(ctx context.Context, sp conns.ServicePackage, config map[string]any) []func(*{{ .GoV2Package }}.Options) {
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*{{ .GoV2Package }}.Options) {
 	if v, ok := sp.(interface {
-		extraOptFns(context.Context, map[string]any) []func(*{{ .GoV2Package }}.Options)
+		withExtraOptions(context.Context, map[string]any) []func(*{{ .GoV2Package }}.Options)
 	}); ok {
-		return v.extraOptFns(ctx, config)
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *{{ .GoV2Package }}.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
 	}
 
-	return nil
+	return func (*{{ .GoV2Package }}.Options) {}
 }
 {{- end }}
 
