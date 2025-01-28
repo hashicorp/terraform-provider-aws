@@ -11,6 +11,7 @@ import (
 )
 
 type EphemeralResourceWithConfigure struct {
+	withMetadata
 	withMeta
 }
 

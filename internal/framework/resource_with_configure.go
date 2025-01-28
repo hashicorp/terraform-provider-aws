@@ -17,6 +17,7 @@ import (
 
 // ResourceWithConfigure is a structure to be embedded within a Resource that implements the ResourceWithConfigure interface.
 type ResourceWithConfigure struct {
+	withMetadata
 	withMeta
 }
 

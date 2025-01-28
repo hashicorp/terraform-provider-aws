@@ -12,6 +12,7 @@ import (
 
 // DataSourceWithConfigure is a structure to be embedded within a DataSource that implements the DataSourceWithConfigure interface.
 type DataSourceWithConfigure struct {
+	withMetadata
 	withMeta
 }
 
