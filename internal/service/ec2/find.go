@@ -2359,9 +2359,9 @@ func findVPCEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*aws
 		return nil, err
 	}
 
-	if vpcEndpointState := strings.ToLower(string(output.State)); vpcEndpointState == vpcEndpointStateDeleted {
+	if state := string(output.State); strings.EqualFold(state, vpcEndpointStateDeleted) {
 		return nil, &retry.NotFoundError{
-			Message:     vpcEndpointState,
+			Message:     state,
 			LastRequest: input,
 		}
 	}
@@ -3049,9 +3049,9 @@ func findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx context.Context, c
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if vpcEndpointState := strings.ToLower(string(output.VpcEndpointState)); vpcEndpointState == vpcEndpointStateDeleted {
+	if state := string(output.VpcEndpointState); strings.EqualFold(state, vpcEndpointStateDeleted) {
 		return nil, &retry.NotFoundError{
-			Message:     vpcEndpointState,
+			Message:     state,
 			LastRequest: input,
 		}
 	}
