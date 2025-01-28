@@ -20,7 +20,7 @@ ephemeral "aws_secretsmanager_random_password" "example" {}
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are optional:
 
 * `exclude_characters` - (Optional) String of the characters that you don't want in the password.
 * `exclude_lowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
