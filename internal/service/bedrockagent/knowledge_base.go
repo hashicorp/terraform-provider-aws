@@ -84,9 +84,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -529,7 +526,8 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !new.Description.Equal(old.Description) ||
-		!new.Name.Equal(old.Name) {
+		!new.Name.Equal(old.Name) ||
+		!new.RoleARN.Equal(old.RoleARN) {
 		input := &bedrockagent.UpdateKnowledgeBaseInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {

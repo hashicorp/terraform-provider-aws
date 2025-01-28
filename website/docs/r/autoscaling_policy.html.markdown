@@ -63,7 +63,8 @@ resource "aws_autoscaling_policy" "example" {
               value = "my-queue"
             }
           }
-          stat = "Sum"
+          stat   = "Sum"
+          period = 10
         }
         return_data = false
       }
@@ -79,7 +80,8 @@ resource "aws_autoscaling_policy" "example" {
               value = "my-asg"
             }
           }
-          stat = "Average"
+          stat   = "Average"
+          period = 10
         }
         return_data = false
       }
@@ -295,6 +297,7 @@ This configuration block supports the following arguments:
 This configuration block supports the following arguments:
 
 * `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `period` - (Optional) The period of the metric in seconds.
 * `stat` - (Required) Statistic of the metrics to return.
 * `unit` - (Optional) Unit of the metrics to return.
 

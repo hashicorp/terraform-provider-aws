@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -25,6 +26,9 @@ func resourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 		CreateWithoutTimeout: resourceVPCEndpointSecurityGroupAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSecurityGroupAssociationRead,
 		DeleteWithoutTimeout: resourceVPCEndpointSecurityGroupAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceVPCEndpointSecurityGroupAssociationImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"replace_default_association": {
@@ -206,4 +210,22 @@ func deleteVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.Cl
 	}
 
 	return nil
+}
+
+func resourceVPCEndpointSecurityGroupAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/security-group-id'", d.Id())
+	}
+
+	endpointID := parts[0]
+	securityGroupID := parts[1]
+	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Security Group (%s) Association", endpointID, securityGroupID)
+
+	d.SetId(vpcEndpointSecurityGroupAssociationCreateID(endpointID, securityGroupID))
+	d.Set(names.AttrVPCEndpointID, endpointID)
+	d.Set("security_group_id", securityGroupID)
+	d.Set("replace_default_association", false)
+
+	return []*schema.ResourceData{d}, nil
 }
