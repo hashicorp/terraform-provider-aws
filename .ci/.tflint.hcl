@@ -25,9 +25,3 @@ rule "terraform_required_version" {
 rule "aws_acm_certificate_lifecycle" {
   enabled = false
 }
-
-# The provider supports a number of undocumented connection types
-# https://github.com/hashicorp/terraform-provider-aws/pull/37731
-rule "aws_glue_connection_invalid_connection_type" {
-  enabled = false
-}
