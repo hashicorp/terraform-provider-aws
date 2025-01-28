@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -2358,9 +2359,9 @@ func findVPCEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*aws
 		return nil, err
 	}
 
-	if output.State == awstypes.StateDeleted {
+	if vpcEndpointState := strings.ToLower(string(output.State)); vpcEndpointState == vpcEndpointStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(output.State),
+			Message:     vpcEndpointState,
 			LastRequest: input,
 		}
 	}
@@ -3048,7 +3049,7 @@ func findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx context.Context, c
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if vpcEndpointState := string(output.VpcEndpointState); vpcEndpointState == vpcEndpointStateDeleted {
+	if vpcEndpointState := strings.ToLower(string(output.VpcEndpointState)); vpcEndpointState == vpcEndpointStateDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     vpcEndpointState,
 			LastRequest: input,

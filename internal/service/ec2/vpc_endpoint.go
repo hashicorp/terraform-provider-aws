@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -322,7 +323,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	vpce := output.VpcEndpoint
 	d.SetId(aws.ToString(vpce.VpcEndpointId))
 
-	if d.Get("auto_accept").(bool) && string(vpce.State) == vpcEndpointStatePendingAcceptance {
+	if d.Get("auto_accept").(bool) && strings.ToLower(string(vpce.State)) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), aws.ToString(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -417,6 +418,8 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 			d.Set("cidr_blocks", pl.Cidrs)
 			d.Set("prefix_list_id", pl.PrefixListId)
 		}
+	} else {
+		d.Set("cidr_blocks", nil)
 	}
 
 	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
@@ -452,7 +455,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get(names.AttrState).(string) == vpcEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && strings.ToLower(d.Get(names.AttrState).(string)) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get(names.AttrServiceName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
