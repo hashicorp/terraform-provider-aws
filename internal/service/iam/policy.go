@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/url"
 	"reflect"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -237,16 +238,33 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
+		// Creating Policy and Setting the version as Default in one operation is causing
+		// Access issues. Hence to mitigate it, the SetAsDefault is set to false.
+		// Seperating the setDefaultPolicyVersion as a separate operation.
+
 		input := &iam.CreatePolicyVersionInput{
 			PolicyArn:      aws.String(d.Id()),
 			PolicyDocument: aws.String(policy),
-			SetAsDefault:   true,
+			SetAsDefault:   false,
 		}
 
-		_, err = conn.CreatePolicyVersion(ctx, input)
+		var policyVersionOutput *iam.CreatePolicyVersionOutput
+		policyVersionOutput, err = conn.CreatePolicyVersion(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", d.Id(), err)
+		}
+
+		// Ensuring Thread Sleeps for 3 seconds before Setting version as default version
+		time.Sleep(10 * time.Second)
+		policyInput := &iam.SetDefaultPolicyVersionInput{
+			PolicyArn: aws.String(d.Id()),
+			VersionId: policyVersionOutput.PolicyVersion.VersionId,
+		}
+
+		_, err = conn.SetDefaultPolicyVersion(ctx, policyInput)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting Default Policy version for IAM Policy (%s): %s", d.Id(), err)
 		}
 	}
 
