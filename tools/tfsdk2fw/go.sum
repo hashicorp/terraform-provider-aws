@@ -97,8 +97,8 @@ github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.12 h1:AChqnjHCKzY0PiODw
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.12/go.mod h1:xCL3i+svFpcYVRc9o37lo6Xqa3uhCDlsWkROr2qSwCs=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.3 h1:UuUakMNPTQy9Fgfykef4uSq8maFf7yEnokZqvTYlHxc=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.3/go.mod h1:14jkC6peItRHeXBnjkOW6ANHCbOruI3lzYZDnNmB9qs=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.4 h1:LHmqGWuuv4Q64B2EHQ5w6umunorv2fkRc85W1hi+uj4=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.4/go.mod h1:aZn1m8bo1G7pLhwFAnAgZxm4FeetAE2eFLCsU++8hm8=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.0 h1:GxKCta2si7ciwmXmzn3FrkQEgO6Bw1hDIaFLCFxHR+c=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.0/go.mod h1:aZn1m8bo1G7pLhwFAnAgZxm4FeetAE2eFLCsU++8hm8=
 github.com/aws/aws-sdk-go-v2/service/billing v1.1.4 h1:Cop1dbTY/sVjOM5hac90dpFKhGrr9x7k2pxwix8B990=
 github.com/aws/aws-sdk-go-v2/service/billing v1.1.4/go.mod h1:RwmRsoyECS9EFfCtTx+T3H8GKK8pfv0WPfmoiW+9Y24=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.29.6 h1:jauT/3fD3vkD2lD9+23K9PEVrLmiUET32D+iHu+s0ZA=
@@ -351,8 +351,8 @@ github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.6 h1:/hiINB2/Z+zFtaxO90flEj4OZ
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.6/go.mod h1:wvLl9uRHqLRr0x9yuufd3PwoO5lXkw68q9IzkTTFzNs=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.5 h1:mRjie56z1EhugybFCSimJ20hW0mso4qJ92VeyN+iygU=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.5/go.mod h1:WA6r3cVNlbAcGHUiKxa6CzuumENpxb7PdkI06CeEMgE=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.65.4 h1:WrOM8nksmJ4V0Q6G2G3aQVWaVOkEaB2ONLTONazenXo=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.65.4/go.mod h1:CnfuebgK90nxQ0ZGDucJO3gYMVLmMU/h1nub4eXrnRg=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.66.0 h1:FVsocFoWQi9uxO8z9dplypDN0NiDuCFl5+EwkwoVPtc=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.66.0/go.mod h1:CnfuebgK90nxQ0ZGDucJO3gYMVLmMU/h1nub4eXrnRg=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.66.1 h1:I5UUQdhjQUMOF/dOvTgN2sP9+ukbfzPEK9SESy6Dtv8=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.66.1/go.mod h1:+Bai0P4sbLQy14bVkAJevI/xaulnv1T883f0xrLGYNw=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.12 h1:xP1Ae0yl8T2OVlz5d4MFgT1XVhN0Ym4U4lOV9VwMjU8=
@@ -455,8 +455,8 @@ github.com/aws/aws-sdk-go-v2/service/rum v1.21.12 h1:AqTXXqjIMLODmv+JBSrohIJj6aS
 github.com/aws/aws-sdk-go-v2/service/rum v1.21.12/go.mod h1:zY0Vz6DawMcmoVCKze6Gt3MZbhDpN62judu4MC4vkpU=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.74.1 h1:9LawY3cDJ3HE+v2GMd5SOkNLDwgN4K7TsCjyVBYu/L4=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.74.1/go.mod h1:hHnELVnIHltd8EOF3YzahVX6F6y2C6dNqpRj1IMkS5I=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.52.7 h1:cewH1fJ35N26pujUo8pXtqngf0QZio0ko62rT1x2Uak=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.52.7/go.mod h1:zZ6ah0Hp8TqLZERFcwSQ2T5A4lMkX5vujkDvSkFiXh8=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.53.0 h1:SkXjl2eAsfe4AjvErh7eIHsBOvLO8A40WWP2mBcvhzM=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.53.0/go.mod h1:zZ6ah0Hp8TqLZERFcwSQ2T5A4lMkX5vujkDvSkFiXh8=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.12 h1:SEgjbn9G9/NN3pEl5z178aYsRHJH57KMy6tAba+Vrzk=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.12/go.mod h1:3bKwli4C6IgEcgE2sCwVbHJIIdqlIHSKOrKeIcKaIw8=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.5 h1:b4vMWPIYJrjoOMYugxWKmJAuUINWbAbHrfJ+2meTRm0=
@@ -519,8 +519,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.33.10 h1:g9d+TOsu3ac7SgmY2dUf1qMgu/u
 github.com/aws/aws-sdk-go-v2/service/sts v1.33.10/go.mod h1:WZfNmntu92HO44MVZAubQaz3qCuIdeOdog2sADfU6hU=
 github.com/aws/aws-sdk-go-v2/service/swf v1.27.15 h1:diKywLM8S2eB2DkXebwwlWBUuoF60/jGs9DihgoPh9E=
 github.com/aws/aws-sdk-go-v2/service/swf v1.27.15/go.mod h1:SoMd7ge8jLACTKK9LI0kPOj4AC22/XAkpmRzYA3UKSk=
-github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.8 h1:ixd56hGsxrcAneTjwDbiARcZfaTfVV+pQS9/Ypkblxw=
-github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.8/go.mod h1:ZVza8hB17weyaaRLg8damI6yLR0t+mzO15zOdcoJStE=
+github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.9 h1:9/tQkLu3PjYo9w6kK79nMZEgyI4BFMRMAY75l9qkUp4=
+github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.9/go.mod h1:ZVza8hB17weyaaRLg8damI6yLR0t+mzO15zOdcoJStE=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.6 h1:4a7Y9RmVu9vHbA3nJt7jmuTYkEi4kL6UX8/qjLqiOCY=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.6/go.mod h1:M2GiUuNO1ewArwc/W/jFeexz7K0ceuOZgnArlbyP5o8=
 github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.5 h1:65YZKb8cxJd2QfISipZtZuWKvzYJq96JzRgV99QAgXY=

@@ -17,6 +17,11 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
 	return []*types.ServicePackageEphemeralResource{
 		{
+			Factory:  newEphemeralRandomPassword,
+			TypeName: "aws_secretsmanager_random_password",
+			Name:     "Random Password",
+		},
+		{
 			Factory:  newEphemeralSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
@@ -106,11 +111,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*secretsmanager.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return secretsmanager.NewFromConfig(cfg,
+	optFns := []func(*secretsmanager.Options){
 		secretsmanager.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return secretsmanager.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*secretsmanager.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*secretsmanager.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *secretsmanager.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*secretsmanager.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
