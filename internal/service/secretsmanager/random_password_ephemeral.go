@@ -22,7 +22,7 @@ func newEphemeralRandomPassword(context.Context) (ephemeral.EphemeralResourceWit
 }
 
 const (
-	EPNameRandomPassword = "Random Password Ephemeral Resource"
+	ERNameRandomPassword = "Random Password Ephemeral Resource"
 )
 
 type ephemeralRandomPassword struct {
@@ -86,7 +86,7 @@ func (e *ephemeralRandomPassword) Open(ctx context.Context, req ephemeral.OpenRe
 	output, err := conn.GetRandomPassword(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecretsManager, create.ErrActionOpening, EPNameRandomPassword, "", err),
+			create.ProblemStandardMessage(names.SecretsManager, create.ErrActionOpening, ERNameRandomPassword, "", err),
 			err.Error(),
 		)
 		return
