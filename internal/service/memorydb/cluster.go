@@ -85,6 +85,11 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"multi_region_cluster_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
 				names.AttrEngine: {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -324,6 +329,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaintenanceWindow = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
+		input.MultiRegionClusterName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.ParameterGroupName = aws.String(v.(string))
 	}
@@ -368,6 +377,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(name)
 
+	// If a multi-region cluster name is set, ensure the `aws_memorydb_multi_region_cluster`
+	// is created and available before proceeding with cluster creation.
+	// Otherwise, the cluster creation will fail.
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
+		if _, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi-Region Cluster (%s) create: %s", v.(string), err)
+		}
+	}
+
 	if _, err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) create: %s", d.Id(), err)
 	}
@@ -408,6 +426,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set(names.AttrDescription, cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
+	d.Set("multi_region_cluster_name", cluster.MultiRegionClusterName)
 	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
@@ -559,6 +578,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
+	}
+
+	if v := d.Get("multi_region_cluster_name"); v != nil && len(v.(string)) > 0 {
+		input.MultiRegionClusterName = aws.String(v.(string))
 	}
 
 	if v := d.Get("final_snapshot_name"); v != nil && len(v.(string)) > 0 {

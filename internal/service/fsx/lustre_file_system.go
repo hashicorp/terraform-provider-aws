@@ -117,6 +117,12 @@ func resourceLustreFileSystem() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.DriveCacheType](),
 			},
+			"efa_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"export_path": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -430,6 +436,11 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		inputB.LustreConfiguration.DriveCacheType = awstypes.DriveCacheType(v.(string))
 	}
 
+	if v, ok := d.GetOk("efa_enabled"); ok {
+		inputC.LustreConfiguration.EfaEnabled = aws.Bool(v.(bool))
+		inputB.LustreConfiguration.EfaEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("export_path"); ok {
 		inputC.LustreConfiguration.ExportPath = aws.String(v.(string))
 		inputB.LustreConfiguration.ExportPath = aws.String(v.(string))
@@ -545,6 +556,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("deployment_type", lustreConfig.DeploymentType)
 	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
+	d.Set("efa_enabled", lustreConfig.EfaEnabled)
 	d.Set("export_path", lustreConfig.DataRepositoryConfiguration.ExportPath)
 	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
 	d.Set("import_path", lustreConfig.DataRepositoryConfiguration.ImportPath)

@@ -72,13 +72,13 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findWorkspaces(ctx context.Context, conn *amp.Client, alias string) ([]types.WorkspaceSummary, error) { // nosemgrep:ci.caps0-in-func-name
-	input := &amp.ListWorkspacesInput{}
+	input := amp.ListWorkspacesInput{}
 	if alias != "" {
 		input.Alias = aws.String(alias)
 	}
 
 	var output []types.WorkspaceSummary
-	pages := amp.NewListWorkspacesPaginator(conn, input)
+	pages := amp.NewListWorkspacesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

@@ -71,12 +71,7 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.UserProfileStatus](),
 				Optional:   true,

@@ -339,7 +339,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeReportDefinitions(ctx, &costandusagereportservice.DescribeReportDefinitionsInput{},
+	input := costandusagereportservice.DescribeReportDefinitionsInput{}
+	_, err := client.DescribeReportDefinitions(ctx, &input,
 		func(opts *costandusagereportservice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

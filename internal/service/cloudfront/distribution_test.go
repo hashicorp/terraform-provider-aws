@@ -715,6 +715,9 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 						"custom_origin_config.0.origin_read_timeout":      "30",
 						"custom_origin_config.0.origin_ssl_protocols.#":   "2",
 						names.AttrDomainName:                              "www.example.com",
+						"origin_shield.#":                                 "0",
+						"s3_origin_config.#":                              "0",
+						"vpc_origin_config.#":                             "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "price_class", "PriceClass_All"),
 					resource.TestCheckResourceAttr(resourceName, "restrictions.#", "1"),
@@ -1447,6 +1450,49 @@ func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "500"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "502"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_vpcOriginConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_vpcOriginConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_header.#":        "0",
+						"custom_origin_config.#": "0",
+						names.AttrDomainName:     "www.example.com",
+						"origin_id":              "test",
+						"origin_shield.#":        "0",
+						"s3_origin_config.#":     "0",
+						"vpc_origin_config.#":    "1",
+						"vpc_origin_config.0.origin_keepalive_timeout": "5",
+						"vpc_origin_config.0.origin_read_timeout":      "30",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
 			},
 		},
 	})
@@ -4470,4 +4516,47 @@ resource "aws_cloudfront_distribution" "test" {
   %[2]s
 }
 `, rName, testAccDistributionRetainConfig(), which))
+}
+
+func testAccDistributionConfig_vpcOriginConfig(rName string) string {
+	return acctest.ConfigCompose(testAccVPCOriginConfig_basic(rName), `
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    vpc_origin_config {
+      vpc_origin_id = aws_cloudfront_vpc_origin.test.id
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`)
 }

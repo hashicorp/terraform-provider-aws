@@ -206,9 +206,9 @@ func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDe
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
-	input := &amp.ListScrapersInput{}
+	input := amp.ListScrapersInput{}
 
-	_, err := conn.ListScrapers(ctx, input)
+	_, err := conn.ListScrapers(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

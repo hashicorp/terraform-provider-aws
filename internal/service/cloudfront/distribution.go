@@ -673,6 +673,31 @@ func resourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"vpc_origin_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"origin_keepalive_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      5,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"origin_read_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      30,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"vpc_origin_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -2042,9 +2067,15 @@ func expandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 		}
 	}
 
-	// if both custom and s3 origin are missing, add an empty s3 origin
+	if v, ok := tfMap["vpc_origin_config"]; ok {
+		if v := v.([]interface{}); len(v) > 0 {
+			apiObject.VpcOriginConfig = expandVPCOriginConfig(v[0].(map[string]interface{}))
+		}
+	}
+
+	// if custom, s3 and VPC origin are all missing, add an empty s3 origin
 	// One or the other must be specified, but the S3 origin can be "empty"
-	if apiObject.S3OriginConfig == nil && apiObject.CustomOriginConfig == nil {
+	if apiObject.CustomOriginConfig == nil && apiObject.S3OriginConfig == nil && apiObject.VpcOriginConfig == nil {
 		apiObject.S3OriginConfig = &awstypes.S3OriginConfig{
 			OriginAccessIdentity: aws.String(""),
 		}
@@ -2092,6 +2123,10 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
 
 	if apiObject.S3OriginConfig != nil && aws.ToString(apiObject.S3OriginConfig.OriginAccessIdentity) != "" {
 		tfMap["s3_origin_config"] = []interface{}{flattenS3OriginConfig(apiObject.S3OriginConfig)}
+	}
+
+	if apiObject.VpcOriginConfig != nil && aws.ToString(apiObject.VpcOriginConfig.VpcOriginId) != "" {
+		tfMap["vpc_origin_config"] = []interface{}{flattenVPCOriginConfig(apiObject.VpcOriginConfig)}
 	}
 
 	return tfMap
@@ -2346,6 +2381,17 @@ func flattenCustomOriginConfigSSL(apiObject *awstypes.OriginSslProtocols) []inte
 	return flex.FlattenStringyValueList(apiObject.Items)
 }
 
+func expandOriginShield(tfMap map[string]interface{}) *awstypes.OriginShield {
+	if tfMap == nil {
+		return nil
+	}
+
+	return &awstypes.OriginShield{
+		Enabled:            aws.Bool(tfMap[names.AttrEnabled].(bool)),
+		OriginShieldRegion: aws.String(tfMap["origin_shield_region"].(string)),
+	}
+}
+
 func expandS3OriginConfig(tfMap map[string]interface{}) *awstypes.S3OriginConfig {
 	if tfMap == nil {
 		return nil
@@ -2356,14 +2402,26 @@ func expandS3OriginConfig(tfMap map[string]interface{}) *awstypes.S3OriginConfig
 	}
 }
 
-func expandOriginShield(tfMap map[string]interface{}) *awstypes.OriginShield {
+func expandVPCOriginConfig(tfMap map[string]interface{}) *awstypes.VpcOriginConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	return &awstypes.OriginShield{
-		Enabled:            aws.Bool(tfMap[names.AttrEnabled].(bool)),
-		OriginShieldRegion: aws.String(tfMap["origin_shield_region"].(string)),
+	return &awstypes.VpcOriginConfig{
+		OriginKeepaliveTimeout: aws.Int32(int32(tfMap["origin_keepalive_timeout"].(int))),
+		OriginReadTimeout:      aws.Int32(int32(tfMap["origin_read_timeout"].(int))),
+		VpcOriginId:            aws.String(tfMap["vpc_origin_id"].(string)),
+	}
+}
+
+func flattenOriginShield(apiObject *awstypes.OriginShield) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	return map[string]interface{}{
+		names.AttrEnabled:      aws.ToBool(apiObject.Enabled),
+		"origin_shield_region": aws.ToString(apiObject.OriginShieldRegion),
 	}
 }
 
@@ -2377,14 +2435,15 @@ func flattenS3OriginConfig(apiObject *awstypes.S3OriginConfig) map[string]interf
 	}
 }
 
-func flattenOriginShield(apiObject *awstypes.OriginShield) map[string]interface{} {
+func flattenVPCOriginConfig(apiObject *awstypes.VpcOriginConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	return map[string]interface{}{
-		names.AttrEnabled:      aws.ToBool(apiObject.Enabled),
-		"origin_shield_region": aws.ToString(apiObject.OriginShieldRegion),
+		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
+		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
+		"vpc_origin_id":            aws.ToString(apiObject.VpcOriginId),
 	}
 }
 

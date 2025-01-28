@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListResourcePolicies(ctx, &xray.ListResourcePoliciesInput{},
+	input := xray.ListResourcePoliciesInput{}
+	_, err := client.ListResourcePolicies(ctx, &input,
 		func(opts *xray.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

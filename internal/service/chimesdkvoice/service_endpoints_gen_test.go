@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListPhoneNumbers(ctx, &chimesdkvoice.ListPhoneNumbersInput{},
+	input := chimesdkvoice.ListPhoneNumbersInput{}
+	_, err := client.ListPhoneNumbers(ctx, &input,
 		func(opts *chimesdkvoice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

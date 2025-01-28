@@ -61,7 +61,7 @@ func (r *cidrLocationResource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{

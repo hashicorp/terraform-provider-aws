@@ -257,6 +257,34 @@ func TestAccMemoryDBCluster_create_withDataTiering(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_multiRegionClusterName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_cluster.test"
+	multiRegionClusterResourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_multiRegionClusterName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "multi_region_cluster_name", multiRegionClusterResourceName, "multi_region_cluster_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1368,6 +1396,42 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, finalSnapshotName),
+	)
+}
+
+func testAccClusterConfig_multiRegionClusterName(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseNetwork(rName),
+		testAccClusterConfig_baseUserAndACL(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_memorydb_multi_region_cluster" "test" {
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  num_shards                       = 2
+}
+
+resource "aws_memorydb_cluster" "test" {
+  acl_name                   = aws_memorydb_acl.test.id
+  auto_minor_version_upgrade = false
+  name                       = %[1]q
+  node_type                  = "db.r7g.xlarge"
+  num_shards                 = 2
+  security_group_ids         = [aws_security_group.test.id]
+  snapshot_retention_limit   = 7
+  subnet_group_name          = aws_memorydb_subnet_group.test.id
+
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+`, rName),
 	)
 }
 
