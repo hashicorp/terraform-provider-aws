@@ -776,7 +776,7 @@ resource "aws_opensearchserverless_access_policy" "test" {
     }
   ])
 }
-`, rName, collectionName)
+`, rName, collectionName, model)
 }
 
 func testAccKnowledgeBaseConfig_OpenSearch_basic(rName, collectionName, model string) string {
