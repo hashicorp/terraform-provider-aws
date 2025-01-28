@@ -98,14 +98,25 @@ resource "aws_vpc_endpoint" "example" {
 }
 ```
 
-### Resource Endpoint Type
+### VPC Lattice Resource Configuration Endpoint Type
 
 ```terraform
 resource "aws_vpc_endpoint" "example" {
   resource_configuration_arn = aws_vpclattice_resource_configuration.example.arn
   subnet_ids                 = [aws_subnet.example.id]
-  vpc_endpoint_type          = aws_vpc_endpoint_service.example.service_type
+  vpc_endpoint_type          = "Resource"
   vpc_id                     = aws_vpc.example.id
+}
+```
+
+### VPC Lattice Service Network Endpoint Type
+
+```terraform
+resource "aws_vpc_endpoint" "example" {
+  service_network_arn = aws_vpclattice_service_network.example.arn
+  subnet_ids          = [aws_subnet.example.id]
+  vpc_endpoint_type   = "ServiceNetwork"
+  vpc_id              = aws_vpc.example.id
 }
 ```
 
