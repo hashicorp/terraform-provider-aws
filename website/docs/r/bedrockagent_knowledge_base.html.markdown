@@ -87,33 +87,33 @@ The `vector_knowledge_base_configuration` configuration block supports the follo
 
 The `embedding_model_configuration` configuration block supports the following arguments:
 
-* `bedrock_embedding_model_configuration` - The vector configuration details on the Bedrock embeddings model.  See [`bedrock_embedding_model_configuration` block](#bedrock_embedding_model_configuration-block) for details.
+* `bedrock_embedding_model_configuration` - (Optional) The vector configuration details on the Bedrock embeddings model.  See [`bedrock_embedding_model_configuration` block](#bedrock_embedding_model_configuration-block) for details.
 
 ### `bedrock_embedding_model_configuration` block
 
 The `bedrock_embedding_model_configuration` configuration block supports the following arguments:
 
-* `dimensions` - (Optional) The dimensions details for the vector configuration used on the Bedrock embeddings model.
-* `embedding_data_type` - (Optional) The data type for the vectors when using a model to convert text into vector embeddings. The model must support the specified data type for vector embeddings.  Currently supported values are FLOAT32 and BINARY.
+* `dimensions` - (Optional) Dimension details for the vector configuration used on the Bedrock embeddings model.
+* `embedding_data_type` - (Optional) Data type for the vectors when using a model to convert text into vector embeddings. The model must support the specified data type for vector embeddings.  Valid values are `FLOAT32` and `BINARY`.
 
 ### `supplemental_data_storage_configuration` block
 
 The `supplemental_data_storage_configuration` configuration block supports the following arguments:
 
-* `storage_location` - A storage location specification for images extracted from multimodal documents in your data source.  See [`storage_location` block](#storage_location-block) for details.
+* `storage_location` - (Required) A storage location specification for images extracted from multimodal documents in your data source.  See [`storage_location` block](#storage_location-block) for details.
 
 ### `storage_location` block
 
 The `storage_location` configuration block supports the following arguments:
 
-* `type` - Specifies the storage service used for this location (as of this writing S3 is the only valid value).
-* `s3_location` - Contains information about the Amazon S3 location for the extracted images.  See [`s3_location` block](#s3_location-block) for details.
+* `type` - (Required) Storage service used for this location. `S3` is the only valid value.
+* `s3_location` - (Optional) Contains information about the Amazon S3 location for the extracted images.  See [`s3_location` block](#s3_location-block) for details.
 
 ### `s3_location` block
 
 The `s3_location` configuration block supports the following arguments:
 
-* `uri` - The URI of the location. For example, s3://my-bucket/chunk-processor/.
+* `uri` - (Required) URI of the location.
 
 ### `storage_configuration` block
 
