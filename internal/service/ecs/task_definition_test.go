@@ -112,6 +112,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "1"))),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
 					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
+					resource.TestCheckResourceAttr(resourceName, "enable_fault_injection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "track_latest", acctest.CtFalse),
 				),
@@ -123,6 +124,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "2"))),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
 					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
+					resource.TestCheckResourceAttr(resourceName, "enable_fault_injection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
@@ -1015,6 +1017,36 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size_in_gib", "30"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_enableFaultInjection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_enableFaultInjection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "enable_fault_injection", acctest.CtTrue),
 				),
 			},
 			{
@@ -3767,4 +3799,31 @@ TASK_DEFINITION
   }
 }
 `, rName, configureAtLaunch)
+}
+
+func testAccTaskDefinitionConfig_enableFaultInjection(rName string, enableFaultInjection bool) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  enable_fault_injection   = %[2]t
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true,
+    "portMappings": [{"protocol": "tcp", "containerPort": 8000}]
+  }
+]
+TASK_DEFINITION
+}
+`, rName, enableFaultInjection)
 }
