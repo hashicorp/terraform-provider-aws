@@ -155,10 +155,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																Optional: true,
 															},
 															"embedding_data_type": schema.StringAttribute{
-																Optional: true,
-																Validators: []validator.String{
-																	stringvalidator.OneOf("FLOAT32", "BINARY"),
-																},
+																CustomType: fwtypes.StringEnumType[awstypes.EmbeddingDataType](),
+																Optional:   true,
 															},
 														},
 													},
@@ -180,10 +178,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															names.AttrType: schema.StringAttribute{
-																Required: true,
-																Validators: []validator.String{
-																	stringvalidator.OneOf("S3"),
-																},
+																CustomType: fwtypes.StringEnumType[awstypes.SupplementalDataStorageLocationType](),
+																Required:   true,
 															},
 														},
 														Blocks: map[string]schema.Block{
@@ -830,8 +826,8 @@ type embeddingModelConfigurationModel struct {
 }
 
 type bedrockEmbeddingModelConfigurationModel struct {
-	Dimensions        types.Int64  `tfsdk:"dimensions"`
-	EmbeddingDataType types.String `tfsdk:"embedding_data_type"`
+	Dimensions        types.Int64                                    `tfsdk:"dimensions"`
+	EmbeddingDataType fwtypes.StringEnum[awstypes.EmbeddingDataType] `tfsdk:"embedding_data_type"`
 }
 
 type supplementalDataStorageConfigurationModel struct {
@@ -839,8 +835,8 @@ type supplementalDataStorageConfigurationModel struct {
 }
 
 type storageLocationModel struct {
-	Type       types.String                                     `tfsdk:"type"`
-	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
+	Type       fwtypes.StringEnum[awstypes.SupplementalDataStorageLocationType] `tfsdk:"type"`
+	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_location"`
 }
 
 type storageConfigurationModel struct {
