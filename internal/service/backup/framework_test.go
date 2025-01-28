@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,7 +59,7 @@ func testAccFramework_basic(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, originalDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
@@ -80,7 +82,7 @@ func testAccFramework_basic(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
@@ -117,7 +119,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
@@ -140,7 +142,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_controlScopeComplianceResourceID(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
@@ -166,7 +168,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_controlScopeTag(rName, description, originalControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
@@ -190,7 +192,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_controlScopeTag(rName, description, updatedControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
@@ -228,7 +230,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 				Config: testAccFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
@@ -262,7 +264,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 				Config: testAccFrameworkConfig_controlInputParameter(rName, description, updatedRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
@@ -308,7 +310,7 @@ func testAccFramework_updateControls(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
@@ -331,7 +333,7 @@ func testAccFramework_updateControls(t *testing.T) {
 				Config: testAccFrameworkConfig_controls(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName:            "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",

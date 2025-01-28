@@ -60,6 +60,25 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_issuer_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_leaf_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_subject_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_validity_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_tls_cipher_suite_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_tls_version_header_name"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_credentials_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_headers_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_methods_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_origin_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_expose_headers_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_server_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_strict_transport_security_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
@@ -73,6 +92,25 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
 					"tcp_idle_timeout_seconds",
+					"routing_http_response_server_enabled",
+					"routing_http_response_strict_transport_security_header_value",
+					"routing_http_response_access_control_allow_origin_header_value",
+					"routing_http_response_access_control_allow_methods_header_value",
+					"routing_http_response_access_control_allow_headers_header_value",
+					"routing_http_response_access_control_allow_credentials_header_value",
+					"routing_http_response_access_control_expose_headers_header_value",
+					"routing_http_response_access_control_max_age_header_value",
+					"routing_http_response_content_security_policy_header_value",
+					"routing_http_response_x_content_type_options_header_value",
+					"routing_http_response_x_frame_options_header_value",
+					"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_subject_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_validity_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_header_name",
+					"routing_http_request_x_amzn_tls_version_header_name",
+					"routing_http_request_x_amzn_tls_cipher_suite_header_name",
 				},
 			},
 		},
@@ -113,6 +151,25 @@ func TestAccELBV2Listener_Network_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_issuer_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_leaf_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_subject_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_validity_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_tls_cipher_suite_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_request_x_amzn_tls_version_header_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_access_control_allow_credentials_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_access_control_allow_headers_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_access_control_allow_methods_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_access_control_allow_origin_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_access_control_expose_headers_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_server_enabled"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_strict_transport_security_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value"),
+					resource.TestCheckNoResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
@@ -125,6 +182,26 @@ func TestAccELBV2Listener_Network_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
+					"tcp_idle_timeout_seconds",
+					"routing_http_response_server_enabled",
+					"routing_http_response_strict_transport_security_header_value",
+					"routing_http_response_access_control_allow_origin_header_value",
+					"routing_http_response_access_control_allow_methods_header_value",
+					"routing_http_response_access_control_allow_headers_header_value",
+					"routing_http_response_access_control_allow_credentials_header_value",
+					"routing_http_response_access_control_expose_headers_header_value",
+					"routing_http_response_access_control_max_age_header_value",
+					"routing_http_response_content_security_policy_header_value",
+					"routing_http_response_x_content_type_options_header_value",
+					"routing_http_response_x_frame_options_header_value",
+					"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_subject_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_validity_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_header_name",
+					"routing_http_request_x_amzn_tls_version_header_name",
+					"routing_http_request_x_amzn_tls_cipher_suite_header_name",
 				},
 			},
 		},
@@ -1102,6 +1179,105 @@ func TestAccELBV2Listener_attributes_nlb_TCPIdleTimeoutSeconds(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", strconv.Itoa(tcpTimeout2)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_attributes_alb_HTTPRequestHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_attributes_albHTTPRequestHeaders(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_server_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_strict_transport_security_header_value", "max-age=31536000; includeSubDomains"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_origin_header_value", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_methods_header_value", "GET,POST,OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_headers_header_value", "Content-Type,X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_credentials_header_value", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_expose_headers_header_value", "X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value", "default-src 'self'"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value", "nosniff"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", "DENY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_attributes_alb_HTTPSRequestHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = rName[:min(len(rName), 30)]
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_attributes_albHTTPSRequestHeaders(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, "aws_iam_server_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_server_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_strict_transport_security_header_value", "max-age=31536000; includeSubDomains"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_origin_header_value", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_methods_header_value", "GET,POST,OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_headers_header_value", "Content-Type,X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_credentials_header_value", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_expose_headers_header_value", "X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value", "default-src 'self'"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value", "nosniff"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name", "X-Custom-Serial-Number"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_issuer_header_name", "X-Custom-Issuer"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_subject_header_name", "X-Custom-Subject"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_validity_header_name", "X-Custom-Validity"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_leaf_header_name", "X-Custom-Leaf"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_mtls_clientcert_header_name", "X-Custom-Mtls-Cert"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_tls_version_header_name", "X-Custom-TLS-Version"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_request_x_amzn_tls_cipher_suite_header_name", "X-Custom-Cipher-Suite"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -3060,6 +3236,128 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName, seconds))
+}
+
+func testAccListenerConfig_attributes_albHTTPRequestHeaders(rName string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  protocol          = "HTTP"
+  port              = 80
+
+  routing_http_response_server_enabled                                = true
+  routing_http_response_strict_transport_security_header_value        = "max-age=31536000; includeSubDomains"
+  routing_http_response_access_control_allow_origin_header_value      = "https://example.com"
+  routing_http_response_access_control_allow_methods_header_value     = "GET,POST,OPTIONS"
+  routing_http_response_access_control_allow_headers_header_value     = "Content-Type,X-Custom-Header"
+  routing_http_response_access_control_allow_credentials_header_value = "true"
+  routing_http_response_access_control_expose_headers_header_value    = "X-Custom-Header"
+  routing_http_response_access_control_max_age_header_value           = "3600"
+  routing_http_response_content_security_policy_header_value          = "default-src 'self'"
+  routing_http_response_x_content_type_options_header_value           = "nosniff"
+  routing_http_response_x_frame_options_header_value                  = "DENY"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccListenerConfig_attributes_albHTTPSRequestHeaders(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn                                                     = aws_lb.test.arn
+  protocol                                                              = "HTTPS"
+  port                                                                  = 443
+  ssl_policy                                                            = "ELBSecurityPolicy-2016-08"
+  certificate_arn                                                       = aws_iam_server_certificate.test.arn
+  routing_http_response_server_enabled                                  = true
+  routing_http_response_strict_transport_security_header_value          = "max-age=31536000; includeSubDomains"
+  routing_http_response_access_control_allow_origin_header_value        = "https://example.com"
+  routing_http_response_access_control_allow_methods_header_value       = "GET,POST,OPTIONS"
+  routing_http_response_access_control_allow_headers_header_value       = "Content-Type,X-Custom-Header"
+  routing_http_response_access_control_allow_credentials_header_value   = "true"
+  routing_http_response_access_control_expose_headers_header_value      = "X-Custom-Header"
+  routing_http_response_access_control_max_age_header_value             = "3600"
+  routing_http_response_content_security_policy_header_value            = "default-src 'self'"
+  routing_http_response_x_content_type_options_header_value             = "nosniff"
+  routing_http_response_x_frame_options_header_value                    = "DENY"
+  routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name = "X-Custom-Serial-Number"
+  routing_http_request_x_amzn_mtls_clientcert_issuer_header_name        = "X-Custom-Issuer"
+  routing_http_request_x_amzn_mtls_clientcert_subject_header_name       = "X-Custom-Subject"
+  routing_http_request_x_amzn_mtls_clientcert_validity_header_name      = "X-Custom-Validity"
+  routing_http_request_x_amzn_mtls_clientcert_leaf_header_name          = "X-Custom-Leaf"
+  routing_http_request_x_amzn_mtls_clientcert_header_name               = "X-Custom-Mtls-Cert"
+  routing_http_request_x_amzn_tls_version_header_name                   = "X-Custom-TLS-Version"
+  routing_http_request_x_amzn_tls_cipher_suite_header_name              = "X-Custom-Cipher-Suite"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccListenerConfig_Forward_changeWeightedToBasic(rName, rName2 string) string {

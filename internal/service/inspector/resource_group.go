@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_inspector_resource_group")
+// @SDKResource("aws_inspector_resource_group", name="Resource Group")
 func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,

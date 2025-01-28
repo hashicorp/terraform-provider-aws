@@ -49,6 +49,7 @@ func TestAccPipesPipe_basicSQS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
@@ -306,6 +307,55 @@ func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.0", "p2"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.query_string_parameters.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_1.id}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_2.arn}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 				),
 			},
 		},
@@ -2056,6 +2106,27 @@ resource "aws_pipes_pipe" "test" {
   }
 }
 `, rName))
+}
+
+func testAccPipeConfig_kmsKeyIdentifier(rName, kmsKeyID string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test_1" {}
+resource "aws_kms_key" "test_2" {}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  kms_key_identifier = %[2]q
+  name               = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  source             = aws_sqs_queue.source.arn
+  target             = aws_sqs_queue.target.arn
+}
+`, rName, kmsKeyID))
 }
 
 func testAccPipeConfig_logConfiguration_cloudwatchLogsLogDestination(rName string) string {

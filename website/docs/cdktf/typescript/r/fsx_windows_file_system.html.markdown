@@ -35,9 +35,9 @@ class MyConvertedCode extends TerraformStack {
     new FsxWindowsFileSystem(this, "example", {
       activeDirectoryId: Token.asString(awsDirectoryServiceDirectoryExample.id),
       kmsKeyId: Token.asString(awsKmsKeyExample.arn),
-      storageCapacity: 300,
+      storageCapacity: 32,
       subnetIds: [Token.asString(awsSubnetExample.id)],
-      throughputCapacity: 1024,
+      throughputCapacity: 32,
     });
   }
 }
@@ -68,9 +68,9 @@ class MyConvertedCode extends TerraformStack {
         password: "avoid-plaintext-passwords",
         username: "Admin",
       },
-      storageCapacity: 300,
+      storageCapacity: 32,
       subnetIds: [Token.asString(awsSubnetExample.id)],
-      throughputCapacity: 1024,
+      throughputCapacity: 32,
     });
   }
 }
@@ -217,4 +217,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0a78a794f659cfe5c611887ac9e1fb7eebb21239a00af5aa1b95cd06aa75b7cb -->
+<!-- cache-key: cdktf-0.20.8 input-7512c63eecc7f2680d6ccea199dd6ef48933a2367fbdf05c9a796ce6d12b0c43 -->

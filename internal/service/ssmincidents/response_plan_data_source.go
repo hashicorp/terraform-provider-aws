@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmincidents_response_plan")
+// @SDKDataSource("aws_ssmincidents_response_plan", name="Response Plan")
 func DataSourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponsePlanRead,

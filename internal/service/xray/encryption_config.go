@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_xray_encryption_config")
+// @SDKResource("aws_xray_encryption_config", name="Encryption Config")
 func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEncryptionPutConfig,

@@ -331,6 +331,12 @@ service/bedrockagent:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagent/**/*'
               - 'website/**/bedrockagent_*'
+service/billing:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/billing/**/*'
+              - 'website/**/billing_*'
 service/billingconductor:
   - any:
       - changed-files:
@@ -1074,6 +1080,12 @@ service/internetmonitor:
           - any-glob-to-any-file:
               - 'internal/service/internetmonitor/**/*'
               - 'website/**/internetmonitor_*'
+service/invoicing:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/invoicing/**/*'
+              - 'website/**/invoicing_*'
 service/iot:
   - any:
       - changed-files:

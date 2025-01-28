@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_access_point")
+// @SDKResource("aws_s3_access_point, name="Access Point")
 func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointCreate,

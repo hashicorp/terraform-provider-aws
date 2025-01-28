@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -173,7 +174,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("resource_record_set_count", hostedZone.ResourceRecordSetCount)
 	d.Set("zone_id", hostedZoneID)
 
-	nameServers, err := hostedZoneNameServers(ctx, conn, hostedZoneID, aws.ToString(hostedZone.Name))
+	nameServers, err := findHostedZoneNameServers(ctx, conn, hostedZoneID, aws.ToString(hostedZone.Name))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -195,7 +196,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func hostedZoneNameServers(ctx context.Context, conn *route53.Client, zoneID, zoneName string) ([]string, error) {
+func findHostedZoneNameServers(ctx context.Context, conn *route53.Client, zoneID, zoneName string) ([]string, error) {
 	output, err := findHostedZoneByID(ctx, conn, zoneID)
 
 	if err != nil {
@@ -217,4 +218,35 @@ func hostedZoneNameServers(ctx context.Context, conn *route53.Client, zoneID, zo
 	}
 
 	return nameServers, nil
+}
+
+func findHostedZone(ctx context.Context, conn *route53.Client, input *route53.ListHostedZonesInput, filter tfslices.Predicate[*awstypes.HostedZone]) (*awstypes.HostedZone, error) {
+	output, err := findHostedZones(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findHostedZones(ctx context.Context, conn *route53.Client, input *route53.ListHostedZonesInput, filter tfslices.Predicate[*awstypes.HostedZone]) ([]awstypes.HostedZone, error) {
+	var output []awstypes.HostedZone
+
+	pages := route53.NewListHostedZonesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.HostedZones {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

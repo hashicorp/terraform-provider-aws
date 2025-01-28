@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceQueue,
 			TypeName: "aws_sqs_queue",
+			Name:     "Queue",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrURL,
 			},
@@ -34,6 +35,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceQueues,
 			TypeName: "aws_sqs_queues",
+			Name:     "Queues",
 		},
 	}
 }
@@ -51,14 +53,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceQueuePolicy,
 			TypeName: "aws_sqs_queue_policy",
+			Name:     "Queue Policy",
 		},
 		{
 			Factory:  resourceQueueRedriveAllowPolicy,
 			TypeName: "aws_sqs_queue_redrive_allow_policy",
+			Name:     "Queue Redrive Allow Policy",
 		},
 		{
 			Factory:  resourceQueueRedrivePolicy,
 			TypeName: "aws_sqs_queue_redrive_policy",
+			Name:     "Queue Redrive Policy",
 		},
 	}
 }
@@ -70,11 +75,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sqs.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return sqs.NewFromConfig(cfg,
+	optFns := []func(*sqs.Options){
 		sqs.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return sqs.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*sqs.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*sqs.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *sqs.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*sqs.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
