@@ -60,6 +60,11 @@ func TestToSnakeCase(t *testing.T) {
 			input:    "ResourceARN",
 			expected: "resource_arn",
 		},
+		{
+			name:     "Resource-ARN",
+			input:    "Resource-ARN",
+			expected: "resource_arn",
+		},
 	}
 
 	for _, testCase := range testCases {
