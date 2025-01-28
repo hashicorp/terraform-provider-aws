@@ -71,6 +71,9 @@ var (
 
 	NewObjectARN   = newObjectARN
 	ParseObjectARN = parseObjectARN
+
+	CreateResourceID = createResourceID
+	ParseResourceID  = parseResourceID
 )
 
 type (

@@ -299,7 +299,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
 	if _, err := waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
@@ -312,7 +312,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -375,7 +375,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -418,7 +418,7 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
