@@ -27,6 +27,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceBucketLifecycleConfiguration,
+			TypeName: "aws_s3_bucket_lifecycle_configuration",
+			Name:     "Bucket Lifecycle Configuration",
+		},
+		{
 			Factory:  newDirectoryBucketResource,
 			TypeName: "aws_s3_directory_bucket",
 			Name:     "Directory Bucket",
@@ -122,11 +127,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceBucketInventory,
 			TypeName: "aws_s3_bucket_inventory",
 			Name:     "Bucket Inventory",
-		},
-		{
-			Factory:  resourceBucketLifecycleConfiguration,
-			TypeName: "aws_s3_bucket_lifecycle_configuration",
-			Name:     "Bucket Lifecycle Configuration",
 		},
 		{
 			Factory:  resourceBucketLogging,
