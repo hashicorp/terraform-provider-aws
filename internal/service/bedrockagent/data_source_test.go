@@ -548,8 +548,8 @@ func testAccDataSource_webConfiguration(t *testing.T) {
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.source_configuration", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.max_pages", "25000"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.rate_limit", "300"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.exclusion_filters.#", "5"),
@@ -854,14 +854,12 @@ resource "aws_bedrockagent_data_source" "test" {
     web_configuration {
       source_configuration {
         url_configuration {
-          seed_urls = [
-            {
-              url = "https://aws.amazon.com/blogs/compute/category/compute/aws-outposts/"
-            },
-            {
-              url = "https://aws.amazon.com/blogs/networking-and-content-delivery/category/compute/aws-outposts/"
-            }
-          ]
+          seed_urls {
+            url = "https://aws.amazon.com/blogs/compute/category/compute/aws-outposts/"
+          }
+          seed_urls {
+            url = "https://aws.amazon.com/blogs/networking-and-content-delivery/category/compute/aws-outposts/"
+          }
         }
       }
 
@@ -880,7 +878,7 @@ resource "aws_bedrockagent_data_source" "test" {
         inclusion_filters = [
           ".*/blogs/(compute|containers|networking\\-and\\-content\\-delivery|storage|publicsector|media|awsmarketplace|apn|machine\\-learning|industries|mt|aws|architecture|database)/.*"
         ]
-        user_agent = "HOST_ONLY"
+        user_agent = "bedrockbot_UUID test"
       }
     }
   }
