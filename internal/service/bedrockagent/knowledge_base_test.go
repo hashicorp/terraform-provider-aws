@@ -388,6 +388,7 @@ func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
+	foundationModel := "amazon.titan-embed-text-v2:0"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -398,7 +399,7 @@ func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_OpenSearch_supplementalDataStorage(rName, collectionName),
+				Config: testAccKnowledgeBaseConfig_OpenSearch_supplementalDataStorage(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
@@ -780,7 +781,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, model))
 }
 
-func testAccKnowledgeBaseConfigBase_OpenSearch_supplementalDataStorage(rName, collectionName string) string {
+func testAccKnowledgeBaseConfigBase_openSearch(rName, collectionName, model string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -825,11 +826,6 @@ data "aws_iam_policy_document" "test_trust" {
   }
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
 data "aws_iam_policy_document" "test" {
   statement {
     effect = "Allow"
@@ -848,7 +844,7 @@ data "aws_iam_policy_document" "test" {
       "bedrock:InvokeModel",
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:foundation-model/amazon.titan-embed-text-v2:0",
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:foundation-model/%[3]s",
     ]
   }
 
@@ -860,27 +856,6 @@ data "aws_iam_policy_document" "test" {
     resources = [
       "*",
     ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:DeleteObject",
-      "s3:GetObject",
-      "s3:ListBucket",
-      "s3:PutObject",
-    ]
-    resources = [
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}",
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}/*",
-    ]
-    condition {
-      test     = "StringEquals"
-      variable = "aws:PrincipalAccount"
-      values = [
-        data.aws_caller_identity.current.account_id,
-      ]
-    }
   }
 
   statement {
@@ -944,13 +919,52 @@ resource "aws_opensearchserverless_access_policy" "test" {
 `, rName, collectionName)
 }
 
-func testAccKnowledgeBaseConfig_OpenSearch_supplementalDataStorage(rName, collectionName string) string {
+func testAccKnowledgeBaseConfig_OpenSearch_supplementalDataStorage(rName, collectionName, model string) string {
 	return acctest.ConfigCompose(
-		testAccKnowledgeBaseConfigBase_OpenSearch_supplementalDataStorage(rName, collectionName),
+		testAccKnowledgeBaseConfigBase_openSearch(rName, collectionName, model),
 		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_iam_policy_document" "test_s3" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:DeleteObject",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:PutObject",
+    ]
+    resources = [
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}/*",
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:PrincipalAccount"
+      values = [
+        data.aws_caller_identity.current.account_id,
+      ]
+    }
+  }
+}
+
+resource "aws_iam_policy" "test_s3" {
+  name   = "%[1]s-s3"
+  policy = data.aws_iam_policy_document.test_s3.json
+}
+
+resource "aws_iam_role_policy_attachment" "test_s3" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test_s3.arn
+}
+
 resource "aws_bedrockagent_knowledge_base" "test" {
   depends_on = [
     aws_iam_role_policy_attachment.test,
+    aws_iam_role_policy_attachment.test_s3,
     aws_opensearchserverless_access_policy.test,
   ]
 
@@ -960,7 +974,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   knowledge_base_configuration {
     type = "VECTOR"
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/amazon.titan-embed-text-v2:0"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
       embedding_model_configuration {
         bedrock_embedding_model_configuration {
           dimensions          = 1024
@@ -991,5 +1005,5 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     }
   }
 }
-`, rName))
+`, rName, model))
 }
