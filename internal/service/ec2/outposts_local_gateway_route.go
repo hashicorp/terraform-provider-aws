@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ec2_local_gateway_route")
+// @SDKResource("aws_ec2_local_gateway_route", name="Local Gateway Route")
 func resourceLocalGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteCreate,

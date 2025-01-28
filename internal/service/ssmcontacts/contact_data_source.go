@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmcontacts_contact")
+// @SDKDataSource("aws_ssmcontacts_contact", name="Contact")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 func DataSourceContact() *schema.Resource {

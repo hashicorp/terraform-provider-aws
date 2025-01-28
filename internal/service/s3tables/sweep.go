@@ -52,7 +52,7 @@ func sweepNamespaces(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 				for _, namespace := range page.Namespaces {
 					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceNamespace, client,
 						framework.NewAttribute("table_bucket_arn", aws.ToString(bucket.Arn)),
-						framework.NewAttribute(names.AttrNamespace, namespace.Namespace),
+						framework.NewAttribute(names.AttrNamespace, namespace.Namespace[0]),
 					))
 				}
 			}

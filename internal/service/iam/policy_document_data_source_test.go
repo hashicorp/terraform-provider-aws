@@ -236,6 +236,21 @@ func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_invalidSidValid(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:   testAccPolicyDocumentDataSourceConfig_invalidSid,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -1018,6 +1033,18 @@ data "aws_iam_policy_document" "test_source_conflicting" {
     sid       = "SourceJSONTestConflicting"
     actions   = ["*"]
     resources = ["*"]
+  }
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_invalidSid = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = "Invalid SID"
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
   }
 }
 `

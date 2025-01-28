@@ -21,15 +21,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newMonitorResource,
-			Name:    "Monitor",
+			Factory:  newMonitorResource,
+			TypeName: "aws_networkmonitor_monitor",
+			Name:     "Monitor",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newProbeResource,
-			Name:    "Probe",
+			Factory:  newProbeResource,
+			TypeName: "aws_networkmonitor_probe",
+			Name:     "Probe",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

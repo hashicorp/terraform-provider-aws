@@ -36,7 +36,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
@@ -55,7 +55,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
@@ -86,7 +86,7 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
@@ -106,7 +106,7 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 				Config: testAccSecurityProfileConfig_permissions(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 

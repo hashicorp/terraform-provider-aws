@@ -37,7 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Pipeline")
+// @FrameworkResource("aws_osis_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="pipeline_arn")
 func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResource{}

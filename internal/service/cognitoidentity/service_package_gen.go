@@ -14,6 +14,16 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource{
+		{
+			Factory:  newOpenIDTokenForDeveloperIdentityEphemeralResource,
+			TypeName: "aws_cognito_identity_openid_token_for_developer_identity",
+			Name:     "Open ID Connect Token For Developer Identity",
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
 }

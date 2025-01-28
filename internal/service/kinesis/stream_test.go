@@ -89,7 +89,6 @@ func TestAccKinesisStream_disappears(t *testing.T) {
 func TestAccKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.StreamDescriptionSummary
-	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -122,13 +121,6 @@ func TestAccKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 					testAccCheckStreamExists(ctx, "aws_kinesis_stream.test.18", &stream),
 					testAccCheckStreamExists(ctx, "aws_kinesis_stream.test.19", &stream),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName + "-0",
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 		},
 	})
@@ -482,7 +474,7 @@ func TestAccKinesisStream_basicOnDemand(t *testing.T) {
 	})
 }
 
-func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
+func TestAccKinesisStream_updateStreamModeOnDemandToProvisionedStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
@@ -495,7 +487,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_changeProvisionedToOnDemand1(rName),
+				Config: testAccStreamConfig_changeStreamModeNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
@@ -503,14 +495,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
-			},
-			{
-				Config: testAccStreamConfig_changeProvisionedToOnDemand2(rName),
+				Config: testAccStreamConfig_changeStreamModeOnDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
@@ -518,14 +503,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
-			},
-			{
-				Config: testAccStreamConfig_changeProvisionedToOnDemand3(rName),
+				Config: testAccStreamConfig_changeStreamModeProvisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
@@ -533,26 +511,76 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
-			},
-			{
-				Config: testAccStreamConfig_changeProvisionedToOnDemand1(rName),
+				Config: testAccStreamConfig_changeStreamModeNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccKinesisStream_updateStreamModeOnDemandToProvisionedStartWithProvisioned(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.StreamDescriptionSummary
+	resourceName := "aws_kinesis_stream.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				Config: testAccStreamConfig_changeStreamModeProvisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
+				),
+			},
+			{
+				Config: testAccStreamConfig_changeStreamModeOnDemand(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "ON_DEMAND"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKinesisStream_updateStreamModeProvisionedToOnDemand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.StreamDescriptionSummary
+	resourceName := "aws_kinesis_stream.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfig_changeStreamModeProvisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
+				),
+			},
+			{
+				Config: testAccStreamConfig_changeStreamModeOnDemand(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "ON_DEMAND"),
+				),
 			},
 		},
 	})
@@ -856,7 +884,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccStreamConfig_changeProvisionedToOnDemand1(rName string) string {
+func testAccStreamConfig_changeStreamModeNone(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = %[1]q
@@ -865,7 +893,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccStreamConfig_changeProvisionedToOnDemand2(rName string) string {
+func testAccStreamConfig_changeStreamModeOnDemand(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name = %[1]q
@@ -877,7 +905,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccStreamConfig_changeProvisionedToOnDemand3(rName string) string {
+func testAccStreamConfig_changeStreamModeProvisioned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = %[1]q

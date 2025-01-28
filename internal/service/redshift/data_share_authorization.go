@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Share Authorization")
+// @FrameworkResource("aws_redshift_data_share_authorization", name="Data Share Authorization")
 func newResourceDataShareAuthorization(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceDataShareAuthorization{}, nil
 }

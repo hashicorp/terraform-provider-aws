@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAuthorizeVPCEndpointAccess,
-			Name:    "Authorize VPC Endpoint Access",
+			Factory:  newResourceAuthorizeVPCEndpointAccess,
+			TypeName: "aws_opensearch_authorize_vpc_endpoint_access",
+			Name:     "Authorize VPC Endpoint Access",
 		},
 	}
 }

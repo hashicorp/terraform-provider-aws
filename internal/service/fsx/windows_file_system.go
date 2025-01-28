@@ -281,7 +281,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntBetween(8, 2048),
+				ValidateFunc: validation.IntInSlice([]int{8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4608, 6144, 9216, 12228}),
 			},
 			names.AttrVPCID: {
 				Type:     schema.TypeString,

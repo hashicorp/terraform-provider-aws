@@ -19,8 +19,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourcePolicyResource,
-			Name:    "Resource Policy",
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_kinesis_resource_policy",
+			Name:     "Resource Policy",
 		},
 	}
 }
@@ -30,6 +31,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceStream,
 			TypeName: "aws_kinesis_stream",
+			Name:     "Stream",
 		},
 		{
 			Factory:  dataSourceStreamConsumer,

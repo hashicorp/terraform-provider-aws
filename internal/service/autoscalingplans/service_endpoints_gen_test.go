@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeScalingPlans(ctx, &autoscalingplans.DescribeScalingPlansInput{},
+	input := autoscalingplans.DescribeScalingPlansInput{}
+	_, err := client.DescribeScalingPlans(ctx, &input,
 		func(opts *autoscalingplans.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

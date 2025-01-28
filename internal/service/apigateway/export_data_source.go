@@ -68,7 +68,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
-	input := &apigateway.GetExportInput{
+	input := apigateway.GetExportInput{
 		RestApiId:  aws.String(apiID),
 		StageName:  aws.String(stageName),
 		ExportType: aws.String(d.Get("export_type").(string)),
@@ -84,7 +84,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	id := apiID + ":" + stageName
 
-	export, err := conn.GetExport(ctx, input)
+	export, err := conn.GetExport(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Export (%s): %s", id, err)

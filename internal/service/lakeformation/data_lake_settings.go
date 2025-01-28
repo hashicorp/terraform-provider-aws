@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lakeformation_data_lake_settings")
+// @SDKResource("aws_lakeformation_data_lake_settings", name="Data Lake Settings")
 func ResourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataLakeSettingsCreate,

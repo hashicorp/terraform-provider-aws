@@ -21,12 +21,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newWorkspaceServiceAccountResource,
-			Name:    "Workspace Service Account",
+			Factory:  newWorkspaceServiceAccountResource,
+			TypeName: "aws_grafana_workspace_service_account",
+			Name:     "Workspace Service Account",
 		},
 		{
-			Factory: newWorkspaceServiceAccountTokenResource,
-			Name:    "Workspace Service Account Token",
+			Factory:  newWorkspaceServiceAccountTokenResource,
+			TypeName: "aws_grafana_workspace_service_account_token",
+			Name:     "Workspace Service Account Token",
 		},
 	}
 }

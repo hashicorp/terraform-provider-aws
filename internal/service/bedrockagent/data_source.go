@@ -50,7 +50,7 @@ const (
 	semanticBreakpointPercentileThresholdMax = 99
 )
 
-// @FrameworkResource(name="Data Source")
+// @FrameworkResource("aws_bedrockagent_data_source", name="Data Source")
 func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataSourceResource{}
 

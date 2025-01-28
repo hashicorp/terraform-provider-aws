@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Connector")
+// @FrameworkDataSource("aws_transfer_connector", name="Connector")
 func newDataSourceConnector(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceConnector{}, nil
 }

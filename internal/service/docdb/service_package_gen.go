@@ -27,10 +27,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceEngineVersion,
 			TypeName: "aws_docdb_engine_version",
+			Name:     "Engine Version",
 		},
 		{
 			Factory:  dataSourceOrderableDBInstance,
 			TypeName: "aws_docdb_orderable_db_instance",
+			Name:     "Orderable DB Instance",
 		},
 	}
 }
@@ -64,6 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClusterSnapshot,
 			TypeName: "aws_docdb_cluster_snapshot",
+			Name:     "Cluster Snapshot",
 		},
 		{
 			Factory:  resourceEventSubscription,
@@ -76,6 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceGlobalCluster,
 			TypeName: "aws_docdb_global_cluster",
+			Name:     "Global Cluster",
 		},
 		{
 			Factory:  resourceSubnetGroup,

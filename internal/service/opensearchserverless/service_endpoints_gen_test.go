@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListCollections(ctx, &opensearchserverless.ListCollectionsInput{},
+	input := opensearchserverless.ListCollectionsInput{}
+	_, err := client.ListCollections(ctx, &input,
 		func(opts *opensearchserverless.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

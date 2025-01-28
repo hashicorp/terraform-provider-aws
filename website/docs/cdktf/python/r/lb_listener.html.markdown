@@ -352,6 +352,8 @@ The following arguments are optional:
 * `tcp_idle_timeout_seconds` - (Optional) TCP idle timeout value in seconds. Can only be set if protocol is `TCP` on Network Load Balancer, or with a Gateway Load Balancer. Not supported for Application Load Balancers. Valid values are between `60` and `6000` inclusive. Default: `350`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+~> **Note::** When a `Name` key is specified in the map, the AWS Console maps the value to the `Name Tag` column value inside the `Listener Rules` table within a specific load balancer listener page. Otherwise, the value resolves to `Default`.
+
 ### default_action
 
 The following arguments are required:
@@ -467,9 +469,10 @@ The following arguments are optional:
 
 ### mutual_authentication
 
+* `advertise_trust_store_ca_names` - (Optional) Valid values are `off` and `on`.
+* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 * `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
 * `trust_store_arn` - (Required) ARN of the elbv2 Trust Store.
-* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 
 ## Attribute Reference
 
@@ -506,4 +509,4 @@ Using `terraform import`, import listeners using their ARN. For example:
 % terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-45efed382fbe57e9c235d5755c420a2f9cfab3433dd2d3d12d7d33192b4e071b -->
+<!-- cache-key: cdktf-0.20.8 input-648231a12b98e111847d414eb30bc4bcf304e881b1f8a444ea52aa8eaf12d46a -->

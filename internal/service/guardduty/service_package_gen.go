@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceFindingIds,
-			Name:    "Finding Ids",
+			Factory:  newDataSourceFindingIds,
+			TypeName: "aws_guardduty_finding_ids",
+			Name:     "Finding Ids",
 		},
 	}
 }
@@ -26,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceMalwareProtectionPlan,
-			Name:    "Malware Protection Plan",
+			Factory:  newResourceMalwareProtectionPlan,
+			TypeName: "aws_guardduty_malware_protection_plan",
+			Name:     "Malware Protection Plan",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -40,6 +42,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceDetector,
 			TypeName: "aws_guardduty_detector",
+			Name:     "Detector",
 		},
 	}
 }
@@ -83,10 +86,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMember,
 			TypeName: "aws_guardduty_member",
+			Name:     "Member",
 		},
 		{
 			Factory:  ResourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
+			Name:     "Organization Admin Account",
 		},
 		{
 			Factory:  ResourceOrganizationConfiguration,
@@ -101,6 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePublishingDestination,
 			TypeName: "aws_guardduty_publishing_destination",
+			Name:     "Publishing Destination",
 		},
 		{
 			Factory:  ResourceThreatIntelSet,

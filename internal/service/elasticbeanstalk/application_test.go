@@ -36,8 +36,9 @@ func TestAccElasticBeanstalkApplication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticbeanstalk", "application/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -138,7 +139,7 @@ func TestAccElasticBeanstalkApplication_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticbeanstalk", "application/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -154,7 +155,7 @@ func TestAccElasticBeanstalkApplication_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticbeanstalk", "application/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

@@ -221,6 +221,10 @@ func sweepClusterInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
+			if engine := aws.ToString(v.Engine); engine != engineDocDB {
+				continue
+			}
+
 			r := resourceClusterInstance()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DBInstanceIdentifier))

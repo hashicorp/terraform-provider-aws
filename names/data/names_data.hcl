@@ -604,8 +604,8 @@ service "mgn" {
     human_friendly      = "Application Migration (Mgn)"
   }
 
-  client {
-    go_v1_client_typename = "Mgn"
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -615,7 +615,6 @@ service "mgn" {
   provider_package_correct = "mgn"
   doc_prefix               = ["mgn_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "appstream" {
@@ -920,6 +919,34 @@ service "bcmdataexports" {
 
   provider_package_correct = "bcmdataexports"
   doc_prefix               = ["bcmdataexports_"]
+  brand                    = "AWS"
+}
+
+service "billing" {
+  sdk {
+    id = "Billing"
+  }
+
+  names {
+    provider_name_upper = "Billing"
+    human_friendly      = "Billing"
+  }
+
+  client {
+    skip_client_generate = true
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListBillingViews"
+    endpoint_region_override = "us-east-1"
+  }
+
+  resource_prefix {
+    correct = "aws_billing_"
+  }
+
+  provider_package_correct = "billing"
+  doc_prefix               = ["billing_"]
   brand                    = "AWS"
 }
 
@@ -3322,6 +3349,29 @@ service "elb" {
 
   provider_package_correct = "elb"
   doc_prefix               = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
+}
+
+service "invoicing" {
+  sdk {
+    id = "Invoicing"
+  }
+
+  names {
+    provider_name_upper = "Invoicing"
+    human_friendly      = "Invoicing"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListInvoiceUnits"
+  }
+
+  resource_prefix {
+    correct = "aws_invoicing_"
+  }
+
+  provider_package_correct = "invoicing"
+  doc_prefix               = ["invoicing_"]
+  brand                    = "AWS"
 }
 
 service "mediaconnect" {
@@ -7500,8 +7550,8 @@ service "s3tables" {
     correct = "aws_s3tables_"
   }
 
-  doc_prefix               = ["s3tables_"]
-  brand                    = "Amazon"
+  doc_prefix = ["s3tables_"]
+  brand      = "Amazon"
 }
 
 service "glacier" {
@@ -8671,7 +8721,7 @@ service "timestreaminfluxdb" {
 
   provider_package_correct = "timestreaminfluxdb"
   doc_prefix               = ["timestreaminfluxdb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "timestreamquery" {
@@ -8689,8 +8739,8 @@ service "timestreamquery" {
     human_friendly      = "Timestream Query"
   }
 
-  client {
-    go_v1_client_typename = "TimestreamQuery"
+  endpoint_info {
+    endpoint_api_call = "DescribeEndpoints"
   }
 
   resource_prefix {
@@ -8700,7 +8750,6 @@ service "timestreamquery" {
   provider_package_correct = "timestreamquery"
   doc_prefix               = ["timestreamquery_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "timestreamwrite" {
@@ -8728,7 +8777,7 @@ service "timestreamwrite" {
 
   provider_package_correct = "timestreamwrite"
   doc_prefix               = ["timestreamwrite_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "transcribe" {

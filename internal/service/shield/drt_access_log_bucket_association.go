@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="DRT Log Bucket Association")
+// @FrameworkResource("aws_shield_drt_access_log_bucket_association", name="DRT Log Bucket Association")
 func newDRTAccessLogBucketAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &drtAccessLogBucketAssociationResource{}
 

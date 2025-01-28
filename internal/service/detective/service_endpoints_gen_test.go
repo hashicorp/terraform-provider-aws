@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListGraphs(ctx, &detective.ListGraphsInput{},
+	input := detective.ListGraphsInput{}
+	_, err := client.ListGraphs(ctx, &input,
 		func(opts *detective.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

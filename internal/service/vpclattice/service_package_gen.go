@@ -19,7 +19,24 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceConfigurationResource,
+			TypeName: "aws_vpclattice_resource_configuration",
+			Name:     "Resource Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  newResourceGatewayResource,
+			TypeName: "aws_vpclattice_resource_gateway",
+			Name:     "Resource Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -42,12 +59,18 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceService,
 			TypeName: "aws_vpclattice_service",
-			Tags:     &types.ServicePackageResourceTags{},
+			Name:     "Service",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceServiceNetwork,
 			TypeName: "aws_vpclattice_service_network",
-			Tags:     &types.ServicePackageResourceTags{},
+			Name:     "Service Network",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
@@ -65,6 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAuthPolicy,
 			TypeName: "aws_vpclattice_auth_policy",
+			Name:     "Auth Policy",
 		},
 		{
 			Factory:  resourceListener,
