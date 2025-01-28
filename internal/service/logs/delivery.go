@@ -151,7 +151,7 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 			if response.Diagnostics.HasError() {
 				return
 			}
-			if s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
+			if s3DeliveryConfiguration == nil || s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
 				delivery.S3DeliveryConfiguration.EnableHiveCompatiblePath = nil
 			}
 		}
@@ -203,7 +203,7 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 			if response.Diagnostics.HasError() {
 				return
 			}
-			if s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
+			if s3DeliveryConfiguration == nil || s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
 				output.S3DeliveryConfiguration.EnableHiveCompatiblePath = nil
 			}
 		}
