@@ -373,7 +373,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			}
 
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, inner, interceptors)
+				return newWrappedDataSource(bootstrapContext, v.TypeName, inner, interceptors)
 			})
 		}
 	}
@@ -458,7 +458,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(bootstrapContext, inner, interceptors)
+				return newWrappedResource(bootstrapContext, v.TypeName, inner, interceptors)
 			})
 		}
 	}
@@ -518,7 +518,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 				}
 
 				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(bootstrapContext, inner, nil)
+					return newWrappedEphemeralResource(bootstrapContext, v.TypeName, inner, nil)
 				})
 			}
 		}
