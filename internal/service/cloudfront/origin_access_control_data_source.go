@@ -30,10 +30,6 @@ const (
 	DSNameOriginAccessControl = "Origin Access Control Data Source"
 )
 
-func (d *dataSourceOriginAccessControl) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_origin_access_control"
-}
-
 func (d *dataSourceOriginAccessControl) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
