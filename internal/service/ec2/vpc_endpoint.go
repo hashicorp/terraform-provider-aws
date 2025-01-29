@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -141,6 +142,13 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"resource_configuration_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrServiceName, "service_network_arn"},
+				ValidateFunc:  verify.ValidARN,
+			},
 			"route_table_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -154,9 +162,17 @@ func resourceVPCEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"resource_configuration_arn", "service_network_arn"},
+			},
+			"service_network_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrServiceName, "resource_configuration_arn"},
+				ValidateFunc:  verify.ValidARN,
 			},
 			"service_region": {
 				Type:     schema.TypeString,
@@ -231,7 +247,6 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &ec2.CreateVpcEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
-		ServiceName:       aws.String(serviceName),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
@@ -261,12 +276,24 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PolicyDocument = aws.String(policy)
 	}
 
+	if v, ok := d.GetOk("resource_configuration_arn"); ok {
+		input.ResourceConfigurationArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("route_table_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.RouteTableIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk(names.AttrServiceName); ok {
+		input.ServiceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("service_network_arn"); ok {
+		input.ServiceNetworkArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("subnet_configuration"); ok && v.(*schema.Set).Len() > 0 {
@@ -296,7 +323,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	vpce := output.VpcEndpoint
 	d.SetId(aws.ToString(vpce.VpcEndpointId))
 
-	if d.Get("auto_accept").(bool) && string(vpce.State) == vpcEndpointStatePendingAcceptance {
+	if d.Get("auto_accept").(bool) && strings.EqualFold(string(vpce.State), vpcEndpointStatePendingAcceptance) {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), aws.ToString(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -356,10 +383,10 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
+	d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
 	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	serviceName := aws.ToString(vpce.ServiceName)
-	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_network_arn", vpce.ServiceNetworkArn)
 	d.Set("service_region", vpce.ServiceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
@@ -371,15 +398,24 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrVPCID, vpce.VpcId)
 
-	if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
-		if tfresource.NotFound(err) {
-			d.Set("cidr_blocks", nil)
+	if vpce.ServiceName != nil {
+		serviceName := aws.ToString(vpce.ServiceName)
+
+		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
+			if tfresource.NotFound(err) {
+				d.Set("cidr_blocks", nil)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
+			}
 		} else {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
+			d.Set("cidr_blocks", pl.Cidrs)
+			d.Set("prefix_list_id", pl.PrefixListId)
 		}
+
+		d.Set(names.AttrServiceName, serviceName)
 	} else {
-		d.Set("cidr_blocks", pl.Cidrs)
-		d.Set("prefix_list_id", pl.PrefixListId)
+		d.Set("cidr_blocks", nil)
+		d.Set(names.AttrServiceName, nil)
 	}
 
 	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
@@ -415,7 +451,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get(names.AttrState).(string) == vpcEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && strings.EqualFold(d.Get(names.AttrState).(string), vpcEndpointStatePendingAcceptance) {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get(names.AttrServiceName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
