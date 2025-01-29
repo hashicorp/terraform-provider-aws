@@ -18,7 +18,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagent_agent", sweepAgents)
 	awsv2.Register("aws_bedrockagent_data_source", sweepDataSources)
-	awsv2.Register("aws_bedrockagent_knowledge_base", sweepKnowledgeBases, "aws_bedrockagent_data_source")
+	awsv2.Register("aws_bedrockagent_knowledge_base", sweepKnowledgeBases, "aws_bedrockagent_agent", "aws_bedrockagent_data_source")
 }
 
 func sweepAgents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -36,7 +36,7 @@ func sweepAgents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 		for _, v := range page.AgentSummaries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAgentResource, client,
-				framework.NewAttribute("agent_id", aws.ToString(v.AgentId)), framework.NewAttribute("skip_resource_in_use_check", true)))
+				framework.NewAttribute(names.AttrID, aws.ToString(v.AgentId)), framework.NewAttribute("skip_resource_in_use_check", true)))
 		}
 	}
 
