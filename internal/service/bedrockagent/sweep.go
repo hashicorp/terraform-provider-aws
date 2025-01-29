@@ -1,0 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package bedrockagent
+
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func RegisterSweepers() {
+	awsv2.Register("aws_bedrockagent_knowledge_base", sweepKnowledgeBases)
+}
+
+func sweepKnowledgeBases(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &bedrockagent.ListKnowledgeBasesInput{}
+	conn := client.BedrockAgentClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.KnowledgeBaseSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newKnowledgeBaseResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.KnowledgeBaseId))))
+		}
+	}
+
+	return sweepResources, nil
+}
