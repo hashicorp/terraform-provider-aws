@@ -142,7 +142,7 @@ resource "aws_sqs_queue_policy" "test" {
       Principal = {
         AWS = "*"
       }
-      Action = ["sqs:SendMessage"]
+      Action   = ["sqs:SendMessage"]
       Resource = aws_sqs_queue.test.arn
       Condition = {
         ArnEquals = {
@@ -189,7 +189,7 @@ resource "aws_iam_role_policy" "test" {
         "s3:PutObject",
       ]
       Resource = "*"
-      Effect = "Allow"
+      Effect   = "Allow"
     }]
   })
 }
