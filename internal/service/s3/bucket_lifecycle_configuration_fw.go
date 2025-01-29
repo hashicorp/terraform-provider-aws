@@ -134,7 +134,8 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"date": schema.StringAttribute{
-										Optional: true,
+										CustomType: timetypes.RFC3339Type{},
+										Optional:   true,
 										// Computed: true, // Because of Legacy value handling
 										// PlanModifiers: []planmodifier.String{
 										// 	stringplanmodifier.UseStateForUnknown(),
@@ -284,11 +285,13 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"date": schema.StringAttribute{
-										Optional: true,
+										CustomType: timetypes.RFC3339Type{},
+										Optional:   true,
 										// TODO Validate,
 									},
 									"days": schema.Int32Attribute{
 										Optional: true,
+										Computed: true,
 										// TODO Validate,
 									},
 									names.AttrStorageClass: schema.StringAttribute{
@@ -673,10 +676,32 @@ type noncurrentVersionTransitionModel struct {
 	StorageClass            fwtypes.StringEnum[awstypes.TransitionStorageClass] `tfsdk:"storage_class"`
 }
 
+var (
+	_ fwflex.Expander = transitionModel{}
+)
+
 type transitionModel struct {
 	Date         timetypes.RFC3339                                   `tfsdk:"date"`
 	Days         types.Int32                                         `tfsdk:"days"`
 	StorageClass fwtypes.StringEnum[awstypes.TransitionStorageClass] `tfsdk:"storage_class"`
+}
+
+func (m transitionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.Transition
+
+	r.Date = fwflex.TimeFromFramework(ctx, m.Date)
+
+	if m.Days.IsUnknown() || m.Days.IsNull() {
+		if m.Date.IsNull() {
+			r.Days = aws.Int32(0)
+		}
+	} else {
+		r.Days = fwflex.Int32FromFrameworkInt32(ctx, m.Days)
+	}
+
+	r.StorageClass = m.StorageClass.ValueEnum()
+
+	return &r, diags
 }
 
 type tagModel struct {

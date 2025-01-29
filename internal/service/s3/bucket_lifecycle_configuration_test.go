@@ -432,9 +432,6 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.transition.0.days",
-				},
 			},
 		},
 	})
@@ -1108,9 +1105,6 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.transition.0.days",
-				},
 			},
 		},
 	})
@@ -1166,9 +1160,6 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.transition.0.days",
-				},
 			},
 		},
 	})
@@ -1219,9 +1210,6 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.transition.0.days",
-				},
 			},
 		},
 	})
