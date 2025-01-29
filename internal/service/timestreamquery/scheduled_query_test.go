@@ -203,11 +203,11 @@ func testAccWriteRecords(ctx context.Context, name, database, table string) reso
 		multiMeasures := []awswritetypes.MeasureValue{{
 			Name:  aws.String("cpu_utilization"),
 			Value: aws.String("59.16598729806647"),
-			Type:  awswritetypes.MeasureValueType(awswritetypes.MeasureValueTypeDouble),
+			Type:  awswritetypes.MeasureValueTypeDouble,
 		}, {
 			Name:  aws.String("memory_utilization"),
 			Value: aws.String("57.18926269056821"),
-			Type:  awswritetypes.MeasureValueType(awswritetypes.MeasureValueTypeDouble),
+			Type:  awswritetypes.MeasureValueTypeDouble,
 		}}
 
 		currentTimeInMilliSeconds := time.Now().UnixNano() / int64(time.Millisecond)
@@ -215,7 +215,7 @@ func testAccWriteRecords(ctx context.Context, name, database, table string) reso
 		records = append(records, awswritetypes.Record{
 			Dimensions:       dimensions,
 			MeasureName:      aws.String("metrics"),
-			MeasureValueType: awswritetypes.MeasureValueType(awswritetypes.MeasureValueTypeMulti),
+			MeasureValueType: awswritetypes.MeasureValueTypeMulti,
 			MeasureValues:    multiMeasures,
 			Time:             aws.String(strconv.FormatInt(currentTimeInMilliSeconds-10*int64(50), 10)),
 			TimeUnit:         awswritetypes.TimeUnit(awswritetypes.TimeUnitMilliseconds),
@@ -333,7 +333,7 @@ resource "aws_sqs_queue_policy" "test" {
       Principal = {
         AWS = "*"
       }
-      Action = ["sqs:SendMessage"]
+      Action   = ["sqs:SendMessage"]
       Resource = aws_sqs_queue.test.arn
       Condition = {
         ArnEquals = {
@@ -380,7 +380,7 @@ resource "aws_iam_role_policy" "test" {
         "s3:PutObject",
       ]
       Resource = "*"
-      Effect = "Allow"
+      Effect   = "Allow"
     }]
   })
 }
