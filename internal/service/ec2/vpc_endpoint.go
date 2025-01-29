@@ -383,14 +383,10 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
-	if vpce.ResourceConfigurationArn != nil {
-		d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
-	}
+	d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
 	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	if vpce.ServiceNetworkArn != nil {
-		d.Set("service_network_arn", vpce.ServiceNetworkArn)
-	}
+	d.Set("service_network_arn", vpce.ServiceNetworkArn)
 	d.Set("service_region", vpce.ServiceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
