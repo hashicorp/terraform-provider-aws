@@ -21,11 +21,11 @@ func RegisterSweepers() {
 }
 
 func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := &bedrockagent.ListDataSourcesInput{}
+	input := &bedrockagent.ListKnowledgeBasesInput{}
 	conn := client.BedrockAgentClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := bedrockagent.NewListDataSourcesPaginator(conn, input)
+	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -33,9 +33,24 @@ func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 			return nil, err
 		}
 
-		for _, v := range page.DataSourceSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newDataSourceResource, client,
-				framework.NewAttribute("data_source_id", aws.ToString(v.DataSourceId)), framework.NewAttribute("knowledge_base_id", aws.ToString(v.KnowledgeBaseId))))
+		for _, v := range page.KnowledgeBaseSummaries {
+			input := &bedrockagent.ListDataSourcesInput{
+				KnowledgeBaseId: v.KnowledgeBaseId,
+			}
+
+			pages := bedrockagent.NewListDataSourcesPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.DataSourceSummaries {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newDataSourceResource, client,
+						framework.NewAttribute("data_source_id", aws.ToString(v.DataSourceId)), framework.NewAttribute("knowledge_base_id", aws.ToString(v.KnowledgeBaseId))))
+				}
+			}
 		}
 	}
 
