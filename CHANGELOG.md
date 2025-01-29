@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_pinpoint_email_channel: Add `orchestration_sending_role_arn` argument ([#41043](https://github.com/hashicorp/terraform-provider-aws/issues/41043))
 * resource/aws_pipes_pipe: Add `kms_key_identifier` argument ([#41082](https://github.com/hashicorp/terraform-provider-aws/issues/41082))
 * resource/aws_rds_cluster: Support `instance` as a valid value for `enabled_cloudwatch_logs_exports` ([#41111](https://github.com/hashicorp/terraform-provider-aws/issues/41111))
+* resource/aws_vpc_endpoint: Add `resource_configuration_arn` and `service_network_arn` arguments to support creating VPC Endpoints of type `Resource` and `ServiceNetwork` ([#41116](https://github.com/hashicorp/terraform-provider-aws/issues/41116))
 * resource/aws_vpc_endpoint_security_group_association: Add import support ([#41042](https://github.com/hashicorp/terraform-provider-aws/issues/41042))
 
 BUG FIXES:
