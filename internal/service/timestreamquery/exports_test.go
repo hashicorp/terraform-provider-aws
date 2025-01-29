@@ -5,7 +5,7 @@ package timestreamquery
 
 // Exports for use in tests only.
 var (
-	ResourceScheduledQuery = resourceScheduledQuery
+	ResourceScheduledQuery = newResourceScheduledQuery
 
 	FindScheduledQueryByARN = findScheduledQueryByARN
 )
