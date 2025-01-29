@@ -115,6 +115,12 @@ func resourceTaskDefinition() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"enable_fault_injection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"ephemeral_storage": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -564,6 +570,10 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Cpu = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("enable_fault_injection"); ok {
+		input.EnableFaultInjection = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
 		input.EphemeralStorage = expandEphemeralStorage(v.([]interface{}))
 	}
@@ -680,6 +690,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, arn)
 	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
 	d.Set("cpu", taskDefinition.Cpu)
+	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
 	}

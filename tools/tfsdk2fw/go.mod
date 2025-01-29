@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-go 1.23.3
+go 1.23.5
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.0
@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.49.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.33.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.29.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.6 // indirect
@@ -184,7 +184,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.19.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.65.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.66.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.66.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.20.7 // indirect
@@ -236,7 +236,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rum v1.21.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.74.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.52.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.53.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.173.2 // indirect
@@ -268,7 +268,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/swf v1.27.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.6 // indirect
