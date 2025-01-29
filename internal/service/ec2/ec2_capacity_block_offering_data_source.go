@@ -28,10 +28,6 @@ type capacityBlockOfferingDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*capacityBlockOfferingDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ec2_capacity_block_offering"
-}
-
 func (d *capacityBlockOfferingDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

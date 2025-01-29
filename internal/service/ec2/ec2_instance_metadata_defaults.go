@@ -41,10 +41,6 @@ type instanceMetadataDefaultsResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*instanceMetadataDefaultsResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_instance_metadata_defaults"
-}
-
 func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	httpEndpointType := fwtypes.StringEnumType[awstypes.DefaultInstanceMetadataEndpointState]()
 	httpTokensType := fwtypes.StringEnumType[awstypes.MetadataDefaultHttpTokensState]()
