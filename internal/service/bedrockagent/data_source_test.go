@@ -514,19 +514,15 @@ func testAccDataSource_update(t *testing.T) {
 }
 
 func testAccDataSource_webConfiguration(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
 	var dataSource types.DataSource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
-	foundationModel := "amazon.titan-embed-text-v1"
+	foundationModel := "amazon.titan-embed-text-v2:0"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -534,26 +530,21 @@ func testAccDataSource_webConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_webConfiguration(rName, foundationModel),
+				Config: testAccDataSourceConfig_webConfiguration(rName, collectionName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.max_pages", "25000"),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.rate_limit", "300"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.0.max_pages", "25000"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.0.rate_limit", "300"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.exclusion_filters.#", "5"),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.user_agent", "HOST_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.inclusion_filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.user_agent", "bedrockbot_UUID test"),
 				),
 			},
 		},
@@ -842,8 +833,8 @@ resource "aws_bedrockagent_data_source" "test" {
 `, rName))
 }
 
-func testAccDataSourceConfig_webConfiguration(rName, embeddingModel string) string {
-	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
+func testAccDataSourceConfig_webConfiguration(rName, collectionName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_OpenSearch_basic(rName, collectionName, embeddingModel), fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
   name              = %[1]q
   knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
