@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -143,8 +143,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									},
 									"days": schema.Int32Attribute{
 										Optional: true,
-										Computed: true,
-										Default:  int32default.StaticInt32(0),
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 									},
 									"expired_object_delete_marker": schema.BoolAttribute{
 										Optional: true,
@@ -208,6 +210,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												},
 												names.AttrPrefix: schema.StringAttribute{
 													Optional: true,
+													Computed: true, // Because of Legacy value handling
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
 												},
 												names.AttrTags: schema.MapAttribute{
 													ElementType: types.StringType,
@@ -644,7 +650,7 @@ type abortIncompleteMultipartUploadModel struct {
 
 type lifecycleExpirationModel struct {
 	Date                      timetypes.RFC3339 `tfsdk:"date" autoflex:",legacy"`
-	Days                      types.Int32       `tfsdk:"days"`
+	Days                      types.Int32       `tfsdk:"days" autoflex:",legacy"`
 	ExpiredObjectDeleteMarker types.Bool        `tfsdk:"expired_object_delete_marker" autoflex:",legacy"`
 }
 
@@ -681,6 +687,6 @@ type tagModel struct {
 type lifecycleRuleAndOperatorModel struct {
 	ObjectSizeGreaterThan types.Int64  `tfsdk:"object_size_greater_than" autoflex:",legacy"`
 	ObjectSizeLessThan    types.Int64  `tfsdk:"object_size_less_than" autoflex:",legacy"`
-	Prefix                types.String `tfsdk:"prefix"`
+	Prefix                types.String `tfsdk:"prefix" autoflex:",legacy"`
 	Tags                  tftags.Map   `tfsdk:"tags"`
 }
