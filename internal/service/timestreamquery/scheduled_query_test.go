@@ -32,10 +32,6 @@ import (
 func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var scheduledquery awstypes.ScheduledQueryDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreamquery_scheduled_query.test"
@@ -81,7 +77,7 @@ func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_configuration.schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.%", "7"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.database_name", fmt.Sprintf("%s-results", rName)),
@@ -128,9 +124,6 @@ func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 
 func TestAccTimestreamQueryScheduledQuery_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var scheduledquery awstypes.ScheduledQueryDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -139,7 +132,6 @@ func TestAccTimestreamQueryScheduledQuery_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.TimestreamQueryServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamQueryServiceID),
@@ -147,15 +139,20 @@ func TestAccTimestreamQueryScheduledQuery_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduledQueryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledQueryConfig_basic(rName),
+				// Must be done in 2 steps because the scheduled query requires data to be ingested first
+				// which creates the columns. Otherwise, the SQL will always be invalid because no columns exist.
+				Config: testAccScheduledQueryConfig_base(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccWriteRecords(ctx, "aws_timestreamwrite_table.test", rName, rName),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccScheduledQueryConfig_base(rName),
+					testAccScheduledQueryConfig_basic(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledQueryExists(ctx, resourceName, &scheduledquery),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceScheduledQuery = newResourceScheduledQuery
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreamquery.ResourceScheduledQuery, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -462,9 +459,9 @@ EOF
 
   target_configuration {
     timestream_configuration {
-      database_name       = aws_timestreamwrite_database.results.database_name
-      table_name          = aws_timestreamwrite_table.results.table_name
-      time_column         = "binned_timestamp"
+      database_name = aws_timestreamwrite_database.results.database_name
+      table_name    = aws_timestreamwrite_table.results.table_name
+      time_column   = "binned_timestamp"
 
       dimension_mapping {
         dimension_value_type = "VARCHAR"
@@ -505,6 +502,11 @@ EOF
         }
       }
     }
+  }
+
+  tags = {
+    Name        = %[1]q
+    Environment = "test"
   }
 }
 `, rName)
