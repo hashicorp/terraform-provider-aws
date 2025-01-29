@@ -23,10 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tftimestreamquery "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamquery"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tftimestreamquery "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamquery"
 )
 
 func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
