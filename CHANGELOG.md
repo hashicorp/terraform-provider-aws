@@ -32,6 +32,8 @@ BUG FIXES:
 
 * data-source/aws_opensearchserverless_collection: Prevent errant AutoFlex errors when setting `created_date` and `last_modified_date` attributes ([#41105](https://github.com/hashicorp/terraform-provider-aws/issues/41105))
 * resource/aws_bedrockagent_knowledge_base: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) behavior from `role_arn` argument ([#41072](https://github.com/hashicorp/terraform-provider-aws/issues/41072))
+* resource/aws_cloudwatch_log_delivery: Fix `Provider produced inconsistent result after apply` errors for `s3_delivery_configuration.enable_hive_compatible_path` ([#41122](https://github.com/hashicorp/terraform-provider-aws/issues/41122))
+* resource/aws_cloudwatch_log_delivery: Mark `field_delimiter` as Computed ([#41122](https://github.com/hashicorp/terraform-provider-aws/issues/41122))
 * resource/aws_dms_replication_task: Fix `panic: interface conversion: interface {} is float64, not string` ([#41096](https://github.com/hashicorp/terraform-provider-aws/issues/41096))
 * resource/aws_elasticache_serverless_cache: Fix `InvalidParameterCombination` error during update ([#40969](https://github.com/hashicorp/terraform-provider-aws/issues/40969))
 
