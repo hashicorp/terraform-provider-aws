@@ -13,6 +13,8 @@ ENHANCEMENTS:
 * data-source/aws_ec2_transit_gateway_vpc_attachment: Add `arn` attribute ([#41084](https://github.com/hashicorp/terraform-provider-aws/issues/41084))
 * data-source/aws_ecs_task_definition: Add missing attributes ([#41081](https://github.com/hashicorp/terraform-provider-aws/issues/41081))
 * resource/aws_autoscaling_policy: Add `target_tracking_configuration.customized_metric_specification.metrics.metric_stat.period` argument to support [high-resolution metrics](https://docs.aws.amazon.com/autoscaling/ec2/userguide/policy-creating-high-resolution-metrics.html) ([#41066](https://github.com/hashicorp/terraform-provider-aws/issues/41066))
+* resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.vector_knowledge_base_configuration.embedding_model_configuration` and `knowledge_base_configuration.vector_knowledge_base_configuration.supplemental_data_storage_configuration` arguments ([#40737](https://github.com/hashicorp/terraform-provider-aws/issues/40737))
+* resource/aws_bedrockagent_knowledge_base: Improve retry handling for IAM propagation and OpenSearch data access propagation errors ([#40737](https://github.com/hashicorp/terraform-provider-aws/issues/40737))
 * resource/aws_cloudtrail_event_data_store: Add `suspend` argument ([#40607](https://github.com/hashicorp/terraform-provider-aws/issues/40607))
 * resource/aws_ec2_transit_gateway_peering_attachment: Add `arn` attribute ([#41087](https://github.com/hashicorp/terraform-provider-aws/issues/41087))
 * resource/aws_ec2_transit_gateway_vpc_attachment: Add `arn` attribute ([#41084](https://github.com/hashicorp/terraform-provider-aws/issues/41084))
