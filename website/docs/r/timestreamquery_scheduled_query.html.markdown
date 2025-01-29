@@ -435,7 +435,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `run_status` - Status of a scheduled query run. Valid values: `AUTO_TRIGGER_SUCCESS`, `AUTO_TRIGGER_FAILURE`, `MANUAL_TRIGGER_SUCCESS`, `MANUAL_TRIGGER_FAILURE`.
     * `trigger_time` - Actual time when the query was run.
 * `recently_failed_runs` - Runtime summary for the last five failed scheduled query runs.
-    * `error_report_location` -	S3 location for error report.
+    * `error_report_location` - S3 location for error report.
         * `s3_report_location` - S3 location where error reports are written.
             * `bucket_name` - S3 bucket name.
             * `object_key` - S3 key.
