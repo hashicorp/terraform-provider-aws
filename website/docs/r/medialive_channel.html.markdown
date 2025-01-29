@@ -143,8 +143,8 @@ The following arguments are optional:
 
 ### Input Settings
 
-* `audio_selectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
-* `caption_selectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `audio_selector` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `caption_selector` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
 * `deblock_filter` - (Optional) Enable or disable the deblock filter when filtering.
 * `denoise_filter` - (Optional) Enable or disable the denoise filter when filtering.
 * `filter_strength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
@@ -508,7 +508,10 @@ The following arguments are optional:
 * `level` - (Optional) H265 level.
 * `look_ahead_rate_control` - (Optional) Amount of lookahead.
 * `max_bitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `min_interval` - (Optional) Min interval.
+* `min_i_interval` - (Optional) Min interval.
+* `min_qp` - (Optional) Set the minimum QP.
+* `mv_over_picture_boundaries` - (Optional) Enables or disables motion vector over picture boundaries.
+* `mv_temporal_predictor`- (Optional) Enables or disables the motion vector temporal predictor.
 * `par_denominator` - (Optional) Pixel Aspect Ratio denominator.
 * `par_numerator` - (Optional) Pixel Aspect Ratio numerator.
 * `profile` - (Optional) H265 profile.
@@ -518,8 +521,12 @@ The following arguments are optional:
 * `scene_change_detect` - (Optional) Scene change detection.
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
+* `tile_height` - (Optional) Sets the height of tiles.
+* `tile_padding` - (Optional) Enables or disables padding of tiles.
+* `tile_width` - (Optional) Sets the width of tiles.
 * `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
 * `timecode_insertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `treeblock_size` - (Optional) Sets the size of the treeblock.
 
 ### H265 Color Space Settings
 

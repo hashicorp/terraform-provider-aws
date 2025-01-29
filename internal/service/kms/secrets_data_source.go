@@ -117,7 +117,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		plaintext[name] = string(output.Plaintext)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("plaintext", plaintext)
 
 	return diags

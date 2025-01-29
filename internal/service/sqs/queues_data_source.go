@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_sqs_queues")
+// @SDKDataSource("aws_sqs_queues", name="Queues")
 func dataSourceQueues() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueuesRead,
@@ -55,7 +55,7 @@ func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta inte
 		queueURLs = append(queueURLs, page.QueueUrls...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("queue_urls", queueURLs)
 
 	return diags

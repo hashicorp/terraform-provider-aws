@@ -17,7 +17,9 @@ import (
 )
 
 // @SDKDataSource("aws_appintegrations_event_integration", name="Event Integration")
-func DataSourceEventIntegration() *schema.Resource {
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEventIntegrationRead,
 
@@ -59,7 +61,6 @@ func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	output, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
@@ -79,9 +80,7 @@ func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("eventbridge_bus", output.EventBridgeBus)
 	d.Set(names.AttrName, output.Name)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

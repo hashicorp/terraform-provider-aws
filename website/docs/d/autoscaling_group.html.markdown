@@ -80,6 +80,7 @@ interpolation.
                 * `instance_generations` - List of instance generation names.
                 * `local_storage` - Indicates whether instance types with instance store volumes are included, excluded, or required.
                 * `local_storage_types` - List of local storage type names.
+                * `max_spot_price_as_percentage_of_optimal_on_demand_price` - Price protection threshold for Spot Instances.
                 * `memory_gib_per_vcpu` - List of objects describing the minimum and maximum amount of memory (GiB) per vCPU.
                     * `min` - Minimum.
                     * `max` - Maximum.

@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_vpc_endpoint_connection_notification", name="VPC Endpoint Connection Notification")
-func ResourceVPCEndpointConnectionNotification() *schema.Resource {
+func resourceVPCEndpointConnectionNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointConnectionNotificationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointConnectionNotificationRead,
@@ -102,7 +102,7 @@ func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schem
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	cn, err := findVPCEndpointConnectionNotificationByIDV2(ctx, conn, d.Id())
+	cn, err := findVPCEndpointConnectionNotificationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Endpoint Connection Notification %s not found, removing from state", d.Id())

@@ -12,7 +12,9 @@ description: |-
 
 Provides a security group resource.
 
-~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a Security Group resource with `ingress` and `egress` rules defined in-line and a [Security Group Rule resource](security_group_rule.html) which manages one or more `ingress` or `egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID. The [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources have been added to address these limitations and should be used for all new security group rules. You should not use the `aws_vpc_security_group_egress_rule` and `aws_vpc_security_group_ingress_rule` resources in conjunction with an `aws_security_group` resource with in-line rules or with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
+~> **NOTE:** Avoid using the `ingress` and `egress` arguments of the `aws_security_group` resource to configure in-line rules, as they struggle with managing multiple CIDR blocks, and, due to the historical lack of unique IDs, tags and descriptions. To avoid these problems, use the current best practice of the [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources with one CIDR block per rule.
+
+!> **WARNING:** You should not use the `aws_security_group` resource with _in-line rules_ (using the `ingress` and `egress` arguments of `aws_security_group`) in conjunction with the [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources or the [`aws_security_group_rule`](security_group_rule.html) resource. Doing so may cause rule conflicts, perpetual differences, and result in rules being overwritten.
 
 ~> **NOTE:** Referencing Security Groups across VPC peering has certain restrictions. More information is available in the [VPC Peering User Guide](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
 
@@ -431,4 +433,4 @@ Using `terraform import`, import Security Groups using the security group `id`. 
 % terraform import aws_security_group.elb_sg sg-903004f8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-93222372e6881ccaba4ffb1efdf5422fdc272507a55ffdf74984bc8bf0bd0d39 -->
+<!-- cache-key: cdktf-0.20.8 input-f27b2ddd1b96fb8f3101f366dcdd7ee739c133499a9b5dbadc26b5d39c054f26 -->

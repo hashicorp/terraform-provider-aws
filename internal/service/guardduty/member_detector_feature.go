@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Member Detector Feature")
+// @FrameworkResource("aws_guardduty_member_detector_feature", name="Member Detector Feature")
 func newResourceMemberDetectorFeature(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceMemberDetectorFeature{}
 	return r, nil

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Config")
+// @FrameworkDataSource("aws_opensearchserverless_security_config", name="Security Config")
 func newDataSourceSecurityConfig(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSecurityConfig{}, nil
 }

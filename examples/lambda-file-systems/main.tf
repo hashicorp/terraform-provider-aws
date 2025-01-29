@@ -138,7 +138,7 @@ resource "aws_lambda_function" "example_lambda" {
 
   role    = aws_iam_role.iam_role_for_lambda.arn
   handler = "hello_lambda.lambda_handler"
-  runtime = "python3.7"
+  runtime = "python3.12"
 
   timeout = 60
 

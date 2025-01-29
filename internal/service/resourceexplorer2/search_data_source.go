@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -23,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Search")
+// @FrameworkDataSource("aws_resourceexplorer2_search", name="Search")
 func newDataSourceSearch(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSearch{}, nil
 }
@@ -84,10 +83,10 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	input := &resourceexplorer2.SearchInput{
-		QueryString: aws.String(data.QueryString.ValueString()),
+		QueryString: data.QueryString.ValueStringPointer(),
 	}
 	if !data.ViewArn.IsNull() {
-		input.ViewArn = aws.String(data.ViewArn.ValueString())
+		input.ViewArn = data.ViewArn.ValueStringPointer()
 	}
 
 	paginator := resourceexplorer2.NewSearchPaginator(conn, input)

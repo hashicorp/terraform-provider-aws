@@ -6,10 +6,22 @@ package connect_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.ConnectServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"flagged for an excessive number of creation and deletion attempts",
+	)
+}
+
+// Serialized acceptance tests due to Connect account limits (max 2 parallel tests).
 func TestAccConnect_serial(t *testing.T) {
 	t.Parallel()
 
@@ -46,6 +58,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"directory":        testAccInstance_directory,
 			"saml":             testAccInstance_saml,
 			"dataSource_basic": testAccInstanceDataSource_basic,
+			"tags":             testAccInstance_tags,
 		},
 		"InstanceStorageConfig": {
 			acctest.CtBasic:                             testAccInstanceStorageConfig_basic,

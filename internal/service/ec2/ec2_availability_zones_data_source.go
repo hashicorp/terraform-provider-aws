@@ -4,23 +4,25 @@
 package ec2
 
 import (
+	"cmp"
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_availability_zones")
-func DataSourceAvailabilityZones() *schema.Resource {
+// @SDKDataSource("aws_availability_zones", name="Availability Zones")
+func dataSourceAvailabilityZones() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAvailabilityZonesRead,
 
@@ -55,9 +57,9 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrState: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ec2.AvailabilityZoneState_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneState](),
 			},
 			"zone_ids": {
 				Type:     schema.TypeList,
@@ -70,7 +72,7 @@ func DataSourceAvailabilityZones() *schema.Resource {
 
 func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Reading Availability Zones.")
 
@@ -81,10 +83,10 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk(names.AttrState); ok {
-		request.Filters = []*ec2.Filter{
+		request.Filters = []awstypes.Filter{
 			{
 				Name:   aws.String(names.AttrState),
-				Values: []*string{aws.String(v.(string))},
+				Values: []string{v.(string)},
 			},
 		}
 	}
@@ -100,14 +102,14 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		request.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading Availability Zones: %s", request)
-	resp, err := conn.DescribeAvailabilityZonesWithContext(ctx, request)
+	log.Printf("[DEBUG] Reading Availability Zones: %s", d.Id())
+	resp, err := conn.DescribeAvailabilityZones(ctx, request)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "fetching Availability Zones: %s", err)
 	}
 
-	sort.Slice(resp.AvailabilityZones, func(i, j int) bool {
-		return aws.StringValue(resp.AvailabilityZones[i].ZoneName) < aws.StringValue(resp.AvailabilityZones[j].ZoneName)
+	slices.SortFunc(resp.AvailabilityZones, func(a, b awstypes.AvailabilityZone) int {
+		return cmp.Compare(aws.ToString(a.ZoneName), aws.ToString(b.ZoneName))
 	})
 
 	excludeNames := d.Get("exclude_names").(*schema.Set)
@@ -117,9 +119,9 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	nms := []string{}
 	zoneIds := []string{}
 	for _, v := range resp.AvailabilityZones {
-		groupName := aws.StringValue(v.GroupName)
-		name := aws.StringValue(v.ZoneName)
-		zoneID := aws.StringValue(v.ZoneId)
+		groupName := aws.ToString(v.GroupName)
+		name := aws.ToString(v.ZoneName)
+		zoneID := aws.ToString(v.ZoneId)
 
 		if excludeNames.Contains(name) {
 			continue
@@ -137,7 +139,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		zoneIds = append(zoneIds, zoneID)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)

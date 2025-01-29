@@ -19,20 +19,20 @@ Before new resources are submitted, please raise a separate pull request contain
 
 To add an AWS SDK for Go service client:
 
-1. Check the file `names/data/names_data.csv` for the service.
+1. Check the file `names/data/names_data.hcl` for the service.
 
-1. If the service is there and there is no value in the `NotImplmented` column, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
+1. If the service is there and the `not_implemented` attribute does not exist, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
 
-1. If the service is there and there is a value in the `NotImplemented` column, remove it and submit the client pull request as described below.
+1. If the service is there and the `not_implemented` attribute is true, remove it and submit the client pull request as described below.
 
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
-1. In `names/data/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
+1. In `names/data/names_data.hcl`, add a new hcl block with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
 
     !!! tip
-        Be very careful when adding or changing data in `names_data.csv`!
+        Be very careful when adding or changing data in `names_data.hcl`!
         The Provider and generators depend on the file being correct.
-        We strongly recommend using an editor with CSV support.
+        We strongly recommend using an editor with HCL support.
 
 Once the names data is ready, create a new service directory with the appropriate service name.
 
@@ -68,69 +68,20 @@ Once the service client has been added, implement the first [resource](./add-a-n
 
 ## Adding a Custom Service Client
 
-If an AWS service must be created in a non-standard way, for example, the service API's endpoint must be accessed via a single AWS Region, then:
+If the service API's endpoint must be accessed via a single AWS Region, then:
 
-1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
+1. Add a `endpoint_region_overrides` map attribute to the `endpoint_info` for the service in [`names/data/names_data.hcl`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
+
+```terraform
+  endpoint_info {
+    endpoint_api_call = ...
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+```
 
 1. Run `make gen`
-
-1. Add a file `internal/<service>/service_package.go` that contains an API client factory function, for example:
-
-=== "AWS Go SDK V2 (Preferred)"
-
-    ```go
-    package costoptimizationhub
-
-    import (
-        "context"
-
-        "github.com/aws/aws-sdk-go-v2/aws"
-        "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
-        "github.com/hashicorp/terraform-provider-aws/names"
-    )
-
-    // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costoptimizationhub.Client, error) {
-        cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-        return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
-            if endpoint := config["endpoint"].(string); endpoint != "" {
-                o.BaseEndpoint = aws.String(endpoint)
-            } else if config["partition"].(string) == names.StandardPartitionID {
-                // Cost Optimization Hub endpoint is available only in us-east-1 Region.
-                o.Region = names.USEast1RegionID
-            }
-        }), nil
-    }
-    ```
-
-=== "AWS Go SDK V1"
-
-    ```go
-    package globalaccelerator
-    
-    import (
-        "context"
-    
-        aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-        endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-        session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-        globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
-    )
-    
-    // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-    func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
-        sess := p.config["session"].(*session_sdkv1.Session)
-        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
-    
-        // Force "global" services to correct Regions.
-        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
-        }
-    
-        return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
-    }
-    ```
 
 ## Customizing a new Service Client
 
@@ -138,32 +89,38 @@ If an AWS service must be customized after creation, for example, retry handling
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client customization function, for example:
 
-=== "AWS Go SDK V1"
+```go
+package shield
 
-    ```go
-    package chime
-    
-    import (
-    	"context"
-    
-    	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-    	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-    	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-    	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-    )
-    
-    // CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-    func (p *servicePackage) CustomizeConn(ctx context.Context, conn *chime_sdkv1.Chime) (*chime_sdkv1.Chime, error) {
-    	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-    		// When calling CreateVoiceConnector across multiple resources,
-    		// the API can randomly return a BadRequestException without an explanation
-    		if r.Operation.Name == "CreateVoiceConnector" {
-    			if tfawserr.ErrMessageContains(r.Error, chime_sdkv1.ErrCodeBadRequestException, "Service received a bad request") {
-    				r.Retryable = aws_sdkv1.Bool(true)
-    			}
-    		}
-    	})
-    
-    	return conn, nil
-    }
-    ```
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+
+	return shield.NewFromConfig(cfg,
+		shield.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *shield.Options) {
+			// Force "global" services to correct Regions.
+			if config["partition"].(string) == endpoints.AwsPartitionID {
+				if cfg.Region != names.USEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USEast1RegionID,
+					})
+					o.Region = names.USEast1RegionID
+				}
+			}
+		},
+	), nil
+}
+```

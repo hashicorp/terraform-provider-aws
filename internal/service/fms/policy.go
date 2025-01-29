@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_fms_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(importIgnore="delete_all_policy_resources;policy_update_token")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -133,6 +135,14 @@ func resourcePolicy() *schema.Resource {
 				Computed:      true,
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
 				ConflictsWith: []string{"resource_type_list"},
+			},
+			"resource_set_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"resource_type_list": {
 				Type:     schema.TypeSet,
@@ -261,27 +271,28 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("delete_unused_fm_managed_resources", policy.DeleteUnusedFMManagedResources)
 	d.Set(names.AttrDescription, policy.PolicyDescription)
 	if err := d.Set("exclude_map", flattenPolicyMap(policy.ExcludeMap)); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting exclude_map: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting exclude_map: %s", err)
 	}
 	d.Set("exclude_resource_tags", policy.ExcludeResourceTags)
 	if err := d.Set("include_map", flattenPolicyMap(policy.IncludeMap)); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting include_map: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting include_map: %s", err)
 	}
 	d.Set(names.AttrName, policy.PolicyName)
 	d.Set("policy_update_token", policy.PolicyUpdateToken)
 	d.Set("remediation_enabled", policy.RemediationEnabled)
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(policy.ResourceTags)); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
 	d.Set(names.AttrResourceType, policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
+	d.Set("resource_set_ids", policy.ResourceSetIds)
 	securityServicePolicy := []map[string]interface{}{{
 		names.AttrType:         string(policy.SecurityServicePolicyData.Type),
 		"managed_service_data": aws.ToString(policy.SecurityServicePolicyData.ManagedServiceData),
 		"policy_option":        flattenPolicyOption(policy.SecurityServicePolicyData.PolicyOption),
 	}}
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting security_service_policy_data: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting security_service_policy_data: %s", err)
 	}
 
 	return diags
@@ -376,6 +387,7 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 		RemediationEnabled:             d.Get("remediation_enabled").(bool),
 		ResourceType:                   resourceType,
 		ResourceTypeList:               flex.ExpandStringValueSet(d.Get("resource_type_list").(*schema.Set)),
+		ResourceSetIds:                 flex.ExpandStringValueSet(d.Get("resource_set_ids").(*schema.Set)),
 	}
 
 	if d.Id() != "" {

@@ -58,7 +58,7 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway (%s) Attachment (%s): %s", vpnGatewayID, vpcID, err)
 	}
 
-	d.SetId(VPNGatewayVPCAttachmentCreateID(vpnGatewayID, vpcID))
+	d.SetId(vpnGatewayVPCAttachmentCreateID(vpnGatewayID, vpcID))
 
 	_, err = waitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID)
 

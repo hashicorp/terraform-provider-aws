@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -290,9 +289,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
-
-			for _, chunk := range chunks {
+			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToAdd: chunk,
 					Name:            aws.String(d.Id()),
@@ -331,24 +328,18 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "document/" + aws.ToString(doc.Name),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	documentType, name := doc.DocumentType, aws.ToString(doc.Name)
+	d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
 	d.Set(names.AttrCreatedDate, aws.ToTime(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set(names.AttrDescription, doc.Description)
 	d.Set("document_format", doc.DocumentFormat)
-	d.Set("document_type", doc.DocumentType)
+	d.Set("document_type", documentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
-	d.Set(names.AttrName, doc.Name)
+	d.Set(names.AttrName, name)
 	d.Set(names.AttrOwner, doc.Owner)
 	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
@@ -426,7 +417,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
+		for chunk := range slices.Chunk(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToAdd: chunk,
 				Name:            aws.String(d.Id()),
@@ -440,7 +431,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
+		for chunk := range slices.Chunk(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToRemove: chunk,
 				Name:               aws.String(d.Id()),
@@ -517,9 +508,7 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
-
-			for _, chunk := range chunks {
+			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToRemove: chunk,
 					Name:               aws.String(d.Id()),
@@ -724,4 +713,16 @@ func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []interf
 	}
 
 	return tfList
+}
+
+func documentARN(ctx context.Context, c *conns.AWSClient, documentType awstypes.DocumentType, name string) string {
+	var resource string
+	switch documentType {
+	case awstypes.DocumentTypeAutomation:
+		resource = "automation-definition/" + name
+	default:
+		resource = "document/" + name
+	}
+
+	return c.RegionalARN(ctx, "ssm", resource)
 }

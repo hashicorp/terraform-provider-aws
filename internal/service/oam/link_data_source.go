@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_oam_link")
+// @SDKDataSource("aws_oam_link", name="Link")
 func DataSourceLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinkRead,
@@ -26,14 +26,6 @@ func DataSourceLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"link_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"link_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"label": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -41,6 +33,46 @@ func DataSourceLink() *schema.Resource {
 			"label_template": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"link_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"log_group_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFilter: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"metric_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFilter: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"link_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"link_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"resource_types": {
 				Type:     schema.TypeSet,
@@ -76,9 +108,10 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.ToString(out.Arn))
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("link_id", out.Id)
 	d.Set("label", out.Label)
 	d.Set("label_template", out.LabelTemplate)
+	d.Set("link_configuration", flattenLinkConfiguration(out.LinkConfiguration))
+	d.Set("link_id", out.Id)
 	d.Set("resource_types", flex.FlattenStringValueList(out.ResourceTypes))
 	d.Set("sink_arn", out.SinkArn)
 
@@ -87,7 +120,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionSetting, DSNameLink, d.Id(), err)

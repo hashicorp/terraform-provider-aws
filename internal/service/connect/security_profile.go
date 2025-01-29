@@ -9,32 +9,38 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_security_profile", name="Security Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceSecurityProfile() *schema.Resource {
+func resourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityProfileCreate,
 		ReadWithoutTimeout:   resourceSecurityProfileRead,
 		UpdateWithoutTimeout: resourceSecurityProfileUpdate,
 		DeleteWithoutTimeout: resourceSecurityProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -80,8 +86,7 @@ func ResourceSecurityProfile() *schema.Resource {
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	securityProfileName := d.Get(names.AttrName).(string)
@@ -96,106 +101,90 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() > 0 {
-		input.Permissions = flex.ExpandStringSet(v.(*schema.Set))
+		input.Permissions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating Connect Security Profile %s", input)
-	output, err := conn.CreateSecurityProfileWithContext(ctx, input)
+	output, err := conn.CreateSecurityProfile(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): %s", securityProfileName, err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): empty output", securityProfileName)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.SecurityProfileId)))
+	id := securityProfileCreateResourceID(instanceID, aws.ToString(output.SecurityProfileId))
+	d.SetId(id)
 
 	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
-
+	instanceID, securityProfileID, err := securityProfileParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeSecurityProfileWithContext(ctx, &connect.DescribeSecurityProfileInput{
-		InstanceId:        aws.String(instanceID),
-		SecurityProfileId: aws.String(securityProfileID),
-	})
+	securityProfile, err := findSecurityProfileByTwoPartKey(ctx, conn, instanceID, securityProfileID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Security Profile (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.SecurityProfile == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile (%s): empty response", d.Id())
-	}
-
-	d.Set(names.AttrARN, resp.SecurityProfile.Arn)
-	d.Set(names.AttrDescription, resp.SecurityProfile.Description)
+	d.Set(names.AttrARN, securityProfile.Arn)
+	d.Set(names.AttrDescription, securityProfile.Description)
 	d.Set(names.AttrInstanceID, instanceID)
-	d.Set("organization_resource_id", resp.SecurityProfile.OrganizationResourceId)
-	d.Set("security_profile_id", resp.SecurityProfile.Id)
-	d.Set(names.AttrName, resp.SecurityProfile.SecurityProfileName)
+	d.Set(names.AttrName, securityProfile.SecurityProfileName)
+	d.Set("organization_resource_id", securityProfile.OrganizationResourceId)
+	d.Set("security_profile_id", securityProfile.Id)
 
-	// reading permissions requires a separate API call
-	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
+	permissions, err := findSecurityProfilePermissionsByTwoPartKey(ctx, conn, instanceID, securityProfileID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding Connect Security Profile Permissions for Security Profile (%s): %s", securityProfileID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Security Profile (%s) permissions: %s", d.Id(), err)
 	}
 
-	if permissions != nil {
-		d.Set(names.AttrPermissions, flex.FlattenStringSet(permissions))
-	}
+	d.Set(names.AttrPermissions, permissions)
 
-	setTagsOut(ctx, resp.SecurityProfile.Tags)
+	setTagsOut(ctx, securityProfile.Tags)
 
 	return diags
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
-
+	instanceID, securityProfileID, err := securityProfileParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &connect.UpdateSecurityProfileInput{
-		InstanceId:        aws.String(instanceID),
-		SecurityProfileId: aws.String(securityProfileID),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &connect.UpdateSecurityProfileInput{
+			InstanceId:        aws.String(instanceID),
+			SecurityProfileId: aws.String(securityProfileID),
+		}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
-	}
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
 
-	if d.HasChange(names.AttrPermissions) {
-		input.Permissions = flex.ExpandStringSet(d.Get(names.AttrPermissions).(*schema.Set))
-	}
+		if d.HasChange(names.AttrPermissions) {
+			input.Permissions = flex.ExpandStringValueSet(d.Get(names.AttrPermissions).(*schema.Set))
+		}
 
-	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
+		_, err = conn.UpdateSecurityProfile(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SecurityProfile (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Connect Security Profile (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
@@ -203,59 +192,110 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
-
+	instanceID, securityProfileID, err := securityProfileParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteSecurityProfileWithContext(ctx, &connect.DeleteSecurityProfileInput{
+	log.Printf("[DEBUG] Deleting Connect Security Profile: %s", d.Id())
+	_, err = conn.DeleteSecurityProfile(ctx, &connect.DeleteSecurityProfileInput{
 		InstanceId:        aws.String(instanceID),
 		SecurityProfileId: aws.String(securityProfileID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SecurityProfile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Security Profile (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func SecurityProfileParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
+const securityProfileResourceIDSeparator = ":"
+
+func securityProfileCreateResourceID(instanceID, securityProfileID string) string {
+	parts := []string{instanceID, securityProfileID}
+	id := strings.Join(parts, securityProfileResourceIDSeparator)
+
+	return id
+}
+
+func securityProfileParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, securityProfileResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:securityProfileID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected instanceID%[2]ssecurityProfileID", id, securityProfileResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
 }
 
-func getSecurityProfilePermissions(ctx context.Context, conn *connect.Connect, instanceID, securityProfileID string) ([]*string, error) {
-	var result []*string
-
-	input := &connect.ListSecurityProfilePermissionsInput{
+func findSecurityProfileByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, securityProfileID string) (*awstypes.SecurityProfile, error) {
+	input := &connect.DescribeSecurityProfileInput{
 		InstanceId:        aws.String(instanceID),
-		MaxResults:        aws.Int64(ListSecurityProfilePermissionsMaxResults),
 		SecurityProfileId: aws.String(securityProfileID),
 	}
 
-	err := conn.ListSecurityProfilePermissionsPagesWithContext(ctx, input, func(page *connect.ListSecurityProfilePermissionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	return findSecurityProfile(ctx, conn, input)
+}
+
+func findSecurityProfile(ctx context.Context, conn *connect.Client, input *connect.DescribeSecurityProfileInput) (*awstypes.SecurityProfile, error) {
+	output, err := conn.DescribeSecurityProfile(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		result = append(result, page.Permissions...)
-
-		return !lastPage
-	})
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	if output == nil || output.SecurityProfile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SecurityProfile, nil
+}
+
+func findSecurityProfilePermissionsByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, securityProfileID string) ([]string, error) {
+	const maxResults = 60
+	input := &connect.ListSecurityProfilePermissionsInput{
+		InstanceId:        aws.String(instanceID),
+		MaxResults:        aws.Int32(maxResults),
+		SecurityProfileId: aws.String(securityProfileID),
+	}
+
+	return findSecurityProfilePermissions(ctx, conn, input)
+}
+
+func findSecurityProfilePermissions(ctx context.Context, conn *connect.Client, input *connect.ListSecurityProfilePermissionsInput) ([]string, error) {
+	var output []string
+
+	pages := connect.NewListSecurityProfilePermissionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Permissions...)
+	}
+
+	return output, nil
 }

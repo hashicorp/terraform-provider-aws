@@ -44,6 +44,7 @@ The following arguments are optional:
 
 * `principals` - (Optional) List of AWS account IDs that are allowed to associate resources with the accelerator.
 * `resource` - (Optional) List of resources to be associated with the accelerator.
+    * `cidr_block` - (Optional) IP address range, in CIDR format, that is specified as resource.
     * `endpoint_id` - (Optional) The endpoint ID for the endpoint that is specified as a AWS resource.
     * `region` - (Optional) The AWS Region where a shared endpoint resource is located.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

@@ -145,7 +145,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 
 func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	maybeInvitation, err := findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, d.Id(), string(awstypes.ResourceShareInvitationStatusAccepted))

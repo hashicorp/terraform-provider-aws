@@ -81,6 +81,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `applianceModeSupport` - Whether Appliance Mode support is enabled.
 * `dnsSupport` - Whether DNS support is enabled.
+* `securityGroupReferencingSupport` - Whether Security Group Referencing Support is enabled.
 * `id` - EC2 Transit Gateway VPC Attachment identifier
 * `ipv6Support` - Whether IPv6 support is enabled.
 * `subnetIds` - Identifiers of EC2 Subnets.
@@ -95,4 +96,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-1163f41ecbd71e0e8d7980fd48db7828f6a894bd96414a472ab369bf6fdfcc81 -->
+<!-- cache-key: cdktf-0.20.8 input-b030455ca37d1b34a98947781dae1fcce49d7cedd0eb63e3d1fdd571840438bd -->

@@ -39,8 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Subscriber")
+// @FrameworkResource("aws_securitylake_subscriber", name="Subscriber")
 // @Tags(identifierAttribute="arn")
 func newSubscriberResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriberResource{}
@@ -378,7 +377,7 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	in := &securitylake.DeleteSubscriberInput{
-		SubscriberId: aws.String(data.ID.ValueString()),
+		SubscriberId: data.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSubscriber(ctx, in)
@@ -747,8 +746,8 @@ type subscriberResourceModel struct {
 	S3BucketArn           types.String                                             `tfsdk:"s3_bucket_arn"`
 	SubscriberEndpoint    types.String                                             `tfsdk:"subscriber_endpoint"`
 	SubscriberStatus      types.String                                             `tfsdk:"subscriber_status"`
-	Tags                  types.Map                                                `tfsdk:"tags"`
-	TagsAll               types.Map                                                `tfsdk:"tags_all"`
+	Tags                  tftags.Map                                               `tfsdk:"tags"`
+	TagsAll               tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                           `tfsdk:"timeouts"`
 }
 

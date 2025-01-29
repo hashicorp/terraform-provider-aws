@@ -107,7 +107,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name                          = var.rName
+    Name                                 = var.rName
     "kubernetes.io/cluster/${var.rName}" = "shared"
   }
 }
@@ -123,7 +123,7 @@ resource "aws_subnet" "test" {
   assign_ipv6_address_on_creation = true
 
   tags = {
-    Name                          = var.rName
+    Name                                 = var.rName
     "kubernetes.io/cluster/${var.rName}" = "shared"
   }
 }

@@ -127,7 +127,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		err = roleUpdateTags(ctx, conn, roleName, nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, continue. Otherwise, error.
-		partition := meta.(*conns.AWSClient).Partition
+		partition := meta.(*conns.AWSClient).Partition(ctx)
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 		}

@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grants Instance Resource Policy")
+// @FrameworkResource("aws_s3control_access_grants_instance_resource_policy", name="Access Grants Instance Resource Policy")
 func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsInstanceResourcePolicyResource{}
 
@@ -77,7 +77,7 @@ func (r *accessGrantsInstanceResourcePolicyResource) Create(ctx context.Context,
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.PutAccessGrantsInstanceResourcePolicyInput{
 		AccountId: flex.StringFromFramework(ctx, data.AccountID),

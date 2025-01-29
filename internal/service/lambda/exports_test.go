@@ -22,6 +22,7 @@ var (
 	FindEventSourceMappingByID                   = findEventSourceMappingByID
 	FindFunctionByName                           = findFunctionByName
 	FindFunctionEventInvokeConfigByTwoPartKey    = findFunctionEventInvokeConfigByTwoPartKey
+	FindFunctionRecursionConfigByName            = findFunctionRecursionConfigByName
 	FindFunctionURLByTwoPartKey                  = findFunctionURLByTwoPartKey
 	FindLayerVersionByTwoPartKey                 = findLayerVersionByTwoPartKey
 	FindLayerVersionPolicyByTwoPartKey           = findLayerVersionPolicyByTwoPartKey
@@ -34,4 +35,10 @@ var (
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
+
+	ValidFunctionName               = validFunctionName
+	ValidPermissionAction           = validPermissionAction
+	ValidPermissionEventSourceToken = validPermissionEventSourceToken
+	ValidQualifier                  = validQualifier
+	ValidPolicyStatementID          = validPolicyStatementID
 )

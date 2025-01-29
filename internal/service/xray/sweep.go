@@ -16,9 +16,9 @@ import (
 )
 
 func RegisterSweepers() {
-	sweep.Register("aws_xray_group", sweepGroups)
+	awsv2.Register("aws_xray_group", sweepGroups)
 
-	sweep.Register("aws_xray_sampling_rule", sweepSamplingRules)
+	awsv2.Register("aws_xray_sampling_rule", sweepSamplingRules)
 }
 
 func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -30,13 +30,6 @@ func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 	pages := xray.NewGetGroupsPaginator(conn, &xray.GetGroupsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}
@@ -68,13 +61,6 @@ func sweepSamplingRules(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 	pages := xray.NewGetSamplingRulesPaginator(conn, &xray.GetSamplingRulesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}

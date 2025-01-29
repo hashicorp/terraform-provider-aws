@@ -66,7 +66,7 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 
 	tgwRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	input := &ec2.SearchTransitGatewayRoutesInput{
-		Filters:                    newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set)),
+		Filters:                    newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 		TransitGatewayRouteTableId: aws.String(tgwRouteTableID),
 	}
 

@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Event Sources Config")
+// @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
 func newResourceEventSourcesConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceEventSourcesConfig{}, nil
 }
@@ -86,7 +86,7 @@ func (r *resourceEventSourcesConfig) Create(ctx context.Context, req resource.Cr
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = types.StringValue(r.Meta().Region)
+	plan.ID = types.StringValue(r.Meta().Region(ctx))
 
 	in := &devopsguru.UpdateEventSourcesConfigInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)

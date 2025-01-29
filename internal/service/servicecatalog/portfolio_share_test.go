@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -30,7 +30,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -46,7 +46,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.DescribePortfolioShareTypeAccount),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DescribePortfolioShareTypeAccount)),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.DescribePortfolioShareTypeAccount),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DescribePortfolioShareTypeAccount)),
 				),
 			},
 		},
@@ -84,7 +84,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -127,7 +127,7 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -142,7 +142,7 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.DescribePortfolioShareTypeOrganizationalUnit),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DescribePortfolioShareTypeOrganizationalUnit)),
 				),
 			},
 			{
@@ -166,7 +166,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -186,7 +186,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 
 func testAccCheckPortfolioShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_portfolio_share" {
@@ -225,7 +225,7 @@ func testAccCheckPortfolioShareExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No Service Catalog Portfolio Share ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		_, err := tfservicecatalog.FindPortfolioShare(ctx, conn,
 			rs.Primary.Attributes["portfolio_id"],

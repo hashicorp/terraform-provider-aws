@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Cross-account Attachment")
+// @FrameworkResource("aws_globalaccelerator_cross_account_attachment", name="Cross-account Attachment")
 // @Tags(identifierAttribute="id")
 func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &crossAccountAttachmentResource{}
@@ -83,6 +83,9 @@ func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request res
 							Optional: true,
 						},
 						names.AttrRegion: schema.StringAttribute{
+							Optional: true,
+						},
+						names.AttrCIDRBlock: schema.StringAttribute{
 							Optional: true,
 						},
 					},
@@ -213,17 +216,19 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 			}
 
 			add, remove, _ := flex.DiffSlices(oldResources, newResources, func(v1, v2 *resourceModel) bool {
-				return v1.EndpointID.Equal(v2.EndpointID) && v1.Region.Equal(v2.Region)
+				return v1.Cidr.Equal(v2.Cidr) && v1.EndpointID.Equal(v2.EndpointID) && v1.Region.Equal(v2.Region)
 			})
 
 			input.AddResources = tfslices.ApplyToAll(add, func(v *resourceModel) awstypes.Resource {
 				return awstypes.Resource{
+					Cidr:       fwflex.StringFromFramework(ctx, v.Cidr),
 					EndpointId: fwflex.StringFromFramework(ctx, v.EndpointID),
 					Region:     fwflex.StringFromFramework(ctx, v.Region),
 				}
 			})
 			input.RemoveResources = tfslices.ApplyToAll(remove, func(v *resourceModel) awstypes.Resource {
 				return awstypes.Resource{
+					Cidr:       fwflex.StringFromFramework(ctx, v.Cidr),
 					EndpointId: fwflex.StringFromFramework(ctx, v.EndpointID),
 					Region:     fwflex.StringFromFramework(ctx, v.Region),
 				}
@@ -307,8 +312,8 @@ type crossAccountAttachmentResourceModel struct {
 	Name             types.String                                  `tfsdk:"name"`
 	Principals       fwtypes.SetValueOf[types.String]              `tfsdk:"principals"`
 	Resources        fwtypes.SetNestedObjectValueOf[resourceModel] `tfsdk:"resource"`
-	Tags             types.Map                                     `tfsdk:"tags"`
-	TagsAll          types.Map                                     `tfsdk:"tags_all"`
+	Tags             tftags.Map                                    `tfsdk:"tags"`
+	TagsAll          tftags.Map                                    `tfsdk:"tags_all"`
 }
 
 func (m *crossAccountAttachmentResourceModel) InitFromID() error {
@@ -322,6 +327,7 @@ func (m *crossAccountAttachmentResourceModel) setID() {
 }
 
 type resourceModel struct {
+	Cidr       types.String `tfsdk:"cidr_block"`
 	EndpointID types.String `tfsdk:"endpoint_id"`
 	Region     types.String `tfsdk:"region"`
 }

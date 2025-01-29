@@ -33,8 +33,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":              int64(80),
-					"to_port":                int64(8000),
+					"from_port":              int32(80),
+					"to_port":                int32(8000),
 					names.AttrProtocol:       "tcp",
 					"cidr_blocks":            []string{"172.8.0.0/16", "10.0.0.0/16"},
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
@@ -61,8 +61,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":              int64(80),
-					"to_port":                int64(8000),
+					"from_port":              int32(80),
+					"to_port":                int32(8000),
 					names.AttrProtocol:       "tcp",
 					"cidr_blocks":            []string{"172.8.0.0/16", "10.0.0.0/16"},
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
@@ -76,8 +76,8 @@ func TestRulesMixedMatching(t *testing.T) {
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
@@ -94,8 +94,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
@@ -120,8 +120,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":              int64(80),
-					"to_port":                int64(8000),
+					"from_port":              int32(80),
+					"to_port":                int32(8000),
 					names.AttrProtocol:       "tcp",
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
@@ -152,8 +152,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
@@ -177,16 +177,16 @@ func TestRulesMixedMatching(t *testing.T) {
 			local: []interface{}{},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
@@ -203,8 +203,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 				},
 			},
@@ -228,19 +228,19 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"10.0.0.0/16"},
 				},
 			},
-			// Because this is the remote rule being saved, we need to check for int64
+			// Because this is the remote rule being saved, we need to check for int32
 			// encoding. We could convert this code, but ultimately Terraform doesn't
 			// care it's for the reflect.DeepEqual in this test
 			saves: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"10.0.0.0/16"},
 				},
@@ -258,16 +258,16 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
@@ -298,8 +298,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
@@ -332,8 +332,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16", "10.8.0.0/16", "206.8.0.0/16"},
 				},
@@ -346,8 +346,8 @@ func TestRulesMixedMatching(t *testing.T) {
 					"cidr_blocks":      []string{"172.8.0.0/16", "10.8.0.0/16"},
 				},
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"192.168.0.0/16", "206.8.0.0/16"},
 				},
@@ -358,17 +358,17 @@ func TestRulesMixedMatching(t *testing.T) {
 			local: []interface{}{},
 			remote: []map[string]interface{}{
 				{
-					"from_port":              int64(22),
-					"to_port":                int64(22),
+					"from_port":              int32(22),
+					"to_port":                int32(22),
 					names.AttrProtocol:       "tcp",
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					// we're saving the remote, so it will be int64 encoded
-					"from_port":              int64(22),
-					"to_port":                int64(22),
+					// we're saving the remote, so it will be int32 encoded
+					"from_port":              int32(22),
+					"to_port":                int32(22),
 					names.AttrProtocol:       "tcp",
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
 				},
@@ -392,8 +392,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(22),
-					"to_port":          int64(22),
+					"from_port":        int32(22),
+					"to_port":          int32(22),
 					names.AttrProtocol: "tcp",
 					names.AttrSecurityGroups: schema.NewSet(
 						schema.HashString,
@@ -442,16 +442,16 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(22),
-					"to_port":          int64(22),
+					"from_port":        int32(22),
+					"to_port":          int32(22),
 					names.AttrProtocol: "tcp",
 					"self":             true,
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":        int64(22),
-					"to_port":          int64(22),
+					"from_port":        int32(22),
+					"to_port":          int32(22),
 					names.AttrProtocol: "tcp",
 					"self":             true,
 				},
@@ -469,16 +469,16 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(22),
-					"to_port":          int64(22),
+					"from_port":        int32(22),
+					"to_port":          int32(22),
 					names.AttrProtocol: "tcp",
 					"self":             true,
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":        int64(22),
-					"to_port":          int64(22),
+					"from_port":        int32(22),
+					"to_port":          int32(22),
 					names.AttrProtocol: "tcp",
 					"self":             true,
 				},
@@ -495,16 +495,16 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":        int64(22),
-					"to_port":          int64(22),
+					"from_port":        int32(22),
+					"to_port":          int32(22),
 					names.AttrProtocol: "tcp",
 					"self":             true,
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":        int64(22),
-					"to_port":          int64(22),
+					"from_port":        int32(22),
+					"to_port":          int32(22),
 					names.AttrProtocol: "tcp",
 					"self":             true,
 				},
@@ -528,8 +528,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":              int64(80),
-					"to_port":                int64(8000),
+					"from_port":              int32(80),
+					"to_port":                int32(8000),
 					names.AttrProtocol:       "tcp",
 					"cidr_blocks":            []string{"172.8.0.0/16", "192.168.0.0/16"},
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
@@ -537,14 +537,14 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
+					"from_port":        int32(80),
+					"to_port":          int32(8000),
 					names.AttrProtocol: "tcp",
 					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
 				{
-					"from_port":              int64(80),
-					"to_port":                int64(8000),
+					"from_port":              int32(80),
+					"to_port":                int32(8000),
 					names.AttrProtocol:       "tcp",
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
@@ -567,8 +567,8 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":              int64(80),
-					"to_port":                int64(8000),
+					"from_port":              int32(80),
+					"to_port":                int32(8000),
 					names.AttrProtocol:       "tcp",
 					"cidr_blocks":            []string{"172.8.0.0/16", "192.168.0.0/16"},
 					"self":                   true,
@@ -583,8 +583,8 @@ func TestRulesMixedMatching(t *testing.T) {
 					"self":             true,
 				},
 				{
-					"from_port":              int64(80),
-					"to_port":                int64(8000),
+					"from_port":              int32(80),
+					"to_port":                int32(8000),
 					names.AttrProtocol:       "tcp",
 					"cidr_blocks":            []string{"172.8.0.0/16", "192.168.0.0/16"},
 					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),

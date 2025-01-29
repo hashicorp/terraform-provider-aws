@@ -10,12 +10,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -44,24 +47,24 @@ func TestAccRoute53Record_basic(t *testing.T) {
 				Config: testAccRecordConfig_basic(zoneName.String(), strings.ToUpper(recordName.String())),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "alias.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_overwrite"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "failover_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "failover_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "fqdn", recordName.String()),
-					resource.TestCheckResourceAttr(resourceName, "geolocation_routing_policy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "geoproximity_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "geolocation_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "geoproximity_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "multivalue_answer_routing_policy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, recordName.String()),
-					resource.TestCheckResourceAttr(resourceName, "records.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "records.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.27"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "30"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
-					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
 			},
@@ -376,6 +379,15 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*.domain.test")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*.domain.test")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -390,6 +402,15 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*.domain.test")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*.domain.test")),
+				},
 			},
 		},
 	})
@@ -660,25 +681,25 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 				Config: testAccRecordConfig_cidr(rName, locationName, zoneName.String(), recordName.String(), "cidr-location-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "alias.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_overwrite"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.location_name", "aws_route53_cidr_location.test", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "failover_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "failover_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "fqdn", recordName.String()),
-					resource.TestCheckResourceAttr(resourceName, "geolocation_routing_policy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "geoproximity_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "geolocation_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "geoproximity_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "multivalue_answer_routing_policy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, recordName.String()),
-					resource.TestCheckResourceAttr(resourceName, "records.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "records.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "2001:0db8::0123:4567:89ab:cdef"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", "cidr-location-1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "60"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AAAA"),
-					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
 			},
@@ -692,7 +713,7 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 				Config: testAccRecordConfig_cidr(rName, locationName, zoneName.String(), recordName.String(), "cidr-location-2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.location_name", "aws_route53_cidr_location.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", "cidr-location-2"),
@@ -702,7 +723,7 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 				Config: testAccRecordConfig_cidrDefaultLocation(rName, locationName, zoneName.String(), recordName.String(), "cidr-location-3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.0.location_name", "*"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", "cidr-location-3"),
@@ -754,7 +775,7 @@ func TestAccRoute53Record_Geoproximity_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_geoproximityCNAME(names.USEast1RegionID, fmt.Sprintf("%s-atl-1", names.USEast1RegionID)),
+				Config: testAccRecordConfig_geoproximityCNAME(endpoints.UsEast1RegionID, fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, "aws_route53_record.awsregion", &record1),
 					testAccCheckRecordExists(ctx, "aws_route53_record.localzonegroup", &record2),
@@ -849,7 +870,7 @@ func TestAccRoute53Record_Latency_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_latencyCNAME(names.USEast1RegionID, names.EUWest1RegionID, names.APNortheast1RegionID),
+				Config: testAccRecordConfig_latencyCNAME(endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 					testAccCheckRecordExists(ctx, "aws_route53_record.second_region", &record2),
@@ -1115,7 +1136,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(names.USEast1RegionID, "before"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(endpoints.UsEast1RegionID, "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1127,7 +1148,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityRegion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(names.USEast1RegionID, "after"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(endpoints.UsEast1RegionID, "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
@@ -1148,7 +1169,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityLocalZoneGroup(t *test
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", names.USEast1RegionID), "before"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID), "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1160,7 +1181,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityLocalZoneGroup(t *test
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", names.USEast1RegionID), "after"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID), "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
@@ -1247,7 +1268,7 @@ func TestAccRoute53Record_SetIdentifierRename_latency(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameLatency(names.USEast1RegionID, "before"),
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1259,7 +1280,7 @@ func TestAccRoute53Record_SetIdentifierRename_latency(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameLatency(names.USEast1RegionID, "after"),
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
@@ -1530,6 +1551,165 @@ func TestAccRoute53Record_Allow_overwrite(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_ttl0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+			},
+			{
+				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 45),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "45"),
+				),
+			},
+			{
+				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	zoneName := acctest.RandomDomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_aliasWildcardName(rName, zoneName.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := "0/24." + acctest.RandomDomain()
+	recordName := "0"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := "a\\040b." + acctest.RandomDomain()
+	recordName := "0\\040to\\0401"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	// zone name always needs an escape code if any
+	zoneName := "a\\040b." + acctest.RandomDomain()
+	// as for record name, r53 API can accept a space as is but will send the escaped version of it back
+	recordName := "0 to 1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // testAccErrorCheckSkip skips Route53 tests that have error messages indicating unsupported features
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
@@ -1614,41 +1794,29 @@ func testAccCheckRecordExists(ctx context.Context, n string, v *awstypes.Resourc
 	}
 }
 
-func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
+func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName, recordName, recordType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
+		rs, ok := s.RootModule().Resources[zoneResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneResourceName)
 		}
 
-		zoneId := zoneResource.Primary.ID
-		en := tfroute53.ExpandRecordName(recordName, zoneResource.Primary.Attributes["zone_id"])
+		zone := rs.Primary.ID
+		recordName := tfroute53.ExpandRecordName(recordName, zone)
 
-		lopts := &route53.ListResourceRecordSetsInput{
-			HostedZoneId: aws.String(tfroute53.CleanZoneID(zoneId)),
+		_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, zone, recordName, recordType, "")
+
+		if tfresource.NotFound(err) {
+			return nil
 		}
 
-		resp, err := conn.ListResourceRecordSets(ctx, lopts)
 		if err != nil {
 			return err
 		}
 
-		found := false
-		for _, rec := range resp.ResourceRecordSets {
-			recName := tfroute53.CleanRecordName(*rec.Name)
-			if tfroute53.FQDN(strings.ToLower(recName)) == tfroute53.FQDN(strings.ToLower(en)) && rec.Type == awstypes.RRType(recordType) {
-				found = true
-				break
-			}
-		}
-
-		if found {
-			return fmt.Errorf("Record exists but should not: %s", en)
-		}
-
-		return nil
+		return fmt.Errorf("Route 53 Record %s still exists", recordName)
 	}
 }
 
@@ -2474,8 +2642,8 @@ resource "aws_route53_record" "test" {
 
   alias {
     evaluate_target_health = false
-    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")
-    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")
+    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id", "")
+    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name", "")
   }
 }
 `)
@@ -2490,8 +2658,8 @@ resource "aws_route53_record" "test" {
 
   alias {
     evaluate_target_health = false
-    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")
-    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")
+    name                   = lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name", "")
+    zone_id                = lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id", "")
   }
 }
 `)
@@ -3195,3 +3363,75 @@ resource "aws_route53_record" "www-server1" {
   records = ["127.0.0.1"]
 }
 `
+
+func testAccRecordConfig_ttl(zoneName, recordName string, ttl int) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "A"
+  ttl     = %[3]d
+  records = ["127.0.0.1", "127.0.0.27"]
+}
+`, zoneName, recordName, ttl)
+}
+
+func testAccRecordConfig_aliasWildcardName(rName, zoneName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id              = aws_vpc.test.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = false
+  subnet_ids          = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route53_zone" "test1" {
+  name = %[2]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test1.zone_id
+  name    = "*.%[2]s"
+  type    = "A"
+
+  alias {
+    name                   = aws_vpc_endpoint.test.dns_entry[0].dns_name
+    zone_id                = aws_vpc_endpoint.test.dns_entry[0].hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+`, rName, zoneName))
+}

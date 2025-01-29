@@ -4,43 +4,74 @@
 package vpclattice
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_vpclattice_service", &resource.Sweeper{
-		Name: "aws_vpclattice_service",
-		F:    sweepServices,
-	})
-
-	resource.AddTestSweepers("aws_vpclattice_service_network", &resource.Sweeper{
-		Name: "aws_vpclattice_service_network",
-		F:    sweepServiceNetworks,
-		Dependencies: []string{
-			"aws_vpclattice_service",
-		},
-	})
-
-	resource.AddTestSweepers("aws_vpclattice_target_group", &resource.Sweeper{
-		Name: "aws_vpclattice_target_group",
-		F:    sweepTargetGroups,
-	})
+	awsv2.Register("aws_vpclattice_resource_configuration", sweepResourceConfigurations)
+	awsv2.Register("aws_vpclattice_resource_gateway", sweepResourceGateways, "aws_vpclattice_resource_configuration")
+	awsv2.Register("aws_vpclattice_service", sweepServices)
+	awsv2.Register("aws_vpclattice_service_network", sweepServiceNetworks, "aws_vpclattice_service")
+	awsv2.Register("aws_vpclattice_target_group", sweepTargetGroups)
 }
 
-func sweepServices(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+func sweepResourceConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	input := &vpclattice.ListResourceConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := vpclattice.NewListResourceConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if aws.ToBool(v.AmazonManaged) {
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceConfigurationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
 	}
+
+	return sweepResources, nil
+}
+
+func sweepResourceGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	input := &vpclattice.ListResourceGatewaysInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := vpclattice.NewListResourceGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceGatewayResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepServices(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.VPCLatticeClient(ctx)
 	input := &vpclattice.ListServicesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -49,13 +80,8 @@ func sweepServices(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
-			log.Printf("[WARN] Skipping VPC Lattice Service sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing VPC Lattice Services (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Items {
@@ -67,21 +93,10 @@ func sweepServices(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping VPC Lattice Services (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepServiceNetworks(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepServiceNetworks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.VPCLatticeClient(ctx)
 	input := &vpclattice.ListServiceNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -90,13 +105,8 @@ func sweepServiceNetworks(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
-			log.Printf("[WARN] Skipping VPC Lattice Service Network sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing VPC Lattice Service Networks (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Items {
@@ -108,21 +118,10 @@ func sweepServiceNetworks(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping VPC Lattice Service Networks (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepTargetGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepTargetGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.VPCLatticeClient(ctx)
 	input := &vpclattice.ListTargetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -131,13 +130,8 @@ func sweepTargetGroups(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
-			log.Printf("[WARN] Skipping VPC Lattice Target Group sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing VPC Lattice Target Groups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Items {
@@ -149,15 +143,5 @@ func sweepTargetGroups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping VPC Lattice Target Groups (%s): %w", region, err)
-	}
-
-	return nil
-}
-
-func skipSweepErr(err error) bool {
-	return tfawserr.ErrCodeEquals(err, "AccessDeniedException")
+	return sweepResources, nil
 }

@@ -65,7 +65,7 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
 		VPC: &awstypes.VPC{
 			VPCId:     aws.String(d.Get(names.AttrVPCID).(string)),
-			VPCRegion: awstypes.VPCRegion(meta.(*conns.AWSClient).Region),
+			VPCRegion: awstypes.VPCRegion(meta.(*conns.AWSClient).Region(ctx)),
 		},
 	}
 

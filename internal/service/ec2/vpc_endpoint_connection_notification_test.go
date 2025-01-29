@@ -33,7 +33,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
@@ -47,7 +47,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
@@ -65,7 +65,7 @@ func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context) r
 				continue
 			}
 
-			_, err := tfec2.FindVPCEndpointConnectionNotificationByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCEndpointConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -95,7 +95,7 @@ func testAccCheckVPCEndpointConnectionNotificationExists(ctx context.Context, n 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindVPCEndpointConnectionNotificationByIDV2(ctx, conn, rs.Primary.ID)
+		_, err := tfec2.FindVPCEndpointConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

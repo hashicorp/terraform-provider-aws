@@ -501,7 +501,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		// Security Group IDs are not returned for VPC endpoints.
 		if output.EndpointType == awstypes.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
 			vpcEndpointID := aws.ToString(output.EndpointDetails.VpcEndpointId)
-			output, err := tfec2.FindVPCEndpointByIDV2(ctx, meta.(*conns.AWSClient).EC2Client(ctx), vpcEndpointID)
+			output, err := tfec2.FindVPCEndpointByID(ctx, meta.(*conns.AWSClient).EC2Client(ctx), vpcEndpointID)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)
@@ -660,7 +660,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					return sdkdiag.AppendErrorf(diags, "modifying Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)
 				}
 
-				if _, err := tfec2.WaitVPCEndpointAvailableV2(ctx, conn, vpcEndpointID, tfec2.VPCEndpointCreationTimeout); err != nil {
+				if _, err := tfec2.WaitVPCEndpointAvailable(ctx, conn, vpcEndpointID, tfec2.VPCEndpointCreationTimeout); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Transfer Server (%s) VPC Endpoint (%s) update: %s", d.Id(), vpcEndpointID, err)
 				}
 			}
@@ -1246,27 +1246,35 @@ type securityPolicyName string
 const (
 	securityPolicyName2018_11             securityPolicyName = "TransferSecurityPolicy-2018-11"
 	securityPolicyName2020_06             securityPolicyName = "TransferSecurityPolicy-2020-06"
-	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
-	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
-	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
 	securityPolicyName2022_03             securityPolicyName = "TransferSecurityPolicy-2022-03"
 	securityPolicyName2023_05             securityPolicyName = "TransferSecurityPolicy-2023-05"
 	securityPolicyName2024_01             securityPolicyName = "TransferSecurityPolicy-2024-01"
+	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
+	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
+	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
+	securityPolicyNameFIPS_2024_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
 	securityPolicyNamePQ_SSH_2023_04      securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
 	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
+	securityPolicyNameRestricted_2018_11  securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
+	securityPolicyNameRestricted_2020_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
+	securityPolicyNameRestricted_2024_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
 	return []securityPolicyName{
 		securityPolicyName2018_11,
 		securityPolicyName2020_06,
-		securityPolicyNameFIPS_2020_06,
-		securityPolicyNameFIPS_2023_05,
-		securityPolicyNameFIPS_2024_01,
 		securityPolicyName2022_03,
 		securityPolicyName2023_05,
 		securityPolicyName2024_01,
+		securityPolicyNameFIPS_2020_06,
+		securityPolicyNameFIPS_2023_05,
+		securityPolicyNameFIPS_2024_01,
+		securityPolicyNameFIPS_2024_05,
 		securityPolicyNamePQ_SSH_2023_04,
 		securityPolicyNamePQ_SSH_FIPS_2023_04,
+		securityPolicyNameRestricted_2018_11,
+		securityPolicyNameRestricted_2020_06,
+		securityPolicyNameRestricted_2024_06,
 	}
 }

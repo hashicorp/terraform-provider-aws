@@ -82,7 +82,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_deviceOptions("test", trustProviderType, deviceTrustProviderType, tenantId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "device_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "device_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "device_options.0.tenant_id", tenantId),
 					resource.TestCheckResourceAttr(resourceName, "device_trust_provider_type", deviceTrustProviderType),
 					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", "test"),
@@ -159,7 +159,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_oidcOptions("test", trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.authorization_endpoint", authorizationEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_id", clientId),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_secret", clientSecret),
@@ -205,7 +205,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_tags1("test", trustProviderType, userTrustProviderType, description, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -213,7 +213,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_tags2("test", trustProviderType, userTrustProviderType, description, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -222,7 +222,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_tags1("test", trustProviderType, userTrustProviderType, description, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

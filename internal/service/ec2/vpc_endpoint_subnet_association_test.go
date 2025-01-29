@@ -106,7 +106,7 @@ func testAccCheckVPCEndpointSubnetAssociationDestroy(ctx context.Context) resour
 				continue
 			}
 
-			err := tfec2.FindVPCEndpointSubnetAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
+			err := tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -136,13 +136,13 @@ func testAccCheckVPCEndpointSubnetAssociationExists(ctx context.Context, n strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		out, err := tfec2.FindVPCEndpointByIDV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID])
+		out, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID])
 
 		if err != nil {
 			return err
 		}
 
-		err = tfec2.FindVPCEndpointSubnetAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
+		err = tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
 
 		if err != nil {
 			return err

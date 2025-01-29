@@ -1,0 +1,74 @@
+# IMPORTANT: Only add linters whose names start with letters F-M here.
+issues:
+  max-issues-per-linter: 10
+  max-same-issues: 3
+
+linters:
+  disable-all: true
+  enable:
+    # !! only add f-m linters here
+    - goconst
+    - gocritic
+    - gofmt
+    - gosimple
+    - govet
+    - ineffassign
+    - makezero
+    - misspell
+    - mnd
+
+linters-settings:
+  goconst:
+    ignore-tests: true
+    min-occurrences: 6
+  gocritic:
+    enabled-tags:
+      - diagnostic
+    disabled-tags:
+      - experimental
+      - opinionated
+      - performance
+      - style
+  mnd:
+    checks:
+      - argument
+    ignored-functions:
+      # AWS Go SDK
+      - aws.Int32
+      - aws.Int64
+      - request.ConstantWaiterDelay
+      - request.WithWaiterMaxAttempts
+      # AWS Provider
+      - nullable.*
+      - tfresource.Retry*
+      - tfresource.With*
+      # Terraform Plugin SDK
+      - retry.RetryContext
+      - schema.DefaultTimeout
+      - validation.*
+      # QuickSight schema
+      - floatBetweenSchema
+      - intBetweenSchema
+      - stringLenBetweenSchema
+      # Terraform Plugin Framework
+      - int32validator.*
+      - int64validator.*
+      - listvalidator.*
+      - mapvalidator.*
+      - setvalidator.*
+      - stringvalidator.*
+      - SetDefaultCreateTimeout
+      - SetDefaultReadTimeout
+      - SetDefaultUpdateTimeout
+      - SetDefaultDeleteTimeout
+      # Go
+      - make
+      - strconv.FormatFloat
+      - strconv.FormatInt
+      - strconv.ParseFloat
+      - strconv.ParseInt
+      - strings.SplitN
+      # - big.Int.Text # Not sure how to specify a method
+
+run:
+  timeout: 75m

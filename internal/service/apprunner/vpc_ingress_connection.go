@@ -49,16 +49,19 @@ func resourceVPCIngressConnection() *schema.Resource {
 			"ingress_vpc_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -66,10 +69,12 @@ func resourceVPCIngressConnection() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"service_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrStatus: {

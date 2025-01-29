@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,7 +23,7 @@ import (
 
 func TestAccDocDBClusterParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -37,12 +37,13 @@ func TestAccDocDBClusterParameterGroup_basic(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "rds", "cluster-pg:{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "docdb3.6"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -56,7 +57,7 @@ func TestAccDocDBClusterParameterGroup_basic(t *testing.T) {
 
 func TestAccDocDBClusterParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -80,7 +81,7 @@ func TestAccDocDBClusterParameterGroup_disappears(t *testing.T) {
 
 func TestAccDocDBClusterParameterGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +109,7 @@ func TestAccDocDBClusterParameterGroup_nameGenerated(t *testing.T) {
 
 func TestAccDocDBClusterParameterGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -136,7 +137,7 @@ func TestAccDocDBClusterParameterGroup_namePrefix(t *testing.T) {
 
 func TestAccDocDBClusterParameterGroup_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +165,7 @@ func TestAccDocDBClusterParameterGroup_description(t *testing.T) {
 
 func TestAccDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -178,7 +179,7 @@ func TestAccDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_systemParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 				),
 			},
 			{
@@ -193,7 +194,7 @@ func TestAccDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 
 func TestAccDocDBClusterParameterGroup_parameter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -207,7 +208,7 @@ func TestAccDocDBClusterParameterGroup_parameter(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_parameter(rName, "tls", "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "tls",
@@ -224,7 +225,7 @@ func TestAccDocDBClusterParameterGroup_parameter(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_parameter(rName, "tls", names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "tls",
@@ -238,7 +239,7 @@ func TestAccDocDBClusterParameterGroup_parameter(t *testing.T) {
 
 func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -252,7 +253,7 @@ func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -265,7 +266,7 @@ func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -274,7 +275,7 @@ func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -284,7 +285,7 @@ func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 
 func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster_parameter_group" {
@@ -308,7 +309,7 @@ func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *awstypes.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -319,7 +320,7 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *d
 			return errors.New("No DocumentDB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 

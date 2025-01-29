@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,7 +26,7 @@ import (
 
 // @SDKResource("aws_devicefarm_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceInstanceProfile() *schema.Resource {
+func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
@@ -116,7 +117,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	instanceProf, err := FindInstanceProfileByARN(ctx, conn, d.Id())
+	instanceProf, err := findInstanceProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Instance Profile (%s) not found, removing from state", d.Id())
@@ -196,4 +197,28 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func findInstanceProfileByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.InstanceProfile, error) {
+	input := &devicefarm.GetInstanceProfileInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetInstanceProfile(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InstanceProfile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InstanceProfile, nil
 }

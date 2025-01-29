@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_network_interface_attachment")
-func ResourceNetworkInterfaceAttachment() *schema.Resource {
+// @SDKResource("aws_network_interface_attachment", name="Network Interface Attachment")
+func resourceNetworkInterfaceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceAttachmentCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceAttachmentRead,
@@ -77,9 +77,9 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 
 func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	network_interface, err := FindNetworkInterfaceByAttachmentID(ctx, conn, d.Id())
+	network_interface, err := findNetworkInterfaceByAttachmentID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface Attachment (%s) not found, removing from state", d.Id())
@@ -104,7 +104,7 @@ func resourceNetworkInterfaceAttachmentDelete(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := detachNetworkInterface(ctx, conn, d.Get(names.AttrNetworkInterfaceID).(string), d.Id(), NetworkInterfaceDetachedTimeout); err != nil {
+	if err := detachNetworkInterface(ctx, conn, d.Get(names.AttrNetworkInterfaceID).(string), d.Id(), networkInterfaceDetachedTimeout); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 

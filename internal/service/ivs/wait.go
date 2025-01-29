@@ -7,11 +7,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/ivs"
+	"github.com/aws/aws-sdk-go-v2/service/ivs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
-func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.PlaybackKeyPair, error) {
+func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.PlaybackKeyPair, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -22,14 +24,14 @@ func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.IVS, id string, t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ivs.PlaybackKeyPair); ok {
+	if out, ok := outputRaw.(*awstypes.PlaybackKeyPair); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.PlaybackKeyPair, error) {
+func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.PlaybackKeyPair, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNormal},
 		Target:  []string{},
@@ -38,17 +40,17 @@ func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.IVS, id string, t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ivs.PlaybackKeyPair); ok {
+	if out, ok := outputRaw.(*awstypes.PlaybackKeyPair); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
+func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.RecordingConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{ivs.RecordingConfigurationStateCreating},
-		Target:                    []string{ivs.RecordingConfigurationStateActive},
+		Pending:                   enum.Slice(awstypes.RecordingConfigurationStateCreating),
+		Target:                    enum.Slice(awstypes.RecordingConfigurationStateActive),
 		Refresh:                   statusRecordingConfiguration(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -56,30 +58,30 @@ func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.IVS, id st
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ivs.RecordingConfiguration); ok {
+	if out, ok := outputRaw.(*awstypes.RecordingConfiguration); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
+func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.RecordingConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ivs.RecordingConfigurationStateActive},
+		Pending: enum.Slice(awstypes.RecordingConfigurationStateActive),
 		Target:  []string{},
 		Refresh: statusRecordingConfiguration(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ivs.RecordingConfiguration); ok {
+	if out, ok := outputRaw.(*awstypes.RecordingConfiguration); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitChannelCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.Channel, error) {
+func waitChannelCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.Channel, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -90,14 +92,14 @@ func waitChannelCreated(ctx context.Context, conn *ivs.IVS, id string, timeout t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ivs.Channel); ok {
+	if out, ok := outputRaw.(*awstypes.Channel); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitChannelUpdated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration, updateDetails *ivs.UpdateChannelInput) (*ivs.Channel, error) {
+func waitChannelUpdated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration, updateDetails *ivs.UpdateChannelInput) (*awstypes.Channel, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -108,14 +110,14 @@ func waitChannelUpdated(ctx context.Context, conn *ivs.IVS, id string, timeout t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ivs.Channel); ok {
+	if out, ok := outputRaw.(*awstypes.Channel); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitChannelDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.Channel, error) {
+func waitChannelDeleted(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.Channel, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNormal},
 		Target:  []string{},
@@ -124,7 +126,7 @@ func waitChannelDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ivs.Channel); ok {
+	if out, ok := outputRaw.(*awstypes.Channel); ok {
 		return out, err
 	}
 

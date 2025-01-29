@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -18,6 +17,7 @@ import (
 func TestFindRegionByEC2Endpoint(t *testing.T) {
 	t.Parallel()
 
+	ctx := acctest.Context(t)
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -41,7 +41,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByEndpoint(tc.Value)
+		_, err := tfmeta.FindRegionByEC2Endpoint(ctx, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -54,6 +54,7 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 func TestFindRegionByName(t *testing.T) {
 	t.Parallel()
 
+	ctx := acctest.Context(t)
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -70,10 +71,14 @@ func TestFindRegionByName(t *testing.T) {
 			Value:    "us-east-1", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
+		{
+			Value:    "ap-southeast-5", // lintignore:AWSAT003
+			ErrCount: 0,
+		},
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByName(tc.Value)
+		_, err := tfmeta.FindRegionByName(ctx, tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -96,7 +101,7 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 				Config: testAccRegionDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
-					acctest.CheckResourceAttrRegionalHostnameService(dataSourceName, names.AttrEndpoint, ec2.EndpointsID),
+					acctest.CheckResourceAttrRegionalHostnameService(dataSourceName, names.AttrEndpoint, names.EC2),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, acctest.Region()),
 				),
 			},
@@ -117,7 +122,7 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 				Config: testAccRegionDataSourceConfig_endpoint(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", ec2.EndpointsID, acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", names.EC2, acctest.PartitionDNSSuffix()))),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
 				),
 			},

@@ -33,8 +33,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// @SDKResource("aws_budgets_budget")
+// @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -314,7 +315,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 
 	_, err = conn.CreateBudget(ctx, &budgets.CreateBudgetInput{
@@ -370,7 +371,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrAccountID, accountID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
 		AccountID: accountID,
 		Resource:  "budget/" + budgetName,

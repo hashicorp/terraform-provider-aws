@@ -92,7 +92,7 @@ resource "aws_connect_bot_association" "test" {
 }
 
 func testAccBotAssociationDataSourceConfig_basic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccBotAssociationDataSourceConfig_base(rName, rName2) + `
+	return acctest.ConfigCompose(testAccBotAssociationDataSourceConfig_base(rName, rName2), `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {

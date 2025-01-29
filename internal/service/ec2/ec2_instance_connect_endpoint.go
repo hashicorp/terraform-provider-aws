@@ -152,7 +152,7 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 
 	// Additional fields.
 	input.ClientToken = aws.String(id.UniqueId())
-	input.TagSpecifications = getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
 
@@ -165,12 +165,17 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	data.InstanceConnectEndpointId = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
 	id := data.InstanceConnectEndpointId.ValueString()
 
-	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+	instanceConnectEndpoint, err := waitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
 
 		return
+	}
+
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
 	}
 
 	// Set values for unknowns.
@@ -192,7 +197,7 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 	conn := r.Meta().EC2Client(ctx)
 
 	id := data.InstanceConnectEndpointId.ValueString()
-	instanceConnectEndpoint, err := FindInstanceConnectEndpointByID(ctx, conn, id)
+	instanceConnectEndpoint, err := findInstanceConnectEndpointByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -207,12 +212,17 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 		return
 	}
 
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	setTagsOutV2(ctx, instanceConnectEndpoint.Tags)
+	setTagsOut(ctx, instanceConnectEndpoint.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -242,7 +252,7 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 		return
 	}
 
-	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitInstanceConnectEndpointDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) delete", id), err.Error())
 
 		return
@@ -265,8 +275,8 @@ type instanceConnectEndpointResourceModel struct {
 	PreserveClientIp           types.Bool     `tfsdk:"preserve_client_ip"`
 	SecurityGroupIds           types.Set      `tfsdk:"security_group_ids"`
 	SubnetId                   types.String   `tfsdk:"subnet_id"`
-	Tags                       types.Map      `tfsdk:"tags"`
-	TagsAll                    types.Map      `tfsdk:"tags_all"`
+	Tags                       tftags.Map     `tfsdk:"tags"`
+	TagsAll                    tftags.Map     `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
 	VpcId                      types.String   `tfsdk:"vpc_id"`
 }

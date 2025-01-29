@@ -12,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_transfer_server", name="Server")
+// @Tags(identifierAttribute="arn")
 func dataSourceServer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServerRead,
@@ -79,6 +81,7 @@ func dataSourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -115,6 +118,8 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set(names.AttrURL, "")
 	}
+
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

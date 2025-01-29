@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_neptune_cluster: Mark `neptune_cluster_parameter_group_name` as Computed
+```
+
+```release-note:bug
+resource/aws_neptune_cluster_instance: Mark `neptune_parameter_group_name` as Computed
+```

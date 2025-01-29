@@ -121,7 +121,7 @@ resource "aws_connect_hours_of_operation" "test" {
 }
 
 func testAccHoursOfOperationDataSourceConfig_id(rName, rName2 string) string {
-	return fmt.Sprintf(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_hours_of_operation" "test" {
   instance_id           = aws_connect_instance.test.id
   hours_of_operation_id = aws_connect_hours_of_operation.test.hours_of_operation_id
@@ -130,7 +130,7 @@ data "aws_connect_hours_of_operation" "test" {
 }
 
 func testAccHoursOfOperationDataSourceConfig_name(rName, rName2 string) string {
-	return fmt.Sprintf(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id
   name        = aws_connect_hours_of_operation.test.name

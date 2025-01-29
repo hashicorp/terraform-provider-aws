@@ -7,9 +7,9 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpclattice_service")
-// @Tags
+// @SDKDataSource("aws_vpclattice_service", name="Service")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
@@ -136,7 +137,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
+	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err := listTags(ctx, conn, serviceARN)
 
 		if err != nil {

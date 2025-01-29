@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -30,105 +29,81 @@ func RegisterSweepers() {
 func sweepProjects(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.DeviceFarmClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &devicefarm.ListProjectsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := devicefarm.NewListProjectsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Project for %s: %w", region, err))
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DeviceFarm Project sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, project := range page.Projects {
-			r := ResourceProject()
+		if err != nil {
+			return fmt.Errorf("error listing DeviceFarm Projects (%s): %w", region, err)
+		}
+
+		for _, v := range page.Projects {
+			r := resourceProject()
 			d := r.Data(nil)
-
-			id := aws.ToString(project.Arn)
-			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading DeviceFarm Project (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Project for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping DeviceFarm Projects (%s): %w", region, err)
 	}
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DeviceFarm Project sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepTestGridProjects(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.DeviceFarmClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &devicefarm.ListTestGridProjectsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := devicefarm.NewListTestGridProjectsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Test Grid Project for %s: %w", region, err))
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DeviceFarm Test Grid Project sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, project := range page.TestGridProjects {
-			r := ResourceTestGridProject()
+		if err != nil {
+			return fmt.Errorf("error listing DeviceFarm Test Grid Projects (%s): %w", region, err)
+		}
+
+		for _, v := range page.TestGridProjects {
+			r := resourceTestGridProject()
 			d := r.Data(nil)
-
-			id := aws.ToString(project.Arn)
-			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading DeviceFarm Project (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Test Grid Project for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping DeviceFarm Test Grid Projects (%s): %w", region, err)
 	}
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DeviceFarm Test Grid Project sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

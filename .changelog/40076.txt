@@ -1,0 +1,18 @@
+```release-note:bug
+resource/aws_iam_group_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns`
+```
+```release-note:bug
+resource/aws_iam_role_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns`
+```
+```release-note:bug
+resource/aws_iam_user_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns`
+```
+```release-note:bug
+resource/aws_iam_group_policies_exclusive: Add validation to prevent null values in `policy_names`
+```
+```release-note:bug
+resource/aws_iam_role_policies_exclusive: Add validation to prevent null values in `policy_names`
+```
+```release-note:bug
+resource/aws_iam_user_policies_exclusive: Add validation to prevent null values in `policy_names`
+```
