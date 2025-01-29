@@ -16,7 +16,30 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_bedrockagent_knowledge_base", sweepKnowledgeBases)
+	awsv2.Register("aws_bedrockagent_data_source", sweepDataSources)
+	awsv2.Register("aws_bedrockagent_knowledge_base", sweepKnowledgeBases, "aws_bedrockagent_data_source")
+}
+
+func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &bedrockagent.ListDataSourcesInput{}
+	conn := client.BedrockAgentClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := bedrockagent.NewListDataSourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DataSourceSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDataSourceResource, client,
+				framework.NewAttribute("data_source_id", aws.ToString(v.DataSourceId)), framework.NewAttribute("knowledge_base_id", aws.ToString(v.KnowledgeBaseId))))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepKnowledgeBases(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -34,7 +57,7 @@ func sweepKnowledgeBases(ctx context.Context, client *conns.AWSClient) ([]sweep.
 
 		for _, v := range page.KnowledgeBaseSummaries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newKnowledgeBaseResource, client,
-				framework.NewAttribute(names.AttrARN, aws.ToString(v.KnowledgeBaseId))))
+				framework.NewAttribute(names.AttrID, aws.ToString(v.KnowledgeBaseId))))
 		}
 	}
 
