@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -708,7 +709,7 @@ func (r *resourceScheduledQuery) ModifyPlan(ctx context.Context, request resourc
 func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client, id string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(awstypes.ScheduledQueryStateEnabled)},
+		Target:                    enum.Slice(awstypes.ScheduledQueryStateEnabled),
 		Refresh:                   statusScheduledQuery(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -725,8 +726,8 @@ func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client
 
 func waitScheduledQueryUpdated(ctx context.Context, conn *timestreamquery.Client, arn string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.ScheduledQueryStateDisabled)},
-		Target:                    []string{string(awstypes.ScheduledQueryStateEnabled)},
+		Pending:                   enum.Slice(awstypes.ScheduledQueryStateDisabled),
+		Target:                    enum.Slice(awstypes.ScheduledQueryStateEnabled),
 		Refresh:                   statusScheduledQuery(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -743,7 +744,7 @@ func waitScheduledQueryUpdated(ctx context.Context, conn *timestreamquery.Client
 
 func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client, arn string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ScheduledQueryStateEnabled), string(awstypes.ScheduledQueryStateDisabled)},
+		Pending: enum.Slice(awstypes.ScheduledQueryStateEnabled, awstypes.ScheduledQueryStateDisabled),
 		Target:  []string{},
 		Refresh: statusScheduledQuery(ctx, conn, arn),
 		Timeout: timeout,
