@@ -71,8 +71,12 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 			},
 			"field_delimiter": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 5),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -139,6 +143,20 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 		delivery.FieldDelimiter = nil
 	}
 
+	// Normalize S3DeliveryConfiguration.EnableHiveCompatiblePath.
+	if delivery.S3DeliveryConfiguration != nil && !aws.ToBool(delivery.S3DeliveryConfiguration.EnableHiveCompatiblePath) {
+		if !data.S3DeliveryConfiguration.IsNull() {
+			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if s3DeliveryConfiguration == nil || s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
+				delivery.S3DeliveryConfiguration.EnableHiveCompatiblePath = nil
+			}
+		}
+	}
+
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, delivery, &data)...)
 	if response.Diagnostics.HasError() {
@@ -175,6 +193,20 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 	// Normalize FieldDelimiter.
 	if aws.ToString(output.FieldDelimiter) == "" && data.FieldDelimiter.IsNull() {
 		output.FieldDelimiter = nil
+	}
+
+	// Normalize S3DeliveryConfiguration.EnableHiveCompatiblePath.
+	if output.S3DeliveryConfiguration != nil && !aws.ToBool(output.S3DeliveryConfiguration.EnableHiveCompatiblePath) {
+		if !data.S3DeliveryConfiguration.IsNull() {
+			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if s3DeliveryConfiguration == nil || s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
+				output.S3DeliveryConfiguration.EnableHiveCompatiblePath = nil
+			}
+		}
 	}
 
 	// Set attributes for import.
