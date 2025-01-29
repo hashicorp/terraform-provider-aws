@@ -68,6 +68,10 @@ func testAccDelivery_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
+				},
 			},
 		},
 	})
@@ -153,6 +157,10 @@ func testAccDelivery_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
+				},
 			},
 			{
 				Config: testAccDeliveryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -237,6 +245,10 @@ func testAccDelivery_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
+				},
 			},
 			{
 				Config: testAccDeliveryConfig_allAttributes(rName, "", "{region}/{yyyy}/{MM}/{dd}/"),
@@ -254,6 +266,15 @@ func testAccDelivery_update(t *testing.T) {
 						knownvalue.StringExact("event_timestamp"),
 						knownvalue.StringExact("event"),
 					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
 				},
 			},
 		},
