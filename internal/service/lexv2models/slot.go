@@ -58,10 +58,6 @@ type resourceSlot struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceSlot) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_slot"
-}
-
 func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	multValueSettingsLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[MultipleValuesSettingData](ctx),
