@@ -191,10 +191,10 @@ func testAccWriteRecords(ctx context.Context, name, database, table string) reso
 
 		dimensions := []awswritetypes.Dimension{{
 			Name:  aws.String("region"),
-			Value: aws.String("us-east-2"),
+			Value: aws.String("us-east-2"), //lintignore:AWSAT003
 		}, {
 			Name:  aws.String("az"),
-			Value: aws.String("us-east-2a"),
+			Value: aws.String("us-east-2a"), //lintignore:AWSAT003
 		}, {
 			Name:  aws.String("hostname"),
 			Value: aws.String("host-WgAuL"),
