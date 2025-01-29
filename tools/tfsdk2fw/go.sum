@@ -79,8 +79,8 @@ github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.12 h1:ernZWzne+Xe6lYkwFhgCc
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.12/go.mod h1:QjRDRQN6p+REVPHEyeqs8djgt2iF9Qbs7RhI0kQmjDA=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.42.5 h1:GmXjcru+mvyPCbRyYFIoSuzypZ5oRjTYYb6B6iqO16k=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.42.5/go.mod h1:hbIHTnrmEhPxikhOpbEBSqnCjI1RyvRc+Vqu+Vk8YbQ=
-github.com/aws/aws-sdk-go-v2/service/appsync v1.41.4 h1:MvQreO85QfGnfxyGDqYX6irVUpxct3YeoEreZPSgBvI=
-github.com/aws/aws-sdk-go-v2/service/appsync v1.41.4/go.mod h1:M00zcrAYWiW/mAP8Cod++xIrOqbCRWlqlERlMUIczMM=
+github.com/aws/aws-sdk-go-v2/service/appsync v1.42.0 h1:mmu+dJwudZLhEKWvgroM42y4ejwYeNJdEII4znEBx3c=
+github.com/aws/aws-sdk-go-v2/service/appsync v1.42.0/go.mod h1:M00zcrAYWiW/mAP8Cod++xIrOqbCRWlqlERlMUIczMM=
 github.com/aws/aws-sdk-go-v2/service/athena v1.49.6 h1:07Sa9Y2PUOr6zYNd10BGUrt9DqnrB79SEKAnUZ21t7k=
 github.com/aws/aws-sdk-go-v2/service/athena v1.49.6/go.mod h1:TwbhVBb7kE3tHpgWi1NSlPORwLjx8cg20F6vozbxjdY=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.12 h1:tmbM03Yhlw5Kqbt968iV1dubPyNQqfxNyQYJNiQ7ImM=
@@ -187,8 +187,8 @@ github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.10 h1:RcME0knUeb4vymcD6Q
 github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.10/go.mod h1:aMl/cfEuCAsgHqevJxZVTbHQLAHTCeLzWO3c31B1XbY=
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.12 h1:IGeFR8Up1yFQ0lbOjvFPplUnIUImT7Aug4YZTlDeJKI=
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.12/go.mod h1:GnFAcGAlooa5lZRzZ0+LOSu5uOYgHWbuNqolSv6LjQo=
-github.com/aws/aws-sdk-go-v2/service/datasync v1.44.7 h1:4iB8b4mUoFPoxVf7t+dRs76SrmbaiDpEvPVHOdkZW7U=
-github.com/aws/aws-sdk-go-v2/service/datasync v1.44.7/go.mod h1:MP+zm69UPFgktWkUgODxsO8+qtq6iliCgSJKYLAsNDA=
+github.com/aws/aws-sdk-go-v2/service/datasync v1.45.0 h1:x/BRRN4S+m1su/4i3Mj42qzWkRVaewtyMiOH85yVGeg=
+github.com/aws/aws-sdk-go-v2/service/datasync v1.45.0/go.mod h1:MP+zm69UPFgktWkUgODxsO8+qtq6iliCgSJKYLAsNDA=
 github.com/aws/aws-sdk-go-v2/service/datazone v1.25.6 h1:IbM5YFT1226DLKOo72znZCZqVaMWzVqIH2tolqLJj+I=
 github.com/aws/aws-sdk-go-v2/service/datazone v1.25.6/go.mod h1:sStw28AnrcxoXHWxF34068IGq5geXlpncJgNfD38LN0=
 github.com/aws/aws-sdk-go-v2/service/dax v1.23.12 h1:qRrYtookvIVHtYpqBBdDYeRTrFco25HixotrGL6zi38=
@@ -213,8 +213,8 @@ github.com/aws/aws-sdk-go-v2/service/drs v1.30.12 h1:k1FyeUfR+5wZgMfqvhgFrl7+T7I
 github.com/aws/aws-sdk-go-v2/service/drs v1.30.12/go.mod h1:2USWEHfvk6PxY9UOzkhgTM96mmuDfbgG7L/QMzmuRXk=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.6 h1:OBoVhuZ7zXKziB4Kyd1lDUzysef2zWY8pC2Doc0zuiQ=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.6/go.mod h1:P4zDzUQq/lYgWGFzXNAKkyyMtlTqWvroS3IPQ18SnLw=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.201.1 h1:HJUHMHbBg3stGO7ZZfpwbeK9xVhGS7GK8NScady6Moc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.201.1/go.mod h1:cRD0Fhzj0YD+uAh16NChQAv9/BB0S9x3YK9hLx1jb/k=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.202.0 h1:/kB9Uf7fgpYNLvwhAW0YiDSg7xQyxB6MbEYoC0yXtjs=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.202.0/go.mod h1:cRD0Fhzj0YD+uAh16NChQAv9/BB0S9x3YK9hLx1jb/k=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.38.7 h1:3fxpNAXVQV7J3dymLoQjoI5AxbrI4/FDYlfk+wPoB3s=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.38.7/go.mod h1:vj6+DOvmrbZgqmZvyrbMienKS3PQTHJpqa+BRBKR6Xc=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.29.5 h1:OIVRRBeqOvqNVyA9urTt5MeC2EVUbgJ5zHDMfnhS0lw=
@@ -249,8 +249,8 @@ github.com/aws/aws-sdk-go-v2/service/evidently v1.23.12 h1:njQRT/n17fiqOVutFy29U
 github.com/aws/aws-sdk-go-v2/service/evidently v1.23.12/go.mod h1:E1QKpxgBVhcNGlK+OKP0t/oiV+sZydnhAQl48oIAmno=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.28.12 h1:90xaPGq5XRCMSusa4Osxh1f6PACuH50u29NGE0Jg1so=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.28.12/go.mod h1:zvIOxATXB8qjcTQtIwLKThZJqcIV5hMKjW/750w1goo=
-github.com/aws/aws-sdk-go-v2/service/firehose v1.35.7 h1:IH2Rnwp4vF0RwoSphScySwWUAQZPMSMYiVtCQ7GzbCs=
-github.com/aws/aws-sdk-go-v2/service/firehose v1.35.7/go.mod h1:e5ovgxElE+7K0Pkl4meBboGn8922OGllgxAvVQgBLMo=
+github.com/aws/aws-sdk-go-v2/service/firehose v1.36.0 h1:X8KJAHwGcng290Z5SP70wqKAqvbuhaXQjocVQ+1+S2U=
+github.com/aws/aws-sdk-go-v2/service/firehose v1.36.0/go.mod h1:e5ovgxElE+7K0Pkl4meBboGn8922OGllgxAvVQgBLMo=
 github.com/aws/aws-sdk-go-v2/service/fis v1.31.7 h1:cbQ5G+n9OJ+IZ4RLjoDjkVoFt7kiGxE8kdLxp3+HSik=
 github.com/aws/aws-sdk-go-v2/service/fis v1.31.7/go.mod h1:K0pl22pYIH6bXKeAToBiHYZtzl1meLCkyCJRrk6Bi04=
 github.com/aws/aws-sdk-go-v2/service/fms v1.39.3 h1:3OCozoIA4p43L6TE55bUg0AA+O84SZF1Bp96kkVs1F0=
@@ -523,8 +523,8 @@ github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.9 h1:9/tQkLu3PjYo9w6kK79nM
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.9/go.mod h1:ZVza8hB17weyaaRLg8damI6yLR0t+mzO15zOdcoJStE=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.6 h1:4a7Y9RmVu9vHbA3nJt7jmuTYkEi4kL6UX8/qjLqiOCY=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.6/go.mod h1:M2GiUuNO1ewArwc/W/jFeexz7K0ceuOZgnArlbyP5o8=
-github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.5 h1:65YZKb8cxJd2QfISipZtZuWKvzYJq96JzRgV99QAgXY=
-github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.5/go.mod h1:6mnwqIdNZaLQ8ESO9M4YeiIFMFFbkk694LPCcvjMqDg=
+github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.8.0 h1:LsjUFWQKxAoOYh4xzo7L8V2pfjl+DtSx2t1qTaYFrtY=
+github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.8.0/go.mod h1:6mnwqIdNZaLQ8ESO9M4YeiIFMFFbkk694LPCcvjMqDg=
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.6 h1:BGK1AzA6X9ZbfmfUMLdMZXGdxtZ6BN1UUvSEXNB19Rs=
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.6/go.mod h1:SMuZFyMphnRMo8aJSd4P0VvIFcFnwDzyjGGyvoeLp6U=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.13 h1:Csa+nopgclKzWQ+FMNZiX1XYtj6KKAxYP1RBD9So8Jk=
