@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMemberDetectorFeature_basic(t *testing.T) {
@@ -35,10 +36,10 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", "RDS_LOGIN_EVENTS"),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
 			},
 		},
@@ -64,14 +65,14 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, "DISABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.name", "ECS_FARGATE_AGENT_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "name", "RUNTIME_MONITORING"),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
 			},
 		},
@@ -104,17 +105,17 @@ func testAccMemberDetectorFeature_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resource1Name, "status", "ENABLED"),
-					resource.TestCheckResourceAttr(resource1Name, "name", "EKS_RUNTIME_MONITORING"),
-					resource.TestCheckResourceAttr(resource1Name, "account_id", accountID),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource2Name, "status", "DISABLED"),
-					resource.TestCheckResourceAttr(resource2Name, "name", "S3_DATA_EVENTS"),
-					resource.TestCheckResourceAttr(resource2Name, "account_id", accountID),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrStatus, "DISABLED"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrName, "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource3Name, "status", "ENABLED"),
-					resource.TestCheckResourceAttr(resource3Name, "name", "LAMBDA_NETWORK_LOGS"),
-					resource.TestCheckResourceAttr(resource3Name, "account_id", accountID),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrName, "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrAccountID, accountID),
 				),
 			},
 		},
@@ -130,7 +131,7 @@ func testAccMemberDetectorFeatureExists(ctx context.Context, n string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
-		_, err := tfguardduty.FindMemberDetectorFeatureByThreePartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["account_id"], rs.Primary.Attributes["name"])
+		_, err := tfguardduty.FindMemberDetectorFeatureByThreePartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

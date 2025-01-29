@@ -54,7 +54,7 @@ func (r *resourceMemberDetectorFeature) Metadata(_ context.Context, req resource
 func (r *resourceMemberDetectorFeature) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					fwvalidators.AWSAccountID(),
@@ -70,7 +70,7 @@ func (r *resourceMemberDetectorFeature) Schema(ctx context.Context, req resource
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -79,7 +79,7 @@ func (r *resourceMemberDetectorFeature) Schema(ctx context.Context, req resource
 					enum.FrameworkValidate[awstypes.DetectorFeature](),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.FeatureStatus](),
@@ -91,13 +91,13 @@ func (r *resourceMemberDetectorFeature) Schema(ctx context.Context, req resource
 				CustomType: fwtypes.NewListNestedObjectTypeOf[additionalConfigurationModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								enum.FrameworkValidate[awstypes.OrgFeatureAdditionalConfiguration](),
 							},
 						},
-						"status": schema.StringAttribute{
+						names.AttrStatus: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								enum.FrameworkValidate[awstypes.FeatureStatus](),
