@@ -62,17 +62,17 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"creation_time": schema.StringAttribute{
+			names.AttrCreationTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"execution_role_arn": schema.StringAttribute{
+			names.AttrExecutionRoleARN: schema.StringAttribute{
 				Required: true,
 			},
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"next_invocation_time": schema.StringAttribute{
@@ -86,7 +86,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 			"query_string": schema.StringAttribute{
 				Required: true,
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ScheduledQueryState](), // ENABLED, DISABLED
 				Computed:   true,
 			},
@@ -106,7 +106,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							objectvalidator.IsRequired(),
 						},
 						Attributes: map[string]schema.Attribute{
-							"bucket_name": schema.StringAttribute{
+							names.AttrBucketName: schema.StringAttribute{
 								Required: true,
 							},
 							"encryption_option": schema.StringAttribute{
@@ -147,7 +147,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							"s3_report_location": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[s3ReportLocation](ctx),
 								Attributes: map[string]schema.Attribute{
-									"bucket_name": schema.StringAttribute{
+									names.AttrBucketName: schema.StringAttribute{
 										Computed: true,
 									},
 									"object_key": schema.StringAttribute{
@@ -197,7 +197,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							"query_spatial_coverage": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[querySpatialCoverage](ctx),
 								Blocks: map[string]schema.Block{
-									"max": schema.SingleNestedBlock{
+									names.AttrMax: schema.SingleNestedBlock{
 										CustomType: fwtypes.NewObjectTypeOf[querySpatialCoverageMax](ctx),
 										Attributes: map[string]schema.Attribute{
 											"partition_key": schema.ListAttribute{
@@ -208,7 +208,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 											"table_arn": schema.StringAttribute{
 												Computed: true,
 											},
-											"value": schema.Float64Attribute{
+											names.AttrValue: schema.Float64Attribute{
 												Computed: true,
 											},
 										},
@@ -218,13 +218,13 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							"query_temporal_range": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[queryTemporalRange](ctx),
 								Blocks: map[string]schema.Block{
-									"max": schema.SingleNestedBlock{
+									names.AttrMax: schema.SingleNestedBlock{
 										CustomType: fwtypes.NewObjectTypeOf[queryTemporalRangeMax](ctx),
 										Attributes: map[string]schema.Attribute{
 											"table_arn": schema.StringAttribute{
 												Computed: true,
 											},
-											"value": schema.Int64Attribute{
+											names.AttrValue: schema.Int64Attribute{
 												Computed: true,
 											},
 										},
@@ -247,7 +247,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							objectvalidator.IsRequired(),
 						},
 						Attributes: map[string]schema.Attribute{
-							"topic_arn": schema.StringAttribute{
+							names.AttrTopicARN: schema.StringAttribute{
 								Required: true,
 							},
 						},
@@ -281,7 +281,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 								"s3_report_location": schema.SingleNestedBlock{
 									CustomType: fwtypes.NewObjectTypeOf[s3ReportLocation](ctx),
 									Attributes: map[string]schema.Attribute{
-										"bucket_name": schema.StringAttribute{
+										names.AttrBucketName: schema.StringAttribute{
 											Computed: true,
 										},
 										"object_key": schema.StringAttribute{
@@ -331,7 +331,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 								"query_spatial_coverage": schema.SingleNestedBlock{
 									CustomType: fwtypes.NewObjectTypeOf[querySpatialCoverage](ctx),
 									Blocks: map[string]schema.Block{
-										"max": schema.SingleNestedBlock{
+										names.AttrMax: schema.SingleNestedBlock{
 											CustomType: fwtypes.NewObjectTypeOf[querySpatialCoverageMax](ctx),
 											Attributes: map[string]schema.Attribute{
 												"partition_key": schema.ListAttribute{
@@ -342,7 +342,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 												"table_arn": schema.StringAttribute{
 													Computed: true,
 												},
-												"value": schema.Float64Attribute{
+												names.AttrValue: schema.Float64Attribute{
 													Computed: true,
 												},
 											},
@@ -352,13 +352,13 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 								"query_temporal_range": schema.SingleNestedBlock{
 									CustomType: fwtypes.NewObjectTypeOf[queryTemporalRange](ctx),
 									Blocks: map[string]schema.Block{
-										"max": schema.SingleNestedBlock{
+										names.AttrMax: schema.SingleNestedBlock{
 											CustomType: fwtypes.NewObjectTypeOf[queryTemporalRangeMax](ctx),
 											Attributes: map[string]schema.Attribute{
 												"table_arn": schema.StringAttribute{
 													Computed: true,
 												},
-												"value": schema.Int64Attribute{
+												names.AttrValue: schema.Int64Attribute{
 													Computed: true,
 												},
 											},
@@ -376,7 +376,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 					objectvalidator.IsRequired(),
 				},
 				Attributes: map[string]schema.Attribute{
-					"schedule_expression": schema.StringAttribute{
+					names.AttrScheduleExpression: schema.StringAttribute{
 						Required: true,
 					},
 				},
@@ -402,10 +402,10 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							),
 						},
 						Attributes: map[string]schema.Attribute{
-							"database_name": schema.StringAttribute{
+							names.AttrDatabaseName: schema.StringAttribute{
 								Required: true,
 							},
-							"table_name": schema.StringAttribute{
+							names.AttrTableName: schema.StringAttribute{
 								Required: true,
 							},
 							"time_column": schema.StringAttribute{
@@ -427,7 +427,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 											CustomType: fwtypes.StringEnumType[awstypes.DimensionValueType](),
 											Required:   true,
 										},
-										"name": schema.StringAttribute{
+										names.AttrName: schema.StringAttribute{
 											Required: true,
 										},
 									},
@@ -511,7 +511,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -698,7 +698,7 @@ func (r *resourceScheduledQuery) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceScheduledQuery) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
 func (r *resourceScheduledQuery) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
