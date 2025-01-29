@@ -48,10 +48,6 @@ type indexResource struct {
 	framework.WithTimeouts
 }
 
-func (*indexResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_resourceexplorer2_index"
-}
-
 func (r *indexResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
