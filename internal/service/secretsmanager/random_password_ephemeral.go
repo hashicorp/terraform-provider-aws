@@ -29,10 +29,6 @@ type ephemeralRandomPassword struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (e *ephemeralRandomPassword) Metadata(_ context.Context, req ephemeral.MetadataRequest, resp *ephemeral.MetadataResponse) {
-	resp.TypeName = "aws_secretsmanager_random_password"
-}
-
 func (e *ephemeralRandomPassword) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
