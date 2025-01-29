@@ -5,14 +5,6 @@ page_title: "AWS: aws_billing_view"
 description: |-
   Terraform resource for managing an AWS Billing View.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
 # Resource: aws_billing_view
 
 Terraform resource for managing an AWS Billing View.
@@ -23,6 +15,8 @@ Terraform resource for managing an AWS Billing View.
 
 ```terraform
 resource "aws_billing_view" "example" {
+  name = "example"
+  source_views = ["arn:aws:billing::123456789012:billing-view/primary"]
 }
 ```
 
@@ -30,42 +24,72 @@ resource "aws_billing_view" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) Name of the custom billing view to be created.
+* `source_views` - (Required) List of ARNs of the source data views for the custom billing view.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `client_token` - (Optional) A unique, case-sensitive identifier you specify to ensure idempotency of the request.
+* `description` - (Optional) Description of the custom billing view.
+* `resource_tags` - (Optional) A list of key value map specifying tags associated to the billing view being created. Refer to the [resource-tags block](#resource-tags) documentation for more details.
+* `data_filter_experession` - (Optional) Filter Cost Explorer APIs using the expression. Refer to the [data-filter-expression block](#data-filter-expression) documentation for more details.
+
+### resource-tags
+
+A `resource-tags` block supports the following:
+
+* `key` - (Required) The key of the tag.
+* `value` - (Required) The value of the tag.
+
+### data-filter-expression
+
+A `data-filter-expression` block supports the following:
+
+* `dimensions` - (Optional) The specific `dimension` to use for `expression`. Refer to [#dimensions](#dimensions) for more details.
+* `tags` - (Optional) The specific `tag` to use for `expression`. Refer to [#tags](#tags) for more details.
+
+#### dimensions
+
+A `dimensions` block supports the following:
+
+* `key` - (Required) The key of the dimension. Possible values are `LINKED_ACCOUNT`.
+* `values` - (Required) A list of metadata values that you can use to filter and group your results.
+
+#### tags
+
+A `tags` block supports the following:
+
+* `key` - (Required) The key of the tag.
+* `values` - (Required) A list of values for the tag.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the View. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the View.
+* `created_at` - The timestamp when the billing view was created.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Billing View using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Billing View using the `arn`. For example:
 
 ```terraform
 import {
   to = aws_billing_view.example
-  id = "view-id-12345678"
+  id = "arn:aws:billing::123456789012:billing-view/example"
 }
 ```
 
-Using `terraform import`, import Billing View using the `example_id_arg`. For example:
+Using `terraform import`, import Billing View using the `arn`. For example:
 
 ```console
-% terraform import aws_billing_view.example view-id-12345678
+% terraform import aws_billing_view.example arn:aws:billing::123456789012:billing-view/example
 ```

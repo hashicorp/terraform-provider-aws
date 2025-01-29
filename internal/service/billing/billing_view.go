@@ -7,11 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/billing/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -38,6 +38,7 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_billing_view", name="View")
+// @Tags(identifierAttribute="arn")
 func newResourceView(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceView{}
 
@@ -112,11 +113,11 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"key": schema.StringAttribute{
+									names.AttrKey: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.Dimension](),
 									},
-									"values": schema.ListAttribute{
+									names.AttrValues: schema.ListAttribute{
 										Required:    true,
 										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
@@ -138,14 +139,14 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"key": schema.StringAttribute{
+									names.AttrKey: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(0, 1024),
 											stringvalidator.RegexMatches(regexache.MustCompile(`[\S\s]*`), "must contain any character"),
 										},
 									},
-									"values": schema.ListAttribute{
+									names.AttrValues: schema.ListAttribute{
 										Required:    true,
 										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
@@ -163,20 +164,20 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
-			"resource_tags": schema.ListNestedBlock{
+			names.AttrResourceTags: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[tagsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeBetween(0, 200),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"key": schema.StringAttribute{
+						names.AttrKey: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 128),
 							},
 						},
-						"values": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 256),
@@ -208,6 +209,8 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	input.ResourceTags = getTagsIn(ctx)
 
 	out, err := conn.CreateBillingView(ctx, input)
 	if err != nil {
@@ -304,7 +307,6 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateBillingView(ctx, input)
 		if err != nil {
 			resp.Diagnostics.AddError(

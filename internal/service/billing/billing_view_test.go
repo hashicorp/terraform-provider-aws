@@ -42,20 +42,52 @@ func TestAccBillingView_basic(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test description"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					//acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "billing", regexache.MustCompile(`view:.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "arn"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccBillingView_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var view awstypes.BillingViewElement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_billing_view.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view),
+				),
+			},
+			{
+				Config: testAccViewConfig_update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-new", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
 			},
 		},
 	})
@@ -171,6 +203,15 @@ resource "aws_billing_view" "test" {
   name         = "%s"
   description  = "Test description"
   source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
+}
+`, rName)
+}
+
+func testAccViewConfig_update(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_billing_view" "test" {
+  name         = "%s-new"
+  description  = "Test description updated"
 }
 `, rName)
 }
