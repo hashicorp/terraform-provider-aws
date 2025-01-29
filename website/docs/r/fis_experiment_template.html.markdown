@@ -49,6 +49,7 @@ resource "aws_fis_experiment_template" "example" {
 ```
 
 ## Example Usage with Report Configuration
+
 ```terraform
 data "aws_partition" "current" {}
 
@@ -73,41 +74,41 @@ data "aws_iam_policy_document" "report_access" {
   version = "2012-10-17"
 
   statement {
-    sid = "logsDelivery"
-    effect = "Allow"
-    actions = ["logs:CreateLogDelivery"]
+    sid       = "logsDelivery"
+    effect    = "Allow"
+    actions   = ["logs:CreateLogDelivery"]
     resources = ["*"]
   }
 
   statement {
-    sid = "ReportsBucket"
-    effect = "Allow"
-    actions = ["s3:PutObject", "s3:GetObject"]
+    sid       = "ReportsBucket"
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:GetObject"]
     resources = ["*"]
   }
 
   statement {
-    sid = "GetDashboard"
-    effect = "Allow"
-    actions = ["cloudwatch:GetDashboard"]
+    sid       = "GetDashboard"
+    effect    = "Allow"
+    actions   = ["cloudwatch:GetDashboard"]
     resources = ["*"]
   }
 
   statement {
-    sid = "GetDashboardData"
-    effect = "Allow"
-    actions = ["cloudwatch:getMetricWidgetImage"]
+    sid       = "GetDashboardData"
+    effect    = "Allow"
+    actions   = ["cloudwatch:getMetricWidgetImage"]
     resources = ["*"]
   }
 }
 
 resource "aws_iam_policy" "report_access" {
-  name = "report_access"
+  name   = "report_access"
   policy = data.aws_iam_policy_document.report_access.json
 }
 
 resource "aws_iam_role_policy_attachment" "report_access" {
-  role = aws_iam_role.test.name
+  role       = aws_iam_role.test.name
   policy_arn = aws_iam_policy.report_access.arn
 }
 

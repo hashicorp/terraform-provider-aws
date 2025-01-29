@@ -1270,12 +1270,6 @@ data "aws_iam_policy_document" "report_access" {
   }
 }
 
-
-resource "aws_iam_role_policy_attachment" "fis_access" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSFaultInjectionSimulatorEC2Access"
-}
-
 resource "aws_iam_policy" "report_access" {
   name   = "report_access"
   policy = data.aws_iam_policy_document.report_access.json
@@ -1414,12 +1408,6 @@ data "aws_iam_policy_document" "report_access" {
     actions   = ["cloudwatch:getMetricWidgetImage"]
     resources = ["*"]
   }
-}
-
-
-resource "aws_iam_role_policy_attachment" "fis_access" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSFaultInjectionSimulatorEC2Access"
 }
 
 resource "aws_iam_policy" "report_access" {

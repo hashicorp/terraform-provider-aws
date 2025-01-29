@@ -148,7 +148,6 @@ func resourceExperimentTemplate() *schema.Resource {
 			"experiment_report_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_sources": {
@@ -164,7 +163,7 @@ func resourceExperimentTemplate() *schema.Resource {
 												"dashboard_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws:cloudwatch::\d{12}:dashboard\/[a-zA-Z0-9_-]+$`), "must be in the format of arn:aws:cloudwatch::account-id:dashboard/dashboard-name"),
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -1149,8 +1148,8 @@ func flattenExperimentTemplateExperimentReportConfigurationS3Configuration(confi
 
 	dataResources := make([]map[string]interface{}, 1)
 	dataResources[0] = make(map[string]interface{})
-	dataResources[0]["bucket_name"] = aws.ToString(configured.BucketName)
-	dataResources[0]["prefix"] = aws.ToString(configured.Prefix)
+	dataResources[0][names.AttrBucketName] = aws.ToString(configured.BucketName)
+	dataResources[0][names.AttrPrefix] = aws.ToString(configured.Prefix)
 
 	return dataResources
 }
