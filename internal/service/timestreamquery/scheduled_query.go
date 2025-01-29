@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -111,6 +112,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							"encryption_option": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.S3EncryptionOption](),
 								Optional:   true,
+								Computed:   true,
 							},
 							"object_key_prefix": schema.StringAttribute{
 								Optional: true,
@@ -374,18 +376,30 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 					objectvalidator.IsRequired(),
 				},
 				Attributes: map[string]schema.Attribute{
-					"expression": schema.StringAttribute{
+					"schedule_expression": schema.StringAttribute{
 						Required: true,
 					},
 				},
 			},
 			"target_configuration": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[targetConfiguration](ctx),
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+					objectvalidator.AlsoRequires(
+						path.MatchRelative().AtName("timestream_configuration"),
+					),
+				},
 				Blocks: map[string]schema.Block{
 					"timestream_configuration": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[timestreamConfiguration](ctx),
 						Validators: []validator.Object{
-							objectvalidator.IsRequired(),
+							objectvalidator.AlsoRequires(
+								path.MatchRelative().AtName("dimension_mapping"),
+							),
+							objectvalidator.AtLeastOneOf(
+								path.MatchRelative().AtName("mixed_measure_mapping"),
+								path.MatchRelative().AtName("multi_measure_mappings"),
+							),
 						},
 						Attributes: map[string]schema.Attribute{
 							"database_name": schema.StringAttribute{
@@ -398,14 +412,13 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 								Required: true,
 							},
 							"measure_name_column": schema.StringAttribute{
-								Required: true,
+								Optional: true,
 							},
 						},
 						Blocks: map[string]schema.Block{
-							"dimension_mappings": schema.ListNestedBlock{
+							"dimension_mapping": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionMapping](ctx),
 								Validators: []validator.List{
-									listvalidator.IsRequired(),
 									listvalidator.SizeAtLeast(1),
 								},
 								NestedObject: schema.NestedBlockObject{
@@ -420,7 +433,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 									},
 								},
 							},
-							"mixed_measure_mappings": schema.ListNestedBlock{
+							"mixed_measure_mapping": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[mixedMeasureMapping](ctx),
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
@@ -439,7 +452,7 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 										},
 									},
 									Blocks: map[string]schema.Block{
-										"multi_measure_attribute_mappings": schema.ListNestedBlock{
+										"multi_measure_attribute_mapping": schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[multiMeasureAttributeMapping](ctx),
 											NestedObject: schema.NestedBlockObject{
 												Attributes: map[string]schema.Attribute{
@@ -461,17 +474,21 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 							},
 							"multi_measure_mappings": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[multiMeasureMappings](ctx),
+								Validators: []validator.Object{
+									objectvalidator.AlsoRequires(
+										path.MatchRelative().AtName("multi_measure_attribute_mapping"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"target_multi_measure_name": schema.StringAttribute{
 										Optional: true,
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"multi_measure_attribute_mappings": schema.ListNestedBlock{
+									"multi_measure_attribute_mapping": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[multiMeasureAttributeMapping](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtLeast(1),
-											listvalidator.IsRequired(),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -518,6 +535,9 @@ func (r *resourceScheduledQuery) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	clientToken := id.UniqueId()
+	input.ClientToken = aws.String(clientToken)
+
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateScheduledQuery(ctx, &input)
@@ -536,17 +556,20 @@ func (r *resourceScheduledQuery) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// CreateScheduledQueryOutput only contains ARN
+	plan.ARN = types.StringValue(aws.ToString(out.Arn))
 
-	_, err = waitScheduledQueryCreated(ctx, conn, plan.ARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	sqOut, err := waitScheduledQueryCreated(ctx, conn, plan.ARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamQuery, create.ErrActionWaitingForCreation, ResNameScheduledQuery, plan.Name.String(), err),
 			err.Error(),
 		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, sqOut, &plan, flex.WithFieldNamePrefix(ScheduledQueryFieldNamePrefix))...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -575,7 +598,7 @@ func (r *resourceScheduledQuery) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix(ScheduledQueryFieldNamePrefix))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -682,7 +705,7 @@ func (r *resourceScheduledQuery) ModifyPlan(ctx context.Context, request resourc
 	r.SetTagsAll(ctx, request, response)
 }
 
-func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client, id string, timeout time.Duration) (*awstypes.ScheduledQuery, error) {
+func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client, id string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{string(awstypes.ScheduledQueryStateEnabled)},
@@ -693,14 +716,14 @@ func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.ScheduledQuery); ok {
+	if out, ok := outputRaw.(*awstypes.ScheduledQueryDescription); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitScheduledQueryUpdated(ctx context.Context, conn *timestreamquery.Client, arn string, timeout time.Duration) (*awstypes.ScheduledQuery, error) {
+func waitScheduledQueryUpdated(ctx context.Context, conn *timestreamquery.Client, arn string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{string(awstypes.ScheduledQueryStateDisabled)},
 		Target:                    []string{string(awstypes.ScheduledQueryStateEnabled)},
@@ -711,14 +734,14 @@ func waitScheduledQueryUpdated(ctx context.Context, conn *timestreamquery.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.ScheduledQuery); ok {
+	if out, ok := outputRaw.(*awstypes.ScheduledQueryDescription); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client, arn string, timeout time.Duration) (*awstypes.ScheduledQuery, error) {
+func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client, arn string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{string(awstypes.ScheduledQueryStateEnabled), string(awstypes.ScheduledQueryStateDisabled)},
 		Target:  []string{},
@@ -727,7 +750,7 @@ func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.ScheduledQuery); ok {
+	if out, ok := outputRaw.(*awstypes.ScheduledQueryDescription); ok {
 		return out, err
 	}
 
@@ -819,7 +842,7 @@ type snsConfiguration struct {
 }
 
 type scheduleConfiguration struct {
-	Expression types.String `tfsdk:"expression"`
+	ScheduleExpression types.String `tfsdk:"schedule_expression"`
 }
 
 type targetConfiguration struct {
@@ -834,8 +857,8 @@ type timestreamConfiguration struct {
 	MeasureNameColumn types.String `tfsdk:"measure_name_column"`
 
 	// Blocks
-	DimensionMappings    fwtypes.ListNestedObjectValueOf[dimensionMapping]    `tfsdk:"dimension_mappings"`
-	MixedMeasureMappings fwtypes.ListNestedObjectValueOf[mixedMeasureMapping] `tfsdk:"mixed_measure_mappings"`
+	DimensionMapping     fwtypes.ListNestedObjectValueOf[dimensionMapping]    `tfsdk:"dimension_mapping"`
+	MixedMeasureMapping  fwtypes.ListNestedObjectValueOf[mixedMeasureMapping] `tfsdk:"mixed_measure_mapping"`
 	MultiMeasureMappings fwtypes.ObjectValueOf[multiMeasureMappings]          `tfsdk:"multi_measure_mappings"`
 }
 
@@ -852,7 +875,7 @@ type mixedMeasureMapping struct {
 	TargetMeasureName types.String                                  `tfsdk:"target_measure_name"`
 
 	// Blocks
-	MultiMeasureAttributeMappings fwtypes.ListNestedObjectValueOf[multiMeasureAttributeMapping] `tfsdk:"multi_measure_attribute_mappings"`
+	MultiMeasureAttributeMapping fwtypes.ListNestedObjectValueOf[multiMeasureAttributeMapping] `tfsdk:"multi_measure_attribute_mapping"`
 }
 
 type multiMeasureAttributeMapping struct {
@@ -866,7 +889,7 @@ type multiMeasureMappings struct {
 	TargetMultiMeasureName types.String `tfsdk:"target_multi_measure_name"`
 
 	// Blocks
-	MultiMeasureAttributeMappings fwtypes.ListNestedObjectValueOf[multiMeasureAttributeMapping] `tfsdk:"multi_measure_attribute_mappings"`
+	MultiMeasureAttributeMapping fwtypes.ListNestedObjectValueOf[multiMeasureAttributeMapping] `tfsdk:"multi_measure_attribute_mapping"`
 }
 
 type scheduledQueryRunSummary struct {
