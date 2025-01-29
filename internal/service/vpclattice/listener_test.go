@@ -539,7 +539,7 @@ func testAccCheckListenerExists(ctx context.Context, name string, listener *vpcl
 	}
 }
 
-func testAccListenerConfig_basic(rName string) string {
+func testAccListenerConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
@@ -559,7 +559,7 @@ resource "aws_vpclattice_target_group" "test" {
 }
 
 func testAccListenerConfig_fixedResponseHTTP(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
@@ -574,7 +574,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_fixedResponseHTTPS(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTPS"
@@ -625,7 +625,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardMultiTargetGroupHTTP(rName string, targetGroupName1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test1" {
   name = %[2]q
   type = "INSTANCE"
@@ -658,7 +658,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPServiceID(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
@@ -676,7 +676,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPServiceIDCustomPort(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   port               = 8080
@@ -695,7 +695,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPServiceARN(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name        = %[1]q
   protocol    = "HTTPS"
@@ -712,7 +712,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPSServiceID(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTPS"
@@ -729,7 +729,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPSServiceIDCustomPort(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   port               = 8443
@@ -747,7 +747,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
@@ -768,7 +768,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
