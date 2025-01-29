@@ -217,7 +217,7 @@ func testAccWriteRecords(ctx context.Context, name, database, table string) reso
 			MeasureValueType: awswritetypes.MeasureValueTypeMulti,
 			MeasureValues:    multiMeasures,
 			Time:             aws.String(strconv.FormatInt(currentTimeInMilliSeconds-10*int64(50), 10)),
-			TimeUnit:         awswritetypes.TimeUnit(awswritetypes.TimeUnitMilliseconds),
+			TimeUnit:         awswritetypes.TimeUnitMilliseconds,
 		})
 
 		input := &timestreamwrite.WriteRecordsInput{
