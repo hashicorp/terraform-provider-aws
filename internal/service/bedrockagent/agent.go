@@ -389,7 +389,7 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	agentID := data.ID.ValueString()
 	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
+		AgentId:                aws.String(agentID),
 		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
 	})
 
