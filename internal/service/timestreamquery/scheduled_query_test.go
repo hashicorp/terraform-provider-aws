@@ -61,23 +61,23 @@ func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledQueryExists(ctx, resourceName, &scheduledquery),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream", regexache.MustCompile(`scheduled-query/.+$`)),
-					acctest.CheckResourceAttrRFC3339(resourceName, "creation_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "error_report_configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "error_report_configuration.s3_configuration.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "error_report_configuration.s3_configuration.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "error_report_configuration.s3_configuration.encryption_option", "SSE_S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "next_invocation_time"),
 					resource.TestCheckResourceAttr(resourceName, "notification_configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_configuration.sns_configuration.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "notification_configuration.sns_configuration.topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "notification_configuration.sns_configuration.topic_arn", "aws_sns_topic.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "query_string", fmt.Sprintf("SELECT region, az, hostname, BIN(time, 15s) AS binned_timestamp,\n\tROUND(AVG(cpu_utilization), 2) AS avg_cpu_utilization, \n\tROUND(APPROX_PERCENTILE(cpu_utilization, 0.9), 2) AS p90_cpu_utilization, \n\tROUND(APPROX_PERCENTILE(cpu_utilization, 0.95), 2) AS p95_cpu_utilization, \n\tROUND(APPROX_PERCENTILE(cpu_utilization, 0.99), 2) AS p99_cpu_utilization \nFROM \"%[1]s\".\"%[1]s\"\nWHERE measure_name = 'metrics' AND time > ago(2h) \nGROUP BY region, hostname, az, BIN(time, 15s) \nORDER BY binned_timestamp ASC \nLIMIT 5\n", rName)),
 					resource.TestCheckResourceAttr(resourceName, "recently_failed_runs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_configuration.schedule_expression", "rate(1 hour)"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.%", "7"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.database_name", fmt.Sprintf("%s-results", rName)),
@@ -87,7 +87,7 @@ func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.0.name", "az"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.1.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.1.dimension_value_type", "VARCHAR"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.1.name", "region"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.1.name", names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.2.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.2.dimension_value_type", "VARCHAR"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.timestream_configuration.dimension_mapping.2.name", "hostname"),
@@ -116,7 +116,7 @@ func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccScheduledQueryImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "arn",
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -168,7 +168,7 @@ func testAccScheduledQueryImportStateIDFunc(resourceName string) resource.Import
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["arn"], nil
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 
@@ -190,7 +190,7 @@ func testAccWriteRecords(ctx context.Context, name, database, table string) reso
 		// region,us-east-1,az,us-east-1b,hostname,host-EOh5a,2020-03-18 01:28:46.608000000,MILLISECONDS,memory_utilization,66.99426972454896,DOUBLE,cpu_utilization,90.75165411419735,DOUBLE
 
 		dimensions := []awswritetypes.Dimension{{
-			Name:  aws.String("region"),
+			Name:  aws.String(names.AttrRegion),
 			Value: aws.String("us-east-2"), //lintignore:AWSAT003
 		}, {
 			Name:  aws.String("az"),
