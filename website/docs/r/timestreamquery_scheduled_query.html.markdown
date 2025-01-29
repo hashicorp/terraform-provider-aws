@@ -14,7 +14,7 @@ Terraform resource for managing an AWS Timestream Query Scheduled Query.
 
 ### Basic Usage
 
-Before creating a scheduled query, you must have a source database and table with ingested data. Below is a [multi-step example](#multi-step-example), providing an opportunity for data ingestion.  
+Before creating a scheduled query, you must have a source database and table with ingested data. Below is a [multi-step example](#multi-step-example), providing an opportunity for data ingestion.
 
 If your infrastructure is already set up—including the source database and table with data, results database and table, error report S3 bucket, SNS topic, and IAM role—you can create a scheduled query as follows:
 
@@ -104,9 +104,9 @@ EOF
 
 To ingest data before creating a scheduled query, this example provides multiple steps:
 
-    1. [Create the prerequisite infrastructure](#step-1-create-the-prerequisite-infrastructure)
-    2. [Ingest data](#step-2-ingest-data)
-    3. [Create the scheduled query](#step-3-create-the-scheduled-query)
+1. [Create the prerequisite infrastructure](#step-1-create-the-prerequisite-infrastructure)
+2. [Ingest data](#step-2-ingest-data)
+3. [Create the scheduled query](#step-3-create-the-scheduled-query)
 
 #### Step 1. Create the prerequisite infrastructure
 
@@ -381,7 +381,7 @@ The following arguments are optional:
 
 * `measure_name` - (Optional) Refers to the value of measure_name in a result row. This field is required if `measure_name_column` is provided.
 * `multi_measure_attribute_mapping` - (Optional) Configuration block for attribute mappings for `MULTI` value measures. Required when `measure_value_type` is `MULTI`. [See below.](#multi_measure_attribute_mapping)
-* `measure_value_type` - (Required) Type of the value that is to be read from `source_column`. Valid values are `BIGINT`, `BOOLEAN`, `DOUBLE`, `VARCHAR`, `MULTI`.        
+* `measure_value_type` - (Required) Type of the value that is to be read from `source_column`. Valid values are `BIGINT`, `BOOLEAN`, `DOUBLE`, `VARCHAR`, `MULTI`.
 * `source_column` - (Optional) Source column from which measure-value is to be read for result materialization.
 * `target_measure_name` - (Optional) Target measure name to be used. If not provided, the target measure name by default is `measure_name`, if provided, or `source_column` otherwise.
 
@@ -394,7 +394,7 @@ The following arguments are optional:
 ##### `multi_measure_mappings`
 
 * `multi_measure_attribute_mapping` - (Required) Attribute mappings to be used for mapping query results to ingest data for multi-measure attributes. [See above.](#multi_measure_attribute_mapping)
-* `target_multi_measure_name` - (Optional) Name of the target multi-measure name in the derived table. This input is required when `measure_name_column` is not provided. If `measure_name_column` is provided, then the value from that column will be used as the multi-measure name. 
+* `target_multi_measure_name` - (Optional) Name of the target multi-measure name in the derived table. This input is required when `measure_name_column` is not provided. If `measure_name_column` is provided, then the value from that column will be used as the multi-measure name.
 
 ## Attribute Reference
 
