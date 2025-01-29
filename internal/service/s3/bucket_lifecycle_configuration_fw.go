@@ -651,10 +651,32 @@ type abortIncompleteMultipartUploadModel struct {
 	DaysAfterInitiation types.Int32 `tfsdk:"days_after_initiation"`
 }
 
+var (
+	_ fwflex.Expander = lifecycleExpirationModel{}
+)
+
 type lifecycleExpirationModel struct {
 	Date                      timetypes.RFC3339 `tfsdk:"date" autoflex:",legacy"`
 	Days                      types.Int32       `tfsdk:"days" autoflex:",legacy"`
 	ExpiredObjectDeleteMarker types.Bool        `tfsdk:"expired_object_delete_marker" autoflex:",legacy"`
+}
+
+func (m lifecycleExpirationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.LifecycleExpiration
+
+	r.Date = fwflex.TimeFromFramework(ctx, m.Date)
+
+	r.Days = fwflex.Int32FromFrameworkInt32(ctx, m.Days)
+
+	if m.ExpiredObjectDeleteMarker.IsUnknown() || m.ExpiredObjectDeleteMarker.IsNull() {
+		if (m.Date.IsUnknown() || m.Date.IsNull()) && (m.Days.IsUnknown() || m.Days.IsNull()) {
+			r.ExpiredObjectDeleteMarker = aws.Bool(false)
+		}
+	} else {
+		r.ExpiredObjectDeleteMarker = fwflex.BoolFromFramework(ctx, m.ExpiredObjectDeleteMarker)
+	}
+
+	return &r, diags
 }
 
 type lifecycleRuleFilterModel struct {
