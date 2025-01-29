@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceScheduledQuery,
-			Name:    "Scheduled Query",
+			Factory:  newResourceScheduledQuery,
+			TypeName: "aws_timestreamquery_scheduled_query",
+			Name:     "Scheduled Query",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
