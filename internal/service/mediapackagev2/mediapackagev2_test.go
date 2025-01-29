@@ -21,6 +21,9 @@ func TestAccMediaPackageV2_serial(t *testing.T) {
 			acctest.CtDisappears: testAccMediaPackageV2ChannelGroup_disappears,
 			"tags":               testAccMediaPackageV2ChannelGroup_tagsSerial,
 		},
+		"Channel": {
+			acctest.CtBasic: testAccMediaPackageV2Channel_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

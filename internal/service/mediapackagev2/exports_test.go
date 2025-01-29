@@ -6,5 +6,6 @@ package mediapackagev2
 // Exports for use in tests only.
 var (
 	FindChannelGroupByID = findChannelGroupByID
+	FindChannelByID      = findChannelByID
 	ResourceChannelGroup = newResourceChannelGroup
 )
