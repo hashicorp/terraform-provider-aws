@@ -322,15 +322,12 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	}
 
 	const (
-		lifecycleConfigurationExtraRetryDelay    = 5 * time.Second
 		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 	)
 	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
 
 	err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
 		var err error
-
-		time.Sleep(lifecycleConfigurationExtraRetryDelay)
 
 		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
