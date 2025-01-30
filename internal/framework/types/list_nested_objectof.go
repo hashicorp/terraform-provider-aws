@@ -15,10 +15,11 @@ import (
 )
 
 var (
-	_ basetypes.ListTypable       = (*listNestedObjectTypeOf[struct{}])(nil)
-	_ NestedObjectCollectionType  = (*listNestedObjectTypeOf[struct{}])(nil)
-	_ basetypes.ListValuable      = (*ListNestedObjectValueOf[struct{}])(nil)
-	_ NestedObjectCollectionValue = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ basetypes.ListTypable                    = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ NestedObjectCollectionType               = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ basetypes.ListValuable                   = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ NestedObjectCollectionValue              = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ basetypes.ListValuableWithSemanticEquals = (*ListNestedObjectValueOf[struct{}])(nil)
 )
 
 type listSemanticEqualityFunc[T any] func(context.Context, ListNestedObjectValueOf[T], ListNestedObjectValueOf[T]) (bool, diag.Diagnostics)
