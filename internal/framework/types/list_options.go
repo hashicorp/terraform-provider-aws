@@ -4,6 +4,7 @@
 package types
 
 type ListNestedObjectOfOption[T any] func(*ListNestedObjectOfOptions[T])
+
 type ListNestedObjectOfOptions[T any] struct {
 	SemanticEqualityFunc listSemanticEqualityFunc[T]
 }

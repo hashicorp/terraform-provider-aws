@@ -486,7 +486,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	plan.StreamProcessorARN = fwflex.StringToFrameworkARN(ctx, out.StreamProcessorArn)
 
 	if plan.DataSharingPreference.IsNull() {
-		dataSharing, diag := fwtypes.NewListNestedObjectValueOfPtr(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)}, nil)
+		dataSharing, diag := fwtypes.NewListNestedObjectValueOfPtr(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
 		resp.Diagnostics.Append(diag...)
 		plan.DataSharingPreference = dataSharing
 		resp.Diagnostics.Append(req.Plan.Set(ctx, &plan)...)
