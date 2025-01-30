@@ -4,6 +4,7 @@
 package flex_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -12,10 +13,21 @@ import (
 )
 
 type mockWriteOnlyAttrGetter struct {
+	path  cty.Path
 	value cty.Value
 }
 
-func (m *mockWriteOnlyAttrGetter) GetRawConfigAt(_ cty.Path) (cty.Value, diag.Diagnostics) {
+func (m *mockWriteOnlyAttrGetter) GetRawConfigAt(path cty.Path) (cty.Value, diag.Diagnostics) {
+	if !path.Equals(m.path) {
+		return cty.NilVal, diag.Diagnostics{
+			diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Invalid config Path",
+				Detail:        fmt.Sprintf("expected: %v, got: %v", m.path, path),
+				AttributePath: path,
+			},
+		}
+	}
 	return m.value, nil
 }
 
@@ -28,20 +40,27 @@ func TestGetWriteOnlyValue(t *testing.T) {
 
 	testCases := map[string]struct {
 		input       cty.Path
-		inputType   cty.Type
 		setPath     cty.Path
+		inputType   cty.Type
 		value       cty.Value
 		expectError bool
 	}{
-		"valid value": {
+		"valid value type": {
 			input:     cty.GetAttrPath("test_path"),
 			inputType: cty.String,
 			value:     cty.StringVal("test_value"),
 		},
-		"invalid type": {
+		"invalid value type": {
 			input:       cty.GetAttrPath("test_path"),
 			inputType:   cty.String,
 			value:       cty.BoolVal(true),
+			expectError: true,
+		},
+		"invalid path": {
+			input:       cty.GetAttrPath("invalid_path"),
+			setPath:     cty.GetAttrPath("test_path"),
+			inputType:   cty.String,
+			value:       cty.StringVal("test_value"),
 			expectError: true,
 		},
 	}
@@ -51,6 +70,7 @@ func TestGetWriteOnlyValue(t *testing.T) {
 			t.Parallel()
 
 			m := mockWriteOnlyAttrGetter{
+				path:  testCase.setPath,
 				value: testCase.value,
 			}
 			_, diags := flex.GetWriteOnlyValue(&m, testCase.input, testCase.inputType)
