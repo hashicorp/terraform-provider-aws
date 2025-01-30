@@ -291,18 +291,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-					ctx = v.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := interceptorItems{}
-
 			if v.Tags != nil {
 				schema := r.SchemaMap()
 
@@ -327,15 +316,20 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				})
 			}
 
-			ds := &wrappedDataSource{
-				bootstrapContext: bootstrapContext,
-				interceptors:     interceptors,
-			}
+			opts := wrappedDataSourceOptions{
+				bootstrapContext: func(ctx context.Context, meta any) context.Context {
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if v, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+						ctx = v.RegisterLogger(ctx)
+					}
 
-			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = ds.Read(v)
+					return ctx
+				},
+				interceptors: interceptors,
+				typeName:     typeName,
 			}
-
+			wrapDataSource(r, opts)
 			provider.DataSourcesMap[typeName] = r
 		}
 
@@ -367,18 +361,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-					ctx = v.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := interceptorItems{}
-
 			if v.Tags != nil {
 				schema := r.SchemaMap()
 
@@ -414,37 +397,21 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				})
 			}
 
-			rs := &wrappedResource{
-				bootstrapContext: bootstrapContext,
-				interceptors:     interceptors,
-			}
+			opts := wrappedResourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, meta any) context.Context {
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if v, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+						ctx = v.RegisterLogger(ctx)
+					}
 
-			if v := r.CreateWithoutTimeout; v != nil {
-				r.CreateWithoutTimeout = rs.Create(v)
+					return ctx
+				},
+				interceptors: interceptors,
+				typeName:     typeName,
 			}
-			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = rs.Read(v)
-			}
-			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = rs.Update(v)
-			}
-			if v := r.DeleteWithoutTimeout; v != nil {
-				r.DeleteWithoutTimeout = rs.Delete(v)
-			}
-			if v := r.Importer; v != nil {
-				if v := v.StateContext; v != nil {
-					r.Importer.StateContext = rs.State(v)
-				}
-			}
-			if v := r.CustomizeDiff; v != nil {
-				r.CustomizeDiff = rs.CustomizeDiff(v)
-			}
-			for _, stateUpgrader := range r.StateUpgraders {
-				if v := stateUpgrader.Upgrade; v != nil {
-					stateUpgrader.Upgrade = rs.StateUpgrade(v)
-				}
-			}
-
+			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
 		}
 	}
