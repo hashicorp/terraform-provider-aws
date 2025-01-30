@@ -234,8 +234,8 @@ func TestListNestedObjectValueOfListSemanticEquals(t *testing.T) {
 			want:    true,
 		},
 		"equal empty current and nil slice": {
-			other:   fwtypes.NewListNestedObjectValueOfNull[ObjectA](ctx),
 			current: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, emptySlice, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
+			other:   fwtypes.NewListNestedObjectValueOfNull[ObjectA](ctx),
 			want:    true,
 		},
 		"not equal": {
