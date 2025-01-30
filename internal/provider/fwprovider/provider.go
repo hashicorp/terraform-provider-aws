@@ -331,20 +331,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			}
 
 			typeName := v.TypeName
-
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-					ctx = meta.RegisterLogger(ctx)
-					ctx = flex.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := dataSourceInterceptors{}
-
 			if v.Tags != nil {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -364,8 +351,25 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
 			}
 
+			opts := wrappedDataSourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, meta *conns.AWSClient) context.Context {
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if meta != nil {
+						ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
+						ctx = meta.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
+					}
+
+					return ctx
+				},
+				inner:        inner,
+				interceptors: interceptors,
+				typeName:     typeName,
+			}
+
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, typeName, inner, interceptors)
+				return newWrappedDataSource(opts)
 			})
 		}
 	}

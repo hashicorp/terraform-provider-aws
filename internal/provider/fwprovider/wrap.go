@@ -16,42 +16,43 @@ import (
 // contextFunc augments Context.
 type contextFunc func(context.Context, *conns.AWSClient) context.Context
 
-// wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
-type wrappedDataSource struct {
+type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	inner            datasource.DataSourceWithConfigure
 	interceptors     dataSourceInterceptors
-	meta             *conns.AWSClient
 	typeName         string
 }
 
-func newWrappedDataSource(bootstrapContext contextFunc, typeName string, inner datasource.DataSourceWithConfigure, interceptors dataSourceInterceptors) datasource.DataSourceWithConfigure {
+// wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
+type wrappedDataSource struct {
+	meta *conns.AWSClient
+	opts wrappedDataSourceOptions
+}
+
+func newWrappedDataSource(opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
 	return &wrappedDataSource{
-		bootstrapContext: bootstrapContext,
-		inner:            inner,
-		interceptors:     interceptors,
-		typeName:         typeName,
+		opts: opts,
 	}
 }
 
 func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	// This method does not call down to the inner data source.
-	response.TypeName = w.typeName
+	response.TypeName = w.opts.typeName
 }
 
 func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Schema(ctx, request, response)
+	ctx = w.opts.bootstrapContext(ctx, w.meta)
+	w.opts.inner.Schema(ctx, request, response)
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	f := func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
-		w.inner.Read(ctx, request, response)
+		w.opts.inner.Read(ctx, request, response)
 		return response.Diagnostics
 	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedDataSourceReadHandler(w.interceptors.read(), f, w.meta)(ctx, request, response)
+	ctx = w.opts.bootstrapContext(ctx, w.meta)
+	diags := interceptedDataSourceReadHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -59,13 +60,13 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
 		w.meta = v
 	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Configure(ctx, request, response)
+	ctx = w.opts.bootstrapContext(ctx, w.meta)
+	w.opts.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
-	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
+	if v, ok := w.opts.inner.(datasource.DataSourceWithConfigValidators); ok {
+		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		return v.ConfigValidators(ctx)
 	}
 
