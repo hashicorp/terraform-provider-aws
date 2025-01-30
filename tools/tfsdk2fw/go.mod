@@ -286,7 +286,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.25.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.30.8 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
-	github.com/beevik/etree v1.4.1 // indirect
+	github.com/beevik/etree v1.5.0 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/cedar-policy/cedar-go v0.1.0 // indirect
 	github.com/cloudflare/circl v1.5.0 // indirect
