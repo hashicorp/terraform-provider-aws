@@ -43,6 +43,17 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
 			},
+			{
+				Config: testAccMemberDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "DISABLED", accountID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccMemberDetectorFeatureExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
+				),
+			},
 		},
 	})
 }
@@ -63,15 +74,17 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, "DISABLED", "ENABLED"),
+				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, "DISABLED", "ENABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.name", "ECS_FARGATE_AGENT_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.2.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.2.name", "EC2_AGENT_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RUNTIME_MONITORING"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
@@ -149,7 +162,7 @@ resource "aws_guardduty_member_detector_feature" "test" {
 `, name, status, accountID))
 }
 
-func testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, eksStatus, ecsStatus string) string {
+func testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, eksStatus, ecsStatus, ec2Status string) string {
 	return acctest.ConfigCompose(testAccMemberDetectorFeatureConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_member_detector_feature" "test" {
     detector_id = data.aws_guardduty_detector.test.id
@@ -166,8 +179,13 @@ resource "aws_guardduty_member_detector_feature" "test" {
         name   = "ECS_FARGATE_AGENT_MANAGEMENT"
         status = %[3]q
     }
+
+    additional_configuration {
+        name   = "EC2_AGENT_MANAGEMENT"
+        status = %[4]q
+    }
 }
-`, accountID, eksStatus, ecsStatus))
+`, accountID, eksStatus, ecsStatus, ec2Status))
 }
 
 func testAccMemberDetectorFeatureConfig_multiple(accountID, status1, status2, status3 string) string {

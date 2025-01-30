@@ -212,7 +212,7 @@ func updateMemberDetectors(ctx context.Context, conn *guardduty.Client, input *g
 		return err
 	}
 
-	if err == nil && len(output.UnprocessedAccounts) > 0 {
+	if len(output.UnprocessedAccounts) > 0 {
 		return errors.New(aws.ToString(output.UnprocessedAccounts[0].Result))
 	}
 
