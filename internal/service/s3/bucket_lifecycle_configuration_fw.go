@@ -719,9 +719,47 @@ type tagModel struct {
 	Value types.String `tfsdk:"value"`
 }
 
+var (
+	_ fwflex.Expander  = lifecycleRuleAndOperatorModel{}
+	_ fwflex.Flattener = &lifecycleRuleAndOperatorModel{}
+)
+
 type lifecycleRuleAndOperatorModel struct {
 	ObjectSizeGreaterThan types.Int64  `tfsdk:"object_size_greater_than" autoflex:",legacy"`
 	ObjectSizeLessThan    types.Int64  `tfsdk:"object_size_less_than" autoflex:",legacy"`
 	Prefix                types.String `tfsdk:"prefix" autoflex:",legacy"`
 	Tags                  tftags.Map   `tfsdk:"tags"`
+}
+
+func (m lifecycleRuleAndOperatorModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.LifecycleRuleAndOperator
+
+	r.ObjectSizeGreaterThan = fwflex.Int64FromFramework(ctx, m.ObjectSizeGreaterThan)
+
+	r.ObjectSizeLessThan = fwflex.Int64FromFramework(ctx, m.ObjectSizeLessThan)
+
+	r.Prefix = fwflex.StringFromFramework(ctx, m.Prefix)
+
+	if tags := Tags(tftags.New(ctx, m.Tags).IgnoreAWS()); len(tags) > 0 {
+		r.Tags = tags
+	}
+
+	return &r, diags
+}
+
+func (m *lifecycleRuleAndOperatorModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	and, ok := v.(awstypes.LifecycleRuleAndOperator)
+	if !ok {
+		return diags // TODO: return an actual error here
+	}
+
+	m.ObjectSizeGreaterThan = fwflex.Int64ToFrameworkLegacy(ctx, and.ObjectSizeGreaterThan)
+
+	m.ObjectSizeLessThan = fwflex.Int64ToFrameworkLegacy(ctx, and.ObjectSizeLessThan)
+
+	m.Prefix = fwflex.StringToFrameworkLegacy(ctx, and.Prefix)
+
+	m.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, keyValueTags(ctx, and.Tags).Map()))
+
+	return diags
 }
