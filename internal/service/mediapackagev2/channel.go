@@ -79,79 +79,9 @@ func (r *resourceChannel) Schema(ctx context.Context, request resource.SchemaReq
 					}()...),
 				},
 			},
-			// AttributeName("ingest_endpoints"): protocol version 5 cannot have Attributes set
-			//"ingest_endpoints": schema.ListNestedAttribute{
-			// //Optional:  true,
-			// CustomType: fwtypes.NewListNestedObjectTypeOf[ingestEndpointModel](ctx),
-			// Computed:  true,
-			// PlanModifiers: []planmodifier.List{
-			//  listplanmodifier.UseStateForUnknown(),
-			// },
-			// NestedObject: schema.NestedAttributeObject{
-			//  Attributes: map[string]schema.Attribute{
-			//   "id": schema.StringAttribute{
-			//    Computed: true,
-			//    PlanModifiers: []planmodifier.String{
-			//     stringplanmodifier.UseStateForUnknown(),
-			//    },
-			//   },
-			//   "url": schema.StringAttribute{
-			//    Computed: true,
-			//    PlanModifiers: []planmodifier.String{
-			//     stringplanmodifier.UseStateForUnknown(),
-			//    },
-			//   },
-			//  },
-			// },
-			//},
-			//names.AttrTags:  tftags.TagsAttribute(),
-			//names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
-		// Blocks: map[string]schema.Block{
-		// "ingest_endpoints": schema.ListNestedBlock{
-		//  CustomType: fwtypes.NewListNestedObjectTypeOf[ingestEndpointModel](ctx),
-		//  PlanModifiers: []planmodifier.List{
-		//   listplanmodifier.UseStateForUnknown(),
-		//  },
-		//  Validators: []validator.List{
-		//   listvalidator.SizeAtLeast(2),
-		//  },
-		//  NestedObject: schema.NestedBlockObject{
-		//   Attributes: map[string]schema.Attribute{
-		//    "id": schema.StringAttribute{
-		//     Computed: true,
-		//     PlanModifiers: []planmodifier.String{
-		//      stringplanmodifier.UseStateForUnknown(),
-		//     },
-		//    },
-		//    "url": schema.StringAttribute{
-		//     Computed: true,
-		//     PlanModifiers: []planmodifier.String{
-		//      stringplanmodifier.UseStateForUnknown(),
-		//     },
-		//    },
-		//   },
-		//  },
-		// },
-		// //"ingest_endpoints": schema.SetNestedBlock{
-		// // CustomType: fwtypes.NewSetNestedObjectTypeOf[ingestEndpointModel](ctx),
-		// // PlanModifiers: []planmodifier.Set{
-		// //  setplanmodifier.UseStateForUnknown(),
-		// // },
-		// // NestedObject: schema.NestedBlockObject{
-		// //  Attributes: map[string]schema.Attribute{
-		// //   "id": schema.StringAttribute{
-		// //    Optional: true,
-		// //    Computed: true,
-		// //   },
-		// //   "url": schema.StringAttribute{
-		// //    Optional: true,
-		// //    Computed: true,
-		// //   },
-		// //  },
-		// // },
-		// //},
-		// },
 	}
 
 	response.Schema = s
@@ -247,22 +177,22 @@ func (r *resourceChannel) Update(ctx context.Context, request resource.UpdateReq
 	}
 
 	if diff.HasChanges() {
-		input := mediapackagev2.UpdateChannelGroupInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+		input := mediapackagev2.UpdateChannelInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix(ChannelFieldNamePrefix))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		output, err := conn.UpdateChannelGroup(ctx, &input)
+		output, err := conn.UpdateChannel(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.MediaPackageV2, create.ErrActionUpdating, ResNameChannelGroup, state.Name.String(), err),
+				create.ProblemStandardMessage(names.MediaPackageV2, create.ErrActionUpdating, ResNameChannel, state.Name.String(), err),
 				err.Error(),
 			)
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan, fwflex.WithFieldNamePrefix(ChannelGroupFieldNamePrefix))...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan, fwflex.WithFieldNamePrefix(ChannelFieldNamePrefix))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -330,16 +260,8 @@ type resourceChannelData struct {
 	ChannelGroupName types.String `tfsdk:"channel_group_name"`
 	Description      types.String `tfsdk:"description"`
 	InputType        types.String `tfsdk:"input_type"`
-	//IngestEndpoints types.List  `tfsdk:"ingest_endpoints"`
-	//IngestEndpoints fwtypes.ListNestedObjectValueOf[ingestEndpointModel] `tfsdk:"ingest_endpoints"`
-	//////IngestEndpoints fwtypes.SetNestedObjectValueOf[ingestEndpointModel] `tfsdk:"ingest_endpoints"`
-	Tags    tftags.Map `tfsdk:"tags"`
-	TagsAll tftags.Map `tfsdk:"tags_all"`
-}
-
-type ingestEndpointModel struct {
-	Id  types.String `tfsdk:"id"`
-	Url types.String `tfsdk:"url"`
+	Tags             tftags.Map   `tfsdk:"tags"`
+	TagsAll          tftags.Map   `tfsdk:"tags_all"`
 }
 
 func findChannelByID(ctx context.Context, conn *mediapackagev2.Client, channelGroupName string, channelName string) (*mediapackagev2.GetChannelOutput, error) {

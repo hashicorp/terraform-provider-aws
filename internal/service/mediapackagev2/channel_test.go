@@ -68,11 +68,11 @@ func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_media_packagev2_channel_group" {
+			if rs.Type != "aws_media_packagev2_channel" {
 				continue
 			}
 
-			_, err := tfmediapackagev2.FindChannelGroupByID(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+			_, err := tfmediapackagev2.FindChannelByID(ctx, conn, rs.Primary.Attributes["channel_group_name"], rs.Primary.Attributes[names.AttrARN])
 			if err == nil {
 				return fmt.Errorf("MediaPackageV2 Channel Group: %s not deleted", rs.Primary.ID)
 			}
