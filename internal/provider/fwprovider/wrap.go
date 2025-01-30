@@ -36,6 +36,7 @@ func newWrappedDataSource(bootstrapContext contextFunc, typeName string, inner d
 }
 
 func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	// This method does not call down to the inner data source.
 	response.TypeName = w.typeName
 }
 
@@ -91,6 +92,7 @@ func newWrappedEphemeralResource(bootstrapContext contextFunc, typeName string, 
 }
 
 func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
+	// This method does not call down to the inner ephemeral resource.
 	response.TypeName = w.typeName
 }
 
@@ -162,6 +164,7 @@ func newWrappedResource(bootstrapContext contextFunc, typeName string, inner res
 }
 
 func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	// This method does not call down to the inner resource.
 	response.TypeName = w.typeName
 }
 
