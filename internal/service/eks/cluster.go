@@ -635,7 +635,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if cluster.OutpostConfig != nil {
 		d.Set("cluster_id", cluster.Id)
 	}
-	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
+	if err := d.Set("compute_config", cleanComputeConfig(cluster, d)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
@@ -662,7 +662,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
-	if err := d.Set("storage_config", flattenStorageConfigResponse(cluster.StorageConfig)); err != nil {
+	if err := d.Set("storage_config", cleanStorageConfig(cluster, d)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
 	}
 	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
@@ -730,9 +730,41 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
-		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
-		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
-		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
+		oldComputeConfig, computeConfig := getComputeConfigChange(d)
+		oldKubernetesNetworkConfig, kubernetesNetworkConfig := getKubernetesNetworkConfigChange(d)
+		oldStorageConfig, storageConfig := getStorageConfigChange(d)
+
+		oldAutoModeEnabled := autoModeEnabled(oldComputeConfig, oldKubernetesNetworkConfig, oldStorageConfig)
+		newAutoModeEnabled := autoModeEnabled(computeConfig, kubernetesNetworkConfig, storageConfig)
+
+		// If we are disabling auto mode, we might need to populate auto mode config options that are nil.
+		// Setting some explicitly to false and others to nil will cause InputValidationErrors
+		if oldAutoModeEnabled && !newAutoModeEnabled {
+			if computeConfig == nil {
+				computeConfig = &types.ComputeConfigRequest{
+					Enabled: aws.Bool(false),
+				}
+			}
+
+			if kubernetesNetworkConfig == nil {
+				kubernetesNetworkConfig = &types.KubernetesNetworkConfigRequest{}
+			}
+			if kubernetesNetworkConfig.ElasticLoadBalancing == nil {
+				kubernetesNetworkConfig.ElasticLoadBalancing = &types.ElasticLoadBalancing{
+					Enabled: aws.Bool(false),
+				}
+			}
+
+			if storageConfig == nil {
+				storageConfig = &types.StorageConfigRequest{}
+			}
+
+			if storageConfig.BlockStorage == nil {
+				storageConfig.BlockStorage = &types.BlockStorage{
+					Enabled: aws.Bool(false),
+				}
+			}
+		}
 
 		input := &eks.UpdateClusterConfigInput{
 			Name:                    aws.String(d.Id()),
@@ -1789,4 +1821,63 @@ func validateAutoModeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ 
 	}
 
 	return nil
+}
+
+func getComputeConfigChange(d *schema.ResourceData) (old, new *types.ComputeConfigRequest) {
+	oldRaw, newRaw := d.GetChange("compute_config")
+	old = expandComputeConfigRequest(oldRaw.([]interface{}))
+	new = expandComputeConfigRequest(newRaw.([]interface{}))
+	return old, new
+}
+
+func getKubernetesNetworkConfigChange(d *schema.ResourceData) (old, new *types.KubernetesNetworkConfigRequest) {
+	oldRaw, newRaw := d.GetChange("kubernetes_network_config")
+	old = expandKubernetesNetworkConfigRequest(oldRaw.([]interface{}))
+	new = expandKubernetesNetworkConfigRequest(newRaw.([]interface{}))
+	return old, new
+}
+
+func getStorageConfigChange(d *schema.ResourceData) (old, new *types.StorageConfigRequest) {
+	oldRaw, newRaw := d.GetChange("storage_config")
+	old = expandStorageConfigRequest(oldRaw.([]interface{}))
+	new = expandStorageConfigRequest(newRaw.([]interface{}))
+	return old, new
+}
+
+func autoModeEnabled(computeConfig *types.ComputeConfigRequest, networkConfig *types.KubernetesNetworkConfigRequest, storageConfig *types.StorageConfigRequest) bool {
+	return (computeConfig != nil && computeConfig.Enabled != nil && aws.ToBool(computeConfig.Enabled)) &&
+		(networkConfig != nil && networkConfig.ElasticLoadBalancing != nil && networkConfig.ElasticLoadBalancing.Enabled != nil && aws.ToBool(networkConfig.ElasticLoadBalancing.Enabled)) &&
+		(storageConfig != nil && storageConfig.BlockStorage != nil && storageConfig.BlockStorage.Enabled != nil && aws.ToBool(storageConfig.BlockStorage.Enabled))
+}
+
+func cleanComputeConfig(cluster *types.Cluster, d *schema.ResourceData) []map[string]interface{} {
+	computeConfig := flattenComputeConfigResponse(cluster.ComputeConfig)
+	var currentComputeConfig *types.ComputeConfigRequest
+	if v, ok := d.GetOk("compute_config"); ok {
+		currentComputeConfig = expandComputeConfigRequest(v.([]interface{}))
+	}
+
+	// If the compute_config was removed after having auto mode enabled before, the API will now return enabled=false.
+	// Zero out the compute config in order to align the state with the config.
+	if currentComputeConfig == nil && cluster.ComputeConfig != nil && cluster.ComputeConfig.Enabled != nil && !*cluster.ComputeConfig.Enabled && len(cluster.ComputeConfig.NodePools) == 0 && cluster.ComputeConfig.NodeRoleArn == nil {
+		computeConfig = nil
+	}
+
+	return computeConfig
+}
+
+func cleanStorageConfig(cluster *types.Cluster, d *schema.ResourceData) []interface{} {
+	storageConfig := flattenStorageConfigResponse(cluster.StorageConfig)
+	var currentStorageConfig *types.StorageConfigRequest
+	if v, ok := d.GetOk("storage_config"); ok {
+		currentStorageConfig = expandStorageConfigRequest(v.([]interface{}))
+	}
+
+	// If the storage_config was removed after having auto mode enabled before, the API will now return enabled=false.
+	// Zero out the storage config in order to align the state with the config.
+	if currentStorageConfig == nil && cluster.StorageConfig != nil && cluster.StorageConfig.BlockStorage != nil && !*cluster.StorageConfig.BlockStorage.Enabled {
+		storageConfig = nil
+	}
+
+	return storageConfig
 }
