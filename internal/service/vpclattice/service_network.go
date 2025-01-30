@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_vpclattice_service_network", name="Service Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkCreate,
