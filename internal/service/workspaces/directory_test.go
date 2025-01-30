@@ -464,6 +464,8 @@ func testAccDirectory_tenancy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
+	sharedTenancy := "SHARED"
+	dedicatedTenancy := "DEDICATED"
 
 	resourceName := "aws_workspaces_directory.test"
 
@@ -476,7 +478,7 @@ func testAccDirectory_tenancy(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_creationPropertiesSharedTenancy(rName, domain),
+				Config: testAccDirectoryConfig_creationPropertiesTenancy(rName, domain, sharedTenancy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "SHARED"),
@@ -488,7 +490,7 @@ func testAccDirectory_tenancy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDirectoryConfig_creationPropertiesDedicatedTenancy(rName, domain),
+				Config: testAccDirectoryConfig_creationPropertiesTenancy(rName, domain, dedicatedTenancy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "DEDICATED"),
@@ -500,7 +502,7 @@ func testAccDirectory_tenancy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDirectoryConfig_creationPropertiesEmptyTenancy(rName, domain),
+				Config: testAccDirectoryConfig_creationPropertiesTenancy(rName, domain, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", ""),
@@ -942,52 +944,20 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccDirectoryConfig_creationPropertiesSharedTenancy(rName, domain string) string {
+func testAccDirectoryConfig_creationPropertiesTenancy(rName, domain, tenancy string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
-  tenancy = "SHARED"
+  tenancy = "%s"
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
-`, rName))
-}
-
-func testAccDirectoryConfig_creationPropertiesDedicatedTenancy(rName, domain string) string {
-	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
-		fmt.Sprintf(`
-resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
-
-  tenancy = "DEDICATED"
-
-  tags = {
-    Name = "tf-testacc-workspaces-directory-%[1]s"
-  }
-}
-`, rName))
-}
-
-func testAccDirectoryConfig_creationPropertiesEmptyTenancy(rName, domain string) string {
-	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
-		fmt.Sprintf(`
-resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
-
-  tenancy = ""
-
-  tags = {
-    Name = "tf-testacc-workspaces-directory-%[1]s"
-  }
-}
-`, rName))
+`, rName, tenancy))
 }
 
 func testAccDirectoryConfig_ipGroupIdsCreate(rName, domain string) string {
