@@ -134,67 +134,6 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 	}
 }
 
-// contextFunc augments Context.
-type contextFunc func(context.Context, any) context.Context
-
-// wrappedDataSource represents an interceptor dispatcher for a Plugin SDK v2 data source.
-type wrappedDataSource struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     interceptorItems
-}
-
-func (ds *wrappedDataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return interceptedHandler(ds.bootstrapContext, ds.interceptors, f, Read)
-}
-
-// wrappedResource represents an interceptor dispatcher for a Plugin SDK v2 resource.
-type wrappedResource struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     interceptorItems
-}
-
-func (r *wrappedResource) Create(f schema.CreateContextFunc) schema.CreateContextFunc {
-	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Create)
-}
-
-func (r *wrappedResource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Read)
-}
-
-func (r *wrappedResource) Update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
-	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Update)
-}
-
-func (r *wrappedResource) Delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Delete)
-}
-
-func (r *wrappedResource) State(f schema.StateContextFunc) schema.StateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx = r.bootstrapContext(ctx, meta)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func (r *wrappedResource) CustomizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx = r.bootstrapContext(ctx, meta)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
-	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
-		ctx = r.bootstrapContext(ctx, meta)
-
-		return f(ctx, rawState, meta)
-	}
-}
-
 type tagsCRUDFunc func(context.Context, schemaResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 // tagsResourceInterceptor implements transparent tagging for resources.

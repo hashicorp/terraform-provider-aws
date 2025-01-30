@@ -19,20 +19,21 @@ type contextFunc func(context.Context, *conns.AWSClient) context.Context
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	inner            datasource.DataSourceWithConfigure
 	interceptors     dataSourceInterceptors
 	typeName         string
 }
 
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
-	meta *conns.AWSClient
-	opts wrappedDataSourceOptions
+	inner datasource.DataSourceWithConfigure
+	meta  *conns.AWSClient
+	opts  wrappedDataSourceOptions
 }
 
-func newWrappedDataSource(opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
+func newWrappedDataSource(inner datasource.DataSourceWithConfigure, opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
 	return &wrappedDataSource{
-		opts: opts,
+		inner: inner,
+		opts:  opts,
 	}
 }
 
@@ -43,12 +44,12 @@ func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.Met
 
 func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.opts.inner.Schema(ctx, request, response)
+	w.inner.Schema(ctx, request, response)
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	f := func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
-		w.opts.inner.Read(ctx, request, response)
+		w.inner.Read(ctx, request, response)
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
@@ -61,11 +62,11 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 		w.meta = v
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.opts.inner.Configure(ctx, request, response)
+	w.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
-	if v, ok := w.opts.inner.(datasource.DataSourceWithConfigValidators); ok {
+	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		return v.ConfigValidators(ctx)
 	}
@@ -76,20 +77,21 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 type wrappedEphemeralResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	inner            ephemeral.EphemeralResourceWithConfigure
 	interceptors     ephemeralResourceInterceptors
 	typeName         string
 }
 
 // wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
 type wrappedEphemeralResource struct {
-	meta *conns.AWSClient
-	opts wrappedEphemeralResourceOptions
+	inner ephemeral.EphemeralResourceWithConfigure
+	meta  *conns.AWSClient
+	opts  wrappedEphemeralResourceOptions
 }
 
-func newWrappedEphemeralResource(opts wrappedEphemeralResourceOptions) ephemeral.EphemeralResourceWithConfigure {
+func newWrappedEphemeralResource(inner ephemeral.EphemeralResourceWithConfigure, opts wrappedEphemeralResourceOptions) ephemeral.EphemeralResourceWithConfigure {
 	return &wrappedEphemeralResource{
-		opts: opts,
+		inner: inner,
+		opts:  opts,
 	}
 }
 
@@ -100,12 +102,12 @@ func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemer
 
 func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.opts.inner.Schema(ctx, request, response)
+	w.inner.Schema(ctx, request, response)
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.opts.inner.Open(ctx, request, response)
+	w.inner.Open(ctx, request, response)
 }
 
 func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
@@ -113,25 +115,25 @@ func (w *wrappedEphemeralResource) Configure(ctx context.Context, request epheme
 		w.meta = v
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.opts.inner.Configure(ctx, request, response)
+	w.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) {
-	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithRenew); ok {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithRenew); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.Renew(ctx, request, response)
 	}
 }
 
 func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) {
-	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithClose); ok {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithClose); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.Close(ctx, request, response)
 	}
 }
 
 func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephemeral.ConfigValidator {
-	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		return v.ConfigValidators(ctx)
 	}
@@ -140,7 +142,7 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 }
 
 func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
-	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.ValidateConfig(ctx, request, response)
 	}
@@ -149,20 +151,21 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	inner            resource.ResourceWithConfigure
 	interceptors     resourceInterceptors
 	typeName         string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
 type wrappedResource struct {
-	meta *conns.AWSClient
-	opts wrappedResourceOptions
+	inner resource.ResourceWithConfigure
+	meta  *conns.AWSClient
+	opts  wrappedResourceOptions
 }
 
-func newWrappedResource(opts wrappedResourceOptions) resource.ResourceWithConfigure {
+func newWrappedResource(inner resource.ResourceWithConfigure, opts wrappedResourceOptions) resource.ResourceWithConfigure {
 	return &wrappedResource{
-		opts: opts,
+		inner: inner,
+		opts:  opts,
 	}
 }
 
@@ -173,12 +176,12 @@ func (w *wrappedResource) Metadata(ctx context.Context, request resource.Metadat
 
 func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.opts.inner.Schema(ctx, request, response)
+	w.inner.Schema(ctx, request, response)
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	f := func(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) diag.Diagnostics {
-		w.opts.inner.Create(ctx, request, response)
+		w.inner.Create(ctx, request, response)
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
@@ -188,7 +191,7 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	f := func(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) diag.Diagnostics {
-		w.opts.inner.Read(ctx, request, response)
+		w.inner.Read(ctx, request, response)
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
@@ -198,7 +201,7 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	f := func(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) diag.Diagnostics {
-		w.opts.inner.Update(ctx, request, response)
+		w.inner.Update(ctx, request, response)
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
@@ -208,7 +211,7 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	f := func(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) diag.Diagnostics {
-		w.opts.inner.Delete(ctx, request, response)
+		w.inner.Delete(ctx, request, response)
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
@@ -221,11 +224,11 @@ func (w *wrappedResource) Configure(ctx context.Context, request resource.Config
 		w.meta = v
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.opts.inner.Configure(ctx, request, response)
+	w.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	if v, ok := w.opts.inner.(resource.ResourceWithImportState); ok {
+	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.ImportState(ctx, request, response)
 
@@ -239,14 +242,14 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 }
 
 func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	if v, ok := w.opts.inner.(resource.ResourceWithModifyPlan); ok {
+	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.ModifyPlan(ctx, request, response)
 	}
 }
 
 func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	if v, ok := w.opts.inner.(resource.ResourceWithConfigValidators); ok {
+	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		return v.ConfigValidators(ctx)
 	}
@@ -255,14 +258,14 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 }
 
 func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	if v, ok := w.opts.inner.(resource.ResourceWithValidateConfig); ok {
+	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.ValidateConfig(ctx, request, response)
 	}
 }
 
 func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	if v, ok := w.opts.inner.(resource.ResourceWithUpgradeState); ok {
+	if v, ok := w.inner.(resource.ResourceWithUpgradeState); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 
 		return v.UpgradeState(ctx)
@@ -272,7 +275,7 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 }
 
 func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
-	if v, ok := w.opts.inner.(resource.ResourceWithMoveState); ok {
+	if v, ok := w.inner.(resource.ResourceWithMoveState); ok {
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
 
 		return v.MoveState(ctx)

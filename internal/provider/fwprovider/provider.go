@@ -363,12 +363,11 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 					return ctx
 				},
-				inner:        inner,
 				interceptors: interceptors,
 				typeName:     typeName,
 			}
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(opts)
+				return newWrappedDataSource(inner, opts)
 			})
 		}
 	}
@@ -443,12 +442,11 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 					return ctx
 				},
-				inner:        inner,
 				interceptors: interceptors,
 				typeName:     typeName,
 			}
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(opts)
+				return newWrappedResource(inner, opts)
 			})
 		}
 	}
@@ -497,11 +495,10 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 						}
 						return ctx
 					},
-					inner:    inner,
 					typeName: v.TypeName,
 				}
 				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(opts)
+					return newWrappedEphemeralResource(inner, opts)
 				})
 			}
 		}
