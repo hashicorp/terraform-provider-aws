@@ -82,6 +82,7 @@ func testAccDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_maintenance_mode", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.user_enabled_as_local_administrator", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_security_group_id"),
 				),
 			},
@@ -457,6 +458,62 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 			},
 		},
 	})
+}
+
+func testAccDirectory_tenancy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.test"
+
+	domain := acctest.RandomDomainName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_creationPropertiesSharedTenancy(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", "SHARED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDirectoryConfig_creationPropertiesDedicatedTenancy(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", "DEDICATED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDirectoryConfig_creationPropertiesEmptyTenancy(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+
 }
 
 func testAccDirectory_ipGroupIDs(t *testing.T) {
@@ -877,6 +934,54 @@ resource "aws_workspaces_directory" "main" {
     enable_maintenance_mode             = false
     user_enabled_as_local_administrator = false
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_creationPropertiesSharedTenancy(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  tenancy = "SHARED"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_creationPropertiesDedicatedTenancy(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  tenancy = "DEDICATED"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_creationPropertiesEmptyTenancy(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  tenancy = ""
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
