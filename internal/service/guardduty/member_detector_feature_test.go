@@ -165,25 +165,25 @@ resource "aws_guardduty_member_detector_feature" "test" {
 func testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, eksStatus, ecsStatus, ec2Status string) string {
 	return acctest.ConfigCompose(testAccMemberDetectorFeatureConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_member_detector_feature" "test" {
-    detector_id = data.aws_guardduty_detector.test.id
-    name        = "RUNTIME_MONITORING"
-    status      = "ENABLED"
-    account_id  = %[1]q
+  detector_id = data.aws_guardduty_detector.test.id
+  name        = "RUNTIME_MONITORING"
+  status      = "ENABLED"
+  account_id  = %[1]q
 
-    additional_configuration {
-        name   = "EKS_ADDON_MANAGEMENT"
-        status = %[2]q
-    }
+  additional_configuration {
+    name   = "EKS_ADDON_MANAGEMENT"
+    status = %[2]q
+  }
 
-    additional_configuration {
-        name   = "ECS_FARGATE_AGENT_MANAGEMENT"
-        status = %[3]q
-    }
+  additional_configuration {
+    name   = "ECS_FARGATE_AGENT_MANAGEMENT"
+    status = %[3]q
+  }
 
-    additional_configuration {
-        name   = "EC2_AGENT_MANAGEMENT"
-        status = %[4]q
-    }
+  additional_configuration {
+    name   = "EC2_AGENT_MANAGEMENT"
+    status = %[4]q
+  }
 }
 `, accountID, eksStatus, ecsStatus, ec2Status))
 }
@@ -191,29 +191,29 @@ resource "aws_guardduty_member_detector_feature" "test" {
 func testAccMemberDetectorFeatureConfig_multiple(accountID, status1, status2, status3 string) string {
 	return acctest.ConfigCompose(testAccMemberDetectorFeatureConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_member_detector_feature" "test1" {
-    detector_id = data.aws_guardduty_detector.test.id
-    name        = "EKS_RUNTIME_MONITORING"
-    status      = %[2]q
-    account_id  = %[1]q
+  detector_id = data.aws_guardduty_detector.test.id
+  name        = "EKS_RUNTIME_MONITORING"
+  status      = %[2]q
+  account_id  = %[1]q
 
-    additional_configuration {
-        name   = "EKS_ADDON_MANAGEMENT"
-        status = %[2]q
-    }
+  additional_configuration {
+    name   = "EKS_ADDON_MANAGEMENT"
+    status = %[2]q
+  }
 }
 
 resource "aws_guardduty_member_detector_feature" "test2" {
-    detector_id = data.aws_guardduty_detector.test.id
-    name        = "S3_DATA_EVENTS"
-    status      = %[3]q
-    account_id  = %[1]q
+  detector_id = data.aws_guardduty_detector.test.id
+  name        = "S3_DATA_EVENTS"
+  status      = %[3]q
+  account_id  = %[1]q
 }
 
 resource "aws_guardduty_member_detector_feature" "test3" {
-    detector_id = data.aws_guardduty_detector.test.id
-    name        = "LAMBDA_NETWORK_LOGS"
-    status      = %[4]q
-    account_id  = %[1]q
+  detector_id = data.aws_guardduty_detector.test.id
+  name        = "LAMBDA_NETWORK_LOGS"
+  status      = %[4]q
+  account_id  = %[1]q
 }
 `, accountID, status1, status2, status3))
 }
