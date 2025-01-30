@@ -15,7 +15,7 @@ Terraform resource for managing an AWS Billing View.
 
 ```terraform
 resource "aws_billing_view" "example" {
-  name = "example"
+  name         = "example"
   source_views = ["arn:aws:billing::123456789012:billing-view/primary"]
 }
 ```

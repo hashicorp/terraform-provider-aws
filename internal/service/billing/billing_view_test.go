@@ -44,7 +44,7 @@ func TestAccBillingView_basic(t *testing.T) {
 					testAccCheckViewExists(ctx, resourceName, &view),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARN(ctx, rName, names.AttrARN, "billing", fmt.Sprintf("billingview/%s", rName)),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccBillingView_update(t *testing.T) {
 					testAccCheckViewExists(ctx, resourceName, &view),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-new", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description updated"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARN(ctx, rName, names.AttrARN, "billing", fmt.Sprintf("billingview/%s", rName)),
 				),
 			},
 		},
@@ -133,7 +133,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			arn := rs.Primary.Attributes["arn"]
+			arn := rs.Primary.Attributes[names.AttrARN]
 			if arn == "" {
 				return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
 			}
@@ -162,7 +162,7 @@ func testAccCheckViewExists(ctx context.Context, name string, view *awstypes.Bil
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BillingClient(ctx)
 
-		arn := rs.Primary.Attributes["arn"]
+		arn := rs.Primary.Attributes[names.AttrARN]
 		if arn == "" {
 			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
 		}
@@ -210,8 +210,8 @@ resource "aws_billing_view" "test" {
 func testAccViewConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_billing_view" "test" {
-  name         = "%s-new"
-  description  = "Test description updated"
+  name        = "%s-new"
+  description = "Test description updated"
 }
 `, rName)
 }

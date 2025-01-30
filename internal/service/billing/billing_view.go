@@ -6,7 +6,6 @@ package billing
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -132,7 +131,7 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 							},
 						},
-						"tags": schema.ListNestedBlock{
+						names.AttrTags: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[tagsModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -380,8 +379,7 @@ func (r *resourceView) Delete(ctx context.Context, req resource.DeleteRequest, r
 }
 
 func (r *resourceView) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	fmt.Printf("ImportState %v\n", req.ID)
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
 const (
