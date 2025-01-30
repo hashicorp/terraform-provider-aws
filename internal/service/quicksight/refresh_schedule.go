@@ -533,7 +533,7 @@ func flattenSchedule(ctx context.Context, apiObject *awstypes.RefreshSchedule) (
 		model.StartAfterDateTime = types.StringValue(apiObject.StartAfterDateTime.Format(startAfterDateTimeLayout))
 	}
 
-	return fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+	return fwtypes.NewListNestedObjectValueOfPtr(ctx, &model, nil)
 }
 
 const refreshScheduleResourceIDSeparator = ","
