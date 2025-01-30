@@ -82,7 +82,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					transitionDefaultMinimumObjectSizeDefault(),
 				},
 				// TODO Validate,
 			},
@@ -431,17 +431,61 @@ func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, reque
 	var old, new resourceBucketLifecycleConfigurationModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
-	// updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+
+	conn := r.Meta().S3Client(ctx)
+	bucket := new.Bucket.ValueString()
+	if isDirectoryBucket(bucket) {
+		conn = r.Meta().S3ExpressClient(ctx)
+	}
+
+	var input s3.PutBucketLifecycleConfigurationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var rules []awstypes.LifecycleRule
+	response.Diagnostics.Append(fwflex.Expand(ctx, new.Rules, &rules)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	lifecycleConfiguraton := awstypes.BucketLifecycleConfiguration{
+		Rules: rules,
+	}
+
+	input.LifecycleConfiguration = &lifecycleConfiguraton
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+		return conn.PutBucketLifecycleConfiguration(ctx, &input)
+	}, errCodeNoSuchBucket)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
+		return
+	}
+
+	expectedBucketOwner := new.ExpectedBucketOwner.ValueString()
+	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+	rules, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, input.LifecycleConfiguration.Rules, updateTimeout)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), fmt.Sprintf("While waiting: %s", err.Error()))
+		return
+	}
+
+	output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+
+	new.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
+	new.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -500,7 +544,7 @@ func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, 
 
 type resourceBucketLifecycleConfigurationModel struct {
 	Bucket                             types.String                                                    `tfsdk:"bucket"`
-	ExpectedBucketOwner                types.String                                                    `tfsdk:"expected_bucket_owner" autoflex:",noflatten"`
+	ExpectedBucketOwner                types.String                                                    `tfsdk:"expected_bucket_owner" autoflex:",legacy"`
 	ID                                 types.String                                                    `tfsdk:"id"`
 	TransitionDefaultMinimumObjectSize fwtypes.StringEnum[awstypes.TransitionDefaultMinimumObjectSize] `tfsdk:"transition_default_minimum_object_size" autoflex:",legacy"`
 	Rules                              fwtypes.ListNestedObjectValueOf[lifecycleRuleModel]             `tfsdk:"rule"`
@@ -540,8 +584,11 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 		return nil, diags
 	}
 
+	// For legacy-mode reasons, `prefix` may be empty, but should be treated as `nil`
+	prefix := fwflex.EmptyStringAsNull(m.Prefix)
+
 	if m.Filter.IsUnknown() || m.Filter.IsNull() {
-		if m.Prefix.IsUnknown() || m.Prefix.IsNull() {
+		if prefix.IsUnknown() || prefix.IsNull() {
 			filter := awstypes.LifecycleRuleFilter{}
 			r.Filter = &filter
 		}
@@ -567,7 +614,7 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 		return nil, diags
 	}
 
-	r.Prefix = fwflex.StringFromFramework(ctx, m.Prefix)
+	r.Prefix = fwflex.StringFromFramework(ctx, prefix)
 
 	r.Status = m.Status.ValueEnum()
 
@@ -654,14 +701,19 @@ func (m lifecycleExpirationModel) Expand(ctx context.Context) (result any, diags
 
 	r.Date = fwflex.TimeFromFramework(ctx, m.Date)
 
-	r.Days = fwflex.Int32FromFrameworkInt32(ctx, m.Days)
+	// For legacy-mode reasons, `days` may be zero, but should be treated as `nil`
+	days := fwflex.ZeroInt32AsNull(m.Days)
+
+	r.Days = fwflex.Int32FromFrameworkInt32(ctx, days)
 
 	if m.ExpiredObjectDeleteMarker.IsUnknown() || m.ExpiredObjectDeleteMarker.IsNull() {
-		if (m.Date.IsUnknown() || m.Date.IsNull()) && (m.Days.IsUnknown() || m.Days.IsNull()) {
+		if (m.Date.IsUnknown() || m.Date.IsNull()) && (days.IsUnknown() || days.IsNull()) {
 			r.ExpiredObjectDeleteMarker = aws.Bool(false)
 		}
-	} else {
+	} else if (m.Date.IsUnknown() || m.Date.IsNull()) && (days.IsUnknown() || days.IsNull()) {
 		r.ExpiredObjectDeleteMarker = fwflex.BoolFromFramework(ctx, m.ExpiredObjectDeleteMarker)
+	} else {
+		r.ExpiredObjectDeleteMarker = nil
 	}
 
 	return &r, diags
@@ -762,4 +814,42 @@ func (m *lifecycleRuleAndOperatorModel) Flatten(ctx context.Context, v any) (dia
 	m.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, keyValueTags(ctx, and.Tags).Map()))
 
 	return diags
+}
+
+func transitionDefaultMinimumObjectSizeDefault() planmodifier.String {
+	return transitionDefaultMinimumObjectSizeDefaultModifier{}
+}
+
+type transitionDefaultMinimumObjectSizeDefaultModifier struct{}
+
+func (m transitionDefaultMinimumObjectSizeDefaultModifier) Description(_ context.Context) string {
+	return "Defaults to '" + string(awstypes.TransitionDefaultMinimumObjectSizeAllStorageClasses128k) + "' for general purpose buckets, nothing otherwise."
+}
+
+func (m transitionDefaultMinimumObjectSizeDefaultModifier) MarkdownDescription(_ context.Context) string {
+	return "Defaults to `" + string(awstypes.TransitionDefaultMinimumObjectSizeAllStorageClasses128k) + "` for general purpose buckets, nothing otherwise."
+}
+
+func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	var bucket types.String
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root(names.AttrBucket), &bucket)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if isDirectoryBucket(bucket.ValueString()) {
+		return
+	}
+
+	// There's already a value configured, so do nothing
+	if !req.ConfigValue.IsNull() {
+		return
+	}
+
+	v, d := fwtypes.StringEnumValue(awstypes.TransitionDefaultMinimumObjectSizeAllStorageClasses128k).ToStringValue(ctx)
+	resp.Diagnostics.Append(d...)
+	if d.HasError() {
+		return
+	}
+	resp.PlanValue = v
 }

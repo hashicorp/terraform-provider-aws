@@ -97,3 +97,15 @@ func Int32ValueFromFramework(ctx context.Context, v basetypes.Int64Valuable) int
 
 	return output
 }
+
+func ZeroInt32AsNull(v types.Int32) types.Int32 {
+	if v.IsNull() || v.IsUnknown() {
+		return v
+	}
+
+	if v.ValueInt32() == 0 {
+		return types.Int32Null()
+	}
+
+	return v
+}
