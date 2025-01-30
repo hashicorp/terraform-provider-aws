@@ -263,6 +263,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_domain_name: Support `PRIVATE` as a valid value for `endpoint_configuration.types` argument, enabling custom domain name support for private REST API endpoints ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * resource/aws_ebs_snapshot_copy: Add `completion_duration_minutes` argument ([#40336](https://github.com/hashicorp/terraform-provider-aws/issues/40336))
 * resource/aws_glue_catalog_table_optimizer: Add `configuration.retention_configuration` and `configuration.orphan_file_deletion_configuration` attributes. ([#40199](https://github.com/hashicorp/terraform-provider-aws/issues/40199))
+* resource/aws_iam_openid_connect_provider: Make `thumbprint_list` optional ([#37255](https://github.com/hashicorp/terraform-provider-aws/issues/37255))
 * resource/aws_instance: Add `enable_primary_ipv6` argument to add support for enabling primary IPv6 addresses on EC2 instances ([#36425](https://github.com/hashicorp/terraform-provider-aws/issues/36425))
 * resource/aws_kinesis_stream: Add plan-time validation that `shard_count` would not exceed the AWS account's [shard quota](https://docs.aws.amazon.com/streams/latest/dev/service-sizes-and-limits.html) when the data stream capacity mode is `PROVISIONED`, preventing the provider from retrying for 1 hour in the case that the quota is exceeded. This functionality requires the `kinesis:DescribeLimits` IAM permission ([#40499](https://github.com/hashicorp/terraform-provider-aws/issues/40499))
 * resource/aws_kinesis_stream: Add plan-time validation that creation of an on-demand stream would not exceed the AWS account's [data stream quota](https://docs.aws.amazon.com/streams/latest/dev/service-sizes-and-limits.html), preventing the provider from retrying for 1 hour in the case that the quota is exceeded. This functionality requires the `kinesis:DescribeLimits` IAM permission ([#40499](https://github.com/hashicorp/terraform-provider-aws/issues/40499))
@@ -655,6 +656,7 @@ NOTES:
 FEATURES:
 
 * **New Resource:** `aws_backup_logically_air_gapped_vault` ([#39098](https://github.com/hashicorp/terraform-provider-aws/issues/39098))
+* **New Resource:** `aws_bedrock_guardrail_version` ([#39478](https://github.com/hashicorp/terraform-provider-aws/issues/39478))
 * **New Resource:** `aws_ec2_transit_gateway_default_route_table_association` ([#39496](https://github.com/hashicorp/terraform-provider-aws/issues/39496))
 * **New Resource:** `aws_ec2_transit_gateway_default_route_table_propagation` ([#39517](https://github.com/hashicorp/terraform-provider-aws/issues/39517))
 * **New Resource:** `aws_iam_group_policies_exclusive` ([#39554](https://github.com/hashicorp/terraform-provider-aws/issues/39554))
@@ -732,6 +734,10 @@ BUG FIXES:
 * resource/aws_vpc_dhcp_options: Fix a bug causing a panic crash when an option is absent ([#39427](https://github.com/hashicorp/terraform-provider-aws/issues/39427))
 
 ## 5.68.0 (September 19, 2024)
+
+BREAKING CHANGES:
+
+* resource/aws_lexv2models_slot_type: Within the `composite_slot_type_setting` block, the `subslots` argument has been renamed `sub_slots` ([#39353](https://github.com/hashicorp/terraform-provider-aws/issues/39353))
 
 NOTES:
 
@@ -2260,6 +2266,7 @@ ENHANCEMENTS:
 * resource/aws_autoscaling_group: Fix `ValidationError: The instance ... is not part of Auto Scaling group ...` errors on resource Delete when disabling scale-in protection for instances that are already fully terminated ([#35071](https://github.com/hashicorp/terraform-provider-aws/issues/35071))
 * resource/aws_batch_compute_environment: Add `update_policy` parameter ([#34353](https://github.com/hashicorp/terraform-provider-aws/issues/34353))
 * resource/aws_batch_job_definition: Add `scheduling_priority` argument and `arn_prefix` attribute ([#34997](https://github.com/hashicorp/terraform-provider-aws/issues/34997))
+* resource/aws_batch_job_definition: Adds ability to define `eks_properties` ([#34931](https://github.com/hashicorp/terraform-provider-aws/issues/34931))
 * resource/aws_cloud9_environment_ec2: Add `amazonlinux-2023-x86_64` and `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64` as valid values for `image_id` ([#35020](https://github.com/hashicorp/terraform-provider-aws/issues/35020))
 * resource/aws_codepipeline: Add `pipeline_type` argument and `variable` configuration block ([#34841](https://github.com/hashicorp/terraform-provider-aws/issues/34841))
 * resource/aws_dms_replication_task: Allow `cdc_start_time` to use [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted dates in addition to UNIX timestamps ([#31917](https://github.com/hashicorp/terraform-provider-aws/issues/31917))
