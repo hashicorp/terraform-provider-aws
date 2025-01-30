@@ -36,7 +36,6 @@ func NewListNestedObjectTypeOf[T any](ctx context.Context, f ...ListNestedObject
 		ListType:             basetypes.ListType{ElemType: NewObjectTypeOf[T](ctx)},
 		semanticEqualityFunc: opts.SemanticEqualityFunc,
 	}
-
 }
 
 func (t listNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
@@ -289,7 +288,6 @@ func NewListNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T, f 
 }
 
 func NewListNestedObjectValueOfValueSliceMust[T any](ctx context.Context, ts []T, f ...ListNestedObjectOfOption[T]) ListNestedObjectValueOf[T] {
-
 	return fwdiag.Must(NewListNestedObjectValueOfValueSlice(ctx, ts, f...))
 }
 
