@@ -230,8 +230,11 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 }
 
 func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+
+	// Transparent tagging plan modifier.
+
 	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
 		v.ModifyPlan(ctx, request, response)
 	}
 }
