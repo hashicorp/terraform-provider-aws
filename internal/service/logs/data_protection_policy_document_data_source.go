@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudwatch_log_data_protection_policy_document")
+// @SDKDataSource("aws_cloudwatch_log_data_protection_policy_document", name="Data Protection Policy Document")
 func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_signer_signing_job")
+// @SDKDataSource("aws_signer_signing_job", name="Signing Job")
 func DataSourceSigningJob() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningJobRead,

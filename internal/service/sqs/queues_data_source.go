@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_sqs_queues")
+// @SDKDataSource("aws_sqs_queues", name="Queues")
 func dataSourceQueues() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueuesRead,

@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Knowledge Base Association")
+// @FrameworkResource("aws_bedrockagent_agent_knowledge_base_association", name="Agent Knowledge Base Association")
 func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentKnowledgeBaseAssociationResource{}
 

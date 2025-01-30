@@ -17,12 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newLifecyclePolicyDocumentDataSource,
-			Name:    "Lifecycle Policy Document",
+			Factory:  newLifecyclePolicyDocumentDataSource,
+			TypeName: "aws_ecr_lifecycle_policy_document",
+			Name:     "Lifecycle Policy Document",
 		},
 		{
-			Factory: newRepositoriesDataSource,
-			Name:    "Repositories",
+			Factory:  newRepositoriesDataSource,
+			TypeName: "aws_ecr_repositories",
+			Name:     "Repositories",
 		},
 	}
 }
@@ -30,8 +32,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAccountSettingResource,
-			Name:    "Account Setting",
+			Factory:  newAccountSettingResource,
+			TypeName: "aws_ecr_account_setting",
+			Name:     "Account Setting",
 		},
 	}
 }
@@ -124,11 +127,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ecr.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return ecr.NewFromConfig(cfg,
+	optFns := []func(*ecr.Options){
 		ecr.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return ecr.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*ecr.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*ecr.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *ecr.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*ecr.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

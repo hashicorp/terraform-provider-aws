@@ -52,7 +52,7 @@ func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "drs", "replication-configuration-template/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "associate_default_security_group", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth_throttling", "12"),
 					resource.TestCheckResourceAttr(resourceName, "create_public_ip", acctest.CtFalse),

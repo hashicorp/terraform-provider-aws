@@ -1032,7 +1032,7 @@ func funcHasConnFuncSignature(method reflect.Value) bool {
 }
 
 func serviceClient(key string) string {
-	serviceUpper := ""
+	var serviceUpper string
 	var err error
 	if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 		return ""

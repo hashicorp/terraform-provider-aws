@@ -56,12 +56,14 @@ const (
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
+	// NOTE: the State values returned from the service may be in varied case e.g. `Pending` and `pending`
+	// State is normalised to lower case for comparison against these constants
 	vpcEndpointStateAvailable         = "available"
 	vpcEndpointStateDeleted           = "deleted"
 	vpcEndpointStateDeleting          = "deleting"
 	vpcEndpointStateFailed            = "failed"
 	vpcEndpointStatePending           = "pending"
-	vpcEndpointStatePendingAcceptance = "pendingAcceptance"
+	vpcEndpointStatePendingAcceptance = "pendingacceptance"
 )
 
 const (

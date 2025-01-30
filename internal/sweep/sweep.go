@@ -57,7 +57,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 	}
-	meta.ServicePackages = servicePackageMap
+	meta.SetServicePackages(ctx, servicePackageMap)
 
 	conf := &conns.Config{
 		MaxRetries:       5,

@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_customerprofiles_domain")
+// @SDKResource("aws_customerprofiles_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{

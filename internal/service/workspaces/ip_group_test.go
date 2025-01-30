@@ -26,7 +26,7 @@ func testAccIPGroup_basic(t *testing.T) {
 	var v types.WorkspacesIpGroup
 	ipGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ipGroupNewName := sdkacctest.RandomWithPrefix("tf-acc-test-upd")
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(sdkacctest.RandString(20)))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
@@ -118,7 +118,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspacesIpGroup
 	ipGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(sdkacctest.RandString(20)))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{

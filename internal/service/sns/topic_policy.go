@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sns_topic_policy")
+// @SDKResource("aws_sns_topic_policy", name="Topic Policy")
 func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicPolicyUpsert,

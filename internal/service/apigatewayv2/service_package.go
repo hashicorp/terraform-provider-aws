@@ -27,6 +27,13 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 				if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "try again later") {
 					return aws.TrueTernary
 				}
+				// In some instances, ConflictException error responses have been observed as
+				// a *smithy.OperationError type (not an *awstypes.ConflictException), which
+				// can't be handled via errs.IsAErrorMessageContains. Instead we fall back
+				// to a simple match on the message contents.
+				if errs.Contains(err, "Unable to complete operation due to concurrent modification. Please try again later.") {
+					return aws.TrueTernary
+				}
 				return aws.UnknownTernary // Delegate to configured Retryer.
 			}))
 		},

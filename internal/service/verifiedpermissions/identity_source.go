@@ -43,7 +43,7 @@ const (
 	updateOperation operationTypeCtxValue = "UPDATE"
 )
 
-// @FrameworkResource(name="Identity Source")
+// @FrameworkResource("aws_verifiedpermissions_identity_source", name="Identity Source")
 func newResourceIdentitySource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIdentitySource{}
 

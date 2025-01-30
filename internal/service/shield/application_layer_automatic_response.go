@@ -42,7 +42,7 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 	}
 }
 
-// @FrameworkResource(name="Application Layer Automatic Response")
+// @FrameworkResource("aws_shield_application_layer_automatic_response", name="Application Layer Automatic Response")
 func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationLayerAutomaticResponseResource{}
 
