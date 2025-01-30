@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -18,41 +19,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_guardduty_member_detector_feature", name="Member Detector Feature")
-func newResourceMemberDetectorFeature(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceMemberDetectorFeature{}
+func newMemberDetectorFeatureResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &memberDetectorFeatureResource{}
+
 	return r, nil
 }
 
-const (
-	memberDetectorFeatureResourceIDPartCount = 3
-	memberDetectorFeatureResourceName        = "Member Detector Feature"
-	memberDetectorFeatureResourceTypeName    = "aws_guardduty_member_detector_feature"
-)
-
-type resourceMemberDetectorFeature struct {
+type memberDetectorFeatureResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpDelete
 }
 
-func (r *resourceMemberDetectorFeature) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = memberDetectorFeatureResourceTypeName
+func (*memberDetectorFeatureResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_guardduty_member_detector_feature"
 }
 
-func (r *resourceMemberDetectorFeature) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *memberDetectorFeatureResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAccountID: schema.StringAttribute{
 				Required: true,
@@ -69,39 +63,30 @@ func (r *resourceMemberDetectorFeature) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.OrgFeature](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.DetectorFeature](),
-				},
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.FeatureStatus](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.FeatureStatus](),
+				Required:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
 			"additional_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[additionalConfigurationModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[memberAdditionalConfigurationModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrName: schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.OrgFeatureAdditionalConfiguration](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.OrgFeatureAdditionalConfiguration](),
+							Required:   true,
 						},
 						names.AttrStatus: schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.FeatureStatus](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.FeatureStatus](),
+							Required:   true,
 						},
 					},
 				},
@@ -110,235 +95,200 @@ func (r *resourceMemberDetectorFeature) Schema(ctx context.Context, req resource
 	}
 }
 
-func (r *resourceMemberDetectorFeature) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().GuardDutyClient(ctx)
-
-	var plan resourceMemberDetectorFeatureModel
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := createUpdateMemberDetectorsInput(plan)
-
-	if !plan.AdditionalConfiguration.IsNull() {
-		resp.Diagnostics.Append(fwflex.Expand(ctx, &plan.AdditionalConfiguration, &in.Features[0].AdditionalConfiguration)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	_, err := updateMemberDetectorFeature(ctx, conn, in)
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionCreating, memberDetectorFeatureResourceName, plan.Name.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	// Set the ID and save the state
-	plan.setID()
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func (r *resourceMemberDetectorFeature) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resourceMemberDetectorFeatureModel
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
-
+func (r *memberDetectorFeatureResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data memberDetectorFeatureResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().GuardDutyClient(ctx)
 
-	output, err := FindMemberDetectorFeatureByThreePartKey(ctx, conn, data.DetectorID.ValueString(), data.AccountID.ValueString(), data.Name.ValueString())
-
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-
-		return
-	}
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionReading, memberDetectorFeatureResourceName, data.ID.ValueString(), err),
-			err.Error(),
-		)
-
-		return
-	}
-
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.AdditionalConfiguration, &data.AdditionalConfiguration)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *resourceMemberDetectorFeature) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var old, new resourceMemberDetectorFeatureModel
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().GuardDutyClient(ctx)
-
-	in := createUpdateMemberDetectorsInput(new)
-
-	if !new.AdditionalConfiguration.IsNull() {
-		resp.Diagnostics.Append(fwflex.Expand(ctx, new.AdditionalConfiguration, &in.Features[0].AdditionalConfiguration)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	_, err := updateMemberDetectorFeature(ctx, conn, in)
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionUpdating, memberDetectorFeatureResourceName, new.ID.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
-}
-
-func (r *resourceMemberDetectorFeature) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// No-op
-}
-
-// ==== HELPERS ====
-func createUpdateMemberDetectorsInput(plan resourceMemberDetectorFeatureModel) *guardduty.UpdateMemberDetectorsInput {
-	in := &guardduty.UpdateMemberDetectorsInput{
-		AccountIds: []string{plan.AccountID.ValueString()},
-		DetectorId: aws.String(plan.DetectorID.ValueString()),
+	input := guardduty.UpdateMemberDetectorsInput{
+		AccountIds: fwflex.StringSliceValueFromFramework(ctx, data.AccountID),
+		DetectorId: fwflex.StringFromFramework(ctx, data.DetectorID),
 		Features: []awstypes.MemberFeaturesConfiguration{
 			{
-				Name:   awstypes.OrgFeature(plan.Name.ValueString()),
-				Status: awstypes.FeatureStatus(plan.Status.ValueString()),
+				Name:   data.Name.ValueEnum(),
+				Status: data.Status.ValueEnum(),
 			},
 		},
 	}
-	return in
-}
 
-func updateMemberDetectorFeature(ctx context.Context, conn *guardduty.Client, in *guardduty.UpdateMemberDetectorsInput) (*guardduty.UpdateMemberDetectorsOutput, error) {
-	conns.GlobalMutexKV.Lock(*in.DetectorId)
-	defer conns.GlobalMutexKV.Unlock(*in.DetectorId)
-
-	out, err := conn.UpdateMemberDetectors(ctx, in)
-	if err != nil {
-		return out, err
-	}
-
-	if out == nil {
-		return nil, errors.New("empty output")
-	}
-
-	// For example:
-	// {"unprocessedAccounts":[{"result":"The request is rejected because the given account ID is not an associated member of account the current account.","accountId":"123456789012"}]}
-	if len(out.UnprocessedAccounts) > 0 {
-		return out, errors.New(*(out.UnprocessedAccounts[0].Result))
-	}
-
-	return out, err
-}
-
-// ==== FINDERS ====
-func FindMemberDetectorFeatureByThreePartKey(ctx context.Context, client *guardduty.Client, detectorID, accountID, name string) (*awstypes.MemberFeaturesConfigurationResult, error) {
-	output, err := findMemberConfigurationByDetectorAndAccountID(ctx, client, detectorID, accountID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, feature := range output.Features {
-		if string(feature.Name) == name {
-			return &feature, nil
+	if !data.AdditionalConfiguration.IsNull() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, &data.AdditionalConfiguration, &input.Features[0].AdditionalConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 	}
 
-	return nil, fmt.Errorf("no MemberFeaturesConfigurationResult found with name %s", name)
+	if err := updateMemberDetectors(ctx, conn, &input); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating GuardDuty Member Detector Feature (%s/%s/%s)", data.DetectorID.ValueString(), data.AccountID.ValueString(), data.Name.ValueString()), err.Error())
 
-}
-
-func findMemberConfigurationByDetectorAndAccountID(ctx context.Context, client *guardduty.Client, detectorID string, accountID string) (*awstypes.MemberDataSourceConfiguration, error) {
-	input := &guardduty.GetMemberDetectorsInput{
-		DetectorId: aws.String(detectorID),
-		AccountIds: []string{accountID},
+		return
 	}
 
-	output, err := client.GetMemberDetectors(ctx, input)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+}
+
+func (r *memberDetectorFeatureResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data memberDetectorFeatureResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().GuardDutyClient(ctx)
+
+	output, err := findMemberDetectorFeatureByThreePartKey(ctx, conn, data.DetectorID.ValueString(), data.AccountID.ValueString(), data.Name.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
 
 	if err != nil {
-		return nil, err
+		response.Diagnostics.AddError(fmt.Sprintf("reading GuardDuty Member Detector Feature (%s/%s/%s)", data.DetectorID.ValueString(), data.AccountID.ValueString(), data.Name.ValueString()), err.Error())
+
+		return
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AdditionalConfiguration, &data.AdditionalConfiguration)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.Status = fwtypes.StringEnumValue(output.Status)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *memberDetectorFeatureResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var data memberDetectorFeatureResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if output.MemberDataSourceConfigurations == nil || len(output.MemberDataSourceConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+	conn := r.Meta().GuardDutyClient(ctx)
+
+	input := guardduty.UpdateMemberDetectorsInput{
+		AccountIds: fwflex.StringSliceValueFromFramework(ctx, data.AccountID),
+		DetectorId: fwflex.StringFromFramework(ctx, data.DetectorID),
+		Features: []awstypes.MemberFeaturesConfiguration{
+			{
+				Name:   data.Name.ValueEnum(),
+				Status: data.Status.ValueEnum(),
+			},
+		},
 	}
 
-	return &output.MemberDataSourceConfigurations[0], nil
+	if !data.AdditionalConfiguration.IsNull() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, data.AdditionalConfiguration, &input.Features[0].AdditionalConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if err := updateMemberDetectors(ctx, conn, &input); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating GuardDuty Member Detector Feature (%s/%s/%s)", data.DetectorID.ValueString(), data.AccountID.ValueString(), data.Name.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-// ==== MODEL ====
-type resourceMemberDetectorFeatureModel struct {
-	AccountID               types.String                                                  `tfsdk:"account_id"`
-	AdditionalConfiguration fwtypes.ListNestedObjectValueOf[additionalConfigurationModel] `tfsdk:"additional_configuration"`
-	DetectorID              types.String                                                  `tfsdk:"detector_id"`
-	ID                      types.String                                                  `tfsdk:"id"`
-	Name                    types.String                                                  `tfsdk:"name"`
-	Status                  types.String                                                  `tfsdk:"status"`
-}
+func updateMemberDetectors(ctx context.Context, conn *guardduty.Client, input *guardduty.UpdateMemberDetectorsInput) error {
+	dtectorID := aws.ToString(input.DetectorId)
+	conns.GlobalMutexKV.Lock(dtectorID)
+	defer conns.GlobalMutexKV.Unlock(dtectorID)
 
-type additionalConfigurationModel struct {
-	Name   types.String `tfsdk:"name"`
-	Status types.String `tfsdk:"status"`
-}
-
-func (data *resourceMemberDetectorFeatureModel) InitFromID() error {
-	id := data.ID.ValueString()
-	parts, err := flex.ExpandResourceId(id, memberDetectorFeatureResourceIDPartCount, false)
+	output, err := conn.UpdateMemberDetectors(ctx, input)
 
 	if err != nil {
 		return err
 	}
 
-	data.DetectorID = types.StringValue(parts[0])
-	data.AccountID = types.StringValue(parts[1])
-	data.Name = types.StringValue(parts[2])
+	if err == nil && len(output.UnprocessedAccounts) > 0 {
+		return errors.New(aws.ToString(output.UnprocessedAccounts[0].Result))
+	}
 
 	return nil
 }
 
-func (data *resourceMemberDetectorFeatureModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DetectorID.ValueString(), data.AccountID.ValueString(), data.Name.ValueString()}, memberDetectorFeatureResourceIDPartCount, false)))
+func findMemberDetectorFeatureByThreePartKey(ctx context.Context, client *guardduty.Client, detectorID, accountID, name string) (*awstypes.MemberFeaturesConfigurationResult, error) {
+	detector, err := findMemberDetectorByTwoPartKey(ctx, client, detectorID, accountID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(detector.Features, func(v awstypes.MemberFeaturesConfigurationResult) bool {
+		return string(v.Name) == name
+	}))
+}
+
+func findMemberDetectorByTwoPartKey(ctx context.Context, client *guardduty.Client, detectorID, accountID string) (*awstypes.MemberDataSourceConfiguration, error) {
+	input := guardduty.GetMemberDetectorsInput{
+		DetectorId: aws.String(detectorID),
+		AccountIds: []string{accountID},
+	}
+
+	detector, unprocessedAccounts, err := findMemberDetector(ctx, client, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if i := slices.IndexFunc(unprocessedAccounts, func(v awstypes.UnprocessedAccount) bool { return aws.ToString(v.AccountId) == accountID }); i >= 0 {
+		return nil, errors.New(aws.ToString(unprocessedAccounts[i].Result))
+	}
+
+	return detector, nil
+}
+
+func findMemberDetector(ctx context.Context, client *guardduty.Client, input *guardduty.GetMemberDetectorsInput) (*awstypes.MemberDataSourceConfiguration, []awstypes.UnprocessedAccount, error) {
+	detectors, unprocessedAccounts, err := findMemberDetectors(ctx, client, input)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	detector, err := tfresource.AssertSingleValueResult(detectors)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return detector, unprocessedAccounts, nil
+}
+
+func findMemberDetectors(ctx context.Context, client *guardduty.Client, input *guardduty.GetMemberDetectorsInput) ([]awstypes.MemberDataSourceConfiguration, []awstypes.UnprocessedAccount, error) {
+	output, err := client.GetMemberDetectors(ctx, input)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if output == nil {
+		return nil, nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.MemberDataSourceConfigurations, output.UnprocessedAccounts, nil
+}
+
+type memberDetectorFeatureResourceModel struct {
+	AccountID               types.String                                                        `tfsdk:"account_id"`
+	AdditionalConfiguration fwtypes.ListNestedObjectValueOf[memberAdditionalConfigurationModel] `tfsdk:"additional_configuration"`
+	DetectorID              types.String                                                        `tfsdk:"detector_id"`
+	Name                    fwtypes.StringEnum[awstypes.OrgFeature]                             `tfsdk:"name"`
+	Status                  fwtypes.StringEnum[awstypes.FeatureStatus]                          `tfsdk:"status"`
+}
+
+type memberAdditionalConfigurationModel struct {
+	Name   fwtypes.StringEnum[awstypes.OrgFeatureAdditionalConfiguration] `tfsdk:"name"`
+	Status fwtypes.StringEnum[awstypes.FeatureStatus]                     `tfsdk:"status"`
 }

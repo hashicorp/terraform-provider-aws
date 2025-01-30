@@ -65,7 +65,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
 		},
 		"MemberDetectorFeature": {
-			acctest.CtBasic:                    testAccMemberDetectorFeature_basic,
+			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
 			"additional_configuration": testAccMemberDetectorFeature_additionalConfiguration,
 			"multiple":                 testAccMemberDetectorFeature_multiple,
 		},

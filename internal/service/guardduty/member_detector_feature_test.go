@@ -21,6 +21,7 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member_detector_feature.test"
 	accountID := testAccMemberAccountFromEnv(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
