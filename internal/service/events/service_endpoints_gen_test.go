@@ -396,7 +396,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListEventBuses(ctx, &eventbridge.ListEventBusesInput{},
+	input := eventbridge.ListEventBusesInput{}
+	_, err := client.ListEventBuses(ctx, &input,
 		func(opts *eventbridge.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

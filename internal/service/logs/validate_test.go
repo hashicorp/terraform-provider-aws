@@ -152,7 +152,7 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 	}
 }
 
-func TestValidStreamName(t *testing.T) {
+func TestValidLogStreamName(t *testing.T) {
 	t.Parallel()
 
 	validNames := []string{
@@ -162,7 +162,7 @@ func TestValidStreamName(t *testing.T) {
 		"logstream/1234",
 	}
 	for _, v := range validNames {
-		_, errors := tflogs.ValidStreamName(v, names.AttrName)
+		_, errors := tflogs.ValidLogStreamName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CloudWatch LogStream name: %q", v, errors)
 		}
@@ -174,7 +174,7 @@ func TestValidStreamName(t *testing.T) {
 		"stringwith:colon",
 	}
 	for _, v := range invalidNames {
-		_, errors := tflogs.ValidStreamName(v, names.AttrName)
+		_, errors := tflogs.ValidLogStreamName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CloudWatch LogStream name", v)
 		}

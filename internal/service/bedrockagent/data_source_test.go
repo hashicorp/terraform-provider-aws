@@ -513,6 +513,44 @@ func testAccDataSource_update(t *testing.T) {
 	})
 }
 
+func testAccDataSource_webConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
+	var dataSource types.DataSource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+	foundationModel := "amazon.titan-embed-text-v2:0"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_webConfiguration(rName, collectionName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.0.max_pages", "25000"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.crawler_limits.0.rate_limit", "300"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.exclusion_filters.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.inclusion_filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.crawler_configuration.0.user_agent", "bedrockbot_UUID test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -789,6 +827,50 @@ resource "aws_bedrockagent_data_source" "test" {
     s3_configuration {
       bucket_arn         = aws_s3_bucket.test.arn
       inclusion_prefixes = ["Europe/France/Nouvelle-Aquitaine/Bordeaux"]
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_webConfiguration(rName, collectionName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_OpenSearch_basic(rName, collectionName, embeddingModel), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "WEB"
+
+    web_configuration {
+      source_configuration {
+        url_configuration {
+          seed_urls {
+            url = "https://aws.amazon.com/blogs/compute/category/compute/aws-outposts/"
+          }
+          seed_urls {
+            url = "https://aws.amazon.com/blogs/networking-and-content-delivery/category/compute/aws-outposts/"
+          }
+        }
+      }
+
+      crawler_configuration {
+        crawler_limits {
+          max_pages  = 25000
+          rate_limit = 300
+        }
+        exclusion_filters = [
+          ".*\\.(txt|csv|md|pdf|doc|docx|xls|xlsx).*",
+          ".*/(users|topics|products|contact\\-us|about\\-aws|pricing|privacy)/.*",
+          ".*/(terms|getting\\-started)$",
+          ".*\\.(github|pages\\.awscloud|awsstatic|oracle)\\.com.*",
+          ".*\\.(gov|edu).*"
+        ]
+        inclusion_filters = [
+          ".*/blogs/(compute|containers|networking\\-and\\-content\\-delivery|storage|publicsector|media|awsmarketplace|apn|machine\\-learning|industries|mt|aws|architecture|database)/.*"
+        ]
+        user_agent = "bedrockbot_UUID test"
+      }
     }
   }
 }

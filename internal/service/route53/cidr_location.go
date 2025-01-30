@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_route53_cidr_location", name="CIDR Location")
 func newCIDRLocationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cidrLocationResource{}
 
@@ -61,7 +61,7 @@ func (r *cidrLocationResource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_map")
+// @SDKDataSource("aws_location_map", name="Map")
 func DataSourceMap() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMapRead,

@@ -3386,6 +3386,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)TimestreamInfluxDB"
     severity: WARNING
+  - id: timestreamquery-in-func-name
+    languages:
+      - go
+    message: Do not use "TimestreamQuery" in func name inside timestreamquery package
+    paths:
+      include:
+        - internal/service/timestreamquery
+      exclude:
+        - internal/service/timestreamquery/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamQuery"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: timestreamquery-in-test-name
+    languages:
+      - go
+    message: Include "TimestreamQuery" in test name
+    paths:
+      include:
+        - internal/service/timestreamquery/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccTimestreamQuery"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: timestreamquery-in-const-name
+    languages:
+      - go
+    message: Do not use "TimestreamQuery" in const name inside timestreamquery package
+    paths:
+      include:
+        - internal/service/timestreamquery
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamQuery"
+    severity: WARNING
+  - id: timestreamquery-in-var-name
+    languages:
+      - go
+    message: Do not use "TimestreamQuery" in var name inside timestreamquery package
+    paths:
+      include:
+        - internal/service/timestreamquery
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamQuery"
+    severity: WARNING
   - id: timestreamwrite-in-func-name
     languages:
       - go

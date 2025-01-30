@@ -208,10 +208,6 @@ func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awsty
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager Connect Attachment ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)

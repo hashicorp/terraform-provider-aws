@@ -2294,6 +2294,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
 
 			if err != nil {
+				// Handle virtual attribute
+				if input.ManageMasterUserPassword != nil {
+					// Attempted change, but update error as it's a stopped instance, so revert to original value
+					old, _ := d.GetChange("manage_master_user_password")
+					d.Set("manage_master_user_password", old.(bool))
+				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 		}

@@ -430,11 +430,8 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
-* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface.
-  Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.
-  Boolean value, can be left unset.
-* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface.
-  Boolean value, can be left unset.
+* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value, can be left unset.
+* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface. Boolean value, can be left unset.
 * `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `device_index` - (Optional) The integer index of the network interface attachment.
@@ -520,4 +517,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4ea1f79147c035d56ca062057addfe56de64ba6c3dee99ca558008c0b296d7c8 -->
+<!-- cache-key: cdktf-0.20.8 input-d5f5cf3f475aed18197e671b1adb2db9c3270710a8c989074f6c12451f7f2c38 -->

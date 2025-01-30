@@ -521,10 +521,6 @@ func testAccCheckVPCAttachmentExists(ctx context.Context, n string, v *awstypes.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager VPC Attachment ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindVPCAttachmentByID(ctx, conn, rs.Primary.ID)

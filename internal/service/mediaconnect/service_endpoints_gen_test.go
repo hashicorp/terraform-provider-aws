@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListBridges(ctx, &mediaconnect.ListBridgesInput{},
+	input := mediaconnect.ListBridgesInput{}
+	_, err := client.ListBridges(ctx, &input,
 		func(opts *mediaconnect.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

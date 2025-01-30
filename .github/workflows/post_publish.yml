@@ -19,7 +19,7 @@ jobs:
     steps:
       - if: github.event_name == 'workflow_run'
         name: Download Artifact from Release workflow
-        uses: dawidd6/action-download-artifact@80620a5d27ce0ae443b965134db88467fc607b43 # v7
+        uses: dawidd6/action-download-artifact@20319c5641d495c8a52e688b7dc5fada6c3a9fbc # v8
         with:
           workflow: release.yml
           name: release-tag
@@ -83,8 +83,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     needs: [registry-check]
     steps:
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_wrapper: false
       - name: Specify Provider Version in TF Configuration
         run: |
           cat <<EOF > main.tf
@@ -92,7 +98,7 @@ jobs:
             required_providers {
               aws = {
                 source  = "hashicorp/aws"
-                version = ${{ needs.registry-check.outputs.latest-version }}
+                version = "${{ needs.registry-check.outputs.latest-version }}"
               }
             }
           }

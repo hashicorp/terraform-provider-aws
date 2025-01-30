@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListMetricSets(ctx, &lookoutmetrics.ListMetricSetsInput{},
+	input := lookoutmetrics.ListMetricSetsInput{}
+	_, err := client.ListMetricSets(ctx, &input,
 		func(opts *lookoutmetrics.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

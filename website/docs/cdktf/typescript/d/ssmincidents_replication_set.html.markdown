@@ -45,7 +45,7 @@ No arguments are required.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resouce Name (ARN) of the replication set.
+* `arn` - The Amazon Resource Name (ARN) of the replication set.
 * `tags` - All tags applied to the replication set.
 * `createdBy` - The ARN of the user who created the replication set.
 * `deletionProtected` - If `true`, the last remaining Region in a replication set can’t be deleted.
@@ -61,4 +61,4 @@ The `region` configuration block exports the following attributes for each Regio
     * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 * `statusMessage` - More information about the status of a Region.
 
-<!-- cache-key: cdktf-0.20.8 input-39319f4ba29ed3dd3b2f5e50f169ffe1879a34918a97973bcb5a09f09dcd8369 -->
+<!-- cache-key: cdktf-0.20.8 input-6a2e2a03147c80c70d5034490152e25bfdf1a23527cecc85bbec71418c9ac0c2 -->

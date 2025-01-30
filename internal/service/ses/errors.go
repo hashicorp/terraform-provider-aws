@@ -4,5 +4,7 @@
 package ses
 
 const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
+	errCodeInvalidLambdaConfiguration = "InvalidLambdaConfiguration"
+	errCodeInvalidParameterValue      = "InvalidParameterValue"
+	errCodeInvalidS3Configuration     = "InvalidS3Configuration"
 )

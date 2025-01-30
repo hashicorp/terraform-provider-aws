@@ -180,7 +180,7 @@ data "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerDataSourceConfig_forwardMultiTargetGroupHTTP(rName string, targetGroupName1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test1" {
   name = %[2]q
   type = "INSTANCE"

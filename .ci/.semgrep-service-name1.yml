@@ -4182,6 +4182,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)InternetMonitor"
     severity: WARNING
+  - id: invoicing-in-func-name
+    languages:
+      - go
+    message: Do not use "Invoicing" in func name inside invoicing package
+    paths:
+      include:
+        - internal/service/invoicing
+      exclude:
+        - internal/service/invoicing/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Invoicing"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: invoicing-in-test-name
+    languages:
+      - go
+    message: Include "Invoicing" in test name
+    paths:
+      include:
+        - internal/service/invoicing/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccInvoicing"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: invoicing-in-const-name
+    languages:
+      - go
+    message: Do not use "Invoicing" in const name inside invoicing package
+    paths:
+      include:
+        - internal/service/invoicing
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Invoicing"
+    severity: WARNING
+  - id: invoicing-in-var-name
+    languages:
+      - go
+    message: Do not use "Invoicing" in var name inside invoicing package
+    paths:
+      include:
+        - internal/service/invoicing
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Invoicing"
+    severity: WARNING
   - id: iot-in-func-name
     languages:
       - go

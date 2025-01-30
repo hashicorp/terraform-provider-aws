@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Origin Access Control")
+// @FrameworkDataSource("aws_cloudfront_origin_access_control", name="Origin Access Control")
 func newDataSourceOriginAccessControl(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceOriginAccessControl{}
 

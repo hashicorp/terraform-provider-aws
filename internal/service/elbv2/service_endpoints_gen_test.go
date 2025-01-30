@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeLoadBalancers(ctx, &elasticloadbalancingv2.DescribeLoadBalancersInput{},
+	input := elasticloadbalancingv2.DescribeLoadBalancersInput{}
+	_, err := client.DescribeLoadBalancers(ctx, &input,
 		func(opts *elasticloadbalancingv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
