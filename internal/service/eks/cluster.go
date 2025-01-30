@@ -738,7 +738,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		newAutoModeEnabled := autoModeEnabled(computeConfig, kubernetesNetworkConfig, storageConfig)
 
 		// If we are disabling auto mode, we might need to populate auto mode config options that are nil.
-		// Setting some explicitly to false and others to nil will cause InputValidationErrors
+		// Setting some explicitly to false and others to nil will cause InvalidParameterException
 		if oldAutoModeEnabled && !newAutoModeEnabled {
 			if computeConfig == nil {
 				computeConfig = &types.ComputeConfigRequest{
