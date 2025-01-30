@@ -402,20 +402,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			typeName := v.TypeName
-
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-					ctx = meta.RegisterLogger(ctx)
-					ctx = flex.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := resourceInterceptors{}
-
 			if v.Tags != nil {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -444,8 +431,24 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
 			}
 
+			opts := wrappedResourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, meta *conns.AWSClient) context.Context {
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if meta != nil {
+						ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
+						ctx = meta.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
+					}
+
+					return ctx
+				},
+				inner:        inner,
+				interceptors: interceptors,
+				typeName:     typeName,
+			}
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(bootstrapContext, typeName, inner, interceptors)
+				return newWrappedResource(opts)
 			})
 		}
 	}
