@@ -2023,8 +2023,7 @@ func checkFilter_Tag(key, value string) knownvalue.Check {
 
 func filterDefaults() map[string]knownvalue.Check {
 	return map[string]knownvalue.Check{
-		"and": knownvalue.ListExact([]knownvalue.Check{}),
-		// "object_size_greater_than": knownvalue.Null(),
+		"and":                      knownvalue.ListExact([]knownvalue.Check{}),
 		"object_size_greater_than": knownvalue.Null(),
 		"object_size_less_than":    knownvalue.Null(),
 		names.AttrPrefix:           knownvalue.StringExact(""),
@@ -2062,27 +2061,42 @@ func checkTransitions(checks ...knownvalue.Check) knownvalue.Check {
 }
 
 func checkTransition_Date(date string, class types.TransitionStorageClass) knownvalue.Check {
-	return knownvalue.ObjectExact(map[string]knownvalue.Check{
-		"date":                 knownvalue.StringExact(date),
-		"days":                 knownvalue.Null(),
-		names.AttrStorageClass: tfknownvalue.StringExact(class),
+	checks := transitionDefaults(class)
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"date": knownvalue.StringExact(date),
 	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
 }
 
 func checkTransition_Days(days int64, class types.TransitionStorageClass) knownvalue.Check {
-	return knownvalue.ObjectExact(map[string]knownvalue.Check{
-		"date":                 knownvalue.StringExact(""),
-		"days":                 knownvalue.Int64Exact(days),
-		names.AttrStorageClass: tfknownvalue.StringExact(class),
+	checks := transitionDefaults(class)
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"days": knownvalue.Int64Exact(days),
 	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
 }
 
 func checkTransition_StorageClass(class types.TransitionStorageClass) knownvalue.Check {
-	return knownvalue.ObjectExact(map[string]knownvalue.Check{
-		"date":                 knownvalue.StringExact(""),
+	checks := transitionDefaults(class)
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"days": knownvalue.Int64Exact(0),
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func transitionDefaults(class types.TransitionStorageClass) map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		// "date":                 knownvalue.StringExact(""),
+		"date":                 knownvalue.Null(), // TODO: RFC3339 does not suppport legacy-mode autoflex
 		"days":                 knownvalue.Null(),
 		names.AttrStorageClass: tfknownvalue.StringExact(class),
-	})
+	}
 }
 
 func testAccBucketLifecycleConfigurationConfig_basic(rName string) string {

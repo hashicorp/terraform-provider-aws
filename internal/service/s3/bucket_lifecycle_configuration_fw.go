@@ -297,7 +297,6 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									names.AttrStorageClass: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.TransitionStorageClass](),
 										Required:   true,
-										// TODO Validate,
 									},
 								},
 							},
@@ -541,20 +540,9 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 		return nil, diags
 	}
 
-	// d = fwflex.Expand(ctx, m.Filter, &r.Filter)
-	// diags.Append(d...)
-	// if d.HasError() {
-	// 	return nil, diags
-	// }
-	// if r.Filter == nil && m.Prefix.IsNull() {
-	// 	var filter awstypes.LifecycleRuleFilter
-	// 	r.Filter = &filter
-	// }
 	if m.Filter.IsUnknown() || m.Filter.IsNull() {
 		if m.Prefix.IsUnknown() || m.Prefix.IsNull() {
-			filter := awstypes.LifecycleRuleFilter{
-				// Prefix: aws.String(""),
-			}
+			filter := awstypes.LifecycleRuleFilter{}
 			r.Filter = &filter
 		}
 	} else {
@@ -714,7 +702,7 @@ func (m transitionModel) Expand(ctx context.Context) (result any, diags diag.Dia
 	r.Date = fwflex.TimeFromFramework(ctx, m.Date)
 
 	if m.Days.IsUnknown() || m.Days.IsNull() {
-		if m.Date.IsNull() {
+		if m.Date.IsUnknown() || m.Date.IsNull() {
 			r.Days = aws.Int32(0)
 		}
 	} else {
