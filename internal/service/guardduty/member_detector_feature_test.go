@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +27,7 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -69,7 +68,7 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -106,7 +105,7 @@ func testAccMemberDetectorFeature_multiple(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
