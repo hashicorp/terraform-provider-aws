@@ -367,7 +367,6 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				interceptors: interceptors,
 				typeName:     typeName,
 			}
-
 			dataSources = append(dataSources, func() datasource.DataSource {
 				return newWrappedDataSource(opts)
 			})
@@ -484,21 +483,22 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					continue
 				}
 
-				typeName := v.TypeName
-
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-					ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
-					if meta != nil {
-						ctx = meta.RegisterLogger(ctx)
-						ctx = flex.RegisterLogger(ctx)
-						ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
-					}
-					return ctx
+				opts := wrappedEphemeralResourceOptions{
+					// bootstrapContext is run on all wrapped methods before any interceptors.
+					bootstrapContext: func(ctx context.Context, meta *conns.AWSClient) context.Context {
+						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+						if meta != nil {
+							ctx = meta.RegisterLogger(ctx)
+							ctx = flex.RegisterLogger(ctx)
+							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+						}
+						return ctx
+					},
+					inner:    inner,
+					typeName: v.TypeName,
 				}
-
 				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(bootstrapContext, typeName, inner, nil)
+					return newWrappedEphemeralResource(opts)
 				})
 			}
 		}

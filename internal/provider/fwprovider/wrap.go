@@ -73,65 +73,66 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 	return nil
 }
 
-// wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
-type wrappedEphemeralResource struct {
+type wrappedEphemeralResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	inner            ephemeral.EphemeralResourceWithConfigure
 	interceptors     ephemeralResourceInterceptors
-	meta             *conns.AWSClient
 	typeName         string
 }
 
-func newWrappedEphemeralResource(bootstrapContext contextFunc, typeName string, inner ephemeral.EphemeralResourceWithConfigure, interceptors ephemeralResourceInterceptors) ephemeral.EphemeralResourceWithConfigure {
+// wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
+type wrappedEphemeralResource struct {
+	meta *conns.AWSClient
+	opts wrappedEphemeralResourceOptions
+}
+
+func newWrappedEphemeralResource(opts wrappedEphemeralResourceOptions) ephemeral.EphemeralResourceWithConfigure {
 	return &wrappedEphemeralResource{
-		bootstrapContext: bootstrapContext,
-		inner:            inner,
-		interceptors:     interceptors,
-		typeName:         typeName,
+		opts: opts,
 	}
 }
 
 func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
 	// This method does not call down to the inner ephemeral resource.
-	response.TypeName = w.typeName
+	response.TypeName = w.opts.typeName
 }
 
 func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Schema(ctx, request, response)
+	ctx = w.opts.bootstrapContext(ctx, w.meta)
+	w.opts.inner.Schema(ctx, request, response)
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Open(ctx, request, response)
+	ctx = w.opts.bootstrapContext(ctx, w.meta)
+	w.opts.inner.Open(ctx, request, response)
 }
 
 func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
 	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
 		w.meta = v
 	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Configure(ctx, request, response)
+	ctx = w.opts.bootstrapContext(ctx, w.meta)
+	w.opts.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithRenew); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
+	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithRenew); ok {
+		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.Renew(ctx, request, response)
 	}
 }
 
 func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithClose); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
+	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithClose); ok {
+		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.Close(ctx, request, response)
 	}
 }
 
 func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephemeral.ConfigValidator {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
+	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
+		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		return v.ConfigValidators(ctx)
 	}
 
@@ -139,8 +140,8 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 }
 
 func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
+	if v, ok := w.opts.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
+		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.ValidateConfig(ctx, request, response)
 	}
 }
