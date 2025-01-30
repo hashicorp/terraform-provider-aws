@@ -372,9 +372,15 @@ func (r *resourceConfigurationResource) Delete(ctx context.Context, request reso
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	_, err := conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{
-		ResourceConfigurationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	// Handle EventBridge-managed resource association deletion.
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{
+			ResourceConfigurationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
+		})
+	}, "has existing association with service networks")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

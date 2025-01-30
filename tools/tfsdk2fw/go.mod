@@ -48,7 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.42.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/appsync v1.41.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appsync v1.42.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.49.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.8 // indirect
@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.33.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/datasync v1.44.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.25.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.23.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.31.12 // indirect
@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.201.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.202.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.38.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.29.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.9 // indirect
@@ -133,7 +133,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.36.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.23.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.28.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/firehose v1.35.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fis v1.31.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fms v1.39.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.51.6 // indirect
@@ -270,7 +270,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.27.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.42.3 // indirect
