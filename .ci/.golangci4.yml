@@ -42,10 +42,6 @@ issues:
       text: "SA1019: \\w+.(\\w+) is deprecated: This member has been deprecated"
     - linters:
         - staticcheck
-      path: "internal/service/cloudtrail"
-      text: "SA1019: \\w+.(\\w+) is deprecated: This member has been deprecated"
-    - linters:
-        - staticcheck
       path: internal/service/detective/
       text: "SA1019: member.VolumeUsageInBytes is deprecated: This property is deprecated. Use VolumeUsageByDatasourcePackage instead"
     - linters:
