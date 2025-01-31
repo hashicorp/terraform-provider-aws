@@ -82,26 +82,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 					if identifier := r.getIdentifier(d); identifier != "" {
 						o, n := d.GetChange(names.AttrTagsAll)
 
-						// If the service package has a generic resource update tags methods, call it.
-						var err error
-
-						if v, ok := sp.(tftags.ServiceTagUpdater); ok {
-							err = v.UpdateTags(ctx, c, identifier, o, n)
-						} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && r.tags.ResourceType != "" {
-							err = v.UpdateTags(ctx, c, identifier, r.tags.ResourceType, o, n)
-						} else {
-							tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
-								"ServicePackage": sp.ServicePackageName(),
-								"ResourceType":   r.tags.ResourceType,
-							})
-						}
-
-						// ISO partitions may not support tagging, giving error.
-						if errs.IsUnsupportedOperationInPartitionError(c.Partition(ctx), err) {
-							return ctx, diags
-						}
-
-						if err != nil {
+						if err := r.updateTags(ctx, sp, c, identifier, o, n); err != nil {
 							return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 						}
 					}
@@ -437,6 +418,35 @@ func (r tagsInterceptor) listTags(ctx context.Context, sp conns.ServicePackage, 
 		if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 			err = nil
 		}
+	}
+
+	return err
+}
+
+// If the service package has a generic resource update tags methods, call it.
+func (r tagsInterceptor) updateTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string, oldTags, newTags any) error {
+	var err error
+
+	if v, ok := sp.(tftags.ServiceTagUpdater); ok {
+		err = v.UpdateTags(ctx, c, identifier, oldTags, newTags)
+	} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok {
+		if r.tags.ResourceType == "" {
+			tflog.Error(ctx, "UpdateTags method requires ResourceType but none set", map[string]interface{}{
+				"ServicePackage": sp.ServicePackageName(),
+			})
+		} else {
+			err = v.UpdateTags(ctx, c, identifier, r.tags.ResourceType, oldTags, newTags)
+		}
+	} else {
+		tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+			"ServicePackage": sp.ServicePackageName(),
+			"ResourceType":   r.tags.ResourceType,
+		})
+	}
+
+	// ISO partitions may not support tagging, giving error.
+	if errs.IsUnsupportedOperationInPartitionError(c.Partition(ctx), err) {
+		err = nil
 	}
 
 	return err
