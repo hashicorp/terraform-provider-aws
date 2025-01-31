@@ -26,17 +26,8 @@ type schemaResourceData interface {
 }
 
 type interceptorOptions struct {
-	c *conns.AWSClient
-	d interface {
-		Get(string) any
-		GetChange(string) (any, any)
-		GetRawConfig() cty.Value
-		GetRawPlan() cty.Value
-		GetRawState() cty.Value
-		HasChange(string) bool
-		Id() string
-		Set(string, any) error
-	}
+	c     *conns.AWSClient
+	d     schemaResourceData
 	diags diag.Diagnostics
 	when  when
 	why   why

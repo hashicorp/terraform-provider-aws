@@ -77,44 +77,35 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 
 			if d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				if d.HasChange(names.AttrTagsAll) {
-					if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
-						var identifier string
-						if identifierAttribute == "id" {
-							identifier = d.Id()
+					// Some old resources may not have the required attribute set after Read:
+					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+					if identifier := r.getIdentifier(d); identifier != "" {
+						o, n := d.GetChange(names.AttrTagsAll)
+
+						// If the service package has a generic resource update tags methods, call it.
+						var err error
+
+						if v, ok := sp.(tftags.ServiceTagUpdater); ok {
+							err = v.UpdateTags(ctx, c, identifier, o, n)
+						} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && r.tags.ResourceType != "" {
+							err = v.UpdateTags(ctx, c, identifier, r.tags.ResourceType, o, n)
 						} else {
-							identifier = d.Get(identifierAttribute).(string)
+							tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
 						}
 
-						// Some old resources may not have the required attribute set after Read:
-						// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-						if identifier != "" {
-							o, n := d.GetChange(names.AttrTagsAll)
-
-							// If the service package has a generic resource update tags methods, call it.
-							var err error
-
-							if v, ok := sp.(tftags.ServiceTagUpdater); ok {
-								err = v.UpdateTags(ctx, c, identifier, o, n)
-							} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && r.tags.ResourceType != "" {
-								err = v.UpdateTags(ctx, c, identifier, r.tags.ResourceType, o, n)
-							} else {
-								tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
-									"ServicePackage": sp.ServicePackageName(),
-									"ResourceType":   r.tags.ResourceType,
-								})
-							}
-
-							// ISO partitions may not support tagging, giving error.
-							if errs.IsUnsupportedOperationInPartitionError(c.Partition(ctx), err) {
-								return ctx, diags
-							}
-
-							if err != nil {
-								return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-							}
+						// ISO partitions may not support tagging, giving error.
+						if errs.IsUnsupportedOperationInPartitionError(c.Partition(ctx), err) {
+							return ctx, diags
 						}
-						// TODO If the only change was to tags it would be nice to not call the resource's U handler.
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
 					}
+					// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 				}
 			}
 		}
@@ -132,20 +123,11 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 		case Create, Update:
 			// If the R handler didn't set tags, try and read them from the service API.
 			if tagsInContext.TagsOut.IsNone() {
-				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
-					var identifier string
-					if identifierAttribute == "id" {
-						identifier = d.Id()
-					} else {
-						identifier = d.Get(identifierAttribute).(string)
-					}
-
-					// Some old resources may not have the required attribute set after Read:
-					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-					if identifier != "" {
-						if err := r.listTags(ctx, sp, c, identifier); err != nil {
-							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-						}
+				// Some old resources may not have the required attribute set after Read:
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+				if identifier := r.getIdentifier(d); identifier != "" {
+					if err := r.listTags(ctx, sp, c, identifier); err != nil {
+						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
 			}
@@ -232,21 +214,12 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOpti
 
 			// If the R handler didn't set tags, try and read them from the service API.
 			if tagsInContext.TagsOut.IsNone() {
-				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
-					var identifier string
-					if identifierAttribute == "id" {
-						identifier = d.Id()
-					} else {
-						identifier = d.Get(identifierAttribute).(string)
-					}
-
-					// TODO: can this occur for a data source?
-					// Some old resources may not have the required attribute set after Read:
-					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-					if identifier != "" {
-						if err := r.listTags(ctx, sp, c, identifier); err != nil {
-							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-						}
+				// TODO: can this occur for a data source?
+				// Some old resources may not have the required attribute set after Read:
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+				if identifier := r.getIdentifier(d); identifier != "" {
+					if err := r.listTags(ctx, sp, c, identifier); err != nil {
+						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
 			}
@@ -417,6 +390,21 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 
 type tagsInterceptor struct {
 	tags *types.ServicePackageResourceTags
+}
+
+// getIdentifier returns the value of the identifier attribute used in AWS APIs.
+func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
+	var identifier string
+
+	if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+		if identifierAttribute == "id" {
+			identifier = d.Id()
+		} else {
+			identifier = d.Get(identifierAttribute).(string)
+		}
+	}
+
+	return identifier
 }
 
 // If the service package has a generic resource list tags methods, call it.
