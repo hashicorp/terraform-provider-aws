@@ -1956,14 +1956,6 @@ func checkFilter_None() knownvalue.Check {
 	return knownvalue.ListExact([]knownvalue.Check{})
 }
 
-func checkFilter_Basic() knownvalue.Check {
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			filterDefaults(),
-		),
-	})
-}
-
 func checkFilter_And(check knownvalue.Check) knownvalue.Check {
 	checks := filterDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{

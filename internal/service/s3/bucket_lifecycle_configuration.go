@@ -103,13 +103,6 @@ const (
 	lifecycleRuleStatusEnabled  = "Enabled"
 )
 
-func lifecycleRuleStatus_Values() []string {
-	return []string{
-		lifecycleRuleStatusDisabled,
-		lifecycleRuleStatusEnabled,
-	}
-}
-
 func expandTag(tfMap map[string]interface{}) *types.Tag {
 	if len(tfMap) == 0 {
 		return nil
