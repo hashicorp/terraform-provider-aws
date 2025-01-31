@@ -44,6 +44,8 @@ func testAccTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", ""),
 				),
 			},
 			{
@@ -59,6 +61,8 @@ func testAccTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", ""),
 				),
 			},
 			{
@@ -317,6 +321,48 @@ func testAccTrail_kmsKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTrail_snsTopicName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var trail types.Trail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudTrailConfig_snsTopicName(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrSNSTopicARN, "sns", regexache.MustCompile(rName)),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCloudTrailConfig_snsTopicName(rName, rName+"-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrSNSTopicARN, "sns", regexache.MustCompile(rName+"-2")),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", rName+"-2"),
 				),
 			},
 			{
@@ -1168,6 +1214,56 @@ resource "aws_cloudtrail" "test" {
   kms_key_id                    = aws_kms_key.test.arn
 }
 `, rName))
+}
+
+func testAccCloudTrailConfig_snsTopicName(rName, snsTopicName string) string {
+	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowPublishToTopic"
+      Effect = "Allow"
+      Principal = {
+        Service = "cloudtrail.amazonaws.com"
+      }
+      Action   = "sns:Publish"
+      Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_sns_topic" "test_2" {
+  name = "%[1]s-2"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowPublishToTopic"
+      Effect = "Allow"
+      Principal = {
+        Service = "cloudtrail.amazonaws.com"
+      }
+      Action   = "sns:Publish"
+      Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.id
+  sns_topic_name = %[2]q
+}
+
+`, rName, snsTopicName))
 }
 
 func testAccCloudTrailConfig_globalServiceEvents(rName string) string {
