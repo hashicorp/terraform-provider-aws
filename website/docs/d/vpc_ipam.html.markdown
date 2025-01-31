@@ -3,12 +3,12 @@ subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam"
 description: |-
-  Terraform data source for managing an AWS VPC IPAM.
+  Terraform data source for managing a VPC IPAM.
 ---
 
 # Data Source: aws_vpc_ipam
 
-Terraform data source for managing an AWS VPC IPAM resource.
+Terraform data source for managing a VPC IPAM.
 
 ## Example Usage
 
