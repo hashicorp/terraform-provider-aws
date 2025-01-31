@@ -73,9 +73,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
 				Required: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
 				Validators: []validator.Int64{
 					int64validator.Between(20, 16384),
 				},
@@ -131,7 +128,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `The Timestream for InfluxDB DB storage type to read and write InfluxDB data. 
@@ -476,7 +472,9 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) ||
 		!plan.DBInstanceType.Equal(state.DBInstanceType) ||
 		!plan.DeploymentType.Equal(state.DeploymentType) ||
-		!plan.Port.Equal(state.Port) {
+		!plan.Port.Equal(state.Port) ||
+		!plan.AllocatedStorage.Equal(state.AllocatedStorage) ||
+		!plan.DBStorageType.Equal(state.DBStorageType) {
 		in := timestreaminfluxdb.UpdateDbInstanceInput{
 			Identifier: plan.ID.ValueStringPointer(),
 		}
@@ -497,6 +495,29 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 
 		if !plan.DeploymentType.Equal(state.DeploymentType) {
 			in.DeploymentType = awstypes.DeploymentType(plan.DeploymentType.ValueString())
+		}
+
+		if !plan.DBStorageType.Equal(state.DBStorageType) {
+			in.DbStorageType = awstypes.DbStorageType(plan.DBStorageType.ValueString())
+		}
+
+		if !plan.AllocatedStorage.Equal(state.AllocatedStorage) {
+			if plan.AllocatedStorage.ValueInt64() > math.MaxInt32 {
+				err := errors.New("allocated_storage was greater than the maximum allowed value for int32")
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+					err.Error(),
+				)
+				return
+			} else if plan.AllocatedStorage.ValueInt64() < math.MinInt32 {
+				err := errors.New("allocated_storage was less than the minimum allowed value for int32")
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+			in.AllocatedStorage = aws.Int32(int32(plan.AllocatedStorage.ValueInt64()))
 		}
 
 		if !plan.Port.Equal(state.Port) {

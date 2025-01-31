@@ -305,6 +305,108 @@ func TestAccTimestreamInfluxDBDBInstance_port(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBInstance_allocatedStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance1, dbInstance2 timestreaminfluxdb.GetDbInstanceOutput
+	allocatedStorage1 := "20"
+	allocatedStorage2 := "40"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBInstanceConfig_allocatedStorage(rName, allocatedStorage1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, allocatedStorage1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+			{
+				Config: testAccDBInstanceConfig_allocatedStorage(rName, allocatedStorage2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
+					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, allocatedStorage2),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBInstance_dbStorageType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance1, dbInstance2 timestreaminfluxdb.GetDbInstanceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBInstanceConfig_dbStorageType(rName, string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+			{
+				Config: testAccDBInstanceConfig_dbStorageType(rName, string(awstypes.DbStorageTypeInfluxIoIncludedT2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
+					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
+					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT2)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
 func TestAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -678,4 +780,39 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   port = %[2]s
 }
 `, rName, port))
+}
+
+func testAccDBInstanceConfig_allocatedStorage(rName string, storageAmount string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+
+  allocated_storage = %[2]s
+}
+`, rName, storageAmount))
+}
+
+func testAccDBInstanceConfig_dbStorageType(rName string, dbStorageType string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = 400
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+
+  db_storage_type = %[2]q
+}
+`, rName, dbStorageType))
 }
