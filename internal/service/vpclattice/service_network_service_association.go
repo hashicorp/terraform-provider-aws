@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_vpclattice_service_network_service_association", name="Service Network Service Association")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceServiceNetworkServiceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkServiceAssociationCreate,

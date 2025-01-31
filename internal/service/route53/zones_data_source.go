@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,22 +52,18 @@ func (d *zonesDataSource) Read(ctx context.Context, request datasource.ReadReque
 
 	conn := d.Meta().Route53Client(ctx)
 
-	var zoneIDs []string
-	input := &route53.ListHostedZonesInput{}
-	pages := route53.NewListHostedZonesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	input := route53.ListHostedZonesInput{}
+	output, err := findHostedZones(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.HostedZone]())
 
-		if err != nil {
-			response.Diagnostics.AddError("listing Route 53 Hosted Zones", err.Error())
+	if err != nil {
+		response.Diagnostics.AddError("reading Route 53 Hosted Zones", err.Error())
 
-			return
-		}
-
-		for _, v := range page.HostedZones {
-			zoneIDs = append(zoneIDs, cleanZoneID(aws.ToString(v.Id)))
-		}
+		return
 	}
+
+	zoneIDs := tfslices.ApplyToAll(output, func(v awstypes.HostedZone) string {
+		return cleanZoneID(aws.ToString(v.Id))
+	})
 
 	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.ZoneIDs = fwflex.FlattenFrameworkStringValueList(ctx, zoneIDs)

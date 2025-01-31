@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -19,8 +19,8 @@ import (
 
 func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
-		Target:  enum.Slice(types.OperationStatusSuccessful),
+		Pending: enum.Slice(awstypes.OperationStatusSubmitted, awstypes.OperationStatusInProgress),
+		Target:  enum.Slice(awstypes.OperationStatusSuccessful),
 		Timeout: timeout,
 		Refresh: statusOperation(ctx, conn, id),
 	}
@@ -59,7 +59,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 
 	output, err := conn.GetOperationDetail(ctx, input)
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "No operation found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "No operation found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
