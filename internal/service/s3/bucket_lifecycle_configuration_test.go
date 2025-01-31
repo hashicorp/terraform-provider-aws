@@ -340,22 +340,14 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
-							names.AttrFilter: knownvalue.ListExact([]knownvalue.Check{
+							names.AttrFilter: checkFilter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"and": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"object_size_greater_than": knownvalue.Int64Exact(500),
-											"object_size_less_than":    knownvalue.Int64Exact(64000),
-											names.AttrPrefix:           knownvalue.StringExact(""),
-											names.AttrTags:             knownvalue.Null(),
-										}),
-									}),
-									"object_size_greater_than": knownvalue.Null(),
-									"object_size_less_than":    knownvalue.Null(),
+									"object_size_greater_than": knownvalue.Int64Exact(500),
+									"object_size_less_than":    knownvalue.Int64Exact(64000),
 									names.AttrPrefix:           knownvalue.StringExact(""),
-									"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
+									names.AttrTags:             knownvalue.Null(),
 								}),
-							}),
+							),
 							names.AttrID:                    knownvalue.StringExact(rName),
 							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
@@ -564,25 +556,17 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Days(90),
-							names.AttrFilter: knownvalue.ListExact([]knownvalue.Check{
+							names.AttrFilter: checkFilter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"and": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"object_size_greater_than": knownvalue.Int64Exact(0),
-											"object_size_less_than":    knownvalue.Int64Exact(0),
-											names.AttrPrefix:           knownvalue.StringExact("log/"),
-											names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
-												acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-												acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-											}),
-										}),
+									"object_size_greater_than": knownvalue.Int64Exact(0),
+									"object_size_less_than":    knownvalue.Int64Exact(0),
+									names.AttrPrefix:           knownvalue.StringExact("log/"),
+									names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+										acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+										acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 									}),
-									"object_size_greater_than": knownvalue.Null(),
-									"object_size_less_than":    knownvalue.Null(),
-									names.AttrPrefix:           knownvalue.StringExact(""),
-									"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
 								}),
-							}),
+							),
 							names.AttrID:                    knownvalue.StringExact("log"),
 							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
@@ -1568,22 +1552,14 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Days(90),
-							names.AttrFilter: knownvalue.ListExact([]knownvalue.Check{
+							names.AttrFilter: checkFilter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"and": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"object_size_greater_than": knownvalue.Int64Exact(300),
-											"object_size_less_than":    knownvalue.Int64Exact(0),
-											names.AttrPrefix:           knownvalue.StringExact("prefix1"),
-											names.AttrTags:             knownvalue.Null(),
-										}),
-									}),
-									"object_size_greater_than": knownvalue.Null(),
-									"object_size_less_than":    knownvalue.Null(),
-									names.AttrPrefix:           knownvalue.StringExact(""),
-									"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
+									"object_size_greater_than": knownvalue.Int64Exact(300),
+									"object_size_less_than":    knownvalue.Int64Exact(0),
+									names.AttrPrefix:           knownvalue.StringExact("prefix1"),
+									names.AttrTags:             knownvalue.Null(),
 								}),
-							}),
+							),
 							names.AttrID:                    knownvalue.StringExact(rName),
 							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
@@ -1901,29 +1877,34 @@ func checkAbortIncompleteMultipartUpload_Days(days int64) knownvalue.Check {
 }
 
 func checkExpiration_Date(date string) knownvalue.Check {
+	checks := expirationDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"date": knownvalue.StringExact(date),
+	})
 	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(map[string]knownvalue.Check{
-			"date":                         knownvalue.StringExact(date),
-			"days":                         knownvalue.Int64Exact(0),
-			"expired_object_delete_marker": knownvalue.Bool(false),
-		}),
+		knownvalue.ObjectExact(
+			checks,
+		),
 	})
 }
 
 func checkExpiration_Days(days int64) knownvalue.Check {
+	checks := expirationDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"days": knownvalue.Int64Exact(days),
+	})
 	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(map[string]knownvalue.Check{
-			// "date":                         knownvalue.StringExact(""),
-			"date":                         knownvalue.Null(), // TODO: RFC3339 does not suppport legacy-mode autoflex
-			"days":                         knownvalue.Int64Exact(days),
-			"expired_object_delete_marker": knownvalue.Bool(false),
-		}),
+		knownvalue.ObjectExact(
+			checks,
+		),
 	})
 }
 
 func checkExpiration_DeleteMarker(marker bool) knownvalue.Check {
 	checks := expirationDefaults()
-	checks["expired_object_delete_marker"] = knownvalue.Bool(marker)
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"expired_object_delete_marker": knownvalue.Bool(marker),
+	})
 	return knownvalue.ListExact([]knownvalue.Check{
 		knownvalue.ObjectExact(
 			checks,
@@ -1959,7 +1940,9 @@ func checkFilter_None() knownvalue.Check {
 func checkFilter_And(check knownvalue.Check) knownvalue.Check {
 	checks := filterDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
-		"and": check,
+		"and": knownvalue.ListExact([]knownvalue.Check{
+			check,
+		}),
 	})
 	return knownvalue.ListExact([]knownvalue.Check{
 		knownvalue.ObjectExact(
