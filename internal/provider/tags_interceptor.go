@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -28,10 +29,22 @@ type tagsResourceInterceptor struct {
 	readFunc   tagsCRUDFunc
 }
 
+func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
+	return &tagsResourceInterceptor{
+		tagsInterceptor: tagsInterceptor{
+			WithTaggingMethods: interceptors.WithTaggingMethods{
+				ServicePackageResourceTags: servicePackageResourceTags,
+			},
+		},
+		updateFunc: tagsUpdateFunc,
+		readFunc:   tagsReadFunc,
+	}
+}
+
 func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOptions) (context.Context, diag.Diagnostics) {
 	c, diags := opts.c, opts.diags
 
-	if r.tags == nil {
+	if !r.HasServicePackageResourceTags() {
 		return ctx, diags
 	}
 
@@ -82,7 +95,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 					if identifier := r.getIdentifier(d); identifier != "" {
 						o, n := d.GetChange(names.AttrTagsAll)
 
-						if err := r.updateTags(ctx, sp, c, identifier, o, n); err != nil {
+						if err := r.UpdateTags(ctx, sp, c, identifier, o, n); err != nil {
 							return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 						}
 					}
@@ -107,7 +120,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 				// Some old resources may not have the required attribute set after Read:
 				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
 				if identifier := r.getIdentifier(d); identifier != "" {
-					if err := r.listTags(ctx, sp, c, identifier); err != nil {
+					if err := r.ListTags(ctx, sp, c, identifier); err != nil {
 						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
@@ -129,9 +142,9 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 	case Finally:
 		switch why {
 		case Update:
-			if r.tags.IdentifierAttribute != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
-				ctx, diags = r.updateFunc(ctx, d, sp, r.tags, serviceName, resourceName, c, diags)
-				ctx, diags = r.readFunc(ctx, d, sp, r.tags, serviceName, resourceName, c, diags)
+			if r.ServicePackageResourceTags.IdentifierAttribute != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
+				ctx, diags = r.updateFunc(ctx, d, sp, r.ServicePackageResourceTags, serviceName, resourceName, c, diags)
+				ctx, diags = r.readFunc(ctx, d, sp, r.ServicePackageResourceTags, serviceName, resourceName, c, diags)
 			}
 		}
 	}
@@ -144,10 +157,20 @@ type tagsDataSourceInterceptor struct {
 	tagsInterceptor
 }
 
+func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
+	return &tagsDataSourceInterceptor{
+		tagsInterceptor: tagsInterceptor{
+			WithTaggingMethods: interceptors.WithTaggingMethods{
+				ServicePackageResourceTags: servicePackageResourceTags,
+			},
+		},
+	}
+}
+
 func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) (context.Context, diag.Diagnostics) {
 	c, diags := opts.c, opts.diags
 
-	if r.tags == nil {
+	if !r.HasServicePackageResourceTags() {
 		return ctx, diags
 	}
 
@@ -199,7 +222,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOpti
 				// Some old resources may not have the required attribute set after Read:
 				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
 				if identifier := r.getIdentifier(d); identifier != "" {
-					if err := r.listTags(ctx, sp, c, identifier); err != nil {
+					if err := r.ListTags(ctx, sp, c, identifier); err != nil {
 						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
@@ -370,14 +393,14 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 }
 
 type tagsInterceptor struct {
-	tags *types.ServicePackageResourceTags
+	interceptors.WithTaggingMethods
 }
 
 // getIdentifier returns the value of the identifier attribute used in AWS APIs.
 func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	var identifier string
 
-	if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := r.ServicePackageResourceTags.IdentifierAttribute; identifierAttribute != "" {
 		if identifierAttribute == "id" {
 			identifier = d.Id()
 		} else {
@@ -386,68 +409,4 @@ func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	}
 
 	return identifier
-}
-
-// If the service package has a generic resource list tags methods, call it.
-func (r tagsInterceptor) listTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string) error {
-	var err error
-
-	if v, ok := sp.(tftags.ServiceTagLister); ok {
-		err = v.ListTags(ctx, c, identifier) // Sets tags in Context
-	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
-		if r.tags.ResourceType == "" {
-			tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]interface{}{
-				"ServicePackage": sp.ServicePackageName(),
-			})
-		} else {
-			err = v.ListTags(ctx, c, identifier, r.tags.ResourceType) // Sets tags in Context
-		}
-	} else {
-		tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
-			"ServicePackage": sp.ServicePackageName(),
-			"ResourceType":   r.tags.ResourceType,
-		})
-	}
-
-	switch {
-	// ISO partitions may not support tagging, giving error.
-	case errs.IsUnsupportedOperationInPartitionError(c.Partition(ctx), err):
-		err = nil
-	case sp.ServicePackageName() == names.DynamoDB && err != nil:
-		// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
-		if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-			err = nil
-		}
-	}
-
-	return err
-}
-
-// If the service package has a generic resource update tags methods, call it.
-func (r tagsInterceptor) updateTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string, oldTags, newTags any) error {
-	var err error
-
-	if v, ok := sp.(tftags.ServiceTagUpdater); ok {
-		err = v.UpdateTags(ctx, c, identifier, oldTags, newTags)
-	} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok {
-		if r.tags.ResourceType == "" {
-			tflog.Error(ctx, "UpdateTags method requires ResourceType but none set", map[string]interface{}{
-				"ServicePackage": sp.ServicePackageName(),
-			})
-		} else {
-			err = v.UpdateTags(ctx, c, identifier, r.tags.ResourceType, oldTags, newTags)
-		}
-	} else {
-		tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
-			"ServicePackage": sp.ServicePackageName(),
-			"ResourceType":   r.tags.ResourceType,
-		})
-	}
-
-	// ISO partitions may not support tagging, giving error.
-	if errs.IsUnsupportedOperationInPartitionError(c.Partition(ctx), err) {
-		err = nil
-	}
-
-	return err
 }

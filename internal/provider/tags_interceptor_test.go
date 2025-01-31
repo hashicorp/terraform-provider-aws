@@ -66,11 +66,7 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	sp := &types.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	}
-	tags := tagsResourceInterceptor{
-		tagsInterceptor: tagsInterceptor{tags: sp},
-		updateFunc:      tagsUpdateFunc,
-		readFunc:        tagsReadFunc,
-	}
+	tags := newTagsResourceInterceptor(sp)
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
 		why:         Update,
