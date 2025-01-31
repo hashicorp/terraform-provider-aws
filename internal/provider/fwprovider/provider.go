@@ -348,7 +348,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 					continue
 				}
 
-				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
 			}
 
 			opts := wrappedDataSourceOptions{
