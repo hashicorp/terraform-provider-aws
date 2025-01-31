@@ -48,27 +48,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 		return ctx, diags
 	}
 
-	inContext, ok := conns.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	sp := c.ServicePackage(ctx, inContext.ServicePackageName)
-	if sp == nil {
-		return ctx, diags
-	}
-
-	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
-	if err != nil {
-		serviceName = "<service>"
-	}
-
-	resourceName := inContext.ResourceName
-	if resourceName == "" {
-		resourceName = "<thing>"
-	}
-
-	tagsInContext, ok := tftags.FromContext(ctx)
+	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return ctx, diags
 	}
@@ -174,27 +154,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOpti
 		return ctx, diags
 	}
 
-	inContext, ok := conns.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	sp := c.ServicePackage(ctx, inContext.ServicePackageName)
-	if sp == nil {
-		return ctx, diags
-	}
-
-	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
-	if err != nil {
-		serviceName = "<service>"
-	}
-
-	resourceName := inContext.ResourceName
-	if resourceName == "" {
-		resourceName = "<thing>"
-	}
-
-	tagsInContext, ok := tftags.FromContext(ctx)
+	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return ctx, diags
 	}

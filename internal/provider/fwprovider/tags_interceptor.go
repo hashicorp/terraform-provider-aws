@@ -40,27 +40,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 		return ctx, diags
 	}
 
-	inContext, ok := conns.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	sp := c.ServicePackage(ctx, inContext.ServicePackageName)
-	if sp == nil {
-		return ctx, diags
-	}
-
-	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
-	if err != nil {
-		serviceName = "<service>"
-	}
-
-	resourceName := inContext.ResourceName
-	if resourceName == "" {
-		resourceName = "<thing>"
-	}
-
-	tagsInContext, ok := tftags.FromContext(ctx)
+	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return ctx, diags
 	}
@@ -121,12 +101,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		return ctx, diags
 	}
 
-	inContext, ok := conns.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	tagsInContext, ok := tftags.FromContext(ctx)
+	sp, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return ctx, diags
 	}
@@ -142,13 +117,13 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreSystem(inContext.ServicePackageName)
+		tags = tags.IgnoreSystem(sp.ServicePackageName())
 		tagsInContext.TagsIn = option.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 		if diags.HasError() {
 			return ctx, diags
@@ -163,27 +138,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		return ctx, diags
 	}
 
-	inContext, ok := conns.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	sp := c.ServicePackage(ctx, inContext.ServicePackageName)
-	if sp == nil {
-		return ctx, diags
-	}
-
-	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
-	if err != nil {
-		serviceName = "<service>"
-	}
-
-	resourceName := inContext.ResourceName
-	if resourceName == "" {
-		resourceName = "<thing>"
-	}
-
-	tagsInContext, ok := tftags.FromContext(ctx)
+	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return ctx, diags
 	}
@@ -239,27 +194,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		return ctx, diags
 	}
 
-	inContext, ok := conns.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	sp := c.ServicePackage(ctx, inContext.ServicePackageName)
-	if sp == nil {
-		return ctx, diags
-	}
-
-	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
-	if err != nil {
-		serviceName = "<service>"
-	}
-
-	resourceName := inContext.ResourceName
-	if resourceName == "" {
-		resourceName = "<thing>"
-	}
-
-	tagsInContext, ok := tftags.FromContext(ctx)
+	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return ctx, diags
 	}

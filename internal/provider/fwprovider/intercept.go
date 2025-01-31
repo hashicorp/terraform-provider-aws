@@ -58,13 +58,13 @@ type resourceCRUDResponse interface {
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
 type resourceInterceptor interface {
-	// create is invoke for a Create call.
+	// create is invoked for a Create call.
 	create(context.Context, resource.CreateRequest, *resource.CreateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
-	// read is invoke for a Read call.
+	// read is invoked for a Read call.
 	read(context.Context, resource.ReadRequest, *resource.ReadResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
-	// update is invoke for an Update call.
+	// update is invoked for an Update call.
 	update(context.Context, resource.UpdateRequest, *resource.UpdateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
-	// delete is invoke for a Delete call.
+	// delete is invoked for a Delete call.
 	delete(context.Context, resource.DeleteRequest, *resource.DeleteResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
 }
 
