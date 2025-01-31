@@ -102,7 +102,14 @@ func TestTagsResourceInterceptor(t *testing.T) {
 
 	for _, v := range interceptors {
 		var diags diag.Diagnostics
-		_, diags = v.interceptor.run(ctx, d, conn, v.when, v.why, diags)
+		opts := interceptorOptions{
+			c:     conn,
+			d:     d,
+			diags: diags,
+			when:  v.when,
+			why:   v.why,
+		}
+		_, diags = v.interceptor.run(ctx, opts)
 		if got, want := len(diags), 1; got != want {
 			t.Errorf("length of diags = %v, want %v", got, want)
 		}
