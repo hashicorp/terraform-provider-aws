@@ -10,10 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mediapackagev2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -23,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,6 +85,27 @@ func (r *resourceChannel) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"ingest_endpoints": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[ingestEndpointModel](ctx),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Computed: true,
+						},
+						"url": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -260,8 +285,15 @@ type resourceChannelData struct {
 	ChannelGroupName types.String `tfsdk:"channel_group_name"`
 	Description      types.String `tfsdk:"description"`
 	InputType        types.String `tfsdk:"input_type"`
-	Tags             tftags.Map   `tfsdk:"tags"`
-	TagsAll          tftags.Map   `tfsdk:"tags_all"`
+	//IngestEndpoints  fwtypes.ListNestedObjectValueOf[ingestEndpointModel] `tfsdk:"ingest_endpoints"`
+	IngestEndpoints fwtypes.SetNestedObjectValueOf[ingestEndpointModel] `tfsdk:"ingest_endpoints"`
+	Tags            tftags.Map                                          `tfsdk:"tags"`
+	TagsAll         tftags.Map                                          `tfsdk:"tags_all"`
+}
+
+type ingestEndpointModel struct {
+	Id  types.String `tfsdk:"id"`
+	Url types.String `tfsdk:"url"`
 }
 
 func findChannelByID(ctx context.Context, conn *mediapackagev2.Client, channelGroupName string, channelName string) (*mediapackagev2.GetChannelOutput, error) {
