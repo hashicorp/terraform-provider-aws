@@ -40,8 +40,11 @@ func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityVerificationConfig_basic(rootDomain, domain),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ses", "identity/{domain}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ses_domain_identity.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrDomain),
 				),
 			},
 		},
