@@ -427,7 +427,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
-				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
 			}
 
 			opts := wrappedResourceOptions{
