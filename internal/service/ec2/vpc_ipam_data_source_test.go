@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCIPAMDataSource_Basic(t *testing.T) {
+func TestAccVPCIPAMDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceName := "data.aws_vpc_ipam.test"
@@ -28,7 +28,18 @@ func TestAccEC2VPCIPAMDataSource_Basic(t *testing.T) {
 			{
 				Config: testAccVPCIPAMDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_resource_discovery_id", resourceName, "default_resource_discovery_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_resource_discovery_association_id", resourceName, "default_resource_discovery_association_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enable_private_gua", resourceName, "enable_private_gua"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "operating_regions.0.region_name", resourceName, "operating_regions.0.region_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "private_default_scope_id", resourceName, "private_default_scope_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_default_scope_id", resourceName, "public_default_scope_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "scope_count", resourceName, "scope_count"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tier", resourceName, "tier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
 				),
 			},

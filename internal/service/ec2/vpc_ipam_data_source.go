@@ -55,8 +55,8 @@ func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed: true,
 			},
 			"tier": schema.StringAttribute{
-				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.IpamTier](),
+				Computed:   true,
 			},
 			"scope_count": schema.Int32Attribute{
 				Computed: true,
@@ -81,8 +81,8 @@ func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed: true,
 			},
 			names.AttrState: schema.StringAttribute{
-				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.IpamState](),
+				Computed:   true,
 			},
 			"state_message": schema.StringAttribute{
 				Computed: true,
@@ -109,7 +109,7 @@ func (d *dataSourceVPCIPAM) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, ipam, &data, flex.WithFieldNamePrefix("ipam"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, ipam, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -124,7 +124,7 @@ type dataSourceVPCIPAMSummaryModel struct {
 	DefaultResourceDiscoveryAssociationId types.String                                              `tfsdk:"default_resource_discovery_association_id"`
 	DefaultResourceDiscoveryId            types.String                                              `tfsdk:"default_resource_discovery_id"`
 	EnablePrivateGua                      types.Bool                                                `tfsdk:"enable_private_gua"`
-	IpamARN                               types.String                                              `tfsdk:"arn"`
+	IpamArn                               types.String                                              `tfsdk:"arn"`
 	IpamId                                types.String                                              `tfsdk:"id"`
 	IpamRegion                            types.String                                              `tfsdk:"region"`
 	OperatingRegions                      fwtypes.ListNestedObjectValueOf[ipamOperatingRegionModel] `tfsdk:"operating_regions"`
