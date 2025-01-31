@@ -30,7 +30,7 @@ func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rootDomain := testAccDomainIdentityDomainFromEnv(t)
 	domain := fmt.Sprintf("tf-acc-%d.%s", sdkacctest.RandInt(), rootDomain)
-	resourceName := "aws_ses_domain_identity.test"
+	resourceName := "aws_ses_domain_identity_verification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
