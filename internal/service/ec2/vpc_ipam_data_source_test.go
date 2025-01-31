@@ -28,9 +28,9 @@ func TestAccVPCIPAMDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCIPAMDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_resource_discovery_id", resourceName, "default_resource_discovery_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_resource_discovery_association_id", resourceName, "default_resource_discovery_association_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_private_gua", resourceName, "enable_private_gua"),
@@ -39,7 +39,7 @@ func TestAccVPCIPAMDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_default_scope_id", resourceName, "public_default_scope_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "scope_count", resourceName, "scope_count"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tier", resourceName, "tier"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
 				),
 			},
