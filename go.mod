@@ -177,7 +177,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.14
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.15.8
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.12
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.7
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.12
 	github.com/aws/aws-sdk-go-v2/service/oam v1.15.14
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.7
