@@ -71,8 +71,8 @@ github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.10 h1:rRaaDvAU
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.10/go.mod h1:+Va9GrQ1Nwv6lrcJ0Zc0SfZPrDD43mdJixe5B1yoXrI=
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.11 h1:KVPaCmqoGcFWZglbkcs8hDCtiqhAE0PgT6887eNR0HA=
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.11/go.mod h1:mm+RICbMhIO0jBCUhj27HYdPbrLTnTlvM64r73XDgfI=
-github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.7 h1:5HhVvVFaWYlpMonRWWGJZ+uSjajoXGOdx1erkzxNYqs=
-github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.7/go.mod h1:9UwGC1jGhQMI8ltWumhHiywjlQQ2gLHf/0lk2ZtgCNk=
+github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.8 h1:KE4UEKC/pwIMiQGXkEfxlxjSgGNG6aUKuUYoESC2y38=
+github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.8/go.mod h1:yeMSCtJ9644RuEXiEc4cGQiZkKZ3Izd5TX7+HptA/T8=
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.12 h1:H3xDidA4CUVPKvd+XHh22kDEcnNbvSeKPKxZi1kj9k0=
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.12/go.mod h1:KZbofrsrTMAsfFGxxwLxXJeWt6fze1Fi0Ff4o823bx4=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.12 h1:ernZWzne+Xe6lYkwFhgCc6a+XekKJ57eJL/SWt29+Jw=
