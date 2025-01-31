@@ -54,7 +54,6 @@ type resourceScheduledQuery struct {
 	framework.WithTimeouts
 }
 
-
 func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

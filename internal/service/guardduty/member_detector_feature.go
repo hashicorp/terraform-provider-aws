@@ -41,7 +41,6 @@ type memberDetectorFeatureResource struct {
 	framework.WithNoOpDelete
 }
 
-
 func (r *memberDetectorFeatureResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
