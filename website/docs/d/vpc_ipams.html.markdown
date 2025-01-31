@@ -12,12 +12,32 @@ Use this data source to get details of Amazon VPC IPAM resources
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
-# Declare the data source
-data "aws_vpc_ipams" "ipams" {
+data "aws_vpc_ipams" "example" {
+  ipam_ids = ["ipam-abcd1234"]
+}
+```
+
+### Filter by `tags`
+
+```terraform
+data "aws_vpc_ipams" "example" {
   filter {
     name   = "tags.Some"
-    values = ["value"]
+    values = ["Value"]
+  }
+}
+```
+
+### Filter by `tier`
+
+```terraform
+data "aws_vpc_ipams" "example" {
+  filter {
+    name   = "tier"
+    values = ["free"]
   }
 }
 ```
@@ -62,9 +82,3 @@ All of the argument attributes except `filter` are also exported as result attri
 * `state` - Current state of the IPAM.
 * `state_message` - State message of the IPAM.
 * `tier` - IPAM Tier.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `read` - (Default `20m`)

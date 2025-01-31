@@ -16,7 +16,7 @@ Terraform data source for managing an AWS VPC IPAM resource.
 
 ```terraform
 data "aws_vpc_ipam" "example" {
-  id = "<some ipam id>"
+  id = "ipam-abcd1234"
 }
 ```
 
