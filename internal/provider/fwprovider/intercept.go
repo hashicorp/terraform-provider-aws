@@ -8,15 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
-
-type attributeGetter interface {
-	GetAttribute(context.Context, path.Path, any) diag.Diagnostics
-}
 
 type interceptorOptions[Request, Response any] struct {
 	c        *conns.AWSClient

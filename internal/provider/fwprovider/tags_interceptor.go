@@ -253,7 +253,9 @@ type tagsInterceptor struct {
 }
 
 // getIdentifier returns the value of the identifier attribute used in AWS APIs.
-func (r tagsInterceptor) getIdentifier(ctx context.Context, d attributeGetter) string {
+func (r tagsInterceptor) getIdentifier(ctx context.Context, d interface {
+	GetAttribute(context.Context, path.Path, any) diag.Diagnostics
+}) string {
 	var identifier string
 
 	if identifierAttribute := r.ServicePackageResourceTags.IdentifierAttribute; identifierAttribute != "" {
