@@ -19,6 +19,8 @@ import (
 )
 
 // @FrameworkDataSource("aws_vpc_ipam", name="IPAM")
+// @Tags
+// @Testing(tagsTest=false)
 func newVPCIPAMDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceVPCIPAM{}, nil
 }
@@ -112,10 +114,7 @@ func (d *dataSourceVPCIPAM) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, ipam.Tags).IgnoreAWS().Map())
-	// ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
-	// tags := keyValueTags(ctx, ipam.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, ipam.Tags).IgnoreAWS().Map())
+	setTagsOut(ctx, ipam.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
