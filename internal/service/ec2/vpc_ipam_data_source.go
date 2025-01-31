@@ -41,31 +41,20 @@ func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrID: schema.StringAttribute{
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"default_resource_discovery_association_id": schema.StringAttribute{
 				Computed: true,
 			},
 			"default_resource_discovery_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"tier": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.IpamTier](),
-				Computed:   true,
-			},
-			"scope_count": schema.Int32Attribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"enable_private_gua": schema.BoolAttribute{
 				Computed: true,
 			},
-			names.AttrRegion: schema.StringAttribute{
-				Computed: true,
+			names.AttrID: schema.StringAttribute{
+				Required: true,
 			},
 			"operating_regions": framework.DataSourceComputedListOfObjectAttribute[ipamOperatingRegionModel](ctx),
 			names.AttrOwnerID: schema.StringAttribute{
@@ -77,7 +66,13 @@ func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaReq
 			"public_default_scope_id": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrRegion: schema.StringAttribute{
+				Computed: true,
+			},
 			"resource_discovery_association_count": schema.Int32Attribute{
+				Computed: true,
+			},
+			"scope_count": schema.Int32Attribute{
 				Computed: true,
 			},
 			names.AttrState: schema.StringAttribute{
@@ -86,6 +81,11 @@ func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaReq
 			},
 			"state_message": schema.StringAttribute{
 				Computed: true,
+			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"tier": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.IpamTier](),
+				Computed:   true,
 			},
 		},
 	}
