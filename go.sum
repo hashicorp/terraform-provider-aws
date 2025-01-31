@@ -97,8 +97,8 @@ github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.13 h1:ipLx+njSretdTAivx
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.13/go.mod h1:grl9s0+M05be8/ZpDtLhLr0fLiXNshpBV42FkfKX9DE=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.4 h1:+CSDwN7wUGa4m9qP2j2zHtfaqnAr77hGpHD4JSanVP4=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.4/go.mod h1:tCYpmiPC7UQDrI+ile6hzU+MRSEgSTuF7p/kWZPqYOY=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.0 h1:GxKCta2si7ciwmXmzn3FrkQEgO6Bw1hDIaFLCFxHR+c=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.0/go.mod h1:aZn1m8bo1G7pLhwFAnAgZxm4FeetAE2eFLCsU++8hm8=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.1 h1:6j/D7j0b9cPsHn2yf+7mZI2NK8FbVja9NeC/aZvWymQ=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.1/go.mod h1:3LXcbGNYAoBv3r3jO73u5tnWw5jzxxkihbX1eO2k9Ik=
 github.com/aws/aws-sdk-go-v2/service/billing v1.1.4 h1:Cop1dbTY/sVjOM5hac90dpFKhGrr9x7k2pxwix8B990=
 github.com/aws/aws-sdk-go-v2/service/billing v1.1.4/go.mod h1:RwmRsoyECS9EFfCtTx+T3H8GKK8pfv0WPfmoiW+9Y24=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.29.6 h1:jauT/3fD3vkD2lD9+23K9PEVrLmiUET32D+iHu+s0ZA=
