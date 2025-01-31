@@ -162,7 +162,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.42.13
 	github.com/aws/aws-sdk-go-v2/service/location v1.42.14
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.13
-	github.com/aws/aws-sdk-go-v2/service/m2 v1.19.5
+	github.com/aws/aws-sdk-go-v2/service/m2 v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.66.0
