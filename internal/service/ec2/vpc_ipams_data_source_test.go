@@ -11,12 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCIPAMsDataSource_tiered(t *testing.T) {
+func TestAccVPCIPAMsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceName := "data.aws_vpc_ipams.test"
-	dataSourceFree := "data.aws_vpc_ipams.free"
-	dataSourceAdvanced := "data.aws_vpc_ipams.advanced"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -29,24 +27,57 @@ func TestAccVPCIPAMsDataSource_tiered(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPAMsDataSourceConfig_filterWithTiers(),
+				Config: testAccVPCIPAMsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ipams.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipams.0.id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ipams.0.operating_regions.0.region_name", resourceName, "operating_regions.0.region_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ipams.0.tags.#", resourceName, "tags.#"),
-					resource.TestCheckResourceAttr(dataSourceAdvanced, "ipams.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceFree, "ipams.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccVPCIPAMsDataSourceConfig_filterWithTiers() string {
+func TestAccVPCIPAMsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_ipam.test"
+	dataSourceNameAdvanced := "data.aws_vpc_ipams.advanced"
+	dataSourceNameFree := "data.aws_vpc_ipams.free"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPAMsDataSourceConfig_filter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceNameAdvanced, "ipams.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceNameAdvanced, "ipams.0.id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceNameAdvanced, "ipams.0.tier", resourceName, "tier"),
+					resource.TestCheckResourceAttr(dataSourceNameFree, "ipams.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccVPCIPAMsDataSourceConfig_basic() string {
 	return acctest.ConfigCompose(testAccIPAMConfig_tags("Some", "Value"), `
 data "aws_vpc_ipams" "test" {
   ipam_ids = [aws_vpc_ipam.test.id]
 }
+`)
+}
 
+func testAccVPCIPAMsDataSourceConfig_filter() string {
+	return acctest.ConfigCompose(testAccIPAMConfig_tags("Some", "Value"), `
 data "aws_vpc_ipams" "advanced" {
   ipam_ids = [aws_vpc_ipam.test.id]
   filter {
