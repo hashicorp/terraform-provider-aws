@@ -37,7 +37,6 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_billing_view", name="View")
-// @Tags(identifierAttribute="arn")
 func newResourceView(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceView{}
 
@@ -490,8 +489,8 @@ func findSourceViewsByARN(ctx context.Context, conn *billing.Client, arn string)
 		sourceView, err := sourceViewsPag.NextPage(ctx)
 		if err != nil {
 			tflog.Error(ctx, "Error listing source views for billing view", map[string]interface{}{
-				"arn":   arn,
-				"error": err.Error(),
+				names.AttrARN: arn,
+				"error":       err.Error(),
 			})
 			return nil, err
 		}
