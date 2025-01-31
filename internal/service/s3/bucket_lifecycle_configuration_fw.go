@@ -19,8 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -100,11 +98,8 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							// TODO Validate,
 						},
 						names.AttrPrefix: schema.StringAttribute{
-							Optional: true,
-							Computed: true, // Because of Legacy value handling
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+							Optional:           true,
+							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Use filter instead",
 						},
 						names.AttrStatus: schema.StringAttribute{
@@ -137,17 +132,11 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										CustomType: timetypes.RFC3339Type{},
 										Optional:   true,
 										// Computed: true, // Because of Legacy value handling
-										// PlanModifiers: []planmodifier.String{
-										// 	stringplanmodifier.UseStateForUnknown(),
-										// },
 										// TODO Validate,
 									},
 									"days": schema.Int32Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.Int32{
-											int32planmodifier.UseStateForUnknown(),
-										},
 									},
 									"expired_object_delete_marker": schema.BoolAttribute{
 										Optional: true,
@@ -166,23 +155,14 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									"object_size_greater_than": schema.Int64Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.UseStateForUnknown(),
-										},
 									},
 									"object_size_less_than": schema.Int64Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.UseStateForUnknown(),
-										},
 									},
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
-										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -196,25 +176,16 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_greater_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
 													// TODO Validate,
 												},
 												"object_size_less_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
 													// TODO Validate,
 												},
 												names.AttrPrefix: schema.StringAttribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.UseStateForUnknown(),
-													},
 												},
 												names.AttrTags: schema.MapAttribute{
 													ElementType: types.StringType,
