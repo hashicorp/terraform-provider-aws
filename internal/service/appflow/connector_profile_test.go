@@ -22,12 +22,7 @@ import (
 
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var connectorProfiles types.ConnectorProfile
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
@@ -62,10 +57,6 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 
 func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var connectorProfiles types.ConnectorProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
@@ -96,12 +87,7 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 
 func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var connectorProfiles types.ConnectorProfile
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
@@ -170,18 +156,8 @@ func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.
 	}
 }
 
-func testAccConnectorProfileConfigBase(connectorProfileName string, redshiftPassword string, redshiftUsername string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccConnectorProfileConfig_base(rName string, redshiftPassword string, redshiftUsername string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -195,26 +171,14 @@ data "aws_route_table" "test" {
 }
 
 resource "aws_route" "test" {
-  route_table_id = data.aws_route_table.test.id
-
+  route_table_id         = data.aws_route_table.test.id
   destination_cidr_block = "0.0.0.0/0"
-
-  gateway_id = aws_internet_gateway.test.id
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = aws_vpc.test.cidr_block
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
+  gateway_id             = aws_internet_gateway.test.id
 }
 
 resource "aws_redshift_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 data "aws_iam_policy" "test" {
@@ -242,9 +206,12 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name = %[1]q
-
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {
@@ -272,16 +239,17 @@ resource "aws_redshift_cluster" "test" {
 
   node_type           = "dc2.large"
   skip_final_snapshot = true
+  encrypted           = true
 }
-`, connectorProfileName, redshiftPassword, redshiftUsername))
+`, rName, redshiftPassword, redshiftUsername))
 }
 
-func testAccConnectorProfileConfig_basic(connectorProfileName string) string {
+func testAccConnectorProfileConfig_basic(rName string) string {
 	const redshiftPassword = "testPassword123!"
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfig_base(rName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
@@ -314,16 +282,15 @@ resource "aws_appflow_connector_profile" "test" {
     aws_security_group_rule.test,
   ]
 }
-`, connectorProfileName, redshiftPassword, redshiftUsername),
-	)
+`, rName, redshiftPassword, redshiftUsername))
 }
 
-func testAccConnectorProfileConfig_update(connectorProfileName string, bucketPrefix string) string {
+func testAccConnectorProfileConfig_update(rName string, bucketPrefix string) string {
 	const redshiftPassword = "testPassword123!"
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfig_base(rName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
@@ -357,6 +324,5 @@ resource "aws_appflow_connector_profile" "test" {
     aws_security_group_rule.test,
   ]
 }
-`, connectorProfileName, redshiftPassword, redshiftUsername, bucketPrefix),
-	)
+`, rName, redshiftPassword, redshiftUsername, bucketPrefix))
 }
