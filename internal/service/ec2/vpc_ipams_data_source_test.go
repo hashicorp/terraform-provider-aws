@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCIPAMsDataSource_Tiered(t *testing.T) {
+func TestAccVPCIPAMsDataSource_tiered(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceName := "data.aws_vpc_ipams.test"
@@ -62,6 +62,5 @@ data "aws_vpc_ipams" "free" {
     values = ["free"]
   }
 }
-
 `)
 }

@@ -18,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_vpc_ipam", name="AWS IPAM")
-func newDataSourceVPCIPAM(context.Context) (datasource.DataSourceWithConfigure, error) {
+// @FrameworkDataSource("aws_vpc_ipam", name="IPAM")
+func newVPCIPAMDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceVPCIPAM{}, nil
 }
 
 const (
-	DSNameVPCIPAM = "AWS IPAM Data Source"
+	DSNameVPCIPAM = "IPAM Data Source"
 )
 
 type dataSourceVPCIPAM struct {
