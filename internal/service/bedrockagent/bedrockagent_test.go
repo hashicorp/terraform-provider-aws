@@ -30,6 +30,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"hierarchical":         testAccDataSource_fullHierarchical,
 			"parsing":              testAccDataSource_parsing,
 			"customtransformation": testAccDataSource_fullCustomTranformation,
+			"webconfiguration":     testAccDataSource_webConfiguration,
 		},
 	}
 
