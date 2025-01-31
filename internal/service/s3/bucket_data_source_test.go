@@ -100,7 +100,7 @@ func TestAccS3BucketDataSource_accessPointAlias(t *testing.T) {
 			{
 				Config: testAccBucketDataSourceConfig_accessPointAlias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNNoAccountFormat(dataSourceName, names.AttrARN, "s3", "{bucket}"),
 				),
 			},
 		},
