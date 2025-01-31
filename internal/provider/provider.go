@@ -311,7 +311,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					when: Before | After,
 					why:  Read,
 					interceptor: tagsDataSourceInterceptor{
-						tags: v.Tags,
+						tagsInterceptor: tagsInterceptor{tags: v.Tags},
 					},
 				})
 			}
@@ -390,9 +390,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					when: Before | After | Finally,
 					why:  Create | Read | Update,
 					interceptor: tagsResourceInterceptor{
-						tags:       v.Tags,
-						updateFunc: tagsUpdateFunc,
-						readFunc:   tagsReadFunc,
+						tagsInterceptor: tagsInterceptor{tags: v.Tags},
+						updateFunc:      tagsUpdateFunc,
+						readFunc:        tagsReadFunc,
 					},
 				})
 			}

@@ -67,9 +67,9 @@ func TestTagsResourceInterceptor(t *testing.T) {
 		IdentifierAttribute: "id",
 	}
 	tags := tagsResourceInterceptor{
-		tags:       sp,
-		updateFunc: tagsUpdateFunc,
-		readFunc:   tagsReadFunc,
+		tagsInterceptor: tagsInterceptor{tags: sp},
+		updateFunc:      tagsUpdateFunc,
+		readFunc:        tagsReadFunc,
 	}
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
