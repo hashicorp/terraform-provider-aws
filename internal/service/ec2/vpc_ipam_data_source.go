@@ -56,6 +56,9 @@ func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaReq
 			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
+			"ipam_region": schema.StringAttribute{
+				Computed: true,
+			},
 			"operating_regions": framework.DataSourceComputedListOfObjectAttribute[ipamOperatingRegionModel](ctx),
 			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
@@ -64,9 +67,6 @@ func (d *dataSourceVPCIPAM) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed: true,
 			},
 			"public_default_scope_id": schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrRegion: schema.StringAttribute{
 				Computed: true,
 			},
 			"resource_discovery_association_count": schema.Int32Attribute{
@@ -126,7 +126,7 @@ type dataSourceVPCIPAMSummaryModel struct {
 	EnablePrivateGua                      types.Bool                                                `tfsdk:"enable_private_gua"`
 	IpamArn                               types.String                                              `tfsdk:"arn"`
 	IpamId                                types.String                                              `tfsdk:"id"`
-	IpamRegion                            types.String                                              `tfsdk:"region"`
+	IpamRegion                            types.String                                              `tfsdk:"ipam_region"`
 	OperatingRegions                      fwtypes.ListNestedObjectValueOf[ipamOperatingRegionModel] `tfsdk:"operating_regions"`
 	OwnerID                               types.String                                              `tfsdk:"owner_id"`
 	PrivateDefaultScopeId                 types.String                                              `tfsdk:"private_default_scope_id"`

@@ -36,11 +36,11 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description for the IPAM.
 * `enable_private_gua` - If private GUA is enabled.
 * `id` - ID of the IPAM resource.
+* `ipam_region` - Region that the IPAM exists in.
 * `operating_regions` - Regions that the IPAM is configured to operate in.
 * `owner_id` - ID of the account that owns this IPAM.
 * `private_default_scope_id` - ID of the default private scope.
 * `public_default_scope_id` - ID of the default public scope.
-* `region` - Region that the IPAM exists in.
 * `resource_discovery_association_count` - Number of resource discovery associations.
 * `scope_count` - Number of scopes on this IPAM.
 * `state` - Current state of the IPAM.
