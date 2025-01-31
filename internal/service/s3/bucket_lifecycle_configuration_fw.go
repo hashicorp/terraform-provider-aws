@@ -334,6 +334,10 @@ func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, reque
 	}
 
 	output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
+		return
+	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 
@@ -452,6 +456,10 @@ func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, reque
 	}
 
 	output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
+		return
+	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
 
