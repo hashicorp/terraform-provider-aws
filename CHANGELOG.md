@@ -1,5 +1,9 @@
 ## 5.85.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_macie2_invitation_accepter: Maintainers are unable to acceptance test the regression fix included in this release. This patch is best effort, and we ask for community help in assessing the change. ([#41163](https://github.com/hashicorp/terraform-provider-aws/issues/41163))
+
 FEATURES:
 
 * **New Ephemeral Resource:** `aws_secretsmanager_random_password` ([#41106](https://github.com/hashicorp/terraform-provider-aws/issues/41106))
@@ -18,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_bedrockagent_data_source: Add `data_source_configuration.confluence_configuration`, `data_source_configuration.salesforce_configuration`, `data_source_configuration.share_point_configuration`, and `data_source_configuration.web_configuration` arguments ([#40711](https://github.com/hashicorp/terraform-provider-aws/issues/40711))
 * resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.vector_knowledge_base_configuration.embedding_model_configuration` and `knowledge_base_configuration.vector_knowledge_base_configuration.supplemental_data_storage_configuration` arguments ([#40737](https://github.com/hashicorp/terraform-provider-aws/issues/40737))
 * resource/aws_bedrockagent_knowledge_base: Improve retry handling for IAM propagation and OpenSearch data access propagation errors ([#40737](https://github.com/hashicorp/terraform-provider-aws/issues/40737))
+* resource/aws_cloudtrail : Add `sns_topic_arn` attribute ([#41168](https://github.com/hashicorp/terraform-provider-aws/issues/41168))
 * resource/aws_cloudtrail_event_data_store: Add `suspend` argument ([#40607](https://github.com/hashicorp/terraform-provider-aws/issues/40607))
 * resource/aws_cloudwatch_event_connection: Add `invocation_connectivity_parameters` argument ([#41144](https://github.com/hashicorp/terraform-provider-aws/issues/41144))
 * resource/aws_ec2_transit_gateway_peering_attachment: Add `arn` attribute ([#41087](https://github.com/hashicorp/terraform-provider-aws/issues/41087))
@@ -40,6 +45,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_delivery: Mark `field_delimiter` as Computed ([#41122](https://github.com/hashicorp/terraform-provider-aws/issues/41122))
 * resource/aws_dms_replication_task: Fix `panic: interface conversion: interface {} is float64, not string` ([#41096](https://github.com/hashicorp/terraform-provider-aws/issues/41096))
 * resource/aws_elasticache_serverless_cache: Fix `InvalidParameterCombination` error during update ([#40969](https://github.com/hashicorp/terraform-provider-aws/issues/40969))
+* resource/aws_macie2_invitation_accepter: Properly set `invitation_id` when calling the `AcceptInvitation` API ([#41163](https://github.com/hashicorp/terraform-provider-aws/issues/41163))
 
 ## 5.84.0 (January 16, 2025)
 
