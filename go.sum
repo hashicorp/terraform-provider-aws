@@ -333,8 +333,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.69.9 h1:0Eb5qwRHAr4LIsO1mkA/vUfzE
 github.com/aws/aws-sdk-go-v2/service/lambda v1.69.9/go.mod h1:9nWh0bjktS3VG2Y9X+2wVt4XfW5YjVSG+ZileUyz63c=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.13 h1:3DbuRnr7cNpyUM+8auCFRf0vmrWQnccLgdYvar4R4WY=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.13/go.mod h1:6b2IRnjq1k4xSO0y945S0PD1eqjExGYOZCIxaw0rxA0=
-github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.12 h1:hM/YBu5qjTLIjdeqCkXGESgDoPlTqEHmBgeLF9e6oPc=
-github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.12/go.mod h1:S/UFyjymn7TZjemDePQNmNo59V6w3/SQEb8pdJXHlGo=
+github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.13 h1:LRUZS4nTpxUaLAgTXU00oPpxeygxVM0i+vmxvbE39iQ=
+github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.13/go.mod h1:X+rn7O6/Qictv7LjobOMxxpgmKu1yn4jYxmQw+FhCJg=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.49.13 h1:syxToNXEKb5awrD5W7vNaQoDhUpd5GliCzzhd5GAYFg=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.49.13/go.mod h1:jYbSRHxWqK6fSmYqfFvXPVbWhz7fUzzqMzyGwL5hAXc=
 github.com/aws/aws-sdk-go-v2/service/licensemanager v1.29.13 h1:0csSsZyC25LVss/12+indYroRfq9XS3sSw9kecEJbgg=
