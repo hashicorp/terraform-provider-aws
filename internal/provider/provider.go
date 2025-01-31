@@ -417,14 +417,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	var meta *conns.AWSClient
+	var c *conns.AWSClient
 	if v, ok := provider.Meta().(*conns.AWSClient); ok {
-		meta = v
+		c = v
 	} else {
-		meta = new(conns.AWSClient)
+		c = new(conns.AWSClient)
 	}
-	meta.SetServicePackages(ctx, servicePackageMap)
-	provider.SetMeta(meta)
+	c.SetServicePackages(ctx, servicePackageMap)
+	provider.SetMeta(c)
 
 	return provider, nil
 }
@@ -579,20 +579,20 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	var meta *conns.AWSClient
+	var c *conns.AWSClient
 	if v, ok := provider.Meta().(*conns.AWSClient); ok {
-		meta = v
+		c = v
 	} else {
-		meta = new(conns.AWSClient)
+		c = new(conns.AWSClient)
 	}
-	meta, ds := config.ConfigureProvider(ctx, meta)
+	c, ds := config.ConfigureProvider(ctx, c)
 	diags = append(diags, ds...)
 
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	return meta, diags
+	return c, diags
 }
 
 func assumeRoleSchema() *schema.Schema {

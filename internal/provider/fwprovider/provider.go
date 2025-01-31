@@ -353,11 +353,11 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 			opts := wrappedDataSourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, meta *conns.AWSClient) context.Context {
+				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
 					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-					if meta != nil {
-						ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-						ctx = meta.RegisterLogger(ctx)
+					if c != nil {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
 						ctx = flex.RegisterLogger(ctx)
 					}
 
@@ -432,11 +432,11 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, meta *conns.AWSClient) context.Context {
+				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-					if meta != nil {
-						ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-						ctx = meta.RegisterLogger(ctx)
+					if c != nil {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
 						ctx = flex.RegisterLogger(ctx)
 					}
 
@@ -486,10 +486,10 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 
 				opts := wrappedEphemeralResourceOptions{
 					// bootstrapContext is run on all wrapped methods before any interceptors.
-					bootstrapContext: func(ctx context.Context, meta *conns.AWSClient) context.Context {
+					bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
 						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
-						if meta != nil {
-							ctx = meta.RegisterLogger(ctx)
+						if c != nil {
+							ctx = c.RegisterLogger(ctx)
 							ctx = flex.RegisterLogger(ctx)
 							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
 						}

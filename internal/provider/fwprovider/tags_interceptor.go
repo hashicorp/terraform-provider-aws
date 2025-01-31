@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,7 +34,9 @@ func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePacka
 	}
 }
 
-func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse, c *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) (context.Context, diag.Diagnostics) {
+	c, diags := opts.c, opts.diags
+
 	if !r.HasServicePackageResourceTags() {
 		return ctx, diags
 	}
@@ -45,7 +46,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 		return ctx, diags
 	}
 
-	switch when {
+	switch request, response, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		var configTags tftags.Map
 		diags.Append(request.Config.GetAttribute(ctx, path.Root(names.AttrTags), &configTags)...)
@@ -54,7 +55,6 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 		}
 
 		tags := tftags.New(ctx, configTags)
-
 		tagsInContext.TagsIn = option.Some(tags)
 	case After:
 		// If the R handler didn't set tags, try and read them from the service API.
@@ -68,11 +68,9 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 		}
 
 		tags := tagsInContext.TagsOut.UnwrapOrDefault()
-
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		stateTags := flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), tftags.NewMapFromMapValue(stateTags))...)
-
 		if diags.HasError() {
 			return ctx, diags
 		}
@@ -96,7 +94,9 @@ func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackage
 	}
 }
 
-func (r tagsResourceInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, c *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) (context.Context, diag.Diagnostics) {
+	c, diags := opts.c, opts.diags
+
 	if !r.HasServicePackageResourceTags() {
 		return ctx, diags
 	}
@@ -106,7 +106,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		return ctx, diags
 	}
 
-	switch when {
+	switch request, response, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
@@ -133,7 +133,9 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 	return ctx, diags
 }
 
-func (r tagsResourceInterceptor) read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse, c *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptions[resource.ReadRequest, resource.ReadResponse]) (context.Context, diag.Diagnostics) {
+	c, diags := opts.c, opts.diags
+
 	if !r.HasServicePackageResourceTags() {
 		return ctx, diags
 	}
@@ -143,7 +145,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		return ctx, diags
 	}
 
-	switch when {
+	switch response, when := opts.response, opts.when; when {
 	case After:
 		// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
 		if response.State.Raw.IsNull() {
@@ -189,7 +191,9 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 	return ctx, diags
 }
 
-func (r tagsResourceInterceptor) update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse, c *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) (context.Context, diag.Diagnostics) {
+	c, diags := opts.c, opts.diags
+
 	if !r.HasServicePackageResourceTags() {
 		return ctx, diags
 	}
@@ -199,7 +203,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		return ctx, diags
 	}
 
-	switch when {
+	switch request, when := opts.request, opts.when; when {
 	case Before:
 		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
@@ -240,8 +244,8 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 	return ctx, diags
 }
 
-func (r tagsResourceInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, c *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-	return ctx, diags
+func (r tagsResourceInterceptor) delete(ctx context.Context, opts interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) (context.Context, diag.Diagnostics) {
+	return ctx, opts.diags
 }
 
 type tagsInterceptor struct {

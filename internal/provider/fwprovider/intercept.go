@@ -18,7 +18,15 @@ type attributeGetter interface {
 	GetAttribute(context.Context, path.Path, any) diag.Diagnostics
 }
 
-type interceptorFunc[Request, Response any] func(context.Context, Request, *Response, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type interceptorOptions[Request, Response any] struct {
+	c        *conns.AWSClient
+	diags    diag.Diagnostics
+	request  Request
+	response *Response
+	when     when
+}
+
+type interceptorFunc[Request, Response any] func(context.Context, interceptorOptions[Request, Response]) (context.Context, diag.Diagnostics)
 
 // A data source interceptor is functionality invoked during the data source's CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
@@ -26,7 +34,7 @@ type interceptorFunc[Request, Response any] func(context.Context, Request, *Resp
 // In other cases all interceptors in the chain are run.
 type dataSourceInterceptor interface {
 	// read is invoke for a Read call.
-	read(context.Context, datasource.ReadRequest, *datasource.ReadResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) (context.Context, diag.Diagnostics)
 }
 
 type dataSourceInterceptors []dataSourceInterceptor
@@ -59,13 +67,13 @@ type resourceCRUDResponse interface {
 // In other cases all interceptors in the chain are run.
 type resourceInterceptor interface {
 	// create is invoked for a Create call.
-	create(context.Context, resource.CreateRequest, *resource.CreateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	create(context.Context, interceptorOptions[resource.CreateRequest, resource.CreateResponse]) (context.Context, diag.Diagnostics)
 	// read is invoked for a Read call.
-	read(context.Context, resource.ReadRequest, *resource.ReadResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	read(context.Context, interceptorOptions[resource.ReadRequest, resource.ReadResponse]) (context.Context, diag.Diagnostics)
 	// update is invoked for an Update call.
-	update(context.Context, resource.UpdateRequest, *resource.UpdateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	update(context.Context, interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) (context.Context, diag.Diagnostics)
 	// delete is invoked for a Delete call.
-	delete(context.Context, resource.DeleteRequest, *resource.DeleteResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	delete(context.Context, interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) (context.Context, diag.Diagnostics)
 }
 
 type resourceInterceptors []resourceInterceptor
@@ -114,7 +122,7 @@ const (
 // TODO Share the intercepted handler logic between data sources and resources..
 
 // interceptedDataSourceHandler returns a handler that invokes the specified data source Read handler, running any interceptors.
-func interceptedDataSourceReadHandler(interceptors []dataSourceInterceptorReadFunc, f func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics, meta *conns.AWSClient) func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics {
+func interceptedDataSourceReadHandler(interceptors []dataSourceInterceptorReadFunc, f func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics, c *conns.AWSClient) func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics {
 	return func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
 		var diags diag.Diagnostics
 		// Before interceptors are run first to last.
@@ -122,7 +130,14 @@ func interceptedDataSourceReadHandler(interceptors []dataSourceInterceptorReadFu
 
 		when := Before
 		for _, v := range forward {
-			ctx, diags = v(ctx, request, response, meta, when, diags)
+			opts := interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]{
+				c:        c,
+				diags:    diags,
+				request:  request,
+				response: response,
+				when:     when,
+			}
+			ctx, diags = v(ctx, opts)
 
 			// Short circuit if any Before interceptor errors.
 			if diags.HasError() {
@@ -140,12 +155,26 @@ func interceptedDataSourceReadHandler(interceptors []dataSourceInterceptorReadFu
 			when = After
 		}
 		for _, v := range reverse {
-			ctx, diags = v(ctx, request, response, meta, when, diags)
+			opts := interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]{
+				c:        c,
+				diags:    diags,
+				request:  request,
+				response: response,
+				when:     when,
+			}
+			ctx, diags = v(ctx, opts)
 		}
 
 		when = Finally
 		for _, v := range reverse {
-			ctx, diags = v(ctx, request, response, meta, when, diags)
+			opts := interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]{
+				c:        c,
+				diags:    diags,
+				request:  request,
+				response: response,
+				when:     when,
+			}
+			ctx, diags = v(ctx, opts)
 		}
 
 		return diags
@@ -153,7 +182,7 @@ func interceptedDataSourceReadHandler(interceptors []dataSourceInterceptorReadFu
 }
 
 // interceptedResourceHandler returns a handler that invokes the specified resource CRUD handler, running any interceptors.
-func interceptedResourceHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, meta *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
+func interceptedResourceHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
 	return func(ctx context.Context, request Request, response *Response) diag.Diagnostics {
 		var diags diag.Diagnostics
 		// Before interceptors are run first to last.
@@ -161,7 +190,14 @@ func interceptedResourceHandler[Request resourceCRUDRequest, Response resourceCR
 
 		when := Before
 		for _, v := range forward {
-			ctx, diags = v(ctx, request, response, meta, when, diags)
+			opts := interceptorOptions[Request, Response]{
+				c:        c,
+				diags:    diags,
+				request:  request,
+				response: response,
+				when:     when,
+			}
+			ctx, diags = v(ctx, opts)
 
 			// Short circuit if any Before interceptor errors.
 			if diags.HasError() {
@@ -179,12 +215,26 @@ func interceptedResourceHandler[Request resourceCRUDRequest, Response resourceCR
 			when = After
 		}
 		for _, v := range reverse {
-			ctx, diags = v(ctx, request, response, meta, when, diags)
+			opts := interceptorOptions[Request, Response]{
+				c:        c,
+				diags:    diags,
+				request:  request,
+				response: response,
+				when:     when,
+			}
+			ctx, diags = v(ctx, opts)
 		}
 
 		when = Finally
 		for _, v := range reverse {
-			ctx, diags = v(ctx, request, response, meta, when, diags)
+			opts := interceptorOptions[Request, Response]{
+				c:        c,
+				diags:    diags,
+				request:  request,
+				response: response,
+				when:     when,
+			}
+			ctx, diags = v(ctx, opts)
 		}
 
 		return diags
