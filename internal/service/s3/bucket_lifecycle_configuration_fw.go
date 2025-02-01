@@ -572,10 +572,32 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 			r.Filter = &filter
 		}
 	} else {
-		d = fwflex.Expand(ctx, m.Filter, &r.Filter)
+		filter, d := m.Filter.ToPtr(ctx)
 		diags.Append(d...)
-		if d.HasError() {
+		if diags.HasError() {
 			return nil, diags
+		}
+		if filter == nil {
+			diags.AddError(
+				"Unexpected Error",
+				"An unexpected error occurred while preparing request. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					`Expanding "lifecycleRuleModel": "Filter" has value, but returned nil`,
+			)
+			return nil, diags
+		}
+		if isFilterModelZero(filter) {
+			filter := awstypes.LifecycleRuleFilter{
+				Prefix: aws.String(""),
+			}
+			r.Filter = &filter
+		} else {
+			d = fwflex.Expand(ctx, m.Filter, &r.Filter)
+			diags.Append(d...)
+			if d.HasError() {
+				return nil, diags
+			}
 		}
 	}
 
@@ -604,6 +626,30 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 	}
 
 	return &r, diags
+}
+
+func isFilterModelZero(v *lifecycleRuleFilterModel) bool {
+	if !v.And.IsNull() {
+		return false
+	}
+
+	if !v.ObjectSizeGreaterThan.IsUnknown() {
+		return false
+	}
+
+	if !v.ObjectSizeLessThan.IsUnknown() {
+		return false
+	}
+
+	if !v.Prefix.IsUnknown() {
+		return false
+	}
+
+	if !v.Tag.IsNull() {
+		return false
+	}
+
+	return true
 }
 
 func (m *lifecycleRuleModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {

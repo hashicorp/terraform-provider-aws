@@ -1370,8 +1370,6 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23228
 func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *testing.T) {
-	t.Skip("Currently produces inconsistent result")
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1392,7 +1390,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Empty(),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1935,6 +1933,14 @@ func checkExpiration_None() knownvalue.Check {
 
 func checkFilter_None() knownvalue.Check {
 	return knownvalue.ListExact([]knownvalue.Check{})
+}
+
+func checkFilter_Empty() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			filterDefaults(),
+		),
+	})
 }
 
 func checkFilter_And(check knownvalue.Check) knownvalue.Check {
