@@ -3070,6 +3070,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 		tfMap[names.AttrSubnetID] = aws.ToString(v)
 	}
 
+	if v := apiObject.ConnectionTrackingSpecification; v != nil {
+		tfMap["ebs"] = []interface{}{flattenConnectionTrackingSpecification(v)}
+	}
+
 	return tfMap
 }
 
