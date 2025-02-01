@@ -850,6 +850,30 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"connection_tracking_specification": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"tcp_established_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(60, 432000),
+									},
+									"udp_stream_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(60, 180),
+									},
+									"udp_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(30, 60),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -2089,6 +2113,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.SubnetId = aws.String(v)
 	}
 
+	if v, ok := tfMap["connection_tracking_specification"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ConnectionTrackingSpecification = expandConnectionTrackingSpecification(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -3146,6 +3174,28 @@ func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []aw
 	return tfList
 }
 
+func flattenConnectionTrackingSpecification(apiObject *awstypes.ConnectionTrackingSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TcpEstablishedTimeout; v != nil {
+		tfMap["tcp_established_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpStreamTimeout; v != nil {
+		tfMap["udp_stream_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpTimeout; v != nil {
+		tfMap["udp_timeout"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
 func expandLaunchTemplateIPv4PrefixSpecificationRequest(tfString string) awstypes.Ipv4PrefixSpecificationRequest {
 	if tfString == "" {
 		return awstypes.Ipv4PrefixSpecificationRequest{}
@@ -3209,3 +3259,26 @@ func expandLaunchTemplateIPv6PrefixSpecificationRequests(tfList []interface{}) [
 
 	return apiObjects
 }
+
+func expandConnectionTrackingSpecification(tfMap map[string]interface{}) *awstypes.ConnectionTrackingSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ConnectionTrackingSpecificationRequest{}
+
+	if v, ok := tfMap["tcp_established_timeout"].(int); ok && v != 0 {
+		apiObject.TcpEstablishedTimeout = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["udp_stream_timeout"].(int); ok && v != 0 {
+		apiObject.UdpStreamTimeout = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["udp_timeout"].(int); ok && v != 0 {
+		apiObject.UdpTimeout = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
