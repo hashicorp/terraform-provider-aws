@@ -3281,4 +3281,3 @@ func expandConnectionTrackingSpecification(tfMap map[string]interface{}) *awstyp
 
 	return apiObject
 }
-
