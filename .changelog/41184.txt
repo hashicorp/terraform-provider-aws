@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/ec2_launch_template: Add `connection_tracking_specification` argument block to `network_interfaces` block
+```
