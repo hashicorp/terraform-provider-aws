@@ -63,7 +63,16 @@ func (r *resourceView) Metadata(_ context.Context, req resource.MetadataRequest,
 func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+				Optional: true,
+				Validators: []validator.String{
+					validators.ARN(),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"client_token": schema.StringAttribute{
 				Optional: true,
 			},
@@ -303,6 +312,10 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		if plan.ARN.IsNull() {
+			input.Arn = state.ARN.ValueStringPointer()
 		}
 
 		out, err := conn.UpdateBillingView(ctx, input)

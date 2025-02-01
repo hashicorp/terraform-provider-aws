@@ -44,7 +44,7 @@ func TestAccBillingView_basic(t *testing.T) {
 					testAccCheckViewExists(ctx, resourceName, &view),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
-					acctest.CheckResourceAttrGlobalARN(ctx, rName, names.AttrARN, "billing", fmt.Sprintf("billingview/%s", rName)),
+					acctest.CheckResourceAttrContains(resourceName, names.AttrARN, "billingview/custom-"),
 				),
 			},
 			{
@@ -75,18 +75,25 @@ func TestAccBillingView_update(t *testing.T) {
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccViewConfig_basic(rName),
+				Config: testAccViewConfig_update(rName, "Test description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
 				),
 			},
 			{
-				Config: testAccViewConfig_update(rName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccViewConfig_update(fmt.Sprintf("%s-updated", rName), "Test description updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-new", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-updated", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description updated"),
-					acctest.CheckResourceAttrGlobalARN(ctx, rName, names.AttrARN, "billing", fmt.Sprintf("billingview/%s", rName)),
+					acctest.CheckResourceAttrContains(resourceName, names.AttrARN, "billingview/custom-"),
 				),
 			},
 		},
@@ -193,25 +200,29 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccViewConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccViewConfig_base() string {
+	return `
 data "aws_caller_identity" "current" {}
-
 data "aws_partition" "current" {}
+`
+}
 
+func testAccViewConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
 resource "aws_billing_view" "test" {
   name         = "%s"
   description  = "Test description"
   source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
 }
-`, rName)
+`, rName))
 }
 
-func testAccViewConfig_update(rName string) string {
-	return fmt.Sprintf(`
+func testAccViewConfig_update(rName, description string) string {
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
 resource "aws_billing_view" "test" {
-  name        = "%s-new"
-  description = "Test description updated"
+  name         = %[1]q
+  description  = %[2]q
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
 }
-`, rName)
+`, rName, description))
 }
