@@ -6,7 +6,10 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_vpc_ipam` ([#40459](https://github.com/hashicorp/terraform-provider-aws/issues/40459))
+* **New Data Source:** `aws_vpc_ipams` ([#40459](https://github.com/hashicorp/terraform-provider-aws/issues/40459))
 * **New Ephemeral Resource:** `aws_secretsmanager_random_password` ([#41106](https://github.com/hashicorp/terraform-provider-aws/issues/41106))
+* **New Resource:** `aws_guardduty_member_detector_feature` ([#35625](https://github.com/hashicorp/terraform-provider-aws/issues/35625))
 * **New Resource:** `aws_route53domains_domain` ([#37885](https://github.com/hashicorp/terraform-provider-aws/issues/37885))
 * **New Resource:** `aws_timestreamquery_scheduled_query` ([#41145](https://github.com/hashicorp/terraform-provider-aws/issues/41145))
 * **New Resource:** `aws_vpclattice_resource_configuration` ([#41019](https://github.com/hashicorp/terraform-provider-aws/issues/41019))
@@ -41,6 +44,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_opensearchserverless_collection: Prevent errant AutoFlex errors when setting `created_date` and `last_modified_date` attributes ([#41105](https://github.com/hashicorp/terraform-provider-aws/issues/41105))
+* resource/aws_ami_ids: Fix `sort_ascending` to sort in ascending order ([#40529](https://github.com/hashicorp/terraform-provider-aws/issues/40529))
 * resource/aws_bedrockagent_knowledge_base: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) behavior from `role_arn` argument ([#41072](https://github.com/hashicorp/terraform-provider-aws/issues/41072))
 * resource/aws_cloudwatch_log_delivery: Fix `Provider produced inconsistent result after apply` errors for `s3_delivery_configuration.enable_hive_compatible_path` ([#41122](https://github.com/hashicorp/terraform-provider-aws/issues/41122))
 * resource/aws_cloudwatch_log_delivery: Mark `field_delimiter` as Computed ([#41122](https://github.com/hashicorp/terraform-provider-aws/issues/41122))
