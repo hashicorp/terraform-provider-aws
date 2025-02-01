@@ -8,7 +8,6 @@ rules:
         - "internal/service/organizations"
         - "internal/service/redshift"
         - "internal/service/transcribe"
-        - "internal/service/transfer"
     patterns:
       - pattern: |
           resource.TestCheckResourceAttrSet($NAME, $ATTR)
