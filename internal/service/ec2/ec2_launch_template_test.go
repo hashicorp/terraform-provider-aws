@@ -4087,10 +4087,10 @@ resource "aws_launch_template" "test" {
 
   network_interfaces {
     connection_tracking_specification {
-		tcp_established_timeout = 60
-		udp_stream_timeout      = 60
-		udp_timeout             = 30
-	}
+      tcp_established_timeout = 60
+      udp_stream_timeout      = 60
+      udp_timeout             = 30
+    }
   }
 }
 `, rName)
