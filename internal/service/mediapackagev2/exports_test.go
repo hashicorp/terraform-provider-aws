@@ -8,4 +8,5 @@ var (
 	FindChannelGroupByID = findChannelGroupByID
 	FindChannelByID      = findChannelByID
 	ResourceChannelGroup = newResourceChannelGroup
+	ResourceChannel      = newResourceChannel
 )

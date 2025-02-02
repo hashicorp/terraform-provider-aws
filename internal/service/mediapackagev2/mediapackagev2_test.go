@@ -22,7 +22,11 @@ func TestAccMediaPackageV2_serial(t *testing.T) {
 			"tags":               testAccMediaPackageV2ChannelGroup_tagsSerial,
 		},
 		"Channel": {
-			acctest.CtBasic: testAccMediaPackageV2Channel_basic,
+			acctest.CtBasic:      testAccMediaPackageV2Channel_basic,
+			"cmaf":               testAccMediaPackageV2Channel_cmaf,
+			"description":        testAccMediaPackageV2Channel_description,
+			acctest.CtDisappears: testAccMediaPackageV2Channel_disappears,
+			"tags":               testAccMediaPackageV2Channel_tagsSerial,
 		},
 	}
 

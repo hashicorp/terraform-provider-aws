@@ -5,18 +5,20 @@ package mediapackagev2
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mediapackagev2/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -72,6 +74,7 @@ func (r *resourceChannel) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"input_type": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(func() []string {
 						values := awstypes.InputType("").Values()
@@ -82,30 +85,34 @@ func (r *resourceChannel) Schema(ctx context.Context, request resource.SchemaReq
 						return strValues
 					}()...),
 				},
+				Default: stringdefault.StaticString(string(awstypes.InputTypeHls)),
+			},
+			"input_switch_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[inputSwitchingConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				AttributeTypes: map[string]attr.Type{
+					"mqcs_input_switching": types.BoolType,
+				},
+			},
+			"output_header_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[outputHeaderConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				AttributeTypes: map[string]attr.Type{
+					"publish_mqcs": types.BoolType,
+				},
+			},
+			"ingest_endpoints": schema.ListAttribute{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[ingestEndpointModel](ctx),
+				ElementType: fwtypes.NewObjectTypeOf[ingestEndpointModel](ctx),
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-		},
-		Blocks: map[string]schema.Block{
-			"ingest_endpoints": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[ingestEndpointModel](ctx),
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.Set{
-					setvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"url": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
 		},
 	}
 
@@ -272,7 +279,10 @@ func (r *resourceChannel) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 func (r *resourceChannel) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
+	parts := strings.Split(request.ID, "/")
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("channel_group_name"), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
 }
 
 func (r *resourceChannel) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -280,20 +290,29 @@ func (r *resourceChannel) ModifyPlan(ctx context.Context, request resource.Modif
 }
 
 type resourceChannelData struct {
-	ARN              types.String `tfsdk:"arn"`
-	Name             types.String `tfsdk:"name"`
-	ChannelGroupName types.String `tfsdk:"channel_group_name"`
-	Description      types.String `tfsdk:"description"`
-	InputType        types.String `tfsdk:"input_type"`
-	//IngestEndpoints  fwtypes.ListNestedObjectValueOf[ingestEndpointModel] `tfsdk:"ingest_endpoints"`
-	IngestEndpoints fwtypes.SetNestedObjectValueOf[ingestEndpointModel] `tfsdk:"ingest_endpoints"`
-	Tags            tftags.Map                                          `tfsdk:"tags"`
-	TagsAll         tftags.Map                                          `tfsdk:"tags_all"`
+	ARN                       types.String                                            `tfsdk:"arn"`
+	Name                      types.String                                            `tfsdk:"name"`
+	ChannelGroupName          types.String                                            `tfsdk:"channel_group_name"`
+	Description               types.String                                            `tfsdk:"description"`
+	InputType                 types.String                                            `tfsdk:"input_type"`
+	IngestEndpoints           fwtypes.ListNestedObjectValueOf[ingestEndpointModel]    `tfsdk:"ingest_endpoints"`
+	InputSwitchConfiguration  fwtypes.ObjectValueOf[inputSwitchingConfigurationModel] `tfsdk:"input_switch_configuration"`
+	OutputHeaderConfiguration fwtypes.ObjectValueOf[outputHeaderConfigurationModel]   `tfsdk:"output_header_configuration"`
+	Tags                      tftags.Map                                              `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                              `tfsdk:"tags_all"`
 }
 
 type ingestEndpointModel struct {
 	Id  types.String `tfsdk:"id"`
 	Url types.String `tfsdk:"url"`
+}
+
+type inputSwitchingConfigurationModel struct {
+	MQCSInputSwitching types.Bool `tfsdk:"mqcs_input_switching"`
+}
+
+type outputHeaderConfigurationModel struct {
+	PublishMQCS types.Bool `tfsdk:"publish_mqcs"`
 }
 
 func findChannelByID(ctx context.Context, conn *mediapackagev2.Client, channelGroupName string, channelName string) (*mediapackagev2.GetChannelOutput, error) {
