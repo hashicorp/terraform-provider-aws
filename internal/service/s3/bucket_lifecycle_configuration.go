@@ -121,14 +121,14 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object_size_greater_than": {
-													Type:         schema.TypeInt,
+													Type:         nullable.TypeNullableInt,
 													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(0),
+													ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 												},
 												"object_size_less_than": {
-													Type:         schema.TypeInt,
+													Type:         nullable.TypeNullableInt,
 													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
+													ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 												},
 												names.AttrPrefix: {
 													Type:     schema.TypeString,
@@ -735,12 +735,12 @@ func expandLifecycleRuleAndOperator(ctx context.Context, tfMap map[string]interf
 
 	apiObject := &types.LifecycleRuleAndOperator{}
 
-	if v, ok := tfMap["object_size_greater_than"].(int); ok && v > 0 {
-		apiObject.ObjectSizeGreaterThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["object_size_greater_than"].(string)).ValueInt64(); !null && v >= 0 {
+		apiObject.ObjectSizeGreaterThan = aws.Int64(v)
 	}
 
-	if v, ok := tfMap["object_size_less_than"].(int); ok && v > 0 {
-		apiObject.ObjectSizeLessThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["object_size_less_than"].(string)).ValueInt64(); !null && v > 0 {
+		apiObject.ObjectSizeLessThan = aws.Int64(v)
 	}
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok {
@@ -983,9 +983,14 @@ func flattenLifecycleRuleAndOperator(ctx context.Context, apiObject *types.Lifec
 		return []interface{}{}
 	}
 
-	tfMap := map[string]interface{}{
-		"object_size_greater_than": aws.ToInt64(apiObject.ObjectSizeGreaterThan),
-		"object_size_less_than":    aws.ToInt64(apiObject.ObjectSizeLessThan),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ObjectSizeGreaterThan; v != nil {
+		tfMap["object_size_greater_than"] = flex.Int64ToStringValue(v)
+	}
+
+	if v := apiObject.ObjectSizeLessThan; v != nil {
+		tfMap["object_size_less_than"] = flex.Int64ToStringValue(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
