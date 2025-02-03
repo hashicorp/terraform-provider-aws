@@ -50,8 +50,8 @@ func testAccMediaPackageV2Channel_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.id", regexache.MustCompile("2")),
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.url", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z-]+.ingest.[0-9a-z-]+.mediapackagev2.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
 					resource.TestMatchResourceAttr(resourceName, "input_type", regexache.MustCompile("HLS")),
-					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile("false")),
-					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile("false")),
+					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile(acctest.CtFalse)),
+					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile(acctest.CtFalse)),
 				),
 			},
 			{
@@ -94,8 +94,8 @@ func testAccMediaPackageV2Channel_cmaf(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.id", regexache.MustCompile("2")),
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.url", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z-]+.ingest.[0-9a-z-]+.mediapackagev2.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
 					resource.TestMatchResourceAttr(resourceName, "input_type", regexache.MustCompile("CMAF")),
-					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile("true")),
-					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile("true")),
+					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile(acctest.CtTrue)),
+					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile(acctest.CtTrue)),
 				),
 			},
 			{
@@ -115,8 +115,8 @@ func testAccMediaPackageV2Channel_cmaf(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.id", regexache.MustCompile("2")),
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.url", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z-]+.ingest.[0-9a-z-]+.mediapackagev2.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
 					resource.TestMatchResourceAttr(resourceName, "input_type", regexache.MustCompile("CMAF")),
-					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile("false")),
-					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile("false")),
+					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile(acctest.CtFalse)),
+					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile(acctest.CtFalse)),
 				),
 			},
 		},
@@ -152,8 +152,8 @@ func testAccMediaPackageV2Channel_description(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.id", regexache.MustCompile("2")),
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.url", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z-]+.ingest.[0-9a-z-]+.mediapackagev2.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
 					resource.TestMatchResourceAttr(resourceName, "input_type", regexache.MustCompile("HLS")),
-					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile("false")),
-					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile("false")),
+					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile(acctest.CtFalse)),
+					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile(acctest.CtFalse)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -174,8 +174,8 @@ func testAccMediaPackageV2Channel_description(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.id", regexache.MustCompile("2")),
 					resource.TestMatchResourceAttr(resourceName, "ingest_endpoints.1.url", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z-]+.ingest.[0-9a-z-]+.mediapackagev2.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
 					resource.TestMatchResourceAttr(resourceName, "input_type", regexache.MustCompile("HLS")),
-					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile("false")),
-					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile("false")),
+					resource.TestMatchResourceAttr(resourceName, "input_switch_configuration.mqcs_input_switching", regexache.MustCompile(acctest.CtFalse)),
+					resource.TestMatchResourceAttr(resourceName, "output_header_configuration.publish_mqcs", regexache.MustCompile(acctest.CtFalse)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -221,7 +221,7 @@ func testAccChannelImportStateIdFunc(resourceName string) resource.ImportStateId
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["channel_group_name"], rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["channel_group_name"], rs.Primary.Attributes[acctest.CtName]), nil
 	}
 }
 

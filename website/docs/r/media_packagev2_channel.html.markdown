@@ -39,11 +39,11 @@ This resource supports the following arguments:
 
 ### `input_switch_configuration` Configuration Block
 
-* `mqcs_input_switching` - (Optional) A Boolean value set determins if Media Quality Confidence Score should be enabled. This can only be set to `true` if the `input_type` is `CMAF`. See [Media Quality Scores](https://docs.aws.amazon.com/mediapackage/latest/userguide/mqcs.html)
+* `mqcs_input_switching` - (Optional) A Boolean value set determines if Media Quality Confidence Score should be enabled. This can only be set to `true` if the `input_type` is `CMAF`. See [Media Quality Scores](https://docs.aws.amazon.com/mediapackage/latest/userguide/mqcs.html)
 
 ### `output_header_configuration` Configuration Block
 
-* `publish_mqcs` - (Optional) A Boolean value set determins if MQCS will show up as CMSD keys in the CMSD-Static output headers. This can only be set to `true` if the `input_type` is `CMAF`. See [CMSD headers from AWS Elemental MediaPackage](https://docs.aws.amazon.com/mediapackage/latest/userguide/mqcs.html)
+* `publish_mqcs` - (Optional) A Boolean value set determines if MQCS will show up as CMSD keys in the CMSD-Static output headers. This can only be set to `true` if the `input_type` is `CMAF`. See [CMSD headers from AWS Elemental MediaPackage](https://docs.aws.amazon.com/mediapackage/latest/userguide/mqcs.html)
 
 ## Attribute Reference
 
