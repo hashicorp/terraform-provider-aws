@@ -23,11 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_rekognition_project", name="Project")
+// @Tags(identifierAttribute="arn")
 func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProject{}
 
@@ -78,6 +80,8 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -97,7 +101,9 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	in := rekognition.CreateProjectInput{}
+	in := rekognition.CreateProjectInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
@@ -247,6 +253,10 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
+func (r *resourceProject) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
 func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusCreating),
@@ -340,5 +350,7 @@ type resourceProjectData struct {
 	Feature    fwtypes.StringEnum[awstypes.CustomizationFeature] `tfsdk:"feature"`
 	ID         types.String                                      `tfsdk:"id"`
 	Name       types.String                                      `tfsdk:"name"`
+	Tags       tftags.Map                                        `tfsdk:"tags"`
+	TagsAll    tftags.Map                                        `tfsdk:"tags_all"`
 	Timeouts   timeouts.Value                                    `tfsdk:"timeouts"`
 }

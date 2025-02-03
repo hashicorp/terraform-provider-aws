@@ -67,7 +67,28 @@ The following arguments are optional:
 The `dataSourceConfiguration` configuration block supports the following arguments:
 
 * `type` - (Required) Type of storage for the data source. Valid values: `S3`.
+* `confluence_configuration` - (Optional) Details about the configuration of the Confluence data source. See [`confluence_data_source_configuration` block](#confluence_data_source_configuration-block) for details.
 * `s3Configuration` - (Optional) Details about the configuration of the S3 object containing the data source. See [`s3_data_source_configuration` block](#s3_data_source_configuration-block) for details.
+* `salesforce_configuration` - (Optional) Details about the configuration of the Salesforce data source. See [`salesforce_data_source_configuration` block](#salesforce_data_source_configuration-block) for details.
+* `share_point_configuration` - (Optional) Details about the configuration of the SharePoint data source. See [`share_point_data_source_configuration` block](#share_point_data_source_configuration-block) for details.
+
+### `confluence_data_source_configuration` block
+
+The `confluence_data_source_configuration` configuration block supports the following arguments:
+
+* `sourceConfiguration` - (Required) The endpoint information to connect to your Confluence data source. See [`sourceConfiguration` block](#confluence-source_configuration-block) for details.
+* `crawlerConfiguration` - (Optional) Configuration for Confluence content. See [`crawlerConfiguration` block](#crawler_configuration-block) for details.
+
+For more details, see the [Amazon BedrockAgent Confluence documentation][1].
+
+### Confluence `sourceConfiguration` block
+
+The `sourceConfiguration` configuration block supports the following arguments:
+
+* `authType` - (Required) The supported authentication type to authenticate and connect to your Confluence instance. Valid values: `BASIC`, `OAUTH2_CLIENT_CREDENTIALS`.
+* `credentialsSecretArn` - (Required) The Amazon Resource Name of an AWS Secrets Manager secret that stores your authentication credentials for your Confluence instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Confluence connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
+* `hostType` - (Required) The supported host type, whether online/cloud or server/on-premises. Valid values: `SAAS`.
+* `host_url` - (Required) The Confluence host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
 
 ### `s3_data_source_configuration` block
 
@@ -76,6 +97,68 @@ The `s3_data_source_configuration` configuration block supports the following ar
 * `bucketArn` - (Required) ARN of the bucket that contains the data source.
 * `bucketOwnerAccountId` - (Optional) Bucket account owner ID for the S3 bucket.
 * `inclusionPrefixes` - (Optional) List of S3 prefixes that define the object containing the data sources. For more information, see [Organizing objects using prefixes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html).
+
+### `salesforce_data_source_configuration` block
+
+The `salesforce_data_source_configuration` configuration block supports the following arguments:
+
+* `sourceConfiguration` - (Required) The endpoint information to connect to your Salesforce data source. See [`sourceConfiguration` block](#salesforce-source_configuration-block) for details.
+* `crawlerConfiguration` - (Optional) Configuration for Salesforce content. See [`crawlerConfiguration` block](#crawler_configuration-block) for details.
+
+For more details, see the [Amazon BedrockAgent Salesforce documentation][2].
+
+### Salesforce `sourceConfiguration` block
+
+The `sourceConfiguration` configuration block supports the following arguments:
+
+* `authType` - (Required) The supported authentication type to authenticate and connect to your Salesforce instance. Valid values: OAUTH2_CLIENT_CREDENTIALS.
+* `credentialsSecretArn` - (Required) The Amazon Resource Name of an AWS Secrets Manager secret that stores your authentication credentials for your Salesforce instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Salesforce connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
+* `host_url` - (Required) The Salesforce host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
+
+### `crawlerConfiguration` block
+
+The `crawlerConfiguration` configuration block supports the following arguments:
+
+* `filter_configuration` - (Optional) The Salesforce standard object configuration. See [`filter_configuration` block](#filter_configuration-block) for details.
+
+### `filter_configuration` block
+
+The `filter_configuration` configuration block supports the following arguments:
+
+* `type` - (Required) The type of filtering that you want to apply to certain objects or content of the data source. For example, the PATTERN type is regular expression patterns you can apply to filter your content.
+* `pattern_object_filter` - (Optional) The configuration of filtering certain objects or content types of the data source. See [`pattern_object_filter` block](#pattern_object_filter-block) for details.
+
+### `pattern_object_filter` block
+
+The `pattern_object_filter` configuration block supports the following arguments:
+
+* `filters` - (Required) The configuration of specific filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters.
+
+Each filter object should contain the following configuration:
+
+* `object_type` - (Required) The supported object type or content type of the data source.
+* `exclusion_filters` - (Optional) A list of one or more exclusion regular expression patterns to exclude certain object types that adhere to the pattern.
+* `inclusion_filters` - (Optional) A list of one or more inclusion regular expression patterns to include certain object types that adhere to the pattern.
+
+### `share_point_data_source_configuration` block
+
+The `share_point_data_source_configuration` configuration block supports the following arguments:
+
+* `sourceConfiguration` - (Required) The endpoint information to connect to your SharePoint data source. See [`sourceConfiguration` block](#sharepoint-source_configuration-block) for details.
+* `crawlerConfiguration` - (Optional) Configuration for SharePoint content. See [`crawlerConfiguration` block](#crawler_configuration-block) for details.
+
+For more details, see the [Amazon BedrockAgent SharePoint documentation][3].
+
+### SharePoint `sourceConfiguration` block
+
+The `sourceConfiguration` configuration block supports the following arguments:
+
+* `authType` - (Required) The supported authentication type to authenticate and connect to your SharePoint site. Valid values: `OAUTH2_CLIENT_CREDENTIALS`, `OAUTH2_SHAREPOINT_APP_ONLY_CLIENT_CREDENTIALS`.
+* `credentialsSecretArn` - (Required) The Amazon Resource Name of an AWS Secrets Manager secret that stores your authentication credentials for your SharePoint site. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see SharePoint connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
+* `domain` - (Required) The domain of your SharePoint instance or site URL/URLs.
+* `hostType` - (Required) The supported host type, whether online/cloud or server/on-premises. Valid values: `ONLINE`.
+* `site_urls` - (Required) A list of one or more SharePoint site URLs.
+* `tenantId` - (Optional) The identifier of your Microsoft 365 tenant.
 
 ### `serverSideEncryptionConfiguration` block
 
@@ -232,4 +315,9 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a29b632aed73b2eb2bb1ee798a495964c54fc9897dab020469f9ebbf7fd83f31 -->
+[1]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html
+[2]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html
+[3]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html
+[4]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_WebDataSourceConfiguration.html
+
+<!-- cache-key: cdktf-0.20.8 input-9c6dc29a10ac4e2bab6c8c940f06cf4814f71a791b299bba79c904345e097d05 -->
