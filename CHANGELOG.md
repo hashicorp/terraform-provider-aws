@@ -6,7 +6,10 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_vpc_ipam` ([#40459](https://github.com/hashicorp/terraform-provider-aws/issues/40459))
+* **New Data Source:** `aws_vpc_ipams` ([#40459](https://github.com/hashicorp/terraform-provider-aws/issues/40459))
 * **New Ephemeral Resource:** `aws_secretsmanager_random_password` ([#41106](https://github.com/hashicorp/terraform-provider-aws/issues/41106))
+* **New Resource:** `aws_guardduty_member_detector_feature` ([#35625](https://github.com/hashicorp/terraform-provider-aws/issues/35625))
 * **New Resource:** `aws_route53domains_domain` ([#37885](https://github.com/hashicorp/terraform-provider-aws/issues/37885))
 * **New Resource:** `aws_timestreamquery_scheduled_query` ([#41145](https://github.com/hashicorp/terraform-provider-aws/issues/41145))
 * **New Resource:** `aws_vpclattice_resource_configuration` ([#41019](https://github.com/hashicorp/terraform-provider-aws/issues/41019))
@@ -18,6 +21,7 @@ ENHANCEMENTS:
 * data-source/aws_ec2_transit_gateway_peering_attachment: Add `arn` attribute ([#41087](https://github.com/hashicorp/terraform-provider-aws/issues/41087))
 * data-source/aws_ec2_transit_gateway_vpc_attachment: Add `arn` attribute ([#41084](https://github.com/hashicorp/terraform-provider-aws/issues/41084))
 * data-source/aws_ecs_task_definition: Add missing attributes ([#41081](https://github.com/hashicorp/terraform-provider-aws/issues/41081))
+* data-source/aws_launch_template: Add `network_interfaces.connection_tracking_specification` attribute ([#41184](https://github.com/hashicorp/terraform-provider-aws/issues/41184))
 * resource/aws_appflow_connector_profile: Add `connector_profile_config.connector_profile_properties.salesforce.use_privatelink_for_metadata_and_authorization` argument ([#41175](https://github.com/hashicorp/terraform-provider-aws/issues/41175))
 * resource/aws_autoscaling_policy: Add `target_tracking_configuration.customized_metric_specification.metrics.metric_stat.period` argument to support [high-resolution metrics](https://docs.aws.amazon.com/autoscaling/ec2/userguide/policy-creating-high-resolution-metrics.html) ([#41066](https://github.com/hashicorp/terraform-provider-aws/issues/41066))
 * resource/aws_bedrockagent_data_source: Add `data_source_configuration.confluence_configuration`, `data_source_configuration.salesforce_configuration`, `data_source_configuration.share_point_configuration`, and `data_source_configuration.web_configuration` arguments ([#40711](https://github.com/hashicorp/terraform-provider-aws/issues/40711))
@@ -29,23 +33,30 @@ ENHANCEMENTS:
 * resource/aws_ec2_transit_gateway_peering_attachment: Add `arn` attribute ([#41087](https://github.com/hashicorp/terraform-provider-aws/issues/41087))
 * resource/aws_ec2_transit_gateway_vpc_attachment: Add `arn` attribute ([#41084](https://github.com/hashicorp/terraform-provider-aws/issues/41084))
 * resource/aws_ecs_task_definition: Add `enable_fault_injection` argument ([#41078](https://github.com/hashicorp/terraform-provider-aws/issues/41078))
+* resource/aws_launch_template: Add `network_interfaces.connection_tracking_specification` argument ([#41184](https://github.com/hashicorp/terraform-provider-aws/issues/41184))
 * resource/aws_media_convert_queue: Add `concurrent_jobs` argument ([#41012](https://github.com/hashicorp/terraform-provider-aws/issues/41012))
 * resource/aws_medialive_multiplex_program: Add configurable `create` timeout ([#40972](https://github.com/hashicorp/terraform-provider-aws/issues/40972))
 * resource/aws_organizations_account: Add configurable timeouts for Create and Delete ([#41059](https://github.com/hashicorp/terraform-provider-aws/issues/41059))
 * resource/aws_pinpoint_email_channel: Add `orchestration_sending_role_arn` argument ([#41043](https://github.com/hashicorp/terraform-provider-aws/issues/41043))
 * resource/aws_pipes_pipe: Add `kms_key_identifier` argument ([#41082](https://github.com/hashicorp/terraform-provider-aws/issues/41082))
 * resource/aws_rds_cluster: Support `instance` as a valid value for `enabled_cloudwatch_logs_exports` ([#41111](https://github.com/hashicorp/terraform-provider-aws/issues/41111))
+* resource/aws_rekognition_project: Add `tags` argument and `tags_all` attribute ([#41192](https://github.com/hashicorp/terraform-provider-aws/issues/41192))
 * resource/aws_vpc_endpoint: Add `resource_configuration_arn` and `service_network_arn` arguments to support creating VPC Endpoints of type `Resource` and `ServiceNetwork` ([#41116](https://github.com/hashicorp/terraform-provider-aws/issues/41116))
 * resource/aws_vpc_endpoint_security_group_association: Add import support ([#41042](https://github.com/hashicorp/terraform-provider-aws/issues/41042))
 
 BUG FIXES:
 
 * data-source/aws_opensearchserverless_collection: Prevent errant AutoFlex errors when setting `created_date` and `last_modified_date` attributes ([#41105](https://github.com/hashicorp/terraform-provider-aws/issues/41105))
+* resource/aws_ami_ids: Fix `sort_ascending` to sort in ascending order ([#40529](https://github.com/hashicorp/terraform-provider-aws/issues/40529))
 * resource/aws_bedrockagent_knowledge_base: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) behavior from `role_arn` argument ([#41072](https://github.com/hashicorp/terraform-provider-aws/issues/41072))
 * resource/aws_cloudwatch_log_delivery: Fix `Provider produced inconsistent result after apply` errors for `s3_delivery_configuration.enable_hive_compatible_path` ([#41122](https://github.com/hashicorp/terraform-provider-aws/issues/41122))
 * resource/aws_cloudwatch_log_delivery: Mark `field_delimiter` as Computed ([#41122](https://github.com/hashicorp/terraform-provider-aws/issues/41122))
+* resource/aws_cognito_identity_provider: Correct plan-time validation of `provider_name` to count UTF-8 characters properly ([#41187](https://github.com/hashicorp/terraform-provider-aws/issues/41187))
+* resource/aws_cognito_user_group: Correct plan-time validation of `name` to count UTF-8 characters properly ([#41187](https://github.com/hashicorp/terraform-provider-aws/issues/41187))
+* resource/aws_cognito_user_pool_client: Correct plan-time validation of `callback_urls, `default_redirect_uri`, `logout_urls`, and `supported_identity_providers` to count UTF-8 characters properly ([#41187](https://github.com/hashicorp/terraform-provider-aws/issues/41187))
 * resource/aws_dms_replication_task: Fix `panic: interface conversion: interface {} is float64, not string` ([#41096](https://github.com/hashicorp/terraform-provider-aws/issues/41096))
 * resource/aws_elasticache_serverless_cache: Fix `InvalidParameterCombination` error during update ([#40969](https://github.com/hashicorp/terraform-provider-aws/issues/40969))
+* resource/aws_iam_server_certificate: Allow update of `name`, `name_prefix`, and `path` without forcing new resource ([#41186](https://github.com/hashicorp/terraform-provider-aws/issues/41186))
 * resource/aws_macie2_invitation_accepter: Properly set `invitation_id` when calling the `AcceptInvitation` API ([#41163](https://github.com/hashicorp/terraform-provider-aws/issues/41163))
 
 ## 5.84.0 (January 16, 2025)

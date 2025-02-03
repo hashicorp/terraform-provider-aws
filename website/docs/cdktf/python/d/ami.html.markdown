@@ -134,6 +134,7 @@ interpolation.
 * `tpm_support` - If the image is configured for NitroTPM support, the value is `v2.0`.
 * `virtualization_type` - Type of virtualization of the AMI (ie: `hvm` or
   `paravirtual`).
+* `uefi_data` - (Optional) Base64 representation of the non-volatile UEFI variable store.
 * `usage_operation` - Operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
 * `platform_details` - Platform details associated with the billing code of the AMI.
 * `ena_support` - Whether enhanced networking with ENA is enabled.
@@ -146,4 +147,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-ddf36ab9a263ec2e8e853d80bf60b914742b569dad64c1a3b33bf922722760bf -->
+<!-- cache-key: cdktf-0.20.8 input-6bfc785d19c21a4c97610e6294c1165146c55e004a58d2acdf72762d82db7ef8 -->
