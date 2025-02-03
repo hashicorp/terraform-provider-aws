@@ -182,8 +182,8 @@ func (v Map) MapSemanticEquals(ctx context.Context, oValuable basetypes.MapValua
 	return true, diags
 }
 
-// IsFullyKnown returns true if the map is known and all of its elements are known.
-func (v Map) IsFullyKnown() bool {
+// IsWhollyKnown returns true if the map is known and all of its elements are known.
+func (v Map) IsWhollyKnown() bool {
 	if v.IsUnknown() {
 		return false
 	}

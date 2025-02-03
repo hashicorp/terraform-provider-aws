@@ -230,7 +230,7 @@ func TestTagMapEquality(t *testing.T) {
 	}
 }
 
-func TestTagMapIsFullyKnown(t *testing.T) {
+func TestTagMapIsWhollyKnown(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -310,7 +310,7 @@ func TestTagMapIsFullyKnown(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := test.val.IsFullyKnown(), test.fullyKnown; got != want {
+			if got, want := test.val.IsWhollyKnown(), test.fullyKnown; got != want {
 				t.Errorf("IsFullyKnown(%q) = %v, want %v", test.val, got, want)
 			}
 		})
