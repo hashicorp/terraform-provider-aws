@@ -6816,13 +6816,11 @@ service "route53recoverycontrolconfig" {
     human_friendly      = "Route 53 Recovery Control Config"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryControlConfig"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListClusters"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
