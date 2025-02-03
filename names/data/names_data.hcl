@@ -6903,10 +6903,6 @@ service "s3" {
     human_friendly      = "S3 (Simple Storage)"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   env_var {
     deprecated_env_var = "AWS_S3_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_S3_ENDPOINT"
