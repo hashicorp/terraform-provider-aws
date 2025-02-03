@@ -8624,14 +8624,11 @@ service "dynamodb" {
     human_friendly      = "DynamoDB"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   env_var {
     deprecated_env_var = "AWS_DYNAMODB_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_DYNAMODB_ENDPOINT"
   }
+
   endpoint_info {
     endpoint_api_call = "ListTables"
   }
