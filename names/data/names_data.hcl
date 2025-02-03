@@ -4890,10 +4890,6 @@ service "lightsail" {
     human_friendly      = "Lightsail"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "GetInstances"
   }
