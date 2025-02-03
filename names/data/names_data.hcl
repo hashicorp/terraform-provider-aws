@@ -2809,10 +2809,6 @@ service "ec2instanceconnect" {
     human_friendly      = "EC2 Instance Connect"
   }
 
-  client {
-    go_v1_client_typename = "EC2InstanceConnect"
-  }
-
   resource_prefix {
     correct = "aws_ec2instanceconnect_"
   }
@@ -3088,10 +3084,6 @@ service "elbv2" {
     aliases             = ["elasticloadbalancingv2"]
     provider_name_upper = "ELBV2"
     human_friendly      = "ELB (Elastic Load Balancing)"
-  }
-
-  client {
-    go_v1_client_typename = "ELBV2"
   }
 
   endpoint_info {
@@ -3967,10 +3959,6 @@ service "iot1clickdevices" {
     human_friendly      = "IoT 1-Click Devices"
   }
 
-  client {
-    go_v1_client_typename = "IoT1ClickDevicesService"
-  }
-
   resource_prefix {
     correct = "aws_iot1clickdevices_"
   }
@@ -3994,10 +3982,6 @@ service "iot1clickprojects" {
   names {
     provider_name_upper = "IoT1ClickProjects"
     human_friendly      = "IoT 1-Click Projects"
-  }
-
-  client {
-    go_v1_client_typename = "IoT1ClickProjects"
   }
 
   resource_prefix {
@@ -4183,10 +4167,6 @@ service "greengrassv2" {
   names {
     provider_name_upper = "GreengrassV2"
     human_friendly      = "IoT Greengrass V2"
-  }
-
-  client {
-    go_v1_client_typename = "GreengrassV2"
   }
 
   resource_prefix {
@@ -4478,10 +4458,6 @@ service "kinesisanalyticsv2" {
   names {
     provider_name_upper = "KinesisAnalyticsV2"
     human_friendly      = "Kinesis Analytics V2"
-  }
-
-  client {
-    go_v1_client_typename = "KinesisAnalyticsV2"
   }
 
   endpoint_info {
@@ -4838,10 +4814,6 @@ service "lexruntimev2" {
     human_friendly      = "Lex Runtime V2"
   }
 
-  client {
-    go_v1_client_typename = "LexRuntimeV2"
-  }
-
   resource_prefix {
     correct = "aws_lexruntimev2_"
   }
@@ -5029,10 +5001,6 @@ service "macie2" {
   names {
     provider_name_upper = "Macie2"
     human_friendly      = "Macie"
-  }
-
-  client {
-    go_v1_client_typename = "Macie2"
   }
 
   endpoint_info {
@@ -6109,10 +6077,6 @@ service "pinpointsmsvoicev2" {
     human_friendly      = "End User Messaging SMS"
   }
 
-  client {
-    go_v1_client_typename = "PinpointSMSVoiceV2"
-  }
-
   endpoint_info {
     endpoint_api_call = "DescribePhoneNumbers"
   }
@@ -6869,10 +6833,6 @@ service "route53resolver" {
     human_friendly      = "Route 53 Resolver"
   }
 
-  client {
-    go_v1_client_typename = "Route53Resolver"
-  }
-
   endpoint_info {
     endpoint_api_call = "ListFirewallDomainLists"
   }
@@ -6998,10 +6958,6 @@ service "s3outposts" {
   names {
     provider_name_upper = "S3Outposts"
     human_friendly      = "S3 on Outposts"
-  }
-
-  client {
-    go_v1_client_typename = "S3Outposts"
   }
 
   endpoint_info {
@@ -8650,11 +8606,6 @@ service "ec2" {
   names {
     provider_name_upper = "EC2"
     human_friendly      = "EC2 (Elastic Compute Cloud)"
-  }
-
-  client {
-    go_v1_client_typename = "EC2"
-    skip_client_generate  = true
   }
 
   endpoint_info {
