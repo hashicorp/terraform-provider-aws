@@ -280,7 +280,7 @@ resource "aws_media_packagev2_channel_group" "channelGroup" {
 
 resource "aws_media_packagev2_channel" "channel" {
   channel_group_name = aws_media_packagev2_channel_group.channelGroup.name
-  name = %[2]q
+  name               = %[2]q
 }
 `, channelGroupName, channelName)
 }
@@ -293,11 +293,13 @@ resource "aws_media_packagev2_channel_group" "channelGroup" {
 
 resource "aws_media_packagev2_channel" "channel" {
   channel_group_name = aws_media_packagev2_channel_group.channelGroup.name
-  name = %[2]q
-  input_type = "CMAF"
+  name               = %[2]q
+  input_type         = "CMAF"
+
 	input_switch_configuration = {
 	  mqcs_input_switching = %[3]t
 	}
+
 	output_header_configuration = {
 	  publish_mqcs = %[4]t
 	}
@@ -313,8 +315,8 @@ resource "aws_media_packagev2_channel_group" "channelGroup" {
 
 resource "aws_media_packagev2_channel" "channel" {
   channel_group_name = aws_media_packagev2_channel_group.channelGroup.name
-  name = %[2]q
-	description = %[3]q
+  name               = %[2]q
+	description        = %[3]q
 }
 `, channelGroupName, channelName, description)
 }
