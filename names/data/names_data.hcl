@@ -5151,10 +5151,6 @@ service "kafka" {
     human_friendly      = "Managed Streaming for Kafka"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListClusters"
   }
