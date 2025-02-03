@@ -6787,10 +6787,6 @@ service "route53recoverycluster" {
     human_friendly      = "Route 53 Recovery Cluster"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryCluster"
-  }
-
   resource_prefix {
     correct = "aws_route53recoverycluster_"
   }
@@ -6847,13 +6843,11 @@ service "route53recoveryreadiness" {
     human_friendly      = "Route 53 Recovery Readiness"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryReadiness"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListCells"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
