@@ -29,10 +29,6 @@ type openIDTokenForDeveloperIdentityEphemeralResource struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (*openIDTokenForDeveloperIdentityEphemeralResource) Metadata(_ context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "aws_cognito_identity_openid_token_for_developer_identity"
-}
-
 func (e *openIDTokenForDeveloperIdentityEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

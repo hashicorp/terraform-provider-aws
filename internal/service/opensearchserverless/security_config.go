@@ -47,10 +47,6 @@ type resourceSecurityConfig struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceSecurityConfig) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_security_config"
-}
-
 func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -28,10 +28,6 @@ type dataSourceRegistry struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceRegistry) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "aws_glue_registry"
-}
-
 func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

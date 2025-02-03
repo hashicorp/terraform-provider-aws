@@ -39,10 +39,6 @@ type resourceAccount struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAccount) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_api_gateway_account"
-}
-
 func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{

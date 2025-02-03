@@ -95,6 +95,7 @@ This resource supports the following arguments:
 * `configurationSet` - (Optional) The ARN of the Amazon SES configuration set that you want to apply to messages that you send through the channel.
 * `fromAddress` - (Required) The email address used to send emails from. You can use email only (`user@example.com`) or friendly address (`User <user@example.com>`). This field comply with [RFC 5322](https://www.ietf.org/rfc/rfc5322.txt).
 * `identity` - (Required) The ARN of an identity verified with SES.
+* `orchestration_sending_role_arn` - (Optional) The ARN of an IAM role for Amazon Pinpoint to use to send email from your campaigns or journeys through Amazon SES.
 * `roleArn` - (Optional) *Deprecated* The ARN of an IAM Role used to submit events to Mobile Analytics' event ingestion service.
 
 ## Attribute Reference
@@ -135,4 +136,4 @@ Using `terraform import`, import Pinpoint Email Channel using the `application-i
 % terraform import aws_pinpoint_email_channel.email application-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6378f9b4a01e95270fdc0e626fd068fb87d9b632a57e241b972a8df73443edf7 -->
+<!-- cache-key: cdktf-0.20.8 input-f241e136fa56c2547739a7955160cb39ed713e9e5ac76e90c67708b921512768 -->

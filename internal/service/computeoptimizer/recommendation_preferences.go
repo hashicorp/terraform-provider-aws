@@ -47,10 +47,6 @@ type recommendationPreferencesResource struct {
 	framework.WithImportByID
 }
 
-func (*recommendationPreferencesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_computeoptimizer_recommendation_preferences"
-}
-
 func (r *recommendationPreferencesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 

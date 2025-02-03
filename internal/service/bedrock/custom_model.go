@@ -60,10 +60,6 @@ type customModelResource struct {
 	framework.WithTimeouts
 }
 
-func (r *customModelResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_custom_model"
-}
-
 func (r *customModelResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	// This resource is a composition of the following APIs. These APIs do not have consitently named attributes, so we will normalize them here.
 	// - CreateModelCustomizationJob

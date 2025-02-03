@@ -28,10 +28,6 @@ type callerIdentityDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*callerIdentityDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_caller_identity"
-}
-
 func (d *callerIdentityDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

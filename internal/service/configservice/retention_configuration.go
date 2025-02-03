@@ -36,10 +36,6 @@ type retentionConfigurationResource struct {
 	framework.WithImportByID
 }
 
-func (r *retentionConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_config_retention_configuration"
-}
-
 func (r *retentionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -32,10 +32,6 @@ const (
 	DSNameDatabase = "Database data source"
 )
 
-func (d *dataSourceDatabase) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_timestreamwrite_database"
-}
-
 func (d *dataSourceDatabase) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

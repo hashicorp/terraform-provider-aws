@@ -5,18 +5,8 @@ rules:
     paths:
       exclude:
         - "internal/service/controltower"
-        - "internal/service/kafka"
-        - "internal/service/kafkaconnect"
-        - "internal/service/kendra"
-        - "internal/service/kinesis"
-        - "internal/service/kinesisvideo"
-        - "internal/service/lexmodels"
-        - "internal/service/lightsail"
-        - "internal/service/medialive"
-        - "internal/service/memorydb"
         - "internal/service/networkmanager"
         - "internal/service/networkmonitor"
-        - "internal/service/oam"
         - "internal/service/organizations"
         - "internal/service/pinpoint"
         - "internal/service/redshift"
