@@ -971,10 +971,6 @@ service "chatbot" {
     human_friendly      = "Chatbot"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "GetAccountPreferences"
   }
