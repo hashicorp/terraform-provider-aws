@@ -53,7 +53,7 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	diags := interceptedDataSourceReadHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)
+	diags := interceptedHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -185,7 +185,7 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.opts.interceptors.create(), f, w.meta)(ctx, request, response)
+	diags := interceptedHandler(w.opts.interceptors.create(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -195,7 +195,7 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)
+	diags := interceptedHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -205,7 +205,7 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.opts.interceptors.update(), f, w.meta)(ctx, request, response)
+	diags := interceptedHandler(w.opts.interceptors.update(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -215,7 +215,7 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 		return response.Diagnostics
 	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.opts.interceptors.delete(), f, w.meta)(ctx, request, response)
+	diags := interceptedHandler(w.opts.interceptors.delete(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 

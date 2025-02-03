@@ -28,17 +28,15 @@ type interceptorFunc[Request, Response any] func(context.Context, interceptorOpt
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
 type dataSourceInterceptor interface {
-	// read is invoke for a Read call.
+	// read is invoked for a Read call.
 	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) (context.Context, diag.Diagnostics)
 }
 
 type dataSourceInterceptors []dataSourceInterceptor
 
-type dataSourceInterceptorReadFunc interceptorFunc[datasource.ReadRequest, datasource.ReadResponse]
-
 // read returns a slice of interceptors that run on data source Read.
-func (s dataSourceInterceptors) read() []dataSourceInterceptorReadFunc {
-	return slices.ApplyToAll(s, func(e dataSourceInterceptor) dataSourceInterceptorReadFunc {
+func (s dataSourceInterceptors) read() []interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
+	return slices.ApplyToAll(s, func(e dataSourceInterceptor) interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
 		return e.read
 	})
 }
@@ -49,11 +47,14 @@ type ephemeralResourceInterceptor interface {
 
 type ephemeralResourceInterceptors []ephemeralResourceInterceptor
 
-type resourceCRUDRequest interface {
-	resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
+// interceptedRequest represents a Plugin Framework request type that can be intercepted.
+type interceptedRequest interface {
+	datasource.ReadRequest | resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
 }
-type resourceCRUDResponse interface {
-	resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
+
+// interceptedResponse represents a Plugin Framework response type that can be intercepted.
+type interceptedResponse interface {
+	datasource.ReadResponse | resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
 }
 
 // A resource interceptor is functionality invoked during the resource's CRUD request lifecycle.
@@ -73,32 +74,30 @@ type resourceInterceptor interface {
 
 type resourceInterceptors []resourceInterceptor
 
-type resourceInterceptorFunc[Request resourceCRUDRequest, Response resourceCRUDResponse] interceptorFunc[Request, Response]
-
 // create returns a slice of interceptors that run on resource Create.
-func (s resourceInterceptors) create() []resourceInterceptorFunc[resource.CreateRequest, resource.CreateResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) resourceInterceptorFunc[resource.CreateRequest, resource.CreateResponse] {
+func (s resourceInterceptors) create() []interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
+	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
 		return e.create
 	})
 }
 
 // read returns a slice of interceptors that run on resource Read.
-func (s resourceInterceptors) read() []resourceInterceptorFunc[resource.ReadRequest, resource.ReadResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) resourceInterceptorFunc[resource.ReadRequest, resource.ReadResponse] {
+func (s resourceInterceptors) read() []interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
+	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
 		return e.read
 	})
 }
 
 // update returns a slice of interceptors that run on resource Update.
-func (s resourceInterceptors) update() []resourceInterceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) resourceInterceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
+func (s resourceInterceptors) update() []interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
+	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
 		return e.update
 	})
 }
 
 // delete returns a slice of interceptors that run on resource Delete.
-func (s resourceInterceptors) delete() []resourceInterceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) resourceInterceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
+func (s resourceInterceptors) delete() []interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
+	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
 		return e.delete
 	})
 }
@@ -114,70 +113,8 @@ const (
 	Finally                  // Interceptor is invoked after After or OnError
 )
 
-// TODO Share the intercepted handler logic between data sources and resources..
-
-// interceptedDataSourceHandler returns a handler that invokes the specified data source Read handler, running any interceptors.
-func interceptedDataSourceReadHandler(interceptors []dataSourceInterceptorReadFunc, f func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics, c *conns.AWSClient) func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics {
-	return func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
-		var diags diag.Diagnostics
-		// Before interceptors are run first to last.
-		forward := interceptors
-
-		when := Before
-		for _, v := range forward {
-			opts := interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]{
-				c:        c,
-				diags:    diags,
-				request:  request,
-				response: response,
-				when:     when,
-			}
-			ctx, diags = v(ctx, opts)
-
-			// Short circuit if any Before interceptor errors.
-			if diags.HasError() {
-				return diags
-			}
-		}
-
-		// All other interceptors are run last to first.
-		reverse := slices.Reverse(forward)
-		diags = f(ctx, request, response)
-
-		if diags.HasError() {
-			when = OnError
-		} else {
-			when = After
-		}
-		for _, v := range reverse {
-			opts := interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]{
-				c:        c,
-				diags:    diags,
-				request:  request,
-				response: response,
-				when:     when,
-			}
-			ctx, diags = v(ctx, opts)
-		}
-
-		when = Finally
-		for _, v := range reverse {
-			opts := interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]{
-				c:        c,
-				diags:    diags,
-				request:  request,
-				response: response,
-				when:     when,
-			}
-			ctx, diags = v(ctx, opts)
-		}
-
-		return diags
-	}
-}
-
-// interceptedResourceHandler returns a handler that invokes the specified resource CRUD handler, running any interceptors.
-func interceptedResourceHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
+// interceptedHandler returns a handler that runs any interceptors.
+func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
 	return func(ctx context.Context, request Request, response *Response) diag.Diagnostics {
 		var diags diag.Diagnostics
 		// Before interceptors are run first to last.
