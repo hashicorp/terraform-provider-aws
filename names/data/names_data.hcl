@@ -1268,10 +1268,6 @@ service "cloudformation" {
     human_friendly      = "CloudFormation"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call   = "ListStackInstances"
     endpoint_api_params = "StackSetName: aws.String(\"test\")"
