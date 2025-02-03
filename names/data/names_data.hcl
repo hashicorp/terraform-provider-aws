@@ -5815,10 +5815,6 @@ service "organizations" {
     human_friendly      = "Organizations"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListAccounts"
   }
