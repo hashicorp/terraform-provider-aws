@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -15,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-type tagsCRUDFunc func(context.Context, schemaResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 // tagsResourceInterceptor implements transparent tagging for resources.
 type tagsResourceInterceptor struct {
