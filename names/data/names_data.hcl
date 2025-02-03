@@ -7925,10 +7925,6 @@ service "sts" {
     human_friendly      = "STS (Security Token)"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   env_var {
     deprecated_env_var = "AWS_STS_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_STS_ENDPOINT"
