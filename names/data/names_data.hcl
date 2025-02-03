@@ -1350,10 +1350,6 @@ service "cloudhsmv2" {
     human_friendly      = "CloudHSM"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "DescribeClusters"
   }
