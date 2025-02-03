@@ -7830,10 +7830,6 @@ service "ssoadmin" {
     human_friendly      = "SSO Admin"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListInstances"
   }
