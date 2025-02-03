@@ -264,10 +264,6 @@ service "apigatewayv2" {
     human_friendly      = "API Gateway V2"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "GetApis"
   }
