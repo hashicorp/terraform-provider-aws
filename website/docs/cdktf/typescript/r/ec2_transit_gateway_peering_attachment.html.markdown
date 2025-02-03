@@ -92,7 +92,8 @@ The `options` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -129,4 +130,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` us
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.8 input-41020aee510c0b05bb83970e5a2476a6ad33b6555e1212019aa8de77dffc534d -->
+<!-- cache-key: cdktf-0.20.8 input-5ea2b00ac9f0c8180ca8c5b14ac19cf1fc94238faacfe4cfb97c37d1d32b4db9 -->
