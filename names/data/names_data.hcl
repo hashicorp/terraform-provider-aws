@@ -607,11 +607,6 @@ service "appsync" {
     human_friendly      = "AppSync"
   }
 
-  client {
-    go_v1_client_typename = "AppSync"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListDomainNames"
   }
