@@ -1,5 +1,5 @@
 ---
-subcategory: "Meta Data Sources"
+subcategory: "Billing"
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
 description: |-
@@ -92,4 +92,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS billing service account.
 * `arn` - ARN of the AWS billing service account.
 
-<!-- cache-key: cdktf-0.20.8 input-8925e83aaf4808ed4c7dc3e71d2003c1129f36ec86722b8b5095c47d2188bd28 -->
+<!-- cache-key: cdktf-0.20.8 input-17ce35cbdad2dfd249442b9beaa5ba48d0700677cd41afaccbdb685d3a70e690 -->

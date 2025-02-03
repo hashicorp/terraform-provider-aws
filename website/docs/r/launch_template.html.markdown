@@ -458,6 +458,13 @@ Each `network_interfaces` block supports the following:
 * `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
 * `security_groups` - (Optional) A list of security group IDs to associate.
 * `subnet_id` - (Optional) The VPC Subnet ID to associate.
+* `connection_tracking_specification` - (Optional) The Connection Tracking Configuration for the network interface. See [Amazon EC2 security group connection tracking](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html#connection-tracking-timeouts)
+
+The `connection_tracking_specification` block supports the following:
+
+* `tcp_established_timeout` - (Optional) Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Default: 432000 seconds. Recommended: Less than 432000 seconds.
+* `udp_stream_timeout` - (Optional) Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
+* `udp_timeout` - (Optional) Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
 
 ### Placement
 

@@ -79,6 +79,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the attachment.
 * `applianceModeSupport` - Whether Appliance Mode support is enabled.
 * `dnsSupport` - Whether DNS support is enabled.
 * `securityGroupReferencingSupport` - Whether Security Group Referencing Support is enabled.
@@ -96,4 +97,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-b030455ca37d1b34a98947781dae1fcce49d7cedd0eb63e3d1fdd571840438bd -->
+<!-- cache-key: cdktf-0.20.8 input-2c646fced3ce6052c4197611167e29ff678c7e458ebac65504c7f76089e50453 -->
