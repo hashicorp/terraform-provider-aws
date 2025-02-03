@@ -4432,10 +4432,6 @@ service "kinesis" {
     human_friendly      = "Kinesis"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListStreams"
   }
