@@ -3559,10 +3559,6 @@ service "fms" {
     human_friendly      = "FMS (Firewall Manager)"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call   = "ListAppsLists"
     endpoint_api_params = "MaxResults: aws.Int32(1)"
