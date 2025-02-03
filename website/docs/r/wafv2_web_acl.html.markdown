@@ -820,7 +820,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `address_fields` Block
 
-* `identifier` - (Required) The name of a single primary address field.
+* `identifiers` - (Required) The names of the address fields.
 
 ### `email_field` Block
 
@@ -832,7 +832,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `phone_number_fields` Block
 
-* `identifier` - (Required) The name of a single primary phone number field.
+* `identifiers` - (Required) The names of the phone number fields.
 
 ### `username_field` Block
 
