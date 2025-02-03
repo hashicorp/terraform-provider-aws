@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -42,19 +43,35 @@ func (s dataSourceInterceptors) read() []interceptorFunc[datasource.ReadRequest,
 }
 
 type ephemeralResourceInterceptor interface {
-	// TODO implement me
+	// open is invoked for an Open call.
+	open(context.Context, interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) (context.Context, diag.Diagnostics)
+	// renew is invoked for a Renew call.
+	renew(context.Context, interceptorOptions[ephemeral.RenewRequest, ephemeral.RenewResponse]) (context.Context, diag.Diagnostics)
+	// close is invoked for a Close call.
+	close(context.Context, interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) (context.Context, diag.Diagnostics)
 }
 
 type ephemeralResourceInterceptors []ephemeralResourceInterceptor
 
-// interceptedRequest represents a Plugin Framework request type that can be intercepted.
-type interceptedRequest interface {
-	datasource.ReadRequest | resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
+// open returns a slice of interceptors that run on ephemeral resource Open.
+func (s ephemeralResourceInterceptors) open() []interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
+	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
+		return e.open
+	})
 }
 
-// interceptedResponse represents a Plugin Framework response type that can be intercepted.
-type interceptedResponse interface {
-	datasource.ReadResponse | resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
+// renew returns a slice of interceptors that run on ephemeral resource Renew.
+func (s ephemeralResourceInterceptors) renew() []interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
+	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
+		return e.renew
+	})
+}
+
+// close returns a slice of interceptors that run on ephemeral resource Renew.
+func (s ephemeralResourceInterceptors) close() []interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
+	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
+		return e.close
+	})
 }
 
 // A resource interceptor is functionality invoked during the resource's CRUD request lifecycle.
@@ -112,6 +129,16 @@ const (
 	OnError                  // Interceptor is invoked after unsuccessful call to method in schema
 	Finally                  // Interceptor is invoked after After or OnError
 )
+
+// interceptedRequest represents a Plugin Framework request type that can be intercepted.
+type interceptedRequest interface {
+	datasource.ReadRequest | ephemeral.OpenRequest | ephemeral.RenewRequest | ephemeral.CloseRequest | resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
+}
+
+// interceptedResponse represents a Plugin Framework response type that can be intercepted.
+type interceptedResponse interface {
+	datasource.ReadResponse | ephemeral.OpenResponse | ephemeral.RenewResponse | ephemeral.CloseResponse | resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
+}
 
 // interceptedHandler returns a handler that runs any interceptors.
 func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {

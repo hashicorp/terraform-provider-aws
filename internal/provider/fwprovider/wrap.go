@@ -106,8 +106,13 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	f := func(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) diag.Diagnostics {
+		w.inner.Open(ctx, request, response)
+		return response.Diagnostics
+	}
 	ctx = w.opts.bootstrapContext(ctx, w.meta)
-	w.inner.Open(ctx, request, response)
+	diags := interceptedHandler(w.opts.interceptors.open(), f, w.meta)(ctx, request, response)
+	response.Diagnostics = diags
 }
 
 func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
@@ -120,15 +125,25 @@ func (w *wrappedEphemeralResource) Configure(ctx context.Context, request epheme
 
 func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) {
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithRenew); ok {
+		f := func(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) diag.Diagnostics {
+			v.Renew(ctx, request, response)
+			return response.Diagnostics
+		}
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
-		v.Renew(ctx, request, response)
+		diags := interceptedHandler(w.opts.interceptors.renew(), f, w.meta)(ctx, request, response)
+		response.Diagnostics = diags
 	}
 }
 
 func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) {
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithClose); ok {
+		f := func(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) diag.Diagnostics {
+			v.Close(ctx, request, response)
+			return response.Diagnostics
+		}
 		ctx = w.opts.bootstrapContext(ctx, w.meta)
-		v.Close(ctx, request, response)
+		diags := interceptedHandler(w.opts.interceptors.close(), f, w.meta)(ctx, request, response)
+		response.Diagnostics = diags
 	}
 }
 

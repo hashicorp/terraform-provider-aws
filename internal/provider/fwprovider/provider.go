@@ -484,6 +484,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					continue
 				}
 
+				interceptors := ephemeralResourceInterceptors{}
 				opts := wrappedEphemeralResourceOptions{
 					// bootstrapContext is run on all wrapped methods before any interceptors.
 					bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
@@ -495,7 +496,8 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 						}
 						return ctx
 					},
-					typeName: v.TypeName,
+					interceptors: interceptors,
+					typeName:     v.TypeName,
 				}
 				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
 					return newWrappedEphemeralResource(inner, opts)
