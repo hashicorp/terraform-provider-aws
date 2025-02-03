@@ -64,6 +64,11 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"additional_configuration": testAccOrganizationConfigurationFeature_additionalConfiguration,
 			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
 		},
+		"MemberDetectorFeature": {
+			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
+			"additional_configuration": testAccMemberDetectorFeature_additionalConfiguration,
+			"multiple":                 testAccMemberDetectorFeature_multiple,
+		},
 		"ThreatIntelSet": {
 			acctest.CtBasic: testAccThreatIntelSet_basic,
 			"tags":          testAccThreatIntelSet_tags,
@@ -99,6 +104,17 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 				"a valid email associated with the AWS_GUARDDUTY_MEMBER_ACCOUNT_ID must be provided.")
 	}
 	return accountID, email
+}
+
+func testAccMemberAccountFromEnv(t *testing.T) string {
+	accountID := os.Getenv("AWS_GUARDDUTY_MEMBER_ACCOUNT_ID")
+	if accountID == "" {
+		t.Skip(
+			"Environment variable AWS_GUARDDUTY_MEMBER_ACCOUNT_ID is not set. " +
+				"To properly test GuardDuty member accounts, " +
+				"a valid AWS account ID must be provided.")
+	}
+	return accountID
 }
 
 // testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.

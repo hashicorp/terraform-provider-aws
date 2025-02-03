@@ -6,6 +6,7 @@ package cognitoidp_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -23,6 +24,7 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedGroupNameUTF8 := strings.Repeat("あ", 128)
 	resourceName := "aws_cognito_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,6 +50,13 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
+				),
+			},
+			{
+				Config: testAccUserGroupConfig_basic(poolName, updatedGroupNameUTF8),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupNameUTF8),
 				),
 			},
 		},

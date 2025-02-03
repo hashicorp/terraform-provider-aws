@@ -6,6 +6,7 @@ package cognitoidp_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -1179,6 +1180,69 @@ func TestAccCognitoIDPUserPoolClient_frameworkMigration_emptySet(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolClient_supportedIdentityProviders_utf8(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client awstypes.UserPoolClientType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool_client.test"
+	identityProvider := strings.Repeat("あ", 32)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolClientConfig_supportedIdentityProviders_utf8(rName, identityProvider),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.0", identityProvider),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPoolClient_urls_utf8(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client awstypes.UserPoolClientType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool_client.test"
+	defaultRedirectURI := "https://www.example.com/redirect/" + strings.Repeat("あ", 991)
+	logoutURL := "https://www.example.com/logout/" + strings.Repeat("あ", 993)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolClientConfig_urls_utf8(rName, defaultRedirectURI, logoutURL),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.0", defaultRedirectURI),
+					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", defaultRedirectURI),
+					resource.TestCheckResourceAttr(resourceName, "logout_urls.0", logoutURL),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccUserPoolClientImportStateIDFunc(ctx context.Context, n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[n]
@@ -1640,4 +1704,34 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 }
 `, rName))
+}
+
+func testAccUserPoolClientConfig_supportedIdentityProviders_utf8(rName, identityProvider string) string {
+	return acctest.ConfigCompose(
+		testAccIdentityProviderConfig_saml(identityProvider, rName, acctest.CtTrue),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  supported_identity_providers = [%[2]q]
+
+  depends_on = [aws_cognito_identity_provider.test]
+}
+`, rName, identityProvider))
+}
+
+func testAccUserPoolClientConfig_urls_utf8(rName, defaultRedirectUri, logoutUrl string) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolClientConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  callback_urls        = [%[2]q]
+  default_redirect_uri = %[2]q
+  logout_urls          = [%[3]q]
+}
+`, rName, defaultRedirectUri, logoutUrl))
 }
