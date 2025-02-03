@@ -220,10 +220,6 @@ service "apigateway" {
     human_friendly      = "API Gateway"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "GetAccount"
   }
