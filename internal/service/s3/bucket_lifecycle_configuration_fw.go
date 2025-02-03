@@ -14,7 +14,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -28,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -63,7 +67,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				// TODO Validate,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 63),
+				},
 			},
 			names.AttrExpectedBucketOwner: schema.StringAttribute{
 				Optional: true,
@@ -72,7 +78,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
-				// TODO Validate,
+				Validators: []validator.String{
+					fwvalidators.AWSAccountID(),
+				},
 			},
 			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			"transition_default_minimum_object_size": schema.StringAttribute{
@@ -82,7 +90,6 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 				PlanModifiers: []planmodifier.String{
 					transitionDefaultMinimumObjectSizeDefault(),
 				},
-				// TODO Validate,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -95,7 +102,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 					Attributes: map[string]schema.Attribute{
 						names.AttrID: schema.StringAttribute{
 							Required: true,
-							// TODO Validate,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 255),
+							},
 						},
 						names.AttrPrefix: schema.StringAttribute{
 							Optional:           true,
@@ -104,7 +113,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 						},
 						names.AttrStatus: schema.StringAttribute{
 							Required: true,
-							// TODO Validate,
+							Validators: []validator.String{
+								stringvalidator.OneOf(lifecycleRuleStatus_Values()...),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -176,12 +187,16 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_greater_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// TODO Validate,
+													Validators: []validator.Int64{
+														int64validator.AtLeast(0),
+													},
 												},
 												"object_size_less_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// TODO Validate,
+													Validators: []validator.Int64{
+														int64validator.AtLeast(1),
+													},
 												},
 												names.AttrPrefix: schema.StringAttribute{
 													Optional: true,
@@ -222,11 +237,15 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										// TODO Validate,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(1),
+										},
 									},
 									"noncurrent_days": schema.Int32Attribute{
 										Optional: true,
-										// TODO Validate,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(1),
+										},
 									},
 								},
 							},
@@ -237,16 +256,19 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										// TODO Validate,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(1),
+										},
 									},
 									"noncurrent_days": schema.Int32Attribute{
 										Optional: true,
-										// TODO Validate,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(0),
+										},
 									},
 									names.AttrStorageClass: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.TransitionStorageClass](),
 										Required:   true,
-										// TODO Validate,
 									},
 								},
 							},
@@ -263,7 +285,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									"days": schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
-										// TODO Validate,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(0),
+										},
 									},
 									names.AttrStorageClass: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.TransitionStorageClass](),
