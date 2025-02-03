@@ -755,6 +755,30 @@ func resourceLaunchTemplate() *schema.Resource {
 							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
+						"connection_tracking_specification": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"tcp_established_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(60, 432000),
+									},
+									"udp_stream_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(60, 180),
+									},
+									"udp_timeout": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(30, 60),
+									},
+								},
+							},
+						},
 						names.AttrDeleteOnTermination: {
 							Type:             nullable.TypeNullableBool,
 							Optional:         true,
@@ -849,30 +873,6 @@ func resourceLaunchTemplate() *schema.Resource {
 						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Optional: true,
-						},
-						"connection_tracking_specification": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"tcp_established_timeout": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(60, 432000),
-									},
-									"udp_stream_timeout": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(60, 180),
-									},
-									"udp_timeout": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(30, 60),
-									},
-								},
-							},
 						},
 					},
 				},
@@ -2027,6 +2027,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["connection_tracking_specification"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v[0].(map[string]interface{}))
+	}
+
 	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
@@ -2111,10 +2115,6 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
-	}
-
-	if v, ok := tfMap["connection_tracking_specification"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ConnectionTrackingSpecification = expandConnectionTrackingSpecification(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -2974,6 +2974,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 		tfMap["associate_public_ip_address"] = flex.BoolToStringValue(v)
 	}
 
+	if v := apiObject.ConnectionTrackingSpecification; v != nil {
+		tfMap["connection_tracking_specification"] = []interface{}{flattenConnectionTrackingSpecification(v)}
+	}
+
 	if v := apiObject.DeleteOnTermination; v != nil {
 		tfMap[names.AttrDeleteOnTermination] = flex.BoolToStringValue(v)
 	}
@@ -3068,10 +3072,6 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 
 	if v := apiObject.SubnetId; v != nil {
 		tfMap[names.AttrSubnetID] = aws.ToString(v)
-	}
-
-	if v := apiObject.ConnectionTrackingSpecification; v != nil {
-		tfMap["ebs"] = []interface{}{flattenConnectionTrackingSpecification(v)}
 	}
 
 	return tfMap
@@ -3264,7 +3264,7 @@ func expandLaunchTemplateIPv6PrefixSpecificationRequests(tfList []interface{}) [
 	return apiObjects
 }
 
-func expandConnectionTrackingSpecification(tfMap map[string]interface{}) *awstypes.ConnectionTrackingSpecificationRequest {
+func expandConnectionTrackingSpecificationRequest(tfMap map[string]interface{}) *awstypes.ConnectionTrackingSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
