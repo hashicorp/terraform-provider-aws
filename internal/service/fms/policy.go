@@ -826,7 +826,7 @@ func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap[names.AttrProtocol] = *v
+		tfMap[names.AttrProtocol] = aws.ToString(v)
 	}
 
 	tfMap["rule_action"] = apiObject.RuleAction
