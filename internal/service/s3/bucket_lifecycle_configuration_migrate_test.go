@@ -22,6 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Notes on migration testing
+//
+// Because this migration includes a schema change, the standard testing pattern described at
+// https://hashicorp.github.io/terraform-provider-aws/terraform-plugin-migrations/#testing
+// cannot be used.
+//
+// To ensure that the planned change is as expected, first create the test using the standard pattern.
+// This will either fail with a non-empty plan if there are changes or an error like
+// > Error retrieving state, there may be dangling resources: exit status 1
+// > Failed to marshal state to json: schema version 0 for aws_s3_bucket_lifecycle_configuration.test in state does not match version 1 from the provider
+// if there are no changes.
+//
+// Once the plan is as expected, remove the `PlanOnly` parameter and add `ConfigStateChecks` and `ConfigPlanChecks` checks
+
 func TestAccS3BucketLifecycleConfiguration_frameworkMigration_basic(t *testing.T) {
 	// Expected change: removes `rule[0].filter` from state
 	ctx := acctest.Context(t)
