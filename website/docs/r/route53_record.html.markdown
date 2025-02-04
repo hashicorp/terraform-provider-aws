@@ -115,9 +115,9 @@ resource "aws_route53_record" "www" {
 
 ```terraform
 resource "aws_globalaccelerator_accelerator" "main" {
-  name               = "foobar-terraform-accelerator"
-  enabled            = true
-  ip_address_type    = "IPV4"
+  name            = "foobar-terraform-accelerator"
+  enabled         = true
+  ip_address_type = "IPV4"
 }
 
 resource "aws_route53_record" "www" {
