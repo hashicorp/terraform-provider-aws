@@ -1874,6 +1874,10 @@ func checkAbortIncompleteMultipartUpload_Days(days int64) knownvalue.Check {
 	})
 }
 
+func checkExpiration_None() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{})
+}
+
 func checkExpiration_Date(date string) knownvalue.Check {
 	checks := expirationDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
@@ -1886,10 +1890,10 @@ func checkExpiration_Date(date string) knownvalue.Check {
 	})
 }
 
-func checkExpiration_Days(days int64) knownvalue.Check {
+func checkExpiration_Days(days int32) knownvalue.Check {
 	checks := expirationDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
-		"days": knownvalue.Int64Exact(days),
+		"days": knownvalue.Int32Exact(days),
 	})
 	return knownvalue.ListExact([]knownvalue.Check{
 		knownvalue.ObjectExact(
@@ -1922,13 +1926,9 @@ func expirationDefaults() map[string]knownvalue.Check {
 	return map[string]knownvalue.Check{
 		// "date":                         knownvalue.StringExact(""),
 		"date":                         knownvalue.Null(), // TODO: RFC3339 does not suppport legacy-mode autoflex
-		"days":                         knownvalue.Int64Exact(0),
+		"days":                         knownvalue.Int32Exact(0),
 		"expired_object_delete_marker": knownvalue.Bool(false),
 	}
-}
-
-func checkExpiration_None() knownvalue.Check {
-	return knownvalue.ListExact([]knownvalue.Check{})
 }
 
 func checkFilter_None() knownvalue.Check {

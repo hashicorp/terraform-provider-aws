@@ -22,6 +22,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -47,6 +50,10 @@ func newResourceBucketLifecycleConfiguration(context.Context) (resource.Resource
 	return r, nil
 }
 
+var (
+	_ resource.ResourceWithUpgradeState = &resourceBucketLifecycleConfiguration{}
+)
+
 type resourceBucketLifecycleConfiguration struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
@@ -61,6 +68,7 @@ func (r *resourceBucketLifecycleConfiguration) Metadata(_ context.Context, reque
 // Schema returns the schema for this resource.
 func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrBucket: schema.StringAttribute{
 				Required: true,
@@ -107,8 +115,11 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							},
 						},
 						names.AttrPrefix: schema.StringAttribute{
-							Optional:           true,
-							Computed:           true, // Because of Legacy value handling
+							Optional: true,
+							Computed: true, // Because of Legacy value handling
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 							DeprecationMessage: "Use filter instead",
 						},
 						names.AttrStatus: schema.StringAttribute{
@@ -142,16 +153,20 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									"date": schema.StringAttribute{
 										CustomType: timetypes.RFC3339Type{},
 										Optional:   true,
-										// Computed: true, // Because of Legacy value handling
-										// TODO Validate,
 									},
 									"days": schema.Int32Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 									},
 									"expired_object_delete_marker": schema.BoolAttribute{
 										Optional: true,
 										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
 									},
 								},
 							},
@@ -166,14 +181,23 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									"object_size_greater_than": schema.Int64Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									"object_size_less_than": schema.Int64Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -187,6 +211,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_greater_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
+													// PlanModifiers: []planmodifier.Int64{
+													// 	int64planmodifier.UseStateForUnknown(),
+													// },
 													Validators: []validator.Int64{
 														int64validator.AtLeast(0),
 													},
@@ -194,6 +221,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_less_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
+													// PlanModifiers: []planmodifier.Int64{
+													// 	int64planmodifier.UseStateForUnknown(),
+													// },
 													Validators: []validator.Int64{
 														int64validator.AtLeast(1),
 													},
@@ -201,6 +231,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												names.AttrPrefix: schema.StringAttribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
+													// PlanModifiers: []planmodifier.String{
+													// 	stringplanmodifier.UseStateForUnknown(),
+													// },
 												},
 												names.AttrTags: schema.MapAttribute{
 													ElementType: types.StringType,
@@ -237,12 +270,20 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
+										Computed: true, // Because of schema change
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
 									},
 									"noncurrent_days": schema.Int32Attribute{
 										Optional: true,
+										Computed: true, // Because of schema change
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -256,12 +297,20 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
+										Computed: true, // Because of schema change
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
 									},
 									"noncurrent_days": schema.Int32Attribute{
 										Optional: true,
+										Computed: true, // Because of schema change
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(0),
 										},
@@ -280,7 +329,6 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									"date": schema.StringAttribute{
 										CustomType: timetypes.RFC3339Type{},
 										Optional:   true,
-										// TODO Validate,
 									},
 									"days": schema.Int32Attribute{
 										Optional: true,
@@ -545,14 +593,24 @@ func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }
 
+func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := bucketLifeCycleConfigurationSchema0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeBucketLifeCycleConfigurationResourceStateV0toV1,
+		},
+	}
+}
+
 type resourceBucketLifecycleConfigurationModel struct {
 	Bucket                             types.String                                                    `tfsdk:"bucket"`
 	ExpectedBucketOwner                types.String                                                    `tfsdk:"expected_bucket_owner" autoflex:",legacy"`
 	ID                                 types.String                                                    `tfsdk:"id"`
-	TransitionDefaultMinimumObjectSize fwtypes.StringEnum[awstypes.TransitionDefaultMinimumObjectSize] `tfsdk:"transition_default_minimum_object_size" autoflex:",legacy"`
 	Rules                              fwtypes.ListNestedObjectValueOf[lifecycleRuleModel]             `tfsdk:"rule"`
-
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	TransitionDefaultMinimumObjectSize fwtypes.StringEnum[awstypes.TransitionDefaultMinimumObjectSize] `tfsdk:"transition_default_minimum_object_size" autoflex:",legacy"`
+	Timeouts                           timeouts.Value                                                  `tfsdk:"timeouts"`
 }
 
 var (
