@@ -890,42 +890,41 @@ resource "aws_fms_policy" "test" {
   resource_type         = "AWS::EC2::Subnet"
 
   security_service_policy_data {
-    type                 = "NETWORK_ACL_COMMON"
-	
+    type = "NETWORK_ACL_COMMON"
+
     managed_service_data = jsonencode({ type = "NETWORK_ACL_COMMON" })
 
-	policy_option {
-		network_acl_common_policy {
-			network_acl_entry_set {
-				first_entry {
-					egress      = false
-					protocol    = 6
-					rule_action = "deny"
-					cidr_block  = "0.0.0.0/0"
-					port_range {
-						from = 1234
-						to   = 1234
-					}
-				}
-				first_entry {
-					egress      = false
-					protocol    = 6
-					rule_action = "deny"
-					cidr_block  = "0.0.0.0/0"
-					port_range {
-						from = 2345
-						to   = 2345
-					}
-				}
-				force_remediate_for_first_entries = false
-				force_remediate_for_last_entries  = false
-			}
-		}
-	}
+    policy_option {
+      network_acl_common_policy {
+        network_acl_entry_set {
+          first_entry {
+            egress      = false
+            protocol    = 6
+            rule_action = "deny"
+            cidr_block  = "0.0.0.0/0"
+            port_range {
+              from = 1234
+              to   = 1234
+            }
+          }
+
+          first_entry {
+            egress      = false
+            protocol    = 6
+            rule_action = "deny"
+            cidr_block  = "0.0.0.0/0"
+            port_range {
+              from = 2345
+              to   = 2345
+            }
+          }
+
+          force_remediate_for_first_entries = false
+          force_remediate_for_last_entries  = false
+        }
+      }
+    }
   }
-
-
 }
-
 `, policyName, ruleGroupName))
 }
