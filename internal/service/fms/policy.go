@@ -519,7 +519,7 @@ func expandPolicyOption(tfMap map[string]interface{}) *awstypes.PolicyOption {
 	apiObject := &awstypes.PolicyOption{}
 
 	if v, ok := tfMap["network_acl_common_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkAclCommonPolicy = expandNetworkAclCommonPolicy(v[0].(map[string]interface{}))
+		apiObject.NetworkAclCommonPolicy = expandNetworkACLCommonPolicy(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["network_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -533,7 +533,7 @@ func expandPolicyOption(tfMap map[string]interface{}) *awstypes.PolicyOption {
 	return apiObject
 }
 
-func expandNetworkAclCommonPolicy(tfMap map[string]interface{}) *awstypes.NetworkAclCommonPolicy {
+func expandNetworkACLCommonPolicy(tfMap map[string]interface{}) *awstypes.NetworkAclCommonPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -541,13 +541,13 @@ func expandNetworkAclCommonPolicy(tfMap map[string]interface{}) *awstypes.Networ
 	apiObject := &awstypes.NetworkAclCommonPolicy{}
 
 	if v, ok := tfMap["network_acl_entry_set"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkAclEntrySet = expandNetworkAclEntrySet(v[0].(map[string]interface{}))
+		apiObject.NetworkAclEntrySet = expandNetworkACLEntrySet(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandNetworkAclEntrySet(tfMap map[string]interface{}) *awstypes.NetworkAclEntrySet {
+func expandNetworkACLEntrySet(tfMap map[string]interface{}) *awstypes.NetworkAclEntrySet {
 	if tfMap == nil {
 		return nil
 	}
@@ -555,7 +555,7 @@ func expandNetworkAclEntrySet(tfMap map[string]interface{}) *awstypes.NetworkAcl
 	apiObject := &awstypes.NetworkAclEntrySet{}
 
 	if v, ok := tfMap["first_entry"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.FirstEntries = expandNetworkAclEntries(v.List())
+		apiObject.FirstEntries = expandNetworkACLEntries(v.List())
 	}
 
 	if v, ok := tfMap["force_remediate_for_first_entries"].(bool); ok {
@@ -567,13 +567,13 @@ func expandNetworkAclEntrySet(tfMap map[string]interface{}) *awstypes.NetworkAcl
 	}
 
 	if v, ok := tfMap["last_entry"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.LastEntries = expandNetworkAclEntries(v.List())
+		apiObject.LastEntries = expandNetworkACLEntries(v.List())
 	}
 
 	return apiObject
 }
 
-func expandNetworkAclEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
+func expandNetworkACLEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -586,13 +586,13 @@ func expandNetworkAclEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
 			continue
 		}
 
-		apiObjects = append(apiObjects, expandNetworkAclEntry(tfMap))
+		apiObjects = append(apiObjects, expandNetworkACLEntry(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandNetworkAclEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntry {
+func expandNetworkACLEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntry {
 	apiObject := awstypes.NetworkAclEntry{}
 
 	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
@@ -604,7 +604,7 @@ func expandNetworkAclEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntr
 	}
 
 	if v, ok := tfMap["icmp_type_code"].([]interface{}); ok && len(v) > 0 {
-		apiObject.IcmpTypeCode = expandNetworkAclIcmpTypeCode(v[0].(map[string]interface{}))
+		apiObject.IcmpTypeCode = expandNetworkACLIcmpTypeCode(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["ipv6_cidr_block"].(string); ok && v != "" {
@@ -612,7 +612,7 @@ func expandNetworkAclEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntr
 	}
 
 	if v, ok := tfMap["port_range"].([]interface{}); ok && len(v) > 0 {
-		apiObject.PortRange = expandNetworkAclPortRange(v[0].(map[string]interface{}))
+		apiObject.PortRange = expandNetworkACLPortRange(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
@@ -626,7 +626,7 @@ func expandNetworkAclEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntr
 	return apiObject
 }
 
-func expandNetworkAclIcmpTypeCode(tfMap map[string]interface{}) *awstypes.NetworkAclIcmpTypeCode {
+func expandNetworkACLIcmpTypeCode(tfMap map[string]interface{}) *awstypes.NetworkAclIcmpTypeCode {
 	if tfMap == nil {
 		return nil
 	}
@@ -639,7 +639,7 @@ func expandNetworkAclIcmpTypeCode(tfMap map[string]interface{}) *awstypes.Networ
 	return apiObject
 }
 
-func expandNetworkAclPortRange(tfMap map[string]interface{}) *awstypes.NetworkAclPortRange {
+func expandNetworkACLPortRange(tfMap map[string]interface{}) *awstypes.NetworkAclPortRange {
 	if tfMap == nil {
 		return nil
 	}
@@ -728,7 +728,7 @@ func flattenPolicyOption(apiObject *awstypes.PolicyOption) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.NetworkAclCommonPolicy; v != nil {
-		tfMap["network_acl_common_policy"] = flattenNetworkAclCommonPolicy(apiObject.NetworkAclCommonPolicy)
+		tfMap["network_acl_common_policy"] = flattenNetworkACLCommonPolicy(apiObject.NetworkAclCommonPolicy)
 	}
 
 	if v := apiObject.NetworkFirewallPolicy; v != nil {
@@ -742,7 +742,7 @@ func flattenPolicyOption(apiObject *awstypes.PolicyOption) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenNetworkAclCommonPolicy(apiObject *awstypes.NetworkAclCommonPolicy) []interface{} {
+func flattenNetworkACLCommonPolicy(apiObject *awstypes.NetworkAclCommonPolicy) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -750,13 +750,13 @@ func flattenNetworkAclCommonPolicy(apiObject *awstypes.NetworkAclCommonPolicy) [
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.NetworkAclEntrySet; v != nil {
-		tfMap["network_acl_entry_set"] = flattenNetworkAclEntrySet(v)
+		tfMap["network_acl_entry_set"] = flattenNetworkACLEntrySet(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenNetworkAclEntrySet(apiObject *awstypes.NetworkAclEntrySet) []interface{} {
+func flattenNetworkACLEntrySet(apiObject *awstypes.NetworkAclEntrySet) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -764,7 +764,7 @@ func flattenNetworkAclEntrySet(apiObject *awstypes.NetworkAclEntrySet) []interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FirstEntries; v != nil {
-		tfMap["first_entry"] = flattenNetworkAclEntries(v)
+		tfMap["first_entry"] = flattenNetworkACLEntries(v)
 	}
 
 	if v := apiObject.ForceRemediateForFirstEntries; v != nil {
@@ -776,13 +776,13 @@ func flattenNetworkAclEntrySet(apiObject *awstypes.NetworkAclEntrySet) []interfa
 	}
 
 	if v := apiObject.LastEntries; v != nil {
-		tfMap["last_entry"] = flattenNetworkAclEntries(v)
+		tfMap["last_entry"] = flattenNetworkACLEntries(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenNetworkAclEntries(apiObjects []awstypes.NetworkAclEntry) []interface{} {
+func flattenNetworkACLEntries(apiObjects []awstypes.NetworkAclEntry) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -790,13 +790,13 @@ func flattenNetworkAclEntries(apiObjects []awstypes.NetworkAclEntry) []interface
 	var tfList []interface{}
 
 	for _, networkAclEntry := range apiObjects {
-		tfList = append(tfList, flattenNetworkAclEntry(networkAclEntry))
+		tfList = append(tfList, flattenNetworkACLEntry(networkAclEntry))
 	}
 
 	return tfList
 }
 
-func flattenNetworkAclEntry(apiObject awstypes.NetworkAclEntry) interface{} {
+func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CidrBlock; v != nil {
@@ -809,7 +809,7 @@ func flattenNetworkAclEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 
 	if v := apiObject.IcmpTypeCode; v != nil {
 		tfMap["icmp_type_code"] = []interface{}{map[string]interface{}{
-			"code": aws.ToInt32(v.Code),
+			"code":         aws.ToInt32(v.Code),
 			names.AttrType: aws.ToInt32(v.Type),
 		}}
 	}
