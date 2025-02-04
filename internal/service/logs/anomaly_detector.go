@@ -232,10 +232,6 @@ func (r *anomalyDetectorResource) ImportState(ctx context.Context, request resou
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
-func (r *anomalyDetectorResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findLogAnomalyDetectorByARN(ctx context.Context, conn *cloudwatchlogs.Client, arn string) (*cloudwatchlogs.GetLogAnomalyDetectorOutput, error) {
 	input := cloudwatchlogs.GetLogAnomalyDetectorInput{
 		AnomalyDetectorArn: aws.String(arn),

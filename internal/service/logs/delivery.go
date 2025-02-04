@@ -274,10 +274,6 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDeliveryByID(ctx context.Context, conn *cloudwatchlogs.Client, id string) (*awstypes.Delivery, error) {
 	input := cloudwatchlogs.GetDeliveryInput{
 		Id: aws.String(id),
