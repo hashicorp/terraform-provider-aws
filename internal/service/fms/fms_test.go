@@ -29,6 +29,7 @@ func TestAccFMS_serial(t *testing.T) {
 			"tags":                   testAccFMSPolicy_tagsSerial,
 			"update":                 testAccPolicy_update,
 			"rscSet":                 testAccPolicy_rscSet,
+			"nacl":                   testAccPolicy_nacl,
 		},
 		"ResourceSet": {
 			acctest.CtBasic:      testAccFMSResourceSet_basic,
