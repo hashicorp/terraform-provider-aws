@@ -1260,6 +1260,10 @@ resource "aws_sqs_queue" "test" {
   sqs_managed_sse_enabled           = true
   visibility_timeout_seconds        = "60"
   receive_wait_time_seconds         = "10"
+
+  timeouts {
+    create = "10m"
+  }
 }
 `, rName)
 }
