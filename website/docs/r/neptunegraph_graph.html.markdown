@@ -24,6 +24,7 @@ resource "aws_neptunegraph_graph" "example" {
   deletion_protection = false
   public_connectivity = false
   replica_count       = 1
+  kms_key_identifier  = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
 
   vector_search_configuration {
     vector_search_dimension = 128
@@ -51,6 +52,8 @@ resource "aws_neptunegraph_graph" "example" {
 - `public_connectivity` (Boolean, Default: `false`) Specifies whether the Graph can be reached over the internet. Access to all graphs requires IAM authentication.  When the Graph is publicly reachable, its Domain Name System (DNS) endpoint resolves to the public IP address from the internet.  When the Graph isn't publicly reachable, you need to create a PrivateGraphEndpoint in a given VPC to ensure the DNS name resolves to a private IP address that is reachable from the VPC.
 
 - `replica_count` (Number, Default: `1`, Forces new resource) Specifies the number of replicas you want when finished. All replicas will be provisioned in different availability zones.  Replica Count should always be less than or equal to 2.
+
+- `kms_key_identifier` (String) The ARN for the KMS encryption key. By Default, Neptune Analytics will use an AWS provided key ("AWS_OWNED_KEY"). This parameter is used if you want to encrypt the graph using a KMS Customer Managed Key (CMK).
 
 - `vector_search_configuration` (Block, Forces new resource) Vector Search Configuration (see below for nested schema of vector_search_configuration)
 
@@ -98,6 +101,6 @@ import {
 
 Using `terraform import`, import `aws_neptunegraph_graph` using the graph identifier. For example:
 
-```shell
+```console
 $ terraform import aws_neptunegraph_graph.example "graph_id"
 ```

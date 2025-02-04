@@ -178,7 +178,7 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 				Config: testAccGraphConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
