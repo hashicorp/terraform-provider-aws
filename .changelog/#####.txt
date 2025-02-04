@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_rds_shard_group
 ```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add `cluster_scalability_type` argument
+```

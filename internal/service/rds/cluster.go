@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -107,14 +108,6 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
 			},
-			names.AttrClusterIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validIdentifier,
-				ConflictsWith: []string{"cluster_identifier_prefix"},
-			},
 			"ca_certificate_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -123,6 +116,14 @@ func resourceCluster() *schema.Resource {
 			"ca_certificate_valid_till": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrClusterIdentifier: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validIdentifier,
+				ConflictsWith: []string{"cluster_identifier_prefix"},
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
@@ -141,6 +142,13 @@ func resourceCluster() *schema.Resource {
 			"cluster_resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cluster_scalability_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ClusterScalabilityType](),
 			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
@@ -1091,6 +1099,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.CACertificateIdentifier = aws.String(v.(string))
 		}
 
+		if v := d.Get("cluster_scalability_type"); v.(string) != "" {
+			input.ClusterScalabilityType = types.ClusterScalabilityType(v.(string))
+		}
+
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
@@ -1303,6 +1315,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
 		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
 	}
+	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
 	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.ToString(dbc.DBClusterIdentifier)))
 	d.Set("cluster_members", tfslices.ApplyToAll(dbc.DBClusterMembers, func(v types.DBClusterMember) string {
