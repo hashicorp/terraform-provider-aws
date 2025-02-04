@@ -100,13 +100,13 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 ## `network_acl_entry_set` Configuration Block
 
-* `first_entries` - (Optional) The rules that you want to run first in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 1 and 5000.
-* `last_entries` - (Optional) The rules that you want to run last in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 32000 and 32766.
+* `first_entry` - (Optional) The rules that you want to run first in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 1 and 5000.
+* `last_entry` - (Optional) The rules that you want to run last in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 32000 and 32766.
 * `force_remediate_for_first_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
 * `force_remediate_for_last_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
 
 
-## `first_entries` Configuration Block
+## `first_entry` Configuration Block
 
 * `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
 * `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.
@@ -116,7 +116,7 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 * `ipv6_cidr_block` - (Optional) A string value containing the IPv6 network range to allow or deny, in CIDR notation.
 * `port_range` - (Optional) A configuration block for PortRange
 
-## `last_entries` Configuration Block
+## `last_entry` Configuration Block
 
 * `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
 * `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.

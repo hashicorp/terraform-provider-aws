@@ -383,21 +383,21 @@ func testAccPolicy_nacl(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.0.egress", "false"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.0.protocol", "6"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.0.rule_action", "deny"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.0.cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.0.port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.0.port_range.0.from", "1234"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.0.port_range.0.to", "1234"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.1.egress", "false"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.1.protocol", "6"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.1.rule_action", "deny"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.1.cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.1.port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.1.port_range.0.from", "2345"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entries.1.port_range.0.to", "2345"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.egress", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.rule_action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.0.from", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.0.to", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.egress", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.rule_action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.0.from", "2345"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.0.to", "2345"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.force_remediate_for_first_entries", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.force_remediate_for_last_entries", "false"),
 				),
@@ -897,7 +897,7 @@ resource "aws_fms_policy" "test" {
 	policy_option {
 		network_acl_common_policy {
 			network_acl_entry_set {
-				first_entries {
+				first_entry {
 					egress      = false
 					protocol    = 6
 					rule_action = "deny"
@@ -907,7 +907,7 @@ resource "aws_fms_policy" "test" {
 						to   = 1234
 					}
 				}
-				first_entries {
+				first_entry {
 					egress      = false
 					protocol    = 6
 					rule_action = "deny"
