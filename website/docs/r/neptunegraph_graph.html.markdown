@@ -102,5 +102,5 @@ import {
 Using `terraform import`, import `aws_neptunegraph_graph` using the graph identifier. For example:
 
 ```console
-$ terraform import aws_neptunegraph_graph.example "graph_id"
+% terraform import aws_neptunegraph_graph.example "graph_id"
 ```

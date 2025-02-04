@@ -161,7 +161,7 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var graph neptunegraph.GetGraphOutput
+	var graph1, graph2 neptunegraph.GetGraphOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptunegraph_graph.test"
 
@@ -177,7 +177,7 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 			{
 				Config: testAccGraphConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph),
+					testAccCheckGraphExists(ctx, resourceName, &graph1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
@@ -188,6 +188,11 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 			},
 			{
 				Config: testAccGraphConfig_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGraphExists(ctx, resourceName, &graph2),
+					testAccCheckGraphNotRecreated(&graph2, &graph1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+				),
 			},
 			{
 				Config:  testAccGraphConfig_deletionProtection(rName, false),

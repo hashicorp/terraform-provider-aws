@@ -328,7 +328,6 @@ func (r *resourceGraph) Update(ctx context.Context, req resource.UpdateRequest, 
 		!plan.ProvisionedMemory.Equal(state.ProvisionedMemory) ||
 		!plan.PublicConnectivity.Equal(state.PublicConnectivity) ||
 		!plan.ReplicaCount.Equal(state.ReplicaCount) {
-
 		input := neptunegraph.UpdateGraphInput{
 			GraphIdentifier: state.Id.ValueStringPointer(),
 		}
@@ -370,7 +369,6 @@ func (r *resourceGraph) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
