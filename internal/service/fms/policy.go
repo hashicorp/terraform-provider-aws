@@ -52,7 +52,7 @@ func resourcePolicy() *schema.Resource {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cidr_block": {
+							names.AttrCIDRBlock: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -69,7 +69,7 @@ func resourcePolicy() *schema.Resource {
 											Type:     schema.TypeInt,
 											Optional: true,
 										},
-										"type": {
+										names.AttrType: {
 											Type:     schema.TypeInt,
 											Optional: true,
 										},
@@ -96,7 +96,7 @@ func resourcePolicy() *schema.Resource {
 									},
 								},
 							},
-							"protocol": {
+							names.AttrProtocol: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -595,7 +595,7 @@ func expandNetworkAclEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
 func expandNetworkAclEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntry {
 	apiObject := awstypes.NetworkAclEntry{}
 
-	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
 		apiObject.CidrBlock = aws.String(v)
 	}
 
@@ -615,7 +615,7 @@ func expandNetworkAclEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntr
 		apiObject.PortRange = expandNetworkAclPortRange(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = aws.String(v)
 	}
 
@@ -634,7 +634,7 @@ func expandNetworkAclIcmpTypeCode(tfMap map[string]interface{}) *awstypes.Networ
 	apiObject := &awstypes.NetworkAclIcmpTypeCode{}
 
 	apiObject.Code = aws.Int32(int32(tfMap["code"].(int)))
-	apiObject.Type = aws.Int32(int32(tfMap["type"].(int)))
+	apiObject.Type = aws.Int32(int32(tfMap[names.AttrType].(int)))
 
 	return apiObject
 }
@@ -800,7 +800,7 @@ func flattenNetworkAclEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CidrBlock; v != nil {
-		tfMap["cidr_block"] = aws.ToString(v)
+		tfMap[names.AttrCIDRBlock] = aws.ToString(v)
 	}
 
 	if v := apiObject.Egress; v != nil {
@@ -810,7 +810,7 @@ func flattenNetworkAclEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	if v := apiObject.IcmpTypeCode; v != nil {
 		tfMap["icmp_type_code"] = []interface{}{map[string]interface{}{
 			"code": aws.ToInt32(v.Code),
-			"type": aws.ToInt32(v.Type),
+			names.AttrType: aws.ToInt32(v.Type),
 		}}
 	}
 
@@ -826,7 +826,7 @@ func flattenNetworkAclEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = *v
+		tfMap[names.AttrProtocol] = *v
 	}
 
 	tfMap["rule_action"] = apiObject.RuleAction
