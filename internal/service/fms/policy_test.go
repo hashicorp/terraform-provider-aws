@@ -881,7 +881,7 @@ resource "aws_fms_resource_set" "test" {
 func testAccPolicyConfig_nacl(policyName, ruleGroupName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
-  depends_on = [ aws_fms_admin_account.test ]
+  depends_on = [aws_fms_admin_account.test]
 
   exclude_resource_tags = false
   name                  = %[1]q
