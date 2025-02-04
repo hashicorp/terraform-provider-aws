@@ -250,10 +250,6 @@ func (r *resourceBillingGroup) ImportState(ctx context.Context, request resource
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
-func (r *resourceBillingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findBillingGroupByName(ctx context.Context, conn *iot.Client, name string) (*iot.DescribeBillingGroupOutput, error) {
 	input := &iot.DescribeBillingGroupInput{
 		BillingGroupName: aws.String(name),
