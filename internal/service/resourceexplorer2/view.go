@@ -313,10 +313,6 @@ func (r *viewResource) Delete(ctx context.Context, request resource.DeleteReques
 	}
 }
 
-func (r *viewResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_View.html.
 type viewResourceModel struct {
 	DefaultView        types.Bool                                             `tfsdk:"default_view"`
