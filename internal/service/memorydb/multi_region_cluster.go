@@ -419,10 +419,6 @@ func (r *multiRegionClusterResource) ImportState(ctx context.Context, request re
 	resource.ImportStatePassthroughID(ctx, path.Root("multi_region_cluster_name"), request, response)
 }
 
-func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 type multiRegionClusterResourceModel struct {
 	ARN                           types.String   `tfsdk:"arn"`
 	Description                   types.String   `tfsdk:"description"`
