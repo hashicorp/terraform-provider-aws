@@ -379,10 +379,6 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *vpcConnectionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) (*awstypes.VPCConnection, error) {
 	input := &quicksight.DescribeVPCConnectionInput{
 		AwsAccountId:    aws.String(awsAccountID),
