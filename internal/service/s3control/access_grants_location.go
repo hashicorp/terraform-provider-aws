@@ -259,10 +259,6 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 	}
 }
 
-func (r *accessGrantsLocationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAccessGrantsLocationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, locationID string) (*s3control.GetAccessGrantsLocationOutput, error) {
 	input := &s3control.GetAccessGrantsLocationInput{
 		AccessGrantsLocationId: aws.String(locationID),
