@@ -394,22 +394,14 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
-							names.AttrFilter: knownvalue.ListExact([]knownvalue.Check{
+							names.AttrFilter: checkFilter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"and": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"object_size_greater_than": knownvalue.Int64Exact(500),
-											"object_size_less_than":    knownvalue.Int64Exact(64000),
-											names.AttrPrefix:           knownvalue.StringExact(rName),
-											names.AttrTags:             knownvalue.Null(),
-										}),
-									}),
-									"object_size_greater_than": knownvalue.Null(),
-									"object_size_less_than":    knownvalue.Null(),
-									names.AttrPrefix:           knownvalue.StringExact(""),
-									"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
+									"object_size_greater_than": knownvalue.Int64Exact(500),
+									"object_size_less_than":    knownvalue.Int64Exact(64000),
+									names.AttrPrefix:           knownvalue.StringExact(rName),
+									names.AttrTags:             knownvalue.Null(),
 								}),
-							}),
+							),
 							names.AttrID:                    knownvalue.StringExact(rName),
 							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
