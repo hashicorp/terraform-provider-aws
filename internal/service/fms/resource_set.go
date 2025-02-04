@@ -286,10 +286,6 @@ func (r *resourceResourceSet) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func (r *resourceResourceSet) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
