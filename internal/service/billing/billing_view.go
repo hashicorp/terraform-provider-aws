@@ -292,6 +292,16 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	state.SourceViews = flex.FlattenFrameworkStringValueListOfString(ctx, sourceViews)
 
+	resourceTags, err := findResourceTagsByARN(ctx, conn, state.ARN.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Billing, create.ErrActionSetting, ResNameView, state.ARN.String(), err),
+			err.Error(),
+		)
+	}
+
+	setTagsOut(ctx, resourceTags)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -512,6 +522,21 @@ func findSourceViewsByARN(ctx context.Context, conn *billing.Client, arn string)
 	}
 
 	return sourceViews, nil
+}
+
+func findResourceTagsByARN(ctx context.Context, conn *billing.Client, arn string) ([]awstypes.ResourceTag, error) {
+	out, err := conn.ListTagsForResource(ctx, &billing.ListTagsForResourceInput{
+		ResourceArn: aws.String(arn),
+	})
+	if err != nil {
+		tflog.Error(ctx, "Error listing resource tags for billing view", map[string]interface{}{
+			names.AttrARN: arn,
+			"error":       err.Error(),
+		})
+		return nil, err
+	}
+
+	return out.ResourceTags, nil
 }
 
 type resourceViewModel struct {
