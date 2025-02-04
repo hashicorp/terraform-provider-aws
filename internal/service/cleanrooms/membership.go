@@ -355,10 +355,6 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (r *resourceMembership) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceMembershipData struct {
 	ARN                             types.String                                                `tfsdk:"arn"`
 	CollaborationARN                types.String                                                `tfsdk:"collaboration_arn"`
