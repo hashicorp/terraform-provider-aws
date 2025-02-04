@@ -442,8 +442,9 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 					return ctx
 				},
-				interceptors: interceptors,
-				typeName:     typeName,
+				interceptors:           interceptors,
+				typeName:               typeName,
+				usesTransparentTagging: v.Tags != nil,
 			}
 			resources = append(resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)
