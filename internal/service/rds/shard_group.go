@@ -168,7 +168,7 @@ func (r *shardGroupResource) Read(ctx context.Context, request resource.ReadRequ
 
 	conn := r.Meta().RDSClient(ctx)
 
-	output, err := findShardGroupByID(ctx, conn, data.DBShardGroupResourceID.ValueString())
+	output, err := findDBShardGroupByID(ctx, conn, data.DBShardGroupResourceID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -266,16 +266,16 @@ func (r *shardGroupResource) ModifyPlan(ctx context.Context, request resource.Mo
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findShardGroupByID(ctx context.Context, conn *rds.Client, id string) (*awstypes.DBShardGroup, error) {
+func findDBShardGroupByID(ctx context.Context, conn *rds.Client, id string) (*awstypes.DBShardGroup, error) {
 	input := rds.DescribeDBShardGroupsInput{
 		DBShardGroupIdentifier: aws.String(id),
 	}
 
-	return findShardGroup(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.DBShardGroup]())
+	return findDBShardGroup(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.DBShardGroup]())
 }
 
-func findShardGroup(ctx context.Context, conn *rds.Client, input *rds.DescribeDBShardGroupsInput, filter tfslices.Predicate[*awstypes.DBShardGroup]) (*awstypes.DBShardGroup, error) {
-	output, err := findShardGroups(ctx, conn, input, filter)
+func findDBShardGroup(ctx context.Context, conn *rds.Client, input *rds.DescribeDBShardGroupsInput, filter tfslices.Predicate[*awstypes.DBShardGroup]) (*awstypes.DBShardGroup, error) {
+	output, err := findDBShardGroups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -284,7 +284,7 @@ func findShardGroup(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findShardGroups(ctx context.Context, conn *rds.Client, input *rds.DescribeDBShardGroupsInput, filter tfslices.Predicate[*awstypes.DBShardGroup]) ([]awstypes.DBShardGroup, error) {
+func findDBShardGroups(ctx context.Context, conn *rds.Client, input *rds.DescribeDBShardGroupsInput, filter tfslices.Predicate[*awstypes.DBShardGroup]) ([]awstypes.DBShardGroup, error) {
 	var output []awstypes.DBShardGroup
 
 	err := describeDBShardGroupsPages(ctx, conn, input, func(page *rds.DescribeDBShardGroupsOutput, lastPage bool) bool {
@@ -317,7 +317,7 @@ func findShardGroups(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 
 func statusShardGroup(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findShardGroupByID(ctx, conn, id)
+		output, err := findDBShardGroupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
