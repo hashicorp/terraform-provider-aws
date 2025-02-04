@@ -235,10 +235,6 @@ func (r *resourceChannelGroup) ImportState(ctx context.Context, request resource
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
-func (r *resourceChannelGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceChannelGroupData struct {
 	ARN          types.String `tfsdk:"arn"`
 	Name         types.String `tfsdk:"name"`
