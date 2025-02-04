@@ -105,7 +105,6 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 * `force_remediate_for_first_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
 * `force_remediate_for_last_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
 
-
 ## `first_entry` Configuration Block
 
 * `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
