@@ -1,4 +1,10 @@
 ## 5.86.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_instance: Properly cancel spot instance requests on destroy when `instance_lifecycle` is `spot` ([#41206](https://github.com/hashicorp/terraform-provider-aws/issues/41206))
+* resource/aws_wafv2_web_acl: Properly set `rule` during import ([#41205](https://github.com/hashicorp/terraform-provider-aws/issues/41205))
+
 ## 5.85.0 (February  3, 2025)
 
 NOTES:
