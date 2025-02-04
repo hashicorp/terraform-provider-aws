@@ -223,7 +223,6 @@ func (r *resourceGraph) Schema(ctx context.Context, req resource.SchemaRequest, 
 }
 
 func (r *resourceGraph) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	conn := r.Meta().NeptuneGraphClient(ctx)
 
 	var plan resourceGraphModel
@@ -284,7 +283,6 @@ func (r *resourceGraph) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *resourceGraph) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().NeptuneGraphClient(ctx)
 
 	var state resourceGraphModel
@@ -315,7 +313,6 @@ func (r *resourceGraph) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *resourceGraph) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().NeptuneGraphClient(ctx)
 
 	var plan, state resourceGraphModel
@@ -378,7 +375,6 @@ func (r *resourceGraph) Update(ctx context.Context, req resource.UpdateRequest, 
 }
 
 func (r *resourceGraph) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().NeptuneGraphClient(ctx)
 
 	var state resourceGraphModel
@@ -419,7 +415,7 @@ func (r *resourceGraph) Delete(ctx context.Context, req resource.DeleteRequest, 
 }
 
 func (r *resourceGraph) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceGraph) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

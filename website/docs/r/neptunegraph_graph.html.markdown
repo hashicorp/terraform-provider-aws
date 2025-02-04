@@ -19,9 +19,9 @@ Creates a Neptune Graph with 16GB provisioned memory, vector search capability w
 ```terraform
 # Create Neptune Graph
 resource "aws_neptunegraph_graph" "example" {
-  graph_name           = "example-graph-test-20250203"
-  provisioned_memory   = 16
-  deletion_protection  = false
+  graph_name          = "example-graph-test-20250203"
+  provisioned_memory  = 16
+  deletion_protection = false
   public_connectivity = false
   replica_count       = 1
 
@@ -31,7 +31,7 @@ resource "aws_neptunegraph_graph" "example" {
 
   tags = {
     "Environment" = "Development"
-    "ModifiedBy" = "AWS"
+    "ModifiedBy"  = "AWS"
   }
 }
 ```
@@ -52,17 +52,26 @@ resource "aws_neptunegraph_graph" "example" {
 
 - `replica_count` (Number, Default: `1`, Forces new resource) Specifies the number of replicas you want when finished. All replicas will be provisioned in different availability zones.  Replica Count should always be less than or equal to 2.
 
-- `vector_search_configuration` (Block, Forces new resource) Vector Search Configuration (see [below for nested schema](#nestedatt--vector_search_configuration))
+- `vector_search_configuration` (Block, Forces new resource) Vector Search Configuration (see below for nested schema of vector_search_configuration)
 
-- `tags` (Attributes Set) The tags associated with this graph. (see [below for nested schema](#nestedatt--tags))
+- `tags` (Attributes Set) The tags associated with this graph. (see below for nested schema of tags)
 
-### Read-Only
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 - `endpoint` (String) The connection endpoint for the graph. For example: `g-12a3bcdef4.us-east-1.neptune-graph.amazonaws.com`
 - `arn` (String) Graph resource ARN
 - `id` (String) The auto-generated id assigned by the service.
 
-<a id="nestedatt--tags"></a>
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
 ### Nested Schema for `tags`
 
 Optional:
@@ -70,8 +79,6 @@ Optional:
 - `key` (String) The key name of the tag. You can specify a value that is 1 to 128 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.
 - `value` (String) The value for the tag. You can specify a value that is 0 to 256 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.
 
-
-<a id="nestedatt--vector_search_configuration"></a>
 ### Nested Schema for `vector_search_configuration`
 
 Optional:
@@ -80,7 +87,16 @@ Optional:
 
 ## Import
 
-Import is supported using the following syntax:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptunegraph_graph` using the graph identifier. For example:
+
+```terraform
+import {
+  to = aws_neptunegraph_graph.example
+  id = "graph_id"
+}
+```
+
+Using `terraform import`, import `aws_neptunegraph_graph` using the graph identifier. For example:
 
 ```shell
 $ terraform import aws_neptunegraph_graph.example "graph_id"

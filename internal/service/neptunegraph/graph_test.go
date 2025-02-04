@@ -47,9 +47,9 @@ func TestAccNeptuneGraphGraph_basic(t *testing.T) {
 					testAccCheckGraphExists(ctx, resourceName, &graph),
 					resource.TestCheckResourceAttr(resourceName, "graph_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_memory", "16"),
-					resource.TestCheckResourceAttr(resourceName, "public_connectivity", "false"),
+					resource.TestCheckResourceAttr(resourceName, "public_connectivity", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replica_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "neptune-graph", regexache.MustCompile(`graph/.+$`)),
 				),
 			},
@@ -392,11 +392,11 @@ func testAccCheckGraphNotRecreated(before, after *neptunegraph.GetGraphOutput) r
 func testAccGraphConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptunegraph_graph" "test" {
-    graph_name = %[1]q
-    provisioned_memory = 16
-    public_connectivity = false
-    replica_count = 0
-    deletion_protection = false
+  graph_name          = %[1]q
+  provisioned_memory  = 16
+  public_connectivity = false
+  replica_count       = 0
+  deletion_protection = false
 }
 `, rName)
 }
@@ -404,14 +404,14 @@ resource "aws_neptunegraph_graph" "test" {
 func testAccGraphConfig_vectorSearch(rName string, dimensions int) string {
 	return fmt.Sprintf(`
 resource "aws_neptunegraph_graph" "test" {
-    graph_name = %[1]q
-    provisioned_memory = 16
-    public_connectivity = false
-    replica_count = 0
-    deletion_protection = false
-    vector_search_configuration {
-        vector_search_dimension = %[2]d
-    }
+  graph_name          = %[1]q
+  provisioned_memory  = 16
+  public_connectivity = false
+  replica_count       = 0
+  deletion_protection = false
+  vector_search_configuration {
+    vector_search_dimension = %[2]d
+  }
 }
 `, rName, dimensions)
 }
@@ -520,12 +520,12 @@ POLICY
 }
 
 resource "aws_neptunegraph_graph" "test" {
-    graph_name = %[1]q
-    provisioned_memory = 16
-    public_connectivity = false
-    replica_count = 0
-    deletion_protection = false
-    kms_key_identifier = aws_kms_key.test.arn
+  graph_name          = %[1]q
+  provisioned_memory  = 16
+  public_connectivity = false
+  replica_count       = 0
+  deletion_protection = false
+  kms_key_identifier  = aws_kms_key.test.arn
 }
 `, rName)
 }
@@ -533,30 +533,30 @@ resource "aws_neptunegraph_graph" "test" {
 func testAccGraphConfig_deletionProtection(rName string, dp bool) string {
 	return fmt.Sprintf(`
 resource "aws_neptunegraph_graph" "test" {
-    graph_name = %[1]q
-    provisioned_memory = 16
-    public_connectivity = false
-    replica_count = 0
-    deletion_protection = %[2]t
+  graph_name          = %[1]q
+  provisioned_memory  = 16
+  public_connectivity = false
+  replica_count       = 0
+  deletion_protection = %[2]t
 }
 `, rName, dp)
 }
 
 func testAccGraphConfig_nameGenerated() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_neptunegraph_graph" "test" {
-    provisioned_memory = 16
-    deletion_protection = false
+  provisioned_memory  = 16
+  deletion_protection = false
 }
-`)
+`
 }
 
 func testAccGraphConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_neptunegraph_graph" "test" {
-    provisioned_memory = 16
-    deletion_protection = false
-	graph_name_prefix = %[1]q
+  provisioned_memory  = 16
+  deletion_protection = false
+  graph_name_prefix   = %[1]q
 }
 `, namePrefix)
 }
@@ -564,11 +564,11 @@ resource "aws_neptunegraph_graph" "test" {
 func testAccGraphConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_neptunegraph_graph" "test" {
-	provisioned_memory = 16
-	deletion_protection = false
-	tags = {
-    	%[2]q = %[3]q
-	}
+  provisioned_memory  = 16
+  deletion_protection = false
+  tags = {
+    %[2]q = %[3]q
+  }
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -576,12 +576,12 @@ resource "aws_neptunegraph_graph" "test" {
 func testAccGraphConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_neptunegraph_graph" "test" {
-	provisioned_memory = 16
-	deletion_protection = false
-	tags = {
-    	%[2]q = %[3]q
-    	%[4]q = %[5]q
-	}
+  provisioned_memory  = 16
+  deletion_protection = false
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
