@@ -133,7 +133,7 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 ## `port_range` Configuration Block
 
 * `from` - (Optional) - The beginning port number of the range.
-* `to` - (Optional) - The ending port number of the range. 
+* `to` - (Optional) - The ending port number of the range.
 
 ## `network_firewall_policy` Configuration Block
 
