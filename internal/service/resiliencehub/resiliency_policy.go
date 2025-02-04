@@ -423,10 +423,6 @@ func (r *resourceResiliencyPolicy) ImportState(ctx context.Context, req resource
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
-func (r *resourceResiliencyPolicy) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 const (
 	statusChangePending = "Pending"
 	statusDeleting      = "Deleting"
