@@ -3013,6 +3013,31 @@ func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_localWriteForwarding(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "enable_local_write_forwarding", acctest.CtTrue),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
 func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
@@ -3384,31 +3409,6 @@ func testAccCheckClusterNotRecreated(i, j *types.DBCluster) resource.TestCheckFu
 
 		return nil
 	}
-}
-
-func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dbCluster types.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_localWriteForwarding(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "enable_local_write_forwarding", acctest.CtTrue),
-				),
-			},
-			testAccClusterImportStep(resourceName),
-		},
-	})
 }
 
 func testAccClusterConfig_basic(rName string) string {
@@ -6387,6 +6387,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "tfacctest"
   master_password           = "avoid-plaintext-passwords"
   skip_final_snapshot       = true
+  monitoring_interval       = 0
 }
 `, rName, tfrds.ClusterEngineMySQL)
 }
