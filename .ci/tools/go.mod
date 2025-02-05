@@ -12,7 +12,6 @@ require (
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.7.7
 	github.com/terraform-linters/tflint v0.54.0
-	github.com/uber-go/gopatch v0.4.0
 	mvdan.cc/gofumpt v0.7.0
 )
 
@@ -133,7 +132,6 @@ require (
 	github.com/google/go-github/v45 v45.2.0 // indirect
 	github.com/google/go-github/v53 v53.2.0 // indirect
 	github.com/google/go-github/v66 v66.0.0 // indirect
-	github.com/google/go-intervals v0.0.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -231,7 +229,6 @@ require (
 	github.com/owenrumney/go-sarif/v2 v2.3.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
-	github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/polyfloyd/go-errorlint v1.7.0 // indirect
