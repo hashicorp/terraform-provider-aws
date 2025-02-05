@@ -607,14 +607,14 @@ func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context)
 }
 
 func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketLifecycleConfigurationOutput, error) {
-	input := &s3.GetBucketLifecycleConfigurationInput{
+	input := s3.GetBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketLifecycleConfiguration(ctx, input)
+	output, err := conn.GetBucketLifecycleConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
 		return nil, &retry.NotFoundError{
