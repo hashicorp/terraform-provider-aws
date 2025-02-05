@@ -120,15 +120,9 @@ func (w *wrappedResource) state(f schema.StateContextFunc) schema.StateContextFu
 func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	if w.opts.usesTransparentTagging {
 		if f == nil {
-			return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-				ctx = w.opts.bootstrapContext(ctx, meta)
-				return setTagsAll(ctx, d, meta)
-			}
+			return w.customizeDiffWithBootstrappedContext(setTagsAll)
 		} else {
-			return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-				ctx = w.opts.bootstrapContext(ctx, meta)
-				return customdiff.Sequence(setTagsAll, f)(ctx, d, meta)
-			}
+			return w.customizeDiffWithBootstrappedContext(customdiff.Sequence(setTagsAll, f))
 		}
 	}
 
@@ -136,7 +130,11 @@ func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.Custo
 		return nil
 	}
 
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	return w.customizeDiffWithBootstrappedContext(f)
+}
+
+func (w *wrappedResource) customizeDiffWithBootstrappedContext(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 		ctx = w.opts.bootstrapContext(ctx, meta)
 		return f(ctx, d, meta)
 	}
