@@ -39,6 +39,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"organization":          testAccTrail_organization,
 			"logValidation":         testAccTrail_logValidation,
 			"kmsKey":                testAccTrail_kmsKey,
+			"snsTopicName":          testAccTrail_snsTopicName,
 			"tags":                  testAccTrail_tags,
 			"eventSelector":         testAccTrail_eventSelector,
 			"eventSelectorDynamoDB": testAccTrail_eventSelectorDynamoDB,

@@ -36,7 +36,7 @@ import (
 
 const iamPropagationTimeout = 2 * time.Minute
 
-// @FrameworkResource(name="Assessment")
+// @FrameworkResource("aws_auditmanager_assessment", name="Assessment")
 // @Tags(identifierAttribute="arn")
 func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessment{}, nil

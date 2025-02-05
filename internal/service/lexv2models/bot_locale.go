@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bot Locale")
+// @FrameworkResource("aws_lexv2models_bot_locale", name="Bot Locale")
 func newResourceBotLocale(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBotLocale{}
 

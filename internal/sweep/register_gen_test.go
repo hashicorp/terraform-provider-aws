@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
@@ -116,6 +117,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
@@ -195,6 +197,7 @@ func registerSweepers() {
 	backup.RegisterSweepers()
 	batch.RegisterSweepers()
 	bcmdataexports.RegisterSweepers()
+	bedrockagent.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
 	cleanrooms.RegisterSweepers()
@@ -285,6 +288,7 @@ func registerSweepers() {
 	networkmanager.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
+	organizations.RegisterSweepers()
 	pinpoint.RegisterSweepers()
 	pinpointsmsvoicev2.RegisterSweepers()
 	pipes.RegisterSweepers()

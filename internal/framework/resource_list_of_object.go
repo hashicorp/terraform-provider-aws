@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -17,28 +16,27 @@ import (
 
 // NewResourceComputedListOfObjectSchema returns a new schema.ListAttribute for objects of the specified type.
 // The list is Computed-only.
-func ResourceComputedListOfObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
+func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context, planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
-		Computed:   true,
+		CustomType:    fwtypes.NewListNestedObjectTypeOf[T](ctx),
+		Computed:      true,
+		PlanModifiers: planModifiers,
 		ElementType: types.ObjectType{
 			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),
 		},
 	}
 }
 
-// ResourceOptionalComputedListOfObjectAttribute returns a new schema.ListAttribute for objects of the specified type.
+// ResourceOptionalComputedListOfObjectsAttribute returns a new schema.ListAttribute for objects of the specified type.
 // The list is Optional+Computed.
-func ResourceOptionalComputedListOfObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
+func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
-		Optional:   true,
-		Computed:   true,
-		PlanModifiers: []planmodifier.List{
-			listplanmodifier.UseStateForUnknown(),
-		},
+		CustomType:    fwtypes.NewListNestedObjectTypeOf[T](ctx),
+		Optional:      true,
+		Computed:      true,
+		PlanModifiers: planModifiers,
 		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtMost(sizeAtMost),
 		},
 		ElementType: types.ObjectType{
 			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),

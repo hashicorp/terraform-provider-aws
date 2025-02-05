@@ -49,6 +49,8 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", autoUpdate),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -168,6 +170,69 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRekognitionProject_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_project.test"
+	feature := "CUSTOM_LABELS"
+
+	tags1 := `
+  tags = {
+    key1 = "value1"
+  }
+`
+	tags2 := `
+  tags = {
+    key1 = "value1"
+    key2 = "value2"
+  }
+`
+	tags3 := `
+  tags = {
+    key2 = "value2"
+  }
+`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccProjectPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_tags(rProjectId, tags1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				Config: testAccProjectConfig_tags(rProjectId, tags2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccProjectConfig_tags(rProjectId, tags3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProjectExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -247,4 +312,15 @@ resource "aws_rekognition_project" "test" {
   feature = "CUSTOM_LABELS"
 }
 `, rProjectId)
+}
+
+func testAccProjectConfig_tags(rName, tags string) string {
+	return fmt.Sprintf(`
+resource "aws_rekognition_project" "test" {
+  name    = %[1]q
+  feature = "CUSTOM_LABELS"
+
+%[2]s
+}
+`, rName, tags)
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Permission Sets")
+// @FrameworkDataSource("aws_ssoadmin_permission_sets", name="Permission Sets")
 func newPermissionSetsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &permissionSetsDataSource{}, nil
 }

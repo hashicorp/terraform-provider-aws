@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="IP Ranges")
+// @FrameworkDataSource("aws_ip_ranges", name="IP Ranges")
 func newIPRangesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &ipRangesDataSource{}
 

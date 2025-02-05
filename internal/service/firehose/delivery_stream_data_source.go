@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kinesis_firehose_delivery_stream")
+// @SDKDataSource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
 func dataSourceDeliveryStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeliveryStreamRead,

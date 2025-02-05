@@ -374,6 +374,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
 * `id` - ARN of the trail.
+* `sns_topic_arn` - ARN of the Amazon SNS topic that CloudTrail uses to send notifications when log files are delivered.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

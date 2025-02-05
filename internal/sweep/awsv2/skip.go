@@ -41,6 +41,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
+	// Example (GovCloud): HttpConnectionTimeoutException: Failed to connect to ...
+	if tfawserr.ErrMessageContains(err, "HttpConnectionTimeoutException", "Failed to connect to") {
+		return true
+	}
 	// Example (GovCloud): InvalidAction: DescribeDBProxies is not available in this region
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not available") {
 		return true

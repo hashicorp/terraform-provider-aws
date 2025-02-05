@@ -425,6 +425,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
 * `id` - ARN of the trail.
+* `sns_topic_arn` - ARN of the Amazon SNS topic that CloudTrail uses to send notifications when log files are delivered.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -452,4 +453,4 @@ Using `terraform import`, import Cloudtrails using the `arn`. For example:
 % terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5ed397d637a150a8f46c866261ad00abfa51b67e2e83e6d4564b95a1f22de811 -->
+<!-- cache-key: cdktf-0.20.8 input-c402e37936a1a6d8257bcc1de0d4f07144645d533464982aa9bdc696d25f5a84 -->

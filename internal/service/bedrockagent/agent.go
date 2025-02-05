@@ -43,7 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent")
+// @FrameworkResource("aws_bedrockagent_agent", name="Agent")
 // @Tags(identifierAttribute="agent_arn")
 func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentResource{}
@@ -389,7 +389,7 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	agentID := data.ID.ValueString()
 	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
+		AgentId:                aws.String(agentID),
 		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
 	})
 
