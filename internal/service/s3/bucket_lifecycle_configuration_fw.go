@@ -6,6 +6,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 	"strconv"
 	"time"
@@ -831,7 +832,8 @@ func isFilterModelZero(v *lifecycleRuleFilterModel) bool {
 func (m *lifecycleRuleModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	rule, ok := v.(awstypes.LifecycleRule)
 	if !ok {
-		return diags // TODO: return an actual error here
+		diags.Append(fwflex.DiagFlatteningIncompatibleTypes(reflect.TypeOf(v), reflect.TypeFor[lifecycleRuleModel]()))
+		return diags
 	}
 
 	d := fwflex.Flatten(ctx, rule.AbortIncompleteMultipartUpload, &m.AbortIncompleteMultipartUpload)
@@ -1003,7 +1005,8 @@ func (m lifecycleRuleAndOperatorModel) Expand(ctx context.Context) (result any, 
 func (m *lifecycleRuleAndOperatorModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	and, ok := v.(awstypes.LifecycleRuleAndOperator)
 	if !ok {
-		return diags // TODO: return an actual error here
+		diags.Append(fwflex.DiagFlatteningIncompatibleTypes(reflect.TypeOf(v), reflect.TypeFor[lifecycleRuleAndOperatorModel]()))
+		return diags
 	}
 
 	m.ObjectSizeGreaterThan = fwflex.Int64ToFrameworkLegacy(ctx, and.ObjectSizeGreaterThan)

@@ -1916,8 +1916,7 @@ func checkExpiration_Empty() knownvalue.Check {
 
 func expirationDefaults() map[string]knownvalue.Check {
 	return map[string]knownvalue.Check{
-		// "date":                         knownvalue.StringExact(""),
-		"date":                         knownvalue.Null(), // TODO: RFC3339 does not suppport legacy-mode autoflex
+		"date":                         knownvalue.Null(),
 		"days":                         knownvalue.Int32Exact(0),
 		"expired_object_delete_marker": knownvalue.Bool(false),
 	}
@@ -2073,8 +2072,7 @@ func checkTransition_StorageClass(class types.TransitionStorageClass) knownvalue
 
 func transitionDefaults(class types.TransitionStorageClass) map[string]knownvalue.Check {
 	return map[string]knownvalue.Check{
-		// "date":                 knownvalue.StringExact(""),
-		"date":                 knownvalue.Null(), // TODO: RFC3339 does not suppport legacy-mode autoflex
+		"date":                 knownvalue.Null(),
 		"days":                 knownvalue.Null(),
 		names.AttrStorageClass: tfknownvalue.StringExact(class),
 	}
