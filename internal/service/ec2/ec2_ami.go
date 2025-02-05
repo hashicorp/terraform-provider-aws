@@ -294,8 +294,6 @@ func resourceAMI() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.VirtualizationType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
