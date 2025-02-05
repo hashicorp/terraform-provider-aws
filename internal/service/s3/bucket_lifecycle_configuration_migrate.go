@@ -555,7 +555,7 @@ func stringToInt64Legacy(_ context.Context, s types.String, diags *diag.Diagnost
 		)
 		return types.Int64Unknown()
 	}
-	return types.Int64Value(int64(v))
+	return types.Int64Value(v)
 }
 
 func migrateDate(_ context.Context, old types.String, diags *diag.Diagnostics) timetypes.RFC3339 {
