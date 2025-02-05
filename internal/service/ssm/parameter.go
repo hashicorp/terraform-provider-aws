@@ -182,14 +182,14 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		value = v
 	}
 
-	valueWO, di := flex.GetWriteOnlyValue(d, cty.GetAttrPath("value_wo"), cty.String)
+	valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"), cty.String)
 	diags = append(diags, di...)
 	if diags.HasError() {
 		return diags
 	}
 
-	if !valueWO.IsNull() && valueWO.AsString() != "" {
-		value = valueWO.AsString()
+	if valueWO != "" {
+		value = valueWO
 	}
 
 	input := &ssm.PutParameterInput{
@@ -290,13 +290,13 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	hasWriteOnly := d.Get("has_value_wo").(bool)
 	rawConfig := d.GetRawConfig()
 	if !rawConfig.IsNull() {
-		valueWO, di := flex.GetWriteOnlyValue(d, cty.GetAttrPath("value_wo"), cty.String)
+		valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"), cty.String)
 		diags = append(diags, di...)
 		if diags.HasError() {
 			return diags
 		}
 
-		if !valueWO.IsNull() && valueWO.AsString() != "" {
+		if valueWO != "" {
 			hasWriteOnly = true
 		}
 	}
@@ -349,14 +349,14 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChanges("value_wo_version") {
-			valueWO, di := flex.GetWriteOnlyValue(d, cty.GetAttrPath("value_wo"), cty.String)
+			valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"), cty.String)
 			diags = append(diags, di...)
 			if diags.HasError() {
 				return diags
 			}
 
-			if !valueWO.IsNull() && valueWO.AsString() != "" {
-				value = valueWO.AsString()
+			if valueWO != "" {
+				value = valueWO
 			}
 		}
 
