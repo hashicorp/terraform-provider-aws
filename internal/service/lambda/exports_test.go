@@ -35,6 +35,7 @@ var (
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
+	InvocationParseResourceID                    = invocationParseResourceID
 
 	ValidFunctionName               = validFunctionName
 	ValidPermissionAction           = validPermissionAction
