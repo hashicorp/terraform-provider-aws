@@ -12,12 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -205,8 +207,11 @@ func TestAccSSMParameter_writeOnly(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterDestroy(ctx),
 		Steps: []resource.TestStep{
