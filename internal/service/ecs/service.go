@@ -1150,7 +1150,6 @@ func resourceService() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			capacityProviderStrategyCustomizeDiff,
 			triggersCustomizeDiff,
 		),
