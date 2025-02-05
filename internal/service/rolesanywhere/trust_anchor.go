@@ -135,7 +135,6 @@ func resourceTrustAnchor() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			customizeDiffNotificationSettings,
 		),
 	}
