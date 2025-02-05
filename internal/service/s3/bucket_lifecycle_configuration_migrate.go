@@ -354,21 +354,29 @@ type lifecycleRuleFilterModelV0 struct {
 
 // Single
 func upgradeLifecycleRuleFilterModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleFilterModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleFilterModel]) {
-	oldFilter, d := old.ToPtr(ctx)
+	oldFilters, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result
 	}
 
-	newFilter := lifecycleRuleFilterModel{
-		And:                   upgradeLifecycleRuleAndOperatorModelStateV0toV1(ctx, oldFilter.And, diags),
-		ObjectSizeGreaterThan: stringToInt64Legacy(ctx, oldFilter.ObjectSizeGreaterThan, diags),
-		ObjectSizeLessThan:    stringToInt64Legacy(ctx, oldFilter.ObjectSizeLessThan, diags),
-		Prefix:                oldFilter.Prefix,
-		Tag:                   oldFilter.Tag,
+	newFilters := make([]lifecycleRuleFilterModel, len(oldFilters))
+	for i, oldFilter := range oldFilters {
+		newFilter := lifecycleRuleFilterModel{
+			And:                   upgradeLifecycleRuleAndOperatorModelStateV0toV1(ctx, oldFilter.And, diags),
+			ObjectSizeGreaterThan: stringToInt64Legacy(ctx, oldFilter.ObjectSizeGreaterThan, diags),
+			ObjectSizeLessThan:    stringToInt64Legacy(ctx, oldFilter.ObjectSizeLessThan, diags),
+			Prefix:                oldFilter.Prefix,
+			Tag:                   oldFilter.Tag,
+		}
+		if diags.HasError() {
+			return result
+		}
+
+		newFilters[i] = newFilter
 	}
 
-	result, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &newFilter)
+	result, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, newFilters)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result

@@ -744,7 +744,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 }
 
 // Ensure backwards compatible with now-deprecated "prefix" configuration
-func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_RulePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -756,7 +756,7 @@ func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_basicPrefix(rName, "path1/"),
+				Config: testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -2175,7 +2175,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, date, prefix)
 }
 
-func testAccBucketLifecycleConfigurationConfig_basicPrefix(rName, prefix string) string {
+func testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
