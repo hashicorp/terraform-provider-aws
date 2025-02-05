@@ -204,7 +204,6 @@ func resourceQueue() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceQueueCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 
 		Schema: queueSchema,
