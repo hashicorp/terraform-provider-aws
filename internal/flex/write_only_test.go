@@ -47,11 +47,13 @@ func TestGetWriteOnlyValue(t *testing.T) {
 	}{
 		"valid value type": {
 			input:     cty.GetAttrPath("test_path"),
+			setPath:   cty.GetAttrPath("test_path"),
 			inputType: cty.String,
 			value:     cty.StringVal("test_value"),
 		},
 		"invalid value type": {
 			input:       cty.GetAttrPath("test_path"),
+			setPath:     cty.GetAttrPath("test_path"),
 			inputType:   cty.String,
 			value:       cty.BoolVal(true),
 			expectError: true,
@@ -77,6 +79,53 @@ func TestGetWriteOnlyValue(t *testing.T) {
 
 			if testCase.expectError && !diags.HasError() {
 				t.Fatalf("expected error, got none")
+			}
+		})
+	}
+}
+
+func TestGetWriteOnlyStringValue(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         cty.Path
+		setPath       cty.Path
+		inputType     cty.Type
+		value         cty.Value
+		expectedValue string
+	}{
+		"valid value": {
+			input:         cty.GetAttrPath("test_path"),
+			setPath:       cty.GetAttrPath("test_path"),
+			inputType:     cty.String,
+			value:         cty.StringVal("test_value"),
+			expectedValue: "test_value",
+		},
+		"value empty string": {
+			input:         cty.GetAttrPath("test_path"),
+			setPath:       cty.GetAttrPath("test_path"),
+			inputType:     cty.String,
+			value:         cty.StringVal(""),
+			expectedValue: "",
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			m := mockWriteOnlyAttrGetter{
+				path:  testCase.setPath,
+				value: testCase.value,
+			}
+			value, diags := flex.GetWriteOnlyStringValue(&m, testCase.input, testCase.inputType)
+
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %v", diags)
+			}
+
+			if testCase.expectedValue != value {
+				t.Fatalf("expected value: %s, got: %s", testCase.expectedValue, value)
 			}
 		})
 	}
