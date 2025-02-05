@@ -1,0 +1,13 @@
+rules:
+  - id: transparent-tagging-customizediff-in-wrapper
+    languages: [go]
+    message: Don't implement a transparent tagging CustomizeDiff function
+    paths:
+      include:
+        - "internal/service/*/*.go"
+      exclude:
+        - "internal/service/*/*_test.go"
+    patterns:
+      - pattern-regex: CustomizeDiff:\s+verify\.SetTagsDiff,
+    fix: ""
+    severity: WARNING
