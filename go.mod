@@ -12,8 +12,8 @@ require (
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/aws/aws-sdk-go-v2 v1.36.0
-	github.com/aws/aws-sdk-go-v2/config v1.29.4
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.57
+	github.com/aws/aws-sdk-go-v2/config v1.29.5
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.58
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.27
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.57
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.11
@@ -246,7 +246,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.14
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.29.14
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.14
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.12
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.13
 	github.com/aws/aws-sdk-go-v2/service/swf v1.27.17
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.31.11
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.8
