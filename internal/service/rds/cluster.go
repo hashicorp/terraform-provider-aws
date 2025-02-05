@@ -250,7 +250,7 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineModeProvisioned,
-				ValidateFunc: validation.StringInSlice(engineMode_Values(), false),
+				ValidateFunc: validation.StringInSlice(append(engineMode_Values(), ""), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -684,7 +684,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
 			Tags:                getTagsIn(ctx),
 		}
@@ -728,6 +727,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
 			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("engine_mode"); ok {
+			input.EngineMode = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -1075,7 +1078,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			Tags:                getTagsIn(ctx),
 		}
 
@@ -1149,6 +1151,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
 			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("engine_mode"); ok {
+			input.EngineMode = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
