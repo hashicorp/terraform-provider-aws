@@ -890,8 +890,6 @@ func resourceDistribution() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
