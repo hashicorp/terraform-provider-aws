@@ -981,7 +981,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(7),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1011,7 +1011,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(5),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -2281,6 +2281,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     id     = %[1]q
     status = "Enabled"
+
+    filter {
+      prefix = "prefix/"
+    }
   }
 }
 `, rName, days)
