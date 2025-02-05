@@ -90,8 +90,6 @@ func resourceGameSessionQueue() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 600),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
