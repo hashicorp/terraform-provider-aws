@@ -42,7 +42,6 @@ func resourceAuthorizer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			resourceAuthorizerCustomizeDiff,
 		),
 
