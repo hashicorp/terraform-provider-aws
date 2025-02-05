@@ -316,8 +316,6 @@ func resourceS3Endpoint() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
