@@ -295,7 +295,6 @@ func ResourceBudget() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
