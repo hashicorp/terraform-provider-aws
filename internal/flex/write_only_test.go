@@ -90,21 +90,18 @@ func TestGetWriteOnlyStringValue(t *testing.T) {
 	testCases := map[string]struct {
 		input         cty.Path
 		setPath       cty.Path
-		inputType     cty.Type
 		value         cty.Value
 		expectedValue string
 	}{
 		"valid value": {
 			input:         cty.GetAttrPath("test_path"),
 			setPath:       cty.GetAttrPath("test_path"),
-			inputType:     cty.String,
 			value:         cty.StringVal("test_value"),
 			expectedValue: "test_value",
 		},
 		"value empty string": {
 			input:         cty.GetAttrPath("test_path"),
 			setPath:       cty.GetAttrPath("test_path"),
-			inputType:     cty.String,
 			value:         cty.StringVal(""),
 			expectedValue: "",
 		},
@@ -118,7 +115,7 @@ func TestGetWriteOnlyStringValue(t *testing.T) {
 				path:  testCase.setPath,
 				value: testCase.value,
 			}
-			value, diags := flex.GetWriteOnlyStringValue(&m, testCase.input, testCase.inputType)
+			value, diags := flex.GetWriteOnlyStringValue(&m, testCase.input)
 
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %v", diags)
