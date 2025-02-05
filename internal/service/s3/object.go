@@ -62,7 +62,7 @@ func resourceObject() *schema.Resource {
 				if ignoreProviderDefaultTags(ctx, d) {
 					return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
 				}
-				return verify.SetTagsDiff(ctx, d, meta)
+				return nil
 			},
 		),
 
