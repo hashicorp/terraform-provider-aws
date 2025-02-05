@@ -115,7 +115,6 @@ func ResourceConfigurationProfile() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
