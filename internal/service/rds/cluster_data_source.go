@@ -137,6 +137,14 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"monitoring_interval": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"monitoring_role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -224,6 +232,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("monitoring_interval", dbc.MonitoringInterval)
+	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
