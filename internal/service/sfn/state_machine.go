@@ -196,7 +196,6 @@ func resourceStateMachine() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			stateMachineDefinitionValidate,
 			stateMachineUpdateComputedAttributesOnPublish,
-			verify.SetTagsDiff,
 		),
 	}
 }
