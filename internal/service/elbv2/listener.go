@@ -540,7 +540,6 @@ func resourceListener() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			validateListenerActionsCustomDiff(names.AttrDefaultAction),
 		),
 	}
