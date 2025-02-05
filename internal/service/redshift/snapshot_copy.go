@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Snapshot Copy")
+// @FrameworkResource("aws_redshift_snapshot_copy", name="Snapshot Copy")
 func newResourceSnapshotCopy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSnapshotCopy{}, nil
 }

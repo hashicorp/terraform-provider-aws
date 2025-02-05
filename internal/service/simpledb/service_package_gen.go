@@ -19,8 +19,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newDomainResource,
-			Name:    "Domain",
+			Factory:  newDomainResource,
+			TypeName: "aws_simpledb_domain",
+			Name:     "Domain",
 		},
 	}
 }

@@ -72,6 +72,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tpmSupport` - (Optional) If the image is configured for NitroTPM support, the value is `v2.0`. For more information, see [NitroTPM](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html) in the Amazon Elastic Compute Cloud User Guide.
 * `imdsSupport` - (Optional) If EC2 instances started from this image should require the use of the Instance Metadata Service V2 (IMDSv2), set this argument to `v2.0`. For more information, see [Configure instance metadata options for new instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html#configure-IMDS-new-instances-ami-configuration).
+* `uefiData` - (Optional) Base64 representation of the non-volatile UEFI variable store.
 
 When `virtualizationType` is "paravirtual" the following additional arguments apply:
 
@@ -166,4 +167,4 @@ Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
 % terraform import aws_ami.example ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-07ad6907bcdf710f44e4490525952f2744e1fd913c106b86670941ed753bd143 -->
+<!-- cache-key: cdktf-0.20.8 input-390297daf60088475b5139705e5b6dffa4cecdd13fef48eb4c1d44ff3395b69a -->

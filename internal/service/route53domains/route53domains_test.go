@@ -29,6 +29,11 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDelegationSignerRecord_basic,
 			acctest.CtDisappears: testAccDelegationSignerRecord_disappears,
 		},
+		"Domain": {
+			acctest.CtBasic:      testAccDomain_basic,
+			acctest.CtDisappears: testAccDomain_disappears,
+			"tags":               testAccDomain_tags,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

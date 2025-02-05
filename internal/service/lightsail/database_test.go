@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,7 +53,7 @@ func testAccDatabase_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", "testdatabasename"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`RelationalDatabase/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -62,6 +63,7 @@ func testAccDatabase_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttrSet(resourceName, "master_endpoint_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_endpoint_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "relational_database_name"),
 				),
 			},
 			{

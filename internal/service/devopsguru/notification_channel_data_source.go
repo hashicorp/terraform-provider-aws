@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Notification Channel")
+// @FrameworkDataSource("aws_devopsguru_notification_channel", name="Notification Channel")
 func newDataSourceNotificationChannel(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceNotificationChannel{}, nil
 }

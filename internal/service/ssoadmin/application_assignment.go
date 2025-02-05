@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Assignment")
+// @FrameworkResource("aws_ssoadmin_application_assignment", name="Application Assignment")
 func newResourceApplicationAssignment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAssignment{}, nil
 }

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="ARN")
+// @FrameworkDataSource("aws_arn", name="ARN")
 func newARNDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &arnDataSource{}
 

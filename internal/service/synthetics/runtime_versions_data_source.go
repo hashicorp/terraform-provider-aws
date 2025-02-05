@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Runtime Versions")
+// @FrameworkDataSource("aws_synthetics_runtime_versions", name="Runtime Versions")
 func newDataSourceRuntimeVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceRuntimeVersions{}, nil
 }

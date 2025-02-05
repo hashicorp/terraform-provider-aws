@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Profiling Group")
+// @FrameworkDataSource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
 func newDataSourceProfilingGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProfilingGroup{}, nil
 }

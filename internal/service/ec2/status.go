@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -671,7 +672,7 @@ func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.S
 			return nil, "", err
 		}
 
-		return output, string(output.State), nil
+		return output, strings.ToLower(string(output.State)), nil
 	}
 }
 
@@ -806,7 +807,7 @@ func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Clien
 			return nil, "", err
 		}
 
-		return output, string(output.VpcEndpointState), nil
+		return output, strings.ToLower(string(output.VpcEndpointState)), nil
 	}
 }
 

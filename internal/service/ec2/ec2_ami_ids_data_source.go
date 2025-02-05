@@ -124,9 +124,9 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		btime, _ := time.Parse(time.RFC3339, aws.ToString(b.CreationDate))
 		compare := atime.Compare(btime)
 		if d.Get("sort_ascending").(bool) {
-			return -compare
+			return compare
 		}
-		return compare
+		return -compare
 	})
 	for _, image := range filteredImages {
 		imageIDs = append(imageIDs, aws.ToString(image.ImageId))

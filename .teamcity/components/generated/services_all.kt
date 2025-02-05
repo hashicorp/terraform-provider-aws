@@ -29,6 +29,7 @@ val services = mapOf(
     "bcmdataexports" to ServiceSpec("BCM Data Exports", parallelismOverride = 5),
     "bedrock" to ServiceSpec("Bedrock"),
     "bedrockagent" to ServiceSpec("Bedrock Agents"),
+    "billing" to ServiceSpec("Billing"),
     "budgets" to ServiceSpec("Web Services Budgets"),
     "ce" to ServiceSpec("CE (Cost Explorer)"),
     "chatbot" to ServiceSpec("Chatbot"),

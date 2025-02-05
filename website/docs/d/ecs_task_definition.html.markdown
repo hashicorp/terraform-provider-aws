@@ -64,12 +64,98 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the task definition.
 * `arn` - ARN of the task definition.
 * `arn_without_revision` - ARN of the Task Definition with the trailing `revision` removed. This may be useful for situations where the latest task definition is always desired. If a revision isn't specified, the latest ACTIVE revision is used. See the [AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_StartTask.html#ECS-StartTask-request-taskDefinition) for details.
-* `execution_role_arn` - ARN of the task execution role that the Amazon ECS container agent and the Docker.
-* `family` - Family of this task definition.
-* `network_mode` - Docker networking mode to use for the containers in this task.
-* `revision` - Revision of this task definition.
-* `status` - Status of this task definition.
-* `task_role_arn` - ARN of the IAM role that containers in this task can assume.
+* `container_definitions` - A list of valid [container definitions](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html) provided as a single valid JSON document. Please note that you should only provide values that are part of the container definition document. For a detailed description of what parameters are available, see the [Task Definition Parameters](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) section from the official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
+* `cpu` - Number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
+* `enable_fault_injection` - Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
+* `ephemeral_storage` - The amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage).
+* `execution_role_arn` - ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
+* `family` - A unique name for your task definition.
+The following arguments are optional:
+* `inference_accelerator` - Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
+* `ipc_mode` - IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
+* `memory` - Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
+* `network_mode` - Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
+* `pid_mode` - Process namespace to use for the containers in the task. The valid values are `host` and `task`.
+* `placement_constraints` - Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints).
+* `proxy_configuration` - Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration)
+* `requires_compatibilities` - Set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
+* `revision` - Revision of the task in a particular family.
+* `runtime_platform` - Configuration block for [runtime_platform](#runtime_platform) that containers in your task may use.
+* `status` - Status of the task definition.
+* `task_role_arn` - ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `volume` - Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
+
+### ephemeral_storage
+
+* `size_in_gib` - The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
+
+### inference_accelerator
+
+* `device_name` - Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
+* `device_type` - Elastic Inference accelerator type to use.
+
+### placement_constraints
+
+* `expression` -  Cluster Query Language expression to apply to the constraint. For more information, see [Cluster Query Language in the Amazon EC2 Container Service Developer Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html).
+* `type` - Type of constraint. Use `memberOf` to restrict selection to a group of valid candidates. Note that `distinctInstance` is not supported in task definitions.
+
+### proxy_configuration
+
+* `container_name` - Name of the container that will serve as the App Mesh proxy.
+* `properties` - Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
+* `type` - Proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
+
+### runtime_platform
+
+* `operating_system_family` - If the `requires_compatibilities` is `FARGATE` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
+* `cpu_architecture` - Must be set to either `X86_64` or `ARM64`; see [cpu architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
+
+### volume
+
+* `configure_at_launch` - Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
+* `docker_volume_configuration` - Configuration block to configure a [docker volume](#docker_volume_configuration). Detailed below.
+* `efs_volume_configuration` - Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
+* `fsx_windows_file_server_volume_configuration` - Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
+* `host_path` - Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `name` - Name of the volume. This name is referenced in the `sourceVolume`
+parameter of container definition in the `mountPoints` section.
+
+### docker_volume_configuration
+
+For more information, see [Specifying a Docker volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-volumes.html#specify-volume-config)
+
+* `autoprovision` - If this value is `true`, the Docker volume is created if it does not already exist. *Note*: This field is only used if the scope is `shared`.
+* `driver_opts` - Map of Docker driver specific options.
+* `driver` - Docker volume driver to use. The driver value must match the driver name provided by Docker because it is used for task placement.
+* `labels` - Map of custom metadata to add to your Docker volume.
+* `scope` - Scope for the Docker volume, which determines its lifecycle, either `task` or `shared`.  Docker volumes that are scoped to a `task` are automatically provisioned when the task starts and destroyed when the task stops. Docker volumes that are scoped as `shared` persist after the task stops.
+
+### efs_volume_configuration
+
+For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
+
+* `authorization_config` - Configuration block for [authorization](#efs_volume_configuration-authorization_config) for the Amazon EFS file system. Detailed below.
+* `file_system_id` - ID of the EFS File System.
+* `root_directory` - Directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter. This argument is ignored when using `authorization_config`.
+* `transit_encryption` - Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
+* `transit_encryption_port` - Port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
+
+#### efs_volume_configuration authorization_config
+
+* `access_point_id` - Access point ID to use. If an access point is specified, the root directory value will be relative to the directory set for the access point. If specified, transit encryption must be enabled in the EFSVolumeConfiguration.
+* `iam` - Whether or not to use the Amazon ECS task IAM role defined in a task definition when mounting the Amazon EFS file system. If enabled, transit encryption must be enabled in the EFSVolumeConfiguration. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
+
+### fsx_windows_file_server_volume_configuration
+
+For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
+
+* `file_system_id` - The Amazon FSx for Windows File Server file system ID to use.
+* `root_directory` - The directory within the Amazon FSx for Windows File Server file system to mount as the root directory inside the host.
+* `authorization_config` - Configuration block for [authorization](#fsx_windows_file_server_volume_configuration-authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
+
+#### fsx_windows_file_server_volume_configuration authorization_config
+
+* `credentials_parameter` - The authorization credential option to use. The authorization credential options can be provided using either the Amazon Resource Name (ARN) of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
+* `domain` - A fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.
