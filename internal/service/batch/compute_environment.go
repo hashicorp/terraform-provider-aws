@@ -49,7 +49,6 @@ func resourceComputeEnvironment() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceComputeEnvironmentCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
