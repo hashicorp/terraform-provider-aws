@@ -10,7 +10,7 @@ description: |-
 
 Allows you to set a policy of an SQS Queue while referencing the ARN of the queue within the policy.
 
-~> **Note:** AWS will hang indefinitely when creating or updating an [`aws_sqs_queue`](/docs/providers/aws/r/sqs_queue.html) with an associated policy if `Version = "2012-10-17"` is not explicitly set in the policy. [See below](#timeout-problems-creatingupdating) for an example of how to avoid this issue.
+!> AWS will hang indefinitely when creating or updating an [`aws_sqs_queue`](/docs/providers/aws/r/sqs_queue.html) with an associated policy if `Version = "2012-10-17"` is not explicitly set in the policy. [See below](#timeout-problems-creatingupdating) for an example of how to avoid this issue.
 
 ## Example Usage
 
