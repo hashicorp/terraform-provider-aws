@@ -449,8 +449,8 @@ github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.25.15 h1:ra
 github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.25.15/go.mod h1:6rAnz10bz4TDa+1p3pqxQN+jarqA0YZPjuBCaedvKFU=
 github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.14 h1:tt/mTHuPWqRqenACsN5pgHTYXNgouNK7IDGr2k4htAw=
 github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.14/go.mod h1:r8Pdor3el/OV2LUmY3krvb9dJC0StTftCTcTtyJmfCE=
-github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.11 h1:/JPtq5X3KJPcaHXDDlhcIMQ90q/HoH2gKfkemwv8+a0=
-github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.11/go.mod h1:epPOCbqhKpEDhhIvguqlOgBSmorhet4KW3Ai50KUSRk=
+github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.12 h1:lEzdWgNdHL5mYA072/X490wWQYI/geZBLTC+i+iIT9A=
+github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.12/go.mod h1:epPOCbqhKpEDhhIvguqlOgBSmorhet4KW3Ai50KUSRk=
 github.com/aws/aws-sdk-go-v2/service/rum v1.21.14 h1:JcadCFkR9RqDfQA7kjNSlYfPa+khjmDfyDE0czbWOsU=
 github.com/aws/aws-sdk-go-v2/service/rum v1.21.14/go.mod h1:20lBsfesFDDr4jzQ39czpL+e6OkrZQKKgL5BVK8FFCA=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.75.3 h1:JBod0SnNqcWQ0+uAyzeRFG1zCHotW8DukumYYyNy0zo=
