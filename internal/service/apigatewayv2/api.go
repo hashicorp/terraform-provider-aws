@@ -166,8 +166,6 @@ func resourceAPI() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
