@@ -34,10 +34,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	// Imports needed if protocol version 6 becomes supported - ability to move
-	// vector_search_configuration into attributes vs. using blocks:
-	//
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 )
 
 // @FrameworkResource("aws_neptunegraph_graph", name="Graph")
@@ -164,32 +160,6 @@ func (r *resourceGraph) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			// Preferred configuration for vector_search_configuration, though currently
-			// not supported in protocol version 5.  Leaving here for when (if ever?)
-			// protocol version 6 becomes supported:
-			//
-			// "vector_search_configuration": schema.SingleNestedAttribute{
-			// 	Attributes: map[string]schema.Attribute{
-			// 		"vector_search_dimension": schema.Int32Attribute{
-			// 			Description: "Specifies the number of dimensions for vector embeddings.  Value must be between 1 and 65,535.",
-			// 			Optional:    true,
-			// 			Computed:    true,
-			// 			Validators: []validator.Int32{
-			// 				int32validator.Between(1, 65535),
-			// 			},
-			// 			PlanModifiers: []planmodifier.Int32{
-			// 				int32planmodifier.UseStateForUnknown(),
-			// 			},
-			// 		},
-			// 	},
-			// 	Description: "Vector search configuration for the Neptune Graph",
-			// 	Optional:    true,
-			// 	Computed:    true,
-			// 	PlanModifiers: []planmodifier.Object{ /*START PLAN MODIFIERS*/
-			// 		objectplanmodifier.UseStateForUnknown(),
-			// 		objectplanmodifier.RequiresReplaceIfConfigured(),
-			// 	},
-			// },
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -367,8 +337,8 @@ func (r *resourceGraph) Update(ctx context.Context, req resource.UpdateRequest, 
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -532,11 +502,6 @@ type resourceGraphModel struct {
 	TagsAll                   tftags.Map                                                 `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                             `tfsdk:"timeouts"`
 	VectorSearchConfiguration fwtypes.ListNestedObjectValueOf[vectorSearchConfiguration] `tfsdk:"vector_search_configuration"`
-
-	// Change required if protocol version 6 becomes supported.  Allows
-	// vector_search_configuration to be a nested attribute vs. a block.
-	//
-	//VectorSearchConfiguration *vectorSearchConfiguration `tfsdk:"vector_search_configuration"`
 }
 
 type vectorSearchConfiguration struct {
