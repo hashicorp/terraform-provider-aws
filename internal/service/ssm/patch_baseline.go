@@ -27,7 +27,6 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -239,7 +238,6 @@ func resourcePatchBaseline() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
