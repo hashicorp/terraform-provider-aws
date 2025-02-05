@@ -201,8 +201,6 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
