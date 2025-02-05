@@ -14,6 +14,21 @@ type writeOnlyAttrGetter interface {
 	Id() string
 }
 
+// GetWriteOnlyStringValue returns the string value of the write-only attribute from the config.
+func GetWriteOnlyStringValue(d writeOnlyAttrGetter, path cty.Path, attrType cty.Type) (string, diag.Diagnostics) {
+	valueWO, diags := GetWriteOnlyValue(d, path, attrType)
+	if diags.HasError() {
+		return "", diags
+	}
+
+	var value string
+	if attrType == cty.String && !valueWO.IsNull() {
+		value = valueWO.AsString()
+	}
+
+	return value, diags
+}
+
 // GetWriteOnlyValue returns the value of the write-only attribute from the config.
 func GetWriteOnlyValue(d writeOnlyAttrGetter, path cty.Path, attrType cty.Type) (cty.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
