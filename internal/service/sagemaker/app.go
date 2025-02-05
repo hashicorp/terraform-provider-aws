@@ -117,8 +117,6 @@ func resourceApp() *schema.Resource {
 				ExactlyOneOf: []string{"space_name", "user_profile_name"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
