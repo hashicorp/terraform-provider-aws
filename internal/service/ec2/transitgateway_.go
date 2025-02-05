@@ -56,7 +56,6 @@ func resourceTransitGateway() *schema.Resource {
 				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == string(awstypes.DefaultRouteTablePropagationValueDisable) && new.(string) == string(awstypes.DefaultRouteTablePropagationValueEnable)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

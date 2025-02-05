@@ -49,7 +49,6 @@ func resourceEBSVolume() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceEBSVolumeCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

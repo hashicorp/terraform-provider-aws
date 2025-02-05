@@ -1011,7 +1011,6 @@ func resourceLaunchTemplate() *schema.Resource {
 				}
 				return false
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }

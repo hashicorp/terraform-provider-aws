@@ -52,7 +52,6 @@ func resourceFleet() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			resourceFleetCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

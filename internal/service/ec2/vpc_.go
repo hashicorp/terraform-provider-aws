@@ -67,7 +67,6 @@ func resourceVPC() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			resourceVPCCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 
 		SchemaVersion: 1,
