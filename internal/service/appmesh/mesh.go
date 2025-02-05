@@ -73,8 +73,6 @@ func resourceMesh() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
