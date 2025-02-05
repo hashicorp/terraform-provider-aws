@@ -136,7 +136,6 @@ func resourceMonitor() *schema.Resource {
 				AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
