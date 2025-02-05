@@ -179,8 +179,8 @@ github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.11.9 h1:7aRLWCjZAP1n
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.11.9/go.mod h1:eIMAhLgKbdrdUPG5mvGPEQe1oUV1N71+8PZFJlUQu+o=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.44.7 h1:uXCuWurZQugJ4NTPxZNTytUqBxfe/1k5j2Rjqww9Gco=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.44.7/go.mod h1:teW5GV5JltABUmla6HP3ZZ4n0I/fJwYD39gg9z3LeOw=
-github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.45.9 h1:FSy23vME095ZXc33e43QogqEcro9zuW5m3m8PfGkss0=
-github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.45.9/go.mod h1:y2VgszyuYKCggt4b0Ess+3z4IVMm1KCkbhrbfas3oR0=
+github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.46.0 h1:bwEVdYeKllfziwLo2RjaRvMUmp89rDlQTk62XRmAK90=
+github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.46.0/go.mod h1:y2VgszyuYKCggt4b0Ess+3z4IVMm1KCkbhrbfas3oR0=
 github.com/aws/aws-sdk-go-v2/service/databrew v1.33.14 h1:Bu9XsWl47170NaFc5lm/koIVdkJ6dd7JWTgycSPaE5Y=
 github.com/aws/aws-sdk-go-v2/service/databrew v1.33.14/go.mod h1:flSFM+ZV4rBBy8Foy/WzdCSNgwsM9tIPqp+VuIz8I9M=
 github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.12 h1:osqlr1TsRisS9EimU+gLGpYhuShrdSd4UVB1btLhWFQ=
