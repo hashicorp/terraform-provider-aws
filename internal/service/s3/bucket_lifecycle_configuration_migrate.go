@@ -280,23 +280,22 @@ type abortIncompleteMultipartUploadModelV0 struct {
 
 // Single
 func upgradeAbortIncompleteMultipartStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[abortIncompleteMultipartUploadModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[abortIncompleteMultipartUploadModel]) {
-	oldThing, d := old.ToPtr(ctx)
+	oldThings, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result
 	}
 
-	if oldThing == nil {
-		result, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []abortIncompleteMultipartUploadModel{})
-		diags.Append(d...)
-		return result
+	newThings := make([]abortIncompleteMultipartUploadModel, len(oldThings))
+	for i, oldThing := range oldThings {
+		newThing := abortIncompleteMultipartUploadModel{
+			DaysAfterInitiation: types.Int32Value(fwflex.Int32ValueFromFramework(ctx, oldThing.DaysAfterInitiation)),
+		}
+
+		newThings[i] = newThing
 	}
 
-	newThing := abortIncompleteMultipartUploadModel{
-		DaysAfterInitiation: types.Int32Value(fwflex.Int32ValueFromFramework(ctx, oldThing.DaysAfterInitiation)),
-	}
-
-	result, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &newThing)
+	result, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, newThings)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result
@@ -313,29 +312,27 @@ type lifecycleExpirationModelV0 struct {
 
 // Single
 func upgradeLifecycleExpirationModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleExpirationModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleExpirationModel]) {
-	oldExpiration, d := old.ToPtr(ctx)
+	oldExpirations, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result
 	}
 
-	if oldExpiration == nil {
-		result, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []lifecycleExpirationModel{})
-		diags.Append(d...)
-		return result
+	newThings := make([]lifecycleExpirationModel, len(oldExpirations))
+	for i, oldExpiration := range oldExpirations {
+		newExpiration := lifecycleExpirationModel{
+			Date:                      migrateDate(ctx, oldExpiration.Date, diags),
+			Days:                      int64ToInt32(ctx, oldExpiration.Days),
+			ExpiredObjectDeleteMarker: oldExpiration.ExpiredObjectDeleteMarker,
+		}
+		if diags.HasError() {
+			return result
+		}
+
+		newThings[i] = newExpiration
 	}
 
-	newExpiration := lifecycleExpirationModel{
-		Date:                      migrateDate(ctx, oldExpiration.Date, diags),
-		Days:                      int64ToInt32(ctx, oldExpiration.Days),
-		ExpiredObjectDeleteMarker: oldExpiration.ExpiredObjectDeleteMarker,
-	}
-
-	if diags.HasError() {
-		return result
-	}
-
-	result, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &newExpiration)
+	result, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, newThings)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result
@@ -395,26 +392,25 @@ type lifecycleRuleAndOperatorModelV0 struct {
 
 // Single
 func upgradeLifecycleRuleAndOperatorModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModel]) {
-	oldThing, d := old.ToPtr(ctx)
+	oldThings, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result
 	}
 
-	if oldThing == nil {
-		result, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []lifecycleRuleAndOperatorModel{})
-		diags.Append(d...)
-		return result
+	newThings := make([]lifecycleRuleAndOperatorModel, len(oldThings))
+	for i, oldThing := range oldThings {
+		newThing := lifecycleRuleAndOperatorModel{
+			ObjectSizeGreaterThan: oldThing.ObjectSizeGreaterThan,
+			ObjectSizeLessThan:    oldThing.ObjectSizeLessThan,
+			Prefix:                oldThing.Prefix,
+			Tags:                  oldThing.Tags,
+		}
+
+		newThings[i] = newThing
 	}
 
-	newThing := lifecycleRuleAndOperatorModel{
-		ObjectSizeGreaterThan: oldThing.ObjectSizeGreaterThan,
-		ObjectSizeLessThan:    oldThing.ObjectSizeLessThan,
-		Prefix:                oldThing.Prefix,
-		Tags:                  oldThing.Tags,
-	}
-
-	result, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &newThing)
+	result, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, newThings)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result
@@ -441,6 +437,9 @@ func upgradeNoncurrentVersionExpirationModelStateV0toV1(ctx context.Context, old
 		newThing := noncurrentVersionExpirationModel{
 			NewerNoncurrentVersions: stringToInt32Legacy(ctx, oldThing.NewerNoncurrentVersions, diags),
 			NoncurrentDays:          types.Int32Value(fwflex.Int32ValueFromFrameworkInt64(ctx, oldThing.NoncurrentDays)),
+		}
+		if diags.HasError() {
+			return result
 		}
 
 		newThings[i] = newThing
