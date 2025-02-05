@@ -1,5 +1,9 @@
 ## 5.86.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_fms_policy: Add `security_service_policy_data.policy_option.network_acl_common_policy` argument to allow creation of FMS-managed NACL rules ([#41219](https://github.com/hashicorp/terraform-provider-aws/issues/41219))
+
 BUG FIXES:
 
 * resource/aws_instance: Properly cancel spot instance requests on destroy when `instance_lifecycle` is `spot` ([#41206](https://github.com/hashicorp/terraform-provider-aws/issues/41206))
