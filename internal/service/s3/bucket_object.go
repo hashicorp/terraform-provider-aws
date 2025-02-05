@@ -55,7 +55,6 @@ func resourceBucketObject() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceBucketObjectCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
