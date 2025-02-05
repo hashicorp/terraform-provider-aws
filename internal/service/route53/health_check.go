@@ -184,7 +184,6 @@ func resourceHealthCheck() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			triggersCustomizeDiff,
 		),
 	}
