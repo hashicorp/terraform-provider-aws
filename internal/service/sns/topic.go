@@ -254,7 +254,6 @@ func resourceTopic() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceTopicCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 
 		Schema: topicSchema,
