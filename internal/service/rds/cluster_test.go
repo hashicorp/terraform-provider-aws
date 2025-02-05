@@ -3129,6 +3129,33 @@ func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_auroraLimitless(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	// var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_auroraLimitless(rName),
+				ExpectError: regexache.MustCompile(`You must set the Enhanced Monitoring interval to a value larger than 0 when Aurora Limitless Database is enabled on the DB cluster`),
+				// Check: resource.ComposeTestCheckFunc(
+				// 	testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				// ),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
@@ -6192,4 +6219,24 @@ resource "aws_rds_cluster" "test" {
   performance_insights_retention_period = 62
 }
 `, rName, tfrds.ClusterEngineMySQL)
+}
+
+func testAccClusterConfig_auroraLimitless(rName string) string {
+	return fmt.Sprintf(`
+# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless-create-cluster.html.
+resource "aws_rds_cluster" "test" {
+  cluster_identifier                    = %[1]q
+  engine                                = "aurora-postgresql"
+  engine_version                        = "16.6-limitless"
+  engine_mode                           = ""
+  storage_type                          = "aurora-iopt1"
+  cluster_scalability_type              = "limitless"
+  master_username                       = "tfacctest"
+  master_password                       = "avoid-plaintext-passwords"
+  skip_final_snapshot                   = true
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 31
+  enabled_cloudwatch_logs_exports       = ["postgresql"]
+}
+`, rName)
 }
