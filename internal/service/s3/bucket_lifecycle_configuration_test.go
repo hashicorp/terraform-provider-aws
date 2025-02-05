@@ -1062,7 +1062,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1117,7 +1117,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1167,7 +1167,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1217,7 +1217,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1269,7 +1269,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1298,7 +1298,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1335,7 +1335,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkFilter_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2427,6 +2427,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   rule {
     id = %[1]q
 
+    filter {
+      prefix = "prefix/"
+    }
+
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
     }
@@ -2457,6 +2461,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
   rule {
     id = %[1]q
+
+    filter {
+      prefix = "prefix/"
+    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
@@ -2489,6 +2497,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
   rule {
     id = %[1]q
+
+    filter {
+      prefix = "prefix/"
+    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
