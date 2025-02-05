@@ -46,9 +46,9 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 		QueueUrl:   aws.String(url),
 	}
 
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
+	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, deadline.Remaining(), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (interface{}, error) {
 		return conn.SetQueueAttributes(ctx, input)
 	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 
