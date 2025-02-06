@@ -146,9 +146,10 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	output, err := conn.GetDataIntegration(ctx, &appintegrations.GetDataIntegrationInput{
+	input := appintegrations.GetDataIntegrationInput{
 		Identifier: aws.String(d.Id()),
-	})
+	}
+	output, err := conn.GetDataIntegration(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] AppIntegrations Data Integration (%s) not found, removing from state", d.Id())
@@ -180,11 +181,12 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	if d.HasChanges(names.AttrDescription, names.AttrName) {
-		_, err := conn.UpdateDataIntegration(ctx, &appintegrations.UpdateDataIntegrationInput{
+		input := appintegrations.UpdateDataIntegrationInput{
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			Identifier:  aws.String(d.Id()),
 			Name:        aws.String(d.Get(names.AttrName).(string)),
-		})
+		}
+		_, err := conn.UpdateDataIntegration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating AppIntegrations Data Integration (%s): %s", d.Id(), err)
@@ -199,9 +201,10 @@ func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	_, err := conn.DeleteDataIntegration(ctx, &appintegrations.DeleteDataIntegrationInput{
+	input := appintegrations.DeleteDataIntegrationInput{
 		DataIntegrationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataIntegration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting AppIntegrations Data Integration (%s): %s", d.Id(), err)
