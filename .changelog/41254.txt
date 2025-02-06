@@ -13,3 +13,11 @@ data-source/aws_rds_cluster: Add `cluster_scalability_type` attribute
 ```release-note:enhancement
 resource/aws_rds_cluster: Support `""` as a valid value for `engine_mode`
 ```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add `database_insights_mode` argument
+```
+
+```release-note:enhancement
+data-source/aws_rds_cluster: Add `database_insights_mode` attribute
+```

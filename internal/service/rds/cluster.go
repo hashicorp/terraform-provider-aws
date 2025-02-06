@@ -155,6 +155,12 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"database_insights_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.DatabaseInsightsMode](),
+			},
 			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1138,6 +1144,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ClusterScalabilityType = types.ClusterScalabilityType(v.(string))
 		}
 
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+		}
+
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
@@ -1370,6 +1380,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}))
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
+	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.
@@ -1544,6 +1555,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("copy_tags_to_snapshot") {
 			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
+
+		if d.HasChange("database_insights_mode") {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
 		}
 
 		if d.HasChange("db_cluster_instance_class") {

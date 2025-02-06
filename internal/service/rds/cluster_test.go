@@ -91,6 +91,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_scalability_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", "standard"),
 					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", acctest.CtTrue),
