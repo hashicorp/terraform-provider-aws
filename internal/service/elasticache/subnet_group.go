@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -73,9 +72,7 @@ func resourceSubnetGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceSubnetGroupCustomizeDiff,
-		),
+		CustomizeDiff: resourceSubnetGroupCustomizeDiff,
 	}
 }
 
