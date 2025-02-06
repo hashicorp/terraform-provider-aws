@@ -13,10 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,11 +26,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_macie2_classification_job", name="Classification Job")
-// @Tags
+// @Tags(identifierAttribute="arn")
 func resourceClassificationJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationJobCreate,
@@ -44,6 +44,10 @@ func resourceClassificationJob() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrCreatedAt: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"custom_data_identifier_ids": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -51,39 +55,37 @@ func resourceClassificationJob() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"schedule_frequency": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"daily_schedule": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
-						},
-						"weekly_schedule": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
-						},
-						"monthly_schedule": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
-						},
-					},
-				},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
-			"sampling_percentage": {
-				Type:     schema.TypeInt,
+			"initial_run": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+			},
+			"job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"job_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"job_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused), false),
+			},
+			"job_type": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
 			},
 			names.AttrName: {
 				Type:          schema.TypeString,
@@ -100,24 +102,6 @@ func resourceClassificationJob() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 500-id.UniqueIDSuffixLength),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"initial_run": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"job_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
 			},
 			"s3_job_definition": {
 				Type:     schema.TypeList,
@@ -512,36 +496,52 @@ func resourceClassificationJob() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			"sampling_percentage": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"schedule_frequency": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"daily_schedule": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
+						},
+						"weekly_schedule": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
+						},
+						"monthly_schedule": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
+						},
+					},
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"job_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused), false),
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"user_paused_details": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"job_imminent_expiration_health_event_arn": {
+						"job_expires_at": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"job_expires_at": {
+						"job_imminent_expiration_health_event_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -553,7 +553,16 @@ func resourceClassificationJob() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: resourceClassificationJobCustomizeDiff,
+
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			resourceClassificationJobCustomizeDiff,
+		),
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(4 * time.Minute),
+			Update: schema.DefaultTimeout(4 * time.Minute),
+		},
 	}
 }
 
@@ -585,13 +594,13 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 
 func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.CreateClassificationJobInput{
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))),
 		JobType:         awstypes.JobType(d.Get("job_type").(string)),
+		Name:            aws.String(name),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -599,43 +608,32 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("custom_data_identifier_ids"); ok {
 		input.CustomDataIdentifierIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("schedule_frequency"); ok {
-		input.ScheduleFrequency = expandScheduleFrequency(v.([]interface{}))
-	}
-	if v, ok := d.GetOk("sampling_percentage"); ok {
-		input.SamplingPercentage = aws.Int32(int32(v.(int)))
-	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("initial_run"); ok {
 		input.InitialRun = aws.Bool(v.(bool))
 	}
 
-	var err error
-	var output *macie2.CreateClassificationJobOutput
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		output, err = conn.CreateClassificationJob(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateClassificationJob(ctx, input)
+	if v, ok := d.GetOk("sampling_percentage"); ok {
+		input.SamplingPercentage = aws.Int32(int32(v.(int)))
 	}
+
+	if v, ok := d.GetOk("schedule_frequency"); ok {
+		input.ScheduleFrequency = expandScheduleFrequency(v.([]interface{}))
+	}
+
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateClassificationJob(ctx, &input)
+	}, errCodeClientError)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Macie ClassificationJob: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Macie Classification Job (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.JobId))
+	d.SetId(aws.ToString(outputRaw.(*macie2.CreateClassificationJobOutput).JobId))
 
 	return append(diags, resourceClassificationJobRead(ctx, d, meta)...)
 }

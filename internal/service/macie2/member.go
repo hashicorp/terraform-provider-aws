@@ -122,7 +122,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.CreateMember(ctx, &input)
-	}, string(awstypes.ErrorCodeClientError))
+	}, errCodeClientError)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie Member (%s): %s", accountID, err)
@@ -255,7 +255,7 @@ func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceDa
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.CreateInvitations(ctx, &input)
-	}, string(awstypes.ErrorCodeClientError))
+	}, errCodeClientError)
 
 	if err == nil {
 		if output := outputRaw.(*macie2.CreateInvitationsOutput); output != nil {

@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_macie2_member: Allow `tags` to be updated in-place
 ```
+
+```release-note:enhancement
+resource/aws_macie2_classification_job: Allow `tags` to be updated in-place
+```
