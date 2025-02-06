@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,9 +38,7 @@ func resourcePublicVirtualInterface() *schema.Resource {
 			StateContext: resourcePublicVirtualInterfaceImport,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourcePublicVirtualInterfaceCustomizeDiff,
-		),
+		CustomizeDiff: resourcePublicVirtualInterfaceCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
