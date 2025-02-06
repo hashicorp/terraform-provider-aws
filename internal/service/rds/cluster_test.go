@@ -19,7 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -3269,9 +3273,9 @@ func TestAccRDSCluster_auroraLimitless(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	// var dbCluster types.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// resourceName := "aws_rds_cluster.test"
+	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -3280,11 +3284,23 @@ func TestAccRDSCluster_auroraLimitless(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_auroraLimitless(rName),
-				ExpectError: regexache.MustCompile(`You must set the Enhanced Monitoring interval to a value larger than 0 when Aurora Limitless Database is enabled on the DB cluster`),
-				// Check: resource.ComposeTestCheckFunc(
-				// 	testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-				// ),
+				Config: testAccClusterConfig_auroraLimitless(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("aurora-postgresql")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngineVersion), knownvalue.StringExact("16.6-limitless")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_interval"), knownvalue.Int64Exact(5)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(31)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_type"), knownvalue.StringExact("aurora-iopt1")),
+				},
 			},
 		},
 	})
@@ -6421,6 +6437,33 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_auroraLimitless(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "monitoring.rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = aws_iam_role.test.name
+}
+
 # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless-create-cluster.html.
 resource "aws_rds_cluster" "test" {
   cluster_identifier                    = %[1]q
@@ -6435,6 +6478,8 @@ resource "aws_rds_cluster" "test" {
   performance_insights_enabled          = true
   performance_insights_retention_period = 31
   enabled_cloudwatch_logs_exports       = ["postgresql"]
+  monitoring_interval                   = 5
+  monitoring_role_arn                   = aws_iam_role.test.arn
 }
 `, rName)
 }
