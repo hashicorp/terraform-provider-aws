@@ -612,12 +612,12 @@ test-compile: prereq-go ## Test package compilation
 	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
 
 testacc: prereq-go fmt-check ## Run acceptance tests
-	@if [ "$(TESTARGS)" = "-run=^TestAccXXX$$" ]; then \
+	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
 		echo ""; \
-		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with ^TestAcc$$ and up to the underscore:"; \
-		echo "make testacc TESTS=^TestAccACMCertificate_$$ PKG=acm"; \
+		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
+		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
 		echo ""; \
 		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
