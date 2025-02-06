@@ -251,6 +251,12 @@ func resourceCluster() *schema.Resource {
 				ForceNew:     true,
 				Default:      engineModeProvisioned,
 				ValidateFunc: validation.StringInSlice(append(engineMode_Values(), ""), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == engineModeProvisioned && new == "" {
+						return true
+					}
+					return new == old
+				},
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
