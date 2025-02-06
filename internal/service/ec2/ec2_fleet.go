@@ -592,6 +592,22 @@ func resourceFleet() *schema.Resource {
 								},
 							},
 						},
+						"max_total_price": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"min_target_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"single_availability_zone": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"single_instance_type": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -1152,6 +1168,22 @@ func expandSpotOptionsRequest(tfMap map[string]interface{}) *awstypes.SpotOption
 		apiObject.MaintenanceStrategies = expandFleetSpotMaintenanceStrategiesRequest(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["max_total_price"].(string); ok && v != "" {
+		apiObject.MaxTotalPrice = aws.String(v)
+	}
+
+	if v, ok := tfMap["min_target_capacity"].(int); ok {
+		apiObject.MinTargetCapacity = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["single_availability_zone"].(bool); ok {
+		apiObject.SingleAvailabilityZone = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["single_instance_type"].(bool); ok {
+		apiObject.SingleInstanceType = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -1511,6 +1543,22 @@ func flattenSpotOptions(apiObject *awstypes.SpotOptions) map[string]interface{} 
 
 	if v := apiObject.MaintenanceStrategies; v != nil {
 		tfMap["maintenance_strategies"] = []interface{}{flattenFleetSpotMaintenanceStrategies(v)}
+	}
+
+	if v := apiObject.MaxTotalPrice; v != nil {
+		tfMap["max_total_price"] = aws.ToString(v)
+	}
+
+	if v := apiObject.MinTargetCapacity; v != nil {
+		tfMap["min_target_capacity"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.SingleAvailabilityZone; v != nil {
+		tfMap["single_availability_zone"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.SingleInstanceType; v != nil {
+		tfMap["single_instance_type"] = aws.ToBool(v)
 	}
 
 	return tfMap
