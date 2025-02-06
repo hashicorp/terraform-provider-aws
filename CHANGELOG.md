@@ -1,14 +1,24 @@
-## 5.86.0 (Unreleased)
+## 5.87.0 (Unreleased)
+## 5.86.0 (February  6, 2025)
+
+NOTES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: When upgrading existing resources with no defined `prefix`, the Terraform plan will show the removal of `prefix` from state. This is expected, and should not occur on subsequent plans. ([#41159](https://github.com/hashicorp/terraform-provider-aws/issues/41159))
 
 ENHANCEMENTS:
 
+* data-source/aws_rds_cluster: Add `monitoring_interval` and `monitoring_role_arn` attributes ([#41002](https://github.com/hashicorp/terraform-provider-aws/issues/41002))
 * provider: Support `us-isof-east-1` and `us-isof-south-1` as valid AWS Regions ([#41243](https://github.com/hashicorp/terraform-provider-aws/issues/41243))
 * resource/aws_fms_policy: Add `security_service_policy_data.policy_option.network_acl_common_policy` argument to allow creation of FMS-managed NACL rules ([#41219](https://github.com/hashicorp/terraform-provider-aws/issues/41219))
+* resource/aws_rds_cluster: Add `monitoring_interval` and `monitoring_role_arn` arguments ([#41002](https://github.com/hashicorp/terraform-provider-aws/issues/41002))
 * resource/aws_sqs_queue: Accommodate accounts that take longer to process with customizable `timeouts`. ([#41232](https://github.com/hashicorp/terraform-provider-aws/issues/41232))
 
 BUG FIXES:
 
+* resource/aws_gamelift_game_server_group: Correctly plan `tags_all` value ([#41256](https://github.com/hashicorp/terraform-provider-aws/issues/41256))
 * resource/aws_instance: Properly cancel spot instance requests on destroy when `instance_lifecycle` is `spot` ([#41206](https://github.com/hashicorp/terraform-provider-aws/issues/41206))
+* resource/aws_route53_zone: Fix `panic: runtime error: invalid memory address or nil pointer dereference` when deleting the resource would otherwise return an error ([#41260](https://github.com/hashicorp/terraform-provider-aws/issues/41260))
+* resource/aws_s3_bucket_lifecycle_configuration: Properly handle default value of `transition_default_minimum_object_size` ([#41159](https://github.com/hashicorp/terraform-provider-aws/issues/41159))
 * resource/aws_wafv2_web_acl: Properly set `rule` during import ([#41205](https://github.com/hashicorp/terraform-provider-aws/issues/41205))
 
 ## 5.85.0 (February  3, 2025)

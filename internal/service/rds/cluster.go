@@ -343,6 +343,17 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"monitoring_interval": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"monitoring_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"network_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -745,6 +756,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("network_type"); ok {
 			input.NetworkType = aws.String(v.(string))
 		}
@@ -995,6 +1014,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("network_type"); ok {
 			input.NetworkType = aws.String(v.(string))
 		}
@@ -1180,6 +1207,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.MasterUsername = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("network_type"); ok {
 			input.NetworkType = aws.String(v.(string))
 		}
@@ -1363,6 +1398,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("master_user_secret", nil)
 	}
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("monitoring_interval", dbc.MonitoringInterval)
+	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
@@ -1566,6 +1603,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			}
+		}
+
+		if d.HasChange("monitoring_interval") {
+			input.MonitoringInterval = aws.Int32(int32(d.Get("monitoring_interval").(int)))
+		}
+
+		if d.HasChange("monitoring_role_arn") {
+			input.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
 		}
 
 		if d.HasChange("network_type") {
