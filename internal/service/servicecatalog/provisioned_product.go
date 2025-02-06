@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -264,9 +263,7 @@ func resourceProvisionedProduct() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.All(
-			refreshOutputsDiff,
-		),
+		CustomizeDiff: refreshOutputsDiff,
 	}
 }
 
