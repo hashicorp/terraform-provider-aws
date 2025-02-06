@@ -1,5 +1,11 @@
 ## 5.86.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* provider: Support `us-isof-east-1` and `us-isof-south-1` as valid AWS Regions ([#41243](https://github.com/hashicorp/terraform-provider-aws/issues/41243))
+* resource/aws_fms_policy: Add `security_service_policy_data.policy_option.network_acl_common_policy` argument to allow creation of FMS-managed NACL rules ([#41219](https://github.com/hashicorp/terraform-provider-aws/issues/41219))
+* resource/aws_sqs_queue: Accommodate accounts that take longer to process with customizable `timeouts`. ([#41232](https://github.com/hashicorp/terraform-provider-aws/issues/41232))
+
 BUG FIXES:
 
 * resource/aws_instance: Properly cancel spot instance requests on destroy when `instance_lifecycle` is `spot` ([#41206](https://github.com/hashicorp/terraform-provider-aws/issues/41206))

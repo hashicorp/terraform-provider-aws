@@ -11,16 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ec2.Client, error) {
+func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]any) []func(*ec2.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return ec2.NewFromConfig(cfg,
-		ec2.WithEndpointResolverV2(newEndpointResolverV2()),
-		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	return []func(*ec2.Options){
 		func(o *ec2.Options) {
 			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
 				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "This call cannot be completed because there are pending VPNs or Virtual Interfaces") { // AttachVpnGateway, DetachVpnGateway
@@ -50,5 +46,5 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 				return aws.UnknownTernary // Delegate to configured Retryer.
 			}))
 		},
-	), nil
+	}
 }
