@@ -1,0 +1,3 @@
+[submodule "pinterest-terraform-provider-aws"]
+	path = pinterest-terraform-provider-aws
+	url = https://github.com/pinterest/terraform-provider-aws.git
