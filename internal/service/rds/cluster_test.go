@@ -3161,6 +3161,57 @@ func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_databaseInsightsMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_databaseInsightsMode(rName, "advanced", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+			{
+				Config: testAccClusterConfig_databaseInsightsMode(rName, "standard", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(false)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_enhancedMonitoring_enabledToUpdatedMonitoringInterval(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -6483,4 +6534,23 @@ resource "aws_rds_cluster" "test" {
   monitoring_role_arn                   = aws_iam_role.test.arn
 }
 `, rName)
+}
+
+func testAccClusterConfig_databaseInsightsMode(rName, databaseInsightsMode string, performanceInsightsEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier                    = %[1]q
+  engine                                = %[2]q
+  db_cluster_instance_class             = "db.m6gd.large"
+  storage_type                          = "io1"
+  allocated_storage                     = 100
+  iops                                  = 1000
+  master_username                       = "tfacctest"
+  master_password                       = "avoid-plaintext-passwords"
+  skip_final_snapshot                   = true
+  database_insights_mode                = %[3]q
+  performance_insights_enabled          = %[4]t
+  performance_insights_retention_period = 465
+}
+`, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled)
 }
