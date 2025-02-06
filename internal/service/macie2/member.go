@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -186,8 +187,6 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	// Invitation workflow
-
 	if d.HasChange("invite") {
 		if d.Get("invite").(bool) {
 			if err := inviteMember(ctx, conn, d, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -241,35 +240,6 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie2.GetMemberOutput, error) {
-	input := macie2.GetMemberInput{
-		Id: aws.String(id),
-	}
-
-	return findMember(ctx, conn, &input)
-}
-
-func findMember(ctx context.Context, conn *macie2.Client, input *macie2.GetMemberInput) (*macie2.GetMemberOutput, error) {
-	output, err := conn.GetMember(ctx, input)
-
-	if isMemberNotFoundError(err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceData, timeout time.Duration) error {
 	input := macie2.CreateInvitationsInput{
 		AccountIds: []string{d.Id()},
@@ -302,6 +272,108 @@ func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceDa
 	}
 
 	return nil
+}
+
+func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie2.GetMemberOutput, error) {
+	input := macie2.GetMemberInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetMember(ctx, &input)
+
+	if isMemberNotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findMemberNotAssociated(ctx context.Context, conn *macie2.Client, accountID string) (*awstypes.Member, error) {
+	input := macie2.ListMembersInput{
+		OnlyAssociated: aws.String("false"),
+	}
+
+	return findMember(ctx, conn, &input, func(v *awstypes.Member) bool {
+		return aws.ToString(v.AccountId) == accountID
+	})
+}
+
+func findMember(ctx context.Context, conn *macie2.Client, input *macie2.ListMembersInput, filter tfslices.Predicate[*awstypes.Member]) (*awstypes.Member, error) {
+	output, err := findMembers(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findMembers(ctx context.Context, conn *macie2.Client, input *macie2.ListMembersInput, filter tfslices.Predicate[*awstypes.Member]) ([]awstypes.Member, error) {
+	var output []awstypes.Member
+
+	pages := macie2.NewListMembersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Members {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusMemberRelationship(ctx context.Context, conn *macie2.Client, adminAccountID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findMemberNotAssociated(ctx, conn, adminAccountID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.RelationshipStatus), nil
+	}
+}
+
+func waitMemberInvited(ctx context.Context, conn *macie2.Client, adminAccountID string) (*awstypes.Member, error) { //nolint:unparam
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RelationshipStatusCreated, awstypes.RelationshipStatusEmailVerificationInProgress),
+		Target:  enum.Slice(awstypes.RelationshipStatusInvited, awstypes.RelationshipStatusEnabled, awstypes.RelationshipStatusPaused),
+		Refresh: statusMemberRelationship(ctx, conn, adminAccountID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Member); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func isMemberNotFoundError(err error) bool {
