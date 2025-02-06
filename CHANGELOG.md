@@ -12,6 +12,7 @@ BUG FIXES:
 
 * resource/aws_gamelift_game_server_group: Correctly plan `tags_all` value ([#41256](https://github.com/hashicorp/terraform-provider-aws/issues/41256))
 * resource/aws_instance: Properly cancel spot instance requests on destroy when `instance_lifecycle` is `spot` ([#41206](https://github.com/hashicorp/terraform-provider-aws/issues/41206))
+* resource/aws_route53_zone: Fix `panic: runtime error: invalid memory address or nil pointer dereference` when deleting the resource would otherwise return an error ([#41260](https://github.com/hashicorp/terraform-provider-aws/issues/41260))
 * resource/aws_wafv2_web_acl: Properly set `rule` during import ([#41205](https://github.com/hashicorp/terraform-provider-aws/issues/41205))
 
 ## 5.85.0 (February  3, 2025)
