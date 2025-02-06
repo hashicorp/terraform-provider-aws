@@ -111,7 +111,9 @@ const (
 	instanceStatusStarting                                     = "starting"
 	instanceStatusStopped                                      = "stopped"
 	instanceStatusStopping                                     = "stopping"
+	instanceStatusStorageConfigUpgrade                         = "storage-config-upgrade"
 	instanceStatusStorageFull                                  = "storage-full"
+	instanceStatusStorageInitialization                        = "storage-initialization"
 	instanceStatusStorageOptimization                          = "storage-optimization"
 	instanceStatusUpgrading                                    = "upgrading"
 )
