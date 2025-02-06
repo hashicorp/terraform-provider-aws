@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -116,9 +115,7 @@ func resourceRule() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceRuleCustomizeDiff,
-		),
+		CustomizeDiff: resourceRuleCustomizeDiff,
 	}
 }
 
