@@ -1,4 +1,5 @@
-## 5.86.0 (Unreleased)
+## 5.87.0 (Unreleased)
+## 5.86.0 (February  6, 2025)
 
 NOTES:
 
