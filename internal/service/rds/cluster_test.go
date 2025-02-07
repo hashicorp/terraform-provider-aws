@@ -3178,7 +3178,7 @@ func TestAccRDSCluster_databaseInsightsMode(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_databaseInsightsMode(rName, "advanced", true),
+				Config: testAccClusterConfig_databaseInsightsMode(rName, "advanced", true, "465"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
@@ -3194,7 +3194,7 @@ func TestAccRDSCluster_databaseInsightsMode(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_databaseInsightsMode(rName, "standard", false),
+				Config: testAccClusterConfig_databaseInsightsMode(rName, "standard", false, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
@@ -6536,7 +6536,7 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_databaseInsightsMode(rName, databaseInsightsMode string, performanceInsightsEnabled bool) string {
+func testAccClusterConfig_databaseInsightsMode(rName, databaseInsightsMode string, performanceInsightsEnabled bool, performanceInsightsRetentionPeriond string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier                    = %[1]q
@@ -6550,7 +6550,7 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot                   = true
   database_insights_mode                = %[3]q
   performance_insights_enabled          = %[4]t
-  performance_insights_retention_period = 465
+  performance_insights_retention_period = %[4]s
 }
-`, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled)
+`, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriond)
 }
