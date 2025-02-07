@@ -1033,7 +1033,7 @@ func TestFlattenBool(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]autoFlexTestCases{
-		"Bool to bool": {
+		"bool to Bool": {
 			"true": {
 				Source: awsSingleBoolValue{
 					Field1: true,
@@ -1066,7 +1066,7 @@ func TestFlattenBool(t *testing.T) {
 			},
 		},
 
-		"*bool to String": {
+		"*bool to Bool": {
 			"true": {
 				Source: awsSingleBoolPointer{
 					Field1: aws.Bool(true),
@@ -1114,7 +1114,7 @@ func TestFlattenBool(t *testing.T) {
 			},
 		},
 
-		"legacy *bool to String": {
+		"legacy *bool to Bool": {
 			"true": {
 				Source: awsSingleBoolPointer{
 					Field1: aws.Bool(true),
