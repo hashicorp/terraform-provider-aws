@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	providerVersionSchemaV0 = "5.85.0"
+)
+
 // Notes on migration testing
 //
 // Because this migration includes a schema change, the standard testing pattern described at
@@ -54,7 +58,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_basic(t *testing.T
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
@@ -157,7 +161,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_FilterWithPrefix(t
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, "prefix/"),
@@ -255,7 +259,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_Filter_ObjectSizeG
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
@@ -353,7 +357,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_Filter_ObjectSizeL
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
@@ -451,7 +455,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_Filter_ObjectSizeR
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
@@ -570,7 +574,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_Filter_ObjectSizeR
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
@@ -687,7 +691,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_Filter_And_Tags(t 
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
@@ -813,7 +817,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_Filter_Tag(t *test
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
@@ -909,10 +913,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_EmptyFilter_NonCur
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -941,7 +945,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_EmptyFilter_NonCur
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName),
+				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -969,7 +973,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_EmptyFilter_NonCur
 							"transition":     checkTransitions(),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("varies_by_storage_class")),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1022,7 +1026,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_nonCurrentVersionE
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName),
@@ -1118,7 +1122,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_ruleAbortIncomplet
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
@@ -1214,7 +1218,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_RuleExpiration_exp
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
@@ -1310,7 +1314,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_RuleExpiration_emp
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName),
@@ -1406,7 +1410,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_RulePrefix(t *test
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
@@ -1505,7 +1509,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_TransitionDate(t *
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, types.TransitionStorageClassStandardIa),
@@ -1613,7 +1617,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_TransitionStorageC
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, types.TransitionStorageClassIntelligentTiering),
@@ -1721,7 +1725,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigration_TransitionZeroDays
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.85.0",
+						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
 				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, types.TransitionStorageClassIntelligentTiering),
