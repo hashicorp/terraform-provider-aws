@@ -883,7 +883,7 @@ resource "aws_iam_role" "test" {
         }
         Condition = {
           StringEquals = {
-            "aws:SourceAccount" = "${data.aws_caller_identity.current.account_id}"
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
         }
       }
@@ -923,7 +923,7 @@ resource "aws_iam_policy" "test" {
       {
         Action   = ["s3:ListBucket"],
         Effect   = "Allow",
-        Resource = "${aws_s3_bucket.test.arn}"
+        Resource = aws_s3_bucket.test.arn
       }
     ]
   })
