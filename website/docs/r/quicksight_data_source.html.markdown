@@ -34,10 +34,33 @@ resource "aws_quicksight_data_source" "default" {
 
 ### S3 Data Source with IAM Role ARN
 
-This example assumes that you have an S3 bucket `aws_s3_bucket.example` with an object `aws_s3_object.example` containing the manifest.json file.
-
 ```terraform
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "example" {
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket.example.bucket
+  key    = "manifest.json"
+  content = jsonencode({
+    fileLocations = [
+      {
+        URIPrefixes = [
+          "https://${aws_s3_bucket.example.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+        ]
+      }
+    ]
+    globalUploadSettings = {
+      format         = "CSV"
+      delimiter      = ","
+      textqualifier  = "\""
+      containsHeader = true
+    }
+  })
+}
 
 resource "aws_iam_role" "example" {
   name = "example"
@@ -53,7 +76,7 @@ resource "aws_iam_role" "example" {
         }
         Condition = {
           StringEquals = {
-            "aws:SourceAccount" = "${data.aws_caller_identity.current.account_id}"
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
         }
       }
@@ -76,7 +99,7 @@ resource "aws_iam_policy" "example" {
       {
         Action   = ["s3:ListBucket"],
         Effect   = "Allow",
-        Resource = "${aws_s3_bucket.example.arn}"
+        Resource = aws_s3_bucket.example.arn
       }
     ]
   })
