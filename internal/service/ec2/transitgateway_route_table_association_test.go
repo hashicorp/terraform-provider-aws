@@ -6,8 +6,10 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -54,6 +56,40 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T, semaphore tf
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"replace_existing_association"},
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var a, b awstypes.TransitGatewayRouteTableAssociation
+	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBGPASN := sdkacctest.RandIntRange(64512, 65534)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &a),
+				),
+			},
+			{
+				Config: testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30", "10.255.255.8/30"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &b),
+					testAccCheckRouteTableAssociationNotRecreated(&a, &b),
+				),
 			},
 		},
 	})
@@ -175,6 +211,15 @@ func testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx context.Context)
 	}
 }
 
+func testAccCheckRouteTableAssociationNotRecreated(i, j *awstypes.TransitGatewayRouteTableAssociation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToString(i.ResourceId) != aws.ToString(j.ResourceId) || aws.ToString(i.TransitGatewayAttachmentId) != aws.ToString(j.TransitGatewayAttachmentId) {
+			return fmt.Errorf("Transit Gateway Route Table Association recreated")
+		}
+		return nil
+	}
+}
+
 func testAccTransitGatewayRouteTableAssociationConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
@@ -233,4 +278,52 @@ resource "aws_ec2_transit_gateway_route_table_association" "test" {
   replace_existing_association = true
 }
 `, rName))
+}
+
+func testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName string, rBGPASN int, allowedPrefixes []string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  amazon_side_asn = "%[2]d"
+  name            = %[1]q
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  default_route_table_association = "disable"
+  default_route_table_propagation = "disable"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_dx_gateway_association" "test" {
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_ec2_transit_gateway.test.id
+
+  allowed_prefixes = ["%[3]s"]
+}
+
+data "aws_ec2_transit_gateway_dx_gateway_attachment" "test" {
+  transit_gateway_id = aws_dx_gateway_association.test.associated_gateway_id
+  dx_gateway_id      = aws_dx_gateway_association.test.dx_gateway_id
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "test" {
+  transit_gateway_attachment_id  = data.aws_ec2_transit_gateway_dx_gateway_attachment.test.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
+  transit_gateway_attachment_id  = data.aws_ec2_transit_gateway_dx_gateway_attachment.test.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+}
+`, rName, rBGPASN, strings.Join(allowedPrefixes, `", "`))
 }
