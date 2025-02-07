@@ -911,7 +911,7 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 				}
 			}
 
-			if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 				ps.Value.RoleArn = aws.String(v)
 			}
 
@@ -1139,7 +1139,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []inte
 						names.AttrKey:    aws.ToString(v.Value.ManifestFileLocation.Key),
 					},
 				},
-				"role_arn": aws.ToString(v.Value.RoleArn),
+				names.AttrRoleARN: aws.ToString(v.Value.RoleArn),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberServiceNowParameters:
