@@ -34,7 +34,7 @@ This resource supports the following arguments:
 * `bgp_asn_extended` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `2147483648` to `4294967295` Conflicts with `bgp_asn`.
 * `certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.
 * `device_name` - (Optional) A name for the customer gateway device.
-* `ip_address` - (Optional) The IPv4 address for the customer gateway device's outside interface.
+* `ip_address` - (Required) The IPv4 address for the customer gateway device's outside interface.
 * `type` - (Required) The type of customer gateway. The only type AWS
   supports at this time is "ipsec.1".
 * `tags` - (Optional) Tags to apply to the gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
