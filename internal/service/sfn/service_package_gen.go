@@ -44,6 +44,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_sfn_state_machine_versions",
 			Name:     "State Machine Versions",
 		},
+		{
+			Factory:  DataSourceStateMachines,
+			TypeName: "aws_sfn_state_machines",
+		},
 	}
 }
 
