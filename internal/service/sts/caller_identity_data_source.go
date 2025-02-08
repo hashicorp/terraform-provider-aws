@@ -5,7 +5,6 @@ package sts
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -81,8 +80,6 @@ func (d *callerIdentityDataSource) Read(ctx context.Context, request datasource.
 
 func findCallerIdentity(ctx context.Context, conn *sts.Client) (*sts.GetCallerIdentityOutput, error) {
 	input := &sts.GetCallerIdentityInput{}
-
-	time.Sleep(15 * time.Second)
 
 	output, err := conn.GetCallerIdentity(ctx, input)
 
