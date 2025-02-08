@@ -144,6 +144,7 @@ This resource supports the following arguments:
     * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
     * `validation_method` - (Optional) Which method to use for validation. `DNS` or `EMAIL` are valid. This parameter must not be set for certificates that were imported into ACM and then into Terraform.
+    * `validation_timeout` - (Optional) Maximum amount of time for ACM Certificate asynchronous DNS validation record assignment. This timeout is unrelated to any creation or validation of those assigned DNS records. Defaults to 5 minutes.
     * `key_algorithm` - (Optional) Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data. See [ACM Certificate characteristics](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) for more details.
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.

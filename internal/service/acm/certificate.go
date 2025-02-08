@@ -43,10 +43,6 @@ const (
 	// Removal of ACM Certificates from API Gateway Custom Domains can take >15 minutes.
 	certificateCrossServicePropagationTimeout = 20 * time.Minute
 
-	// Maximum amount of time for ACM Certificate asynchronous DNS validation record assignment.
-	// This timeout is unrelated to any creation or validation of those assigned DNS records.
-	certificateDNSValidationAssignmentTimeout = 5 * time.Minute
-
 	// CertificateRenewalTimeout is the amount of time to wait for managed renewal of a certificate
 	CertificateRenewalTimeout = 1 * time.Minute
 
@@ -234,6 +230,11 @@ func resourceCertificate() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.ValidationMethod](),
 				ConflictsWith:    []string{"certificate_authority_arn", "certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
+			"validation_timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  5,
+			},
 			"validation_option": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -400,8 +401,10 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId(aws.ToString(output.CertificateArn))
 	}
 
-	if _, err := waitCertificateDomainValidationsAvailable(ctx, conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) to be issued: %s", d.Id(), err)
+	if timeout := d.Get("validation_timeout").(int); timeout > 0 {
+		if _, err := waitCertificateDomainValidationsAvailable(ctx, conn, d.Id(), time.Duration(timeout)*time.Minute); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) to be issued: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
