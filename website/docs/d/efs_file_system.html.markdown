@@ -46,6 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `availability_zone_id` - The identifier of the Availability Zone in which the file system's One Zone storage classes exist.
 * `dns_name` - DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
 * `encrypted` - Whether EFS is encrypted.
+* `file_system_id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 * `kms_key_id` - ARN for the KMS encryption key.
 * `lifecycle_policy` - File system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
 * `name` - The value of the file system's `Name` tag.
