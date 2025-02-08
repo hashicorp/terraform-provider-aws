@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -40,7 +41,7 @@ func resourceSecretVersion() *schema.Resource {
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceSecretVersionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -301,6 +302,42 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func resourceSecretVersionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	secretID, versionID, err := secretVersionParseResourceID(d.Id())
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(secretID),
+	}
+
+	var predefinedVersionStages = []string{secretVersionStageCurrent, secretVersionStagePrevious}
+	if slices.Contains(predefinedVersionStages, versionID) {
+		input.VersionStage = aws.String(versionID)
+	} else {
+		input.VersionId = aws.String(versionID)
+	}
+
+	output, err := findSecretVersion(ctx, conn, input)
+
+	if err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("reading Secrets Manager Secret Versions (%s): %s", secretID, err)
+	}
+
+	id := secretVersionCreateResourceID(secretID, aws.ToString(output.VersionId))
+	d.SetId(id)
+	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
+	d.Set("secret_id", secretID)
+	d.Set("secret_string", output.SecretString)
+	d.Set("version_id", output.VersionId)
+	d.Set("version_stages", output.VersionStages)
+	return []*schema.ResourceData{d}, nil
 }
 
 const secretVersionIDSeparator = "|"
