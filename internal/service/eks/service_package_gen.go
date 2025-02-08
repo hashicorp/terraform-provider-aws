@@ -27,8 +27,9 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceClusterVersions,
-			Name:    "Cluster Versions",
+			Factory:  newDataSourceClusterVersions,
+			TypeName: "aws_eks_cluster_versions",
+			Name:     "Cluster Versions",
 		},
 	}
 }
