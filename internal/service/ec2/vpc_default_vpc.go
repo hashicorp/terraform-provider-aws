@@ -138,6 +138,11 @@ func resourceDefaultVPC() *schema.Resource {
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
+			"wait_for_ipam_deallocation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"main_route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
