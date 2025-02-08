@@ -69,7 +69,7 @@ The `container` configuration block supports the following arguments:
 * `image` - (Required) The name of the image used for the container. Container images sourced from your Lightsail container service, that are registered and stored on your service, start with a colon (`:`). For example, `:container-service-1.mystaticwebsite.1`. Container images sourced from a public registry like Docker Hub don't start with a colon. For example, `nginx:latest` or `nginx`.
 * `command` - (Optional) The launch command for the container. A list of string.
 * `environment` - (Optional) A key-value map of the environment variables of the container.
-* `ports` - (Optional) A key-value map of the open firewall ports of the container. Valid values: `HTTP`, `HTTPS`, `TCP`, `UDP`.
+* `ports` - (`Required`) A key-value map of the open firewall ports of the container. Valid values: `HTTP`, `HTTPS`, `TCP`, `UDP`.
 
 ### `public_endpoint`
 
