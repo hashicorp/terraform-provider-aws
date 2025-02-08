@@ -21,6 +21,19 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 200,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"cross_sheet": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterCrossSheetControl.html
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id":               idSchema(),
+							"source_filter_id":                idSchema(),
+							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
+						},
+					},
+				},
 				"date_time_picker": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterDateTimePickerControl.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -80,18 +93,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
 							"title":             stringLenBetweenSchema(attrRequired, 1, 2048),
-							"display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
-								Type:     schema.TypeList,
-								Optional: true,
-								MinItems: 1,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"date_time_format": stringLenBetweenSchema(attrOptional, 1, 128),
-										"title_options":    labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
-									},
-								},
-							},
+							"display_options":   relativeDateTimeControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
 						},
 					},
 				},
@@ -241,6 +243,21 @@ var listControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+func relativeDateTimeControlDisplayOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_time_format": stringLenBetweenSchema(attrOptional, 1, 128),
+				"title_options":    labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+}
+
 var cascadingControlConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 		Type:     schema.TypeList,
@@ -319,6 +336,9 @@ func expandFilterControl(tfMap map[string]interface{}) *awstypes.FilterControl {
 
 	apiObject := &awstypes.FilterControl{}
 
+	if v, ok := tfMap["cross_sheet"].([]interface{}); ok && len(v) > 0 {
+		apiObject.CrossSheet = expandFilterCrossSheetControl(v)
+	}
 	if v, ok := tfMap["date_time_picker"].([]interface{}); ok && len(v) > 0 {
 		apiObject.DateTimePicker = expandFilterDateTimePickerControl(v)
 	}
@@ -339,6 +359,31 @@ func expandFilterControl(tfMap map[string]interface{}) *awstypes.FilterControl {
 	}
 	if v, ok := tfMap["text_field"].([]interface{}); ok && len(v) > 0 {
 		apiObject.TextField = expandFilterTextFieldControl(v)
+	}
+
+	return apiObject
+}
+
+func expandFilterCrossSheetControl(tfList []interface{}) *awstypes.FilterCrossSheetControl {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.FilterCrossSheetControl{}
+
+	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
+		apiObject.FilterControlId = aws.String(v)
+	}
+	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
+		apiObject.SourceFilterId = aws.String(v)
+	}
+	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.CascadingControlConfiguration = expandCascadingControlConfiguration(v)
 	}
 
 	return apiObject
@@ -1103,6 +1148,9 @@ func flattenFilterControls(apiObjects []awstypes.FilterControl) []interface{} {
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{}
 
+		if apiObject.CrossSheet != nil {
+			tfMap["cross_sheet"] = flattenFilterCrossSheetControl(apiObject.CrossSheet)
+		}
 		if apiObject.DateTimePicker != nil {
 			tfMap["date_time_picker"] = flattenFilterDateTimePickerControl(apiObject.DateTimePicker)
 		}
@@ -1129,6 +1177,23 @@ func flattenFilterControls(apiObjects []awstypes.FilterControl) []interface{} {
 	}
 
 	return tfList
+}
+
+func flattenFilterCrossSheetControl(apiObject *awstypes.FilterCrossSheetControl) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"filter_control_id": aws.ToString(apiObject.FilterControlId),
+		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
+	}
+
+	if apiObject.CascadingControlConfiguration != nil {
+		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenFilterDateTimePickerControl(apiObject *awstypes.FilterDateTimePickerControl) []interface{} {
