@@ -47,7 +47,6 @@ func resourceConfigurationAggregator() *schema.Resource {
 			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

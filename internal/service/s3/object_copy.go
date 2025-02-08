@@ -44,7 +44,7 @@ func resourceObjectCopy() *schema.Resource {
 			if ignoreProviderDefaultTags(ctx, d) {
 				return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
 			}
-			return verify.SetTagsDiff(ctx, d, meta)
+			return nil
 		},
 
 		Schema: map[string]*schema.Schema{

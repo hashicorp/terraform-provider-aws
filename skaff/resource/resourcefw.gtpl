@@ -106,9 +106,6 @@ type resource{{ .Resource }} struct {
 	framework.WithTimeouts
 }
 
-func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the attributes in snake case (e.g.,

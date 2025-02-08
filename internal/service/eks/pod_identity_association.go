@@ -62,10 +62,6 @@ type podIdentityAssociationResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *podIdentityAssociationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_eks_pod_identity_association"
-}
-
 func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

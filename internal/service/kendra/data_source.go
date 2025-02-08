@@ -71,7 +71,6 @@ func ResourceDataSource() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

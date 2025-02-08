@@ -47,10 +47,6 @@ type agentKnowledgeBaseAssociationResource struct {
 	framework.WithTimeouts
 }
 
-func (*agentKnowledgeBaseAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_knowledge_base_association"
-}
-
 func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

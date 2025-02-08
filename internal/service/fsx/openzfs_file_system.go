@@ -315,7 +315,6 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			validateDiskConfigurationIOPS,
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				var (

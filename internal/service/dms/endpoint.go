@@ -777,7 +777,6 @@ func resourceEndpoint() *schema.Resource {
 			validateKMSKeyEngineCustomizeDiff,
 			validateS3SSEKMSKeyCustomizeDiff,
 			validateRedshiftSSEKMSKeyCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 	}
 }

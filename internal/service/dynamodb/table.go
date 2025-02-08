@@ -127,7 +127,6 @@ func resourceTable() *schema.Resource {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			validateTTLCustomDiff,
-			verify.SetTagsDiff,
 		),
 
 		SchemaVersion: 1,

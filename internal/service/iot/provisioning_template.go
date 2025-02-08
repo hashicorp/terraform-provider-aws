@@ -121,8 +121,6 @@ func resourceProvisioningTemplate() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.TemplateType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

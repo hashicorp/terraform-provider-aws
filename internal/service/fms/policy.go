@@ -43,8 +43,6 @@ func resourcePolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			networkACLEntrySetNestedBlock := func() *schema.Schema {
 				return &schema.Schema{

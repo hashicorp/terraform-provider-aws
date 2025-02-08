@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -56,10 +55,6 @@ func resourceTableReplica() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 		},
-
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-		),
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: { // direct to replica

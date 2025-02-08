@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,7 +78,6 @@ func ResourceVocabularyFilter() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange("words", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0
 			}),

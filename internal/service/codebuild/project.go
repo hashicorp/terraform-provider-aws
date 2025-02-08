@@ -721,7 +721,6 @@ func resourceProject() *schema.Resource {
 				}
 				return fmt.Errorf(`cache location is required when cache type is %q`, cacheType.(string))
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }

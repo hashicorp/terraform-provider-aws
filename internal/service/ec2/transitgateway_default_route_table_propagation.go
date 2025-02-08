@@ -41,10 +41,6 @@ type transitGatewayDefaultRouteTablePropagationResource struct {
 	framework.WithTimeouts
 }
 
-func (*transitGatewayDefaultRouteTablePropagationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_transit_gateway_default_route_table_propagation"
-}
-
 func (r *transitGatewayDefaultRouteTablePropagationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

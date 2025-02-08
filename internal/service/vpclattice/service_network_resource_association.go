@@ -51,10 +51,6 @@ type serviceNetworkResourceAssociationResource struct {
 	framework.WithTimeouts
 }
 
-func (*serviceNetworkResourceAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_service_network_resource_association"
-}
-
 func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

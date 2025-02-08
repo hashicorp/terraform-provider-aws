@@ -205,8 +205,6 @@ func resourceOpenZFSVolume() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

@@ -35,8 +35,6 @@ func resourceApplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"appversion_lifecycle": {
 				Type:     schema.TypeList,

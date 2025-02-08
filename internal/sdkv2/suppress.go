@@ -5,6 +5,7 @@ package sdkv2
 
 import (
 	"strings"
+	"time"
 
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,6 +22,20 @@ func SuppressEquivalentStringCaseInsensitive(k, old, new string, d *schema.Resou
 // for JSON documents in the given strings that are equivalent.
 func SuppressEquivalentJSONDocuments(k, old, new string, d *schema.ResourceData) bool {
 	return json.EqualStrings(old, new)
+}
+
+// SuppressEquivalentRoundedTime returns a difference suppression function that compares
+// two time value with the specified layout rounded to the specified duration.
+func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, _ *schema.ResourceData) bool {
+		if old, err := time.Parse(layout, old); err == nil {
+			if new, err := time.Parse(layout, new); err == nil {
+				return old.Round(d).Equal(new.Round(d))
+			}
+		}
+
+		return false
+	}
 }
 
 // SuppressEquivalentIAMPolicyDocuments provides custom difference suppression

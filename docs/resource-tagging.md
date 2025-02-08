@@ -163,23 +163,13 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
     }
     ```
 
-Add a plan modifier (Terraform Plugin Framework) or a `CustomizeDiff` function (Terraform Plugin SDK V2) to ensure tagging diffs are handled appropriately.
-These functions handle the combination of tags set on the resource and default tags, and must be set for tagging to function properly.
+Add a plan modifier (Terraform Plugin Framework) to ensure tagging diffs are handled appropriately.
+This functiojn handles the combination of tags set on the resource and default tags, and must be set for tagging to function properly.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
     func (r *resourceExample) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
         r.SetTagsAll(ctx, req, resp)
-    }
-    ```
-
-=== "Terraform Plugin SDK V2"
-    ```go
-    func ResourceExample() *schema.Resource {
-      return &schema.Resource{
-        /* ... other configuration ... */
-        CustomizeDiff: verify.SetTagsDiff,
-      }
     }
     ```
 

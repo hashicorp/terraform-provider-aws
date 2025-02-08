@@ -133,8 +133,6 @@ func resourceUser() *schema.Resource {
 				ValidateFunc: validUserName,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

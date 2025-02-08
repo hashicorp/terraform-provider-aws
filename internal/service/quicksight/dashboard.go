@@ -117,8 +117,6 @@ func resourceDashboard() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

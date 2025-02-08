@@ -92,10 +92,6 @@ type resourceStreamProcessor struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_stream_processor"
-}
-
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

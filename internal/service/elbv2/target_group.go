@@ -56,7 +56,6 @@ func resourceTargetGroup() *schema.Resource {
 			resourceTargetGroupCustomizeDiff,
 			customizeDiffTargetGroupTargetTypeLambda,
 			customizeDiffTargetGroupTargetTypeNotLambda,
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

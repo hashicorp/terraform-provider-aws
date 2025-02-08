@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -36,8 +35,6 @@ func resourceFileSystemAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceFileSystemAssociationRead,
 		UpdateWithoutTimeout: resourceFileSystemAssociationUpdate,
 		DeleteWithoutTimeout: resourceFileSystemAssociationDelete,
-
-		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

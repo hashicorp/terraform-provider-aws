@@ -54,10 +54,6 @@ type resourceResourceSet struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceResourceSet) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_fms_resource_set"
-}
-
 func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resourceSetLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[resourceSetData](ctx),

@@ -179,8 +179,6 @@ func resourceWorkteam() *schema.Resource {
 				),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

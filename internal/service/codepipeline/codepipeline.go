@@ -455,8 +455,6 @@ func resourcePipeline() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

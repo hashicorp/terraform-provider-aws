@@ -182,8 +182,6 @@ func resourceWebACL() *schema.Resource {
 				"visibility_config": visibilityConfigSchema(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

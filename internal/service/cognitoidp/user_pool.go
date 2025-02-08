@@ -711,8 +711,6 @@ func resourceUserPool() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

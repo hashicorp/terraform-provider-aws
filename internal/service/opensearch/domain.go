@@ -101,7 +101,6 @@ func resourceDomain() *schema.Resource {
 			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta interface{}) bool {
 				return (old.(string) == string(awstypes.IPAddressTypeDualstack)) && old.(string) != new.(string)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

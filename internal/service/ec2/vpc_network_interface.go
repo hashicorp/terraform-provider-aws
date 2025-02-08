@@ -215,7 +215,6 @@ func resourceNetworkInterface() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			customdiff.ForceNewIf("private_ips", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				privateIPListEnabled := d.Get("private_ip_list_enabled").(bool)
 				if privateIPListEnabled {

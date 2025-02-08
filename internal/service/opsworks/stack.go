@@ -198,8 +198,6 @@ func resourceStack() *schema.Resource {
 				ConflictsWith: []string{"default_availability_zone"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

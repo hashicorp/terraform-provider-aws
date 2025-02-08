@@ -460,7 +460,6 @@ func resourceFunction() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
 			updateComputedAttributesOnPublish,
-			verify.SetTagsDiff,
 		),
 	}
 }

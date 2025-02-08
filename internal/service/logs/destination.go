@@ -66,8 +66,6 @@ func resourceDestination() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

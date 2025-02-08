@@ -1446,7 +1446,6 @@ func resourceDeliveryStream() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				destination := destinationType(d.Get(names.AttrDestination).(string))
 				requiredAttribute := map[destinationType]string{

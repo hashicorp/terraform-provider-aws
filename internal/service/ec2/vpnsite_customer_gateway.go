@@ -86,8 +86,6 @@ func resourceCustomerGateway() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.GatewayType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

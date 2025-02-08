@@ -151,8 +151,6 @@ func resourceInfrastructureConfiguration() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

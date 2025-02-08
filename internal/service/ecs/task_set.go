@@ -268,8 +268,6 @@ func resourceTaskSet() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

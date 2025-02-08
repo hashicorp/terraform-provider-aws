@@ -84,8 +84,6 @@ func resourceDataSource() *schema.Resource {
 				"vpc_connection_properties": quicksightschema.VPCConnectionPropertiesSchema(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

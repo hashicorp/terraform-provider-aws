@@ -112,8 +112,6 @@ func resourceReportGroup() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.ReportType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

@@ -108,7 +108,6 @@ func resourceIPAM() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() == "" { // Create.
 					currentRegion := meta.(*conns.AWSClient).Region(ctx)

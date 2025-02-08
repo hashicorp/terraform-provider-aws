@@ -50,10 +50,6 @@ type replicationConfigurationTemplateResource struct {
 	framework.WithTimeouts
 }
 
-func (r *replicationConfigurationTemplateResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_drs_replication_configuration_template"
-}
-
 func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -26,10 +26,6 @@ type arnDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*arnDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_arn"
-}
-
 func (d *arnDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

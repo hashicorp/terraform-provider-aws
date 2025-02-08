@@ -290,7 +290,6 @@ func resourceMetricAlarm() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				_, metricNameOk := diff.GetOk(names.AttrMetricName)
 				_, statisticOk := diff.GetOk("statistic")

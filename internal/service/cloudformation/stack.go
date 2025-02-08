@@ -135,7 +135,6 @@ func resourceStack() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			customdiff.ComputedIf("outputs", stackHasActualChanges),
 		),
 	}

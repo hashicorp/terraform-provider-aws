@@ -49,7 +49,6 @@ func resourceFirewall() *schema.Resource {
 			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("subnet_mapping")
 			}),
-			verify.SetTagsDiff,
 		),
 
 		SchemaFunc: func() map[string]*schema.Schema {
