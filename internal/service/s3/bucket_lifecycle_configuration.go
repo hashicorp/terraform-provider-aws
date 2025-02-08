@@ -601,7 +601,7 @@ func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context)
 	return map[int64]resource.StateUpgrader{
 		0: {
 			PriorSchema:   &schemaV0,
-			StateUpgrader: upgradeBucketLifeCycleConfigurationResourceStateV0toV1,
+			StateUpgrader: upgradeBucketLifeCycleConfigurationResourceStateFromV0,
 		},
 	}
 }
