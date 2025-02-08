@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_db_activity_stream
+```
+```release-note:enhancement
+resource/aws_rds_cluster_activity_stream: Improve `resource_arn` argument validation
+```
