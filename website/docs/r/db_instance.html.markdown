@@ -503,6 +503,7 @@ DB instance.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used
 in a Route 53 Alias record).
 * `id` - RDS DBI resource ID.
+* `identifier` - The RDS instance ID.
 * `instance_class`- The RDS instance class.
 * `latest_restorable_time` - The latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
 * `listener_endpoint` - Specifies the listener connection endpoint for SQL Server Always On. See [endpoint](#endpoint) below.
