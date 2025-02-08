@@ -2314,8 +2314,8 @@ func sweepVPCEndpoints(region string) error {
 		for _, v := range page.VpcEndpoints {
 			id := aws.ToString(v.VpcEndpointId)
 
-			if v.State == vpcEndpointStateDeleted {
-				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: State=%s", id, v.State)
+			if state := string(v.State); strings.EqualFold(state, vpcEndpointStateDeleted) {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: State=%s", id, state)
 				continue
 			}
 

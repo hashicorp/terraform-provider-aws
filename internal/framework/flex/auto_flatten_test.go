@@ -1033,7 +1033,7 @@ func TestFlattenBool(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]autoFlexTestCases{
-		"Bool to bool": {
+		"bool to Bool": {
 			"true": {
 				Source: awsSingleBoolValue{
 					Field1: true,
@@ -1066,7 +1066,7 @@ func TestFlattenBool(t *testing.T) {
 			},
 		},
 
-		"*bool to String": {
+		"*bool to Bool": {
 			"true": {
 				Source: awsSingleBoolPointer{
 					Field1: aws.Bool(true),
@@ -1114,7 +1114,7 @@ func TestFlattenBool(t *testing.T) {
 			},
 		},
 
-		"legacy *bool to String": {
+		"legacy *bool to Bool": {
 			"true": {
 				Source: awsSingleBoolPointer{
 					Field1: aws.Bool(true),
@@ -1598,7 +1598,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1614,7 +1614,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1633,7 +1633,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1649,7 +1649,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1665,7 +1665,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -2110,7 +2110,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2126,7 +2126,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2145,7 +2145,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2161,7 +2161,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2177,7 +2177,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),

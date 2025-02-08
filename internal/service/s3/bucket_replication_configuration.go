@@ -846,6 +846,24 @@ func expandReplicationRuleAndOperator(ctx context.Context, tfList []interface{})
 	return apiObject
 }
 
+func expandTag(tfMap map[string]interface{}) *types.Tag {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	apiObject := &types.Tag{}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrValue].(string); ok {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenReplicationRules(ctx context.Context, apiObjects []types.ReplicationRule) []interface{} {
 	if len(apiObjects) == 0 {
 		return []interface{}{}
@@ -1103,6 +1121,24 @@ func flattenSSEKMSEncryptedObjects(apiObject *types.SseKmsEncryptedObjects) []in
 
 	tfMap := map[string]interface{}{
 		names.AttrStatus: apiObject.Status,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTag(apiObject *types.Tag) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Key; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

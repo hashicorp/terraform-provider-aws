@@ -1151,6 +1151,10 @@ func resourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
+												"use_privatelink_for_metadata_and_authorization": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
 											},
 										},
 									},
@@ -2102,6 +2106,10 @@ func expandSalesforceConnectorProfileProperties(m map[string]interface{}) *types
 		properties.IsSandboxEnvironment = v
 	}
 
+	if v, ok := m["use_privatelink_for_metadata_and_authorization"].(bool); ok {
+		properties.UsePrivateLinkForMetadataAndAuthorization = v
+	}
+
 	return properties
 }
 
@@ -2333,6 +2341,7 @@ func flattenSalesforceConnectorProfileProperties(properties *types.SalesforceCon
 		m["instance_url"] = aws.ToString(properties.InstanceUrl)
 	}
 	m["is_sandbox_environment"] = properties.IsSandboxEnvironment
+	m["use_privatelink_for_metadata_and_authorization"] = properties.UsePrivateLinkForMetadataAndAuthorization
 
 	return []interface{}{m}
 }

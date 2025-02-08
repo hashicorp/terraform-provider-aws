@@ -58,10 +58,11 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	adminAccountID := d.Get("administrator_account_id").(string)
-	var invitationID string
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		invitationID, err := findInvitationByAccount(ctx, conn, adminAccountID)
+	var invitationID string
+	var err error
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		invitationID, err = findInvitationByAccount(ctx, conn, adminAccountID)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {

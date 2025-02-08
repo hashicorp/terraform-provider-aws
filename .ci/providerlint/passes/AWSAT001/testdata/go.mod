@@ -2,7 +2,7 @@ module testdata
 
 go 1.23
 
-toolchain go1.23.3
+toolchain go1.23.5
 
 require (
 	github.com/YakDriver/regexache v0.24.0

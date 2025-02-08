@@ -208,6 +208,12 @@ func resourceQueue() *schema.Resource {
 		),
 
 		Schema: queueSchema,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
 	}
 }
 
@@ -228,7 +234,10 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
+	// create is 2 phase: 1. create, 2. wait for propagation
+	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
+
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (interface{}, error) {
 		return conn.CreateQueue(ctx, input)
 	}, errCodeQueueDeletedRecently)
 
@@ -236,7 +245,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (interface{}, error) {
 			return conn.CreateQueue(ctx, input)
 		}, errCodeQueueDeletedRecently)
 	}
@@ -247,7 +256,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
-	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
+	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
@@ -333,7 +342,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
-		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
+		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
@@ -358,7 +367,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := waitQueueDeleted(ctx, conn, d.Id()); err != nil {
+	if err := waitQueueDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
@@ -491,20 +500,13 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 }
 
 const (
-	// Maximum amount of time to wait for SQS queue attribute changes to propagate
-	// This timeout should not be increased without strong consideration
-	// as this will negatively impact user experience when configurations
-	// have incorrect references or permissions.
-	// Reference: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SetQueueAttributes.html
-	queueAttributePropagationTimeout = 2 * time.Minute
+	// Because accounts vary significantly, customizable timeouts are now used to ensure that users
+	// who need to wait longer can do so. The default timeouts are set to 3 minutes.
 
 	// If you delete a queue, you must wait at least 60 seconds before creating a queue with the same name.
-	// ReferenceL https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_CreateQueue.html
-	queueCreatedTimeout = 70 * time.Second
-	queueReadTimeout    = 20 * time.Second
-	queueDeletedTimeout = 3 * time.Minute
-	queueTagsTimeout    = 60 * time.Second
-
+	// Reference: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_CreateQueue.html
+	queueReadTimeout          = 20 * time.Second
+	queueDeletedTimeout       = 3 * time.Minute
 	queueAttributeReadTimeout = 20 * time.Second
 
 	queueStateExists = "exists"
@@ -590,12 +592,12 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 	}
 }
 
-func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) error {
+func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
-		Timeout:                   queueAttributePropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            10,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
@@ -606,12 +608,12 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 	return err
 }
 
-func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string) error {
+func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
 		Refresh:                   statusQueueState(ctx, conn, url),
-		Timeout:                   queueDeletedTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 15,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            5,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering

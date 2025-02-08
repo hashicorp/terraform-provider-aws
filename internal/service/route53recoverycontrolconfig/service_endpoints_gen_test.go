@@ -82,8 +82,10 @@ const (
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
-	const providerRegion = "us-west-2" //lintignore:AWSAT003
-	const expectedEndpointRegion = providerRegion
+	const providerRegion = "us-east-1" //lintignore:AWSAT003
+	// Route 53 Recovery Control Config uses a regional endpoint but is only available in one region or a limited number of regions.
+	// The provider overrides the region for Route 53 Recovery Control Config, but the AWS SDK's endpoint resolution returns one for the current region.
+	const expectedEndpointRegion = "us-west-2" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
