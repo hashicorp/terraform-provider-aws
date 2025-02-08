@@ -230,6 +230,7 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.security_group_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.subnet_ids.0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.vpc_endpoint_management", "SERVICE"),
 				),
 			},
 			{
@@ -723,8 +724,9 @@ resource "aws_osis_pipeline" "test" {
   min_units                   = 1
 
   vpc_options {
-    security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test.id]
+    security_group_ids      = [aws_security_group.test.id]
+    subnet_ids              = [aws_subnet.test.id]
+    vpc_endpoint_management = "SERVICE"
   }
 }
 `, rName)
