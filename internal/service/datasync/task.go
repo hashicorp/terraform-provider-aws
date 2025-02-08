@@ -224,6 +224,13 @@ func resourceTask() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"task_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.TaskModeBasic,
+				ValidateDiagFunc: enum.Validate[awstypes.TaskMode](),
+			},
 			"task_report_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -341,6 +348,10 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Schedule = expandTaskSchedule(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("task_mode"); ok {
+		input.TaskMode = awstypes.TaskMode(v.(string))
+	}
+
 	output, err := conn.CreateTask(ctx, input)
 
 	if err != nil {
@@ -388,6 +399,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set(names.AttrSchedule, flattenTaskSchedule(output.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
+	d.Set("task_mode", output.TaskMode)
 	if err := d.Set("task_report_config", flattenTaskReportConfig(output.TaskReportConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting task_report_config: %s", err)
 	}
