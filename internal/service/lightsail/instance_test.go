@@ -282,6 +282,13 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 				),
 			},
+			{
+				Config: testAccInstanceConfig_IPAddressType(rName, "ipv6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
+				),
+			},
 		},
 	})
 }
