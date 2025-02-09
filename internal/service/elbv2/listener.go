@@ -793,20 +793,18 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChanges("tcp_idle_timeout_seconds") {
-		lbARN := d.Get("load_balancer_arn").(string)
-		listenerProtocolType := awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string))
-		// Protocol does not need to be explicitly set with GWLB listeners, nor is it returned by the API
-		// If protocol is not set, use the load balancer ARN to determine if listener is gateway type and set protocol appropriately
-		if listenerProtocolType == awstypes.ProtocolEnum("") && strings.Contains(lbARN, "loadbalancer/gwy/") {
-			listenerProtocolType = awstypes.ProtocolEnumGeneve
-		}
+	lbARN := d.Get("load_balancer_arn").(string)
+	listenerProtocolType := awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string))
+	// Protocol does not need to be explicitly set with GWLB listeners, nor is it returned by the API
+	// If protocol is not set, use the load balancer ARN to determine if listener is gateway type and set protocol appropriately
+	if listenerProtocolType == awstypes.ProtocolEnum("") && strings.Contains(lbARN, "loadbalancer/gwy/") {
+		listenerProtocolType = awstypes.ProtocolEnumGeneve
+	}
 
-		attributes := listenerAttributes.expand(d, listenerProtocolType, true)
-		if len(attributes) > 0 {
-			if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
+	updatedAttributes := listenerAttributes.expand(d, listenerProtocolType, true)
+	if len(updatedAttributes) > 0 {
+		if err := modifyListenerAttributes(ctx, conn, d.Id(), updatedAttributes); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
