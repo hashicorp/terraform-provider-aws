@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func bucketLifeCycleConfigurationSchema0(ctx context.Context) schema.Schema {
+func bucketLifeCycleConfigurationSchemaV0(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
@@ -203,7 +203,7 @@ type resourceBucketLifecycleConfigurationModelV0 struct {
 	Timeouts                           timeouts.Value                                                  `tfsdk:"timeouts"`
 }
 
-func upgradeBucketLifeCycleConfigurationResourceStateV0toV1(ctx context.Context, request resource.UpgradeStateRequest, response *resource.UpgradeStateResponse) {
+func upgradeBucketLifeCycleConfigurationResourceStateFromV0(ctx context.Context, request resource.UpgradeStateRequest, response *resource.UpgradeStateResponse) {
 	var old resourceBucketLifecycleConfigurationModelV0
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
@@ -214,7 +214,7 @@ func upgradeBucketLifeCycleConfigurationResourceStateV0toV1(ctx context.Context,
 		Bucket:                             old.Bucket,
 		ExpectedBucketOwner:                old.ExpectedBucketOwner,
 		ID:                                 old.ID,
-		Rules:                              upgradeLifecycleRuleModelStateV0toV1(ctx, old.Rules, &response.Diagnostics),
+		Rules:                              upgradeLifecycleRuleModelStateFromV0(ctx, old.Rules, &response.Diagnostics),
 		TransitionDefaultMinimumObjectSize: old.TransitionDefaultMinimumObjectSize,
 		Timeouts:                           old.Timeouts,
 	}
@@ -237,7 +237,7 @@ type lifecycleRuleModelV0 struct {
 	Transitions                    fwtypes.SetNestedObjectValueOf[transitionModelV0]                      `tfsdk:"transition"`
 }
 
-func upgradeLifecycleRuleModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleModel]) {
+func upgradeLifecycleRuleModelStateFromV0(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleModel]) {
 	oldRules, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -247,15 +247,15 @@ func upgradeLifecycleRuleModelStateV0toV1(ctx context.Context, old fwtypes.ListN
 	newRules := make([]lifecycleRuleModel, len(oldRules))
 	for i, oldRule := range oldRules {
 		newRule := lifecycleRuleModel{
-			AbortIncompleteMultipartUpload: upgradeAbortIncompleteMultipartStateV0toV1(ctx, oldRule.AbortIncompleteMultipartUpload, diags),
-			Expiration:                     upgradeLifecycleExpirationModelStateV0toV1(ctx, oldRule.Expiration, diags),
-			Filter:                         upgradeLifecycleRuleFilterModelStateV0toV1(ctx, oldRule.Filter, diags),
+			AbortIncompleteMultipartUpload: upgradeAbortIncompleteMultipartStateFromV0(ctx, oldRule.AbortIncompleteMultipartUpload, diags),
+			Expiration:                     upgradeLifecycleExpirationModelStateFromV0(ctx, oldRule.Expiration, diags),
+			Filter:                         upgradeLifecycleRuleFilterModelStateFromV0(ctx, oldRule.Filter, diags),
 			ID:                             oldRule.ID,
-			NoncurrentVersionExpirations:   upgradeNoncurrentVersionExpirationModelStateV0toV1(ctx, oldRule.NoncurrentVersionExpirations, diags),
-			NoncurrentVersionTransitions:   upgradeNoncurrentVersionTransitionModelStateV0toV1(ctx, oldRule.NoncurrentVersionTransitions, diags),
+			NoncurrentVersionExpirations:   upgradeNoncurrentVersionExpirationModelStateFromV0(ctx, oldRule.NoncurrentVersionExpirations, diags),
+			NoncurrentVersionTransitions:   upgradeNoncurrentVersionTransitionModelStateFromV0(ctx, oldRule.NoncurrentVersionTransitions, diags),
 			Prefix:                         oldRule.Prefix,
 			Status:                         oldRule.Status,
-			Transitions:                    upgradeTransitionModelStateV0toV1(ctx, oldRule.Transitions, diags),
+			Transitions:                    upgradeTransitionModelStateFromV0(ctx, oldRule.Transitions, diags),
 		}
 
 		if diags.HasError() {
@@ -279,7 +279,7 @@ type abortIncompleteMultipartUploadModelV0 struct {
 }
 
 // Single
-func upgradeAbortIncompleteMultipartStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[abortIncompleteMultipartUploadModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[abortIncompleteMultipartUploadModel]) {
+func upgradeAbortIncompleteMultipartStateFromV0(ctx context.Context, old fwtypes.ListNestedObjectValueOf[abortIncompleteMultipartUploadModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[abortIncompleteMultipartUploadModel]) {
 	oldThings, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -311,7 +311,7 @@ type lifecycleExpirationModelV0 struct {
 }
 
 // Single
-func upgradeLifecycleExpirationModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleExpirationModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleExpirationModel]) {
+func upgradeLifecycleExpirationModelStateFromV0(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleExpirationModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleExpirationModel]) {
 	oldExpirations, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -350,7 +350,7 @@ type lifecycleRuleFilterModelV0 struct {
 }
 
 // Single
-func upgradeLifecycleRuleFilterModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleFilterModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleFilterModel]) {
+func upgradeLifecycleRuleFilterModelStateFromV0(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleFilterModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleFilterModel]) {
 	oldFilters, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -360,7 +360,7 @@ func upgradeLifecycleRuleFilterModelStateV0toV1(ctx context.Context, old fwtypes
 	newFilters := make([]lifecycleRuleFilterModel, len(oldFilters))
 	for i, oldFilter := range oldFilters {
 		newFilter := lifecycleRuleFilterModel{
-			And:                   upgradeLifecycleRuleAndOperatorModelStateV0toV1(ctx, oldFilter.And, diags),
+			And:                   upgradeLifecycleRuleAndOperatorModelStateFromV0(ctx, oldFilter.And, diags),
 			ObjectSizeGreaterThan: stringToInt64Legacy(ctx, oldFilter.ObjectSizeGreaterThan, diags),
 			ObjectSizeLessThan:    stringToInt64Legacy(ctx, oldFilter.ObjectSizeLessThan, diags),
 			Prefix:                oldFilter.Prefix,
@@ -391,7 +391,7 @@ type lifecycleRuleAndOperatorModelV0 struct {
 }
 
 // Single
-func upgradeLifecycleRuleAndOperatorModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModel]) {
+func upgradeLifecycleRuleAndOperatorModelStateFromV0(ctx context.Context, old fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModel]) {
 	oldThings, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -425,7 +425,7 @@ type noncurrentVersionExpirationModelV0 struct {
 }
 
 // Single
-func upgradeNoncurrentVersionExpirationModelStateV0toV1(ctx context.Context, old fwtypes.ListNestedObjectValueOf[noncurrentVersionExpirationModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[noncurrentVersionExpirationModel]) {
+func upgradeNoncurrentVersionExpirationModelStateFromV0(ctx context.Context, old fwtypes.ListNestedObjectValueOf[noncurrentVersionExpirationModelV0], diags *diag.Diagnostics) (result fwtypes.ListNestedObjectValueOf[noncurrentVersionExpirationModel]) {
 	oldThings, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -461,7 +461,7 @@ type noncurrentVersionTransitionModelV0 struct {
 }
 
 // Multiple
-func upgradeNoncurrentVersionTransitionModelStateV0toV1(ctx context.Context, old fwtypes.SetNestedObjectValueOf[noncurrentVersionTransitionModelV0], diags *diag.Diagnostics) (result fwtypes.SetNestedObjectValueOf[noncurrentVersionTransitionModel]) {
+func upgradeNoncurrentVersionTransitionModelStateFromV0(ctx context.Context, old fwtypes.SetNestedObjectValueOf[noncurrentVersionTransitionModelV0], diags *diag.Diagnostics) (result fwtypes.SetNestedObjectValueOf[noncurrentVersionTransitionModel]) {
 	oldThings, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -495,7 +495,7 @@ type transitionModelV0 struct {
 }
 
 // Multiple
-func upgradeTransitionModelStateV0toV1(ctx context.Context, old fwtypes.SetNestedObjectValueOf[transitionModelV0], diags *diag.Diagnostics) (result fwtypes.SetNestedObjectValueOf[transitionModel]) {
+func upgradeTransitionModelStateFromV0(ctx context.Context, old fwtypes.SetNestedObjectValueOf[transitionModelV0], diags *diag.Diagnostics) (result fwtypes.SetNestedObjectValueOf[transitionModel]) {
 	oldThings, d := old.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
