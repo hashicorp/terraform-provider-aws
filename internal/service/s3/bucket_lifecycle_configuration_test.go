@@ -1431,12 +1431,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 							"expiration":                        checkExpiration_None(),
 							names.AttrFilter:                    checkFilter_Prefix(""),
 							names.AttrID:                        knownvalue.StringExact(rName),
-							"noncurrent_version_expiration": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"newer_noncurrent_versions": knownvalue.Int32Exact(2),
-									"noncurrent_days":           knownvalue.Int64Exact(30),
-								}),
-							}),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
 								checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
 							),
@@ -1464,12 +1459,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 							"expiration":                        checkExpiration_None(),
 							names.AttrFilter:                    checkFilter_Prefix(""),
 							names.AttrID:                        knownvalue.StringExact(rName),
-							"noncurrent_version_expiration": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"newer_noncurrent_versions": knownvalue.Int32Exact(2),
-									"noncurrent_days":           knownvalue.Int64Exact(30),
-								}),
-							}),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
 								checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
 							),
@@ -2099,6 +2089,15 @@ func checkNoncurrentVersionExpiration_Days(days int32) knownvalue.Check {
 	return knownvalue.ListExact([]knownvalue.Check{
 		knownvalue.ObjectExact(map[string]knownvalue.Check{
 			"newer_noncurrent_versions": knownvalue.Null(),
+			"noncurrent_days":           knownvalue.Int32Exact(days),
+		}),
+	})
+}
+
+func checkNoncurrentVersionExpiration_VersionsAndDays(versions, days int32) knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"newer_noncurrent_versions": knownvalue.Int32Exact(versions),
 			"noncurrent_days":           knownvalue.Int32Exact(days),
 		}),
 	})
