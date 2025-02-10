@@ -69,6 +69,10 @@ func resourceCluster() *schema.Resource {
 			},
 		},
 
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("master_password"), cty.GetAttrPath("master_password_wo")),
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
@@ -344,6 +348,11 @@ func resourceCluster() *schema.Resource {
 				Sensitive:     true,
 				WriteOnly:     true,
 				ConflictsWith: []string{"manage_master_user_password", "master_password"},
+			},
+			"master_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"master_password_wo"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -1629,6 +1638,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("master_password") {
 			if v, ok := d.GetOk("master_password"); ok {
 				input.MasterUserPassword = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("master_password_wo_version") {
+			masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if masterPasswordWO != "" {
+				input.MasterUserPassword = aws.String(masterPasswordWO)
 			}
 		}
 
