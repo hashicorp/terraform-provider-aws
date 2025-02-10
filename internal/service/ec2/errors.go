@@ -76,6 +76,7 @@ const (
 	errCodeInvalidParameterValue                                   = "InvalidParameterValue"
 	errCodeInvalidPermissionDuplicate                              = "InvalidPermission.Duplicate"
 	errCodeInvalidPermissionNotFound                               = "InvalidPermission.NotFound"
+	errCodeInvalidPermissionIDNotFound                             = "InvalidPermissionID.NotFound"
 	errCodeInvalidPlacementGroupUnknown                            = "InvalidPlacementGroup.Unknown"
 	errCodeInvalidPoolIDNotFound                                   = "InvalidPoolID.NotFound"
 	errCodeInvalidPrefixListIDNotFound                             = "InvalidPrefixListID.NotFound"
