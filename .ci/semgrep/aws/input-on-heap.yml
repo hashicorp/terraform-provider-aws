@@ -50,7 +50,6 @@ rules:
     message: Create the $PKG.$INPUT struct on the stack instead of on the heap
     paths:
       exclude:
-        - "internal/service/appsync"
         - "internal/service/athena"
         - "internal/service/auditmanager"
         - "internal/service/autoscaling"
