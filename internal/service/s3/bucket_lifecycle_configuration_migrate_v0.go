@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func bucketLifeCycleConfigurationSchema0(ctx context.Context) schema.Schema {
+func bucketLifeCycleConfigurationSchemaV0(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{

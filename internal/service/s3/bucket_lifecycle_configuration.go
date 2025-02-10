@@ -596,7 +596,7 @@ func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, 
 }
 
 func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	schemaV0 := bucketLifeCycleConfigurationSchema0(ctx)
+	schemaV0 := bucketLifeCycleConfigurationSchemaV0(ctx)
 
 	return map[int64]resource.StateUpgrader{
 		0: {
