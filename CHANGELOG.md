@@ -1,4 +1,9 @@
 ## 5.87.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_cloudtrail: Fix regression issue where `sns_topic_name` shows perpectual diff when an ARN of a SNS topic from a different region is specified ([#41279](https://github.com/hashicorp/terraform-provider-aws/issues/41279))
+
 ## 5.86.0 (February  6, 2025)
 
 NOTES:
