@@ -100,7 +100,7 @@ func testAccTransitGatewayVPCAttachment_disappears(t *testing.T, semaphore tfsyn
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_ApplianceModeSupport(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_applianceModeSupport(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -140,7 +140,7 @@ func testAccTransitGatewayVPCAttachment_ApplianceModeSupport(t *testing.T, semap
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_DNSSupport(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_dnsSupport(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -180,7 +180,7 @@ func testAccTransitGatewayVPCAttachment_DNSSupport(t *testing.T, semaphore tfsyn
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_ipv6Support(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -220,7 +220,7 @@ func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T, semaphore tfsy
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_securityGroupReferencingSupport(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -262,7 +262,7 @@ func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport(t *testi
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/39518.
 // Resources created at <= v5.58.0 show drift after upgrade to v5.69.0.
-func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportV5690Diff(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_securityGroupReferencingSupportV5690Diff(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -325,7 +325,7 @@ func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportV5690Diff
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportExistingResource(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_securityGroupReferencingSupportExistingResource(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -382,7 +382,7 @@ func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportExistingR
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_SharedTransitGateway(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_sharedTransitGateway(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -415,7 +415,7 @@ func testAccTransitGatewayVPCAttachment_SharedTransitGateway(t *testing.T, semap
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_subnetIDs(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2, transitGatewayVpcAttachment3 awstypes.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -515,7 +515,7 @@ func testAccTransitGatewayVPCAttachment_tags(t *testing.T, semaphore tfsync.Sema
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTableAssociationAndPropagationDisabled(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1 awstypes.TransitGateway
 	var transitGatewayVpcAttachment1 awstypes.TransitGatewayVpcAttachment
@@ -553,7 +553,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociation(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTableAssociation(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2, transitGateway3 awstypes.TransitGateway
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2, transitGatewayVpcAttachment3 awstypes.TransitGatewayVpcAttachment
@@ -609,7 +609,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagation(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTablePropagation(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2, transitGateway3 awstypes.TransitGateway
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2, transitGatewayVpcAttachment3 awstypes.TransitGatewayVpcAttachment

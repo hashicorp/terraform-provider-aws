@@ -23,6 +23,10 @@ import (
 )
 
 func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T, semaphore tfsync.Semaphore) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
@@ -61,45 +65,11 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T, semaphore tf
 	})
 }
 
-func testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway(t *testing.T, semaphore tfsync.Semaphore) {
-	ctx := acctest.Context(t)
-	var a awstypes.TransitGatewayRouteTableAssociation
-	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBGPASN := sdkacctest.RandIntRange(64512, 65534)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckTransitGateway(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30"}),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &a),
-				),
-			},
-			{
-				Config: testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30", "10.255.255.8/30"}),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &a),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-			},
-		},
-	})
-}
-
 func testAccTransitGatewayRouteTableAssociation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
@@ -128,6 +98,10 @@ func testAccTransitGatewayRouteTableAssociation_disappears(t *testing.T, semapho
 }
 
 func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *testing.T, semaphore tfsync.Semaphore) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
@@ -163,6 +137,48 @@ func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *te
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"replace_existing_association"},
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway(t *testing.T, semaphore tfsync.Semaphore) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var a awstypes.TransitGatewayRouteTableAssociation
+	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBGPASN := sdkacctest.RandIntRange(64512, 65534)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &a),
+				),
+			},
+			{
+				Config: testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30", "10.255.255.8/30"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &a),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -281,7 +297,7 @@ resource "aws_ec2_transit_gateway_route_table_association" "test" {
 func testAccTransitGatewayRouteTableAssociationConfig_recreationByDXGateway(rName string, rBGPASN int, allowedPrefixes []string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
-  amazon_side_asn = "4200000000"
+  amazon_side_asn = "%[2]d"
   name            = %[1]q
 }
 
