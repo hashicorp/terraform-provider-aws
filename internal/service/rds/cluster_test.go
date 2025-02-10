@@ -45,6 +45,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 			"enable_local_write_forwarding",
 			"manage_master_user_password",
 			"master_password",
+			"master_password_wo",
 			"master_user_secret_kms_key_id",
 			"skip_final_snapshot",
 		},

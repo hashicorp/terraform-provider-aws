@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -303,7 +304,7 @@ func resourceCluster() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"master_password"},
+				ConflictsWith: []string{"master_password", "master_password_wo"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -335,7 +336,14 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				ConflictsWith: []string{"manage_master_user_password", "master_password_wo"},
+			},
+			"master_password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				WriteOnly:     true,
+				ConflictsWith: []string{"manage_master_user_password", "master_password"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -671,6 +679,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 
+	// get write-only value from configuration
+	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
 	// parameters or unsupported configurations, we may need to call
@@ -748,6 +763,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if masterPasswordWO != "" {
+			modifyDbClusterInput.MasterUserPassword = aws.String(masterPasswordWO)
 			requiresModifyDbCluster = true
 		}
 
@@ -899,6 +919,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if masterPasswordWO != "" {
+			input.MasterUserPassword = aws.String(masterPasswordWO)
+		}
+
 		if v, ok := d.GetOk("network_type"); ok {
 			input.NetworkType = aws.String(v.(string))
 		}
@@ -1006,6 +1030,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if masterPasswordWO != "" {
+			modifyDbClusterInput.MasterUserPassword = aws.String(masterPasswordWO)
 			requiresModifyDbCluster = true
 		}
 
@@ -1197,6 +1226,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		// will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+
+		if masterPasswordWO != "" {
+			input.MasterUserPassword = aws.String(masterPasswordWO)
 		}
 
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
