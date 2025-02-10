@@ -746,7 +746,7 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 	// `and`, `object_size_greater_than`, `object_size_less_than`, `prefix`, or `tags` must be set.
 	// However, the provider historically has allowed `filter` to be null, empty, or have one child value set.
 	// (Setting multiple elements would result in a run-time error)
-	// For null `filter`, send an emtpy LifecycleRuleFilter
+	// For null `filter`, send an empty LifecycleRuleFilter
 	if m.Filter.IsUnknown() || m.Filter.IsNull() {
 		if prefix.IsUnknown() || prefix.IsNull() {
 			filter := awstypes.LifecycleRuleFilter{}
