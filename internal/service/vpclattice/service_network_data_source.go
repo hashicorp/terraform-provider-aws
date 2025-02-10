@@ -107,7 +107,7 @@ func crossAccountSetTags(ctx context.Context, conn *vpclattice.Client, diags dia
 	if parsedARN.AccountID == accountID {
 		tags, err := listTags(ctx, conn, resARN)
 
-		if err != nil && errs.Contains(err, ErrCodeAccessDeniedException) {
+		if errs.Contains(err, ErrCodeAccessDeniedException) {
 			return diags
 		}
 
