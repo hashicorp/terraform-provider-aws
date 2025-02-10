@@ -151,7 +151,7 @@ func testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway(t *testing
 	var a awstypes.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBGPASN := sdkacctest.RandIntRange(64512, 65534)
+	rBGPASN := sdkacctest.RandIntRange(4200000000, 4294967294)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
