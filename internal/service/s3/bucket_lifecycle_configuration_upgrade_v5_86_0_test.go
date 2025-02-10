@@ -30,7 +30,7 @@ const (
 	providerVersion_5_86_0 = "5.86.0"
 )
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_basic(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -112,7 +112,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_basic(t *testing
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_FilterWithPrefix(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_FilterWithPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -144,7 +144,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_FilterWithPrefix
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("prefix/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -175,7 +175,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_FilterWithPrefix
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSizeGreaterThan(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreaterThan(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -206,7 +206,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
-							names.AttrFilter:                    checkSchemaV1Filter_GreaterThan(100),
+							names.AttrFilter:                    checkProvider5_86_0Filter_GreaterThan(100),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -259,7 +259,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSizeLessThan(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessThan(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -290,7 +290,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
-							names.AttrFilter:                    checkSchemaV1Filter_LessThan(500),
+							names.AttrFilter:                    checkProvider5_86_0Filter_LessThan(500),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -343,7 +343,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSizeRange(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -374,7 +374,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
-							names.AttrFilter: checkSchemaV1Filter_And(
+							names.AttrFilter: checkProvider5_86_0Filter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"object_size_greater_than": knownvalue.Int64Exact(500),
 									"object_size_less_than":    knownvalue.Int64Exact(64000),
@@ -441,7 +441,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSizeRangeAndPrefix(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRangeAndPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -472,7 +472,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
-							names.AttrFilter: checkSchemaV1Filter_And(
+							names.AttrFilter: checkProvider5_86_0Filter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"object_size_greater_than": knownvalue.Int64Exact(500),
 									"object_size_less_than":    knownvalue.Int64Exact(64000),
@@ -539,7 +539,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_ObjectSiz
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_And_Tags(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -568,7 +568,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_And_Tags(
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Days(90),
-							names.AttrFilter: checkSchemaV1Filter_And(
+							names.AttrFilter: checkProvider5_86_0Filter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"object_size_greater_than": knownvalue.Int64Exact(0),
 									"object_size_less_than":    knownvalue.Int64Exact(0),
@@ -641,7 +641,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_And_Tags(
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_Tag(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -670,7 +670,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_Tag(t *te
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Days(365),
-							names.AttrFilter:                    checkSchemaV1Filter_Tag(acctest.CtKey1, acctest.CtValue1),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Tag(acctest.CtKey1, acctest.CtValue1),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -723,7 +723,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_Filter_Tag(t *te
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_EmptyFilter_NonCurrentVersions(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrentVersions(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -749,7 +749,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_EmptyFilter_NonC
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix(""),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix(""),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -805,7 +805,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_EmptyFilter_NonC
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_EmptyFilter_NonCurrentVersions_WithChange(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrentVersions_WithChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -831,7 +831,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_EmptyFilter_NonC
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkSchemaV1Filter_Empty(),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Empty(),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -920,7 +920,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_EmptyFilter_NonC
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_nonCurrentVersionExpiration(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpiration(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -949,7 +949,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_nonCurrentVersio
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("config/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("config/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_Days(90),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1002,7 +1002,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_nonCurrentVersio
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_ruleAbortIncompleteMultipartUpload(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMultipartUpload(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1031,7 +1031,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_ruleAbortIncompl
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(7),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("prefix/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1084,7 +1084,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_ruleAbortIncompl
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RuleExpiration_expireMarkerOnly(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireMarkerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1113,7 +1113,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RuleExpiration_e
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_DeleteMarker(true),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("prefix/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1166,7 +1166,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RuleExpiration_e
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RuleExpiration_emptyBlock(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1195,7 +1195,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RuleExpiration_e
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Empty(),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("prefix/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1248,7 +1248,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RuleExpiration_e
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RulePrefix(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1330,7 +1330,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_RulePrefix(t *te
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionDate(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1362,7 +1362,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionDate(t
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("prefix/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1423,7 +1423,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionDate(t
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionStorageClassOnly_intelligentTiering(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClassOnly_intelligentTiering(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1452,7 +1452,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionStorag
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("prefix/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1513,7 +1513,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionStorag
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionZeroDays_intelligentTiering(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_intelligentTiering(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -1542,7 +1542,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionZeroDa
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 							"expiration":                        checkExpiration_None(),
-							names.AttrFilter:                    checkSchemaV1Filter_Prefix("prefix/"),
+							names.AttrFilter:                    checkProvider5_86_0Filter_Prefix("prefix/"),
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1603,16 +1603,16 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV1_TransitionZeroDa
 	})
 }
 
-func checkSchemaV1Filter_Empty() knownvalue.Check {
+func checkProvider5_86_0Filter_Empty() knownvalue.Check {
 	return knownvalue.ListExact([]knownvalue.Check{
 		knownvalue.ObjectExact(
-			schemaV1FilterDefaults(),
+			schemaProvider5_86_0FilterDefaults(),
 		),
 	})
 }
 
-func checkSchemaV1Filter_And(check knownvalue.Check) knownvalue.Check {
-	checks := schemaV1FilterDefaults()
+func checkProvider5_86_0Filter_And(check knownvalue.Check) knownvalue.Check {
+	checks := schemaProvider5_86_0FilterDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
 		"and": knownvalue.ListExact([]knownvalue.Check{
 			check,
@@ -1625,8 +1625,8 @@ func checkSchemaV1Filter_And(check knownvalue.Check) knownvalue.Check {
 	})
 }
 
-func checkSchemaV1Filter_Prefix(prefix string) knownvalue.Check {
-	checks := schemaV1FilterDefaults()
+func checkProvider5_86_0Filter_Prefix(prefix string) knownvalue.Check {
+	checks := schemaProvider5_86_0FilterDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
 		names.AttrPrefix: knownvalue.StringExact(prefix),
 	})
@@ -1637,8 +1637,8 @@ func checkSchemaV1Filter_Prefix(prefix string) knownvalue.Check {
 	})
 }
 
-func checkSchemaV1Filter_GreaterThan(size int64) knownvalue.Check {
-	checks := schemaV1FilterDefaults()
+func checkProvider5_86_0Filter_GreaterThan(size int64) knownvalue.Check {
+	checks := schemaProvider5_86_0FilterDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
 		"object_size_greater_than": knownvalue.Int64Exact(size),
 	})
@@ -1649,8 +1649,8 @@ func checkSchemaV1Filter_GreaterThan(size int64) knownvalue.Check {
 	})
 }
 
-func checkSchemaV1Filter_LessThan(size int64) knownvalue.Check {
-	checks := schemaV1FilterDefaults()
+func checkProvider5_86_0Filter_LessThan(size int64) knownvalue.Check {
+	checks := schemaProvider5_86_0FilterDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
 		"object_size_less_than": knownvalue.Int64Exact(size),
 	})
@@ -1661,8 +1661,8 @@ func checkSchemaV1Filter_LessThan(size int64) knownvalue.Check {
 	})
 }
 
-func checkSchemaV1Filter_Tag(key, value string) knownvalue.Check {
-	checks := schemaV1FilterDefaults()
+func checkProvider5_86_0Filter_Tag(key, value string) knownvalue.Check {
+	checks := schemaProvider5_86_0FilterDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
 		"tag": knownvalue.ListExact([]knownvalue.Check{
 			knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1678,7 +1678,7 @@ func checkSchemaV1Filter_Tag(key, value string) knownvalue.Check {
 	})
 }
 
-func schemaV1FilterDefaults() map[string]knownvalue.Check {
+func schemaProvider5_86_0FilterDefaults() map[string]knownvalue.Check {
 	return map[string]knownvalue.Check{
 		"and":                      knownvalue.ListExact([]knownvalue.Check{}),
 		"object_size_greater_than": knownvalue.Null(),
