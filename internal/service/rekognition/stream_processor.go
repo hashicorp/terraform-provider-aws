@@ -135,7 +135,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				DeprecationMessage: "Use 'arn' instead. This attribute will be removed in a future verion of the provider.",
+				DeprecationMessage: "Use 'arn' instead. This attribute will be removed in a future version of the provider.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
