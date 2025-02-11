@@ -271,7 +271,7 @@ resource "aws_detective_graph" "test" {}
 
 resource "aws_detective_member" "test" {
   account_id    = data.aws_caller_identity.member.account_id
-  graph_arn     = aws_detective_graph.test.id
+  graph_arn     = aws_detective_graph.test.graph_arn
   email_address = %[1]q
 }
 `, email))
@@ -287,7 +287,7 @@ resource "aws_detective_graph" "test" {}
 
 resource "aws_detective_member" "test" {
   account_id    = data.aws_caller_identity.member.account_id
-  graph_arn     = aws_detective_graph.test.id
+  graph_arn     = aws_detective_graph.test.graph_arn
   email_address = %[1]q
   message       = "This is a message of the invitation"
 }
@@ -307,7 +307,7 @@ resource "aws_detective_member" "test" {
 
 resource "aws_detective_organization_configuration" "test" {
   auto_enable = %[1]t
-  graph_arn   = aws_detective_graph.test.id
+  graph_arn   = aws_detective_graph.test.graph_arn
 
   depends_on = [aws_detective_organization_admin_account.test]
 }

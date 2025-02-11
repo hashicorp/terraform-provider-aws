@@ -55,7 +55,7 @@ func testAccOrganizationConfigurationConfig_autoEnable(autoEnable bool) string {
 	return fmt.Sprintf(`
 resource "aws_detective_organization_configuration" "test" {
   auto_enable = %[1]t
-  graph_arn   = aws_detective_graph.test.id
+  graph_arn   = aws_detective_graph.test.graph_arn
 
   depends_on = [aws_detective_organization_admin_account.test]
 }
