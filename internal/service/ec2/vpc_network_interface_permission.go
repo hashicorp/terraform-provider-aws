@@ -30,7 +30,7 @@ import (
 )
 
 // @FrameworkResource("aws_network_interface_permission", name="Network Interface Permission")
-// @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func newNetworkInterfacePermission(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &networkInterfacePermission{}
 

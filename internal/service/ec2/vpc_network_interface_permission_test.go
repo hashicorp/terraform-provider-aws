@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
+func TestAccNetworkInterfacePermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -31,12 +31,12 @@ func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCNetworkInterfacePermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkInterfacePermissionConfig_basic(rName, targetAccount),
+				Config: testAccNetworkInterfacePermissionConfig_basic(rName, targetAccount),
 				Check: resource.ComposeTestCheckFunc(
-					testAccVPCNetworkInterfacePermissionExists(ctx, resourceName),
+					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrSet(resourceName, "permission"),
@@ -52,7 +52,7 @@ func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
+func TestAccNetworkInterfacePermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -64,12 +64,12 @@ func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCNetworkInterfacePermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkInterfacePermissionConfig_basic(rName, targetAccount),
+				Config: testAccNetworkInterfacePermissionConfig_basic(rName, targetAccount),
 				Check: resource.ComposeTestCheckFunc(
-					testAccVPCNetworkInterfacePermissionExists(ctx, resourceName),
+					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterfacePermission, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,7 +78,7 @@ func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfacePermission_ownerExpectError(t *testing.T) {
+func TestAccNetworkInterfacePermission_ownerExpectError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -88,17 +88,17 @@ func TestAccVPCNetworkInterfacePermission_ownerExpectError(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCNetworkInterfacePermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVPCNetworkInterfacePermissionConfig_accountOwner(rName),
+				Config:      testAccNetworkInterfacePermissionConfig_accountOwner(rName),
 				ExpectError: regexache.MustCompile(`OperationNotPermitted`),
 			},
 		},
 	})
 }
 
-func testAccCheckVPCNetworkInterfacePermissionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNetworkInterfacePermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
@@ -124,7 +124,7 @@ func testAccCheckVPCNetworkInterfacePermissionDestroy(ctx context.Context) resou
 	}
 }
 
-func testAccVPCNetworkInterfacePermissionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckNetworkInterfacePermissionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -139,7 +139,7 @@ func testAccVPCNetworkInterfacePermissionExists(ctx context.Context, n string) r
 	}
 }
 
-func testAccVPCNetworkInterfacePermissionConfig_basic(rName string, targetAccount string) string {
+func testAccNetworkInterfacePermissionConfig_basic(rName string, targetAccount string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -174,7 +174,7 @@ resource "aws_network_interface_permission" "test" {
 `, rName, targetAccount))
 }
 
-func testAccVPCNetworkInterfacePermissionConfig_accountOwner(rName string) string {
+func testAccNetworkInterfacePermissionConfig_accountOwner(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
