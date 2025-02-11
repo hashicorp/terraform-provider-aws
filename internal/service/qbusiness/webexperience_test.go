@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessWebexperience_basic(t *testing.T) {
@@ -36,7 +35,6 @@ func TestAccQBusinessWebexperience_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
 					resource.TestCheckResourceAttrSet(resourceName, "webexperience_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{

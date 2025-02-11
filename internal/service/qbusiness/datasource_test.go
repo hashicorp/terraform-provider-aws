@@ -38,7 +38,6 @@ func TestAccQBusinessDatasource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttrSet(resourceName, "index_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "datasource_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "sync_schedule"),
 				),

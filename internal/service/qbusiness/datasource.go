@@ -662,9 +662,7 @@ func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx cont
 		if d.HasError() {
 			return d
 		}
-		if dec.InlineConfigurations, diags = fwtypes.NewListNestedObjectValueOfSlice[resourceInlineDocumentEnrichmentConfigurationData](ctx, ic); diags.HasError() {
-			return diags
-		}
+		dec.InlineConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust[resourceInlineDocumentEnrichmentConfigurationData](ctx, ic)
 	} else {
 		dec.InlineConfigurations = fwtypes.NewListNestedObjectValueOfNull[resourceInlineDocumentEnrichmentConfigurationData](ctx)
 	}

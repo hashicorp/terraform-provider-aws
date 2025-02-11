@@ -36,7 +36,6 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),

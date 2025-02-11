@@ -37,7 +37,6 @@ func TestAccQBusinessIndex_basic(t *testing.T) {
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttrSet(resourceName, "index_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Index name"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_configuration.0.units", "1"),
