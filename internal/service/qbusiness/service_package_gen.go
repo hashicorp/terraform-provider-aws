@@ -21,50 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceApplication,
-			Name:    "Application",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourceDataAccessor,
-			Name:    "DataAccessor",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourceDatasource,
-			Name:    "Datasource",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourceIndex,
-			Name:    "Index",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourcePlugin,
-			Name:    "Plugin",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourceRetriever,
-			Name:    "Retriever",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourceWebexperience,
-			Name:    "Webexperience",
+			Factory:  newResourceApplication,
+			TypeName: "aws_qbusiness_app",
+			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
