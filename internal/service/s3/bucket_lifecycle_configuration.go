@@ -40,7 +40,6 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -597,12 +596,12 @@ func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, 
 }
 
 func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	schemaV0 := bucketLifeCycleConfigurationSchema0(ctx)
+	schemaV0 := bucketLifeCycleConfigurationSchemaV0(ctx)
 
 	return map[int64]resource.StateUpgrader{
 		0: {
 			PriorSchema:   &schemaV0,
-			StateUpgrader: upgradeBucketLifeCycleConfigurationResourceStateV0toV1,
+			StateUpgrader: upgradeBucketLifeCycleConfigurationResourceStateFromV0,
 		},
 	}
 }
@@ -743,6 +742,11 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 	// For legacy-mode reasons, `prefix` may be empty, but should be treated as `nil`
 	prefix := fwflex.EmptyStringAsNull(m.Prefix)
 
+	// The AWS API requires a value for `filter` unless `prefix` is set. If `filter` is set, one and only one of
+	// `and`, `object_size_greater_than`, `object_size_less_than`, `prefix`, or `tags` must be set.
+	// However, the provider historically has allowed `filter` to be null, empty, or have one child value set.
+	// (Setting multiple elements would result in a run-time error)
+	// For null `filter`, send an empty LifecycleRuleFilter
 	if m.Filter.IsUnknown() || m.Filter.IsNull() {
 		if prefix.IsUnknown() || prefix.IsNull() {
 			filter := awstypes.LifecycleRuleFilter{}
@@ -848,7 +852,8 @@ func (m *lifecycleRuleModel) Flatten(ctx context.Context, v any) (diags diag.Dia
 		return diags
 	}
 
-	if itypes.IsZero(rule.Filter) {
+	// If Filter has no values set, the value in the configuration was null
+	if isLifecycleRuleFilterZero(rule.Filter) {
 		m.Filter = fwtypes.NewListNestedObjectValueOfNull[lifecycleRuleFilterModel](ctx)
 	} else {
 		d = fwflex.Flatten(ctx, rule.Filter, &m.Filter)
@@ -883,6 +888,15 @@ func (m *lifecycleRuleModel) Flatten(ctx context.Context, v any) (diags diag.Dia
 	}
 
 	return diags
+}
+
+func isLifecycleRuleFilterZero(v *awstypes.LifecycleRuleFilter) bool {
+	return v == nil ||
+		(v.And == nil &&
+			v.ObjectSizeGreaterThan == nil &&
+			v.ObjectSizeLessThan == nil &&
+			v.Prefix == nil &&
+			v.Tag == nil)
 }
 
 type abortIncompleteMultipartUploadModel struct {
@@ -926,7 +940,7 @@ type lifecycleRuleFilterModel struct {
 	And                   fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModel] `tfsdk:"and"`
 	ObjectSizeGreaterThan types.Int64                                                    `tfsdk:"object_size_greater_than"`
 	ObjectSizeLessThan    types.Int64                                                    `tfsdk:"object_size_less_than"`
-	Prefix                types.String                                                   `tfsdk:"prefix" autoflex:",legacy"`
+	Prefix                types.String                                                   `tfsdk:"prefix"`
 	Tag                   fwtypes.ListNestedObjectValueOf[tagModel]                      `tfsdk:"tag"`
 }
 
