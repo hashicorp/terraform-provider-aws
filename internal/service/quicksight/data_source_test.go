@@ -244,6 +244,8 @@ func TestAccQuickSightDataSource_s3RoleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleResourceName := "aws_iam_role.test"
+	iamRoleResourceNameUpdated := "aws_iam_role.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -252,7 +254,7 @@ func TestAccQuickSightDataSource_s3RoleARN(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_s3_role_arn(rId, rName, rName2, "first"),
+				Config: testAccDataSourceConfig_s3RoleARN(rId, rName, rName2, iamRoleResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
@@ -260,7 +262,7 @@ func TestAccQuickSightDataSource_s3RoleARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.s3.0.role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.s3.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
 				),
 			},
@@ -271,7 +273,7 @@ func TestAccQuickSightDataSource_s3RoleARN(t *testing.T) {
 			},
 			// change the selector update the data source with the new Role
 			{
-				Config: testAccDataSourceConfig_s3_role_arn(rId, rName, rName2, "second"),
+				Config: testAccDataSourceConfig_s3RoleARN(rId, rName, rName2, iamRoleResourceNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
@@ -279,7 +281,7 @@ func TestAccQuickSightDataSource_s3RoleARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.s3.0.role_arn", "aws_iam_role.test2", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.s3.0.role_arn", iamRoleResourceNameUpdated, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
 				),
 			},
@@ -859,15 +861,11 @@ resource "aws_quicksight_data_source" "test" {
 `, rId, rName)
 }
 
-func testAccDataSourceConfig_s3_role_arn(rId, rName, rName2, selectIAMRole string) string {
+func testAccDataSourceConfig_s3RoleARN(rId, rName, rName2, iamRoleResourceName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfig_baseNoACL(rName),
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
-locals {
-  select_iam_role = %[4]q
-}
 
 resource "aws_iam_role" "test" {
   name = %[2]q
@@ -949,7 +947,7 @@ resource "aws_quicksight_data_source" "test" {
         bucket = aws_s3_bucket.test.bucket
         key    = aws_s3_object.test.key
       }
-      role_arn = local.select_iam_role == "first" ? aws_iam_role.test.arn : aws_iam_role.test2.arn
+      role_arn = %[4]s.arn
     }
   }
 
@@ -959,5 +957,5 @@ resource "aws_quicksight_data_source" "test" {
     aws_iam_role_policy_attachment.test
   ]
 }
-`, rId, rName, rName2, selectIAMRole))
+`, rId, rName, rName2, iamRoleResourceName))
 }
