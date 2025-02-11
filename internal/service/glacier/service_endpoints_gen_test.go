@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListVaults(ctx, &glacier.ListVaultsInput{},
+	input := glacier.ListVaultsInput{}
+	_, err := client.ListVaults(ctx, &input,
 		func(opts *glacier.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

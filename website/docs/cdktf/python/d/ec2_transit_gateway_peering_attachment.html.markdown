@@ -77,10 +77,11 @@ which take the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `peer_account_id` - Identifier of the peer AWS account
-* `peer_region` - Identifier of the peer AWS region
-* `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway
-* `transit_gateway_id` - Identifier of the local EC2 Transit Gateway
+* `arn` - ARN of the attachment.
+* `peer_account_id` - Identifier of the peer AWS account.
+* `peer_region` - Identifier of the peer AWS region.
+* `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway.
+* `transit_gateway_id` - Identifier of the local EC2 Transit Gateway.
 
 ## Timeouts
 
@@ -88,4 +89,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-64a386696c78ec2309a46c70c800259471a55f51d87aca95430609381da1032a -->
+<!-- cache-key: cdktf-0.20.8 input-be0c89eb348f62d2a6a8eb5de8f29f1f725c750177016bb80a7bda1858be2ead -->

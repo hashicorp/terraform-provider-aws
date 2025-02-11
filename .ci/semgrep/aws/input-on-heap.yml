@@ -1,0 +1,49 @@
+rules:
+  - id: input-on-heap
+    languages: [go]
+    message: Create the $PKG.$INPUT struct on the stack instead of on the heap
+    paths:
+      exclude:
+        - "internal/service/apigatewayv2"
+        - "internal/service/appconfig"
+        - "internal/service/appfabric"
+        - "internal/service/appflow"
+        - "internal/service/appintegrations"
+        - "internal/service/applicationinsights"
+        - "internal/service/appmesh"
+        - "internal/service/apprunner"
+        - "internal/service/appstream"
+        - "internal/service/appsync"
+        - "internal/service/athena"
+        - "internal/service/auditmanager"
+        - "internal/service/autoscaling"
+        - "internal/service/autoscalingplans"
+        - "internal/service/b*"
+        - "internal/service/c*"
+        - "internal/service/d*"
+        - "internal/service/e*"
+        - "internal/service/f*"
+        - "internal/service/g*"
+        - "internal/service/i*"
+        - "internal/service/k*"
+        - "internal/service/l*"
+        - "internal/service/m*"
+        - "internal/service/n*"
+        - "internal/service/o*"
+        - "internal/service/p*"
+        - "internal/service/q*"
+        - "internal/service/r*"
+        - "internal/service/s*"
+        - "internal/service/t*"
+        - "internal/service/v*"
+        - "internal/service/w*"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $X := &$PKG.$INPUT{ ... }
+          - pattern: |
+              $FUNC(ctx, &$PKG.$INPUT{ ... }, ...)
+      - metavariable-regex:
+          metavariable: $INPUT
+          regex: \w+Input
+    severity: WARNING

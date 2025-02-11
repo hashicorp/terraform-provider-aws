@@ -246,10 +246,11 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -274,9 +275,10 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
+					input := acm.RenewCertificateInput{
 						CertificateArn: v1.CertificateArn,
-					})
+					}
+					_, err := conn.RenewCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("renewing ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -372,10 +374,11 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -399,9 +402,10 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
+					input := acm.RenewCertificateInput{
 						CertificateArn: v1.CertificateArn,
-					})
+					}
+					_, err := conn.RenewCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("renewing ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -482,10 +486,11 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -556,10 +561,11 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -630,10 +636,11 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -771,10 +778,11 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -857,10 +865,11 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -927,10 +936,11 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}

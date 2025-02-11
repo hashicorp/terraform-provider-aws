@@ -65,6 +65,7 @@ The following arguments are optional:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `numReplicasPerShard` - (Optional) The number of replicas to apply to each shard, up to a maximum of 5. Defaults to `1` (i.e. 2 nodes per shard).
 * `numShards` - (Optional) The number of shards in the cluster. Defaults to `1`.
+* `multiRegionClusterName` - (Optional) The multi region cluster identifier specified on `aws_memorydb_multi_region_cluster`.
 * `parameterGroupName` - (Optional) The name of the parameter group associated with the cluster.
 * `port` - (Optional, Forces new resource) The port number on which each of the nodes accepts connections. Defaults to `6379`.
 * `securityGroupIds` - (Optional) Set of VPC Security Group ID-s to associate with this cluster.
@@ -136,4 +137,4 @@ Using `terraform import`, import a cluster using the `name`. For example:
 % terraform import aws_memorydb_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bd7eba75b50da85dc3b9f8f15ceb631cc3be04863e150d5d499d34a64da7128e -->
+<!-- cache-key: cdktf-0.20.8 input-b7d6ace67b9086c72709ff30bb3c3394db50bf541655a54b8bff0392b1a725ba -->

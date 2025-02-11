@@ -77,6 +77,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `agent_collaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customer_encryption_key_arn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
 * `guardrail_configuration` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block) for details.

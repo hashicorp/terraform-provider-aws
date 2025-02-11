@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssoadmin_instance_access_control_attributes")
+// @SDKResource("aws_ssoadmin_instance_access_control_attributes", name="Instance Access Control Attributes")
 func ResourceAccessControlAttributes() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessControlAttributesCreate,

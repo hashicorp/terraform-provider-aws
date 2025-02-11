@@ -48,7 +48,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
-* `id` - ARN of the link.
+* `id` - ARN of the link. Use `arn` instead.
 * `label` - Label that is assigned to this link.
 * `labelTemplate` - Human-readable name used to identify this source account when you are viewing data from it in the monitoring account.
 * `linkConfiguration` - Configuration for creating filters that specify that only some metric namespaces or log groups are to be shared from the source account to the monitoring account. See [`linkConfiguration` Block](#link_configuration-block) for details.
@@ -75,4 +75,4 @@ The `metricConfiguration` configuration block supports the following arguments:
 
 * `filter` - Filter string that specifies  which metrics are to be shared with the monitoring account. See [MetricConfiguration](https://docs.aws.amazon.com/OAM/latest/APIReference/API_MetricConfiguration.html) for details.
 
-<!-- cache-key: cdktf-0.20.8 input-f4729e4598ebdb9f58fe0c4d1e223a55c5e962738dad8cf63407b1f580279abe -->
+<!-- cache-key: cdktf-0.20.8 input-434f47653d9717590d7d6136054574462cb78e0df36afe5f9e85294d44c99415 -->

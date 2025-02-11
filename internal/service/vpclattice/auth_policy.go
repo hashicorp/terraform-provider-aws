@@ -24,8 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_vpclattice_auth_policy")
+// @SDKResource("aws_vpclattice_auth_policy", name="Auth Policy")
 func ResourceAuthPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthPolicyPut,

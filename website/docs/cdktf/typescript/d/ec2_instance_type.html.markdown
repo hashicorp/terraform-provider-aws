@@ -48,11 +48,14 @@ This data source exports the following attributes in addition to the arguments a
 ~> **NOTE:** Not all attributes are set for every instance type.
 
 * `autoRecoverySupported` - `true` if auto recovery is supported.
+* `bandwidthWeightings` - A set of strings of valid settings for [configurable bandwidth weighting](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configure-bandwidth-weighting.html), if supported.
 * `bareMetal` - `true` if it is a bare metal instance type.
+* `bootModes` - A set of strings of supported boot modes.
 * `burstablePerformanceSupported` - `true` if the instance type is a burstable performance instance type.
 * `currentGeneration` - `true`  if the instance type is a current generation.
 * `dedicatedHostsSupported` - `true` if Dedicated Hosts are supported on the instance type.
 * `defaultCores` - Default number of cores for the instance type.
+* `defaultNetworkCardIndex` - The index of the default network card, starting at `0`.
 * `defaultThreadsPerCore` - The  default  number of threads per core for the instance type.
 * `defaultVcpus` - Default number of vCPUs for the instance type.
 * `ebsEncryptionSupport` - Indicates whether Amazon EBS encryption is supported.
@@ -64,25 +67,28 @@ This data source exports the following attributes in addition to the arguments a
 * `ebsPerformanceMaximumBandwidth` - The maximum bandwidth performance for an EBS-optimized instance type, in Mbps.
 * `ebsPerformanceMaximumIops` - The maximum input/output storage operations per second for an EBS-optimized instance type.
 * `ebsPerformanceMaximumThroughput` - The maximum throughput performance for an EBS-optimized instance type, in MBps.
-* `efaSupported` - Whether Elastic Fabric Adapter (EFA) is supported.
-* `enaSupport` - Whether Elastic Network Adapter (ENA) is supported.
-* `encryptionInTransitSupported` - Indicates whether encryption in-transit between instances is supported.
+* `efaMaximumInterfaces` - The maximum number of Elastic Fabric Adapters for the instance type.
+* `efaSupported` - `true` if Elastic Fabric Adapter (EFA) is supported.
+* `enaSrdSupported` - `true` if the instance type supports [ENA Express](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-express.html).
+* `enaSupport` - Indicates whether Elastic Network Adapter (ENA) is `"supported"`, `"required"`, or `"unsupported"`.
+* `encryptionInTransitSupported` - `true` if encryption in-transit between instances is supported.
 * `fpgas` - Describes the FPGA accelerator settings for the instance type.
     * `fpgas.#.count` - The count of FPGA accelerators for the instance type.
     * `fpgas.#.manufacturer` - The manufacturer of the FPGA accelerator.
-    * `fpgas.#.memory_size` - The size (in MiB) for the memory available to the FPGA accelerator.
+    * `fpgas.#.memory_size` - The size (in MiB) of the memory available to the FPGA accelerator.
     * `fpgas.#.name` - The name of the FPGA accelerator.
 * `freeTierEligible` - `true` if the instance type is eligible for the free tier.
 * `gpus` - Describes the GPU accelerators for the instance type.
     * `gpus.#.count` - The number of GPUs for the instance type.
     * `gpus.#.manufacturer` - The manufacturer of the GPU accelerator.
-    * `gpus.#.memory_size` - The size (in MiB) for the memory available to the GPU accelerator.
+    * `gpus.#.memory_size` - The size (in MiB) of the memory available to the GPU accelerator.
     * `gpus.#.name` - The name of the GPU accelerator.
 * `hibernationSupported` - `true` if On-Demand hibernation is supported.
 * `hypervisor` - Hypervisor used for the instance type.
 * `inferenceAccelerators` Describes the Inference accelerators for the instance type.
     * `inference_accelerators.#.count` - The number of Inference accelerators for the instance type.
     * `inference_accelerators.#.manufacturer` - The manufacturer of the Inference accelerator.
+    * `inference_accelerators.#.memory_size` - The size (in MiB) of the memory available to the inference accelerator.
     * `inference_accelerators.#.name` - The name of the Inference accelerator.
 * `instanceDisks` - Describes the disks for the instance type.
     * `instance_disks.#.count` - The number of disks with this configuration.
@@ -94,17 +100,42 @@ This data source exports the following attributes in addition to the arguments a
 * `maximumIpv6AddressesPerInterface` - The maximum number of IPv6 addresses per network interface.
 * `maximumNetworkCards` - The maximum number of physical network cards that can be allocated to the instance.
 * `maximumNetworkInterfaces` - The maximum number of network interfaces for the instance type.
+* `mediaAccelerators` -  Describes the media accelerator settings for the instance type.
+    * `media_accelerators.#.count` - The number of media accelerators for the instance type.
+    * `media_accelerators.#.manufacturer` - The manufacturer of the media accelerator.
+    * `media_accelerators.#.memory_size` - The size (in MiB) of the memory available to each media accelerator.
+    * `media_accelerators.#.name` - The name of the media accelerator.
 * `memorySize` - Size of the instance memory, in MiB.
+* `networkCards` - Describes the network cards for the instance type.
+    * `network_cards.#.baseline_bandwidth` - The baseline network performance (in Gbps) of the network card.
+    * `network_cards.#.index` - The index of the network card.
+    * `network_cards.#.maximum_interfaces` - The maximum number of network interfaces for the /network card.
+    * `network_cards.#.performance` - Describes the network performance of the network card.
+    * `network_cards.#.peak_bandwidth` - The peak (burst) network performance (in Gbps) of the network card.
 * `networkPerformance` - Describes the network performance.
-* `supportedArchitectures` - A list of architectures supported by the instance type.
+* `neuronDevices` - Describes the Neuron accelerator settings for the instance type.
+    * `neuron_devices.#.core_count` - The number of cores available to the neuron accelerator.
+    * `neuron_devices.#.core_version` - A number representing the version of the neuron accelerator.
+    * `neuron_devices.#.count` - The number of neuron accelerators for the instance type.
+    * `neuron_devices.#.memory_size` - The size (in MiB) of the memory available to the neuron accelerator.
+    * `neuron_devices.#.name` - The name of the neuron accelerator.
+* `nitroEnclavesSupport` - Indicates whether Nitro Enclaves is `"supported"` or `"unsupported"`.
+* `nitroTpmSupport` - Indicates whether NitroTPM is `"supported"` or `"unsupported"`.
+* `nitroTpmSupportedVersions` - A set of strings indicating the supported NitroTPM versions.
+* `phcSupport` - `true` if a local Precision Time Protocol (PTP) hardware clock (PHC) is supported.
+* `supportedArchitectures` - A list of strings of architectures supported by the instance type.
+* `supportedCpuFeatures` - A set of strings indicating supported CPU features.
 * `supportedPlacementStrategies` - A list of supported placement groups types.
-* `supportedRootDeviceTypes` - Indicates the supported root device types.
-* `supportedUsagesClasses` - Indicates whether the instance type is offered for spot or On-Demand.
+* `supportedRootDeviceTypes` - A list of supported root device types.
+* `supportedUsagesClasses` - A list of supported usage classes.  Usage classes are `"spot"`, `"on-demand"`, or `"capacity-block"`.
 * `supportedVirtualizationTypes` - The supported virtualization types.
 * `sustainedClockSpeed` - The speed of the processor, in GHz.
 * `totalFpgaMemory` - Total memory of all FPGA accelerators for the instance type (in MiB).
 * `totalGpuMemory` - Total size of the memory for the GPU accelerators for the instance type (in MiB).
+* `totalInferenceMemory` - The total size of the memory for the neuron accelerators for the instance type (in MiB).
 * `totalInstanceStorage` - The total size of the instance disks, in GB.
+* `totalNeuronDeviceMemory` - The total size of the memory for the neuron accelerators for the instance type (in MiB).
+* `totalMediaMemory` - The total size of the memory for the media accelerators for the instance type (in MiB).
 * `validCores` - List of the valid number of cores that can be configured for the instance type.
 * `validThreadsPerCore` - List of the valid number of threads per core that can be configured for the instance type.
 
@@ -114,4 +145,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-252aea618bdc0d84a31b332d0bcbeb1cfa651313c051ec4ccf79e7e89e9f6ce2 -->
+<!-- cache-key: cdktf-0.20.8 input-09aa30c4f043eb6427bb2617f53a2ea3db77eb891c300b1cf74bb5227c558245 -->

@@ -32,8 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Host")
+// @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
@@ -108,7 +107,7 @@ func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							ElementType: types.StringType,
 						},
 						"tls_certificate": schema.StringAttribute{
-							Required: true,
+							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 16384),
 							},
@@ -190,7 +189,13 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	out, err := findHostbyARN(ctx, conn, data.ID.ValueString())
+	vpcConfiguration, d := data.VPCConfiguration.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := findHostByARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -202,6 +207,10 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			err.Error(),
 		)
 		return
+	}
+
+	if vpcConfiguration != nil && out.VpcConfiguration != nil {
+		out.VpcConfiguration.TlsCertificate = fwflex.StringFromFramework(ctx, vpcConfiguration.TlsCertificate)
 	}
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
@@ -353,7 +362,7 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 
 func statusHost(ctx context.Context, conn *codeconnections.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findHostbyARN(ctx, conn, id)
+		out, err := findHostByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -366,7 +375,7 @@ func statusHost(ctx context.Context, conn *codeconnections.Client, id string) re
 	}
 }
 
-func findHostbyARN(ctx context.Context, conn *codeconnections.Client, arn string) (*awstypes.Host, error) {
+func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string) (*awstypes.Host, error) {
 	input := &codeconnections.GetHostInput{
 		HostArn: aws.String(arn),
 	}

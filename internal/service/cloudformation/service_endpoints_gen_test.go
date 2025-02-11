@@ -283,9 +283,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListStackInstances(ctx, &cloudformation.ListStackInstancesInput{
+	input := cloudformation.ListStackInstancesInput{
 		StackSetName: aws.String("test"),
-	},
+	}
+	_, err := client.ListStackInstances(ctx, &input,
 		func(opts *cloudformation.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

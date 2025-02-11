@@ -267,6 +267,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// billing
+
+				"billing": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// budgets
 
 				"budgets": {
@@ -1135,6 +1143,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// invoicing
+
+				"invoicing": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// iot
 
 				"iot": {
@@ -1442,6 +1458,14 @@ func endpointsSchema() *schema.Schema {
 				// memorydb
 
 				"memorydb": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// mgn
+
+				"mgn": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -2160,6 +2184,14 @@ func endpointsSchema() *schema.Schema {
 				// timestreaminfluxdb
 
 				"timestreaminfluxdb": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// timestreamquery
+
+				"timestreamquery": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

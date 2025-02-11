@@ -5,12 +5,10 @@ package networkmanager
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -106,7 +104,6 @@ func resourceTransitGatewayRouteTableAttachment() *schema.Resource {
 
 func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	peeringID := d.Get("peering_id").(string)
@@ -117,7 +114,6 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 		TransitGatewayRouteTableArn: aws.String(transitGatewayRouteTableARN),
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Route Table Attachment: %#v", input)
 	output, err := conn.CreateTransitGatewayRouteTableAttachment(ctx, input)
 
 	if err != nil {
@@ -135,7 +131,6 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 
 func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	transitGatewayRouteTableAttachment, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
@@ -150,27 +145,21 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
 	}
 
-	a := transitGatewayRouteTableAttachment.Attachment
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "networkmanager",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("attachment/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
-	d.Set("attachment_type", a.AttachmentType)
-	d.Set("core_network_arn", a.CoreNetworkArn)
-	d.Set("core_network_id", a.CoreNetworkId)
-	d.Set("edge_location", a.EdgeLocation)
-	d.Set(names.AttrOwnerAccountID, a.OwnerAccountId)
+	attachment := transitGatewayRouteTableAttachment.Attachment
+	d.Set(names.AttrARN, attachmentARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set("attachment_policy_rule_number", attachment.AttachmentPolicyRuleNumber)
+	d.Set("attachment_type", attachment.AttachmentType)
+	d.Set("core_network_arn", attachment.CoreNetworkArn)
+	d.Set("core_network_id", attachment.CoreNetworkId)
+	d.Set("edge_location", attachment.EdgeLocation)
+	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set("peering_id", transitGatewayRouteTableAttachment.PeeringId)
-	d.Set(names.AttrResourceARN, a.ResourceArn)
-	d.Set("segment_name", a.SegmentName)
-	d.Set(names.AttrState, a.State)
+	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+	d.Set("segment_name", attachment.SegmentName)
+	d.Set(names.AttrState, attachment.State)
 	d.Set("transit_gateway_route_table_arn", transitGatewayRouteTableAttachment.TransitGatewayRouteTableArn)
 
-	setTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, attachment.Tags)
 
 	return diags
 }
@@ -182,7 +171,6 @@ func resourceTransitGatewayRouteTableAttachmentUpdate(ctx context.Context, d *sc
 
 func resourceTransitGatewayRouteTableAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Route Table Attachment: %s", d.Id())
@@ -230,7 +218,7 @@ func findTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *netwo
 	return output.TransitGatewayRouteTableAttachment, nil
 }
 
-func statusTransitGatewayRouteTableAttachmentState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, id)
 
@@ -248,15 +236,18 @@ func statusTransitGatewayRouteTableAttachmentState(ctx context.Context, conn *ne
 
 func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayRouteTableAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
-		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
-		Timeout: timeout,
-		Refresh: statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
+		Timeout:                   timeout,
+		Refresh:                   statusTransitGatewayRouteTableAttachment(ctx, conn, id),
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRouteTableAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -268,13 +259,15 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Refresh:        statusTransitGatewayRouteTableAttachment(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRouteTableAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -286,12 +279,14 @@ func waitTransitGatewayRouteTableAttachmentAvailable(ctx context.Context, conn *
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,
-		Refresh: statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Refresh: statusTransitGatewayRouteTableAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRouteTableAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 

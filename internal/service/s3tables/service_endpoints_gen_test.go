@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListTableBuckets(ctx, &s3tables.ListTableBucketsInput{},
+	input := s3tables.ListTableBucketsInput{}
+	_, err := client.ListTableBuckets(ctx, &input,
 		func(opts *s3tables.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

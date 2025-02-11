@@ -143,7 +143,7 @@ The `criteria` configuration block supports the following attributes:
 
 The string filter configuration block supports the following arguments:
 
-* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
+* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`, `CONTAINS`, and `NOT_CONTAINS`.
 * `value` - (Required) The string filter value. Filter values are case sensitive.
 
 ### Number Filter Argument reference
@@ -259,4 +259,4 @@ Using `terraform import`, import Security Hub automation rule using their ARN. F
 % terraform import aws_securityhub_automation_rule.example arn:aws:securityhub:us-west-2:123456789012:automation-rule/473eddde-f5c4-4ae5-85c7-e922f271fffc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d39a588992b913aa1997d25a28592253791dd418817f1cd29a608ab212177149 -->
+<!-- cache-key: cdktf-0.20.8 input-00034d3bd4657d0cd8bf50d12c351e064ccdf782d95b7f6dc264c344441858c1 -->

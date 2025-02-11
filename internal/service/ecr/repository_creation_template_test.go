@@ -87,7 +87,6 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	resourceName := "aws_ecr_repository_creation_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -96,10 +95,7 @@ func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryCreationTemplateConfig_failWhenAlreadyExist(repositoryPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
-				),
+				Config:      testAccRepositoryCreationTemplateConfig_failWhenAlreadyExists(repositoryPrefix),
 				ExpectError: regexache.MustCompile(`TemplateAlreadyExistsException`),
 			},
 		},
@@ -246,7 +242,7 @@ resource "aws_ecr_repository_creation_template" "test" {
 `, repositoryPrefix)
 }
 
-func testAccRepositoryCreationTemplateConfig_failWhenAlreadyExist(repositoryPrefix string) string {
+func testAccRepositoryCreationTemplateConfig_failWhenAlreadyExists(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository_creation_template" "test" {
   prefix = %[1]q

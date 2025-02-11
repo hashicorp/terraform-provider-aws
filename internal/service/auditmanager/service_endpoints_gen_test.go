@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{},
+	input := auditmanager.GetAccountStatusInput{}
+	_, err := client.GetAccountStatus(ctx, &input,
 		func(opts *auditmanager.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

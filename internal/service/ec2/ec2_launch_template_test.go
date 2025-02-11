@@ -1096,6 +1096,38 @@ func TestAccEC2LaunchTemplate_networkInterfaceIPv6Prefixes(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_networkInterfaceConnectionTrackingSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceConnectionTrackingSpecification(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.0.tcp_established_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.0.udp_stream_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.0.udp_timeout", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -4043,6 +4075,22 @@ resource "aws_launch_template" "test" {
 
   network_interfaces {
     ipv6_prefixes = ["2001:db8::/80"]
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_networkInterfaceConnectionTrackingSpecification(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    connection_tracking_specification {
+      tcp_established_timeout = 60
+      udp_stream_timeout      = 60
+      udp_timeout             = 30
+    }
   }
 }
 `, rName)

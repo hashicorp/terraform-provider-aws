@@ -40,7 +40,8 @@ class MyConvertedCode(TerraformStack):
 This data source exports the following attributes in addition to the arguments above:
 
 * `amazon_side_asn` - ASN on the Amazon side of the connection.
+* `arn` - ARN of the gateway.
 * `id` - ID of the gateway.
 * `owner_account_id` - AWS Account ID of the gateway.
 
-<!-- cache-key: cdktf-0.20.8 input-3127f300941d7e2a8378ebe59e0ac105a1d12fbec8c4b114a8a16614047676a0 -->
+<!-- cache-key: cdktf-0.20.8 input-067fc66c34cea26a303450ddc8be5a8b1a38f06721e0abe009d9fc2188a6b0aa -->

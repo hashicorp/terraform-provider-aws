@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_global_cluster: Mark `database_name` as Computed. This prevents resource recreation when the source cluster specifies a `database_name`
+```

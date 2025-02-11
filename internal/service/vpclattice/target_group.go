@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_vpclattice_target_group", name="Target Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,

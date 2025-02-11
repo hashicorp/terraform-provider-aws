@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_classifier")
+// @SDKResource("aws_glue_classifier", name="Classifier")
 func ResourceClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassifierCreate,

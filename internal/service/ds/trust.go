@@ -38,7 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Trust")
+// @FrameworkResource("aws_directory_service_trust", name="Trust")
 func newTrustResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustResource{}, nil
 }

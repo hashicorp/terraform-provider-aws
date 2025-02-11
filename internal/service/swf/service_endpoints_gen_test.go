@@ -283,9 +283,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDomains(ctx, &swf.ListDomainsInput{
+	input := swf.ListDomainsInput{
 		RegistrationStatus: "REGISTERED",
-	},
+	}
+	_, err := client.ListDomains(ctx, &input,
 		func(opts *swf.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

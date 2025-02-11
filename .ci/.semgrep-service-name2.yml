@@ -2225,6 +2225,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Meta"
     severity: WARNING
+  - id: mgn-in-func-name
+    languages:
+      - go
+    message: Do not use "Mgn" in func name inside mgn package
+    paths:
+      include:
+        - internal/service/mgn
+      exclude:
+        - internal/service/mgn/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Mgn"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: mgn-in-test-name
+    languages:
+      - go
+    message: Include "Mgn" in test name
+    paths:
+      include:
+        - internal/service/mgn/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccMgn"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: mgn-in-const-name
+    languages:
+      - go
+    message: Do not use "Mgn" in const name inside mgn package
+    paths:
+      include:
+        - internal/service/mgn
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Mgn"
+    severity: WARNING
+  - id: mgn-in-var-name
+    languages:
+      - go
+    message: Do not use "Mgn" in var name inside mgn package
+    paths:
+      include:
+        - internal/service/mgn
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Mgn"
+    severity: WARNING
   - id: mq-in-func-name
     languages:
       - go

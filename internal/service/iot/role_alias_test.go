@@ -56,10 +56,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Check:  resource.ComposeTestCheckFunc(testAccCheckRoleAliasExists(ctx, resourceName2)),
 			},
 			{
-				Config: testAccRoleAliasConfig_update3(alias, alias2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName2),
-				),
+				Config:      testAccRoleAliasConfig_update3(alias, alias2),
 				ExpectError: regexache.MustCompile("Role alias .+? already exists for this account"),
 			},
 			{

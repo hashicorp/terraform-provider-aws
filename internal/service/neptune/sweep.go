@@ -290,6 +290,10 @@ func sweepClusterInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
+			if aws.ToString(v.Engine) != engineNeptune {
+				continue
+			}
+
 			id := aws.ToString(v.DBInstanceIdentifier)
 
 			if state := aws.ToString(v.DBInstanceStatus); state == dbInstanceStatusDeleting {

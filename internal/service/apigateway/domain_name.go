@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -197,7 +196,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
-	input := &apigateway.CreateDomainNameInput{
+	input := apigateway.CreateDomainNameInput{
 		DomainName:              aws.String(domainName),
 		MutualTlsAuthentication: expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
 		Tags:                    getTagsIn(ctx),
@@ -247,7 +246,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SecurityPolicy = types.SecurityPolicy(v.(string))
 	}
 
-	output, err := conn.CreateDomainName(ctx, input)
+	output, err := conn.CreateDomainName(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Domain Name (%s): %s", domainName, err)
@@ -279,7 +278,11 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	if output.DomainNameArn != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrARN, output.DomainNameArn)
+	} else {
+		d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	}
 	d.Set(names.AttrCertificateARN, output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
 	if output.CertificateUploadDate != nil {
@@ -421,7 +424,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			})
 		}
 
-		input := &apigateway.UpdateDomainNameInput{
+		input := apigateway.UpdateDomainNameInput{
 			DomainName:      aws.String(domainName),
 			PatchOperations: operations,
 		}
@@ -429,13 +432,13 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.DomainNameId = aws.String(domainNameID)
 		}
 
-		_, err := conn.UpdateDomainName(ctx, input)
+		_, err := conn.UpdateDomainName(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Domain Name (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDomainNameUpdated(ctx, conn, d.Id(), domainNameID); err != nil {
+		if _, err := waitDomainNameUpdated(ctx, conn, domainName, domainNameID); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Domain Name (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -452,7 +455,7 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &apigateway.DeleteDomainNameInput{
+	input := apigateway.DeleteDomainNameInput{
 		DomainName: aws.String(domainName),
 	}
 	if domainNameID != "" {
@@ -460,7 +463,7 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
-	_, err = conn.DeleteDomainName(ctx, input)
+	_, err = conn.DeleteDomainName(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -473,7 +476,7 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-const domainNameResourceIDSeparator = flex.ResourceIdSeparator
+const domainNameResourceIDSeparator = "/"
 
 func domainNameCreateResourceID(domainName, domainNameID string) string {
 	var id string
@@ -504,14 +507,14 @@ func domainNameParseResourceID(id string) (string, string, error) {
 }
 
 func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) (*apigateway.GetDomainNameOutput, error) {
-	input := &apigateway.GetDomainNameInput{
+	input := apigateway.GetDomainNameInput{
 		DomainName: aws.String(domainName),
 	}
 	if domainNameID != "" {
 		input.DomainNameId = aws.String(domainNameID)
 	}
 
-	output, err := conn.GetDomainName(ctx, input)
+	output, err := conn.GetDomainName(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -578,7 +581,7 @@ func expandMutualTLSAuthentication(tfList []interface{}) *types.MutualTlsAuthent
 
 	tfMap := tfList[0].(map[string]interface{})
 
-	apiObject := &types.MutualTlsAuthenticationInput{}
+	apiObject := &types.MutualTlsAuthenticationInput{} // nosemgrep:ci.semgrep.aws.input-on-heap
 
 	if v, ok := tfMap["truststore_uri"].(string); ok && v != "" {
 		apiObject.TruststoreUri = aws.String(v)
