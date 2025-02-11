@@ -303,7 +303,7 @@ resource "aws_detective_member" "test" {
   email_address = data.aws_organizations_organization.test.non_master_accounts[0].email
 
   depends_on = [aws_detective_organization_configuration.test]
- }
+}
 
 resource "aws_detective_organization_configuration" "test" {
   auto_enable = %[1]t
