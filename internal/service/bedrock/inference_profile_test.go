@@ -203,9 +203,10 @@ func testAccCheckInferenceProfileExists(ctx context.Context, name string, infere
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-		resp, err := conn.GetInferenceProfile(ctx, &bedrock.GetInferenceProfileInput{
+		input := bedrock.GetInferenceProfileInput{
 			InferenceProfileIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetInferenceProfile(ctx, &input)
 		if err != nil {
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameInferenceProfile, rs.Primary.ID, err)
 		}
