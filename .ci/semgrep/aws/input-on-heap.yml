@@ -52,7 +52,6 @@ rules:
       exclude:
         - "internal/service/auditmanager"
         - "internal/service/autoscaling"
-        - "internal/service/autoscalingplans"
         - "internal/service/b*"
         - "internal/service/c*"
         - "internal/service/d*"
