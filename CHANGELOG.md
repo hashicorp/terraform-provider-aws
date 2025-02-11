@@ -1,4 +1,5 @@
-## 5.86.1 (Unreleased)
+## 5.87.0 (Unreleased)
+## 5.86.1 (February 11, 2025)
 
 BUG FIXES:
 
