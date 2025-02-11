@@ -174,6 +174,8 @@ func testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &a),
 				),
+				// Calling a NotRecreated function, such as testAccCheckRouteTableAssociationNotRecreated, as is typical,
+				// won't work here because the recreated resource ID will be the same, because it's two IDs pegged together.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -232,7 +234,8 @@ func testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx context.Context)
 }
 
 // testAccCheckRouteTableAssociationNotRecreated function, as is typical, cannot work here because
-// the resource ID will be the same, even if the association is recreated.
+// the resource ID will be the same, even if the association is recreated. See the test for
+// notRecreatedDXGateway for more details.
 
 func testAccTransitGatewayRouteTableAssociationConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
