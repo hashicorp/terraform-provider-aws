@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add `monitoring_interval` and `monitoring_role_arn` arguments
+```
+
+```release-note:enhancement
+data-source/aws_rds_cluster: Add `monitoring_interval` and `monitoring_role_arn` attributes
+```

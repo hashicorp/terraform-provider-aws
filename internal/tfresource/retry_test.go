@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,8 +19,6 @@ import (
 func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	t.Parallel()
-
-	var retryCount int32
 
 	testCases := []struct {
 		Name        string
@@ -41,37 +38,10 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 			},
 			ExpectError: true,
 		},
-		{
-			Name: "non-retryable AWS error",
-			F: func() (interface{}, error) {
-				return nil, awserr.New("Testing", "Testing", nil)
-			},
-			ExpectError: true,
-		},
-		{
-			Name: "retryable AWS error timeout",
-			F: func() (interface{}, error) {
-				return nil, awserr.New("TestCode1", "TestMessage", nil)
-			},
-			ExpectError: true,
-		},
-		{
-			Name: "retryable AWS error success",
-			F: func() (interface{}, error) {
-				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
-					return nil, awserr.New("TestCode2", "TestMessage", nil)
-				}
-
-				return nil, nil
-			},
-		},
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
-			retryCount = 0
-
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Second, testCase.F, "TestCode1", "TestCode2")
 
 			if testCase.ExpectError && err == nil {
@@ -88,8 +58,6 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 	ctx := acctest.Context(t)
 	t.Parallel()
 
-	var retryCount int32
-
 	testCases := []struct {
 		Name        string
 		F           func() (interface{}, error)
@@ -108,37 +76,10 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 			},
 			ExpectError: true,
 		},
-		{
-			Name: "non-retryable AWS error",
-			F: func() (interface{}, error) {
-				return nil, awserr.New("TestCode1", "Testing", nil)
-			},
-			ExpectError: true,
-		},
-		{
-			Name: "retryable AWS error timeout",
-			F: func() (interface{}, error) {
-				return nil, awserr.New("TestCode1", "TestMessage1", nil)
-			},
-			ExpectError: true,
-		},
-		{
-			Name: "retryable AWS error success",
-			F: func() (interface{}, error) {
-				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
-					return nil, awserr.New("TestCode1", "TestMessage1", nil)
-				}
-
-				return nil, nil
-			},
-		},
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
-			retryCount = 0
-
 			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Second, testCase.F, "TestCode1", "TestMessage1")
 
 			if testCase.ExpectError && err == nil {
@@ -191,13 +132,6 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 			ExpectError: true,
 		},
 		{
-			Name: "non-retryable AWS error",
-			F: func() (interface{}, error) {
-				return nil, awserr.New("Testing", "Testing", nil)
-			},
-			ExpectError: true,
-		},
-		{
 			Name: "retryable NotFoundError not new resource",
 			F: func() (interface{}, error) {
 				return nil, &retry.NotFoundError{}
@@ -226,7 +160,6 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -266,13 +199,6 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 			ExpectError: true,
 		},
 		{
-			Name: "non-retryable AWS error",
-			F: func() (interface{}, error) {
-				return nil, awserr.New("Testing", "Testing", nil)
-			},
-			ExpectError: true,
-		},
-		{
 			Name: "retryable NotFoundError timeout",
 			F: func() (interface{}, error) {
 				return nil, &retry.NotFoundError{}
@@ -292,7 +218,6 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -333,13 +258,6 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 			ExpectError: true,
 		},
 		{
-			Name: "AWS error",
-			F: func() (interface{}, error) {
-				return nil, awserr.New("Testing", "Testing", nil)
-			},
-			ExpectError: true,
-		},
-		{
 			Name: "NotFoundError",
 			F: func() (interface{}, error) {
 				return nil, &retry.NotFoundError{}
@@ -358,7 +276,6 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 	}
 
 	for _, testCase := range testCases { //nolint:paralleltest
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -389,7 +306,7 @@ func TestRetryContext_error(t *testing.T) {
 
 	select {
 	case err := <-errCh:
-		if err != expected { //nolint: errorlint // We are actually comparing equality
+		if err != expected { //nolint:errorlint // We are actually comparing equality
 			t.Fatalf("bad: %#v", err)
 		}
 	case <-time.After(5 * time.Second):
@@ -451,7 +368,6 @@ func TestOptionsApply(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

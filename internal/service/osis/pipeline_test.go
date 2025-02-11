@@ -33,7 +33,7 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,10 +47,10 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_units", "1"),
 					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
 				),
 			},
@@ -75,7 +75,7 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "buffer_options.0.persistent_buffer_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "buffer_options.0.persistent_buffer_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "buffer_options.0.persistent_buffer_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "buffer_options.0.persistent_buffer_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -146,7 +146,7 @@ func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +180,7 @@ func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -190,7 +190,7 @@ func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.0.is_logging_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.0.is_logging_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.0.cloudwatch_log_destination.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_publishing_options.0.cloudwatch_log_destination.0.log_group"),
 				),
@@ -216,7 +216,7 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -254,33 +254,33 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineConfig_tags1(rName, "key1", "value1"),
+				Config: testAccPipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccPipelineConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPipelineConfig_tags1(rName, "key2", "value2"),
+				Config: testAccPipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

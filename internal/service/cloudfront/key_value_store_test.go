@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +22,7 @@ import (
 
 func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
+	var keyvaluestore awstypes.KeyValueStore
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_value_store.test"
 
@@ -38,11 +39,14 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "comment"),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", "key-value-store/"+aws.ToString(keyvaluestore.Id))(s)
+					},
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -56,7 +60,7 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
+	var keyvaluestore awstypes.KeyValueStore
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_value_store.test"
 
@@ -83,7 +87,7 @@ func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
+	var keyvaluestore awstypes.KeyValueStore
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_value_store.test"
 	comment1 := "comment1"
@@ -99,7 +103,7 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_comment(rName, comment1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, comment1),
 				),
 			},
 			{
@@ -111,7 +115,7 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_comment(rName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, comment2),
 				),
 			},
 		},
@@ -144,7 +148,7 @@ func testAccCheckKeyValueStoreDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckKeyValueStoreExists(ctx context.Context, n string, v *cloudfront.DescribeKeyValueStoreOutput) resource.TestCheckFunc {
+func testAccCheckKeyValueStoreExists(ctx context.Context, n string, v *awstypes.KeyValueStore) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -159,7 +163,7 @@ func testAccCheckKeyValueStoreExists(ctx context.Context, n string, v *cloudfron
 			return err
 		}
 
-		*v = *output
+		*v = *output.KeyValueStore
 
 		return nil
 	}

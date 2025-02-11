@@ -8,8 +8,6 @@ description: |-
 
 # Using AWS & AWSCC Provider Together
 
-~> **NOTE:** The `awscc` provider is currently in technical preview. This means some aspects of its design and implementation are not yet considered stable for production use. We are actively looking for community feedback in order to identify needed improvements.
-
 The [HashiCorp Terraform AWS Cloud Control Provider](https://registry.terraform.io/providers/hashicorp/awscc/latest) aims to bring Amazon Web Services (AWS) resources to Terraform users faster. The new provider is automatically generated, which means new features and services on AWS can be supported right away. The AWS Cloud Control provider supports hundreds of AWS resources, with more support being added as AWS service teams adopt the Cloud Control API standard.
 
 For Terraform users managing infrastructure on AWS, we expect the AWSCC provider will be used alongside the existing AWS provider. This guide is provided to show guidance and an example of using the providers together to deploy an AWS Cloud WAN Core Network.

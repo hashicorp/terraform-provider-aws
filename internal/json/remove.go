@@ -46,7 +46,7 @@ func RemoveFields(in string, fields ...string) string {
 
 // RemoveEmptyFields removes all empty fields from a valid JSON string.
 func RemoveEmptyFields(in []byte) []byte {
-	n := 0
+	var n int
 	for {
 		in, n = removeEmptyFields(in)
 		if n == 0 {

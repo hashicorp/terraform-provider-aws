@@ -275,14 +275,14 @@ The number filter configuration block supports the following arguments:
 
 The string filter configuration block supports the following arguments:
 
-* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
+* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`, `CONTAINS`, and `NOT_CONTAINS`.
 * `value` - (Required) The string filter value. Filter values are case sensitive.
 
 ### Workflow Status Filter Argument reference
 
 The workflow status filter configuration block supports the following arguments:
 
-* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
+* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`, `CONTAINS`, and `NOT_CONTAINS`.
 * `value` - (Required) The string filter value. Valid values include: `NEW`, `NOTIFIED`, `SUPPRESSED`, and `RESOLVED`.
 
 ## Attribute Reference

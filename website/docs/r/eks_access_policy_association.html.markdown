@@ -29,7 +29,7 @@ resource "aws_eks_access_policy_association" "example" {
 
 The following arguments are required:
 
-* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `cluster_name` – (Required) Name of the EKS Cluster.
 * `policy_arn` – (Required) The ARN of the access policy that you're associating.
 * `principal_arn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
 * `access_scope` – (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
@@ -64,7 +64,7 @@ The `associated_access_policy` block has the following attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name`, `principal_arn`and `policy_arn` separated by a colon (`#`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name`, `principal_arn`and `policy_arn` separated by an octothorp (`#`). For example:
 
 ```terraform
 import {
@@ -73,7 +73,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EKS access entry using the `cluster_name` `principal_arn` and `policy_arn` separated by a colon (`#`). For example:
+Using `terraform import`, import EKS access entry using the `cluster_name` `principal_arn` and `policy_arn` separated by an octothorp (`#`). For example:
 
 ```console
 % terraform import aws_eks_access_policy_association.my_eks_access_entry my_cluster_name#my_principal_arn#my_policy_arn

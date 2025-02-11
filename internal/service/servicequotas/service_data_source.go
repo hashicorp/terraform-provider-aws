@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicequotas_service")
+// @SDKDataSource("aws_servicequotas_service", name="Service)
 func DataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
@@ -25,7 +26,7 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -37,7 +38,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
-	serviceName := d.Get("service_name").(string)
+	serviceName := d.Get(names.AttrServiceName).(string)
 
 	input := &servicequotas.ListServicesInput{}
 
@@ -50,7 +51,6 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		for _, s := range page.Services {
-			s := s
 			if aws.ToString(s.ServiceName) == serviceName {
 				service = &s
 				break
@@ -67,7 +67,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("service_code", service.ServiceCode)
-	d.Set("service_name", service.ServiceName)
+	d.Set(names.AttrServiceName, service.ServiceName)
 	d.SetId(aws.ToString(service.ServiceCode))
 
 	return diags

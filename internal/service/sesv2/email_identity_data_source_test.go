@@ -21,7 +21,7 @@ func TestAccSESV2EmailIdentityDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -29,7 +29,7 @@ func TestAccSESV2EmailIdentityDataSource_basic(t *testing.T) {
 				Config: testAccEmailIdentityDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, dataSourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "email_identity", dataSourceName, "email_identity"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.#", dataSourceName, "dkim_signing_attributes.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.current_signing_key_length", dataSourceName, "dkim_signing_attributes.0.current_signing_key_length"),

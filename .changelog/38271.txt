@@ -1,0 +1,4 @@
+@@ -0,0 +1,27 @@
+```release-note:enhancement
+resource/aws_ssm_association: Add `tags` argument and `tags_all` attribute
+```

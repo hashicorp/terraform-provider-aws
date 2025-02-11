@@ -7,20 +7,21 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_servicecatalog_product_portfolio_association")
-func ResourceProductPortfolioAssociation() *schema.Resource {
+// @SDKResource("aws_servicecatalog_product_portfolio_association", name="Product Portfolio Association")
+func resourceProductPortfolioAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductPortfolioAssociationCreate,
 		ReadWithoutTimeout:   resourceProductPortfolioAssociationRead,
@@ -40,8 +41,8 @@ func ResourceProductPortfolioAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			"portfolio_id": {
 				Type:     schema.TypeString,
@@ -64,7 +65,7 @@ func ResourceProductPortfolioAssociation() *schema.Resource {
 
 func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.AssociateProductWithPortfolioInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
@@ -82,10 +83,9 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 	var output *servicecatalog.AssociateProductWithPortfolioOutput
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
+		output, err = conn.AssociateProductWithPortfolio(ctx, input)
 
-		output, err = conn.AssociateProductWithPortfolioWithContext(ctx, input)
-
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -97,7 +97,7 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.AssociateProductWithPortfolioWithContext(ctx, input)
+		output, err = conn.AssociateProductWithPortfolio(ctx, input)
 	}
 
 	if err != nil {
@@ -108,22 +108,22 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product Portfolio Association: empty response")
 	}
 
-	d.SetId(ProductPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
+	d.SetId(productPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
 	return append(diags, resourceProductPortfolioAssociationRead(ctx, d, meta)...)
 }
 
 func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
+	acceptLanguage, portfolioID, productID, err := productPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
 	}
 
-	output, err := WaitProductPortfolioAssociationReady(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutRead))
+	output, err := waitProductPortfolioAssociationReady(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Product Portfolio Association (%s) not found, removing from state", d.Id())
@@ -149,9 +149,9 @@ func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.Reso
 
 func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
+	acceptLanguage, portfolioID, productID, err := productPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -166,9 +166,9 @@ func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.Re
 		input.AcceptLanguage = aws.String(acceptLanguage)
 	}
 
-	_, err = conn.DisassociateProductFromPortfolioWithContext(ctx, input)
+	_, err = conn.DisassociateProductFromPortfolio(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -176,7 +176,7 @@ func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "disassociating Service Catalog Product from Portfolio (%s): %s", d.Id(), err)
 	}
 
-	err = WaitProductPortfolioAssociationDeleted(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutDelete))
+	err = waitProductPortfolioAssociationDeleted(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Product Portfolio Disassociation (%s): %s", d.Id(), err)

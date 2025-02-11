@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Model Invocation Logging Configuration")
+// @FrameworkResource("aws_bedrock_model_invocation_logging_configuration", name="Model Invocation Logging Configuration")
 func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceModelInvocationLoggingConfiguration{}, nil
 }
@@ -63,11 +63,11 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					"cloudwatch_config": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"log_group_name": schema.StringAttribute{
+							names.AttrLogGroupName: schema.StringAttribute{
 								// Required: true,
 								Optional: true,
 							},
-							"role_arn": schema.StringAttribute{
+							names.AttrRoleARN: schema.StringAttribute{
 								CustomType: fwtypes.ARNType,
 								Optional:   true,
 							},
@@ -76,7 +76,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							"large_data_delivery_s3_config": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 								Attributes: map[string]schema.Attribute{
-									"bucket_name": schema.StringAttribute{
+									names.AttrBucketName: schema.StringAttribute{
 										// Required: true,
 										Optional: true,
 									},
@@ -90,7 +90,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					"s3_config": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"bucket_name": schema.StringAttribute{
+							names.AttrBucketName: schema.StringAttribute{
 								// Required: true,
 								Optional: true,
 							},
@@ -118,7 +118,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().Region)
+	data.ID = types.StringValue(r.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

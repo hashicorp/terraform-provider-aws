@@ -5,7 +5,7 @@ package lightsail
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_https_redirection_policy")
+// @SDKResource("aws_lightsail_lb_https_redirection_policy", name="Load Balancer HTTPS Redirection Policy")
 func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerHTTPSRedirectionPolicyCreate,
@@ -34,7 +34,7 @@ func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -60,7 +60,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 	in := lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(lbName),
 		AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-		AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
+		AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 	}
 
 	out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -97,7 +97,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *sche
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerHTTPSRedirectionPolicy, d.Id(), err)
 	}
 
-	d.Set("enabled", out)
+	d.Set(names.AttrEnabled, out)
 	d.Set("lb_name", d.Id())
 
 	return diags
@@ -108,11 +108,11 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
-	if d.HasChange("enabled") {
+	if d.HasChange(names.AttrEnabled) {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
+			AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)

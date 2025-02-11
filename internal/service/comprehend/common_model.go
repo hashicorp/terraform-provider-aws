@@ -11,11 +11,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type safeMutex struct {
@@ -37,18 +40,18 @@ func (m *safeMutex) Unlock() {
 
 var modelVPCENILock safeMutex
 
-func findNetworkInterfaces(ctx context.Context, conn *ec2.EC2, securityGroups []string, subnets []string) ([]*ec2.NetworkInterface, error) {
+func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, securityGroups []string, subnets []string) ([]ec2types.NetworkInterface, error) {
 	networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
+		Filters: []ec2types.Filter{
 			tfec2.NewFilter("group-id", securityGroups),
 			tfec2.NewFilter("subnet-id", subnets),
 		},
 	})
 	if err != nil {
-		return []*ec2.NetworkInterface{}, err
+		return []ec2types.NetworkInterface{}, err
 	}
 
-	comprehendENIs := make([]*ec2.NetworkInterface, 0, len(networkInterfaces))
+	comprehendENIs := make([]ec2types.NetworkInterface, 0, len(networkInterfaces))
 	for _, v := range networkInterfaces {
 		if strings.HasSuffix(aws.ToString(v.RequesterId), ":Comprehend") {
 			comprehendENIs = append(comprehendENIs, v)
@@ -58,10 +61,10 @@ func findNetworkInterfaces(ctx context.Context, conn *ec2.EC2, securityGroups []
 	return comprehendENIs, nil
 }
 
-func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.EC2, initialENIIds map[string]bool, securityGroups []string, subnets []string, timeout time.Duration) (*ec2.NetworkInterface, error) {
+func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialENIIds map[string]bool, securityGroups []string, subnets []string, timeout time.Duration) (*ec2types.NetworkInterface, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{ec2.NetworkInterfaceStatusInUse},
+		Target:     enum.Slice(ec2types.NetworkInterfaceStatusInUse),
 		Refresh:    statusNetworkInterfaces(ctx, conn, initialENIIds, securityGroups, subnets),
 		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -70,21 +73,21 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.EC2, initialENII
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.NetworkInterface); ok {
-		return output, err
+	if output, ok := outputRaw.(ec2types.NetworkInterface); ok {
+		return &output, err
 	}
 
 	return nil, err
 }
 
-func statusNetworkInterfaces(ctx context.Context, conn *ec2.EC2, initialENIs map[string]bool, securityGroups []string, subnets []string) retry.StateRefreshFunc {
+func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs map[string]bool, securityGroups []string, subnets []string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findNetworkInterfaces(ctx, conn, securityGroups, subnets)
 		if err != nil {
 			return nil, "", err
 		}
 
-		var added *ec2.NetworkInterface
+		var added ec2types.NetworkInterface
 		for _, v := range out {
 			if _, ok := initialENIs[aws.ToString(v.NetworkInterfaceId)]; !ok {
 				added = v
@@ -92,11 +95,11 @@ func statusNetworkInterfaces(ctx context.Context, conn *ec2.EC2, initialENIs map
 			}
 		}
 
-		if added == nil {
+		if added.NetworkInterfaceId == nil {
 			return nil, "", nil
 		}
 
-		return added, aws.ToString(added.Status), nil
+		return added, string(added.Status), nil
 	}
 }
 
@@ -110,8 +113,8 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		"subnets":            flex.FlattenStringValueSet(apiObject.Subnets),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		names.AttrSubnets:          flex.FlattenStringValueSet(apiObject.Subnets),
 	}
 
 	return []interface{}{m}
@@ -125,8 +128,8 @@ func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
 	tfMap := tfList[0].(map[string]interface{})
 
 	a := &types.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-		Subnets:          flex.ExpandStringValueSet(tfMap["subnets"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(tfMap[names.AttrSubnets].(*schema.Set)),
 	}
 
 	return a

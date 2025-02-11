@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func QueuePolicyMigrateState(
@@ -30,7 +31,7 @@ func migrateQueuePolicyStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
 
-	is.Attributes["id"] = is.Attributes["queue_url"]
+	is.Attributes[names.AttrID] = is.Attributes["queue_url"]
 	is.ID = is.Attributes["queue_url"]
 
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, is.Attributes["queue_url"])

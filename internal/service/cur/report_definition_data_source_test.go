@@ -7,38 +7,38 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccReportDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
-	datasourceName := "data.aws_cur_report_definition.test"
-
+	dataSourceName := "data.aws_cur_report_definition.test"
 	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "time_unit", resourceName, "time_unit"),
-					resource.TestCheckResourceAttrPair(datasourceName, "compression", resourceName, "compression"),
-					resource.TestCheckResourceAttrPair(datasourceName, "additional_schema_elements.#", resourceName, "additional_schema_elements.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "s3_bucket", resourceName, "s3_bucket"),
-					resource.TestCheckResourceAttrPair(datasourceName, "s3_prefix", resourceName, "s3_prefix"),
-					resource.TestCheckResourceAttrPair(datasourceName, "s3_region", resourceName, "s3_region"),
-					resource.TestCheckResourceAttrPair(datasourceName, "additional_artifacts.#", resourceName, "additional_artifacts.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "report_name", resourceName, "report_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "time_unit", resourceName, "time_unit"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compression", resourceName, "compression"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "additional_schema_elements.#", resourceName, "additional_schema_elements.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrS3Bucket, resourceName, names.AttrS3Bucket),
+					resource.TestCheckResourceAttrPair(dataSourceName, "s3_prefix", resourceName, "s3_prefix"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "s3_region", resourceName, "s3_region"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "additional_artifacts.#", resourceName, "additional_artifacts.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -48,30 +48,32 @@ func testAccReportDefinitionDataSource_basic(t *testing.T) {
 func testAccReportDefinitionDataSource_additional(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
-	datasourceName := "data.aws_cur_report_definition.test"
-
+	dataSourceName := "data.aws_cur_report_definition.test"
 	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "time_unit", resourceName, "time_unit"),
-					resource.TestCheckResourceAttrPair(datasourceName, "compression", resourceName, "compression"),
-					resource.TestCheckResourceAttrPair(datasourceName, "additional_schema_elements.#", resourceName, "additional_schema_elements.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "s3_bucket", resourceName, "s3_bucket"),
-					resource.TestCheckResourceAttrPair(datasourceName, "s3_prefix", resourceName, "s3_prefix"),
-					resource.TestCheckResourceAttrPair(datasourceName, "s3_region", resourceName, "s3_region"),
-					resource.TestCheckResourceAttrPair(datasourceName, "additional_artifacts.#", resourceName, "additional_artifacts.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "refresh_closed_reports", resourceName, "refresh_closed_reports"),
-					resource.TestCheckResourceAttrPair(datasourceName, "report_versioning", resourceName, "report_versioning"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "report_name", resourceName, "report_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "time_unit", resourceName, "time_unit"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compression", resourceName, "compression"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "additional_schema_elements.#", resourceName, "additional_schema_elements.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrS3Bucket, resourceName, names.AttrS3Bucket),
+					resource.TestCheckResourceAttrPair(dataSourceName, "s3_prefix", resourceName, "s3_prefix"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "s3_region", resourceName, "s3_region"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "additional_artifacts.#", resourceName, "additional_artifacts.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "refresh_closed_reports", resourceName, "refresh_closed_reports"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "report_versioning", resourceName, "report_versioning"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey2, resourceName, acctest.CtTagsKey2),
 				),
 			},
 		},
@@ -135,6 +137,9 @@ resource "aws_cur_report_definition" "test" {
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+  tags = {
+    key1 = "value1"
+  }
 }
 
 data "aws_cur_report_definition" "test" {
@@ -202,6 +207,10 @@ resource "aws_cur_report_definition" "test" {
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
   refresh_closed_reports     = true
   report_versioning          = "CREATE_NEW_REPORT"
+  tags = {
+    key1 = "value1"
+    key2 = "value2"
+  }
 }
 
 data "aws_cur_report_definition" "test" {

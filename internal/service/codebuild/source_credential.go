@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codebuild_source_credential", name="Source Credential")
@@ -32,7 +33,7 @@ func resourceSourceCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +55,7 @@ func resourceSourceCredential() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -74,7 +75,7 @@ func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData,
 		Token:      aws.String(d.Get("token").(string)),
 	}
 
-	if attr, ok := d.GetOk("user_name"); ok && authType == types.AuthTypeBasicAuth {
+	if attr, ok := d.GetOk(names.AttrUserName); ok && authType == types.AuthTypeBasicAuth {
 		input.Username = aws.String(attr.(string))
 	}
 
@@ -105,7 +106,7 @@ func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Source Credential (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", credentials.Arn)
+	d.Set(names.AttrARN, credentials.Arn)
 	d.Set("auth_type", credentials.AuthType)
 	d.Set("server_type", credentials.ServerType)
 

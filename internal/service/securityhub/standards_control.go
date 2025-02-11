@@ -20,13 +20,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_securityhub_standards_control")
-func ResourceStandardsControl() *schema.Resource {
+// @SDKResource("aws_securityhub_standards_control", name="Standards Control")
+func resourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsControlPut,
 		ReadWithoutTimeout:   resourceStandardsControlRead,
@@ -47,7 +49,7 @@ func ResourceStandardsControl() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,6 +86,7 @@ func ResourceStandardsControl() *schema.Resource {
 }
 
 func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	standardsControlARN := d.Get("standards_control_arn").(string)
@@ -96,40 +99,41 @@ func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, me
 	_, err := conn.UpdateStandardsControl(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Security Hub Standards Control (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(standardsControlARN)
 	}
 
-	return resourceStandardsControlRead(ctx, d, meta)
+	return append(diags, resourceStandardsControlRead(ctx, d, meta)...)
 }
 
 func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	standardsSubscriptionARN, err := StandardsControlARNToStandardsSubscriptionARN(d.Id())
+	standardsSubscriptionARN, err := standardsControlARNToStandardsSubscriptionARN(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	control, err := FindStandardsControlByTwoPartKey(ctx, conn, standardsSubscriptionARN, d.Id())
+	control, err := findStandardsControlByTwoPartKey(ctx, conn, standardsSubscriptionARN, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Control (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Security Hub Standards Control (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
 	d.Set("control_id", control.ControlId)
 	d.Set("control_status", control.ControlStatus)
 	d.Set("control_status_updated_at", control.ControlStatusUpdatedAt.Format(time.RFC3339))
-	d.Set("description", control.Description)
+	d.Set(names.AttrDescription, control.Description)
 	d.Set("disabled_reason", control.DisabledReason)
 	d.Set("related_requirements", control.RelatedRequirements)
 	d.Set("remediation_url", control.RemediationUrl)
@@ -137,11 +141,11 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("standards_control_arn", control.StandardsControlArn)
 	d.Set("title", control.Title)
 
-	return nil
+	return diags
 }
 
-// StandardsControlARNToStandardsSubscriptionARN converts a security standard control ARN to a subscription ARN.
-func StandardsControlARNToStandardsSubscriptionARN(inputARN string) (string, error) {
+// standardsControlARNToStandardsSubscriptionARN converts a security standard control ARN to a subscription ARN.
+func standardsControlARNToStandardsSubscriptionARN(inputARN string) (string, error) {
 	const (
 		resourceSeparator = "/"
 		service           = "securityhub"
@@ -173,7 +177,7 @@ func StandardsControlARNToStandardsSubscriptionARN(inputARN string) (string, err
 	return outputARN, nil
 }
 
-func FindStandardsControlByTwoPartKey(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
+func findStandardsControlByTwoPartKey(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
 	input := &securityhub.DescribeStandardsControlsInput{
 		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
 	}
@@ -190,11 +194,11 @@ func findStandardsControl(ctx context.Context, conn *securityhub.Client, input *
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findStandardsControls(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[*types.StandardsControl]) ([]*types.StandardsControl, error) {
-	var output []*types.StandardsControl
+func findStandardsControls(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[*types.StandardsControl]) ([]types.StandardsControl, error) {
+	var output []types.StandardsControl
 
 	pages := securityhub.NewDescribeStandardsControlsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -212,8 +216,7 @@ func findStandardsControls(ctx context.Context, conn *securityhub.Client, input 
 		}
 
 		for _, v := range page.Controls {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

@@ -28,7 +28,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -50,7 +50,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func TestAccMediaStoreContainerPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{

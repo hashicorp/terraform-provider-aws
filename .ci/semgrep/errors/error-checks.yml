@@ -1,0 +1,90 @@
+rules:
+  - id: notfound-without-err-checks
+    languages: [go]
+    message: When checking for tfresource.NotFound() errors, typically other error conditions should be checked.
+    patterns:
+      - pattern: |
+          if tfresource.NotFound($ERR) { ... }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) { ... }
+          if $ERR != nil { ... }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) { ... }
+          if $FUNC($ERR, ...) { ... }
+          if $ERR != nil { ... }
+      - pattern-not-inside: |
+          if err != nil {
+            if tfresource.NotFound($ERR) { ... }
+            return ...
+          }
+      - pattern-not-inside: |
+          if err != nil {
+            if tfresource.NotFound($ERR) {
+              ...
+            } else {
+              ...
+            }
+          }
+      - pattern-not-inside: |
+          if err == nil {
+            ...
+          } else if tfresource.NotFound($ERR) {
+            ...
+          } else { ... }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            ...
+          } else if err != nil {
+            ...
+          } else {
+            ...
+          }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            ...
+          }
+          return $ERR
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            continue
+          }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            ...
+          } else if err != nil {
+            ...
+          }
+      - pattern-not-inside: |
+          tfresource.RetryWhen(...)
+    severity: ERROR
+
+  - id: isnewresource-notfound-without-err-checks
+    languages: [go]
+    message: When checking for !d.IsNewResource() && tfresource.NotFound() errors, typically other error conditions should be checked.
+    patterns:
+      - pattern: |
+          if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
+      - pattern-not-inside: |
+          if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
+          if $ERR != nil { ... }
+      # e.g. internal/service/dms/s3_endpoint.go
+      - pattern-not-inside: |
+          if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
+          if $ERR == nil && ... {
+            ...
+            err = ...
+            ...
+          }
+          if $ERR != nil { ... }
+      # e.g. internal/service/quicksight/analysis.go
+      - pattern-not-inside: |
+          if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
+          if !d.IsNewResource() && ... { ... }
+          if $ERR != nil { ... }
+      # e.g. internal/service/sagemaker/app.go
+      - pattern-not-inside: |
+          if err != nil {
+            if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
+            return ...
+          }
+    severity: ERROR

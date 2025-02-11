@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_resourceexplorer2_index: Correctly mark incomplete `AGGREGATOR` indexes as [tainted](https://developer.hashicorp.com/terraform/cli/state/taint#the-tainted-status) on Create
+```
+
+```release-note:enhancement
+resource/aws_resourceexplorer2_view:  Add `scope` argument
+```

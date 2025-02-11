@@ -57,11 +57,21 @@ resource "aws_ec2_transit_gateway_peering_attachment" "example" {
   }
 }
 
+data "aws_ec2_transit_gateway_peering_attachment" "example" {
+  provider = aws.first
+  filter {
+    name   = "transit-gateway-id"
+    values = [aws_ec2_transit_gateway.first.id]
+  }
+
+  depends_on = [aws_ec2_transit_gateway_peering_attachment.example]
+}
+
 # ...and accept it in the first account.
 resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example" {
   provider = aws.first
 
-  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.example.id
+  transit_gateway_attachment_id = data.aws_ec2_transit_gateway_peering_attachment.example.id
   tags = {
     Name = "terraform-example"
     Side = "Acceptor"

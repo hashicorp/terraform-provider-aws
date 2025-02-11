@@ -4,7 +4,7 @@
 package kafka
 
 import (
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -15,6 +15,6 @@ const (
 // SortEndpointsString sorts a comma-separated list of endpoints.
 func SortEndpointsString(s string) string {
 	parts := strings.Split(s, endpointSeparator)
-	sort.Strings(parts)
+	slices.Sort(parts)
 	return strings.Join(parts, endpointSeparator)
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_user: When `force_destroy` is used and there are inline or attached policies, allow resource to be destroyed
+```

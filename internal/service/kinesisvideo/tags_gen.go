@@ -5,9 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisvideo"
-	"github.com/aws/aws-sdk-go/service/kinesisvideo/kinesisvideoiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +18,12 @@ import (
 // listTags lists kinesisvideo service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &kinesisvideo.ListTagsForStreamInput{
+func listTags(ctx context.Context, conn *kinesisvideo.Client, identifier string, optFns ...func(*kinesisvideo.Options)) (tftags.KeyValueTags, error) {
+	input := kinesisvideo.ListTagsForStreamInput{
 		StreamARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStreamWithContext(ctx, input)
+	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +35,7 @@ func listTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ident
 // ListTags lists kinesisvideo service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisVideoConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisVideoClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -49,21 +48,21 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]*string handling
+// map[string]string handling
 
 // Tags returns kinesisvideo service tags.
-func Tags(tags tftags.KeyValueTags) map[string]*string {
-	return aws.StringMap(tags.Map())
+func Tags(tags tftags.KeyValueTags) map[string]string {
+	return tags.Map()
 }
 
 // KeyValueTags creates tftags.KeyValueTags from kinesisvideo service tags.
-func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
 // getTagsIn returns kinesisvideo service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -74,7 +73,7 @@ func getTagsIn(ctx context.Context) map[string]*string {
 }
 
 // setTagsOut sets kinesisvideo service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]*string) {
+func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -83,7 +82,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 // updateTags updates kinesisvideo service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *kinesisvideo.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*kinesisvideo.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -92,12 +91,12 @@ func updateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.KinesisVideo)
 	if len(removedTags) > 0 {
-		input := &kinesisvideo.UntagStreamInput{
+		input := kinesisvideo.UntagStreamInput{
 			StreamARN:  aws.String(identifier),
-			TagKeyList: aws.StringSlice(removedTags.Keys()),
+			TagKeyList: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagStreamWithContext(ctx, input)
+		_, err := conn.UntagStream(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -107,12 +106,12 @@ func updateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.KinesisVideo)
 	if len(updatedTags) > 0 {
-		input := &kinesisvideo.TagStreamInput{
+		input := kinesisvideo.TagStreamInput{
 			StreamARN: aws.String(identifier),
 			Tags:      Tags(updatedTags),
 		}
 
-		_, err := conn.TagStreamWithContext(ctx, input)
+		_, err := conn.TagStream(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -125,5 +124,5 @@ func updateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 // UpdateTags updates kinesisvideo service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).KinesisVideoConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).KinesisVideoClient(ctx), identifier, oldTags, newTags)
 }

@@ -88,7 +88,7 @@ class MyConvertedCode(TerraformStack):
 
 See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
 * `audio_codec_options` - (Optional, Forces new resource) Codec options for the audio parameters (documented below)
@@ -198,4 +198,4 @@ Using `terraform import`, import Elastic Transcoder presets using the `id`. For 
 % terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8282c40b65cf6c7bab35ac986097ade68a35de7fee2c7e606836eefd3ed414ca -->
+<!-- cache-key: cdktf-0.20.8 input-da7e0345dc7ab7ed0cc5541c569211596cdd2ff4a9663cbf61083d4c7c374b38 -->

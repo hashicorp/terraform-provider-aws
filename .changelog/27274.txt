@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpc_ipv6_cidr_block_association: Add `assign_generated_ipv6_cidr_block` and `ipv6_pool` arguments
+```

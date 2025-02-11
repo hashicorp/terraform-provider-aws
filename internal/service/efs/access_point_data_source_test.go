@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/efs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
@@ -21,18 +21,18 @@ func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "posix_user", resourceName, "posix_user"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "root_directory", resourceName, "root_directory"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.#", resourceName, "tags.#"),
 				),
 			},
 		},
@@ -42,11 +42,19 @@ func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 func testAccAccessPointDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
+  creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_efs_access_point" "test" {

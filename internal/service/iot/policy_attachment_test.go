@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTPolicyAttachment_basic(t *testing.T) {
@@ -28,7 +28,7 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttchmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -64,13 +64,13 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 
 func testAccCheckPolicyAttchmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_policy_attachment" {
 				continue
 			}
 
-			_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy"], rs.Primary.Attributes["target"])
+			_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrPolicy], rs.Primary.Attributes[names.AttrTarget])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -94,9 +94,9 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy"], rs.Primary.Attributes["target"])
+		_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrPolicy], rs.Primary.Attributes[names.AttrTarget])
 
 		return err
 	}

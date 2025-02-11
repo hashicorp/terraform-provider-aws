@@ -46,7 +46,7 @@ func ResourceKxDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func ResourceKxDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -69,7 +69,7 @@ func ResourceKxDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -94,23 +94,23 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxDatabaseInput{
-		DatabaseName:  aws.String(d.Get("name").(string)),
+		DatabaseName:  aws.String(d.Get(names.AttrName).(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateKxDatabase(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.DatabaseArn == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	idParts := []string{
@@ -119,7 +119,7 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	id, err := flex.FlattenResourceId(idParts, kxDatabaseIDPartCount, false)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDatabase, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDatabase, d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(id)
@@ -142,10 +142,10 @@ func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta in
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDatabase, d.Id(), err)
 	}
 
-	d.Set("arn", out.DatabaseArn)
-	d.Set("name", out.DatabaseName)
+	d.Set(names.AttrARN, out.DatabaseArn)
+	d.Set(names.AttrName, out.DatabaseName)
 	d.Set("environment_id", out.EnvironmentId)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 
@@ -156,11 +156,11 @@ func resourceKxDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	if d.HasChanges("description") {
+	if d.HasChanges(names.AttrDescription) {
 		in := &finspace.UpdateKxDatabaseInput{
 			EnvironmentId: aws.String(d.Get("environment_id").(string)),
-			DatabaseName:  aws.String(d.Get("name").(string)),
-			Description:   aws.String(d.Get("description").(string)),
+			DatabaseName:  aws.String(d.Get(names.AttrName).(string)),
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
 		_, err := conn.UpdateKxDatabase(ctx, in)
@@ -180,7 +180,7 @@ func resourceKxDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.DeleteKxDatabase(ctx, &finspace.DeleteKxDatabaseInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		DatabaseName:  aws.String(d.Get("name").(string)),
+		DatabaseName:  aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if err != nil {

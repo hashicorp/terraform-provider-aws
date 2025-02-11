@@ -41,23 +41,28 @@ resource "aws_mskconnect_custom_plugin" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) The name of the custom plugin..
-* `content_type` - (Required) The type of the plugin file. Allowed values are `ZIP` and `JAR`.
-* `location` - (Required) Information about the location of a custom plugin. See below.
+* `name` - (Required, Forces new resource) The name of the custom plugin..
+* `content_type` - (Required, Forces new resource) The type of the plugin file. Allowed values are `ZIP` and `JAR`.
+* `location` - (Required, Forces new resource) Information about the location of a custom plugin. See [`location` Block](#location-block) for details.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following arguments are optional:
 
-* `description` - (Optional) A summary description of the custom plugin.
+* `description` - (Optional, Forces new resource) A summary description of the custom plugin.
 
-### location Argument Reference
+### `location` Block
 
-* `s3` - (Required) Information of the plugin file stored in Amazon S3. See below.
+The `location` configuration block supports the following arguments:
 
-#### location s3 Argument Reference
+* `s3` - (Required, Forces new resource) Information of the plugin file stored in Amazon S3. See [`s3` Block](#s3-block) for details..
 
-* `bucket_arn` - (Required) The Amazon Resource Name (ARN) of an S3 bucket.
-* `file_key` - (Required) The file key for an object in an S3 bucket.
-* `object_version` - (Optional) The version of an object in an S3 bucket.
+### `s3` Block
+
+The `s3` configuration Block supports the following arguments:
+
+* `bucket_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of an S3 bucket.
+* `file_key` - (Required, Forces new resource) The file key for an object in an S3 bucket.
+* `object_version` - (Optional, Forces new resource) The version of an object in an S3 bucket.
 
 ## Attribute Reference
 
@@ -66,6 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - the Amazon Resource Name (ARN) of the custom plugin.
 * `latest_revision` - an ID of the latest successfully created revision of the custom plugin.
 * `state` - the state of the custom plugin.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

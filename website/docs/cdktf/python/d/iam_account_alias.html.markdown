@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         current = DataAwsIamAccountAlias(self, "current")
-        TerraformOutput(self, "account_id",
+        TerraformOutput(self, "account_alias",
             value=current.account_alias
         )
 ```
@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `account_alias` - Alias associated with the AWS account.
 * `id` - Alias associated with the AWS account.
 
-<!-- cache-key: cdktf-0.20.1 input-efa6f2304fc0569176238ebf28fc4c9ec839c206f798e565d2b074c39fb9dfb0 -->
+<!-- cache-key: cdktf-0.20.8 input-f455bf9fcf364a77caee2097f0080546bcaeac3c0d78e42f7561ab85f7ca2ecf -->

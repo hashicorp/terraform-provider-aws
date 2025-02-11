@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_globalaccelerator_accelerator: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_globalaccelerator_custom_routing_accelerator: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_globalaccelerator_custom_routing_listener: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_globalaccelerator_listener: Add `arn` attribute
+```

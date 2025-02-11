@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
@@ -19,13 +19,13 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -40,14 +40,14 @@ func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_repositoryPrefixWithSlash(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -62,14 +62,14 @@ func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_credentialARN(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSource, "credential_arn"),
-					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "registry-1.docker.io"),
 				),
 			},

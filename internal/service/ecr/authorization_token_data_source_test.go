@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -30,9 +30,9 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
-					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexache.MustCompile(`AWS`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrUserName),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrUserName, regexache.MustCompile(`AWS`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPassword),
 				),
 			},
 			{
@@ -42,9 +42,9 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
-					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexache.MustCompile(`AWS`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrUserName),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrUserName, regexache.MustCompile(`AWS`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPassword),
 				),
 			},
 		},

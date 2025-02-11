@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `enable_machine_learning` to `aws_managed_rules_bot_control_rule_set` configuration block
+```

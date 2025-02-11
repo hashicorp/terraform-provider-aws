@@ -19,9 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_xray_encryption_config")
+// @SDKResource("aws_xray_encryption_config", name="Encryption Config")
 func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEncryptionPutConfig,
@@ -34,12 +35,12 @@ func resourceEncryptionConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.EncryptionType](),
@@ -52,21 +53,21 @@ func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	input := &xray.PutEncryptionConfigInput{
-		Type: types.EncryptionType(d.Get("type").(string)),
+	input := xray.PutEncryptionConfigInput{
+		Type: types.EncryptionType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKeyID); ok {
 		input.KeyId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutEncryptionConfig(ctx, input)
+	_, err := conn.PutEncryptionConfig(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating XRay Encryption Config: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if _, err := waitEncryptionConfigAvailable(ctx, conn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for XRay Encryption Config (%s) create: %s", d.Id(), err)
@@ -91,16 +92,16 @@ func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading XRay Encryption Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("key_id", config.KeyId)
-	d.Set("type", config.Type)
+	d.Set(names.AttrKeyID, config.KeyId)
+	d.Set(names.AttrType, config.Type)
 
 	return diags
 }
 
 func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.EncryptionConfig, error) {
-	input := &xray.GetEncryptionConfigInput{}
+	input := xray.GetEncryptionConfigInput{}
 
-	output, err := conn.GetEncryptionConfig(ctx, input)
+	output, err := conn.GetEncryptionConfig(ctx, &input)
 
 	if err != nil {
 		return nil, err

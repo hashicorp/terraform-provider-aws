@@ -141,6 +141,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Description of the flow you want to create.
 * `kms_arn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `metadata_catalog_config` - (Optional) A [Catalog](#metadata-catalog-config) that determines the configuration that Amazon AppFlow uses when it catalogs the data that’s transferred by the associated flow. When Amazon AppFlow catalogs the data from a flow, it stores metadata in a data catalog.
 
 ### Destination Flow Config
 
@@ -252,6 +253,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 
 * `prefix_format` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
 * `prefix_type` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
+* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`
 
 ##### Zendesk Destination Properties
 
@@ -318,10 +320,15 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `object` - (Required) Object specified in the Salesforce flow source.
 * `enable_dynamic_field_update` - (Optional, boolean) Flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
 * `include_deleted_records` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Source Properties
 
 * `object_path` - (Required) Object path specified in the SAPOData flow source.
+* `pagination_config` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
+    * `max_page_size` - (Optional) he maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
+* `parallelism_config` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
+    * `max_parallelism` - (Optional) The maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application.
 
 ##### Veeva Source Properties
 
@@ -390,6 +397,14 @@ resource "aws_appflow_flow" "example" {
   }
 }
 ```
+
+### Metadata Catalog Config
+
+The `metadata_catalog_config` block only supports one attribute: `glue_data_catalog`, a block which in turn supports the following:
+
+* `database_name` - (Required) The name of an existing Glue database to store the metadata tables that Amazon AppFlow creates.
+* `role_arn` - (Required) The ARN of an IAM role that grants AppFlow the permissions it needs to create Data Catalog tables, databases, and partitions.
+* `table_prefix` - (Required) A naming prefix for each Data Catalog table that Amazon AppFlow creates
 
 ## Attribute Reference
 

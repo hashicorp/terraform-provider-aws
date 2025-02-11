@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_networkmonitor_monitor
+```
+
+```release-note:new-resource
+aws_networkmonitor_probe
+```

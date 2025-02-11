@@ -54,7 +54,7 @@ func dataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(targetIdentifier)
-	d.Set("enabled_controls", tfslices.ApplyToAll(controls, func(v *types.EnabledControlSummary) string {
+	d.Set("enabled_controls", tfslices.ApplyToAll(controls, func(v types.EnabledControlSummary) string {
 		return aws.ToString(v.ControlIdentifier)
 	}))
 

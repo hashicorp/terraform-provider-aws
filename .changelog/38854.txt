@@ -1,0 +1,24 @@
+```release-note:bug
+resource/aws_rolesanywhere_trust_anchor: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```
+```release-note:bug
+resource/aws_rolesanywhere_profile: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```
+```release-note:bug
+resource/aws_ecs_cluster_capacity_providers: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```
+```release-note:bug
+resource/aws_fms_policy: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```
+```release-note:bug
+resource/aws_appstream_stack: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```
+```release-note:bug
+resource/aws_controltower_landing_zone: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```
+```release-note:bug
+data-source/aws_acm_certificate: Fix unreturned `sdkdiags.AppendErrorf` function calls
+```

@@ -7,4 +7,4 @@ This area is primarily for AWS provider contributors and maintainers. For inform
 * [Find out about contributing](https://hashicorp.github.io/terraform-provider-aws/#contribute) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 * AWS Provider Docs: [One of the ServiceCatalog resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/servicecatalog_budget_resource_association)
-* AWS Docs: [AWS SDK for Go ServiceCatalog](https://docs.aws.amazon.com/sdk-for-go/api/service/servicecatalog/)
+* Service API Guide: [Service Catalog API Reference](https://docs.aws.amazon.com/servicecatalog/latest/dg/service-catalog-api-overview.html)

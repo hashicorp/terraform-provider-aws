@@ -18,6 +18,11 @@ import (
 
 type mockService struct{}
 
+var (
+	_ tftags.ServiceTagLister  = &mockService{}
+	_ tftags.ServiceTagUpdater = &mockService{}
+)
+
 func (t *mockService) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
 }
@@ -49,53 +54,50 @@ func (t *mockService) ListTags(ctx context.Context, meta any, identifier string)
 	return errors.New("test error")
 }
 
-func (t *mockService) UpdateTags(context.Context, any, string, string, any) error {
+func (t *mockService) UpdateTags(context.Context, any, string, any, any) error {
 	return nil
 }
 
 func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	var interceptors interceptorItems
-
 	sp := &types.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	}
-
 	tags := tagsResourceInterceptor{
 		tags:       sp,
 		updateFunc: tagsUpdateFunc,
 		readFunc:   tagsReadFunc,
 	}
-
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
 		why:         Update,
 		interceptor: tags,
 	})
 
-	conn := &conns.AWSClient{
-		ServicePackages: map[string]conns.ServicePackage{
-			"Test": &mockService{},
-		},
-		DefaultTagsConfig: expandDefaultTags(context.Background(), map[string]interface{}{
-			"tag": "",
-		}),
-		IgnoreTagsConfig: expandIgnoreTags(context.Background(), map[string]interface{}{
-			"tag2": "tag",
-		}),
-	}
+	conn := &conns.AWSClient{}
+	conn.SetServicePackages(ctx, map[string]conns.ServicePackage{
+		"Test": &mockService{},
+	})
+	conns.SetDefaultTagsConfig(conn, expandDefaultTags(ctx, map[string]interface{}{
+		"tag": "",
+	}))
+	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(ctx, map[string]interface{}{
+		"tag2": "tag",
+	}))
 
 	bootstrapContext := func(ctx context.Context, meta any) context.Context {
 		ctx = conns.NewResourceContext(ctx, "Test", "aws_test")
 		if v, ok := meta.(*conns.AWSClient); ok {
-			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 		}
 
 		return ctx
 	}
 
-	ctx := bootstrapContext(context.Background(), conn)
+	ctx = bootstrapContext(ctx, conn)
 	d := &resourceData{}
 
 	for _, v := range interceptors {

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_secretsmanager_secret: Tags with empty values no longer remove all tags.
+```

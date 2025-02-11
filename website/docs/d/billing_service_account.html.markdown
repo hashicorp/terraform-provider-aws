@@ -1,5 +1,5 @@
 ---
-subcategory: "Meta Data Sources"
+subcategory: "Billing"
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
 description: |-

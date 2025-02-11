@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCNetworkInsightsPathDataSource_basic(t *testing.T) {
@@ -21,23 +21,23 @@ func TestAccVPCNetworkInsightsPathDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "destination", resourceName, "destination"),
-					resource.TestCheckResourceAttrPair(datasourceName, "destination_arn", resourceName, "destination_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDestination, resourceName, names.AttrDestination),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "destination_ip", resourceName, "destination_ip"),
 					resource.TestCheckResourceAttrPair(datasourceName, "destination_port", resourceName, "destination_port"),
-					resource.TestCheckResourceAttrPair(datasourceName, "network_insights_path_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "protocol", resourceName, "protocol"),
-					resource.TestCheckResourceAttrPair(datasourceName, "source", resourceName, "source"),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_insights_path_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrProtocol, resourceName, names.AttrProtocol),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrSource, resourceName, names.AttrSource),
 					resource.TestCheckResourceAttrPair(datasourceName, "source_arn", resourceName, "source_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "source_ip", resourceName, "source_ip"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

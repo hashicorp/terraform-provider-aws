@@ -33,6 +33,7 @@ class MyConvertedCode extends TerraformStack {
       },
       resourceTypeOptInPreference: {
         Aurora: true,
+        CloudFormation: true,
         DocumentDB: true,
         DynamoDB: true,
         EBS: true,
@@ -41,6 +42,9 @@ class MyConvertedCode extends TerraformStack {
         FSx: true,
         Neptune: true,
         RDS: true,
+        Redshift: true,
+        S3: true,
+        "SAP HANA on Amazon EC2": true,
         "Storage Gateway": true,
         VirtualMachine: true,
       },
@@ -91,4 +95,4 @@ Using `terraform import`, import Backup Region Settings using the `region`. For 
 % terraform import aws_backup_region_settings.test us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1c87f4723a3ea47fdb8b9fe296035ddc01080e9391eac471698160d93a976e00 -->
+<!-- cache-key: cdktf-0.20.8 input-d3c58f003bf7507368740011ee4226900165137ccde5e31635696cd6e2e7cb4e -->

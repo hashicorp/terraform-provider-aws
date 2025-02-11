@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_chime_voice_connector_logging")
+// @SDKResource("aws_chime_voice_connector_logging", name="Voice Connector Logging")
 func ResourceVoiceConnectorLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorLoggingCreate,
@@ -90,6 +90,10 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Chime Voice Connector logging configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("enable_media_metric_logs", resp.EnableMediaMetricLogs)

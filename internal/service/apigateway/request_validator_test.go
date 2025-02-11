@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,17 +16,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UpdateRequestValidatorOutput
+	var conf apigateway.GetRequestValidatorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRequestValidatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,9 +35,9 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "false"),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_body", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", acctest.CtFalse),
 				),
 			},
 			{
@@ -49,9 +50,9 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 				Config: testAccRequestValidatorConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-modified", rName)),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "true"),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-modified", rName)),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_body", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", acctest.CtTrue),
 				),
 			},
 		},
@@ -60,13 +61,13 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 
 func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UpdateRequestValidatorOutput
+	var conf apigateway.GetRequestValidatorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRequestValidatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,18 +83,14 @@ func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRequestValidatorExists(ctx context.Context, n string, v *apigateway.UpdateRequestValidatorOutput) resource.TestCheckFunc {
+func testAccCheckRequestValidatorExists(ctx context.Context, n string, v *apigateway.GetRequestValidatorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Request Validator ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindRequestValidatorByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rest_api_id"])
 
@@ -109,7 +106,7 @@ func testAccCheckRequestValidatorExists(ctx context.Context, n string, v *apigat
 
 func testAccCheckRequestValidatorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_request_validator" {

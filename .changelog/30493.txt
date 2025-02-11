@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix `unexpected state 'snapshotting'` errors when increasing or decreasing replica count
+```

@@ -5,27 +5,28 @@ package iam
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_group")
-func DataSourceGroup() *schema.Resource {
+// @SDKDataSource("aws_iam_group", name="Group")
+func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +34,7 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,7 +43,7 @@ func DataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -50,11 +51,11 @@ func DataSourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"user_name": {
+						names.AttrUserName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -67,35 +68,37 @@ func DataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	groupName := d.Get("group_name").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
 
 	req := &iam.GetGroupInput{
 		GroupName: aws.String(groupName),
 	}
 
-	var users []*iam.User
-	var group *iam.Group
+	var users []awstypes.User
+	var group *awstypes.Group
 
-	log.Printf("[DEBUG] Reading IAM Group: %s", req)
-	err := conn.GetGroupPagesWithContext(ctx, req, func(page *iam.GetGroupOutput, lastPage bool) bool {
+	pages := iam.NewGetGroupPaginator(conn, req)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "getting group: %s", err)
+		}
 		if group == nil {
 			group = page.Group
 		}
+
 		users = append(users, page.Users...)
-		return !lastPage
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting group: %s", err)
 	}
+
 	if group == nil {
 		return sdkdiag.AppendErrorf(diags, "no IAM group found")
 	}
 
-	d.SetId(aws.StringValue(group.GroupId))
-	d.Set("arn", group.Arn)
-	d.Set("path", group.Path)
+	d.SetId(aws.ToString(group.GroupId))
+	d.Set(names.AttrARN, group.Arn)
+	d.Set(names.AttrPath, group.Path)
 	d.Set("group_id", group.GroupId)
 	if err := d.Set("users", dataSourceGroupUsersRead(users)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting users: %s", err)
@@ -104,14 +107,14 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func dataSourceGroupUsersRead(iamUsers []*iam.User) []map[string]interface{} {
+func dataSourceGroupUsersRead(iamUsers []awstypes.User) []map[string]interface{} {
 	users := make([]map[string]interface{}, 0, len(iamUsers))
 	for _, i := range iamUsers {
 		u := make(map[string]interface{})
-		u["arn"] = aws.StringValue(i.Arn)
-		u["user_id"] = aws.StringValue(i.UserId)
-		u["user_name"] = aws.StringValue(i.UserName)
-		u["path"] = aws.StringValue(i.Path)
+		u[names.AttrARN] = aws.ToString(i.Arn)
+		u["user_id"] = aws.ToString(i.UserId)
+		u[names.AttrUserName] = aws.ToString(i.UserName)
+		u[names.AttrPath] = aws.ToString(i.Path)
 		users = append(users, u)
 	}
 	return users

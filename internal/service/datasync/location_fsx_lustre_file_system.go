@@ -10,14 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -28,7 +29,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_lustre_file_system", name="Location FSx for Lustre File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxLustreFileSystem() *schema.Resource {
+func resourceLocationFSxLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxLustreFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxLustreFileSystemRead,
@@ -53,11 +54,11 @@ func ResourceLocationFSxLustreFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +88,7 @@ func ResourceLocationFSxLustreFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -99,12 +100,12 @@ func ResourceLocationFSxLustreFileSystem() *schema.Resource {
 
 func resourceLocationFSxLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
 	input := &datasync.CreateLocationFsxLustreInput{
 		FsxFilesystemArn:  aws.String(fsxArn),
-		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
+		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -112,22 +113,22 @@ func resourceLocationFSxLustreFileSystemCreate(ctx context.Context, d *schema.Re
 		input.Subdirectory = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateLocationFsxLustreWithContext(ctx, input)
+	output, err := conn.CreateLocationFsxLustre(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Location FSx for Lustre File System: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.LocationArn))
+	d.SetId(aws.ToString(output.LocationArn))
 
 	return append(diags, resourceLocationFSxLustreFileSystemRead(ctx, d, meta)...)
 }
 
 func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	output, err := FindLocationFSxLustreByARN(ctx, conn, d.Id())
+	output, err := findLocationFSxLustreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for Lustre File System (%s) not found, removing from state", d.Id())
@@ -139,18 +140,18 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location FSx for Lustre File System (%s): %s", d.Id(), err)
 	}
 
-	uri := aws.StringValue(output.LocationUri)
+	uri := aws.ToString(output.LocationUri)
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
-	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrARN, output.LocationArn)
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
-	d.Set("security_group_arns", aws.StringValueSlice(output.SecurityGroupArns))
+	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
+	d.Set(names.AttrURI, output.LocationUri)
 
 	return diags
 }
@@ -165,14 +166,14 @@ func resourceLocationFSxLustreFileSystemUpdate(ctx context.Context, d *schema.Re
 
 func resourceLocationFSxLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location FSx for Lustre File System: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
+	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
 	}
 
@@ -183,14 +184,14 @@ func resourceLocationFSxLustreFileSystemDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func FindLocationFSxLustreByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
+func findLocationFSxLustreByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
 	input := &datasync.DescribeLocationFsxLustreInput{
 		LocationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeLocationFsxLustreWithContext(ctx, input)
+	output, err := conn.DescribeLocationFsxLustre(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

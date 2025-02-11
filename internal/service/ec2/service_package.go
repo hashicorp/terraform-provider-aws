@@ -6,48 +6,45 @@ package ec2
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ec2_sdkv1.EC2) (*ec2_sdkv1.EC2, error) {
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		switch err := r.Error; r.Operation.Name {
-		case "AttachVpnGateway", "DetachVpnGateway":
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]any) []func(*ec2.Options) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-		case "CreateClientVpnEndpoint":
-			if tfawserr.ErrMessageContains(err, errCodeOperationNotPermitted, "Endpoint cannot be created while another endpoint is being created") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+	return []func(*ec2.Options){
+		func(o *ec2.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "This call cannot be completed because there are pending VPNs or Virtual Interfaces") { // AttachVpnGateway, DetachVpnGateway
+					return aws.TrueTernary
+				}
 
-		case "CreateClientVpnRoute", "DeleteClientVpnRoute":
-			if tfawserr.ErrMessageContains(err, errCodeConcurrentMutationLimitExceeded, "Cannot initiate another change for this endpoint at this time") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+				if tfawserr.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) { // CreateCapacityReservation, RunInstances
+					return aws.TrueTernary
+				}
 
-		case "CreateVpnConnection":
-			if tfawserr.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+				if tfawserr.ErrMessageContains(err, errCodeOperationNotPermitted, "Endpoint cannot be created while another endpoint is being created") { // CreateClientVpnEndpoint
+					return aws.TrueTernary
+				}
 
-		case "CreateVpnGateway":
-			if tfawserr.ErrMessageContains(err, errCodeVPNGatewayLimitExceeded, "maximum number of mutating objects has been reached") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
+				if tfawserr.ErrMessageContains(err, errCodeConcurrentMutationLimitExceeded, "Cannot initiate another change for this endpoint at this time") { // CreateClientVpnRoute, DeleteClientVpnRoute
+					return aws.TrueTernary
+				}
 
-		case "RunInstances":
-			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
-			if tfawserr.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) {
-				r.Retryable = aws_sdkv1.Bool(false)
-			}
-		}
-	})
+				if tfawserr.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnConnection
+					return aws.TrueTernary
+				}
 
-	return conn, nil
+				if tfawserr.ErrMessageContains(err, errCodeVPNGatewayLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnGateway
+					return aws.TrueTernary
+				}
+
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	}
 }

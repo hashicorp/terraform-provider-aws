@@ -6,42 +6,46 @@ package lakeformation
 import (
 	"context"
 	"fmt"
+	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) retry.StateRefreshFunc {
+func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		var permissions []*lakeformation.PrincipalResourcePermissions
+		var permissions []awstypes.PrincipalResourcePermissions
 
-		err := conn.ListPermissionsPagesWithContext(ctx, input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
-			for _, permission := range resp.PrincipalResourcePermissions {
-				if permission == nil {
+		pages := lakeformation.NewListPermissionsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if errs.IsA[*awstypes.EntityNotFoundException](err) {
+				return nil, statusNotFound, err
+			}
+
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
+				return nil, statusIAMDelay, nil
+			}
+
+			if err != nil {
+				return nil, statusFailed, fmt.Errorf("listing permissions: %w", err)
+			}
+
+			for _, permission := range page.PrincipalResourcePermissions {
+				if reflect.ValueOf(permission).IsZero() {
 					continue
 				}
 
-				if aws.StringValue(input.Principal.DataLakePrincipalIdentifier) != aws.StringValue(permission.Principal.DataLakePrincipalIdentifier) {
+				if aws.ToString(input.Principal.DataLakePrincipalIdentifier) != aws.ToString(permission.Principal.DataLakePrincipalIdentifier) {
 					continue
 				}
 
 				permissions = append(permissions, permission)
 			}
-			return !lastPage
-		})
-
-		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
-			return nil, statusNotFound, err
-		}
-
-		if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
-			return nil, statusIAMDelay, nil
-		}
-
-		if err != nil {
-			return nil, statusFailed, fmt.Errorf("listing permissions: %w", err)
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource

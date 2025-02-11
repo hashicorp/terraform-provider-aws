@@ -5,60 +5,29 @@ package batch
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_batch_job_queue")
-func DataSourceJobQueue() *schema.Resource {
+// @SDKDataSource("aws_batch_job_queue", name="Job Queue")
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"scheduling_policy_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchemaComputed(),
-
-			"priority": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"compute_environment_order": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -75,55 +44,104 @@ func DataSourceJobQueue() *schema.Resource {
 					},
 				},
 			},
+			"job_state_time_limit_action": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAction: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"max_time_seconds": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"reason": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrState: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrPriority: {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"scheduling_policy_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrState: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrStatusReason: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
-	params := &batch.DescribeJobQueuesInput{
-		JobQueues: []*string{aws.String(d.Get("name").(string))},
-	}
-	log.Printf("[DEBUG] Reading Batch Job Queue: %s", params)
-	desc, err := conn.DescribeJobQueuesWithContext(ctx, params)
+	jobQueue, err := findJobQueueByID(ctx, conn, d.Get(names.AttrName).(string))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Batch Job Queue", err))
 	}
 
-	if l := len(desc.JobQueues); l == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): empty response", d.Get("name").(string))
-	} else if l > 1 {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): too many results: wanted 1, got %d", d.Get("name").(string), l)
-	}
-
-	jobQueue := desc.JobQueues[0]
-	d.SetId(aws.StringValue(jobQueue.JobQueueArn))
-	d.Set("arn", jobQueue.JobQueueArn)
-	d.Set("name", jobQueue.JobQueueName)
+	arn := aws.ToString(jobQueue.JobQueueArn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, jobQueue.JobQueueName)
+	d.Set(names.AttrPriority, jobQueue.Priority)
 	d.Set("scheduling_policy_arn", jobQueue.SchedulingPolicyArn)
-	d.Set("status", jobQueue.Status)
-	d.Set("status_reason", jobQueue.StatusReason)
-	d.Set("state", jobQueue.State)
-	d.Set("priority", jobQueue.Priority)
+	d.Set(names.AttrState, jobQueue.State)
+	d.Set(names.AttrStatus, jobQueue.Status)
+	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
 
-	ceos := make([]map[string]interface{}, 0)
-	for _, v := range jobQueue.ComputeEnvironmentOrder {
-		ceo := map[string]interface{}{}
-		ceo["compute_environment"] = aws.StringValue(v.ComputeEnvironment)
-		ceo["order"] = int(aws.Int64Value(v.Order))
-		ceos = append(ceos, ceo)
+	tfList := make([]interface{}, 0)
+	for _, apiObject := range jobQueue.ComputeEnvironmentOrder {
+		tfMap := map[string]interface{}{}
+		tfMap["compute_environment"] = aws.ToString(apiObject.ComputeEnvironment)
+		tfMap["order"] = aws.ToInt32(apiObject.Order)
+		tfList = append(tfList, tfMap)
 	}
-	if err := d.Set("compute_environment_order", ceos); err != nil {
+	if err := d.Set("compute_environment_order", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	tfList = make([]interface{}, 0)
+	for _, apiObject := range jobQueue.JobStateTimeLimitActions {
+		tfMap := map[string]interface{}{}
+		tfMap[names.AttrAction] = apiObject.Action
+		tfMap["max_time_seconds"] = aws.ToInt32(apiObject.MaxTimeSeconds)
+		tfMap["reason"] = aws.ToString(apiObject.Reason)
+		tfMap[names.AttrState] = apiObject.State
+		tfList = append(tfList, tfMap)
 	}
+	if err := d.Set("job_state_time_limit_action", tfList); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting job_state_time_limit_action: %s", err)
+	}
+
+	setTagsOut(ctx, jobQueue.Tags)
 
 	return diags
 }

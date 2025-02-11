@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
@@ -32,7 +33,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,14 +41,14 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
-					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", string(awstypes.ReplicationStatusEnabled)),
+					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "source_file_system_region", acctest.Region()),
 				),
 			},
@@ -70,7 +71,7 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
@@ -111,16 +112,16 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.availability_zone_name", "data.aws_availability_zones.available", "names.0"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, names.AttrKeyID),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
-					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", string(awstypes.ReplicationStatusEnabled)),
+					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "source_file_system_region", acctest.Region()),
 				),
 			},
@@ -144,7 +145,7 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
@@ -152,10 +153,10 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_existingDestination(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination.0.file_system_id", destinationFsResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
+					resource.TestCheckResourceAttrPair(resourceName, "destination.0.file_system_id", destinationFsResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", string(awstypes.ReplicationStatusEnabled)),
 				),
 			},
 		},
@@ -169,7 +170,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		_, err := tfefs.FindReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -185,7 +186,7 @@ func testAccCheckReplicationConfigurationDestroy(ctx context.Context) resource.T
 
 func testAccCheckReplicationConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_replication_configuration" {

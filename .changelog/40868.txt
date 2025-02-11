@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_record: Correct `fdqn` value if `name` is a wildcard domain name (the leftmost label is `*`). This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025)
+```

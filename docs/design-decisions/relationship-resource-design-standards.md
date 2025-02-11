@@ -5,13 +5,13 @@
 
 ---
 
-The goal of this document is to assess the design of existing "relationship" resources in the Terraform AWS Provider and determine if a consistent set of rules can be defined for implementing them. For the purpose of this document, a "relationship" resource is defined as a resource which manages either a direct relationship between two standalone resources ("one-to-one", ie. [`aws_ssoadmin_permission_boundary_attachment`](https://registry.terraform.io/providers/-/aws/latest/docs/resources/ssoadmin_permissions_boundary_attachment)), or a variable number of child relationships to a parent resource ("one-to-many", ie. [`aws_iam_role_policy_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment)). Resources and AWS API’s with this function will often contain suffixes like "attachment", "assignment", "registration", or "rule".
+The goal of this document is to assess the design of existing "relationship" resources in the Terraform AWS Provider and determine if a consistent set of rules can be defined for implementing them. For the purpose of this document, a "relationship" resource is defined as a resource which manages either a direct relationship between two standalone resources ("one-to-one", ie. [`aws_ssoadmin_permission_boundary_attachment`](https://registry.terraform.io/providers/-/aws/latest/docs/resources/ssoadmin_permissions_boundary_attachment)), or a variable number of child relationships to a parent resource ("one-to-many", ie. [`aws_iam_role_policy_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment)). Resources and AWS APIs with this function will often contain suffixes like "attachment", "assignment", "registration", or "rule".
 
 A documented standard for implementing relationship-styled resources will inform how new resources are written, and provide guidelines to refer back to when the community requests features which may not align with internal best practices.
 
 ## Background
 
-The first form of relationship resources ("one-to-one") typically have a straightforward, singular API design and provider implementation given only a single relationship exists. The second form of resources ("one-to-many") often have to balance two provider design principles:
+The first form of relationship resources ("one-to-one") typically have a straightforward, singular API design and provider implementation given only a single relationship exists. The second form of resources ("one-to-many") often has to balance two provider design principles:
 
 * [Resources should represent a single API object](https://developer.hashicorp.com/terraform/plugin/best-practices/hashicorp-provider-design-principles#resources-should-represent-a-single-api-object)
 * [Resource and attribute schema should closely match the underlying API](https://developer.hashicorp.com/terraform/plugin/best-practices/hashicorp-provider-design-principles#resource-and-attribute-schema-should-closely-match-the-underlying-api)
@@ -68,11 +68,11 @@ An analysis of existing resources can inform which of these principles maintaine
 | [aws_vpn_gateway_attachment](https://registry.terraform.io/providers/-/aws/latest/docs/resources/vpn_gateway_attachment) | One-to-one| [Singular](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AttachVpnGateway.html)| [Singular](https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpnsite_gateway_attachment.go#L48-L51) |
 
 [^1]: Due to the volume of resources with "rule" in the name (~70), only the prominent security group rule resources were included in the analysis above. While "rule" resources often follow the same relationship-style design, the ~40 examples above provided enough initial data to inform design standards.
-[^2]: Structure of this API precludes it from being implemented in a singular fashion.
+[^2]: The structure of this API precludes it from being implemented in a singular fashion.
 [^3]: Creates exclusive attachments.
 [^4]: Creates exclusive rules.
 
-Of the 44 resources documented above, 29 are of the "one-to-many" form and 17 have "plural" AWS APIs (ie. accepts a list of child resources to be attached to a single parent). Of these 17, 13 resources (76%) use a "singular" Terraform implementation, where a list with one item is sent to the Create/Read/Update API, rather than allowing a single resource to manage multiple relationships. Of the remaining 4 with "plural" Terraform implementations, 2 do so in order to exclusively manage child relationships (`aws_security_group` Ingress/Egress variants), and one requires a "plural" implementation simply because of API limitations.
+Of the 44 resources documented above, 29 are of the "one-to-many" form and 17 have "plural" AWS APIs (ie. accept a list of child resources to be attached to a single parent). Of these 17, 13 resources (76%) use a "singular" Terraform implementation, where a list with one item is sent to the Create/Read/Update API, rather than allowing a single resource to manage multiple relationships. Of the remaining 4 with "plural" Terraform implementations, 2 do so to exclusively manage child relationships (`aws_security_group` Ingress/Egress variants), and one requires a "plural" implementation simply because of API limitations.
 
 These metrics indicate a strong historical preference for representing a single API object over aligning the schema to the underlying AWS API. The primary exceptions to this are when exclusive management of all child resources is desired, such as [security group ingress/egress rules](https://registry.terraform.io/providers/-/aws/latest/docs/resources/security_group), or [IAM policy attachments](https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_policy_attachment).
 

@@ -67,12 +67,15 @@ This resource supports the following arguments:
 ### `auto_scaling_group_provider`
 
 * `auto_scaling_group_arn` - (Required) - ARN of the associated auto scaling group.
+* `managed_draining` - (Optional) - Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are `ENABLED` and `DISABLED`. The default value is `ENABLED` when a capacity provider is created.
 * `managed_scaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
 * `managed_termination_protection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 
 ### `managed_scaling`
 
 * `instance_warmup_period` - (Optional) Period of time, in seconds, after a newly launched Amazon EC2 instance can contribute to CloudWatch metrics for Auto Scaling group. If this parameter is omitted, the default value of 300 seconds is used.
+
+  For more information on how the instance warmup period contributes to managed scale-out behavior, see [Control the instances Amazon ECS terminates](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/managed-termination-protection.html) in the _Amazon Elastic Container Service Developer Guide_.
 * `maximum_scaling_step_size` - (Optional) Maximum step adjustment size. A number between 1 and 10,000.
 * `minimum_scaling_step_size` - (Optional) Minimum step adjustment size. A number between 1 and 10,000.
 * `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
@@ -111,4 +114,4 @@ Using `terraform import`, import ECS Capacity Providers using the `name`. For ex
 % terraform import aws_ecs_capacity_provider.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-085876568cc2c4593afd22394b677657c0db3a438e0613974a494910237cb352 -->
+<!-- cache-key: cdktf-0.20.8 input-797abb55245071d6007ea74149db3030c3a05e7af10104cb97fc827aed66cbc8 -->

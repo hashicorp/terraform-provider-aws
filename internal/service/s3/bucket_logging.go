@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_logging", name="Bucket Logging")
@@ -35,13 +36,13 @@ func resourceBucketLogging() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -62,7 +63,7 @@ func resourceBucketLogging() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -70,16 +71,16 @@ func resourceBucketLogging() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.Type](),
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -139,8 +140,11 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketLoggingInput{
 		Bucket: aws.String(bucket),
 		BucketLoggingStatus: &types.BucketLoggingStatus{
@@ -174,26 +178,30 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Logging: %s", bucket, err)
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Logging (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Logging (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketLoggingRead(ctx, d, meta)
+	return append(diags, resourceBucketLoggingRead(ctx, d, meta)...)
 }
 
 func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	loggingEnabled, err := findLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
@@ -208,8 +216,8 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Logging (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrBucket, bucket)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
 	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
@@ -230,9 +238,13 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutBucketLoggingInput{
@@ -262,16 +274,20 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Logging (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketLoggingRead(ctx, d, meta)
+	return append(diags, resourceBucketLoggingRead(ctx, d, meta)...)
 }
 
 func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutBucketLoggingInput{
@@ -285,7 +301,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 	_, err = conn.PutBucketLogging(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -294,7 +310,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 
 	// Don't wait for the logging to disappear as it still exists after update.
 
-	return nil
+	return diags
 }
 
 func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expectedBucketOwner string) (*types.LoggingEnabled, error) {
@@ -362,7 +378,7 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 
 	grantee := &types.Grantee{}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		grantee.DisplayName = aws.String(v)
 	}
 
@@ -370,15 +386,15 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 		grantee.EmailAddress = aws.String(v)
 	}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		grantee.ID = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		grantee.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		grantee.URI = aws.String(v)
 	}
 
@@ -409,11 +425,11 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"type": g.Type,
+		names.AttrType: g.Type,
 	}
 
 	if g.DisplayName != nil {
-		m["display_name"] = aws.ToString(g.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(g.DisplayName)
 	}
 
 	if g.EmailAddress != nil {
@@ -421,11 +437,11 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.ID != nil {
-		m["id"] = aws.ToString(g.ID)
+		m[names.AttrID] = aws.ToString(g.ID)
 	}
 
 	if g.URI != nil {
-		m["uri"] = aws.ToString(g.URI)
+		m[names.AttrURI] = aws.ToString(g.URI)
 	}
 
 	return []interface{}{m}

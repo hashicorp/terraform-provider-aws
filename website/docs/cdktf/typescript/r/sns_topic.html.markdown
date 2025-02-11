@@ -127,7 +127,7 @@ This resource supports the following arguments:
 * `kmsMasterKeyId` - (Optional) The ID of an AWS-managed customer master key (CMK) for Amazon SNS or a custom CMK. For more information, see [Key Terms](https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html#sse-key-terms)
 * `signatureVersion` - (Optional) If `SignatureVersion` should be [1 (SHA1) or 2 (SHA256)](https://docs.aws.amazon.com/sns/latest/dg/sns-verify-signature-of-message.html). The signature version corresponds to the hashing algorithm used while creating the signature of the notifications, subscription confirmations, or unsubscribe confirmation messages sent by Amazon SNS.
 * `tracingConfig` - (Optional) Tracing mode of an Amazon SNS topic. Valid values: `"PassThrough"`, `"Active"`.
-* `fifoTopic` - (Optional) Boolean indicating whether or not to create a FIFO (first-in-first-out) topic (default is `false`).
+* `fifoTopic` - (Optional) Boolean indicating whether or not to create a FIFO (first-in-first-out) topic. FIFO topics can't deliver messages to customer managed endpoints, such as email addresses, mobile apps, SMS, or HTTP(S) endpoints. These endpoint types aren't guaranteed to preserve strict message ordering. Default is `false`.
 * `archivePolicy` - (Optional) The message archive policy for FIFO topics. More details in the [AWS documentation](https://docs.aws.amazon.com/sns/latest/dg/message-archiving-and-replay-topic-owner.html).
 * `contentBasedDeduplication` - (Optional) Enables content-based deduplication for FIFO topics. For more information, see the [related documentation](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-dedup.html)
 * `lambdaSuccessFeedbackRoleArn` - (Optional) The IAM role permitted to receive success feedback for this topic
@@ -170,7 +170,7 @@ class MyConvertedCode extends TerraformStack {
     SnsTopic.generateConfigForImport(
       this,
       "userUpdates",
-      "arn:aws:sns:us-west-2:0123456789012:my-topic"
+      "arn:aws:sns:us-west-2:123456789012:my-topic"
     );
   }
 }
@@ -180,7 +180,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SNS Topics using the topic `arn`. For example:
 
 ```console
-% terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+% terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:123456789012:my-topic
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-311dadd136784e610ac528a7d6495a10fda33fd115a478163d12e4e634cb2b45 -->
+<!-- cache-key: cdktf-0.20.8 input-850c3703d7ba8c5c1e1057a7cb169f770a7fafd4a06b6073f91a7aea739ce7c0 -->

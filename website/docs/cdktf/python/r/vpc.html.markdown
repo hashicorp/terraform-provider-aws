@@ -113,7 +113,7 @@ This resource supports the following arguments:
 * `ipv4_netmask_length` - (Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a `ipv4_ipam_pool_id`.
 * `ipv6_cidr_block` - (Optional) IPv6 CIDR block to request from an IPAM Pool. Can be set explicitly or derived from IPAM using `ipv6_netmask_length`.
 * `ipv6_ipam_pool_id` - (Optional) IPAM Pool ID for a IPv6 pool. Conflicts with `assign_generated_ipv6_cidr_block`.
-* `ipv6_netmask_length` - (Optional) Netmask length to request from IPAM Pool. Conflicts with `ipv6_cidr_block`. This can be omitted if IPAM pool as a `allocation_default_netmask_length` set. Valid values: `56`.
+* `ipv6_netmask_length` - (Optional) Netmask length to request from IPAM Pool. Conflicts with `ipv6_cidr_block`. This can be omitted if IPAM pool as a `allocation_default_netmask_length` set. Valid values are from `44` to `60` in increments of 4.
 * `ipv6_cidr_block_network_border_group` - (Optional) By default when an IPv6 CIDR is assigned to a VPC a default ipv6_cidr_block_network_border_group will be set to the region of the VPC. This can be changed to restrict advertisement of public addresses to specific Network Border Groups such as LocalZones.
 * `enable_dns_support` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults to true.
 * `enable_network_address_usage_metrics` - (Optional) Indicates whether Network Address Usage metrics are enabled for your VPC. Defaults to false.
@@ -128,6 +128,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of VPC
 * `id` - The ID of the VPC
 * `instance_tenancy` - Tenancy of instances spin up within VPC
+* `dhcp_options_id` - DHCP options id of the desired VPC.
 * `enable_dns_support` - Whether or not the VPC has DNS support
 * `enable_network_address_usage_metrics` - Whether Network Address Usage metrics are enabled for the VPC
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
@@ -167,4 +168,4 @@ Using `terraform import`, import VPCs using the VPC `id`. For example:
 % terraform import aws_vpc.test_vpc vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ae6df6e7b2fd061f8aef4637ee76c64d6bc7f7657d175ee9d2e9140d0df3c94b -->
+<!-- cache-key: cdktf-0.20.8 input-e1769c317ceb8ff9b909ae2b7a2d263552378fdc71e2b3381730a2670d3f6a5a -->

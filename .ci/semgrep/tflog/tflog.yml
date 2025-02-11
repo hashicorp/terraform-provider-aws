@@ -1,0 +1,9 @@
+rules:
+  - id: setfield-without-assign
+    languages: [go]
+    message: The return value of "tflog.SetField" must be used
+    patterns:
+      - pattern: tflog.SetField(...)
+      - pattern-not-inside: $CTX = tflog.SetField($CTX, ...)
+      - pattern-not-inside: return tflog.SetField($CTX, ...)
+    severity: ERROR

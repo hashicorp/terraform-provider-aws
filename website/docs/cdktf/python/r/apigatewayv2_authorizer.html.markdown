@@ -100,6 +100,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Authorizer identifier.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_authorizer` using the API identifier and authorizer identifier. For example:
@@ -125,4 +131,4 @@ Using `terraform import`, import `aws_apigatewayv2_authorizer` using the API ide
 % terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-322d065b428456a7d1cc59a5a9728d8c2146130eb3756317834d9f82f13b132e -->
+<!-- cache-key: cdktf-0.20.8 input-1c3af321ee2c6d773b05a5b2f0d08b279ff40d97f0ebbbd416015deaabe366fd -->

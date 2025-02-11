@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudhsm_v2_cluster: Support `hsm2m.medium` as a valid value for `hsm_type`
+```
+
+```release-note:enhancement
+resource/aws_cloudhsm_v2_cluster: Add `mode` argument
+```

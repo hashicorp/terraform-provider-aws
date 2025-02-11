@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+)
+
+var (
+	_ basetypes.StringTypable = (*regexpType)(nil)
 )
 
 type regexpType struct {
@@ -24,12 +26,6 @@ type regexpType struct {
 
 var (
 	RegexpType = regexpType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*regexpType)(nil)
-	_ basetypes.StringTypable  = (*regexpType)(nil)
-	_ basetypes.StringValuable = (*Regexp)(nil)
 )
 
 func (t regexpType) Equal(o attr.Type) bool {
@@ -90,35 +86,10 @@ func (regexpType) ValueType(context.Context) attr.Value {
 	return Regexp{}
 }
 
-func (t regexpType) Validate(_ context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !in.IsKnown() || in.IsNull() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"Regexp Type Validation Error",
-			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
-		)
-		return diags
-	}
-
-	if _, err := regexp.Compile(value); err != nil {
-		diags.AddAttributeError(
-			path,
-			"Regexp Type Validation Error",
-			fmt.Sprintf("Value %q cannot be parsed as a regular expression: %s", value, err),
-		)
-		return diags
-	}
-
-	return diags
-}
+var (
+	_ basetypes.StringValuable    = (*Regexp)(nil)
+	_ xattr.ValidateableAttribute = (*Regexp)(nil)
+)
 
 func RegexpNull() Regexp {
 	return Regexp{StringValue: basetypes.NewStringNull()}
@@ -128,10 +99,21 @@ func RegexpUnknown() Regexp {
 	return Regexp{StringValue: basetypes.NewStringUnknown()}
 }
 
+// RegexpValue initializes a new Regexp type with the provided value
+//
+// This function does not return diagnostics, and therefore invalid regular expression values
+// are not handled during construction. Invalid values will be detected by the
+// ValidateAttribute method, called by the ValidateResourceConfig RPC during
+// operations like `terraform validate`, `plan`, or `apply`.
 func RegexpValue(value string) Regexp {
+	// swallow any regex parsing errors here and just pass along the
+	// zero value regexp.Regexp. Invalid values will be handled downstream
+	// by the ValidateAttribute method.
+	v, _ := regexp.Compile(value)
+
 	return Regexp{
 		StringValue: basetypes.NewStringValue(value),
-		value:       regexache.MustCompile(value),
+		value:       v,
 	}
 }
 
@@ -156,4 +138,22 @@ func (Regexp) Type(context.Context) attr.Type {
 
 func (v Regexp) ValueRegexp() *regexp.Regexp {
 	return v.value
+}
+
+func (v Regexp) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	vs := v.ValueString()
+	if _, err := regexp.Compile(vs); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Regexp Value",
+			"The provided value cannot be parsed as a regular expression.\n\n"+
+				"Path: "+req.Path.String()+"\n"+
+				"Value: "+vs+"\n"+
+				"Error: "+err.Error(),
+		)
+	}
 }

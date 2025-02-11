@@ -82,7 +82,7 @@ func (o operation[T]) UntilFoundN(continuousTargetOccurence int) operation[T] {
 			return true, nil
 		}
 
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			targetOccurence = 0
 
 			return true, err
@@ -100,7 +100,7 @@ func (o operation[T]) UntilNotFound() operation[T] {
 			return true, nil
 		}
 
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			return false, nil
 		}
 

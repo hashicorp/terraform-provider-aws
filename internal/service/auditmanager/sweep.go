@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -88,7 +89,7 @@ func sweepAssessments(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessment, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -167,7 +168,7 @@ func sweepAssessmentReports(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentReport, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 				framework.NewAttribute("assessment_id", aws.ToString(report.AssessmentId)),
 			))
 		}
@@ -208,7 +209,7 @@ func sweepControls(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Control: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceControl, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -248,7 +249,7 @@ func sweepFrameworks(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Framework: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFramework, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -288,7 +289,7 @@ func sweepFrameworkShares(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Framework Share: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFrameworkShare, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}

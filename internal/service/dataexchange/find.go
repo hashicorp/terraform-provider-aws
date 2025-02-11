@@ -6,19 +6,20 @@ package dataexchange
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dataexchange"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func FindDataSetById(ctx context.Context, conn *dataexchange.DataExchange, id string) (*dataexchange.GetDataSetOutput, error) {
+func FindDataSetById(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetDataSetOutput, error) {
 	input := &dataexchange.GetDataSetInput{
 		DataSetId: aws.String(id),
 	}
-	output, err := conn.GetDataSetWithContext(ctx, input)
+	output, err := conn.GetDataSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -32,14 +33,14 @@ func FindDataSetById(ctx context.Context, conn *dataexchange.DataExchange, id st
 	return output, nil
 }
 
-func FindRevisionById(ctx context.Context, conn *dataexchange.DataExchange, dataSetId, revisionId string) (*dataexchange.GetRevisionOutput, error) {
+func FindRevisionById(ctx context.Context, conn *dataexchange.Client, dataSetId, revisionId string) (*dataexchange.GetRevisionOutput, error) {
 	input := &dataexchange.GetRevisionInput{
 		DataSetId:  aws.String(dataSetId),
 		RevisionId: aws.String(revisionId),
 	}
-	output, err := conn.GetRevisionWithContext(ctx, input)
+	output, err := conn.GetRevision(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

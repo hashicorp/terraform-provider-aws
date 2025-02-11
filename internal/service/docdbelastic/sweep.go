@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -25,7 +26,7 @@ func RegisterSweepers() {
 
 func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping DocDB Elastic Cluster sweep for region: %s", region)
 		return nil
 	}
@@ -54,7 +55,7 @@ func sweepClusters(region string) error {
 
 			log.Printf("[INFO] Deleting DocDB Elastic Cluster: %s", aws.ToString(cluster.ClusterName))
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCluster, client,
-				framework.NewAttribute("id", arn),
+				framework.NewAttribute(names.AttrID, arn),
 			))
 		}
 	}

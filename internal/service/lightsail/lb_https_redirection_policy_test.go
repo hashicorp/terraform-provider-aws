@@ -18,7 +18,6 @@ import (
 func testAccLoadBalancerHTTPSRedirectionPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	enabled := "true"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -31,7 +30,7 @@ func testAccLoadBalancerHTTPSRedirectionPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccLoadBalancerHTTPSRedirectionPolicyConfig_basic(rName, enabled),
+				Config:      testAccLoadBalancerHTTPSRedirectionPolicyConfig_basic(rName, acctest.CtTrue),
 				ExpectError: regexache.MustCompile(`cannot enable https redirection while https is disabled.`),
 			},
 		},

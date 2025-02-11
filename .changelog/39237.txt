@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_codebuild_fleet
+```
+
+```release-note:new-data-source
+aws_codebuild_fleet
+```
+
+```release-note:enhancement
+resource/aws_codebuild_project: Add `fleet` attribute in `environment` configuration block
+```

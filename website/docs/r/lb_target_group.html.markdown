@@ -81,6 +81,29 @@ resource "aws_lb_target_group" "tcp-example" {
 }
 ```
 
+### Target group with health requirements
+
+```terraform
+resource "aws_lb_target_group" "tcp-example" {
+  name     = "tf-example-lb-nlb-tg"
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.main.id
+
+  target_group_health {
+    dns_failover {
+      minimum_healthy_targets_count      = "1"
+      minimum_healthy_targets_percentage = "off"
+    }
+
+    unhealthy_state_routing {
+      minimum_healthy_targets_count      = "1"
+      minimum_healthy_targets_percentage = "off"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -107,6 +130,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_failover` - (Optional) Target failover block. Only applicable for Gateway Load Balancer target groups. See [target_failover](#target_failover) for more information.
 * `target_health_state` - (Optional) Target health state block. Only applicable for Network Load Balancer target groups when `protocol` is `TCP` or `TLS`. See [target_health_state](#target_health_state) for more information.
+* `target_group_health` - (Optional) Target health requirements block. See [target_group_health](#target_group_health) for more information.
 * `target_type` - (Optional, Forces new resource) Type of target that you must specify when registering targets with this target group.
   See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html) for supported values.
   The default is `instance`.
@@ -137,7 +161,7 @@ This resource supports the following arguments:
     * When the `target_type` is `lambda`, values can be between `200` and `499`. The default is `200`.
 * `path` - (May be required) Destination for the health check request. Required for HTTP/HTTPS ALB and HTTP NLB. Only applies to HTTP/HTTPS.
     * For HTTP and HTTPS health checks, the default is `/`.
-    * For gRPC health checks, the default is `/Amazon Web Services.ALB/healthcheck`.
+    * For gRPC health checks, the default is `/AWS.ALB/healthcheck`.
 * `port` - (Optional) The port the load balancer uses when performing health checks on targets.
   Valid values are either `traffic-port`, to use the same port as the target group, or a valid port number between `1` and `65536`.
   Default is `traffic-port`.
@@ -170,6 +194,30 @@ This resource supports the following arguments:
 ~> **NOTE:** This block is only valid for a Network Load Balancer (NLB) target group when `protocol` is `TCP` or `TLS`.
 
 * `enable_unhealthy_connection_termination` - (Optional) Indicates whether the load balancer terminates connections to unhealthy targets. Possible values are `true` or `false`. Default: `true`.
+* `unhealthy_draining_interval` - (Optional) Indicates the time to wait for in-flight requests to complete when a target becomes unhealthy. The range is `0-360000`. This value has to be set only if `enable_unhealthy_connection_termination` is set to false. Default: `0`.
+
+### target_group_health
+
+~> **NOTE:** This block is only supported by Application Load Balancers and Network Load Balancers.
+
+The `target_group_health` block supports the following:
+
+* `dns_failover` - (Optional) Block to configure DNS Failover requirements. See [DNS Failover](#dns_failover) below for details on attributes.
+* `unhealthy_state_routing` - (Optional) Block to configure Unhealthy State Routing requirements. See [Unhealthy State Routing](#unhealthy_state_routing) below for details on attributes.
+
+### dns_failover
+
+The `dns_failover` block supports the following:
+
+* `minimum_healthy_targets_count` - (Optional) The minimum number of targets that must be healthy. If the number of healthy targets is below this value, mark the zone as unhealthy in DNS, so that traffic is routed only to healthy zones. The possible values are `off` or an integer from `1` to the maximum number of targets. The default is `off`.
+* `minimum_healthy_targets_percentage` - (Optional) The minimum percentage of targets that must be healthy. If the percentage of healthy targets is below this value, mark the zone as unhealthy in DNS, so that traffic is routed only to healthy zones. The possible values are `off` or an integer from `1` to `100`. The default is `off`.
+
+### unhealthy_state_routing
+
+The `unhealthy_state_routing` block supports the following:
+
+* `minimum_healthy_targets_count` - (Optional) The minimum number of targets that must be healthy. If the number of healthy targets is below this value, send traffic to all targets, including unhealthy targets. The possible values are `1` to the maximum number of targets. The default is `1`.
+* `minimum_healthy_targets_percentage` - (Optional) The minimum percentage of targets that must be healthy. If the percentage of healthy targets is below this value, send traffic to all targets, including unhealthy targets. The possible values are `off` or an integer from `1` to `100`. The default is `off`.
 
 ## Attribute Reference
 
@@ -179,6 +227,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Target Group (matches `id`).
 * `id` - ARN of the Target Group (matches `arn`).
 * `name` - Name of the Target Group.
+* `load_balancer_arns` - ARNs of the Load Balancers associated with the Target Group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

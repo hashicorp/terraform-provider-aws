@@ -10,12 +10,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
@@ -27,17 +28,17 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_basic(engine, licenseModel, storageType),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
-					resource.TestCheckResourceAttr(dataSourceName, "storage_type", storageType),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStorageType, storageType),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_class", "data.aws_rds_orderable_db_instance.dynamic", "instance_class"),
 				),
 			},
@@ -55,7 +56,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -79,14 +80,14 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_preferredVersion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
 		},
@@ -103,7 +104,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -111,7 +112,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 				Config: testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_class", "data.aws_rds_orderable_db_instance.dynamic", "instance_class"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
 		},
@@ -128,14 +129,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsEnhancedMonitoring(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_enhanced_monitoring", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_enhanced_monitoring", acctest.CtTrue),
 				),
 			},
 		},
@@ -152,24 +153,24 @@ func TestAccRDSOrderableInstanceDataSource_latestVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_latestVersion(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "false"),
-					resource.TestMatchResourceAttr(dataSourceName, "engine_version", regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtFalse),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
 				),
 			},
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_latestVersion(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "engine_version", regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
 				),
 			},
 		},
@@ -186,17 +187,17 @@ func TestAccRDSOrderableInstanceDataSource_supportsGlobalDatabases(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsGlobalDatabases(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_global_databases", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "engine_version", regexache.MustCompile(`^8\.0\.mysql_aurora\..*`)),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_global_databases", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^8\.0\.mysql_aurora\..*`)),
 				),
 			},
 		},
@@ -209,16 +210,16 @@ func TestAccRDSOrderableInstanceDataSource_supportsClusters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsClusters(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_clusters", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineMySQL),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_clusters", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestMatchResourceAttr(dataSourceName, "instance_class", regexache.MustCompile(`^db\..*large$`)),
 				),
 			},
@@ -232,16 +233,16 @@ func TestAccRDSOrderableInstanceDataSource_readReplicaCapable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_readReplicaCapable(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "read_replica_capable", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.InstanceEngineOracleEnterprise),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "read_replica_capable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.InstanceEngineOracleEnterprise),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(dataSourceName, "instance_class"),
 				),
 			},
@@ -255,16 +256,16 @@ func TestAccRDSOrderableInstanceDataSource_supportsMultiAZ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsMultiAZ(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_multi_az", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineMySQL),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_multi_az", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 				),
 			},
 		},
@@ -277,15 +278,15 @@ func TestAccRDSOrderableInstanceDataSource_supportedEngineModes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportedEngineModes(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, "supported_engine_modes.0", "provisioned"),
 				),
 			},
@@ -299,15 +300,15 @@ func TestAccRDSOrderableInstanceDataSource_supportedNetworkTypes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportedNetworkTypes(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "supported_network_types.*", "DUAL"),
 				),
 			},
@@ -325,14 +326,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsIAMDatabaseAuthentication(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_iam_database_authentication", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_iam_database_authentication", acctest.CtTrue),
 				),
 			},
 		},
@@ -349,14 +350,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsIops(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_iops", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_iops", acctest.CtTrue),
 				),
 			},
 		},
@@ -373,14 +374,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsKerberosAuthentication(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_kerberos_authentication", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_kerberos_authentication", acctest.CtTrue),
 				),
 			},
 		},
@@ -401,14 +402,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 			testAccOrderableInstancePreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, "mysql")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsPerformanceInsights(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_performance_insights", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_performance_insights", acctest.CtTrue),
 				),
 			},
 		},
@@ -425,14 +426,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsStorageAutoScaling(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_storage_autoscaling", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_storage_autoscaling", acctest.CtTrue),
 				),
 			},
 		},
@@ -449,14 +450,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsStorageEncryption(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "supports_storage_encryption", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supports_storage_encryption", acctest.CtTrue),
 				),
 			},
 		},
@@ -464,14 +465,14 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 }
 
 func testAccOrderableInstancePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String("mysql"),
 		DBInstanceClass: aws.String("db.m5.xlarge"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
+	_, err := conn.DescribeOrderableDBInstanceOptions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

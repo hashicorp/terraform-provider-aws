@@ -20,7 +20,7 @@ resource "aws_oam_sink" "example" {
 }
 
 resource "aws_oam_sink_policy" "example" {
-  sink_identifier = aws_oam_sink.example.id
+  sink_identifier = aws_oam_sink.example.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

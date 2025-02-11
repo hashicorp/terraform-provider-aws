@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_transfer_ssh_key: Add `ssh_key_id` attribute
+```

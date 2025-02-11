@@ -38,7 +38,7 @@ resource "aws_lambda_function" "example" {
   function_name    = "tf-ivschat-message-handler"
   role             = aws_iam_role.example.arn
   source_code_hash = data.archive_file.message_review_handler.output_base64sha256
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
   handler          = "index.handler"
 }
 

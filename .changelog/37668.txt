@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_group: Correctly handles tag updates with empty string tags
+```

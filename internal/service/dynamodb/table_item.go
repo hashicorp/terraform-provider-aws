@@ -10,20 +10,23 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dynamodb_table_item")
-func ResourceTableItem() *schema.Resource {
+// @SDKResource("aws_dynamodb_table_item", name="Table Item")
+func resourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableItemCreate,
 		ReadWithoutTimeout:   resourceTableItemRead,
@@ -31,20 +34,10 @@ func ResourceTableItem() *schema.Resource {
 		DeleteWithoutTimeout: resourceTableItemDelete,
 
 		Schema: map[string]*schema.Schema{
-			"table_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"hash_key": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
 			},
 			"item": {
 				Type:                  schema.TypeString,
@@ -53,12 +46,22 @@ func ResourceTableItem() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
 			},
+			"range_key": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+			names.AttrTableName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
-	_, err := ExpandTableItemAttributes(v.(string))
+	_, err := expandTableItemAttributes(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
 	}
@@ -67,130 +70,47 @@ func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 
 func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	tableName := d.Get("table_name").(string)
-	hashKey := d.Get("hash_key").(string)
-	item := d.Get("item").(string)
-	attributes, err := ExpandTableItemAttributes(item)
+	attributes, err := expandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Table Item: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] DynamoDB item create: %s", tableName)
-
-	_, err = conn.PutItemWithContext(ctx, &dynamodb.PutItemInput{
-		Item: attributes,
+	tableName := d.Get(names.AttrTableName).(string)
+	hashKey := d.Get("hash_key").(string)
+	input := &dynamodb.PutItemInput{
 		// Explode if item exists. We didn't create it.
 		ConditionExpression:      aws.String("attribute_not_exists(#hk)"),
-		ExpressionAttributeNames: aws.StringMap(map[string]string{"#hk": hashKey}),
+		ExpressionAttributeNames: map[string]string{"#hk": hashKey},
+		Item:                     attributes,
 		TableName:                aws.String(tableName),
-	})
+	}
+
+	_, err = conn.PutItem(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Table Item: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Table (%s) Item: %s", tableName, err)
 	}
 
-	rangeKey := d.Get("range_key").(string)
-	id := buildTableItemID(tableName, hashKey, rangeKey, attributes)
-
-	d.SetId(id)
-
-	return append(diags, resourceTableItemRead(ctx, d, meta)...)
-}
-
-func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[DEBUG] Updating DynamoDB table %s", d.Id())
-	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
-
-	if d.HasChange("item") {
-		tableName := d.Get("table_name").(string)
-		hashKey := d.Get("hash_key").(string)
-		rangeKey := d.Get("range_key").(string)
-
-		oldItem, newItem := d.GetChange("item")
-
-		attributes, err := ExpandTableItemAttributes(newItem.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): %s", d.Id(), err)
-		}
-		newQueryKey := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
-
-		updates := map[string]*dynamodb.AttributeValueUpdate{}
-		for key, value := range attributes {
-			// Hash keys and range keys are not updatable, so we'll basically create
-			// a new record and delete the old one below
-			if key == hashKey || key == rangeKey {
-				continue
-			}
-			updates[key] = &dynamodb.AttributeValueUpdate{
-				Action: aws.String(dynamodb.AttributeActionPut),
-				Value:  value,
-			}
-		}
-
-		oldAttributes, err := ExpandTableItemAttributes(oldItem.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): %s", d.Id(), err)
-		}
-
-		for k := range oldAttributes {
-			if k == hashKey || k == rangeKey {
-				continue
-			}
-			if _, ok := attributes[k]; !ok {
-				updates[k] = &dynamodb.AttributeValueUpdate{
-					Action: aws.String(dynamodb.AttributeActionDelete),
-				}
-			}
-		}
-
-		_, err = conn.UpdateItemWithContext(ctx, &dynamodb.UpdateItemInput{
-			AttributeUpdates: updates,
-			TableName:        aws.String(tableName),
-			Key:              newQueryKey,
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): %s", d.Id(), err)
-		}
-
-		// New record is created via UpdateItem in case we're changing hash key
-		// so we need to get rid of the old one
-		oldQueryKey := BuildTableItemQueryKey(oldAttributes, hashKey, rangeKey)
-		if !reflect.DeepEqual(oldQueryKey, newQueryKey) {
-			log.Printf("[DEBUG] Deleting old record: %#v", oldQueryKey)
-			_, err := conn.DeleteItemWithContext(ctx, &dynamodb.DeleteItemInput{
-				Key:       oldQueryKey,
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): removing old record: %s", d.Id(), err)
-			}
-		}
-
-		id := buildTableItemID(tableName, hashKey, rangeKey, attributes)
-		d.SetId(id)
-	}
+	d.SetId(tableItemCreateResourceID(tableName, hashKey, d.Get("range_key").(string), attributes))
 
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
 
 func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
-
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
+	attributes, err := expandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Item (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	key := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
-	result, err := FindTableItem(ctx, conn, tableName, key)
+	key := expandTableItemQueryKey(attributes, hashKey, rangeKey)
+	item, err := findTableItemByTwoPartKey(ctx, conn, tableName, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table Item (%s) not found, removing from state", d.Id())
@@ -203,34 +123,113 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// The record exists, now test if it differs from what is desired
-	if !reflect.DeepEqual(result.Item, attributes) {
-		itemAttrs, err := flattenTableItemAttributes(result.Item)
+	if !reflect.DeepEqual(item, attributes) {
+		itemAttrs, err := flattenTableItemAttributes(item)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Item (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 		d.Set("item", itemAttrs)
-		id := buildTableItemID(tableName, hashKey, rangeKey, result.Item)
-		d.SetId(id)
+		d.SetId(tableItemCreateResourceID(tableName, hashKey, rangeKey, item))
 	}
 
 	return diags
 }
 
+func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+
+	if d.HasChange("item") {
+		tableName := d.Get(names.AttrTableName).(string)
+		hashKey := d.Get("hash_key").(string)
+		rangeKey := d.Get("range_key").(string)
+
+		oldItem, newItem := d.GetChange("item")
+
+		attributes, err := expandTableItemAttributes(newItem.(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		newQueryKey := expandTableItemQueryKey(attributes, hashKey, rangeKey)
+
+		updates := map[string]awstypes.AttributeValueUpdate{}
+		for key, value := range attributes {
+			// Hash keys and range keys are not updatable, so we'll basically create
+			// a new record and delete the old one below
+			if key == hashKey || key == rangeKey {
+				continue
+			}
+			updates[key] = awstypes.AttributeValueUpdate{
+				Action: awstypes.AttributeActionPut,
+				Value:  value,
+			}
+		}
+
+		oldAttributes, err := expandTableItemAttributes(oldItem.(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		for k := range oldAttributes {
+			if k == hashKey || k == rangeKey {
+				continue
+			}
+			if _, ok := attributes[k]; !ok {
+				updates[k] = awstypes.AttributeValueUpdate{
+					Action: awstypes.AttributeActionDelete,
+				}
+			}
+		}
+
+		input := &dynamodb.UpdateItemInput{
+			AttributeUpdates: updates,
+			Key:              newQueryKey,
+			TableName:        aws.String(tableName),
+		}
+
+		_, err = conn.UpdateItem(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): %s", d.Id(), err)
+		}
+
+		// New record is created via UpdateItem in case we're changing hash key
+		// so we need to get rid of the old one
+		oldQueryKey := expandTableItemQueryKey(oldAttributes, hashKey, rangeKey)
+		if !reflect.DeepEqual(oldQueryKey, newQueryKey) {
+			input := &dynamodb.DeleteItemInput{
+				Key:       oldQueryKey,
+				TableName: aws.String(tableName),
+			}
+
+			_, err := conn.DeleteItem(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): removing old record: %s", d.Id(), err)
+			}
+		}
+
+		d.SetId(tableItemCreateResourceID(tableName, hashKey, rangeKey, attributes))
+	}
+
+	return append(diags, resourceTableItemRead(ctx, d, meta)...)
+}
+
 func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
+	attributes, err := expandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting DynamoDB Table Item (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	queryKey := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
+	queryKey := expandTableItemQueryKey(attributes, hashKey, rangeKey)
 
-	_, err = conn.DeleteItemWithContext(ctx, &dynamodb.DeleteItemInput{
+	_, err = conn.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key:       queryKey,
-		TableName: aws.String(d.Get("table_name").(string)),
+		TableName: aws.String(d.Get(names.AttrTableName).(string)),
 	})
 
 	if err != nil {
@@ -240,21 +239,51 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-// Helpers
+func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string, attrs map[string]awstypes.AttributeValue) string {
+	id := []string{tableName, hashKey}
 
-func FindTableItem(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, key map[string]*dynamodb.AttributeValue) (*dynamodb.GetItemOutput, error) {
-	in := &dynamodb.GetItemInput{
-		TableName:      aws.String(tableName),
-		ConsistentRead: aws.Bool(true),
-		Key:            key,
+	if v, ok := attrs[hashKey]; ok {
+		switch v := v.(type) {
+		case *awstypes.AttributeValueMemberB:
+			id = append(id, itypes.Base64EncodeOnce(v.Value))
+		case *awstypes.AttributeValueMemberN:
+			id = append(id, v.Value)
+		case *awstypes.AttributeValueMemberS:
+			id = append(id, v.Value)
+		}
 	}
 
-	out, err := conn.GetItemWithContext(ctx, in)
+	if v, ok := attrs[rangeKey]; ok && rangeKey != "" {
+		switch v := v.(type) {
+		case *awstypes.AttributeValueMemberB:
+			id = append(id, itypes.Base64EncodeOnce(v.Value))
+		case *awstypes.AttributeValueMemberN:
+			id = append(id, v.Value)
+		case *awstypes.AttributeValueMemberS:
+			id = append(id, v.Value)
+		}
+	}
 
-	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+	return strings.Join(id, "|")
+}
+
+func findTableItemByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName string, key map[string]awstypes.AttributeValue) (map[string]awstypes.AttributeValue, error) {
+	input := &dynamodb.GetItemInput{
+		ConsistentRead: aws.Bool(true),
+		Key:            key,
+		TableName:      aws.String(tableName),
+	}
+
+	return findTableItem(ctx, conn, input)
+}
+
+func findTableItem(ctx context.Context, conn *dynamodb.Client, input *dynamodb.GetItemInput) (map[string]awstypes.AttributeValue, error) {
+	output, err := conn.GetItem(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -262,35 +291,20 @@ func FindTableItem(ctx context.Context, conn *dynamodb.DynamoDB, tableName strin
 		return nil, err
 	}
 
-	if out == nil || out.Item == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Item == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output.Item, nil
 }
 
-func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {
-	id := []string{tableName, hashKey}
-
-	if hashVal, ok := attrs[hashKey]; ok {
-		id = append(id, verify.Base64Encode(hashVal.B))
-		id = append(id, aws.StringValue(hashVal.S))
-		id = append(id, aws.StringValue(hashVal.N))
-	}
-	if rangeVal, ok := attrs[rangeKey]; ok && rangeKey != "" {
-		id = append(id, rangeKey, verify.Base64Encode(rangeVal.B))
-		id = append(id, aws.StringValue(rangeVal.S))
-		id = append(id, aws.StringValue(rangeVal.N))
-	}
-	return strings.Join(id, "|")
-}
-
-func BuildTableItemQueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey string, rangeKey string) map[string]*dynamodb.AttributeValue {
-	queryKey := map[string]*dynamodb.AttributeValue{
+func expandTableItemQueryKey(attrs map[string]awstypes.AttributeValue, hashKey, rangeKey string) map[string]awstypes.AttributeValue {
+	queryKey := map[string]awstypes.AttributeValue{
 		hashKey: attrs[hashKey],
 	}
 	if rangeKey != "" {
 		queryKey[rangeKey] = attrs[rangeKey]
 	}
+
 	return queryKey
 }

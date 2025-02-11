@@ -96,6 +96,7 @@ This resource supports the following arguments:
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
 * `schedule_expression` - (Optional) A [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html) that specifies when the association runs.
 * `sync_compliance` - (Optional) The mode for generating association compliance. You can specify `AUTO` or `MANUAL`.
+* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
 * `wait_for_success_timeout_seconds` - (Optional) The number of seconds to wait for the association status to be `Success`. If `Success` status is not reached within the given time, create opration will fail.
 
@@ -119,6 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `instance_id` - The instance id that the SSM document was applied to.
 * `name` - The name of the SSM document to apply.
 * `parameters` - Additional parameters passed to the SSM document.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

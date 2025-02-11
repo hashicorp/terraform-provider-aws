@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -45,7 +46,7 @@ func ResourceLink() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,6 +58,43 @@ func ResourceLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"link_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"log_group_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFilter: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 2000),
+									},
+								},
+							},
+						},
+						"metric_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFilter: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 2000),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"link_id": {
 				Type:     schema.TypeString,
@@ -94,30 +132,33 @@ const (
 )
 
 func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	in := &oam.CreateLinkInput{
-		LabelTemplate:  aws.String(d.Get("label_template").(string)),
-		ResourceTypes:  flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set)),
-		SinkIdentifier: aws.String(d.Get("sink_identifier").(string)),
-		Tags:           getTagsIn(ctx),
+		LabelTemplate:     aws.String(d.Get("label_template").(string)),
+		LinkConfiguration: expandLinkConfiguration(d.Get("link_configuration").([]interface{})),
+		ResourceTypes:     flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set)),
+		SinkIdentifier:    aws.String(d.Get("sink_identifier").(string)),
+		Tags:              getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateLink(ctx, in)
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), err)
 	}
 
 	if out == nil || out.Id == nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
 
-	return resourceLinkRead(ctx, d, meta)
+	return append(diags, resourceLinkRead(ctx, d, meta)...)
 }
 
 func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findLinkByID(ctx, conn, d.Id())
@@ -129,12 +170,13 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameLink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, ResNameLink, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("label", out.Label)
 	d.Set("label_template", out.LabelTemplate)
+	d.Set("link_configuration", flattenLinkConfiguration(out.LinkConfiguration))
 	d.Set("link_id", out.Id)
 	d.Set("resource_types", flex.FlattenStringValueList(out.ResourceTypes))
 	d.Set("sink_arn", out.SinkArn)
@@ -144,6 +186,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	update := false
@@ -152,8 +195,13 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Identifier: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("resource_types") {
+	if d.HasChanges("resource_types", "link_configuration") {
 		in.ResourceTypes = flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set))
+
+		if d.HasChanges("link_configuration") {
+			in.LinkConfiguration = expandLinkConfiguration(d.Get("link_configuration").([]interface{}))
+		}
+
 		update = true
 	}
 
@@ -161,14 +209,15 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] Updating ObservabilityAccessManager Link (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateLink(ctx, in)
 		if err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameLink, d.Id(), err)
+			return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameLink, d.Id(), err)
 		}
 	}
 
-	return resourceLinkRead(ctx, d, meta)
+	return append(diags, resourceLinkRead(ctx, d, meta)...)
 }
 
 func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	log.Printf("[INFO] Deleting ObservabilityAccessManager Link %s", d.Id())
@@ -183,7 +232,7 @@ func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil
 		}
 
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionDeleting, ResNameLink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionDeleting, ResNameLink, d.Id(), err)
 	}
 
 	return nil
@@ -211,4 +260,94 @@ func findLinkByID(ctx context.Context, conn *oam.Client, id string) (*oam.GetLin
 	}
 
 	return out, nil
+}
+
+func expandLinkConfiguration(l []interface{}) *types.LinkConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	config := &types.LinkConfiguration{}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["log_group_configuration"]; ok {
+		config.LogGroupConfiguration = expandLogGroupConfiguration(v.([]interface{}))
+	}
+	if v, ok := m["metric_configuration"]; ok {
+		config.MetricConfiguration = expandMetricConfiguration(v.([]interface{}))
+	}
+
+	return config
+}
+
+func expandLogGroupConfiguration(l []interface{}) *types.LogGroupConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	config := &types.LogGroupConfiguration{}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m[names.AttrFilter]; ok && v != "" {
+		config.Filter = aws.String(v.(string))
+	}
+
+	return config
+}
+
+func expandMetricConfiguration(l []interface{}) *types.MetricConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	config := &types.MetricConfiguration{}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m[names.AttrFilter]; ok && v != "" {
+		config.Filter = aws.String(v.(string))
+	}
+
+	return config
+}
+
+func flattenLinkConfiguration(a *types.LinkConfiguration) []interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{}
+
+	if a.LogGroupConfiguration != nil {
+		m["log_group_configuration"] = flattenLogGroupConfiguration(a.LogGroupConfiguration)
+	}
+	if a.MetricConfiguration != nil {
+		m["metric_configuration"] = flattenMetricConfiguration(a.MetricConfiguration)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenLogGroupConfiguration(a *types.LogGroupConfiguration) []interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{}
+
+	if a.Filter != nil {
+		m[names.AttrFilter] = aws.ToString(a.Filter)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenMetricConfiguration(a *types.MetricConfiguration) []interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{}
+
+	if a.Filter != nil {
+		m[names.AttrFilter] = aws.ToString(a.Filter)
+	}
+
+	return []interface{}{m}
 }

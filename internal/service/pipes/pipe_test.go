@@ -36,7 +36,7 @@ func TestAccPipesPipe_basicSQS(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,14 +44,15 @@ func TestAccPipesPipe_basicSQS(t *testing.T) {
 				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -63,8 +64,8 @@ func TestAccPipesPipe_basicSQS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.batch_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.maximum_batching_window_in_seconds", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_sqs_queue.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "0"),
 				),
 			},
@@ -89,7 +90,7 @@ func TestAccPipesPipe_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccPipesPipe_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func TestAccPipesPipe_description(t *testing.T) {
 				Config: testAccPipeConfig_description(rName, "Description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description 1"),
 				),
 			},
 			{
@@ -137,21 +138,21 @@ func TestAccPipesPipe_description(t *testing.T) {
 				Config: testAccPipeConfig_description(rName, "Description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description 2"),
 				),
 			},
 			{
 				Config: testAccPipeConfig_description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
 				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 				),
 			},
 		},
@@ -170,7 +171,7 @@ func TestAccPipesPipe_desiredState(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +224,7 @@ func TestAccPipesPipe_enrichment(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -231,7 +232,7 @@ func TestAccPipesPipe_enrichment(t *testing.T) {
 				Config: testAccPipeConfig_enrichment(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -243,7 +244,7 @@ func TestAccPipesPipe_enrichment(t *testing.T) {
 				Config: testAccPipeConfig_enrichment(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test.1", names.AttrARN),
 				),
 			},
 			{
@@ -269,7 +270,7 @@ func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -277,7 +278,7 @@ func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
 				Config: testAccPipeConfig_enrichmentParameters(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.header_parameters.%", "1"),
@@ -297,7 +298,7 @@ func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
 				Config: testAccPipeConfig_enrichmentParametersUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.header_parameters.%", "2"),
@@ -307,6 +308,201 @@ func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.0", "p2"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.query_string_parameters.%", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_1.id}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_2.arn}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_logConfiguration_cloudwatchLogsLogDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_logConfiguration_cloudwatchLogsLogDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.0.log_group_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_update_logConfiguration_cloudwatchLogsLogDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_logConfiguration_cloudwatchLogsLogDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.0.log_group_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_logConfiguration_update_cloudwatchLogsLogDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.0.log_group_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_logConfiguration_includeExecutionData(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_logConfiguration_includeExecutionData(rName, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_logConfiguration_includeExecutionData(rName, "[\"ALL\"]"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.0", "ALL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_logConfiguration_includeExecutionData(rName, "[]"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -324,7 +520,7 @@ func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -411,7 +607,7 @@ func TestAccPipesPipe_nameGenerated(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -419,8 +615,8 @@ func TestAccPipesPipe_nameGenerated(t *testing.T) {
 				Config: testAccPipeConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -444,7 +640,7 @@ func TestAccPipesPipe_namePrefix(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -452,8 +648,8 @@ func TestAccPipesPipe_namePrefix(t *testing.T) {
 				Config: testAccPipeConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -477,7 +673,7 @@ func TestAccPipesPipe_roleARN(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -485,7 +681,7 @@ func TestAccPipesPipe_roleARN(t *testing.T) {
 				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -497,7 +693,7 @@ func TestAccPipesPipe_roleARN(t *testing.T) {
 				Config: testAccPipeConfig_roleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
 			},
 		},
@@ -516,16 +712,16 @@ func TestAccPipesPipe_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipeConfig_tags1(rName, "key1", "value1"),
+				Config: testAccPipeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -534,20 +730,20 @@ func TestAccPipesPipe_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPipeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPipeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPipeConfig_tags1(rName, "key2", "value2"),
+				Config: testAccPipeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -566,7 +762,7 @@ func TestAccPipesPipe_targetUpdate(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -574,7 +770,7 @@ func TestAccPipesPipe_targetUpdate(t *testing.T) {
 				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_sqs_queue.target", names.AttrARN),
 				),
 			},
 			{
@@ -586,7 +782,7 @@ func TestAccPipesPipe_targetUpdate(t *testing.T) {
 				Config: testAccPipeConfig_targetUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_sqs_queue.target2", names.AttrARN),
 				),
 			},
 		},
@@ -605,7 +801,7 @@ func TestAccPipesPipe_targetParameters_inputTemplate(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -639,6 +835,66 @@ func TestAccPipesPipe_targetParameters_inputTemplate(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_targetParameters_inputTemplate_preserveUnchanged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test1", "$.first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.first"),
+				),
+			},
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test2", "$.first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.first"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test2", "$.second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.second"),
+				),
+			},
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test1", "$.second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.second"),
+				),
+			},
+			{
+				Config: testAccPipeConfig_basicSQS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckNoResourceAttr(resourceName, "target_parameters.0.input_template"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
@@ -651,7 +907,7 @@ func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -659,14 +915,14 @@ func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicKinesis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_kinesis_stream.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_kinesis_stream.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -685,8 +941,8 @@ func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_kinesis_stream.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_kinesis_stream.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
@@ -712,14 +968,14 @@ func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 				Config: testAccPipeConfig_updateKinesis(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_kinesis_stream.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_kinesis_stream.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -738,8 +994,8 @@ func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_kinesis_stream.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_kinesis_stream.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
@@ -772,7 +1028,7 @@ func TestAccPipesPipe_dynamoDBSourceCloudWatchLogsTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -780,14 +1036,14 @@ func TestAccPipesPipe_dynamoDBSourceCloudWatchLogsTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicDynamoDBSourceCloudWatchLogsTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_dynamodb_table.source", "stream_arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_dynamodb_table.source", names.AttrStreamARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "1"),
@@ -804,12 +1060,12 @@ func TestAccPipesPipe_dynamoDBSourceCloudWatchLogsTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_cloudwatch_log_group.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_cloudwatch_log_group.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_parameters.0.cloudwatch_logs_parameters.0.log_stream_name", "aws_cloudwatch_log_stream.target", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_parameters.0.cloudwatch_logs_parameters.0.log_stream_name", "aws_cloudwatch_log_stream.target", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.0.timestamp", ""),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.eventbridge_event_bus_parameters.#", "0"),
@@ -844,7 +1100,7 @@ func TestAccPipesPipe_activeMQSourceStepFunctionTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -852,14 +1108,14 @@ func TestAccPipesPipe_activeMQSourceStepFunctionTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicActiveMQSourceStepFunctionTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_mq_broker.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_mq_broker.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.0.batch_size", "100"),
@@ -873,8 +1129,8 @@ func TestAccPipesPipe_activeMQSourceStepFunctionTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sfn_state_machine.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_sfn_state_machine.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
@@ -912,7 +1168,7 @@ func TestAccPipesPipe_rabbitMQSourceEventBusTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -920,14 +1176,14 @@ func TestAccPipesPipe_rabbitMQSourceEventBusTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicRabbitMQSourceEventBusTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_mq_broker.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_mq_broker.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -942,8 +1198,8 @@ func TestAccPipesPipe_rabbitMQSourceEventBusTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.0.virtual_host", ""),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_cloudwatch_event_bus.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_cloudwatch_event_bus.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "0"),
 				),
 			},
@@ -970,7 +1226,7 @@ func TestAccPipesPipe_mskSourceHTTPTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -978,14 +1234,14 @@ func TestAccPipesPipe_mskSourceHTTPTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicMSKSourceHTTPTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_msk_cluster.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_msk_cluster.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -1000,8 +1256,8 @@ func TestAccPipesPipe_mskSourceHTTPTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "target"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTarget),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
@@ -1046,7 +1302,7 @@ func TestAccPipesPipe_selfManagedKafkaSourceLambdaFunctionTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1054,14 +1310,14 @@ func TestAccPipesPipe_selfManagedKafkaSourceLambdaFunctionTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicSelfManagedKafkaSourceLambdaFunctionTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "source", "smk://test1:9092,test2:9092"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSource, "smk://test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -1082,8 +1338,8 @@ func TestAccPipesPipe_selfManagedKafkaSourceLambdaFunctionTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.0.vpc.0.security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.0.vpc.0.subnets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_lambda_function.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_lambda_function.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
@@ -1121,7 +1377,7 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1129,14 +1385,14 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicSQSSourceRedshiftTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -1147,8 +1403,8 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.batch_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.maximum_batching_window_in_seconds", "90"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_redshift_cluster.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_redshift_cluster.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
@@ -1164,7 +1420,7 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.secret_manager_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.sqls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.statement_name", "SelectAll"),
-					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.with_event", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.with_event", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sqs_queue_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.step_function_state_machine_parameters.#", "0"),
@@ -1193,7 +1449,7 @@ func TestAccPipesPipe_SourceSageMakerTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1201,14 +1457,14 @@ func TestAccPipesPipe_SourceSageMakerTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicSQSSourceSageMakerTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -1217,8 +1473,8 @@ func TestAccPipesPipe_SourceSageMakerTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sagemaker_pipeline.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_sagemaker_pipeline.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
@@ -1260,7 +1516,7 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1268,14 +1524,14 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicSQSSourceBatchJobTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -1284,8 +1540,8 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_batch_job_queue.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_batch_job_queue.target", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.array_properties.#", "1"),
@@ -1344,7 +1600,7 @@ func TestAccPipesPipe_sqsSourceECSTaskTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1352,14 +1608,14 @@ func TestAccPipesPipe_sqsSourceECSTaskTarget(t *testing.T) {
 				Config: testAccPipeConfig_basicSQSSourceECSTaskTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
@@ -1368,15 +1624,15 @@ func TestAccPipesPipe_sqsSourceECSTaskTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_ecs_cluster.target", "id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTarget, "aws_ecs_cluster.target", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.capacity_provider_strategy.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.enable_ecs_managed_tags", "true"),
-					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.enable_ecs_managed_tags", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.enable_execute_command", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.group", "g1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.network_configuration.#", "1"),
@@ -1852,6 +2108,109 @@ resource "aws_pipes_pipe" "test" {
 `, rName))
 }
 
+func testAccPipeConfig_kmsKeyIdentifier(rName, kmsKeyID string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test_1" {}
+resource "aws_kms_key" "test_2" {}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  kms_key_identifier = %[2]q
+  name               = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  source             = aws_sqs_queue.source.arn
+  target             = aws_sqs_queue.target.arn
+}
+`, rName, kmsKeyID))
+}
+
+func testAccPipeConfig_logConfiguration_cloudwatchLogsLogDestination(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+  log_configuration {
+    level = "INFO"
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "target" {
+  name = "%[1]s-target"
+}
+`, rName))
+}
+
+func testAccPipeConfig_logConfiguration_update_cloudwatchLogsLogDestination(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+  log_configuration {
+    level = "ERROR"
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "target" {
+  name = "%[1]s-target"
+}
+`, rName))
+}
+
+func testAccPipeConfig_logConfiguration_includeExecutionData(rName, includeExecutionData string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+  log_configuration {
+    include_execution_data = %[2]s
+    level                  = "INFO"
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "target" {
+  name = "%[1]s-target"
+}
+`, rName, includeExecutionData))
+}
+
 func testAccPipeConfig_sourceParameters_filterCriteria1(rName, criteria1 string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
@@ -2128,6 +2487,37 @@ resource "aws_pipes_pipe" "test" {
   }
 }
 `, rName, template))
+}
+
+func testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, criteria string, template string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+
+  source_parameters {
+    filter_criteria {
+      filter {
+        pattern = jsonencode({
+          source = [%[2]q]
+        })
+      }
+    }
+  }
+
+  target_parameters {
+    input_template = %[3]q
+  }
+}
+`, rName, criteria, template))
 }
 
 func testAccPipeConfig_basicKinesis(rName string) string {
@@ -2473,7 +2863,7 @@ resource "aws_iam_role_policy" "source" {
 resource "aws_mq_broker" "source" {
   broker_name             = "%[1]s-source"
   engine_type             = "RabbitMQ"
-  engine_version          = "3.8.11"
+  engine_version          = "3.12.13"
   host_instance_type      = "mq.t3.micro"
   authentication_strategy = "simple"
 
@@ -2747,7 +3137,7 @@ resource "aws_lambda_function" "target" {
   function_name = "%[1]s-target"
   role          = aws_iam_role.target.arn
   handler       = "index.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_pipes_pipe" "test" {

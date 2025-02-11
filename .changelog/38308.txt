@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Add `MULTI_AZ_2` as a valid value for `deployment_type`
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Add `384`, `768`, `1536`, `3072`, and `6144` as valid values for `throughput_capacity`
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Add `384`, `768`, and `1536` as valid values for `throughput_capacity_per_ha_pair`
+```

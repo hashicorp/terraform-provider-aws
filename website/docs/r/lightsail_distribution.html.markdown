@@ -121,7 +121,7 @@ resource "aws_lightsail_instance" "test" {
   name              = "test-instance"
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 
 resource "aws_lightsail_lb_attachment" "test" {
@@ -159,10 +159,7 @@ The following arguments are optional:
 * `certificate_name` - (Optional) The name of the SSL/TLS certificate attached to the distribution, if any.
 * `ip_address_type` - (Optional) The IP address type of the distribution. Default: `dualstack`.
 * `is_enabled` - (Optional) Indicates whether the distribution is enabled. Default: `true`.
-* `tags` - (Optional) Map of tags for the Lightsail Distribution. If
-  configured with a provider
-  [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
-  present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags for the Lightsail Distribution. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### default_cache_behavior
 

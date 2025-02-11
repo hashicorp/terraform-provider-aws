@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Ignore `UnsupportedOperation` errors when reading `acceleration_status`, `server_side_encryption_configuration` and `tags`
+```

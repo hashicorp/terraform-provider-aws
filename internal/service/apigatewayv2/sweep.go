@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -49,7 +50,7 @@ func sweepAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetApisInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -59,9 +60,9 @@ func sweepAPIs(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceAPI()
+			r := resourceAPI()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ApiId))
+			d.SetId(aws.ToString(v.ApiId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -69,7 +70,7 @@ func sweepAPIs(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 API sweep for %s: %s", region, err)
 		return nil
 	}
@@ -93,7 +94,7 @@ func sweepAPIMappings(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -104,7 +105,7 @@ func sweepAPIMappings(region string) error {
 		}
 
 		for _, v := range page.Items {
-			domainName := aws.StringValue(v.DomainName)
+			domainName := aws.ToString(v.DomainName)
 			input := &apigatewayv2.GetApiMappingsInput{
 				DomainName: aws.String(domainName),
 			}
@@ -115,10 +116,10 @@ func sweepAPIMappings(region string) error {
 				}
 
 				for _, v := range page.Items {
-					r := ResourceAPIMapping()
+					r := resourceAPIMapping()
 					d := r.Data(nil)
-					d.SetId(aws.StringValue(v.ApiMappingId))
-					d.Set("domain_name", domainName)
+					d.SetId(aws.ToString(v.ApiMappingId))
+					d.Set(names.AttrDomainName, domainName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -126,7 +127,7 @@ func sweepAPIMappings(region string) error {
 				return !lastPage
 			})
 
-			if awsv1.SkipSweepError(err) {
+			if awsv2.SkipSweepError(err) {
 				continue
 			}
 
@@ -138,7 +139,7 @@ func sweepAPIMappings(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 API Mapping sweep for %s: %s", region, err)
 		return nil
 	}
@@ -162,7 +163,7 @@ func sweepDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetDomainNamesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -172,9 +173,9 @@ func sweepDomainNames(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceDomainName()
+			r := resourceDomainName()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DomainName))
+			d.SetId(aws.ToString(v.DomainName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -182,7 +183,7 @@ func sweepDomainNames(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 Domain Name sweep for %s: %s", region, err)
 		return nil
 	}
@@ -206,7 +207,7 @@ func sweepVPCLinks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetVpcLinksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -216,9 +217,9 @@ func sweepVPCLinks(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceVPCLink()
+			r := resourceVPCLink()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VpcLinkId))
+			d.SetId(aws.ToString(v.VpcLinkId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -226,7 +227,7 @@ func sweepVPCLinks(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 VPC Link sweep for %s: %s", region, err)
 		return nil
 	}

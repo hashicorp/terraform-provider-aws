@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_shield_subscription
+```
+```release-note:note
+resource/aws_shield_subscription: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

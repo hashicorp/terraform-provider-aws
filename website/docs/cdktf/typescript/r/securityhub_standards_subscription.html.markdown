@@ -53,15 +53,17 @@ This resource supports the following arguments:
 
 * `standardsArn` - (Required) The ARN of a standard - see below.
 
-Currently available standards (remember to replace `${var.region}` as appropriate):
+Currently available standards (remember to replace `${var.partition}` and `${var.region}` as appropriate):
 
-| Name                                     | ARN                                                                                             |
-|------------------------------------------|-------------------------------------------------------------------------------------------------|
-| AWS Foundational Security Best Practices | `arn:aws:securityhub:${var.region}::standards/aws-foundational-security-best-practices/v/1.0.0` |
-| CIS AWS Foundations Benchmark v1.2.0     | `arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                           |
-| CIS AWS Foundations Benchmark v1.4.0     | `arn:aws:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
-| NIST SP 800-53 Rev. 5                    | `arn:aws:securityhub:${var.region}::standards/nist-800-53/v/5.0.0`                              |
-| PCI DSS                                  | `arn:aws:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
+| Name                                     | ARN                                                                                                          |
+|------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| AWS Foundational Security Best Practices | `arn:${var.partition}:securityhub:${var.region}::standards/aws-foundational-security-best-practices/v/1.0.0` |
+| AWS Resource Tagging Standard            | `arn:${var.partition}:securityhub:${var.region}::standards/aws-resource-tagging-standard/v/1.0.0`            |
+| CIS AWS Foundations Benchmark v1.2.0     | `arn:${var.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                           |
+| CIS AWS Foundations Benchmark v1.4.0     | `arn:${var.partition}:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
+| CIS AWS Foundations Benchmark v3.0.0     | `arn:${var.partition}:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/3.0.0`            |
+| NIST SP 800-53 Rev. 5                    | `arn:${var.partition}:securityhub:${var.region}::standards/nist-800-53/v/5.0.0`                              |
+| PCI DSS                                  | `arn:${var.partition}:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
 
 ## Attribute Reference
 
@@ -153,4 +155,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-87f38b34c6cd1e5a8b36b0f50996b817110ec2206abee08341de02841e9f3b5f -->
+<!-- cache-key: cdktf-0.20.8 input-1dc0e821402cbe9c5d05c2a06a4c4a136423a27592e2e2dc7b6613093e3784e9 -->

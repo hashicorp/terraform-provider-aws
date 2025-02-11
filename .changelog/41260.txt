@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_zone: Fix `panic: runtime error: invalid memory address or nil pointer dereference` when deleting the resource would otherwise return an error
+```

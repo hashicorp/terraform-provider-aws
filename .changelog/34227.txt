@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Fix "a number is required" errors when state contains an empty string
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Fix "Invalid address to set" errors
+```

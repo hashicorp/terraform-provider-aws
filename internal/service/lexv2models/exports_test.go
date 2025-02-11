@@ -13,4 +13,6 @@ var (
 	ResourceSlotType   = newResourceSlotType
 
 	FindSlotByID = findSlotByID
+
+	IntentFlexOpt = intentFlexOpt
 )

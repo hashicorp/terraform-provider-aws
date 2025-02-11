@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
-	"github.com/aws/aws-sdk-go/service/budgets"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
@@ -27,18 +27,20 @@ func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBudgetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "account_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "calculated_spend.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "budget_limit.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -57,6 +59,9 @@ resource "aws_budgets_budget" "test" {
   cost_filter {
     name   = "Service"
     values = ["Amazon Redshift"]
+  }
+  tags = {
+    "key1" = "value1updated"
   }
 }
 

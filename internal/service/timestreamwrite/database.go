@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,11 +38,11 @@ func resourceDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +51,7 @@ func resourceDatabase() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -73,30 +74,32 @@ func resourceDatabase() *schema.Resource {
 }
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	name := d.Get("database_name").(string)
+	name := d.Get(names.AttrDatabaseName).(string)
 	input := &timestreamwrite.CreateDatabaseInput{
 		DatabaseName: aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateDatabase(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Timestream Database (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Timestream Database (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.Database.DatabaseName))
 
-	return resourceDatabaseRead(ctx, d, meta)
+	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
 }
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	db, err := findDatabaseByName(ctx, conn, d.Id())
@@ -104,41 +107,43 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Timestream Database %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Timestream Database (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Timestream Database (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", db.Arn)
-	d.Set("database_name", db.DatabaseName)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set(names.AttrARN, db.Arn)
+	d.Set(names.AttrDatabaseName, db.DatabaseName)
+	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	d.Set("table_count", db.TableCount)
 
-	return nil
+	return diags
 }
 
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	if d.HasChange("kms_key_id") {
+	if d.HasChange(names.AttrKMSKeyID) {
 		input := &timestreamwrite.UpdateDatabaseInput{
 			DatabaseName: aws.String(d.Id()),
-			KmsKeyId:     aws.String(d.Get("kms_key_id").(string)),
+			KmsKeyId:     aws.String(d.Get(names.AttrKMSKeyID).(string)),
 		}
 
 		_, err := conn.UpdateDatabase(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Timestream Database (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Timestream Database (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceDatabaseRead(ctx, d, meta)
+	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
 }
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	log.Printf("[INFO] Deleting Timestream Database: %s", d.Id())
@@ -147,14 +152,14 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Timestream Database (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Timestream Database (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findDatabaseByName(ctx context.Context, conn *timestreamwrite.Client, name string) (*types.Database, error) {

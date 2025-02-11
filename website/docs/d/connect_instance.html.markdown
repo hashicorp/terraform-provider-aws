@@ -32,7 +32,7 @@ data "aws_connect_instance" "foo" {
 
 ~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
 
@@ -55,3 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `use_custom_tts_voices` - Whether use custom tts voices is enabled.
 * `status` - State of the instance.
 * `service_role` - Service role of the instance.
+* `tags` - A map of tags to assigned to the instance.

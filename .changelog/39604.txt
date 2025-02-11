@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_eip: Add `ipam_pool_id` argument in support of [public IPAM pools](https://docs.aws.amazon.com/vpc/latest/ipam/tutorials-eip-pool.html)
+```
+
+```release-note:enhancement
+data-source/aws_eip: Add `ipam_pool_id` attribute
+```

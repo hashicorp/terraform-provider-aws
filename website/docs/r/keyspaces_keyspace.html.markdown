@@ -28,6 +28,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `replication_specification` - (Optional) The replication specification of the keyspace.
+    * `region_list` - (Optional) Replication regions. If `replication_strategy` is `MULTI_REGION`, `region_list` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
+    * `replication_strategy` - (Required) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

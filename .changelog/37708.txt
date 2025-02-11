@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `engine_lifecycle_support` argument
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add `engine_lifecycle_support` argument
+```
+
+```release-note:enhancement
+resource/aws_rds_global_cluster: Add `engine_lifecycle_support` argument
+```

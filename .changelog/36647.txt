@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_servicecatalogappregistry_application: Add `application_tag` attribute
+```
+
+```release-note:enhancement
+data-source/aws_servicecatalogappregistry_application: Add `application_tag` attribute
+```

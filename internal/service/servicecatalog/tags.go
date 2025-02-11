@@ -10,53 +10,93 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/aws/aws-sdk-go/service/servicecatalog/servicecatalogiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-// Custom Service Catalog tag service update functions using the same format as generated code.
-
-func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCatalogAPI, identifier string, oldTagsMap, newTagsMap any) error {
-	oldTags := tftags.New(ctx, oldTagsMap)
-	newTags := tftags.New(ctx, newTagsMap)
-
-	input := &servicecatalog.UpdateProductInput{
-		Id: aws.String(identifier),
-	}
-
-	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.ServiceCatalog); len(removedTags) > 0 {
-		input.RemoveTags = aws.StringSlice(removedTags.Keys())
-	}
-
-	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
-		input.AddTags = Tags(updatedTags)
-	}
-
-	_, err := conn.UpdateProductWithContext(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("updating tags for Service Catalog Product (%s): %w", identifier, err)
-	}
-
-	return nil
-}
-
-func recordKeyValueTags(ctx context.Context, tags []*servicecatalog.RecordTag) tftags.KeyValueTags {
+func recordKeyValueTags(ctx context.Context, tags []awstypes.RecordTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
 }
 
-// UpdateTags updates servicecatalog service tags.
+// ListTags lists iam service tags and set them in Context.
 // It is called from outside this package.
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return productUpdateTags(ctx, meta.(*conns.AWSClient).ServiceCatalogConn(ctx), identifier, oldTags, newTags)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	var (
+		tags tftags.KeyValueTags
+		err  error
+	)
+	switch resourceType {
+	case "Portfolio":
+		tags, err = portfolioKeyValueTags(ctx, meta.(*conns.AWSClient).ServiceCatalogClient(ctx), identifier)
+
+	case "Product":
+		tags, err = productKeyValueTags(ctx, meta.(*conns.AWSClient).ServiceCatalogClient(ctx), identifier)
+
+	case "Provisioned Product":
+		tags, err = provisionedProductKeyValueTags(ctx, meta.(*conns.AWSClient).ServiceCatalogClient(ctx), identifier)
+
+	default:
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
+func portfolioKeyValueTags(ctx context.Context, conn *servicecatalog.Client, identifier string) (tftags.KeyValueTags, error) {
+	output, err := findPortfolioByID(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func productKeyValueTags(ctx context.Context, conn *servicecatalog.Client, identifier string) (tftags.KeyValueTags, error) {
+	output, err := findProductByID(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func provisionedProductKeyValueTags(ctx context.Context, conn *servicecatalog.Client, identifier string) (tftags.KeyValueTags, error) {
+	input := &servicecatalog.DescribeProvisionedProductInput{
+		Id: aws.String(identifier),
+	}
+	output, err := conn.DescribeProvisionedProduct(ctx, input)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	detail := output.ProvisionedProductDetail
+
+	recordInput := &servicecatalog.DescribeRecordInput{
+		Id: detail.LastProvisioningRecordId,
+	}
+
+	recordOutput, err := conn.DescribeRecord(ctx, recordInput)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags), nil
 }

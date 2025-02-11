@@ -28,6 +28,10 @@ resource "aws_lambda_code_signing_config" "new_csc" {
   }
 
   description = "My awesome code signing config."
+
+  tags = {
+    Name = "dynamodb"
+  }
 }
 ```
 
@@ -36,6 +40,7 @@ resource "aws_lambda_code_signing_config" "new_csc" {
 * `allowed_publishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
 * `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.
 * `description` - (Optional) Descriptive name for this code signing configuration.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `allowed_publishers` block supports the following argument:
 
@@ -52,6 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the code signing configuration.
 * `config_id` - Unique identifier for the code signing configuration.
 * `last_modified` - The date and time that the code signing configuration was last modified.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html
 

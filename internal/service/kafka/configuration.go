@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_msk_configuration", name="Configuration")
@@ -42,11 +43,11 @@ func resourceConfiguration() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -62,7 +63,7 @@ func resourceConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,11 +81,11 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	input := &kafka.CreateConfigurationInput{
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 		ServerProperties: []byte(d.Get("server_properties").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -126,11 +127,11 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading MSK Configuration (%s) revision (%d): %s", d.Id(), revision, err)
 	}
 
-	d.Set("arn", configurationOutput.Arn)
-	d.Set("description", revisionOutput.Description)
+	d.Set(names.AttrARN, configurationOutput.Arn)
+	d.Set(names.AttrDescription, revisionOutput.Description)
 	d.Set("kafka_versions", configurationOutput.KafkaVersions)
 	d.Set("latest_revision", revision)
-	d.Set("name", configurationOutput.Name)
+	d.Set(names.AttrName, configurationOutput.Name)
 	d.Set("server_properties", string(revisionOutput.ServerProperties))
 
 	return diags
@@ -145,7 +146,7 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 		ServerProperties: []byte(d.Get("server_properties").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 

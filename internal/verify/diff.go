@@ -6,7 +6,6 @@ package verify
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,8 +22,8 @@ import (
 // after resource READ operations as resource and provider-level tags
 // will be indistinguishable when returned from an AWS API.
 func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	resourceTags := tftags.New(ctx, diff.Get("tags").(map[string]interface{}))
 
@@ -60,8 +59,8 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 		}
 
 		if len(allTags) == 0 {
-			if err := diff.SetNewComputed("tags_all"); err != nil {
-				return fmt.Errorf("setting tags_all to computed: %w", err)
+			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+				return fmt.Errorf("setting new tags_all diff: %w", err)
 			}
 		}
 	} else if !diff.HasChange("tags") {
@@ -102,12 +101,6 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 	}
 
 	return nil
-}
-
-// SuppressEquivalentStringCaseInsensitive provides custom difference suppression
-// for strings that are equal under case-insensitivity.
-func SuppressEquivalentStringCaseInsensitive(k, old, new string, d *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
 }
 
 // SuppressEquivalentRoundedTime returns a difference suppression function that compares

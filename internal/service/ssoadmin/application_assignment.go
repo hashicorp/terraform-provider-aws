@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Assignment")
+// @FrameworkResource("aws_ssoadmin_application_assignment", name="Application Assignment")
 func newResourceApplicationAssignment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAssignment{}, nil
 }
@@ -55,7 +55,7 @@ func (r *resourceApplicationAssignment) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"principal_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -156,8 +156,8 @@ func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource
 	}
 
 	in := &ssoadmin.DeleteApplicationAssignmentInput{
-		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
-		PrincipalId:    aws.String(state.PrincipalID.ValueString()),
+		ApplicationArn: state.ApplicationARN.ValueStringPointer(),
+		PrincipalId:    state.PrincipalID.ValueStringPointer(),
 		PrincipalType:  awstypes.PrincipalType(state.PrincipalType.ValueString()),
 	}
 
@@ -175,7 +175,7 @@ func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource
 }
 
 func (r *resourceApplicationAssignment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationAssignmentByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationAssignmentOutput, error) {

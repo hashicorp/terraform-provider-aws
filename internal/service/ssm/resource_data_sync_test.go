@@ -6,10 +6,8 @@ package ssm_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMResourceDataSync_basic(t *testing.T) {
@@ -25,20 +24,42 @@ func TestAccSSMResourceDataSync_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDataSyncConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceDataSyncExists(resourceName),
+					testAccCheckResourceDataSyncExists(ctx, resourceName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMResourceDataSync_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ssm_resource_data_sync.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceDataSyncConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceResourceDataSync(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -51,14 +72,14 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDataSyncConfig_basic(sdkacctest.RandInt(), rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceDataSyncExists(resourceName),
+					testAccCheckResourceDataSyncExists(ctx, resourceName),
 				),
 			},
 			{
@@ -69,7 +90,7 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 			{
 				Config: testAccResourceDataSyncConfig_update(sdkacctest.RandInt(), rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceDataSyncExists(resourceName),
+					testAccCheckResourceDataSyncExists(ctx, resourceName),
 				),
 			},
 		},
@@ -78,14 +99,14 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 
 func testAccCheckResourceDataSyncDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_resource_data_sync" {
 				continue
 			}
 
-			syncItem, err := tfssm.FindResourceDataSyncItem(ctx, conn, rs.Primary.ID)
+			_, err := tfssm.FindResourceDataSyncByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -95,22 +116,25 @@ func testAccCheckResourceDataSyncDestroy(ctx context.Context) resource.TestCheck
 				return err
 			}
 
-			if syncItem != nil {
-				return fmt.Errorf("Resource Data Sync (%s) found", rs.Primary.ID)
-			}
+			return fmt.Errorf("SSM Resource Data Sync %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckResourceDataSyncExists(name string) resource.TestCheckFunc {
+func testAccCheckResourceDataSyncExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		log.Println(s.RootModule().Resources)
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
-		return nil
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+
+		_, err := tfssm.FindResourceDataSyncByName(ctx, conn, rs.Primary.ID)
+
+		return err
 	}
 }
 

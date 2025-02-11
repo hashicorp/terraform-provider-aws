@@ -8,5 +8,6 @@ import (
 )
 
 const (
-	propagationTimeout = 2 * time.Minute
+	propagationTimeout          = 2 * time.Minute
+	deprecatePropagationTimeout = 6 * time.Minute
 )

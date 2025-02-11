@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lightsail_distribution: Fix to properly set `certificate_name` on create and update
+```

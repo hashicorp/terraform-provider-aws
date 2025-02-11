@@ -30,6 +30,7 @@ func validEBSVolumeType() schema.SchemaValidateFunc {
 		"gp3",
 		"gp2",
 		"io1",
+		"io2",
 		"standard",
 		"st1",
 		"sc1",

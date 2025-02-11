@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_elasticache_reserved_cache_node
+```
+
+```release-note:new-data-source
+aws_elasticache_reserved_cache_node_offering
+```

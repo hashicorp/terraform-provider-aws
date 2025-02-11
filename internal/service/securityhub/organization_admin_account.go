@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_securityhub_organization_admin_account")
-func ResourceOrganizationAdminAccount() *schema.Resource {
+// @SDKResource("aws_securityhub_organization_admin_account", name="Organization Admin Account")
+func resourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
@@ -78,12 +78,12 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	adminAccount, err := FindAdminAccountByID(ctx, conn, d.Id())
+	adminAccount, err := findAdminAccountByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -120,7 +120,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func FindAdminAccountByID(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
+func findAdminAccountByID(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
 	input := &securityhub.ListOrganizationAdminAccountsInput{}
 
 	return findAdminAccount(ctx, conn, input, func(v *types.AdminAccount) bool {
@@ -135,11 +135,11 @@ func findAdminAccount(ctx context.Context, conn *securityhub.Client, input *secu
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *securityhub.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*types.AdminAccount]) ([]*types.AdminAccount, error) {
-	var output []*types.AdminAccount
+func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *securityhub.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*types.AdminAccount]) ([]types.AdminAccount, error) {
+	var output []types.AdminAccount
 
 	pages := securityhub.NewListOrganizationAdminAccountsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -157,8 +157,7 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 		}
 
 		for _, v := range page.AdminAccounts {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -169,7 +168,7 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 
 func statusAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAdminAccountByID(ctx, conn, adminAccountID)
+		output, err := findAdminAccountByID(ctx, conn, adminAccountID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

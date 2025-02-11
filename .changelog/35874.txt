@@ -1,0 +1,35 @@
+```release-note:bug
+resource/aws_eks_access_entry: Fix `cluster_name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+data-source/aws_eks_access_entry: Fix `cluster_name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+resource/aws_eks_access_policy_association: Fix `cluster_name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+resource/aws_eks_addon: Fix `cluster_name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+data-source/aws_eks_addon: Fix `cluster_name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+resource/aws_eks_cluster: Fix `name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+data-source/aws_eks_cluster: Fix `name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+resource/aws_eks_fargate_profile: Fix `cluster_name` plan-time validation, allowing single-character names
+```
+
+```release-note:bug
+resource/aws_eks_node_group: Fix `cluster_name` plan-time validation, allowing single-character names
+```

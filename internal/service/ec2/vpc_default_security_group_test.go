@@ -4,27 +4,29 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -32,28 +34,28 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 				Config: testAccVPCDefaultSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "description", "default VPC security group"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "default VPC security group"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":      "tcp",
-						"from_port":     "80",
-						"to_port":       "8000",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"cidr_blocks.#":    "1",
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"protocol":      "tcp",
-						"from_port":     "80",
-						"to_port":       "8000",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"cidr_blocks.#":    "1",
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
-					testAccCheckDefaultSecurityGroupARN(resourceName, &group),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckDefaultSecurityGroupARN(ctx, resourceName, &group),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -72,13 +74,13 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 
 func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -88,7 +90,7 @@ func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -102,9 +104,9 @@ func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 	})
 }
 
-func testAccCheckDefaultSecurityGroupARN(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckDefaultSecurityGroupARN(ctx context.Context, resourceName string, group *awstypes.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
+		return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", fmt.Sprintf("security-group/%s", aws.ToString(group.GroupId)))(s)
 	}
 }
 

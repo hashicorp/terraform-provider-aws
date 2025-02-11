@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_organizations_account: Allow import of accounts with IAM access to the AWS Billing and Cost Management console
+```

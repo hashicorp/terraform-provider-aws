@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Application")
+// @FrameworkDataSource("aws_ssoadmin_application", name="Application")
 func newDataSourceApplication(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplication{}, nil
 }
@@ -47,18 +47,18 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"instance_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 		},

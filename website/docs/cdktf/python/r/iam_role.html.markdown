@@ -16,6 +16,8 @@ Provides an IAM role.
 
 ~> **NOTE:** If you use this resource's `managed_policy_arns` argument or `inline_policy` configuration blocks, this resource will take over exclusive management of the role's respective policy types (e.g., both policy types if both arguments are used). These arguments are incompatible with other ways of managing a role's policies, such as [`aws_iam_policy_attachment`](/docs/providers/aws/r/iam_policy_attachment.html), [`aws_iam_role_policy_attachment`](/docs/providers/aws/r/iam_role_policy_attachment.html), and [`aws_iam_role_policy`](/docs/providers/aws/r/iam_role_policy.html). If you attempt to manage a role's policies by multiple means, you will get resource cycling and/or errors.
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `assume_role_policy` or `inline_policy.*.policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ### Basic Example
@@ -88,6 +90,8 @@ class MyConvertedCode(TerraformStack):
 
 ### Example of Exclusive Inline Policies
 
+~> The `inline_policy` argument is deprecated. Use the [`aws_iam_role_policy`](./iam_role_policy.html.markdown) resource instead. If Terraform should exclusively manage all inline policy associations (the current behavior of this argument), use the [`aws_iam_role_policies_exclusive`](./iam_role_policies_exclusive.html.markdown) resource as well.
+
 This example creates an IAM role with two inline IAM policies. If someone adds another inline policy out-of-band, on the next apply, Terraform will remove that policy. If someone deletes these policies out-of-band, Terraform will recreate them.
 
 ```python
@@ -135,6 +139,8 @@ class MyConvertedCode(TerraformStack):
 
 ### Example of Removing Inline Policies
 
+~> The `inline_policy` argument is deprecated. Use the [`aws_iam_role_policy`](./iam_role_policy.html.markdown) resource instead. If Terraform should exclusively manage all inline policy associations (the current behavior of this argument), use the [`aws_iam_role_policies_exclusive`](./iam_role_policies_exclusive.html.markdown) resource as well.
+
 This example creates an IAM role with what appears to be empty IAM `inline_policy` argument instead of using `inline_policy` as a configuration block. The result is that if someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
 
 ```python
@@ -157,6 +163,8 @@ class MyConvertedCode(TerraformStack):
 ```
 
 ### Example of Exclusive Managed Policies
+
+~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role and attaches two managed IAM policies. If someone attaches another managed policy out-of-band, on the next apply, Terraform will detach that policy. If someone detaches these policies out-of-band, Terraform will attach them again.
 
@@ -208,6 +216,8 @@ class MyConvertedCode(TerraformStack):
 
 ### Example of Removing Managed Policies
 
+~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
+
 This example creates an IAM role with an empty `managed_policy_arns` argument. If someone attaches a policy out-of-band, on the next apply, Terraform will detach that policy.
 
 ```python
@@ -241,8 +251,8 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the role.
 * `force_detach_policies` - (Optional) Whether to force detaching any policies the role has before destroying it. Defaults to `false`.
-* `inline_policy` - (Optional) Configuration block defining an exclusive set of IAM inline policies associated with the IAM role. See below. If no blocks are configured, Terraform will not manage any inline policies in this resource. Configuring one empty block (i.e., `inline_policy {}`) will cause Terraform to remove _all_ inline policies added out of band on `apply`.
-* `managed_policy_arns` - (Optional) Set of exclusive IAM managed policy ARNs to attach to the IAM role. If this attribute is not configured, Terraform will ignore policy attachments to this resource. When configured, Terraform will align the role's managed policy attachments with this set by attaching or detaching managed policies. Configuring an empty set (i.e., `managed_policy_arns = []`) will cause Terraform to remove _all_ managed policy attachments.
+* `inline_policy` - (Optional, **Deprecated**) Configuration block defining an exclusive set of IAM inline policies associated with the IAM role. See below. If no blocks are configured, Terraform will not manage any inline policies in this resource. Configuring one empty block (i.e., `inline_policy {}`) will cause Terraform to remove _all_ inline policies added out of band on `apply`.
+* `managed_policy_arns` - (Optional, **Deprecated**) Set of exclusive IAM managed policy ARNs to attach to the IAM role. If this attribute is not configured, Terraform will ignore policy attachments to this resource. When configured, Terraform will align the role's managed policy attachments with this set by attaching or detaching managed policies. Configuring an empty set (i.e., `managed_policy_arns = []`) will cause Terraform to remove _all_ managed policy attachments.
 * `max_session_duration` - (Optional) Maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
 * `name` - (Optional, Forces new resource) Friendly name of the role. If omitted, Terraform will assign a random, unique name. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
@@ -295,4 +305,4 @@ Using `terraform import`, import IAM Roles using the `name`. For example:
 % terraform import aws_iam_role.developer developer_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bd6124ae737c542517c52e9bbb2eb3419c7ff3714d8593c811602ba81fff4809 -->
+<!-- cache-key: cdktf-0.20.8 input-cc0706c2ff662b976d263da6b20bfd28567462ac69912e6e1cfb323fe6711d20 -->

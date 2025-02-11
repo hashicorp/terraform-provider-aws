@@ -5,7 +5,6 @@ package lightsail
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/YakDriver/regexache"
@@ -22,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_stickiness_policy")
+// @SDKResource("aws_lightsail_lb_stickiness_policy", name="Load Balancer Stickiness Policy")
 func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerStickinessPolicyCreate,
@@ -39,7 +38,7 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -62,19 +61,19 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
-	for _, v := range []string{"enabled", "cookie_duration"} {
+	for _, v := range []string{names.AttrEnabled, "cookie_duration"} {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 		}
 
-		if v == "enabled" {
+		if v == names.AttrEnabled {
 			in.AttributeName = types.LoadBalancerAttributeNameSessionStickinessEnabled
-			in.AttributeValue = aws.String(fmt.Sprint(d.Get("enabled").(bool)))
+			in.AttributeValue = aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool)))
 		}
 
 		if v == "cookie_duration" {
 			in.AttributeName = types.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds
-			in.AttributeValue = aws.String(fmt.Sprint(d.Get("cookie_duration").(int)))
+			in.AttributeValue = aws.String(strconv.Itoa(d.Get("cookie_duration").(int)))
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -123,7 +122,7 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set("cookie_duration", intValue)
-	d.Set("enabled", boolValue)
+	d.Set(names.AttrEnabled, boolValue)
 	d.Set("lb_name", d.Id())
 
 	return diags
@@ -134,11 +133,11 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
-	if d.HasChange("enabled") {
+	if d.HasChange(names.AttrEnabled) {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameSessionStickinessEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
+			AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -158,7 +157,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get("cookie_duration").(int))),
+			AttributeValue:   aws.String(strconv.Itoa(d.Get("cookie_duration").(int))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)

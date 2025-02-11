@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_api_gateway_rest_api: Correctly set `root_resource_id` on resource Read
+```

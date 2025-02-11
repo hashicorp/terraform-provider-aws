@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_batch_job_definition: Add `eks_properties.*.pod_properties.*.image_pull_secret` argument
+```

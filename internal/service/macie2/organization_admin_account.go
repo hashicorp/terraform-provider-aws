@@ -8,27 +8,31 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_macie2_organization_admin_account")
-func ResourceOrganizationAdminAccount() *schema.Resource {
+// @SDKResource("aws_macie2_organization_admin_account", name="Organization Admin Account")
+func resourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
 		DeleteWithoutTimeout: resourceOrganizationAdminAccountDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"admin_account_id": {
 				Type:     schema.TypeString,
@@ -42,7 +46,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
@@ -51,9 +55,9 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	var err error
 	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		_, err := conn.EnableOrganizationAdminAccountWithContext(ctx, input)
+		_, err := conn.EnableOrganizationAdminAccount(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
+		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
 			return retry.RetryableError(err)
 		}
 
@@ -65,7 +69,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.EnableOrganizationAdminAccountWithContext(ctx, input)
+		_, err = conn.EnableOrganizationAdminAccount(ctx, input)
 	}
 
 	if err != nil {
@@ -80,12 +84,12 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	res, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,16 +117,16 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, input)
+	_, err := conn.DisableOrganizationAdminAccount(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
@@ -130,27 +134,22 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func GetOrganizationAdminAccount(ctx context.Context, conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
-	var res *macie2.AdminAccount
+func GetOrganizationAdminAccount(ctx context.Context, conn *macie2.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+	input := &macie2.ListOrganizationAdminAccountsInput{}
 
-	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, &macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := macie2.NewListOrganizationAdminAccountsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, adminAccount := range page.AdminAccounts {
-			if adminAccount == nil {
-				continue
-			}
-
-			if aws.StringValue(adminAccount.AccountId) == adminAccountID {
-				res = adminAccount
-				return false
+			if aws.ToString(adminAccount.AccountId) == adminAccountID {
+				return &adminAccount, nil
 			}
 		}
+	}
 
-		return !lastPage
-	})
-
-	return res, err
+	return nil, tfresource.NewEmptyResultError(input)
 }

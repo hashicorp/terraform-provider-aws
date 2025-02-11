@@ -28,7 +28,7 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Cloud9EndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,9 +36,9 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "permissions", "read-only"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPermissions, "read-only"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", names.AttrID),
 				),
 			},
 			{
@@ -50,9 +50,9 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-write"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "permissions", "read-write"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPermissions, "read-write"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", names.AttrID),
 				),
 			},
 		},
@@ -68,7 +68,7 @@ func TestAccCloud9EnvironmentMembership_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Cloud9EndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccCloud9EnvironmentMembership_Disappears_env(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Cloud9EndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentMemberDestroy(ctx),
 		Steps: []resource.TestStep{

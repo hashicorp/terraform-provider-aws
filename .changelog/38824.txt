@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_networkfirewall_logging_configuration: Change `logging_configuration.log_destination_config` `MaxItems` from `2` to `3`
+```

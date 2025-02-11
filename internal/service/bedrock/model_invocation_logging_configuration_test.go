@@ -28,7 +28,7 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,13 +36,13 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.s3_config.key_prefix", "bedrock"),
 				),
 			},
@@ -62,7 +62,7 @@ func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

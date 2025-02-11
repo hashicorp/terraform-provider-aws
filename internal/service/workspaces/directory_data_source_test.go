@@ -12,6 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDirectoryDataSource_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDirectoryDataSourceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "alias", resourceName, "alias"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAlias, resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_name", resourceName, "directory_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_type", resourceName, "directory_type"),
@@ -43,6 +44,10 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_role_id", resourceName, "iam_role_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_group_ids", resourceName, "ip_group_ids"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "registration_code", resourceName, "registration_code"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.#", resourceName, "saml_properties.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.relay_state_parameter_name", resourceName, "saml_properties.0.relay_state_parameter_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.status", resourceName, "saml_properties.0.status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.user_access_url", resourceName, "saml_properties.0.user_access_url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.#", resourceName, "self_service_permissions.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.0.change_compute_type", resourceName, "self_service_permissions.0.change_compute_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.0.increase_volume_size", resourceName, "self_service_permissions.0.increase_volume_size"),
@@ -59,7 +64,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_windows", resourceName, "workspace_access_properties.0.device_type_windows"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_zeroclient", resourceName, "workspace_access_properties.0.device_type_zeroclient"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.#", resourceName, "workspace_creation_properties.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.0.custom_security_group_id", resourceName, "workspace_creation_properties.0.custom_security_group_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.0.default_ou", resourceName, "workspace_creation_properties.0.default_ou"),
@@ -88,6 +93,12 @@ resource "aws_security_group" "test" {
 
 resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
+
+  saml_properties {
+    relay_state_parameter_name = "LinkMode"
+    status                     = "ENABLED"
+    user_access_url            = "https://sso.%[2]s/"
+  }
 
   self_service_permissions {
     change_compute_type  = false
@@ -128,5 +139,5 @@ data "aws_workspaces_directory" "test" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`, rName))
+`, rName, domain))
 }

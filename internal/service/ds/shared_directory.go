@@ -10,23 +10,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNameSharedDirectory = "Shared Directory"
-)
-
-// @SDKResource("aws_directory_service_shared_directory")
-func ResourceSharedDirectory() *schema.Resource {
+// @SDKResource("aws_directory_service_shared_directory", name="Shared Directory")
+func resourceSharedDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharedDirectoryCreate,
 		ReadWithoutTimeout:   resourceSharedDirectoryRead,
@@ -47,11 +46,11 @@ func ResourceSharedDirectory() *schema.Resource {
 				ForceNew: true,
 			},
 			"method": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      directoryservice.ShareMethodHandshake,
-				ValidateFunc: validation.StringInSlice(directoryservice.ShareMethod_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.ShareMethodHandshake,
+				ValidateDiagFunc: enum.Validate[awstypes.ShareMethod](),
 			},
 			"notes": {
 				Type:      schema.TypeString,
@@ -63,23 +62,23 @@ func ResourceSharedDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      directoryservice.TargetTypeAccount,
-							ValidateFunc: validation.StringInSlice(directoryservice.TargetType_Values(), false),
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.TargetTypeAccount,
+							ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
 						},
 					},
 				},
@@ -90,70 +89,61 @@ func ResourceSharedDirectory() *schema.Resource {
 
 func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
-
-	dirId := d.Get("directory_id").(string)
-	input := directoryservice.ShareDirectoryInput{
-		DirectoryId: aws.String(dirId),
-		ShareMethod: aws.String(d.Get("method").(string)),
-		ShareTarget: expandShareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+	directoryID := d.Get("directory_id").(string)
+	input := &directoryservice.ShareDirectoryInput{
+		DirectoryId: aws.String(directoryID),
+		ShareMethod: awstypes.ShareMethod(d.Get("method").(string)),
+		ShareTarget: expandShareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("notes"); ok {
 		input.ShareNotes = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Shared Directory: %s", input)
-	out, err := conn.ShareDirectoryWithContext(ctx, &input)
+	output, err := conn.ShareDirectory(ctx, input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.DS, create.ErrActionCreating, ResNameSharedDirectory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating Directory Service Shared Directory (%s): %s", directoryID, err)
 	}
 
-	log.Printf("[DEBUG] Shared Directory created: %s", out)
-	d.SetId(sharedDirectoryID(dirId, aws.StringValue(out.SharedDirectoryId)))
-	d.Set("shared_directory_id", out.SharedDirectoryId)
+	d.SetId(sharedDirectoryCreateResourceID(directoryID, aws.ToString(output.SharedDirectoryId)))
 
-	return diags
+	return append(diags, resourceSharedDirectoryRead(ctx, d, meta)...)
 }
 
 func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
-
-	ownerDirID, sharedDirID, err := parseSharedDirectoryID(d.Id())
-
+	ownerDirID, sharedDirID, err := sharedDirectoryParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindSharedDirectory(ctx, conn, ownerDirID, sharedDirID)
+	output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirID, sharedDirID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id())
+		log.Printf("[WARN] Directory Service Shared Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Directory Service Shared Directory (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Received DS shared directory: %s", output)
 
 	d.Set("directory_id", output.OwnerDirectoryId)
 	d.Set("method", output.ShareMethod)
 	d.Set("notes", output.ShareNotes)
 	d.Set("shared_directory_id", output.SharedDirectoryId)
-
 	if output.SharedAccountId != nil {
-		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
-			return create.AppendDiagError(diags, names.DS, create.ErrActionSetting, ResNameSharedDirectory, d.Id(), err)
+		if err := d.Set(names.AttrTarget, []interface{}{flattenShareTarget(output)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 		}
 	} else {
-		d.Set("target", nil)
+		d.Set(names.AttrTarget, nil)
 	}
 
 	return diags
@@ -161,74 +151,190 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
-
-	dirId := d.Get("directory_id").(string)
-	sharedId := d.Get("shared_directory_id").(string)
-
-	input := directoryservice.UnshareDirectoryInput{
-		DirectoryId:   aws.String(dirId),
-		UnshareTarget: expandUnshareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+	ownerDirID, sharedDirID, err := sharedDirectoryParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Unsharing Directory Service Directory: %s", input)
-	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
+	log.Printf("[DEBUG] Deleting Directory Service Shared Directory: %s", d.Id())
+	_, err = conn.UnshareDirectory(ctx, &directoryservice.UnshareDirectoryInput{
+		DirectoryId:   aws.String(ownerDirID),
+		UnshareTarget: expandUnshareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
+	})
+
+	if errs.IsA[*awstypes.DirectoryNotSharedException](err) {
+		return diags
+	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.DS, create.ErrActionDeleting, ResNameSharedDirectory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Shared Directory (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId, d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectory, d.Id(), err)
+	if _, err := waitSharedDirectoryDeleted(ctx, conn, ownerDirID, sharedDirID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Shared Directory (%s) delete: %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Unshared Directory Service Directory: %s", output)
 
 	return diags
 }
 
-func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ci.ds-in-func-name
+const sharedDirectoryResourceIDSeparator = "/" // nosemgrep:ci.ds-in-const-name,ci.ds-in-var-name
+
+func sharedDirectoryCreateResourceID(ownerDirectoryID, sharedDirectoryID string) string {
+	parts := []string{ownerDirectoryID, sharedDirectoryID}
+	id := strings.Join(parts, sharedDirectoryResourceIDSeparator)
+
+	return id
+}
+
+func sharedDirectoryParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, sharedDirectoryResourceIDSeparator, 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected OWNER_DIRECTORY_ID%[2]sSHARED_DIRECTORY_ID", id, sharedDirectoryResourceIDSeparator)
+}
+
+func findSharedDirectory(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeSharedDirectoriesInput) (*awstypes.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
+	output, err := findSharedDirectories(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSharedDirectories(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeSharedDirectoriesInput) ([]awstypes.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
+	var output []awstypes.SharedDirectory
+
+	pages := directoryservice.NewDescribeSharedDirectoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SharedDirectories...)
+	}
+
+	return output, nil
+}
+
+func findSharedDirectoryByTwoPartKey(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string) (*awstypes.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
+	input := &directoryservice.DescribeSharedDirectoriesInput{
+		OwnerDirectoryId:   aws.String(ownerDirectoryID),
+		SharedDirectoryIds: []string{sharedDirectoryID},
+	}
+
+	output, err := findSharedDirectory(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.ShareStatus; status == awstypes.ShareStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusSharedDirectory(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirectoryID, sharedDirectoryID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ShareStatus), nil
+	}
+}
+
+func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string, timeout time.Duration) (*awstypes.SharedDirectory, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.ShareStatusDeleting,
+			awstypes.ShareStatusShared,
+			awstypes.ShareStatusPendingAcceptance,
+			awstypes.ShareStatusRejectFailed,
+			awstypes.ShareStatusRejected,
+			awstypes.ShareStatusRejecting,
+		),
+		Target:                    []string{},
+		Refresh:                   statusSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID),
+		Timeout:                   timeout,
+		MinTimeout:                30 * time.Second,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SharedDirectory); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandShareTarget(tfMap map[string]interface{}) *awstypes.ShareTarget { // nosemgrep:ci.ds-in-func-name
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &directoryservice.ShareTarget{}
+	apiObject := &awstypes.ShareTarget{}
 
-	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrID].(string); ok && len(v) > 0 {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
-		apiObject.Type = aws.String(v)
+	if v, ok := tfMap[names.AttrType].(string); ok && len(v) > 0 {
+		apiObject.Type = awstypes.TargetType(v)
 	}
 
 	return apiObject
 }
 
-func expandUnshareTarget(tfMap map[string]interface{}) *directoryservice.UnshareTarget {
+func expandUnshareTarget(tfMap map[string]interface{}) *awstypes.UnshareTarget {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &directoryservice.UnshareTarget{}
+	apiObject := &awstypes.UnshareTarget{}
 
-	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrID].(string); ok && len(v) > 0 {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
-		apiObject.Type = aws.String(v)
+	if v, ok := tfMap[names.AttrType].(string); ok && len(v) > 0 {
+		apiObject.Type = awstypes.TargetType(v)
 	}
 
 	return apiObject
 }
 
 // flattenShareTarget is not a mirror of expandShareTarget because the API data structures are
-// different, with no ShareTarget returned
-func flattenShareTarget(apiObject *directoryservice.SharedDirectory) map[string]interface{} {
+// different, with no ShareTarget returned.
+func flattenShareTarget(apiObject *awstypes.SharedDirectory) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -236,23 +342,10 @@ func flattenShareTarget(apiObject *directoryservice.SharedDirectory) map[string]
 	tfMap := map[string]interface{}{}
 
 	if apiObject.SharedAccountId != nil {
-		tfMap["id"] = aws.StringValue(apiObject.SharedAccountId)
+		tfMap[names.AttrID] = aws.ToString(apiObject.SharedAccountId)
 	}
 
-	tfMap["type"] = directoryservice.TargetTypeAccount // only type available
+	tfMap[names.AttrType] = awstypes.TargetTypeAccount // only type available
 
 	return tfMap
-}
-
-func sharedDirectoryID(ownerDirectoryID, sharedDirectoryID string) string {
-	return fmt.Sprintf("%s/%s", ownerDirectoryID, sharedDirectoryID)
-}
-
-func parseSharedDirectoryID(id string) (string, string, error) {
-	idParts := strings.SplitN(id, "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%q), expected <owner-directory-id>/<shared-directory-id>", id)
-	}
-
-	return idParts[0], idParts[1], nil
 }

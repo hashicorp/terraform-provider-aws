@@ -1,8 +1,10 @@
+version: 2
 archives:
   - files:
-      # Ensure only built binary is archived
-      - 'none*'
-    format: zip
+      # Ensure only built binary and license file are archived
+      - src: LICENSE
+        dst: LICENSE.txt
+    formats: ['zip']
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 before:
   hooks:
@@ -76,4 +78,4 @@ signs:
     id: key-id
     signature: ${artifact}.72D7468F.sig
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"

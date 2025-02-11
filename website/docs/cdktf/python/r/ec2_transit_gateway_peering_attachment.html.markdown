@@ -75,14 +75,22 @@ This resource supports the following arguments:
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peer_transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway to peer with.
+* `options` - (Optional) Describes whether dynamic routing is enabled or disabled for the transit gateway peering request. See [options](#options) below for more details!
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
+
+### options
+
+The `options` block supports the following:
+
+* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled.. Supports `enable` and `disable`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -112,4 +120,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` us
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-58f6c9437a7c95b8df5161dbac8476475147b7788b6b5351cb7f1a812d59aa51 -->
+<!-- cache-key: cdktf-0.20.8 input-5ea2b00ac9f0c8180ca8c5b14ac19cf1fc94238faacfe4cfb97c37d1d32b4db9 -->

@@ -56,7 +56,7 @@ class MyConvertedCode extends TerraformStack {
           Version: "2012-10-17",
         })
       ),
-      sinkIdentifier: example.id,
+      sinkIdentifier: example.arn,
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsOamSinkPolicyExample.overrideLogicalId("example");
@@ -118,4 +118,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink Po
 % terraform import aws_oam_sink_policy.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-037a8f8dc069aa1440effe505f18867c58c5234b21b04bc16839e7f70855a4b1 -->
+<!-- cache-key: cdktf-0.20.8 input-f0a210b181c1e125359fa31f8f67ddd96acc05b369593efca038ae96f2d16e8c -->

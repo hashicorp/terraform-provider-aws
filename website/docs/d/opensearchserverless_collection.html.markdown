@@ -22,10 +22,12 @@ data "aws_opensearchserverless_collection" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are optional:
 
-* `id` - (Required) ID of the collection. Either `id` or `name` must be provided.
-* `name` - (Required) Name of the collection. Either `name` or `id` must be provided.
+~> Exactly one of `id` or `name` is required.
+
+* `id` - (Optional) ID of the collection.
+* `name` - (Optional) Name of the collection.
 
 ## Attribute Reference
 
@@ -36,6 +38,8 @@ This data source exports the following attributes in addition to the arguments a
 * `created_date` - Date the Collection was created.
 * `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `description` - Description of the collection.
+* `failure_code` - A failure code associated with the collection.
+* `failure_reason` - A failure reason associated with the collection.
 * `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `last_modified_date` - Date the Collection was last modified.
 * `standby_replicas` - Indicates whether standby replicas should be used for a collection.

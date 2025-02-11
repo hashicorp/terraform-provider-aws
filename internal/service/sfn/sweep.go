@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -32,33 +32,30 @@ func sweepActivities(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.SFNConn(ctx)
+	conn := client.SFNClient(ctx)
 	input := &sfn.ListActivitiesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListActivitiesPagesWithContext(ctx, input, func(page *sfn.ListActivitiesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sfn.NewListActivitiesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Step Functions Activity sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Step Functions Activities (%s): %w", region, err)
 		}
 
 		for _, v := range page.Activities {
-			r := ResourceActivity()
+			r := resourceActivity()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ActivityArn))
+			d.SetId(aws.ToString(v.ActivityArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Step Functions Activity sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Step Functions Activities (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -76,33 +73,30 @@ func sweepStateMachines(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.SFNConn(ctx)
+	conn := client.SFNClient(ctx)
 	input := &sfn.ListStateMachinesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListStateMachinesPagesWithContext(ctx, input, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sfn.NewListStateMachinesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Step Functions State Machine sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Step Functions State Machines (%s): %w", region, err)
 		}
 
 		for _, v := range page.StateMachines {
-			r := ResourceStateMachine()
+			r := resourceStateMachine()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.StateMachineArn))
+			d.SetId(aws.ToString(v.StateMachineArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Step Functions State Machine sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Step Functions State Machines (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

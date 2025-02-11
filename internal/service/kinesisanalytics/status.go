@@ -6,16 +6,14 @@ package kinesisanalytics
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// statusApplication fetches the ApplicationDetail and its Status
-func statusApplication(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, name string) retry.StateRefreshFunc {
+func statusApplication(ctx context.Context, conn *kinesisanalytics.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		applicationDetail, err := FindApplicationDetailByName(ctx, conn, name)
+		applicationDetail, err := findApplicationDetailByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,6 +23,6 @@ func statusApplication(ctx context.Context, conn *kinesisanalytics.KinesisAnalyt
 			return nil, "", err
 		}
 
-		return applicationDetail, aws.StringValue(applicationDetail.ApplicationStatus), nil
+		return applicationDetail, string(applicationDetail.ApplicationStatus), nil
 	}
 }

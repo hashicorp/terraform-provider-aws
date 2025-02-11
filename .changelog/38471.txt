@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_task_definition: Fix `Provider produced inconsistent final plan` errors when `container_definitions` is [unknown](https://developer.hashicorp.com/terraform/language/expressions/references#values-not-yet-known)
+```

@@ -93,6 +93,15 @@ resource "aws_eip" "byoip-ip" {
 }
 ```
 
+### Allocating EIP from the IPAM Pool
+
+```terraform
+resource "aws_eip" "ipam-ip" {
+  domain       = "vpc"
+  ipam_pool_id = "ipam-pool-07ccc86aa41bef7ce"
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -100,8 +109,9 @@ This resource supports the following arguments:
 * `address` - (Optional) IP address from an EC2 BYOIP pool. This option is only available for VPC EIPs.
 * `associate_with_private_ip` - (Optional) User-specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
 * `customer_owned_ipv4_pool` - (Optional) ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing).
-* `domain` - Indicates if this EIP is for use in VPC (`vpc`).
+* `domain` - (Optional) Indicates if this EIP is for use in VPC (`vpc`).
 * `instance` - (Optional) EC2 instance ID.
+* `ipam_pool_id`- (Optional) The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
 * `network_border_group` - (Optional) Location from which the IP address is advertised. Use this parameter to limit the address to this location.
 * `network_interface` - (Optional) Network interface ID to associate with.
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`.
@@ -126,6 +136,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Contains the EIP allocation ID.
 * `private_dns` - The Private DNS associated with the Elastic IP address (if in VPC).
 * `private_ip` - Contains the private IP address (if in VPC).
+* `ptr_record` - The DNS pointer (PTR) record for the IP address.
 * `public_dns` - Public DNS associated with the Elastic IP address.
 * `public_ip` - Contains the public IP address.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

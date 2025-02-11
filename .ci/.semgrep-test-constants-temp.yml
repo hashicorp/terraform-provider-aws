@@ -1,0 +1,79 @@
+# All these rules can be removed once inflight PRs are merged that contain:
+#  - acctest.Ct0
+#  - acctest.Ct1
+#  - acctest.Ct2
+#  - acctest.Ct3
+#  - acctest.Ct4
+#  - acctest.Ct10
+rules:
+  - id: literal-Ct0-string-test-constant-temp
+    languages: [go]
+    message: Use the string literal "0" for the constant `acctest.Ct0` in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: "acctest.Ct0"
+    fix: '"0"'
+    severity: ERROR
+    options:
+      constant_propagation: false
+
+  - id: literal-Ct1-string-test-constant-temp
+    languages: [go]
+    message: Use the string literal "1" for the constant `acctest.Ct1` in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: "acctest.Ct1"
+    fix: '"1"'
+    severity: ERROR
+    options:
+      constant_propagation: false
+
+  - id: literal-Ct2-string-test-constant-temp
+    languages: [go]
+    message: Use the string literal "2" for the constant `acctest.Ct2` in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: "acctest.Ct2"
+    fix: '"2"'
+    severity: ERROR
+    options:
+      constant_propagation: false
+
+  - id: literal-Ct3-string-test-constant-temp
+    languages: [go]
+    message: Use the string literal "3" for the constant `acctest.Ct3` in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: "acctest.Ct3"
+    fix: '"3"'
+    severity: ERROR
+    options:
+      constant_propagation: false
+
+  - id: literal-Ct4-string-test-constant-temp
+    languages: [go]
+    message: Use the string literal "4" for the constant `acctest.Ct4` in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: "acctest.Ct4"
+    fix: '"4"'
+    severity: ERROR
+    options:
+      constant_propagation: false
+
+  - id: literal-Ct10-string-test-constant-temp
+    languages: [go]
+    message: Use the string literal "10" for the constant `acctest.Ct10` in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: "acctest.Ct10"
+    fix: '"10"'
+    severity: ERROR
+    options:
+      constant_propagation: false

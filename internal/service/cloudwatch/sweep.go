@@ -22,7 +22,7 @@ func RegisterSweepers() {
 	})
 
 	resource.AddTestSweepers("aws_cloudwatch_dashboard", &resource.Sweeper{
-		Name: "aws_cloudwatch_metric_stream",
+		Name: "aws_cloudwatch_dashboard",
 		F:    sweepDashboards,
 	})
 

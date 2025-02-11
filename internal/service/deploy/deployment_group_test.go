@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -31,7 +31,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,42 +39,43 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_tag_filter.*", map[string]string{
-						"key":   "filterkey",
-						"type":  "KEY_AND_VALUE",
-						"value": "filtervalue",
+						names.AttrKey:   "filterkey",
+						names.AttrType:  "KEY_AND_VALUE",
+						names.AttrValue: "filtervalue",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				Config: testAccDeploymentGroupConfig_modified(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s-updated`, rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s-updated`, rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName+"-updated"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test_updated", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, "aws_iam_role.test_updated", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_tag_filter.*", map[string]string{
-						"key":   "filterkey",
-						"type":  "KEY_AND_VALUE",
-						"value": "anotherfiltervalue",
+						names.AttrKey:   "filterkey",
+						names.AttrType:  "KEY_AND_VALUE",
+						names.AttrValue: "anotherfiltervalue",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
@@ -99,7 +100,7 @@ func TestAccDeployDeploymentGroup_Basic_tagSet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,9 +113,9 @@ func TestAccDeployDeploymentGroup_Basic_tagSet(t *testing.T) {
 						"ec2_tag_filter.#": "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_tag_set.*.ec2_tag_filter.*", map[string]string{
-						"key":   "filterkey",
-						"type":  "KEY_AND_VALUE",
-						"value": "filtervalue",
+						names.AttrKey:   "filterkey",
+						names.AttrType:  "KEY_AND_VALUE",
+						names.AttrValue: "filtervalue",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "0"),
 				),
@@ -128,9 +129,9 @@ func TestAccDeployDeploymentGroup_Basic_tagSet(t *testing.T) {
 						"ec2_tag_filter.#": "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_tag_set.*.ec2_tag_filter.*", map[string]string{
-						"key":   "filterkey",
-						"type":  "KEY_AND_VALUE",
-						"value": "anotherfiltervalue",
+						names.AttrKey:   "filterkey",
+						names.AttrType:  "KEY_AND_VALUE",
+						names.AttrValue: "anotherfiltervalue",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "0"),
 				),
@@ -153,7 +154,7 @@ func TestAccDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,9 +167,9 @@ func TestAccDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
 					resource.TestCheckResourceAttr(resourceName, "on_premises_instance_tag_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_premises_instance_tag_filter.*", map[string]string{
-						"key":   "filterkey",
-						"type":  "KEY_AND_VALUE",
-						"value": "filtervalue",
+						names.AttrKey:   "filterkey",
+						names.AttrType:  "KEY_AND_VALUE",
+						names.AttrValue: "filtervalue",
 					}),
 				),
 			},
@@ -190,7 +191,7 @@ func TestAccDeployDeploymentGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -214,7 +215,7 @@ func TestAccDeployDeploymentGroup_Disappears_app(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -238,16 +239,16 @@ func TestAccDeployDeploymentGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDeploymentGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -257,20 +258,20 @@ func TestAccDeployDeploymentGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeploymentGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeploymentGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDeploymentGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDeploymentGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -285,7 +286,7 @@ func TestAccDeployDeploymentGroup_Trigger_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -326,7 +327,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -379,7 +380,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -388,7 +389,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_create(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -411,7 +412,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -420,7 +421,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -430,7 +431,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_STOP_ON_ALARM"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
@@ -454,7 +455,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -463,7 +464,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -493,7 +494,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -502,7 +503,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -512,7 +513,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -535,7 +536,7 @@ func TestAccDeployDeploymentGroup_Alarm_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -544,10 +545,10 @@ func TestAccDeployDeploymentGroup_Alarm_create(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -568,7 +569,7 @@ func TestAccDeployDeploymentGroup_Alarm_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -577,10 +578,10 @@ func TestAccDeployDeploymentGroup_Alarm_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -588,11 +589,11 @@ func TestAccDeployDeploymentGroup_Alarm_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm-2"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtTrue),
 				),
 			},
 			{
@@ -613,7 +614,7 @@ func TestAccDeployDeploymentGroup_Alarm_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -622,10 +623,10 @@ func TestAccDeployDeploymentGroup_Alarm_delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -653,7 +654,7 @@ func TestAccDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -662,10 +663,10 @@ func TestAccDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -673,10 +674,10 @@ func TestAccDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -698,7 +699,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_default(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -729,7 +730,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -743,7 +744,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_create(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -765,7 +766,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -806,7 +807,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -846,7 +847,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -857,7 +858,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_create(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -879,7 +880,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -890,7 +891,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -901,7 +902,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group-2",
+						names.AttrName: "acc-test-codedeploy-dep-group-2",
 					}),
 				),
 			},
@@ -923,7 +924,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -934,7 +935,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_delete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -963,7 +964,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_create(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -974,7 +975,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_create(t *test
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -996,7 +997,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_update(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1007,7 +1008,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_update(t *test
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -1018,7 +1019,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_update(t *test
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group-2",
+						names.AttrName: "acc-test-codedeploy-dep-group-2",
 					}),
 				),
 			},
@@ -1040,7 +1041,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_delete(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1051,7 +1052,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_delete(t *test
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -1072,6 +1073,45 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_delete(t *test
 	})
 }
 
+func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group types.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_loadBalancerInfoTargetInfoMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
+						names.AttrName: "acc-test-codedeploy-dep-group-1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
+						names.AttrName: "acc-test-codedeploy-dep-group-2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
+						names.AttrName: "acc-test-codedeploy-dep-group-3",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeploymentGroupImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_create(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group types.DeploymentGroupInfo
@@ -1080,7 +1120,7 @@ func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_create(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1094,7 +1134,7 @@ func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_create(t *
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -1116,7 +1156,7 @@ func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_update(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1130,7 +1170,7 @@ func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_update(t *
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 				),
 			},
@@ -1144,7 +1184,7 @@ func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_update(t *
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.deployment_ready_option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.deployment_ready_option.0.action_on_timeout", "CONTINUE_DEPLOYMENT"),
@@ -1172,7 +1212,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1212,7 +1252,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_updateWithASG(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1257,7 +1297,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1309,7 +1349,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1358,7 +1398,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_complete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1372,7 +1412,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.deployment_ready_option.#", "1"),
@@ -1395,7 +1435,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.elb_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.elb_info.*", map[string]string{
-						"name": "acc-test-codedeploy-dep-group",
+						names.AttrName: "acc-test-codedeploy-dep-group",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.deployment_ready_option.#", "1"),
@@ -1429,7 +1469,7 @@ func TestAccDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1438,15 +1478,15 @@ func TestAccDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ecs_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.cluster_name", ecsClusterResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.service_name", ecsServiceResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.cluster_name", ecsClusterResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.service_name", ecsServiceResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.prod_traffic_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.prod_traffic_route.0.listener_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.0.name", lbTargetGroupBlueResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.1.name", lbTargetGroupGreenResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.0.name", lbTargetGroupBlueResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.1.name", lbTargetGroupGreenResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.test_traffic_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.deployment_ready_option.0.action_on_timeout", "CONTINUE_DEPLOYMENT"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.action", "TERMINATE"),
@@ -1458,15 +1498,15 @@ func TestAccDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ecs_service.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.cluster_name", ecsClusterResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.service_name", ecsServiceResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.cluster_name", ecsClusterResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.service_name", ecsServiceResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.prod_traffic_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.prod_traffic_route.0.listener_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.0.name", lbTargetGroupBlueResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.1.name", lbTargetGroupGreenResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.0.name", lbTargetGroupBlueResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.1.name", lbTargetGroupGreenResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.test_traffic_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.deployment_ready_option.0.action_on_timeout", "STOP_DEPLOYMENT"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.0.deployment_ready_option.0.wait_time_in_minutes", "30"),
@@ -1492,7 +1532,7 @@ func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_update(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1521,7 +1561,7 @@ func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_ignore(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1537,6 +1577,52 @@ func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_ignore(t *testing.T)
 				ImportState:       true,
 				ImportStateIdFunc: testAccDeploymentGroupImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDeployDeploymentGroup_TermationHook_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group types.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_terminationHookEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDeployDeploymentGroup_TermationHook_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group types.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_terminationHookDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtFalse),
+				),
 			},
 		},
 	})
@@ -1559,7 +1645,7 @@ func testAccCheckDeploymentGroupTriggerEvents(group *types.DeploymentGroupInfo, 
 				for _, event := range actual.TriggerEvents {
 					actualEvents = append(actualEvents, string(event))
 				}
-				sort.Strings(actualEvents)
+				slices.Sort(actualEvents)
 
 				if !reflect.DeepEqual(actualEvents, expectedEvents) {
 					return fmt.Errorf("Trigger events do not match.\nExpected: %v\nGot: %v\n",
@@ -2178,6 +2264,30 @@ resource "aws_codedeploy_deployment_group" "test" {
   app_name              = aws_codedeploy_app.test.name
   deployment_group_name = %[1]q
   service_role_arn      = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccDeploymentGroupConfig_loadBalancerInfoTargetInfoMultiple(rName string) string {
+	return acctest.ConfigCompose(testAccDeploymentGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name              = aws_codedeploy_app.test.name
+  deployment_group_name = %[1]q
+  service_role_arn      = aws_iam_role.test.arn
+
+  load_balancer_info {
+    target_group_info {
+      name = "acc-test-codedeploy-dep-group-1"
+    }
+
+    target_group_info {
+      name = "acc-test-codedeploy-dep-group-2"
+    }
+
+    target_group_info {
+      name = "acc-test-codedeploy-dep-group-3"
+    }
+  }
 }
 `, rName))
 }
@@ -2827,4 +2937,26 @@ resource "aws_codedeploy_deployment_group" "test" {
   outdated_instances_strategy = %[2]q
 }
 `, rName, outdatedInstancesStrategy))
+}
+
+func testAccDeploymentGroupConfig_terminationHookEnabled(rName string) string {
+	return acctest.ConfigCompose(testAccDeploymentGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name                 = aws_codedeploy_app.test.name
+  deployment_group_name    = %[1]q
+  service_role_arn         = aws_iam_role.test.arn
+  termination_hook_enabled = true
+}
+`, rName))
+}
+
+func testAccDeploymentGroupConfig_terminationHookDisabled(rName string) string {
+	return acctest.ConfigCompose(testAccDeploymentGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name                 = aws_codedeploy_app.test.name
+  deployment_group_name    = %[1]q
+  service_role_arn         = aws_iam_role.test.arn
+  termination_hook_enabled = false
+}
+`, rName))
 }

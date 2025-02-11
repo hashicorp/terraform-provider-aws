@@ -17,19 +17,29 @@ import (
 func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *string {
 	var output *string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
 
-// StringFromFramework converts a single Framework String value to a string pointer slice.
+// StringValueFromFramework converts a Framework String value to a string.
+// A null String is converted to an empty string.
+func StringValueFromFramework(ctx context.Context, v basetypes.StringValuable) string {
+	var output string
+
+	must(Expand(ctx, v, &output))
+
+	return output
+}
+
+// StringSliceValueFromFramework converts a single Framework String value to a string slice.
 // A null String is converted to a nil slice.
-func StringSliceFromFramework(ctx context.Context, v basetypes.StringValuable) []*string {
+func StringSliceValueFromFramework(ctx context.Context, v basetypes.StringValuable) []string {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
 	}
 
-	return []*string{StringFromFramework(ctx, v)}
+	return []string{StringValueFromFramework(ctx, v)}
 }
 
 // StringValueToFramework converts a string value to a Framework String value.
@@ -41,7 +51,7 @@ func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
 
 	var output types.String
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -55,11 +65,7 @@ func StringValueToFrameworkLegacy[T ~string](_ context.Context, v T) types.Strin
 // StringToFramework converts a string pointer to a Framework String value.
 // A nil string pointer is converted to a null String.
 func StringToFramework(ctx context.Context, v *string) types.String {
-	var output types.String
-
-	panicOnError(Flatten(ctx, v, &output))
-
-	return output
+	return StringToFrameworkValuable[types.String](ctx, v)
 }
 
 // StringToFrameworkLegacy converts a string pointer to a Framework String value.
@@ -71,22 +77,27 @@ func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 // StringToFrameworkARN converts a string pointer to a Framework custom ARN value.
 // A nil string pointer is converted to a null ARN.
 func StringToFrameworkARN(ctx context.Context, v *string) fwtypes.ARN {
-	var output fwtypes.ARN
+	return StringToFrameworkValuable[fwtypes.ARN](ctx, v)
+}
 
-	panicOnError(Flatten(ctx, v, &output))
+// StringToFrameworkValuable converts a string pointer to a Framework StringValuable value.
+// A nil string pointer is converted to a null StringValuable.
+func StringToFrameworkValuable[T basetypes.StringValuable](ctx context.Context, v *string) T {
+	var output T
+
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
 
-func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
+func EmptyStringAsNull(v types.String) types.String {
 	if v.IsNull() || v.IsUnknown() {
-		return nil
+		return v
 	}
 
-	s := v.ValueString()
-	if s == "" {
-		return nil
+	if v.ValueString() == "" {
+		return types.StringNull()
 	}
 
-	return aws.String(s)
+	return v
 }

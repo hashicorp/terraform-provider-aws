@@ -44,6 +44,7 @@ This resource supports the following arguments:
 * `default_route_table_propagation` - (Optional) Whether resource attachments automatically propagate routes to the default propagation route table. Valid values: `disable`, `enable`. Default value: `enable`.
 * `description` - (Optional) Description of the EC2 Transit Gateway.
 * `dns_support` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
+* `security_group_referencing_support` - (Optional) Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`. Default value: `disable`.
 * `multicast_support` - (Optional) Whether Multicast support is enabled. Required to use `ec2_transit_gateway_multicast_domain`. Valid values: `disable`, `enable`. Default value: `disable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_cidr_blocks` - (Optional) One or more IPv4 or IPv6 CIDR blocks for the transit gateway. Must be a size /24 CIDR block or larger for IPv4, or a size /64 CIDR block or larger for IPv6.
@@ -93,4 +94,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway` using the EC2 Transit
 % terraform import aws_ec2_transit_gateway.example tgw-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8abb713f19097861ce297d1a598e2ebacc47c1a42889776410c75cd929a248ea -->
+<!-- cache-key: cdktf-0.20.8 input-7d48351af0472362ed03e7587b2d349c35832998a9a07ecac7ae586d3077a97a -->

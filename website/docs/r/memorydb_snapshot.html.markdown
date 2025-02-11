@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_snapshot"
 description: |-
@@ -39,7 +39,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the snapshot.
 * `cluster_configuration` - The configuration of the cluster from which the snapshot was taken.
     * `description` - Description for the cluster.
-    * `engine_version` - Version number of the Redis engine used by the cluster.
+    * `engine` - The engine that will run on cluster nodes.
+    * `engine_version` - Version number of the engine used by the cluster.
     * `maintenance_window` - The weekly time range during which maintenance on the cluster is performed.
     * `name` - Name of the cluster.
     * `node_type` - Compute and memory capacity of the nodes in the cluster.

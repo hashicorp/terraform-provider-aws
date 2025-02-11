@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
@@ -71,12 +72,12 @@ func resourceSecretRotation() *schema.Resource {
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
 							ValidateFunc:  validation.IntBetween(1, 1000),
 						},
-						"duration": {
+						names.AttrDuration: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
@@ -177,7 +178,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
 			return conn.RotateSecret(ctx, input)
-		}, "AccessDeniedException")
+		}, "AccessDeniedException", "InvalidRequestException")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
@@ -211,16 +212,14 @@ func expandRotationRules(l []interface{}) *types.RotationRulesType {
 
 	tfMap := l[0].(map[string]interface{})
 
-	if v, ok := tfMap["automatically_after_days"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
+		rules.ScheduleExpression = aws.String(v)
+	} else if v, ok := tfMap["automatically_after_days"].(int); ok && v != 0 {
 		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
 		rules.Duration = aws.String(v)
-	}
-
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
-		rules.ScheduleExpression = aws.String(v)
 	}
 
 	return rules
@@ -233,17 +232,16 @@ func flattenRotationRules(rules *types.RotationRulesType) []interface{} {
 
 	m := map[string]interface{}{}
 
-	if v := rules.AutomaticallyAfterDays; v != nil && rules.ScheduleExpression == nil {
+	// If ScheduleExpression is set, AutomaticallyAfterDays will be the result of AWS calculating the number of days between rotations
+	if v := rules.ScheduleExpression; v != nil && aws.ToString(v) != "" {
+		m[names.AttrScheduleExpression] = aws.ToString(v)
+	} else if v := rules.AutomaticallyAfterDays; v != nil && aws.ToInt64(v) != 0 {
 		// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
 		m["automatically_after_days"] = int(aws.ToInt64(v))
 	}
 
 	if v := rules.Duration; v != nil {
-		m["duration"] = aws.ToString(v)
-	}
-
-	if v := rules.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.ToString(v)
+		m[names.AttrDuration] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

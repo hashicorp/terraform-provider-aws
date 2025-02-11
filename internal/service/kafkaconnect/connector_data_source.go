@@ -6,85 +6,102 @@ package kafkaconnect
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_mskconnect_connector")
-func DataSourceConnector() *schema.Resource {
+// @SDKDataSource("aws_mskconnect_connector", name="Connector")
+// @Tags(identifierAttribute="arn")
+func dataSourceConnector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectorRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
-
-	name := d.Get("name")
-	var output []*kafkaconnect.ConnectorSummary
-
-	err := conn.ListConnectorsPagesWithContext(ctx, &kafkaconnect.ListConnectorsInput{}, func(page *kafkaconnect.ListConnectorsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Connectors {
-			if aws.StringValue(v.ConnectorName) == name {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing MSK Connect Connectors: %s", err)
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		err = tfresource.NewEmptyResultError(name)
-	} else if count := len(output); count > 1 {
-		err = tfresource.NewTooManyResultsError(count, name)
-	}
+	connector, err := findConnectorByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Connect Connector", err))
 	}
 
-	connector := output[0]
-
-	d.SetId(aws.StringValue(connector.ConnectorArn))
-
-	d.Set("arn", connector.ConnectorArn)
-	d.Set("description", connector.ConnectorDescription)
-	d.Set("name", connector.ConnectorName)
-	d.Set("version", connector.CurrentVersion)
+	arn := aws.ToString(connector.ConnectorArn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, connector.ConnectorDescription)
+	d.Set(names.AttrName, connector.ConnectorName)
+	d.Set(names.AttrVersion, connector.CurrentVersion)
 
 	return diags
+}
+
+func findConnector(ctx context.Context, conn *kafkaconnect.Client, input *kafkaconnect.ListConnectorsInput, filter tfslices.Predicate[*awstypes.ConnectorSummary]) (*awstypes.ConnectorSummary, error) {
+	output, err := findConnectors(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findConnectors(ctx context.Context, conn *kafkaconnect.Client, input *kafkaconnect.ListConnectorsInput, filter tfslices.Predicate[*awstypes.ConnectorSummary]) ([]awstypes.ConnectorSummary, error) {
+	var output []awstypes.ConnectorSummary
+
+	pages := kafkaconnect.NewListConnectorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Connectors {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func findConnectorByName(ctx context.Context, conn *kafkaconnect.Client, name string) (*awstypes.ConnectorSummary, error) {
+	input := &kafkaconnect.ListConnectorsInput{}
+
+	return findConnector(ctx, conn, input, func(v *awstypes.ConnectorSummary) bool {
+		return aws.ToString(v.ConnectorName) == name
+	})
 }

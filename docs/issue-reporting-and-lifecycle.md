@@ -10,7 +10,7 @@ We encourage opening new issues rather than commenting on closed issues if a pro
 
 ### [Bug Reports](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=Bug_Report.md)
 
-- __Test against latest release__: Make sure you test against the latest
+- __Test against the latest release__: Make sure you test against the latest
    released version. It is possible we already fixed the bug you're experiencing.
 
 - __Search for possible duplicate reports__: It's helpful to keep bug
@@ -24,7 +24,7 @@ We encourage opening new issues rather than commenting on closed issues if a pro
 
 - __For panics, include `crash.log`__: If you experienced a panic, please
    create a [gist](https://gist.github.com) of the *entire* generated crash log
-   for us to look at. Double check no sensitive items were in the log.
+   for us to look at. Double-check check no sensitive items were in the log.
 
 ### [Feature Requests](https://github.com/hashicorp/terraform-provider-aws/issues/new?labels=enhancement&template=Feature_Request.md)
 

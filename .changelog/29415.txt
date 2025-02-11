@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add `performance_insights_enabled`, `performance_insights_kms_key_id`, and `performance_insights_retention_period` arguments
+```

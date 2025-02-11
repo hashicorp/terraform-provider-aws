@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,7 +36,7 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "credential_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -56,7 +56,7 @@ func TestAccECRPullThroughCacheRule_credentialARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccECRPullThroughCacheRule_credentialARN(t *testing.T) {
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "credential_arn"),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "registry-1.docker.io"),
 				),
 			},
@@ -86,7 +86,7 @@ func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +105,6 @@ func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("ECR Pull Through Cache Rule is not supported in GovCloud partition")
@@ -113,15 +112,12 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
-				),
+				Config:      testAccPullThroughCacheRuleConfig_failWhenAlreadyExists(repositoryPrefix),
 				ExpectError: regexache.MustCompile(`PullThroughCacheRuleAlreadyExistsException`),
 			},
 		},
@@ -135,7 +131,7 @@ func TestAccECRPullThroughCacheRule_repositoryPrefixWithSlash(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,7 +140,7 @@ func TestAccECRPullThroughCacheRule_repositoryPrefixWithSlash(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -154,7 +150,7 @@ func TestAccECRPullThroughCacheRule_repositoryPrefixWithSlash(t *testing.T) {
 
 func testAccCheckPullThroughCacheRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_pull_through_cache_rule" {
@@ -185,7 +181,7 @@ func testAccCheckPullThroughCacheRuleExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		_, err := tfecr.FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, rs.Primary.ID)
 
@@ -222,7 +218,7 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
 `, repositoryPrefix)
 }
 
-func testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix string) string {
+func testAccPullThroughCacheRuleConfig_failWhenAlreadyExists(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = %[1]q
