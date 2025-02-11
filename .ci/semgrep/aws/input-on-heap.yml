@@ -67,7 +67,6 @@ rules:
         - "internal/service/r*"
         - "internal/service/s*"
         - "internal/service/t*"
-        - "internal/service/v*"
     patterns:
       - pattern-either:
           - pattern: |
