@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -107,14 +108,6 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
 			},
-			names.AttrClusterIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validIdentifier,
-				ConflictsWith: []string{"cluster_identifier_prefix"},
-			},
 			"ca_certificate_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -123,6 +116,14 @@ func resourceCluster() *schema.Resource {
 			"ca_certificate_valid_till": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrClusterIdentifier: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validIdentifier,
+				ConflictsWith: []string{"cluster_identifier_prefix"},
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
@@ -142,10 +143,23 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cluster_scalability_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ClusterScalabilityType](),
+			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"database_insights_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.DatabaseInsightsMode](),
 			},
 			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
@@ -242,7 +256,13 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineModeProvisioned,
-				ValidateFunc: validation.StringInSlice(engineMode_Values(), false),
+				ValidateFunc: validation.StringInSlice(append(engineMode_Values(), ""), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == engineModeProvisioned && new == "" {
+						return true
+					}
+					return new == old
+				},
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -687,7 +707,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
 			Tags:                getTagsIn(ctx),
 		}
@@ -731,6 +750,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
 			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("engine_mode"); ok {
+			input.EngineMode = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -1094,7 +1117,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			Tags:                getTagsIn(ctx),
 		}
 
@@ -1116,6 +1138,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v := d.Get("ca_certificate_identifier"); v.(string) != "" {
 			input.CACertificateIdentifier = aws.String(v.(string))
+		}
+
+		if v := d.Get("cluster_scalability_type"); v.(string) != "" {
+			input.ClusterScalabilityType = types.ClusterScalabilityType(v.(string))
+		}
+
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
 
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
@@ -1164,6 +1194,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
 			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("engine_mode"); ok {
+			input.EngineMode = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -1338,6 +1372,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
 		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
 	}
+	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
 	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.ToString(dbc.DBClusterIdentifier)))
 	d.Set("cluster_members", tfslices.ApplyToAll(dbc.DBClusterMembers, func(v types.DBClusterMember) string {
@@ -1345,6 +1380,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}))
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
+	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.
@@ -1519,6 +1555,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("copy_tags_to_snapshot") {
 			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
+
+		if d.HasChange("database_insights_mode") {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
 		}
 
 		if d.HasChange("db_cluster_instance_class") {
