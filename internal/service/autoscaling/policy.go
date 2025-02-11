@@ -589,10 +589,11 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
-	_, err := conn.DeletePolicy(ctx, &autoscaling.DeletePolicyInput{
+	input := autoscaling.DeletePolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		PolicyName:           aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeletePolicy(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
