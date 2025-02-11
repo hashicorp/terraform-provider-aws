@@ -241,9 +241,10 @@ func resourceReportPlanDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Report Plan: %s", d.Id())
-	_, err := conn.DeleteReportPlan(ctx, &backup.DeleteReportPlanInput{
+	input := backup.DeleteReportPlanInput{
 		ReportPlanName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReportPlan(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

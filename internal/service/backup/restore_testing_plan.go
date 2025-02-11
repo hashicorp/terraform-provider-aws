@@ -285,9 +285,10 @@ func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resourc
 	conn := r.Meta().BackupClient(ctx)
 
 	name := data.RestoreTestingPlanName.ValueString()
-	_, err := conn.DeleteRestoreTestingPlan(ctx, &backup.DeleteRestoreTestingPlanInput{
+	input := backup.DeleteRestoreTestingPlanInput{
 		RestoreTestingPlanName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRestoreTestingPlan(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
