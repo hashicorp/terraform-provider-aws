@@ -102,8 +102,11 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	_, err := conn.DisableOrganizationAdminAccount(ctx, &detective.DisableOrganizationAdminAccountInput{})
-
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+	// For some reason, the API is returning this instead of `ResourceNotFoundException`
+	if errs.IsA[*awstypes.ValidationException](err) {
 		return diags
 	}
 
