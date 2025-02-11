@@ -31,7 +31,7 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
@@ -70,7 +70,7 @@ func TestAccSageMakerEndpointConfiguration_nameGenerated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_nameGenerated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
@@ -98,7 +98,7 @@ func TestAccSageMakerEndpointConfiguration_namePrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_namePrefix(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
@@ -126,7 +126,7 @@ func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_shadowProductionVariants(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
@@ -167,7 +167,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_routing(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_routing(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.routing_config.#", "1"),
@@ -196,7 +196,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *test
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_serverless(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "1"),
@@ -227,7 +227,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_ami(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_ami(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.inference_ami_version", "al2-ami-sagemaker-inference-gpu-2"), //lintignore:AWSAT002
@@ -255,7 +255,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverlessProvisio
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_serverlessProvisionedConcurrency(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "1"),
@@ -286,7 +286,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeig
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_productionVariantsInitialVariantWeight(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(
 						resourceName, "production_variants.1.initial_variant_weight", "0.5"),
@@ -314,7 +314,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType(t 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_productionVariantAcceleratorType(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.accelerator_type", "ml.eia1.medium"),
 				),
@@ -341,7 +341,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_variantNameGenerat
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_productionVariantVariantNameGenerated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "production_variants.0.variant_name"),
 				),
@@ -368,7 +368,7 @@ func TestAccSageMakerEndpointConfiguration_kmsKeyID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_kmsKeyID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
@@ -395,7 +395,7 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -408,7 +408,7 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 			},
 			{
 				Config: testAccEndpointConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -417,7 +417,7 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 			},
 			{
 				Config: testAccEndpointConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -440,7 +440,7 @@ func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_dataCapture(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
@@ -474,7 +474,7 @@ func TestAccSageMakerEndpointConfiguration_dataCapture_inputAndOutput(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_dataCapture_inputAndOutput(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
@@ -507,7 +507,7 @@ func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
 				),
@@ -530,7 +530,7 @@ func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_async(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
@@ -563,7 +563,7 @@ func TestAccSageMakerEndpointConfiguration_async_includeInference(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncNotifInferenceIn(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
@@ -598,7 +598,7 @@ func TestAccSageMakerEndpointConfiguration_async_kms(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncKMS(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
@@ -631,7 +631,7 @@ func TestAccSageMakerEndpointConfiguration_Async_notif(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncNotif(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
@@ -665,7 +665,7 @@ func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncClient(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
@@ -697,7 +697,7 @@ func TestAccSageMakerEndpointConfiguration_Async_client_failurePath(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncClientFailure(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
