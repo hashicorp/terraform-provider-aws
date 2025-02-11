@@ -1,4 +1,9 @@
 ## 5.87.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_vpclattice_access_log_subscription: Add `service_network_log_type` argument ([#41304](https://github.com/hashicorp/terraform-provider-aws/issues/41304))
+
 ## 5.86.1 (February 11, 2025)
 
 BUG FIXES:
