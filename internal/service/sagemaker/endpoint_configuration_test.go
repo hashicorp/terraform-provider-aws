@@ -38,6 +38,7 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "sagemaker", "endpoint-config/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
@@ -78,6 +79,7 @@ func TestAccSageMakerEndpointConfiguration_nameGenerated(t *testing.T) {
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "sagemaker", "endpoint-config/{name}"),
 				),
 			},
 			{
@@ -106,6 +108,7 @@ func TestAccSageMakerEndpointConfiguration_namePrefix(t *testing.T) {
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "sagemaker", "endpoint-config/{name}"),
 				),
 			},
 			{
@@ -561,7 +564,8 @@ func TestAccSageMakerEndpointConfiguration_dataCapture_EmptyHeaders(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEndpointConfigurationConfig_dataCapture_emptyHeaders(rName),
-				ExpectError: regexache.MustCompile(`At least one attribute out of \[csv_content_types, json_content_types\] must be specified`)},
+				ExpectError: regexache.MustCompile(`At least one attribute out of \[csv_content_types, json_content_types\] must be specified`),
+			},
 		},
 	})
 }
