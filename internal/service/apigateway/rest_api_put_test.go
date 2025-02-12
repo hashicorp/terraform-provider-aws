@@ -38,7 +38,7 @@ func TestAccAPIGatewayRestAPIPut_basic(t *testing.T) {
 				Config: testAccRestAPIPutConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIPutExists(ctx, resourceName, &restAPI),
-					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
@@ -48,7 +48,7 @@ func TestAccAPIGatewayRestAPIPut_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rest_api_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rest_api_id",
-				ImportStateVerifyIgnore:              []string{"body", "triggers", "fail_on_warnings"},
+				ImportStateVerifyIgnore:              []string{"body", names.AttrTriggers, "fail_on_warnings"},
 			},
 		},
 	})
