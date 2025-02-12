@@ -74,7 +74,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -128,7 +128,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -176,7 +176,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -212,7 +212,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -277,7 +277,7 @@ func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -330,7 +330,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -415,7 +415,7 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -479,7 +479,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -515,7 +515,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -616,7 +616,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -664,7 +664,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -759,7 +759,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -822,7 +822,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -874,7 +874,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -922,7 +922,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -960,7 +960,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1033,7 +1033,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1097,7 +1097,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1135,7 +1135,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1206,7 +1206,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1270,7 +1270,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1326,7 +1326,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1421,7 +1421,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1515,7 +1515,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1586,7 +1586,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1649,7 +1649,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyT
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1721,7 +1721,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingRes
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1795,7 +1795,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlapping
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1855,7 +1855,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testin
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -1957,7 +1957,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
@@ -2049,7 +2049,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
