@@ -1356,7 +1356,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     capture_options {
       capture_mode = "Output"
     }
-	
+
     capture_content_type_header {
     }
   }
@@ -1394,11 +1394,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     capture_options {
       capture_mode = "Output"
     }
-	
+
     capture_content_type_header {
-		csv_content_types = ["text/csv"]
-       json_content_types = ["application/json"]
-   }
+      csv_content_types  = ["text/csv"]
+      json_content_types = ["application/json"]
+    }
   }
 }
 `, rName))
