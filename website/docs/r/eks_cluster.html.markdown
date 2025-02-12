@@ -407,11 +407,13 @@ The `remote_pod_networks` configuration block supports the following arguments:
 
 ### vpc_config Arguments
 
+* `cluster_security_group_id` - (Computed) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
 * `endpoint_private_access` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpoint_public_access` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `public_access_cidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.
 * `security_group_ids` – (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
 * `subnet_ids` – (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
+* `vpc_id` - (Computed) ID of the VPC associated with your cluster.
 
 ### kubernetes_network_config
 
@@ -425,6 +427,8 @@ The `kubernetes_network_config` configuration block supports the following argum
     * Doesn't overlap with any CIDR block assigned to the VPC that you selected for VPC.
 
     * Between /24 and /12.
+
+* `service_ipv6_cidr` - (Computed) The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specify `ipv6` for `ip_family` when you create the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `ip_family` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
 
 #### elastic_load_balancing
@@ -489,11 +493,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `id` - Name of the cluster.
 * `identity` - Attribute block containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. Detailed below.
-* `kubernetes_network_config` - Attribute block containing Kubernetes network configuration for the cluster. [Detailed](#kubernetes_network_config-1) below.
 * `platform_version` - Platform version for the cluster.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpc_config` - Configuration block _argument_ that also includes attributes for the VPC associated with your cluster. Detailed below.
 
 ### certificate_authority
 
@@ -503,18 +505,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `oidc` - Nested block containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
 
-### kubernetes_network_config
-
-* `service_ipv6_cidr` - The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specified `ipv6` for `ip_family` when you created the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
-
 ### oidc
 
 * `issuer` - Issuer URL for the OpenID Connect identity provider.
-
-### vpc_config Attributes
-
-* `cluster_security_group_id` - Cluster security group that was created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
-* `vpc_id` - ID of the VPC associated with your cluster.
 
 ## Timeouts
 
