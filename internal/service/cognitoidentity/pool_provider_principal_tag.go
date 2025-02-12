@@ -106,10 +106,11 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
-	ret, err := conn.GetPrincipalTagAttributeMap(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
+	input := cognitoidentity.GetPrincipalTagAttributeMapInput{
 		IdentityProviderName: aws.String(providerName),
 		IdentityPoolId:       aws.String(poolId),
-	})
+	}
+	ret, err := conn.GetPrincipalTagAttributeMap(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id())
