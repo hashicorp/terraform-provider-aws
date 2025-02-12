@@ -381,6 +381,12 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"performance_insights_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "standard",
+				ValidateFunc: validation.StringInSlice(performanceInsightsMode_Values(), false),
+			},
 			"performance_insights_kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -1265,6 +1271,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnablePerformanceInsights = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("performance_insights_mode"); ok {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+		}
+
 		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
 			input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 		}
@@ -1444,6 +1454,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
+	d.Set("performance_insights_mode", dbc.DatabaseInsightsMode)
 	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
 	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
 	d.Set(names.AttrPort, dbc.Port)
@@ -1673,6 +1684,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("performance_insights_enabled") {
 			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		}
+
+		if v, ok := d.GetOk("performance_insights_mode"); ok {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
 
 		if d.HasChange("performance_insights_kms_key_id") {

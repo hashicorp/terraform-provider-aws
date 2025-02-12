@@ -54,12 +54,9 @@ const (
 )
 
 const (
-	storageTypeStandard    = "standard"
-	storageTypeGP2         = "gp2"
-	storageTypeGP3         = "gp3"
-	storageTypeIO1         = "io1"
-	storageTypeIO2         = "io2"
-	storageTypeAuroraIOPT1 = "aurora-iopt1"
+	storageTypeGP3 = "gp3"
+	storageTypeIO1 = "io1"
+	storageTypeIO2 = "io2"
 )
 
 const (
@@ -287,6 +284,20 @@ const (
 	timeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
 	timeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
 )
+
+const (
+	PerformanceInsightsModeStandard = "standard"
+
+	performanceInsightsModeStandard = "standard"
+	performanceInsightsModeAdvanced = "advanced"
+)
+
+func performanceInsightsMode_Values() []string {
+	return []string{
+		performanceInsightsModeStandard,
+		performanceInsightsModeAdvanced,
+	}
+}
 
 func timeoutAction_Values() []string {
 	return []string{

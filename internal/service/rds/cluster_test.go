@@ -3121,6 +3121,7 @@ func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtStandart), // default
 				),
 			},
 			{
@@ -3128,6 +3129,23 @@ func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtStandart), // default
+				),
+			},
+			{
+				Config: testAccClusterConfig_performanceInsightsEnabledWithAdvancedMode(rName, false, acctest.CtStandart),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtStandart),
+				),
+			},
+			{
+				Config: testAccClusterConfig_performanceInsightsEnabledWithAdvancedMode(rName, false, acctest.CtAdvanced),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtAdvanced),
 				),
 			},
 		},
@@ -6308,6 +6326,24 @@ resource "aws_rds_cluster" "test" {
   performance_insights_enabled = %[2]t
 }
 `, rName, performanceInsightsEnabled, tfrds.ClusterEngineMySQL)
+}
+
+func testAccClusterConfig_performanceInsightsEnabledWithAdvancedMode(rName string, performanceInsightsEnabled bool, performanceInsightsAdvancedMode string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier           = %[1]q
+  engine                       = %[4]q
+  db_cluster_instance_class    = "db.m6gd.large"
+  storage_type                 = "io1"
+  allocated_storage            = 100
+  iops                         = 1000
+  master_username              = "tfacctest"
+  master_password              = "avoid-plaintext-passwords"
+  skip_final_snapshot          = true
+  performance_insights_enabled = %[2]t
+  performance_insights_mode    = %[3]q
+}
+`, rName, performanceInsightsEnabled, performanceInsightsAdvancedMode, tfrds.ClusterEngineMySQL)
 }
 
 func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {

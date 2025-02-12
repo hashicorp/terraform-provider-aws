@@ -42,4 +42,6 @@ const (
 	CtValue1                = "value1"
 	CtValue1Updated         = "value1updated"
 	CtValue2                = "value2"
+	CtStandart              = "standart"
+	CtAdvanced              = "advanced"
 )
