@@ -6,11 +6,11 @@ package cloudwatch
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,12 +61,13 @@ func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resourc
 			"rule_state": schema.StringAttribute{
 				Required: true,
 			},
-			"schema": schema.StringAttribute{
-				Computed: true,
-			},
-			"managed_rule": schema.BoolAttribute{
-				Computed: true,
-			},
+			// "schema": schema.StringAttribute{
+			// 	Computed: true,
+
+			// },
+			// "managed_rule": schema.BoolAttribute{
+			// 	Computed: true,
+			// },
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -131,11 +132,7 @@ func (r *resourceContributorInsightRule) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.RuleDefinition = flex.StringToFramework(ctx, out.Definition)
-	state.RuleName = flex.StringToFramework(ctx, out.Name)
-	state.RuleState = flex.StringToFramework(ctx, out.State)
-	state.Schema = flex.StringToFramework(ctx, out.Schema)
-	state.ManagedRule = flex.BoolToFramework(ctx, out.ManagedRule)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -169,6 +166,10 @@ func (r *resourceContributorInsightRule) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root("rule_name"), req, resp)
 }
 
+func (r *resourceContributorInsightRule) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
 func findContributorInsightRuleByName(ctx context.Context, conn *cloudwatch.Client, name string) (*awstypes.InsightRule, error) {
 	input := &cloudwatch.DescribeInsightRulesInput{}
 	out, err := findContributorInsightRules(ctx, conn, input, name)
@@ -185,6 +186,8 @@ func findContributorInsightRuleByName(ctx context.Context, conn *cloudwatch.Clie
 
 func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeInsightRulesInput, name string) ([]awstypes.InsightRule, error) {
 	var output []awstypes.InsightRule
+
+	log.Printf("[WARN]input: %+v", input)
 
 	paginator := cloudwatch.NewDescribeInsightRulesPaginator(conn, input)
 
@@ -213,12 +216,9 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 }
 
 type resourceContributorInsightRuleData struct {
-	RuleDefinition types.String   `tfsdk:"rule_definition"`
-	RuleName       types.String   `tfsdk:"rule_name"`
-	RuleState      types.String   `tfsdk:"rule_state"`
-	ManagedRule    types.Bool     `tfsdk:"managed_rule"`
-	Schema         types.String   `tfsdk:"schema"`
-	Timeouts       timeouts.Value `tfsdk:"timeouts"`
-	Tags           types.Map      `tfsdk:"tags"`
-	TagsAll        types.Map      `tfsdk:"tags_all"`
+	RuleDefinition types.String `tfsdk:"rule_definition"`
+	RuleName       types.String `tfsdk:"rule_name"`
+	RuleState      types.String `tfsdk:"rule_state"`
+	Tags           tftags.Map   `tfsdk:"tags"`
+	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
