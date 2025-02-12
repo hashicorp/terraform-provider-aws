@@ -54,7 +54,6 @@ rules:
         - "internal/service/comprehend"
         - "internal/service/configservice"
         - "internal/service/connect"
-        - "internal/service/customerprofiles"
         - "internal/service/d*"
         - "internal/service/e*"
         - "internal/service/f*"
