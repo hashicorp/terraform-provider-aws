@@ -18,7 +18,7 @@ Terraform resource for managing an AWS CloudWatch Contributor Insight Rule.
 resource "aws_cloudwatch_contributor_insight_rule" "test" {
   rule_name       = "testing
   rule_state      = "ENABLED"
-  rule_definition = "{\"Schema\":{\"Name\":\"CloudWatchLogRule\",\"Version\":1},\"AggregateOn\":\"Count\",\"Contribution\":{\"Filters\":[{\"In\":[\"some-keyword\"],\"Match\":\"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"
+  rule_definition = "{\"Schema\": {\"Name\": \"CloudWatchLogRule\", \"Version\": 1}, \"AggregateOn\": \"Count\", \"Contribution\": {\"Filters\": [{\"In\": [\"some-keyword\"], \"Match\": \"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"
 }
 ```
 
@@ -32,6 +32,12 @@ The following arguments are required:
 The following arguments are optional:
 
 * `rule_state` - (Optional) State of the rule. Valid values are `ENABLED` and `DISABLED`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `resource_arn` - ARN of the Contributor Insight Rule.
 
 ## Import
 
