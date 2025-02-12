@@ -33,6 +33,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  newResourceRestAPIPut,
+			TypeName: "aws_api_gateway_rest_api_put",
+			Name:     "Rest API Put",
+		},
 	}
 }
 
