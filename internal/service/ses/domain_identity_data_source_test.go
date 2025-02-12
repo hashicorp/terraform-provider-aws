@@ -16,6 +16,9 @@ func TestAccSESDomainIdentityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 
+	dataSourceName := "data.aws_ses_domain_identity.test"
+	resourceName := "aws_ses_domain_identity.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
@@ -25,8 +28,11 @@ func TestAccSESDomainIdentityDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDomainIdentityDataSourceConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainIdentityExists(ctx, "aws_ses_domain_identity.test"),
-					testAccCheckDomainIdentityARN(ctx, "data.aws_ses_domain_identity.test", domain),
+					testAccCheckDomainIdentityExists(ctx, dataSourceName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDomain, resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrPair(dataSourceName, "verification_token", resourceName, "verification_token"),
 				),
 			},
 		},
