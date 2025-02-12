@@ -37,15 +37,14 @@ func GetWriteOnlyStringValue(d writeOnlyAttrGetter, path cty.Path) (string, diag
 func GetWriteOnlyValue(d writeOnlyAttrGetter, path cty.Path, attrType cty.Type) (cty.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	var valueWO cty.Value
-	if !d.GetRawConfig().IsNull() {
-		val, di := d.GetRawConfigAt(path)
-		if di.HasError() {
-			diags = append(diags, di...)
-			return cty.Value{}, diags
-		}
+	if d.GetRawConfig().IsNull() {
+		return cty.Value{}, diags
+	}
 
-		valueWO = val
+	valueWO, di := d.GetRawConfigAt(path)
+	if di.HasError() {
+		diags = append(diags, di...)
+		return cty.Value{}, diags
 	}
 
 	if !valueWO.Type().Equals(attrType) {

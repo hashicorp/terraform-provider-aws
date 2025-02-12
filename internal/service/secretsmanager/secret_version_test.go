@@ -46,9 +46,10 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_secret_string_wo"},
 			},
 		},
 	})
@@ -79,9 +80,10 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_secret_string_wo"},
 			},
 		},
 	})
@@ -131,9 +133,10 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_secret_string_wo"},
 			},
 		},
 	})
