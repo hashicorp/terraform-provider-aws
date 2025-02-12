@@ -153,9 +153,9 @@ func testAccContributorInsightRuleImportStateIDFunc(n string) resource.ImportSta
 func testAccContributorInsightRuleConfig_basic(rName, state string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_contributor_insight_rule" "test" {
-  rule_name             = %[1]q
-  rule_state             = %[2]q
-  rule_definition  = "{\"Schema\":{\"Name\":\"CloudWatchLogRule\",\"Version\":1},\"AggregateOn\":\"Count\",\"Contribution\":{\"Filters\":[{\"In\":[\"some-keyword\"],\"Match\":\"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"
+  rule_name       = %[1]q
+  rule_state      = %[2]q
+  rule_definition = "{\"Schema\":{\"Name\":\"CloudWatchLogRule\",\"Version\":1},\"AggregateOn\":\"Count\",\"Contribution\":{\"Filters\":[{\"In\":[\"some-keyword\"],\"Match\":\"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"
 }
 `, rName, state)
 }
