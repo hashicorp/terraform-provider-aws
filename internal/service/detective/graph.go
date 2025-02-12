@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_detective_graph", name="Graph")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="graph_arn")
 func ResourceGraph() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGraphCreate,

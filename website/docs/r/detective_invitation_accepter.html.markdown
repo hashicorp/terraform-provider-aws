@@ -18,7 +18,7 @@ resource "aws_detective_graph" "primary" {}
 resource "aws_detective_member" "primary" {
   account_id    = "ACCOUNT ID"
   email_address = "EMAIL"
-  graph_arn     = aws_detective_graph.primary.id
+  graph_arn     = aws_detective_graph.primary.graph_arn
   message       = "Message of the invite"
 }
 
