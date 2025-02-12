@@ -5,11 +5,13 @@ ENHANCEMENTS:
 * resource/aws_dynamodb_table_export: Add `export_type` and `incremental_export_specification` arguments ([#41303](https://github.com/hashicorp/terraform-provider-aws/issues/41303))
 * resource/aws_quicksight_data_source: Add `parameters.s3.role_arn` argument to allow override an account-wide role for a specific S3 data source ([#41284](https://github.com/hashicorp/terraform-provider-aws/issues/41284))
 * resource/aws_rds_cluster: Add `master_password_wo` write-only attribute ([#41314](https://github.com/hashicorp/terraform-provider-aws/issues/41314))
+* resource/aws_rekognition_stream_processor: Deprecates `stream_processor_arn` in favor of `arn`. ([#41271](https://github.com/hashicorp/terraform-provider-aws/issues/41271))
 * resource/aws_ssm_parameter: Add `value_wo` write-only attribute ([#40952](https://github.com/hashicorp/terraform-provider-aws/issues/40952))
 * resource/aws_vpclattice_access_log_subscription: Add `service_network_log_type` argument ([#41304](https://github.com/hashicorp/terraform-provider-aws/issues/41304))
 
 BUG FIXES:
 
+* resource/aws_detective_member: No longer fails with unexpected status when adding Organization member accounts. ([#41344](https://github.com/hashicorp/terraform-provider-aws/issues/41344))
 * resource/aws_ec2_transit_gateway_route_table_association: Fix deleting and recreating resource when dependencies changes don't require the resource be recreated. ([#41292](https://github.com/hashicorp/terraform-provider-aws/issues/41292))
 
 ## 5.86.1 (February 11, 2025)
