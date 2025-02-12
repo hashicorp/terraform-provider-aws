@@ -243,7 +243,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/cleanrooms"
         - "internal/service/cloud9"
         - "internal/service/cloudformation"
         - "internal/service/cloudfront"
