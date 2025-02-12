@@ -24,6 +24,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newResourceContributorInsightRule,
 			TypeName: "aws_cloudwatch_contributor_insight_rule",
 			Name:     "Contributor Insight Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrResourceARN,
+			},
 		},
 	}
 }

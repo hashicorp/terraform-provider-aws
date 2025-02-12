@@ -6,6 +6,7 @@ package cloudwatch
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -26,10 +27,11 @@ import (
 )
 
 // @FrameworkResource("aws_cloudwatch_contributor_insight_rule", name="Contributor Insight Rule")
-// @Tags(identifierAttribute="rule_name")
+// @Tags(identifierAttribute="resource_arn")
 // @Testing(importStateIdFunc="testAccContributorInsightRuleImportStateIDFunc")
 // @Testing(importStateIdAttribute="rule_name")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch;cloudwatch.DescribeInsightRulesOutput")
+// @Testing(importIgnore="rule_definition,rule_state")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;types.InsightRule")
 func newResourceContributorInsightRule(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceContributorInsightRule{}
 
@@ -52,6 +54,7 @@ func (r *resourceContributorInsightRule) Metadata(_ context.Context, req resourc
 func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrResourceARN: framework.ARNAttributeComputedOnly(),
 			"rule_definition": schema.StringAttribute{
 				Required: true,
 			},
@@ -81,6 +84,10 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 		RuleName:       plan.RuleName.ValueStringPointer(),
 		RuleState:      plan.RuleState.ValueStringPointer(),
 	}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	in.Tags = getTagsIn(ctx)
 
@@ -99,6 +106,9 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 		)
 		return
 	}
+	//arn:aws:cloudwatch:Region:account-id:insight-rule/insight-rule-name
+	cirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", aws.ToString(plan.RuleName.ValueStringPointer())))
+	plan.ResourceARN = fwflex.StringValueToFramework(ctx, cirARN)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -124,6 +134,10 @@ func (r *resourceContributorInsightRule) Read(ctx context.Context, req resource.
 		)
 		return
 	}
+
+	//arn:aws:cloudwatch:Region:account-id:insight-rule/insight-rule-name
+	cirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", aws.ToString(state.RuleName.ValueStringPointer())))
+	state.ResourceARN = fwflex.StringValueToFramework(ctx, cirARN)
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -208,6 +222,7 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 }
 
 type resourceContributorInsightRuleData struct {
+	ResourceARN    types.String `tfsdk:"resource_arn"`
 	RuleDefinition types.String `tfsdk:"rule_definition"`
 	RuleName       types.String `tfsdk:"rule_name"`
 	RuleState      types.String `tfsdk:"rule_state"`

@@ -62,9 +62,6 @@ func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var v types.InsightRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -83,12 +80,6 @@ func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 				Config: testAccContributorInsightRuleConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceContributorInsightRule = newResourceContributorInsightRule
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceContributorInsightRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
