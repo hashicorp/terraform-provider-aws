@@ -384,7 +384,7 @@ func resourceCluster() *schema.Resource {
 			"performance_insights_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "standard",
+				Default:      performanceInsightsModeStandard,
 				ValidateFunc: validation.StringInSlice(performanceInsightsMode_Values(), false),
 			},
 			"performance_insights_kms_key_id": {
