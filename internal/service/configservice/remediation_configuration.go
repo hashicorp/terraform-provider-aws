@@ -185,9 +185,10 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 		remediationConfiguration.TargetVersion = aws.String(v.(string))
 	}
 
-	_, err := conn.PutRemediationConfigurations(ctx, &configservice.PutRemediationConfigurationsInput{
+	input := configservice.PutRemediationConfigurationsInput{
 		RemediationConfigurations: []types.RemediationConfiguration{remediationConfiguration},
-	})
+	}
+	_, err := conn.PutRemediationConfigurations(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ConfigService Remediation Configuration (%s): %s", name, err)
