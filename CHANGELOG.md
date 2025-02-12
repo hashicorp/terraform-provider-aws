@@ -13,6 +13,7 @@ BUG FIXES:
 
 * resource/aws_detective_member: No longer fails with unexpected status when adding Organization member accounts. ([#41344](https://github.com/hashicorp/terraform-provider-aws/issues/41344))
 * resource/aws_ec2_transit_gateway_route_table_association: Fix deleting and recreating resource when dependencies changes don't require the resource be recreated. ([#41292](https://github.com/hashicorp/terraform-provider-aws/issues/41292))
+* resource/aws_internet_gateway: Fix to continue deletion when attachment is not found ([#41346](https://github.com/hashicorp/terraform-provider-aws/issues/41346))
 
 ## 5.86.1 (February 11, 2025)
 
