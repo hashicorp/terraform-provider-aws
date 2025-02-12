@@ -11,7 +11,7 @@ var (
 	ResourceBucketCorsConfiguration                 = resourceBucketCorsConfiguration
 	ResourceBucketIntelligentTieringConfiguration   = resourceBucketIntelligentTieringConfiguration
 	ResourceBucketInventory                         = resourceBucketInventory
-	ResourceBucketLifecycleConfiguration            = resourceBucketLifecycleConfiguration
+	ResourceBucketLifecycleConfiguration            = newResourceBucketLifecycleConfiguration
 	ResourceBucketLogging                           = resourceBucketLogging
 	ResourceBucketMetric                            = resourceBucketMetric
 	ResourceBucketNotification                      = resourceBucketNotification
@@ -73,6 +73,9 @@ var (
 
 	NewObjectARN   = newObjectARN
 	ParseObjectARN = parseObjectARN
+
+	CreateResourceID = createResourceID
+	ParseResourceID  = parseResourceID
 )
 
 type (

@@ -286,7 +286,7 @@ func waitMemberInvited(ctx context.Context, conn *detective.Client, graphARN, ad
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemberStatusVerificationInProgress),
-		Target:  enum.Slice(awstypes.MemberStatusInvited),
+		Target:  enum.Slice(awstypes.MemberStatusInvited, awstypes.MemberStatusEnabled),
 		Refresh: statusMember(ctx, conn, graphARN, adminAccountID),
 		Timeout: timeout,
 	}

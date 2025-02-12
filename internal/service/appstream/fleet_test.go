@@ -591,7 +591,7 @@ resource "aws_subnet" "test" {
 }
 
 data "aws_appstream_image" "test" {
-  name_regex  = "^AppStream-WinServer.*$"
+  name_regex  = "^AppStream-WinServer2022.*$"
   type        = "PUBLIC"
   most_recent = true
 }
