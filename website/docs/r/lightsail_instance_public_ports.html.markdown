@@ -39,21 +39,19 @@ resource "aws_lightsail_instance_public_ports" "test" {
 
 The following arguments are required:
 
-* `instance_name` - (Required) Name of the Lightsail Instance.
-* `port_info` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. Detailed below.
+* `instance_name` - (Required) Name of the instance for which to open ports.
+* `port_info` - (Required) Descriptor of the ports to open for the specified instance. AWS closes all currently open ports that are not included in this argument. See [`port_info` Block](#port_info-block) for details.
 
-### port_info
+### `port_info` Block
 
-The following arguments are required:
+The `port_info` configuration block supports the following arguments:
 
-* `from_port` - (Required) First port in a range of open ports on an instance.
-* `protocol` - (Required) IP protocol name. Valid values are `tcp`, `all`, `udp`, and `icmp`.
-* `to_port` - (Required) Last port in a range of open ports on an instance.
-
-The following arguments are optional:
-
-* `cidrs` - (Optional) Set of CIDR blocks.
+* `from_port` - (Required) First port in a range of open ports on an instance. See [PortInfo](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PortInfo.html) for details.
+* `protocol` - (Required) IP protocol name. Valid values: `tcp`, `all`, `udp`, `icmp`, `icmpv6`. See [PortInfo](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PortInfo.html) for details.
+* `to_port` - (Required) Last port in a range of open ports on an instance. See [PortInfo](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PortInfo.html) for details.
 * `cidr_list_aliases` - (Optional) Set of CIDR aliases that define access for a preconfigured range of IP addresses.
+* `cidrs` - (Optional) Set of IPv4 addresses or ranges of IPv4 addresses (in CIDR notation) that are allowed to connect to an instance through the ports, and the protocol.
+* `ipv6_cidrs` - (Optional) Set of IPv6 addresses or ranges of IPv6 addresses (in CIDR notation) that are allowed to connect to an instance through the ports, and the protocol.
 
 ## Attribute Reference
 
