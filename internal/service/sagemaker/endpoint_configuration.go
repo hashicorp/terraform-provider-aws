@@ -601,41 +601,73 @@ func resourceEndpointConfiguration() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-				v, ok := diff.GetOk("data_capture_config")
-				if !ok {
-					return nil
-				}
-
-				l := v.([]any)
-				if len(l) == 0 {
-					return nil
-				}
-
-				m := l[0].(map[string]any)
-
-				v, ok = m["capture_content_type_header"]
-				if !ok {
-					return nil
-				}
-
-				l = v.([]any)
-				if len(l) == 0 {
-					return nil
-				}
-
-				v = l[0]
-				if v == nil { // Empty block
-					return sdkdiag.DiagnosticError(errs.NewAtLeastOneOfChildrenError(
-						cty.GetAttrPath("data_capture_config").GetAttr("capture_content_type_header"),
-						cty.GetAttrPath("csv_content_types"),
-						cty.GetAttrPath("json_content_types"),
-					))
-				}
-
-				return nil
-			},
+			validateDataCaptureConfigCustomDiff,
 		),
+	}
+}
+
+func validateDataCaptureConfigCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	dataCapturesPath := cty.GetAttrPath("data_capture_config")
+	dataCaptures := configRaw.GetAttr("data_capture_config")
+	if dataCaptures.IsKnown() && !dataCaptures.IsNull() {
+		dataCaptureConfigPlanTimeValidate(dataCapturesPath, dataCaptures, &diags)
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func dataCaptureConfigPlanTimeValidate(path cty.Path, dataCaptures cty.Value, diags *diag.Diagnostics) {
+	it := dataCaptures.ElementIterator()
+	for it.Next() {
+		_, dataCapture := it.Element()
+
+		if !dataCapture.IsKnown() {
+			break
+		}
+		if dataCapture.IsNull() {
+			break
+		}
+
+		captureContentHeaderPath := path.GetAttr("capture_content_type_header")
+		captureContentHeaders := dataCapture.GetAttr("capture_content_type_header")
+
+		captureContentTypeHeaderPlanTimeValidate(captureContentHeaderPath, captureContentHeaders, diags)
+	}
+}
+
+func captureContentTypeHeaderPlanTimeValidate(path cty.Path, captureContentHeaders cty.Value, diags *diag.Diagnostics) {
+	it := captureContentHeaders.ElementIterator()
+	for it.Next() {
+		_, captureContentHeader := it.Element()
+
+		if !captureContentHeader.IsKnown() {
+			break
+		}
+		if captureContentHeader.IsNull() {
+			break
+		}
+
+		csvContentTypes := captureContentHeader.GetAttr("csv_content_types")
+		if csvContentTypes.IsKnown() && !csvContentTypes.IsNull() {
+			break
+		}
+
+		jsonContentTypes := captureContentHeader.GetAttr("json_content_types")
+		if jsonContentTypes.IsKnown() && !jsonContentTypes.IsNull() {
+			break
+		}
+
+		*diags = append(*diags, errs.NewAtLeastOneOfChildrenError(path,
+			cty.GetAttrPath("csv_content_types"),
+			cty.GetAttrPath("json_content_types"),
+		))
 	}
 }
 
