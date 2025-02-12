@@ -85,6 +85,10 @@ func resourceInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrAddress: {
 				Type:     schema.TypeString,
