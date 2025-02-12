@@ -114,9 +114,10 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Dashboard: %s", d.Id())
-	_, err := conn.DeleteDashboards(ctx, &cloudwatch.DeleteDashboardsInput{
+	input := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteDashboards(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Dashboard (%s): %s", d.Id(), err)

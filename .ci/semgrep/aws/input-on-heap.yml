@@ -52,7 +52,6 @@ rules:
       exclude:
         - "internal/service/auditmanager"
         - "internal/service/cloudtrail"
-        - "internal/service/cloudwatch"
         - "internal/service/codeartifact"
         - "internal/service/codebuild"
         - "internal/service/codecatalyst"
