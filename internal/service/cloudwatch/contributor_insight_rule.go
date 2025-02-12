@@ -6,7 +6,6 @@ package cloudwatch
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,13 +61,6 @@ func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resourc
 			"rule_state": schema.StringAttribute{
 				Required: true,
 			},
-			// "schema": schema.StringAttribute{
-			// 	Computed: true,
-
-			// },
-			// "managed_rule": schema.BoolAttribute{
-			// 	Computed: true,
-			// },
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -172,22 +165,23 @@ func (r *resourceContributorInsightRule) ModifyPlan(ctx context.Context, request
 
 func findContributorInsightRuleByName(ctx context.Context, conn *cloudwatch.Client, name string) (*awstypes.InsightRule, error) {
 	input := &cloudwatch.DescribeInsightRulesInput{}
-	out, err := findContributorInsightRules(ctx, conn, input, name)
+
+	return findContributorInsightRule(ctx, conn, input, func(v *awstypes.InsightRule) bool {
+		return aws.ToString(v.Name) == name
+	})
+}
+
+func findContributorInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeInsightRulesInput, filter tfslices.Predicate[*awstypes.InsightRule]) (*awstypes.InsightRule, error) {
+	output, err := findContributorInsightRules(ctx, conn, input, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	// if out == nil {
-	// 	return nil, tfresource.NewEmptyResultError(input)
-	// }
-
-	return tfresource.AssertSingleValueResult(out)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeInsightRulesInput, name string) ([]awstypes.InsightRule, error) {
+func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeInsightRulesInput, filter tfslices.Predicate[*awstypes.InsightRule]) ([]awstypes.InsightRule, error) {
 	var output []awstypes.InsightRule
-
-	log.Printf("[WARN]input: %+v", input)
 
 	paginator := cloudwatch.NewDescribeInsightRulesPaginator(conn, input)
 
@@ -204,12 +198,10 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 		}
 
 		for _, v := range page.InsightRules {
-			if aws.ToString(v.Name) == name {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
-
-		output = append(output, page.InsightRules...)
 	}
 
 	return output, nil
