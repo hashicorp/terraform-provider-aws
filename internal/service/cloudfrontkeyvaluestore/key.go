@@ -247,11 +247,12 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 		return
 	}
 
-	_, err = conn.DeleteKey(ctx, &cloudfrontkeyvaluestore.DeleteKeyInput{
+	input := cloudfrontkeyvaluestore.DeleteKeyInput{
 		IfMatch: etag,
 		Key:     fwflex.StringFromFramework(ctx, data.Key),
 		KvsARN:  fwflex.StringFromFramework(ctx, data.KvsARN),
-	})
+	}
+	_, err = conn.DeleteKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
