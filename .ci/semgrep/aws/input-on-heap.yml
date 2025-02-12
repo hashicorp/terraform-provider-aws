@@ -246,7 +246,6 @@ rules:
         - "internal/service/cognitoidp"
         - "internal/service/comprehend"
         - "internal/service/configservice"
-        - "internal/service/controltower"
         - "internal/service/connect"
         - "internal/service/costoptimizationhub"
         - "internal/service/cur"
