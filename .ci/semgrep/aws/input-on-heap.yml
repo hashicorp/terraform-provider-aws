@@ -243,7 +243,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/codeartifact"
         - "internal/service/codebuild"
         - "internal/service/codecatalyst"
         - "internal/service/codecommit"
