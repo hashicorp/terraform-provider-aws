@@ -327,7 +327,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
 
-	_, err := conn.ListDomainNames(ctx, &cloudsearch.ListDomainNamesInput{})
+	input := cloudsearch.ListDomainNamesInput{}
+	_, err := conn.ListDomainNames(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, "NotAuthorized", "New domain creation not supported on this account") {
 		t.Skip("skipping tests; this AWS account does not support new CloudSearch domain creation")
