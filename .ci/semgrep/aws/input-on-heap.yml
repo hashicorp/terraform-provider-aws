@@ -243,7 +243,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/cloudhsmv2"
         - "internal/service/cloudtrail"
         - "internal/service/cloudwatch"
         - "internal/service/codeartifact"
