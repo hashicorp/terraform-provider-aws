@@ -76,6 +76,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Service Network",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
+		{
+			Factory:  DataSourceTargetGroup,
+			TypeName: "aws_vpclattice_target_group",
+			Name:     "Target Group",
+		},
 	}
 }
 
