@@ -30,7 +30,7 @@ import (
 // @Tags(identifierAttribute="resource_arn")
 // @Testing(importStateIdFunc="testAccContributorInsightRuleImportStateIDFunc")
 // @Testing(importStateIdAttribute="rule_name")
-// @Testing(importIgnore="rule_definition;rule_state")
+// @Testing(importIgnore="rule_definition")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;types.InsightRule")
 func newResourceContributorInsightRule(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceContributorInsightRule{}
@@ -62,7 +62,7 @@ func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resourc
 				Required: true,
 			},
 			"rule_state": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -82,7 +82,6 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 	in := &cloudwatch.PutInsightRuleInput{
 		RuleDefinition: plan.RuleDefinition.ValueStringPointer(),
 		RuleName:       plan.RuleName.ValueStringPointer(),
-		RuleState:      plan.RuleState.ValueStringPointer(),
 	}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
