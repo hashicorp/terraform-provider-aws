@@ -86,6 +86,7 @@ func resourceSecretVersion() *schema.Resource {
 			"secret_string_wo_version": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				ForceNew:     true,
 				RequiredWith: []string{"secret_string_wo"},
 			},
 			"version_id": {
