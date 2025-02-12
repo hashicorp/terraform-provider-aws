@@ -17,6 +17,10 @@ type mockWriteOnlyAttrGetter struct {
 	value cty.Value
 }
 
+func (m *mockWriteOnlyAttrGetter) Get(string) any {
+	return nil
+}
+
 func (m *mockWriteOnlyAttrGetter) GetRawConfigAt(path cty.Path) (cty.Value, diag.Diagnostics) {
 	if !path.Equals(m.path) {
 		return cty.NilVal, diag.Diagnostics{
@@ -29,6 +33,12 @@ func (m *mockWriteOnlyAttrGetter) GetRawConfigAt(path cty.Path) (cty.Value, diag
 		}
 	}
 	return m.value, nil
+}
+
+func (m *mockWriteOnlyAttrGetter) GetRawConfig() cty.Value {
+	return cty.MapVal(map[string]cty.Value{
+		"has_write_only_value": cty.BoolVal(true),
+	})
 }
 
 func (m *mockWriteOnlyAttrGetter) Id() string {
