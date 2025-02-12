@@ -213,24 +213,6 @@ func waitRestAPIPutCreated(ctx context.Context, conn *apigateway.Client, id stri
 	return nil, err
 }
 
-func waitRestAPIPutUpdated(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) (*apigateway.GetRestApiOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusRestAPIPut(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*apigateway.GetRestApiOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
 func statusRestAPIPut(ctx context.Context, conn *apigateway.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findRestAPIByID(ctx, conn, id)
