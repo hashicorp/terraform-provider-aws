@@ -3121,7 +3121,7 @@ func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtStandart), // default
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", "standard"), // default
 				),
 			},
 			{
@@ -3129,23 +3129,23 @@ func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtStandart), // default
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", "standard"), // default
 				),
 			},
 			{
-				Config: testAccClusterConfig_performanceInsightsEnabledWithAdvancedMode(rName, false, acctest.CtStandart),
+				Config: testAccClusterConfig_performanceInsightsEnabledWithAdvancedMode(rName, false, "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtStandart),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", "standard"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_performanceInsightsEnabledWithAdvancedMode(rName, false, acctest.CtAdvanced),
+				Config: testAccClusterConfig_performanceInsightsEnabledWithAdvancedMode(rName, false, "advanced"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", acctest.CtAdvanced),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_mode", "advanced"),
 				),
 			},
 		},
