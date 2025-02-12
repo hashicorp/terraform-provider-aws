@@ -246,7 +246,6 @@ rules:
         - "internal/service/comprehend"
         - "internal/service/configservice"
         - "internal/service/connect"
-        - "internal/service/cur"
         - "internal/service/customerprofiles"
         - "internal/service/ecr"
         - "internal/service/ecrpublic"
