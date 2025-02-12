@@ -27,14 +27,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceBucketMetadataTableConfiguration,
-			TypeName: "aws_s3_bucket_metadata_table_configuration",
-			Name:     "Bucket Metadata Table Configuration",
-		},
-		{
 			Factory:  newResourceBucketLifecycleConfiguration,
 			TypeName: "aws_s3_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
+		},
+		{
+			Factory:  newResourceBucketMetadataTableConfiguration,
+			TypeName: "aws_s3_bucket_metadata_table_configuration",
+			Name:     "Bucket Metadata Table Configuration",
 		},
 		{
 			Factory:  newDirectoryBucketResource,
