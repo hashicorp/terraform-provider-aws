@@ -152,10 +152,11 @@ func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Origin Access Control: %s", d.Id())
-	_, err := conn.DeleteOriginAccessControl(ctx, &cloudfront.DeleteOriginAccessControlInput{
+	input := cloudfront.DeleteOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteOriginAccessControl(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchOriginAccessControl](err) {
 		return diags

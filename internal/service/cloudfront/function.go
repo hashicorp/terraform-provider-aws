@@ -155,10 +155,11 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
 	d.Set(names.AttrStatus, outputDF.FunctionSummary.Status)
 
-	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
+	input := cloudfront.GetFunctionInput{
 		Name:  aws.String(d.Id()),
 		Stage: awstypes.FunctionStageDevelopment,
-	})
+	}
+	outputGF, err := conn.GetFunction(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage code: %s", d.Id(), err)
@@ -229,10 +230,11 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Function: %s", d.Id())
-	_, err := conn.DeleteFunction(ctx, &cloudfront.DeleteFunctionInput{
+	input := cloudfront.DeleteFunctionInput{
 		IfMatch: aws.String(d.Get("etag").(string)),
 		Name:    aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchFunctionExists](err) {
 		return diags
