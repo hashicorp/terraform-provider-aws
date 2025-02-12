@@ -186,6 +186,23 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("version_id", output.VersionId)
 	d.Set("version_stages", output.VersionStages)
 
+	// unset secret_string if the the value is configured as write-only
+	hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
+	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if secretStringWO != "" {
+		hasWriteOnly = true
+	}
+
+	if hasWriteOnly {
+		d.Set("has_secret_string_wo", true)
+		d.Set("secret_string", nil)
+	}
+
 	return diags
 }
 
