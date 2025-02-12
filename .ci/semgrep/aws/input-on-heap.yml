@@ -243,7 +243,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/chatbot"
         - "internal/service/chimesdkvoice"
         - "internal/service/cleanrooms"
         - "internal/service/cloud9"
