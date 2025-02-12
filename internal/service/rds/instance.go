@@ -86,7 +86,7 @@ func resourceInstance() *schema.Resource {
 		},
 
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath(names.AttrPassword), cty.GetAttrPath("password_wo")),
 		},
 
 		Schema: map[string]*schema.Schema{
