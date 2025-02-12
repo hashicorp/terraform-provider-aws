@@ -1025,7 +1025,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
 			requiresModifyDbInstance = true
 		}
-
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
