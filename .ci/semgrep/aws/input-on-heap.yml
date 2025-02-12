@@ -244,7 +244,6 @@ rules:
       exclude:
         - "internal/service/auditmanager"
         - "internal/service/comprehend"
-        - "internal/service/configservice"
         - "internal/service/connect"
         - "internal/service/ecr"
         - "internal/service/ecrpublic"
