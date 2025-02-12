@@ -72,7 +72,7 @@ func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequ
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"parameters": schema.MapAttribute{
+			names.AttrParameters: schema.MapAttribute{
 				CustomType:  fwtypes.MapOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
@@ -96,7 +96,7 @@ func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
