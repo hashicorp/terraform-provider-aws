@@ -880,6 +880,55 @@ func TestAccRDSInstance_password(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_passwordWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Password should not be shown in error message
+			{
+				Config:      testAccInstanceConfig_passwordWriteOnly(rName, "invalid", 1),
+				ExpectError: regexache.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
+			},
+			{
+				Config: testAccInstanceConfig_passwordWriteOnly(rName, "valid-password-1", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_passwordWriteOnly(rName, "valid-password-2", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBInstance
@@ -9060,6 +9109,23 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, password))
+}
+
+func testAccInstanceConfig_passwordWriteOnly(rName, password string, passwordVersion int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password_wo         = %[2]q
+  password_wo_version = %[3]d
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+`, rName, password, passwordVersion))
 }
 
 func testAccInstanceConfig_manageMasterPassword(rName string) string {
