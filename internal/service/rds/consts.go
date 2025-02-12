@@ -286,8 +286,6 @@ const (
 )
 
 const (
-	PerformanceInsightsModeStandard = "standard"
-
 	performanceInsightsModeStandard = "standard"
 	performanceInsightsModeAdvanced = "advanced"
 )
