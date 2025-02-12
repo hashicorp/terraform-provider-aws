@@ -12,7 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -596,7 +599,43 @@ func resourceEndpointConfiguration() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				v, ok := diff.GetOk("data_capture_config")
+				if !ok {
+					return nil
+				}
+
+				l := v.([]any)
+				if len(l) == 0 {
+					return nil
+				}
+
+				m := l[0].(map[string]any)
+
+				v, ok = m["capture_content_type_header"]
+				if !ok {
+					return nil
+				}
+
+				l = v.([]any)
+				if len(l) == 0 {
+					return nil
+				}
+
+				v = l[0]
+				if v == nil { // Empty block
+					return sdkdiag.DiagnosticError(errs.NewAtLeastOneOfChildrenError(
+						cty.GetAttrPath("data_capture_config").GetAttr("capture_content_type_header"),
+						cty.GetAttrPath("csv_content_types"),
+						cty.GetAttrPath("json_content_types"),
+					))
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
@@ -882,7 +921,7 @@ func expandDataCaptureConfig(configured []interface{}) *awstypes.DataCaptureConf
 		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["capture_content_type_header"].([]interface{}); ok && (len(v) > 0) {
+	if v, ok := m["capture_content_type_header"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		c.CaptureContentTypeHeader = expandCaptureContentTypeHeader(v[0].(map[string]interface{}))
 	}
 

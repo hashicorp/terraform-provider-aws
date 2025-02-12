@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -497,6 +498,102 @@ func TestAccSageMakerEndpointConfiguration_dataCapture_inputAndOutput(t *testing
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_capture_config").AtSliceIndex(0).AtMapKey("capture_content_type_header"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"csv_content_types": knownvalue.Null(),
+							"json_content_types": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("application/json"),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_dataCapture_NoHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_dataCapture_noHeaders(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_capture_config").AtSliceIndex(0).AtMapKey("capture_content_type_header"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_dataCapture_EmptyHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEndpointConfigurationConfig_dataCapture_emptyHeaders(rName),
+				ExpectError: regexache.MustCompile(`At least one attribute out of \[csv_content_types, json_content_types\] must be specified`)},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_dataCapture_BothHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_dataCapture_bothHeaders(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_capture_config").AtSliceIndex(0).AtMapKey("capture_content_type_header"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"csv_content_types": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("text/csv"),
+							}),
 							"json_content_types": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.StringExact("application/json"),
 							}),
@@ -1185,6 +1282,119 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     capture_content_type_header {
       json_content_types = ["application/json"]
     }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_dataCapture_noHeaders(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 50
+    destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
+
+    capture_options {
+      capture_mode = "Input"
+    }
+
+    capture_options {
+      capture_mode = "Output"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_dataCapture_emptyHeaders(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 50
+    destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
+
+    capture_options {
+      capture_mode = "Input"
+    }
+
+    capture_options {
+      capture_mode = "Output"
+    }
+	
+    capture_content_type_header {
+    }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_dataCapture_bothHeaders(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 50
+    destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
+
+    capture_options {
+      capture_mode = "Input"
+    }
+
+    capture_options {
+      capture_mode = "Output"
+    }
+	
+    capture_content_type_header {
+		csv_content_types = ["text/csv"]
+       json_content_types = ["application/json"]
+   }
   }
 }
 `, rName))
