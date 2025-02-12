@@ -105,7 +105,7 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 		)
 		return
 	}
-	//arn:aws:cloudwatch:Region:account-id:insight-rule/insight-rule-name
+
 	cirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", aws.ToString(plan.RuleName.ValueStringPointer())))
 	plan.ResourceARN = fwflex.StringValueToFramework(ctx, cirARN)
 
@@ -134,7 +134,6 @@ func (r *resourceContributorInsightRule) Read(ctx context.Context, req resource.
 		return
 	}
 
-	//arn:aws:cloudwatch:Region:account-id:insight-rule/insight-rule-name
 	cirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", aws.ToString(state.RuleName.ValueStringPointer())))
 	state.ResourceARN = fwflex.StringValueToFramework(ctx, cirARN)
 
