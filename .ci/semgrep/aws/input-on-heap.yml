@@ -243,7 +243,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/codestarnotifications"
         - "internal/service/cognitoidentity"
         - "internal/service/cognitoidp"
         - "internal/service/comprehend"
