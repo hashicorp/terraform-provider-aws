@@ -243,7 +243,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/cognitoidp"
         - "internal/service/comprehend"
         - "internal/service/configservice"
         - "internal/service/connect"
