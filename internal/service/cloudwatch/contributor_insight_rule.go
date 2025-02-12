@@ -30,7 +30,7 @@ import (
 // @Tags(identifierAttribute="resource_arn")
 // @Testing(importStateIdFunc="testAccContributorInsightRuleImportStateIDFunc")
 // @Testing(importStateIdAttribute="rule_name")
-// @Testing(importIgnore="rule_definition")
+// @Testing(importIgnore="rule_definition;rule_state")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;types.InsightRule")
 func newResourceContributorInsightRule(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceContributorInsightRule{}
