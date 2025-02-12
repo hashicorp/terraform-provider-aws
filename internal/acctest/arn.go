@@ -23,6 +23,17 @@ func CheckResourceAttrGlobalARNFormat(ctx context.Context, resourceName, attribu
 	}
 }
 
+func CheckResourceAttrGlobalARNNoAccountFormat(resourceName, attributeName, arnService, arnFormat string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		resource, err := populateARNFormat(s, resourceName, arnFormat)
+		if err != nil {
+			return err
+		}
+
+		return CheckResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService, resource)(s)
+	}
+}
+
 func CheckResourceAttrRegionalARNFormat(ctx context.Context, resourceName, attributeName, arnService, arnFormat string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resource, err := populateARNFormat(s, resourceName, arnFormat)

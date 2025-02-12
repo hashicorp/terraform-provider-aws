@@ -810,7 +810,7 @@ func expandTargetTrackingConfiguration(tfList []interface{}) *awstypes.TargetTra
 }
 
 func expandTargetTrackingMetricDataQueries(tfList []interface{}) []awstypes.TargetTrackingMetricDataQuery {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -868,7 +868,7 @@ func expandTargetTrackingMetricDataQueries(tfList []interface{}) []awstypes.Targ
 }
 
 func expandPredictiveScalingConfiguration(tfList []interface{}) *awstypes.PredictiveScalingConfiguration {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -889,7 +889,7 @@ func expandPredictiveScalingConfiguration(tfList []interface{}) *awstypes.Predic
 }
 
 func expandPredictiveScalingMetricSpecifications(tfList []interface{}) []awstypes.PredictiveScalingMetricSpecification {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -908,7 +908,7 @@ func expandPredictiveScalingMetricSpecifications(tfList []interface{}) []awstype
 }
 
 func expandPredictiveScalingPredefinedLoadMetric(tfList []interface{}) *awstypes.PredictiveScalingPredefinedLoadMetric {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -924,7 +924,7 @@ func expandPredictiveScalingPredefinedLoadMetric(tfList []interface{}) *awstypes
 }
 
 func expandPredictiveScalingPredefinedMetricPair(tfList []interface{}) *awstypes.PredictiveScalingPredefinedMetricPair {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -940,7 +940,7 @@ func expandPredictiveScalingPredefinedMetricPair(tfList []interface{}) *awstypes
 }
 
 func expandPredictiveScalingPredefinedScalingMetric(tfList []interface{}) *awstypes.PredictiveScalingPredefinedScalingMetric {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -956,7 +956,7 @@ func expandPredictiveScalingPredefinedScalingMetric(tfList []interface{}) *awsty
 }
 
 func expandPredictiveScalingCustomizedScalingMetric(tfList []interface{}) *awstypes.PredictiveScalingCustomizedScalingMetric {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -969,7 +969,7 @@ func expandPredictiveScalingCustomizedScalingMetric(tfList []interface{}) *awsty
 }
 
 func expandPredictiveScalingCustomizedLoadMetric(tfList []interface{}) *awstypes.PredictiveScalingCustomizedLoadMetric {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -982,7 +982,7 @@ func expandPredictiveScalingCustomizedLoadMetric(tfList []interface{}) *awstypes
 }
 
 func expandPredictiveScalingCustomizedCapacityMetric(tfList []interface{}) *awstypes.PredictiveScalingCustomizedCapacityMetric {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -995,7 +995,7 @@ func expandPredictiveScalingCustomizedCapacityMetric(tfList []interface{}) *awst
 }
 
 func expandMetricDataQueries(tfList []interface{}) []awstypes.MetricDataQuery {
-	if tfList == nil || len(tfList) < 1 {
+	if len(tfList) < 1 {
 		return nil
 	}
 
@@ -1202,7 +1202,7 @@ func flattenPredictiveScalingConfiguration(apiObject *awstypes.PredictiveScaling
 
 func flattenPredictiveScalingMetricSpecifications(apiObjects []awstypes.PredictiveScalingMetricSpecification) []interface{} {
 	tfMap := map[string]interface{}{}
-	if apiObjects == nil || len(apiObjects) < 1 {
+	if len(apiObjects) < 1 {
 		return []interface{}{tfMap}
 	}
 

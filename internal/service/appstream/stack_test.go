@@ -507,6 +507,10 @@ resource "aws_appstream_stack" "test" {
   }
 
   user_settings {
+    action     = "AUTO_TIME_ZONE_REDIRECTION"
+    permission = "DISABLED"
+  }
+  user_settings {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
   }

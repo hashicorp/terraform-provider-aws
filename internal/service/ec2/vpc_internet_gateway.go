@@ -166,10 +166,7 @@ func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		err := detachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutDelete))
 
-		switch {
-		case tfresource.NotFound(err):
-			return diags
-		case err != nil:
+		if err != nil && !tfresource.NotFound(err) {
 			return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}
 	}

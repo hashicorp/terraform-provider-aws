@@ -77,6 +77,7 @@ func TestAccVPCInternetGateway_Disappears_attachment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.InternetGateway
 	resourceName := "aws_internet_gateway.test"
+	attachmentResourceName := "aws_internet_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,10 +87,10 @@ func TestAccVPCInternetGateway_Disappears_attachment(t *testing.T) {
 		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCInternetGatewayConfig_attachment(rName),
+				Config: testAccVPCInternetGatewayConfig_attachmentStandalone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), attachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -283,6 +284,29 @@ resource "aws_internet_gateway" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName)
+}
+
+func testAccVPCInternetGatewayConfig_attachmentStandalone(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway_attachment" "test" {
+  internet_gateway_id = aws_internet_gateway.test.id
+  vpc_id              = aws_vpc.test.id
 }
 `, rName)
 }
