@@ -82,6 +82,7 @@ func dataSourceTable() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"warm_throughput": warmThroughputSchema(),
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Computed: true,

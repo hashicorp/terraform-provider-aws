@@ -149,6 +149,19 @@ func waitGSIActive(ctx context.Context, conn *dynamodb.Client, tableName, indexN
 	return nil, err
 }
 
+func waitGSIWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) error { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
+		Target:  enum.Slice(awstypes.IndexStatusActive),
+		Refresh: statusGSIWarmThroughput(ctx, conn, tableName, indexName),
+		Timeout: max(updateTableTimeout, timeout),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
 func waitGSIDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.GlobalSecondaryIndexDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusActive, awstypes.IndexStatusDeleting, awstypes.IndexStatusUpdating),

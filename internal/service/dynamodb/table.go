@@ -216,6 +216,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"warm_throughput": warmThroughputSchema(),
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -1130,7 +1131,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Must update all indexes when switching BillingMode from PAY_PER_REQUEST to PROVISIONED
 	if newBillingMode == awstypes.BillingModeProvisioned {
 		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update == nil {
+			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.WarmThroughput != nil) {
 				continue
 			}
 
@@ -1139,7 +1140,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
+	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST in Phase 2a
 	if newBillingMode == awstypes.BillingModePayPerRequest {
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.OnDemandThroughput == nil) {
@@ -1176,6 +1177,35 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 			}
+
+			if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
+			}
+		}
+	}
+
+	// Phase 2b: update indexes in two steps when warm throughput is set
+	for _, gsiUpdate := range gsiUpdates {
+		if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.WarmThroughput == nil) {
+			continue
+		}
+
+		idxName := aws.ToString(gsiUpdate.Update.IndexName)
+		input := &dynamodb.UpdateTableInput{
+			GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{gsiUpdate},
+			TableName:                   aws.String(d.Id()),
+		}
+
+		if _, err := conn.UpdateTable(ctx, input); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("updating GSI for warm throughput (%s): %w", idxName, err))
+		}
+
+		if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
+		}
+
+		if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 		}
 	}
 
@@ -1199,6 +1229,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
+		}
+
+		if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 		}
 	}
 
@@ -1773,6 +1807,10 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 			}
 
+			if v, ok := m["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				c.WarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
 			ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 				Create: &c,
 			})
@@ -1806,6 +1844,27 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 				onDemandThroughputChanged = true
 			}
 
+			var oldWarmThroughput *awstypes.WarmThroughput
+			var newWarmThroughput *awstypes.WarmThroughput
+			if v, ok := oldMap["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				oldWarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
+			if v, ok := newMap["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				newWarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
+			var warmThroughputChanged bool
+			if !reflect.DeepEqual(oldWarmThroughput, newWarmThroughput) {
+				warmThroughputChanged = true
+			}
+
+			var warmThroughPutDecreased bool
+			if warmThroughputChanged && newWarmThroughput != nil && oldWarmThroughput != nil {
+				warmThroughPutDecreased = (aws.ToInt64(newWarmThroughput.ReadUnitsPerSecond) < aws.ToInt64(oldWarmThroughput.ReadUnitsPerSecond) ||
+					aws.ToInt64(newWarmThroughput.WriteUnitsPerSecond) < aws.ToInt64(oldWarmThroughput.WriteUnitsPerSecond))
+			}
+
 			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
@@ -1822,6 +1881,10 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			if err != nil {
 				return ops, err
 			}
+			oldAttributes, err = stripWarmThroughputAttributes(oldAttributes)
+			if err != nil {
+				return ops, err
+			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
 				return ops, err
@@ -1834,9 +1897,14 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			if err != nil {
 				return ops, err
 			}
-			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
+			newAttributes, err = stripWarmThroughputAttributes(newAttributes)
+			if err != nil {
+				return ops, err
+			}
+			gsiNeedsRecreate := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes) || warmThroughPutDecreased
 
-			if capacityChanged && !otherAttributesChanged && billingMode == awstypes.BillingModeProvisioned {
+			// One step in most cases, an extra step in case of warmThroughputChanged without recreation necessity:
+			if (capacityChanged) && !gsiNeedsRecreate && billingMode == awstypes.BillingModeProvisioned {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
@@ -1844,7 +1912,7 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 					},
 				}
 				ops = append(ops, update)
-			} else if onDemandThroughputChanged && !otherAttributesChanged && billingMode == awstypes.BillingModePayPerRequest {
+			} else if onDemandThroughputChanged && !gsiNeedsRecreate && billingMode == awstypes.BillingModePayPerRequest {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:          aws.String(idxName),
@@ -1852,7 +1920,7 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 					},
 				}
 				ops = append(ops, update)
-			} else if otherAttributesChanged {
+			} else if gsiNeedsRecreate {
 				// Other attributes cannot be updated
 				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
@@ -1866,8 +1934,19 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 						KeySchema:             expandKeySchema(newMap),
 						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
 						Projection:            expandProjection(newMap),
+						WarmThroughput:        newWarmThroughput,
 					},
 				})
+			}
+			// Separating the WarmThroughput updates from the others
+			if !gsiNeedsRecreate && warmThroughputChanged {
+				update := awstypes.GlobalSecondaryIndexUpdate{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName:      aws.String(idxName),
+						WarmThroughput: newWarmThroughput,
+					},
+				}
+				ops = append(ops, update)
 			}
 		} else {
 			idxName := oldName
@@ -2242,6 +2321,10 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi["on_demand_throughput"] = flattenOnDemandThroughput(g.OnDemandThroughput)
 		}
 
+		if g.WarmThroughput != nil {
+			gsi["warm_throughput"] = flattenGSIWarmThroughput(g.WarmThroughput)
+		}
+
 		output = append(output, gsi)
 	}
 
@@ -2292,6 +2375,24 @@ func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []interfa
 }
 
 func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescription) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.ReadUnitsPerSecond; v != nil {
+		m["read_units_per_second"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.WriteUnitsPerSecond; v != nil {
+		m["write_units_per_second"] = aws.ToInt64(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroughputDescription) []interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}
@@ -2434,6 +2535,10 @@ func expandGlobalSecondaryIndex(data map[string]interface{}, billingMode awstype
 
 	if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
 		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+	}
+
+	if v, ok := data["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+		output.WarmThroughput = expandWarmThroughput(v[0].(map[string]any))
 	}
 
 	return &output

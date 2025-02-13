@@ -238,6 +238,7 @@ Optional arguments:
 * `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `range_key` - (Optional) Name of the range key; must be defined
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
+* `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
 
 ### `local_secondary_index`
