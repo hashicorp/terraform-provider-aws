@@ -311,9 +311,10 @@ func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream ImageBuilder: %s", d.Id())
-	_, err := conn.DeleteImageBuilder(ctx, &appstream.DeleteImageBuilderInput{
+	input := appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteImageBuilder(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

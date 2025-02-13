@@ -191,10 +191,11 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteIngestion(ctx, &appfabric.DeleteIngestionInput{
+	input := appfabric.DeleteIngestionInput{
 		AppBundleIdentifier: data.AppBundleARN.ValueStringPointer(),
 		IngestionIdentifier: data.ARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteIngestion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

@@ -235,7 +235,7 @@ resource "aws_redshift_cluster" "test" {
   master_password = %[2]q
   master_username = %[3]q
 
-  publicly_accessible = true
+  publicly_accessible = false
 
   node_type           = "dc2.large"
   skip_final_snapshot = true

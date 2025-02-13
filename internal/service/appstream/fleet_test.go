@@ -367,7 +367,8 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-		resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
+		input := appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}}
+		resp, err := conn.DescribeFleets(ctx, &input)
 
 		if err != nil {
 			return err
@@ -392,7 +393,8 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
+			input := appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}}
+			resp, err := conn.DescribeFleets(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

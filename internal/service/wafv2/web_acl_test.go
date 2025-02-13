@@ -2240,14 +2240,14 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-					input := &wafv2.ListWebACLsInput{
+					listACLsInput := wafv2.ListWebACLsInput{
 						Scope: awstypes.ScopeRegional,
 					}
 
 					aclID := ""
 					lockToken := ""
 
-					err := tfwafv2.ListWebACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+					err := tfwafv2.ListWebACLsPages(ctx, conn, &listACLsInput, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -2272,13 +2272,12 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						t.Fatalf("couldn't find WebACL (%s)", webACLName)
 					}
 
-					in := &wafv2.ListRuleGroupsInput{
+					var rgARN string
+
+					listRuleGroupsInput := wafv2.ListRuleGroupsInput{
 						Scope: awstypes.ScopeRegional,
 					}
-
-					rgARN := ""
-
-					err = tfwafv2.ListRuleGroupsPages(ctx, conn, in, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+					err = tfwafv2.ListRuleGroupsPages(ctx, conn, &listRuleGroupsInput, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -2302,7 +2301,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						t.Fatalf("couldn't find Rule Group (%s)", webACLName)
 					}
 
-					_, err = conn.UpdateWebACL(ctx, &wafv2.UpdateWebACLInput{
+					updateACLInput := wafv2.UpdateWebACLInput{
 						DefaultAction: &awstypes.DefaultAction{
 							Allow: &awstypes.AllowAction{},
 						},
@@ -2332,7 +2331,8 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 							MetricName:               aws.String("friendly-metric-name"),
 							SampledRequestsEnabled:   false,
 						},
-					})
+					}
+					_, err = conn.UpdateWebACL(ctx, &updateACLInput)
 					if err != nil {
 						t.Fatalf("adding rule in PreConfig: %s", err)
 					}

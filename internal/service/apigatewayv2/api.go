@@ -347,9 +347,10 @@ func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
-	_, err := conn.DeleteApi(ctx, &apigatewayv2.DeleteApiInput{
+	input := apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApi(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

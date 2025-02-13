@@ -38,12 +38,47 @@ rules:
         - "internal/service/v*"
         - "internal/service/w*"
     patterns:
-      - pattern-either:
-          - pattern: |
-              $X := &$PKG.$INPUT{ ... }
-          - pattern: |
-              $FUNC(ctx, &$PKG.$INPUT{ ... }, ...)
+      - pattern: |
+          $X := &$PKG.$INPUT{ ... }
       - metavariable-regex:
           metavariable: $INPUT
           regex: \w+Input
+    severity: WARNING
+
+  - id: input-on-heap-inline
+    languages: [go]
+    message: Create the $PKG.$INPUT struct on the stack instead of on the heap
+    paths:
+      exclude:
+        - "internal/service/auditmanager"
+        - "internal/service/b*"
+        - "internal/service/c*"
+        - "internal/service/d*"
+        - "internal/service/e*"
+        - "internal/service/f*"
+        - "internal/service/g*"
+        - "internal/service/i*"
+        - "internal/service/k*"
+        - "internal/service/l*"
+        - "internal/service/m*"
+        - "internal/service/n*"
+        - "internal/service/o*"
+        - "internal/service/p*"
+        - "internal/service/q*"
+        - "internal/service/r*"
+        - "internal/service/s*"
+        - "internal/service/t*"
+        - "internal/service/v*"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              ... = $FUNC(ctx, &$PKG.$INPUT{ ... }, ...)
+      - metavariable-regex:
+          metavariable: $INPUT
+          regex: \w+Input
+    fix-regex:
+      regex: '(?s)(.+= \w+\.\w+\(\w+, &)(\w+\.\w+\{.*\})(\))'
+      replacement: |
+        input := \2
+        \1input\3
     severity: WARNING

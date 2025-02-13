@@ -604,9 +604,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Service: %s", d.Id())
-	_, err := conn.DeleteService(ctx, &apprunner.DeleteServiceInput{
+	input := apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteService(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
