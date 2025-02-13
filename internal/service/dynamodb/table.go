@@ -126,6 +126,22 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
+				// warm_throughput can only be increased, not decreased
+				if old, new := old.(int), new.(int); new != 0 && new < old {
+					return true
+				}
+
+				return false
+			}),
+			customdiff.ForceNewIfChange("warm_throughput.0.write_units_per_second", func(_ context.Context, old, new, meta any) bool {
+				// warm_throughput can only be increased, not decreased
+				if old, new := old.(int), new.(int); new != 0 && new < old {
+					return true
+				}
+
+				return false
+			}),
 			validateTTLCustomDiff,
 		),
 
@@ -490,6 +506,7 @@ func resourceTable() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
+			"warm_throughput": warmThroughputSchema(),
 			"write_capacity": {
 				Type:          schema.TypeInt,
 				Computed:      true,
@@ -522,6 +539,31 @@ func onDemandThroughputSchema() *schema.Schema {
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return old == "0" && new == "-1"
 					},
+				},
+			},
+		},
+	}
+}
+
+func warmThroughputSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"read_units_per_second": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(12000)),
+				},
+				"write_units_per_second": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(4000)),
 				},
 			},
 		},
@@ -761,6 +803,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.TableClass = awstypes.TableClass(v.(string))
 		}
 
+		if v, ok := d.GetOk("warm_throughput"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.WarmThroughput = expandWarmThroughput(v.([]any)[0].(map[string]any))
+		}
+
 		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (any, error) {
 			return conn.CreateTable(ctx, input)
 		}, func(err error) (bool, error) {
@@ -788,6 +834,9 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var err error
 	if output, err = waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTable, d.Id(), err)
+	}
+	if err := waitTableWarmThroughputActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("global_secondary_index"); ok {
@@ -953,6 +1002,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "ttl", err)
 	}
 
+	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "warm_throughput", err)
+	}
+
 	return diags
 }
 
@@ -1111,6 +1164,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
 		}
 
+		if err := waitTableWarmThroughputActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
+		}
+
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil {
 				continue
@@ -1257,6 +1314,12 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChange("point_in_time_recovery") {
 		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+		}
+	}
+
+	if d.HasChange("warm_throughput") {
+		if err := updateWarmThroughput(ctx, conn, d.Get("warm_throughput").([]any), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1646,6 +1709,33 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 		if err := createReplicas(ctx, conn, d.Id(), toAdd, true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("updating replicas, while creating: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList []any, tableName string, timeout time.Duration) error {
+	if len(warmList) < 1 && warmList[0] == nil {
+		return nil
+	}
+
+	warmMap := warmList[0].(map[string]any)
+
+	input := &dynamodb.UpdateTableInput{
+		TableName:      aws.String(tableName),
+		WarmThroughput: expandWarmThroughput(warmMap),
+	}
+
+	if _, err := conn.UpdateTable(ctx, input); err != nil {
+		return err
+	}
+
+	if _, err := waitTableActive(ctx, conn, tableName, timeout); err != nil {
+		return fmt.Errorf("waiting for warm throughput: %s", err)
+	}
+
+	if err := waitTableWarmThroughputActive(ctx, conn, tableName, timeout); err != nil {
+		return fmt.Errorf("waiting for warm throughput: %s", err)
 	}
 
 	return nil
@@ -2208,6 +2298,24 @@ func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []any {
 	return []any{m}
 }
 
+func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescription) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.ReadUnitsPerSecond; v != nil {
+		m["read_units_per_second"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.WriteUnitsPerSecond; v != nil {
+		m["write_units_per_second"] = aws.ToInt64(v)
+	}
+
+	return []any{m}
+}
+
 func flattenReplicaDescription(apiObject *awstypes.ReplicaDescription) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -2457,6 +2565,24 @@ func expandOnDemandThroughput(tfMap map[string]any) *awstypes.OnDemandThroughput
 
 	if v, ok := tfMap["max_write_request_units"].(int); ok && v != 0 {
 		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandWarmThroughput(tfMap map[string]any) *awstypes.WarmThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.WarmThroughput{}
+
+	if v, ok := tfMap["read_units_per_second"].(int); ok && v != 0 {
+		apiObject.ReadUnitsPerSecond = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["write_units_per_second"].(int); ok && v != 0 {
+		apiObject.WriteUnitsPerSecond = aws.Int64(int64(v))
 	}
 
 	return apiObject

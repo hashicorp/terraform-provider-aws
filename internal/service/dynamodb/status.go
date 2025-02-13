@@ -29,6 +29,26 @@ func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) r
 	}
 }
 
+func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.WarmThroughput == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.WarmThroughput.Status), nil
+	}
+}
+
 func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImportByARN(ctx, conn, importARN)

@@ -245,6 +245,7 @@ func dataSourceTable() *schema.Resource {
 					},
 				},
 			},
+			"warm_throughput": warmThroughputSchema(),
 			"write_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -330,11 +331,14 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("table_class", awstypes.TableClassStandard)
 	}
 
+	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting warm_throughput: %s", err)
+	}
+
 	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	}
 	pitrOut, err := conn.DescribeContinuousBackups(ctx, &describeBackupsInput)
-
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table (%s) Continuous Backups: %s", d.Id(), err)

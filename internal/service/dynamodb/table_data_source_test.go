@@ -43,6 +43,8 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "point_in_time_recovery.#", resourceName, "point_in_time_recovery.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "point_in_time_recovery.0.enabled", resourceName, "point_in_time_recovery.0.enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "table_class", resourceName, "table_class"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12100"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4100"),
 				),
 			},
 		},
@@ -119,6 +121,11 @@ resource "aws_dynamodb_table" "test" {
     read_capacity      = 10
     projection_type    = "INCLUDE"
     non_key_attributes = ["UserId"]
+
+
+  warm_throughput {
+    read_units_per_second  = 12100
+    write_units_per_second = 4100
   }
 
   tags = {

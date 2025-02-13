@@ -197,6 +197,7 @@ Optional arguments:
   Default value is `STANDARD`.
 * `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Configuration block for TTL. See below.
+* `warm_throughput` - (Optional) Sets the number of warm read and write units for the specified table. See below.
 * `write_capacity` - (Optional) Number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 
 ### `attribute`
@@ -281,6 +282,11 @@ Optional arguments:
   Required if `enabled` is `true`, must not be set otherwise.
 * `enabled` - (Optional) Whether TTL is enabled.
   Default value is `false`.
+
+### `warm_throughput`
+
+* `read_units_per_second` - (Optional) Number of read operations a table or index can instantaneously support. For the base table decreasing this value will force a new resource. For an index this value can be lowered, but that triggers recreation of the index. Minimum value of `12000`.
+* `write_units_per_second` - (Optional) Number of write operations a table or index can instantaneously support. For the base table decreasing this value will force a new resource. For an index this value can be lowered, but that triggers recreation of the index. Minimum value of `4000`.
 
 ## Attribute Reference
 

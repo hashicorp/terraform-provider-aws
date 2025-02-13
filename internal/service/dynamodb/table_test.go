@@ -3353,6 +3353,69 @@ func TestAccDynamoDBTable_importTable(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_warmThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf, confDecreasedThroughput awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_warmThroughput(rName, 5, 5, 12100, 4100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12100"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_warmThroughput(rName, 5, 5, 12200, 4200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12200"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4200"),
+				),
+			},
+
+			{
+				Config: testAccTableConfig_warmThroughput(rName, 6, 6, 12300, 4300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12300"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4300"),
+				),
+			},
+			{
+				Config: testAccTableConfig_warmThroughput(rName, 6, 6, 12100, 4100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &confDecreasedThroughput),
+					testAccCheckTableRecreated(&conf, &confDecreasedThroughput),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12100"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4100"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
@@ -3408,6 +3471,16 @@ func testAccCheckTableNotRecreated(i, j *awstypes.TableDescription) resource.Tes
 	return func(s *terraform.State) error {
 		if !i.CreationDateTime.Equal(aws.ToTime(j.CreationDateTime)) {
 			return errors.New("DynamoDB Table was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTableRecreated(i, j *awstypes.TableDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if i.CreationDateTime.Equal(aws.ToTime(j.CreationDateTime)) {
+			return errors.New("DynamoDB Table was not recreated")
 		}
 
 		return nil
@@ -5338,4 +5411,30 @@ resource "aws_dynamodb_table" "test_restore" {
   }
 }
 `, rName))
+}
+
+func testAccTableConfig_warmThroughput(rName string, maxRead, maxWrite, warmRead, warmWrite int) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+
+  on_demand_throughput {
+    max_read_request_units  = %[2]d
+    max_write_request_units = %[3]d
+  }
+
+  warm_throughput {
+    read_units_per_second  = %[4]d
+    write_units_per_second = %[5]d
+  }
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName, maxRead, maxWrite, warmRead, warmWrite)
+}
 }
