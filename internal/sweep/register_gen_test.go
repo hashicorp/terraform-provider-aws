@@ -100,6 +100,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
@@ -271,6 +272,7 @@ func registerSweepers() {
 	kms.RegisterSweepers()
 	lakeformation.RegisterSweepers()
 	lambda.RegisterSweepers()
+	launchwizard.RegisterSweepers()
 	lexmodels.RegisterSweepers()
 	lexv2models.RegisterSweepers()
 	licensemanager.RegisterSweepers()
