@@ -150,6 +150,74 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
+		{ // Creation with warm throughput
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						}},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						}},
+				},
+				map[string]any{
+					names.AttrName:    "att2-index",
+					"hash_key":        "att2",
+					"write_capacity":  12,
+					"read_capacity":   11,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(12),
+							ReadCapacityUnits:  aws.Int64(11),
+						},
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(10),
+							WriteUnitsPerSecond: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
 		{ // Deletion
 			Old: []any{
 				map[string]any{
@@ -217,6 +285,165 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
+		{ // Update warm throughput 1: update in place
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  11,
+							"write_units_per_second": 12,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(11),
+							WriteUnitsPerSecond: aws.Int64(12),
+						},
+					},
+				},
+			},
+		},
+
+		{ // Update warm throughput 2: update via recreate
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att2-index",
+					"hash_key":        "att2",
+					"write_capacity":  12,
+					"read_capacity":   11,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  15000,
+							"write_units_per_second": 5000,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att2-index",
+					"hash_key":        "att2",
+					"write_capacity":  12,
+					"read_capacity":   11,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  14000,
+							"write_units_per_second": 5000,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(12),
+							ReadCapacityUnits:  aws.Int64(11),
+						},
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(14000),
+							WriteUnitsPerSecond: aws.Int64(5000),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		{ // Update warm throughput 3: update in place at the same moment as capacity
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  11,
+					"read_capacity":   12,
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  11,
+							"write_units_per_second": 12,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							ReadCapacityUnits:  aws.Int64(12),
+							WriteCapacityUnits: aws.Int64(11),
+						},
+					},
+				},
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(11),
+							WriteUnitsPerSecond: aws.Int64(12),
+						},
+					},
+				},
+			},
+		},
+
 		{ // Update of non-capacity attributes
 			Old: []any{
 				map[string]any{
@@ -278,6 +505,12 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
 				},
 			},
 			New: []any{
@@ -289,6 +522,12 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"read_capacity":      12,
 					"projection_type":    "INCLUDE",
 					"non_key_attributes": schema.NewSet(schema.HashString, []any{"RandomAttribute"}),
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  22,
+							"write_units_per_second": 33,
+						},
+					},
 				},
 			},
 			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
@@ -317,6 +556,10 @@ func TestUpdateDiffGSI(t *testing.T) {
 						Projection: &awstypes.Projection{
 							ProjectionType:   awstypes.ProjectionTypeInclude,
 							NonKeyAttributes: []string{"RandomAttribute"},
+						},
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(22),
+							WriteUnitsPerSecond: aws.Int64(33),
 						},
 					},
 				},
@@ -3416,6 +3659,184 @@ func TestAccDynamoDBTable_warmThroughput(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_gsiWarmThroughput_billingProvisioned(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingProvisioned(rName, 1, 1, 12100, 4100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12100",
+						"warm_throughput.0.write_units_per_second": "4100",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingProvisioned(rName, 1, 1, 12200, 4200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12200",
+						"warm_throughput.0.write_units_per_second": "4200",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingProvisioned(rName, 2, 2, 12300, 4300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12300",
+						"warm_throughput.0.write_units_per_second": "4300",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingProvisioned(rName, 1, 1, 12100, 4100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12100",
+						"warm_throughput.0.write_units_per_second": "4100",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_gsiWarmThroughput_billingPayPerRequest(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName, 5, 5, 12100, 4100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12100",
+						"warm_throughput.0.write_units_per_second": "4100",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName, 5, 5, 12200, 4200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12200",
+						"warm_throughput.0.write_units_per_second": "4200",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName, 6, 6, 12300, 4300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12300",
+						"warm_throughput.0.write_units_per_second": "4300",
+					}),
+				),
+			},
+
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName, 6, 6, 12100, 4100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12100",
+						"warm_throughput.0.write_units_per_second": "4100",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_gsiWarmThroughput_switchBilling(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingProvisioned(rName, 1, 1, 12100, 4100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12100",
+						"warm_throughput.0.write_units_per_second": "4100",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName, 5, 5, 12200, 4200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12200",
+						"warm_throughput.0.write_units_per_second": "4200",
+					}),
+				),
+			},
+			{
+				Config:   testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName, 5, 5, 12200, 4200),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
@@ -5437,4 +5858,74 @@ resource "aws_dynamodb_table" "test" {
 }
 `, rName, maxRead, maxWrite, warmRead, warmWrite)
 }
+
+func testAccTableConfig_gsiWarmThroughput_billingProvisioned(rName string, readCapacity, writeCapacity, warmRead, warmWrite int) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  billing_mode   = "PROVISIONED"
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  global_secondary_index {
+    name            = "att1-index"
+    hash_key        = "att1"
+    projection_type = "ALL"
+    read_capacity   = %[2]d
+    write_capacity  = %[3]d
+
+    warm_throughput {
+      read_units_per_second  = %[4]d
+      write_units_per_second = %[5]d
+    }
+  }
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
+    type = "S"
+  }
+}
+`, rName, readCapacity, writeCapacity, warmRead, warmWrite)
+}
+
+func testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName string, maxRead, maxWrite, warmRead, warmWrite int) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+
+  on_demand_throughput {
+    max_read_request_units  = %[2]d
+    max_write_request_units = %[3]d
+  }
+
+  global_secondary_index {
+    name            = "att1-index"
+    hash_key        = "att1"
+    projection_type = "ALL"
+
+    warm_throughput {
+      read_units_per_second  = %[4]d
+      write_units_per_second = %[5]d
+    }
+  }
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
+    type = "S"
+  }
+}
+`, rName, maxRead, maxWrite, warmRead, warmWrite)
 }

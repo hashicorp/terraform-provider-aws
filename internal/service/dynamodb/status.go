@@ -133,6 +133,26 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 	}
 }
 
+func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.WarmThroughput == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.WarmThroughput.Status), nil
+	}
+}
+
 func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPITRByTableName(ctx, conn, tableName, optFns...)
