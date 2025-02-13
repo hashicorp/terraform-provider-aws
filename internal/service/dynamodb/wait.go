@@ -45,6 +45,19 @@ func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName strin
 	return nil, err
 }
 
+func waitTableWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
+		Target:  enum.Slice(awstypes.TableStatusActive),
+		Refresh: statusTableWarmThroughput(ctx, conn, tableName),
+		Timeout: max(createTableTimeout, timeout),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
 func waitTableDeleted(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TableStatusActive, awstypes.TableStatusDeleting),
