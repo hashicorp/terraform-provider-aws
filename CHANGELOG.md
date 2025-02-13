@@ -1,5 +1,9 @@
 ## 5.87.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_contributor_insight_rule` ([#41373](https://github.com/hashicorp/terraform-provider-aws/issues/41373))
+
 ENHANCEMENTS:
 
 * resource/aws_dynamodb_table_export: Add `export_type` and `incremental_export_specification` arguments ([#41303](https://github.com/hashicorp/terraform-provider-aws/issues/41303))
