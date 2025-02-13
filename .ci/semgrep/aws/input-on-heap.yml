@@ -54,7 +54,6 @@ rules:
         - "internal/service/c*"
         - "internal/service/datasync"
         - "internal/service/dax"
-        - "internal/service/devopsguru"
         - "internal/service/directconnect"
         - "internal/service/dlm"
         - "internal/service/dms"
