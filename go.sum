@@ -97,8 +97,8 @@ github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.15 h1:grZRF778ihj6eL5QY
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.15/go.mod h1:Co5xzek6uUx+cP3PsuKsvW3xWRF/SUaBkIA4EWY5d/0=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.6 h1:sRp3X9Mf+Jv9mQQKNGEpCF1Qt0DyC6pagvW+XU9t4YM=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.6/go.mod h1:ygW1LyLLAnrX+wlbTz41h2mmTnHKilLYuz1j4jNxdzM=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.3 h1:mHAfJ/9wtocekHsiHwRxnSVaV2005cphUqgEKhoCPlo=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.34.3/go.mod h1:4Tg6HD+j/y8r3fkfLFWKIhzTziLD9afXIZTXIr6Jitg=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.35.0 h1:7Jye5dxsyfqb7fGjt/HWi8SIBoE0a5H+2W8I4uX7w90=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.35.0/go.mod h1:4Tg6HD+j/y8r3fkfLFWKIhzTziLD9afXIZTXIr6Jitg=
 github.com/aws/aws-sdk-go-v2/service/billing v1.1.7 h1:979w7v3189U5QEf0Vr92wFmUItp6T9mQRwAAiSUuIM8=
 github.com/aws/aws-sdk-go-v2/service/billing v1.1.7/go.mod h1:kuA8Rh3PEriMxU5e+kKgsVZL/++M5AKvOBni5M69PzI=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.29.10 h1:DvXzHs7NcLrZ7feOZZk+BRK4ZWlXkh3UlgoF77vhung=
@@ -135,8 +135,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.45.12 h1:B7P9U6OmFa+TEnpn
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.45.12/go.mod h1:omuyZE5hIJGMRTWvXfRPdEy85w4exm5e65/4ExTibJw=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.33.15 h1:yR5hPtKFtY1OkgtjRn0z6pUuS699VyVf7OnTtbo/4Ls=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.33.15/go.mod h1:VwRI2hbV0UeyukOG/1HvpSxbKJzXUxMo4t3xPaTJsSQ=
-github.com/aws/aws-sdk-go-v2/service/codebuild v1.51.2 h1:LCPnB0sQmQSu4sfCVckqVSBgstgk5pzbmylsyMu+aYo=
-github.com/aws/aws-sdk-go-v2/service/codebuild v1.51.2/go.mod h1:t4KtUd68MrlCp9C768K45iKEm6Roq75y/ufqwrb63Vg=
+github.com/aws/aws-sdk-go-v2/service/codebuild v1.51.3 h1:Q33oo9meAR1xjsRYJ5C4rcnLowaPtkIykfeAlizh/H0=
+github.com/aws/aws-sdk-go-v2/service/codebuild v1.51.3/go.mod h1:t4KtUd68MrlCp9C768K45iKEm6Roq75y/ufqwrb63Vg=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.15 h1:Jvna8V5eGaPGMeMR8mTbtZmMRjZHe8p5vT8M8g7n7Mw=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.15/go.mod h1:yAk5/8hxhpYhZLGkoynMJ6kJcnS5Op/0Owiu4aT/sh4=
 github.com/aws/aws-sdk-go-v2/service/codecommit v1.27.15 h1:62N5DMYHugf9bA/Vm7ycH/ete0v8K0I6yu9B9hNIaa0=
@@ -255,8 +255,8 @@ github.com/aws/aws-sdk-go-v2/service/fis v1.31.10 h1:v6P5IjwQAcvYl2lBhd/4Kkgxy7u
 github.com/aws/aws-sdk-go-v2/service/fis v1.31.10/go.mod h1:mamWv1A0OkDhWINhI7UI0jAhxsq4hZNPE+eu7mp6C7Y=
 github.com/aws/aws-sdk-go-v2/service/fms v1.39.6 h1:R/Ivm1Y/5AAbPAdC474df7wy86Y4vHgFyH4N6OhyE2A=
 github.com/aws/aws-sdk-go-v2/service/fms v1.39.6/go.mod h1:YUH9GATNVu85IF4xdCcgUulkFX4To0GnUzjZ4YY7XJ0=
-github.com/aws/aws-sdk-go-v2/service/fsx v1.51.10 h1:GrlN9FbeoWWKYF29Gz7yghqEtlXlj8FnRyaMwoHo0eM=
-github.com/aws/aws-sdk-go-v2/service/fsx v1.51.10/go.mod h1:gnNrZVY5gL3FWp4lppI6lfKy+mVwycjYcn0bKev9uUc=
+github.com/aws/aws-sdk-go-v2/service/fsx v1.52.0 h1:dfCPvsrDuWivFMnhsAqKhOOIyTK+uKCLlz15PVV6SyM=
+github.com/aws/aws-sdk-go-v2/service/fsx v1.52.0/go.mod h1:gnNrZVY5gL3FWp4lppI6lfKy+mVwycjYcn0bKev9uUc=
 github.com/aws/aws-sdk-go-v2/service/gamelift v1.39.6 h1:40U9C248rTG4Cbatf4wFTSUFOW7AHUZEPB+E4iu/pHE=
 github.com/aws/aws-sdk-go-v2/service/gamelift v1.39.6/go.mod h1:3eFZrhvzzDegCGj5srooCQ+uON777dGWanEiQwDoWgg=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.26.16 h1:WSJLsA2L2adn0F8Z5Lxg8RHAb6/6D8c+dpWxvVfVCng=
@@ -353,8 +353,8 @@ github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.8 h1:k9yjeC1BOLfACJeGN0r
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.8/go.mod h1:IkM232XlyGKqU2Q26CTBGAbOfsCyFEQQiQzhnfg0syg=
 github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.67.0 h1:NksTae9EA34esrNCfyIaQB6klGRA4HUTUoDRhGmX7VQ=
 github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.67.0/go.mod h1:nfnASMKZVPgis9tWHa4TWafZxX9TUP3/6CuCl3HGL1U=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.66.4 h1:uO2KM04cu1EQIQkJYnuwZQodcck+1O91KIVnkkGvz8Y=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.66.4/go.mod h1:U9fjh5/s1wu8aiC25+aL7lIeqN2mb9LiHMHq97Kv1uY=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.67.0 h1:oB3Y1bxHPzfUsAuXxT5iTGy7uCeTIdX8tjCvn39zJBk=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.67.0/go.mod h1:U9fjh5/s1wu8aiC25+aL7lIeqN2mb9LiHMHq97Kv1uY=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.15 h1:2+jmMc2Ddi4oo1JG+K7C9y/WGWNm4LPcLogB/Koex/Y=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.15/go.mod h1:yTkHb+VTVQb4mXDn64BkjB2NQ8viLZrmInEgsbwyVaU=
 github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.20.10 h1:PnP7zV5Iwf3m0XcEqO38tHnYjrM4GhE17bgSmRHP/5o=
@@ -383,8 +383,8 @@ github.com/aws/aws-sdk-go-v2/service/oam v1.15.18 h1:Ag5TeMGKsdmFyMyHI8P28vuWX6k
 github.com/aws/aws-sdk-go-v2/service/oam v1.15.18/go.mod h1:gr/W1qLbJ57A7FKkZeN2QQlj6cZKQSCGOAHzarhhzhs=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.11 h1:LtsFhIgmWBwPLh5Nrbqd9uE0wYSYDAcGVaUIMZ5eHEU=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.11/go.mod h1:/7xP6IgRuDF9VykZfiV9UKnTstxWOVpltAXyEIPfEqc=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.13 h1:87AqWjSxAeh9548NZ7OFyATwRyAOKETZjvgyD7Q/l8g=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.13/go.mod h1:QDoGULh9p5W+Kex37rV0KQOTCPSoy3MRDgNO3zgeFdY=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.18.0 h1:2r7xLq3dam8M+r0MCG5b4VPRBCuA9hh5qeSZALNEhGg=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.18.0/go.mod h1:QDoGULh9p5W+Kex37rV0KQOTCPSoy3MRDgNO3zgeFdY=
 github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.16 h1:kxxDo5cdsSlhy6p2B2ABvbYSK+MoreOlpl/zCN90QUE=
 github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.16/go.mod h1:t+pSpMMD3sO9DkEGYgt4s0KERR6+5Up8SnF1gK9Ywzg=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.37.8 h1:VsGPLkO6PuyRFlNs0XPWt8qM1bItGR45Id+8PhxtohQ=
@@ -405,8 +405,8 @@ github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.18.10 h1:WjwOsb79PCWO
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.18.10/go.mod h1:v20vK84tkYuwG8LeHXaTHkfFeBOYOk+lzXMs+5XZAyM=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.18.14 h1:BlMlyc6R3+CR38d6DUBAM95cwYfq/i8eaR0glfHnCtE=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.18.14/go.mod h1:cZrFi5Qk9zZBuLedREDy58WeOaoeQzGhWKR4ddDmt3I=
-github.com/aws/aws-sdk-go-v2/service/polly v1.45.16 h1:aVjW8UjbZq5neCqRLB+Z7AQFQq2USrKie3mIMhdvMGY=
-github.com/aws/aws-sdk-go-v2/service/polly v1.45.16/go.mod h1:Jom1tumLMQ3d+3hYQBcy8JNyuLyix7UUmEIpr+dtvRA=
+github.com/aws/aws-sdk-go-v2/service/polly v1.46.0 h1:hhhQCwPoQ19C2OtTsNavuGQvXHxnEi6NthBOzM+H1pg=
+github.com/aws/aws-sdk-go-v2/service/polly v1.46.0/go.mod h1:Jom1tumLMQ3d+3hYQBcy8JNyuLyix7UUmEIpr+dtvRA=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.32.16 h1:V6lgrFRz1B7+OE6NUMrccUBVSiSF0B4uwkldeWAGvnU=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.32.16/go.mod h1:27xFxqZ5sSWdgfXEM8ixtw0qApX2bjsHNiJMbHwNDhc=
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.21.1 h1:JEGmb4HWor3lpYCWssMPdzNfVBBEipBfJM0XtcGT5tM=
