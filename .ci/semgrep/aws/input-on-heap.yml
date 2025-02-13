@@ -52,7 +52,6 @@ rules:
       exclude:
         - "internal/service/auditmanager"
         - "internal/service/c*"
-        - "internal/service/datapipeline"
         - "internal/service/datasync"
         - "internal/service/datazone"
         - "internal/service/dax"
