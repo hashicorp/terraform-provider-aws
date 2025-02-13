@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const policyMaxSize = 8192
+
 // @SDKResource("aws_media_store_container_policy", name="Container Policy")
 func ResourceContainerPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -42,7 +44,7 @@ func ResourceContainerPolicy() *schema.Resource {
 			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				ValidateFunc:     verify.ValidIAMPolicyJSON(policyMaxSize),
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
