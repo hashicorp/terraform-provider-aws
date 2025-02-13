@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appstream_image_builder: Limit the number of items in vpc_config/subnet_ids to 1
+```
