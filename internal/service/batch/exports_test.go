@@ -6,14 +6,11 @@ package batch
 // Exports for use in tests only.
 var (
 	ResourceComputeEnvironment = resourceComputeEnvironment
-	ResourceJobDefinition      = resourceJobDefinition
+	ResourceJobDefinition      = newResourceJobDefinition
 	ResourceJobQueue           = newJobQueueResource
 	ResourceSchedulingPolicy   = resourceSchedulingPolicy
 
-	EquivalentContainerPropertiesJSON       = equivalentContainerPropertiesJSON
-	EquivalentECSPropertiesJSON             = equivalentECSPropertiesJSON
 	EquivalentEKSPropertiesJSON             = equivalentEKSPropertiesJSON
-	EquivalentNodePropertiesJSON            = equivalentNodePropertiesJSON
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
 	FindComputeEnvironmentDetailByName      = findComputeEnvironmentDetailByName

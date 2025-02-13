@@ -34,14 +34,6 @@ func RegisterSweepers() {
 		F: sweepComputeEnvironments,
 	})
 
-	resource.AddTestSweepers("aws_batch_job_definition", &resource.Sweeper{
-		Name: "aws_batch_job_definition",
-		F:    sweepJobDefinitions,
-		Dependencies: []string{
-			"aws_batch_job_queue",
-		},
-	})
-
 	resource.AddTestSweepers("aws_batch_job_queue", &resource.Sweeper{
 		Name: "aws_batch_job_queue",
 		F:    sweepJobQueues,
@@ -166,49 +158,6 @@ func sweepComputeEnvironments(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepJobDefinitions(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	input := &batch.DescribeJobDefinitionsInput{
-		Status: aws.String("ACTIVE"),
-	}
-	conn := client.BatchClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	pages := batch.NewDescribeJobDefinitionsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Batch Job Definition sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing Batch Job Definitions (%s): %w", region, err)
-		}
-
-		for _, v := range page.JobDefinitions {
-			r := resourceJobDefinition()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(v.JobDefinitionArn))
-
-			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
-		}
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Batch Job Definitions (%s): %w", region, err)
-	}
-
-	return nil
 }
 
 func sweepJobQueues(region string) error {

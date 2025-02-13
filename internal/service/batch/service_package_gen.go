@@ -35,6 +35,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory: newResourceJobDefinition,
+			Name:    "Job Definition",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
 	}
 }
 
@@ -67,14 +72,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceComputeEnvironment,
 			TypeName: "aws_batch_compute_environment",
 			Name:     "Compute Environment",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory:  resourceJobDefinition,
-			TypeName: "aws_batch_job_definition",
-			Name:     "Job Definition",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

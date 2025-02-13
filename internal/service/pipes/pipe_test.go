@@ -3340,12 +3340,12 @@ resource "aws_batch_job_queue" "target" {
 }
 
 resource "aws_batch_job_definition" "target" {
-  container_properties = jsonencode({
+  container_properties {
     command = ["echo", "test"]
     image   = "busybox"
     memory  = 128
     vcpus   = 1
-  })
+  }
   name = "%[1]s-target"
   type = "container"
 }
