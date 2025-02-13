@@ -279,39 +279,23 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackSetInstance, id, err)
 	}
 
-	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
+		func() (*cloudformation.CreateStackInstancesOutput, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
-			output, err := conn.CreateStackInstances(ctx, input)
-
-			if err != nil {
-				return nil, err
-			}
-
-			d.SetId(id)
-
-			operation, err := waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
-
-			if err != nil {
-				return nil, fmt.Errorf("waiting for create: %w", err)
-			}
-
-			return operation, nil
+			return conn.CreateStackInstances(ctx, input)
 		},
 		isRetryableIAMPropagationErr,
-
-			// IAM eventual consistency
-			if strings.Contains(message, "The security token included in the request is invalid") {
-				return true, err
-			}
-
-			return false, err
-		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s) Instance: %s", stackSetName, err)
+	}
+
+	d.SetId(id)
+
+	_, err = waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s) Instance: waiting for completion: %s", stackSetName, err)
 	}
 
 	return append(diags, resourceStackSetInstanceRead(ctx, d, meta)...)
