@@ -1,4 +1,5 @@
-## 5.87.0 (Unreleased)
+## 5.88.0 (Unreleased)
+## 5.87.0 (February 13, 2025)
 
 FEATURES:
 
