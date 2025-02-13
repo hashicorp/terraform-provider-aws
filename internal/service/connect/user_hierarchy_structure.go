@@ -156,10 +156,11 @@ func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect User Hierarchy Structure: %s", d.Id())
-	_, err := conn.UpdateUserHierarchyStructure(ctx, &connect.UpdateUserHierarchyStructureInput{
+	input := connect.UpdateUserHierarchyStructureInput{
 		HierarchyStructure: &awstypes.HierarchyStructureUpdate{},
 		InstanceId:         aws.String(d.Id()),
-	})
+	}
+	_, err := conn.UpdateUserHierarchyStructure(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
