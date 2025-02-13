@@ -53,7 +53,6 @@ rules:
         - "internal/service/auditmanager"
         - "internal/service/c*"
         - "internal/service/datasync"
-        - "internal/service/datazone"
         - "internal/service/dax"
         - "internal/service/deploy"
         - "internal/service/detective"
