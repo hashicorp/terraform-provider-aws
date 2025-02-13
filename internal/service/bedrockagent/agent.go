@@ -388,10 +388,11 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	agentID := data.ID.ValueString()
-	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
+	input := bedrockagent.DeleteAgentInput{
 		AgentId:                aws.String(agentID),
 		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
-	})
+	}
+	_, err := conn.DeleteAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

@@ -317,9 +317,10 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VpcLattice TargetGroup: %s", d.Id())
-	_, err := conn.DeleteTargetGroup(ctx, &vpclattice.DeleteTargetGroupInput{
+	input := vpclattice.DeleteTargetGroupInput{
 		TargetGroupIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTargetGroup(ctx, &input)
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException

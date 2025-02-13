@@ -51,7 +51,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/b*"
         - "internal/service/c*"
         - "internal/service/d*"
         - "internal/service/e*"
@@ -67,8 +66,6 @@ rules:
         - "internal/service/q*"
         - "internal/service/r*"
         - "internal/service/s*"
-        - "internal/service/t*"
-        - "internal/service/v*"
     patterns:
       - pattern-either:
           - pattern: |

@@ -288,10 +288,11 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	listenerId := d.Get("listener_id").(string)
 
 	log.Printf("[INFO] Deleting VPCLattice Listener %s", d.Id())
-	_, err := conn.DeleteListener(ctx, &vpclattice.DeleteListenerInput{
+	input := vpclattice.DeleteListenerInput{
 		ListenerIdentifier: aws.String(listenerId),
 		ServiceIdentifier:  aws.String(serviceId),
-	})
+	}
+	_, err := conn.DeleteListener(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

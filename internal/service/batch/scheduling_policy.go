@@ -168,9 +168,10 @@ func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Batch Scheduling Policy: %s", d.Id())
-	_, err := conn.DeleteSchedulingPolicy(ctx, &batch.DeleteSchedulingPolicyInput{
+	input := batch.DeleteSchedulingPolicyInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSchedulingPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Batch Scheduling Policy (%s): %s", d.Id(), err)

@@ -150,9 +150,10 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Profile: %s", d.Id())
-	_, err := conn.DeleteProfile(ctx, &transfer.DeleteProfileInput{
+	input := transfer.DeleteProfileInput{
 		ProfileId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

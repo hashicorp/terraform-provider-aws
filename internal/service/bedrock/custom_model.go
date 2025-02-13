@@ -459,9 +459,10 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if !data.CustomModelARN.IsNull() {
-		_, err := conn.DeleteCustomModel(ctx, &bedrock.DeleteCustomModelInput{
+		input := bedrock.DeleteCustomModelInput{
 			ModelIdentifier: fwflex.StringFromFramework(ctx, data.CustomModelARN),
-		})
+		}
+		_, err := conn.DeleteCustomModel(ctx, &input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return

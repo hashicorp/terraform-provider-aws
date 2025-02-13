@@ -283,6 +283,11 @@ service "vpc" {
   split_package_real_package = "ec2"
 }
 
+service "vpclattice" {
+  vpc_lock    = true
+  parallelism = 10
+}
+
 service "vpnclient" {
   vpc_lock                   = true
   pattern_override           = "TestAccClientVPN"

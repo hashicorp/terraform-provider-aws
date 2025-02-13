@@ -197,9 +197,10 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[INFO] Deleting Transcribe VocabularyFilter %s", d.Id())
 
-	_, err := conn.DeleteVocabularyFilter(ctx, &transcribe.DeleteVocabularyFilterInput{
+	input := transcribe.DeleteVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVocabularyFilter(ctx, &input)
 
 	if err != nil {
 		var bre *types.BadRequestException
