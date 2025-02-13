@@ -11,8 +11,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/bflad/gopaniccheck v0.1.0 h1:tJftp+bv42ouERmUMWLoUn/5bi/iQZjHPznM00cP/bU=
 github.com/bflad/gopaniccheck v0.1.0/go.mod h1:ZCj2vSr7EqVeDaqVsWN4n2MwdROx1YL+LFo47TSWtsA=
-github.com/bflad/tfproviderlint v0.30.0 h1:XBbTGPS4ZagSt4Qtnus3Vgh5yOeHNLZhnjcTcsSJ7ZM=
-github.com/bflad/tfproviderlint v0.30.0/go.mod h1:eBZHT0r7HKPGw1uZEyGMzcR1/d+GAXq9KzQfw0I7wtY=
+github.com/bflad/tfproviderlint v0.31.0 h1:9N/dUzFARsTpAQOjdZzIWnHKMzQc7UDDEYrSNV2xnrw=
+github.com/bflad/tfproviderlint v0.31.0/go.mod h1:yZQdJs4uobBIgVHt1Tv5OpHhgM8fwh29OgxL/La5BFs=
 github.com/bufbuild/protocompile v0.4.0 h1:LbFKd2XowZvQ/kajzguUp2DC9UEIQhIq77fZZlaQsNA=
 github.com/bufbuild/protocompile v0.4.0/go.mod h1:3v93+mbWn/v3xzN+31nwkJfrEpAUwp+BagBSZWx+TP8=
 github.com/cloudflare/circl v1.5.0 h1:hxIWksrX6XN5a1L2TI/h53AGPhNHoUBo+TD1ms9+pys=
