@@ -30,7 +30,7 @@ func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) r
 }
 
 func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
 		if tfresource.NotFound(err) {
@@ -134,7 +134,7 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 }
 
 func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
 		if tfresource.NotFound(err) {

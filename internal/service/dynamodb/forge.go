@@ -47,13 +47,13 @@ func stripOnDemandThroughputAttributes(in map[string]any) (map[string]any, error
 	return m, nil
 }
 
-func stripWarmThroughputAttributes(in map[string]interface{}) (map[string]interface{}, error) {
+func stripWarmThroughputAttributes(in map[string]any) (map[string]any, error) {
 	mapCopy, err := copystructure.Copy(in)
 	if err != nil {
 		return nil, err
 	}
 
-	m := mapCopy.(map[string]interface{})
+	m := mapCopy.(map[string]any)
 
 	delete(m, "warm_throughput")
 
