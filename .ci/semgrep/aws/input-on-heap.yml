@@ -243,7 +243,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/comprehend"
         - "internal/service/ecr"
         - "internal/service/ecrpublic"
         - "internal/service/ecs"
