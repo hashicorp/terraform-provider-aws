@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Alias")
+// @FrameworkResource("aws_bedrockagent_agent_alias", name="Agent Alias")
 // @Tags(identifierAttribute="agent_alias_arn")
 func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentAliasResource{}
@@ -137,7 +137,12 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 
 	// Set values for unknowns.
 	data.AgentAliasID = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Bedrock Agent Alias", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	alias, err := waitAgentAliasCreated(ctx, conn, data.AgentAliasID.ValueString(), data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -249,10 +254,11 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteAgentAlias(ctx, &bedrockagent.DeleteAgentAliasInput{
+	input := bedrockagent.DeleteAgentAliasInput{
 		AgentAliasId: fwflex.StringFromFramework(ctx, data.AgentAliasID),
 		AgentId:      fwflex.StringFromFramework(ctx, data.AgentID),
-	})
+	}
+	_, err := conn.DeleteAgentAlias(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -353,8 +359,8 @@ type agentAliasResourceModel struct {
 	Description          types.String                                                                 `tfsdk:"description"`
 	ID                   types.String                                                                 `tfsdk:"id"`
 	RoutingConfiguration fwtypes.ListNestedObjectValueOf[agentAliasRoutingConfigurationListItemModel] `tfsdk:"routing_configuration"`
-	Tags                 types.Map                                                                    `tfsdk:"tags"`
-	TagsAll              types.Map                                                                    `tfsdk:"tags_all"`
+	Tags                 tftags.Map                                                                   `tfsdk:"tags"`
+	TagsAll              tftags.Map                                                                   `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                               `tfsdk:"timeouts"`
 }
 
@@ -376,10 +382,16 @@ func (m *agentAliasResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentAliasResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AgentAliasID.ValueString(), m.AgentID.ValueString()}, agentAliasResourceIDPartCount, false)))
+func (m *agentAliasResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AgentAliasID.ValueString(),
+		m.AgentID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentAliasResourceIDPartCount, false)
 }
 
 type agentAliasRoutingConfigurationListItemModel struct {
-	AgentVersion types.String `tfsdk:"agent_version"`
+	AgentVersion          types.String `tfsdk:"agent_version"`
+	ProvisionedThroughput types.String `tfsdk:"provisioned_throughput"`
 }

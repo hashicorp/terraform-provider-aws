@@ -34,7 +34,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
@@ -51,7 +51,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 				Config: testAccEndpointAccessConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
@@ -112,7 +112,7 @@ func TestAccRedshiftServerlessEndpointAccess_disappears(t *testing.T) {
 
 func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_endpoint_access" {
@@ -142,7 +142,7 @@ func testAccCheckEndpointAccessExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindEndpointAccessByName(ctx, conn, rs.Primary.ID)
 

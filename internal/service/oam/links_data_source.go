@@ -6,8 +6,8 @@ package oam
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_oam_links")
+// @SDKDataSource("aws_oam_links", name="Links")
 func DataSourceLinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinksRead,
@@ -50,11 +50,11 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		for _, listLinksItem := range page.Items {
-			arns = append(arns, aws.StringValue(listLinksItem.Arn))
+			arns = append(arns, aws.ToString(listLinksItem.Arn))
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 
 	return nil

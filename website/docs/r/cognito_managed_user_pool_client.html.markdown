@@ -18,18 +18,26 @@ Use the [`aws_cognito_user_pool_client`](cognito_user_pool_client.html) resource
 
 ## Example Usage
 
+### Using Name Prefix
+
 ```terraform
 resource "aws_cognito_managed_user_pool_client" "example" {
-  name_prefix  = "AmazonOpenSearchService-example"
+  # Generated client name example: AmazonOpenSearchService-example-abcde-us-east-1-2ni6nt4id5tg25yde3pztiqkd4
+  name_prefix  = "AmazonOpenSearchService-example-"
   user_pool_id = aws_cognito_user_pool.example.id
 
   depends_on = [
-    aws_opensearch_domain.example,
+    aws_opensearch_domain.example
   ]
 }
 
 resource "aws_cognito_user_pool" "example" {
   name = "example"
+}
+
+resource "aws_cognito_user_pool_domain" "example" {
+  domain       = "example"
+  user_pool_id = aws_cognito_user_pool.example.id
 }
 
 resource "aws_cognito_identity_pool" "example" {
@@ -57,7 +65,7 @@ resource "aws_opensearch_domain" "example" {
 
   depends_on = [
     aws_cognito_user_pool_domain.example,
-    aws_iam_role_policy_attachment.example,
+    aws_iam_role_policy_attachment.example
   ]
 }
 
@@ -76,7 +84,7 @@ data "aws_iam_policy_document" "example" {
     principals {
       type = "Service"
       identifiers = [
-        "es.${data.aws_partition.current.dns_suffix}",
+        "es.${data.aws_partition.current.dns_suffix}"
       ]
     }
   }
@@ -85,9 +93,25 @@ data "aws_iam_policy_document" "example" {
 resource "aws_iam_role_policy_attachment" "example" {
   role       = aws_iam_role.example.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
+
+  depends_on = [
+    aws_opensearch_domain.example
+  ]
 }
 
 data "aws_partition" "current" {}
+```
+
+### Using Name Pattern
+
+```terraform
+resource "aws_cognito_managed_user_pool_client" "example" {
+  # Generated client name example: AmazonOpenSearchService-example-abcde-us-east-1-2ni6nt4id5tg25yde3pztiqkd4
+  name_pattern = "^AmazonOpenSearchService-example-(\\w+)$"
+  user_pool_id = aws_cognito_user_pool.example.id
+}
+
+# ... other configuration ...
 ```
 
 ## Argument Reference
@@ -95,25 +119,25 @@ data "aws_partition" "current" {}
 The following arguments are required:
 
 * `user_pool_id` - (Required) User pool that the client belongs to.
-* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the desired User Pool Client. It must only match one User Pool Client.
-* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the desired User Pool Client. It must match only one User Pool Client.
+* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the existing User Pool Client to be managed. It must only match one User Pool Client.
+* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the  existing User Pool Client to be managed. It must match only one User Pool Client.
 
 The following arguments are optional:
 
 * `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
-* `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use the OAuth protocol when interacting with Cognito user pools.
-* `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including code, implicit, and client_credentials.
-* `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes, including phone, email, openid, profile, and aws.cognito.signin.user.admin.
+* `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure the following arguments: `callback_urls`, `logout_urls`, `allowed_oauth_scopes` and `allowed_oauth_flows`.
+* `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
+* `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes, including `phone`, `email`, `openid`, `profile`, and `aws.cognito.signin.user.admin`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics that collects metrics for this user pool. See [details below](#analytics_configuration).
 * `auth_session_validity` - (Optional) Duration, in minutes, of the session token created by Amazon Cognito for each API request in an authentication flow. The session token must be responded to by the native user of the user pool before it expires. Valid values for `auth_session_validity` are between `3` and `15`, with a default value of `3`.
-* `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
+* `callback_urls` - (Optional) List of allowed callback URLs for the identity providers. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `default_redirect_uri` - (Optional) Default redirect URI and must be included in the list of callback URLs.
 * `enable_token_revocation` - (Optional) Enables or disables token revocation.
 * `enable_propagate_additional_user_context_data` - (Optional) Enables the propagation of additional user context data.
 * `explicit_auth_flows` - (Optional) List of authentication flows. The available options include ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, and ALLOW_REFRESH_TOKEN_AUTH.
 * `generate_secret` - (Optional) Boolean flag indicating whether an application secret should be generated.
 * `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.id_token`.
-* `logout_urls` - (Optional) List of allowed logout URLs for the identity providers.
+* `logout_urls` - (Optional) List of allowed logout URLs for the identity providers. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `prevent_user_existence_errors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `read_attributes` - (Optional) List of user pool attributes that the application client can read from.
 * `refresh_token_validity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.

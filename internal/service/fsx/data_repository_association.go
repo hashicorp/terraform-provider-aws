@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -120,8 +122,8 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 										Optional: true,
 										Computed: true,
 										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice(fsx.EventType_Values(), false),
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 										},
 									},
 								},
@@ -140,8 +142,8 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 										Optional: true,
 										Computed: true,
 										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice(fsx.EventType_Values(), false),
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 										},
 									},
 								},
@@ -163,7 +165,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 
 func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateDataRepositoryAssociationInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -178,20 +180,20 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	}
 
 	if v, ok := d.GetOk("imported_file_chunk_size"); ok {
-		input.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
+		input.ImportedFileChunkSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("s3"); ok {
 		input.S3 = expandDataRepositoryAssociationS3(v.([]interface{}))
 	}
 
-	output, err := conn.CreateDataRepositoryAssociationWithContext(ctx, input)
+	output, err := conn.CreateDataRepositoryAssociation(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx for Lustre Data Repository Association: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Association.AssociationId))
+	d.SetId(aws.ToString(output.Association.AssociationId))
 
 	if _, err := waitDataRepositoryAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre Data Repository Association (%s) create: %s", d.Id(), err)
@@ -202,7 +204,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 
 func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	association, err := findDataRepositoryAssociationByID(ctx, conn, d.Id())
 
@@ -233,7 +235,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 
 func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
@@ -242,14 +244,14 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 		}
 
 		if d.HasChange("imported_file_chunk_size") {
-			input.ImportedFileChunkSize = aws.Int64(int64(d.Get("imported_file_chunk_size").(int)))
+			input.ImportedFileChunkSize = aws.Int32(int32(d.Get("imported_file_chunk_size").(int)))
 		}
 
 		if d.HasChange("s3") {
 			input.S3 = expandDataRepositoryAssociationS3(d.Get("s3").([]interface{}))
 		}
 
-		_, err := conn.UpdateDataRepositoryAssociationWithContext(ctx, input)
+		_, err := conn.UpdateDataRepositoryAssociation(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx for Lustre Data Repository Association (%s): %s", d.Id(), err)
@@ -265,7 +267,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	request := &fsx.DeleteDataRepositoryAssociationInput{
 		AssociationId:          aws.String(d.Id()),
@@ -274,9 +276,9 @@ func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for Lustre Data Repository Association: %s", d.Id())
-	_, err := conn.DeleteDataRepositoryAssociationWithContext(ctx, request)
+	_, err := conn.DeleteDataRepositoryAssociation(ctx, request)
 
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
+	if errs.IsA[*awstypes.DataRepositoryAssociationNotFound](err) {
 		return diags
 	}
 
@@ -291,14 +293,142 @@ func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func expandDataRepositoryAssociationS3(cfg []interface{}) *fsx.S3DataRepositoryConfiguration {
+func findDataRepositoryAssociationByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: []string{id},
+	}
+
+	return findDataRepositoryAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DataRepositoryAssociation]())
+}
+
+func findDataRepositoryAssociation(ctx context.Context, conn *fsx.Client, input *fsx.DescribeDataRepositoryAssociationsInput, filter tfslices.Predicate[*awstypes.DataRepositoryAssociation]) (*awstypes.DataRepositoryAssociation, error) {
+	output, err := findDataRepositoryAssociations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDataRepositoryAssociations(ctx context.Context, conn *fsx.Client, input *fsx.DescribeDataRepositoryAssociationsInput, filter tfslices.Predicate[*awstypes.DataRepositoryAssociation]) ([]awstypes.DataRepositoryAssociation, error) {
+	var output []awstypes.DataRepositoryAssociation
+
+	pages := fsx.NewDescribeDataRepositoryAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.DataRepositoryAssociationNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Associations {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDataRepositoryAssociationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Lifecycle), nil
+	}
+}
+
+func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.DataRepositoryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataRepositoryLifecycleCreating),
+		Target:  enum.Slice(awstypes.DataRepositoryLifecycleAvailable),
+		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
+		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.DataRepositoryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataRepositoryLifecycleUpdating),
+		Target:  enum.Slice(awstypes.DataRepositoryLifecycleAvailable),
+		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
+		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.DataRepositoryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataRepositoryLifecycleAvailable, awstypes.DataRepositoryLifecycleDeleting),
+		Target:  []string{},
+		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
+		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandDataRepositoryAssociationS3(cfg []interface{}) *awstypes.S3DataRepositoryConfiguration {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
 
 	m := cfg[0].(map[string]interface{})
 
-	s3Config := &fsx.S3DataRepositoryConfiguration{}
+	s3Config := &awstypes.S3DataRepositoryConfiguration{}
 
 	if v, ok := m["auto_export_policy"]; ok {
 		policy := v.([]interface{})
@@ -312,37 +442,37 @@ func expandDataRepositoryAssociationS3(cfg []interface{}) *fsx.S3DataRepositoryC
 	return s3Config
 }
 
-func expandDataRepositoryAssociationS3AutoExportPolicy(policy []interface{}) *fsx.AutoExportPolicy {
+func expandDataRepositoryAssociationS3AutoExportPolicy(policy []interface{}) *awstypes.AutoExportPolicy {
 	if len(policy) == 0 || policy[0] == nil {
 		return nil
 	}
 
 	m := policy[0].(map[string]interface{})
-	autoExportPolicy := &fsx.AutoExportPolicy{}
+	autoExportPolicy := &awstypes.AutoExportPolicy{}
 
 	if v, ok := m["events"]; ok {
-		autoExportPolicy.Events = flex.ExpandStringList(v.([]interface{}))
+		autoExportPolicy.Events = flex.ExpandStringyValueList[awstypes.EventType](v.([]interface{}))
 	}
 
 	return autoExportPolicy
 }
 
-func expandDataRepositoryAssociationS3AutoImportPolicy(policy []interface{}) *fsx.AutoImportPolicy {
+func expandDataRepositoryAssociationS3AutoImportPolicy(policy []interface{}) *awstypes.AutoImportPolicy {
 	if len(policy) == 0 || policy[0] == nil {
 		return nil
 	}
 
 	m := policy[0].(map[string]interface{})
-	autoImportPolicy := &fsx.AutoImportPolicy{}
+	autoImportPolicy := &awstypes.AutoImportPolicy{}
 
 	if v, ok := m["events"]; ok {
-		autoImportPolicy.Events = flex.ExpandStringList(v.([]interface{}))
+		autoImportPolicy.Events = flex.ExpandStringyValueList[awstypes.EventType](v.([]interface{}))
 	}
 
 	return autoImportPolicy
 }
 
-func flattenDataRepositoryAssociationS3(s3Config *fsx.S3DataRepositoryConfiguration) []map[string]interface{} {
+func flattenDataRepositoryAssociationS3(s3Config *awstypes.S3DataRepositoryConfiguration) []map[string]interface{} {
 	result := make(map[string]interface{})
 	if s3Config == nil {
 		return []map[string]interface{}{result}
@@ -358,157 +488,26 @@ func flattenDataRepositoryAssociationS3(s3Config *fsx.S3DataRepositoryConfigurat
 	return []map[string]interface{}{result}
 }
 
-func flattenS3AutoExportPolicy(policy *fsx.AutoExportPolicy) []map[string][]interface{} {
+func flattenS3AutoExportPolicy(policy *awstypes.AutoExportPolicy) []map[string][]interface{} {
 	result := make(map[string][]interface{})
 	if policy == nil {
 		return []map[string][]interface{}{result}
 	}
 	if policy.Events != nil {
-		result["events"] = flex.FlattenStringList(policy.Events)
+		result["events"] = flex.FlattenStringyValueList(policy.Events)
 	}
 
 	return []map[string][]interface{}{result}
 }
 
-func flattenS3AutoImportPolicy(policy *fsx.AutoImportPolicy) []map[string][]interface{} {
+func flattenS3AutoImportPolicy(policy *awstypes.AutoImportPolicy) []map[string][]interface{} {
 	result := make(map[string][]interface{})
 	if policy == nil {
 		return []map[string][]interface{}{result}
 	}
 	if policy.Events != nil {
-		result["events"] = flex.FlattenStringList(policy.Events)
+		result["events"] = flex.FlattenStringyValueList(policy.Events)
 	}
 
 	return []map[string][]interface{}{result}
-}
-
-func findDataRepositoryAssociationByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
-	input := &fsx.DescribeDataRepositoryAssociationsInput{
-		AssociationIds: aws.StringSlice([]string{id}),
-	}
-
-	return findDataRepositoryAssociation(ctx, conn, input, tfslices.PredicateTrue[*fsx.DataRepositoryAssociation]())
-}
-
-func findDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeDataRepositoryAssociationsInput, filter tfslices.Predicate[*fsx.DataRepositoryAssociation]) (*fsx.DataRepositoryAssociation, error) {
-	output, err := findDataRepositoryAssociations(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeDataRepositoryAssociationsInput, filter tfslices.Predicate[*fsx.DataRepositoryAssociation]) ([]*fsx.DataRepositoryAssociation, error) {
-	var output []*fsx.DataRepositoryAssociation
-
-	err := conn.DescribeDataRepositoryAssociationsPagesWithContext(ctx, input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Associations {
-			if v != nil && filter(v) {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDataRepositoryAssociationByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Lifecycle), nil
-	}
-}
-
-func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.DataRepositoryLifecycleCreating},
-		Target:  []string{fsx.DataRepositoryLifecycleAvailable},
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.DataRepositoryLifecycleUpdating},
-		Target:  []string{fsx.DataRepositoryLifecycleAvailable},
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.DataRepositoryLifecycleAvailable, fsx.DataRepositoryLifecycleDeleting},
-		Target:  []string{},
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
 }

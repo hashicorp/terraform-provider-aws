@@ -19,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Rotation")
+// @FrameworkDataSource("aws_ssmcontacts_rotation", name="Rotation")
+// @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
 func newDataSourceRotation(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRotation{}
 
@@ -119,18 +121,6 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	data.TimeZoneID = fwflex.StringToFramework(ctx, output.TimeZoneId)
 	data.ID = fwflex.StringToFramework(ctx, output.RotationArn)
 
-	tags, err := listTags(ctx, conn, data.ARN.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSMContacts, create.ErrActionSetting, ResNameRotation, data.ARN.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, tags.Map())
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -141,7 +131,7 @@ type dataSourceRotationData struct {
 	Recurrence fwtypes.ListNestedObjectValueOf[dsRecurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                      `tfsdk:"name"`
 	StartTime  timetypes.RFC3339                                 `tfsdk:"start_time"`
-	Tags       types.Map                                         `tfsdk:"tags"`
+	Tags       tftags.Map                                        `tfsdk:"tags"`
 	TimeZoneID types.String                                      `tfsdk:"time_zone_id"`
 }
 

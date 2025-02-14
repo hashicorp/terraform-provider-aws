@@ -12,6 +12,8 @@ Resource for managing QuickSight Data Source
 
 ## Example Usage
 
+### S3 Data Source
+
 ```terraform
 resource "aws_quicksight_data_source" "default" {
   data_source_id = "example-id"
@@ -23,6 +25,102 @@ resource "aws_quicksight_data_source" "default" {
         bucket = "my-bucket"
         key    = "path/to/manifest.json"
       }
+    }
+  }
+
+  type = "S3"
+}
+```
+
+### S3 Data Source with IAM Role ARN
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "example" {
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket.example.bucket
+  key    = "manifest.json"
+  content = jsonencode({
+    fileLocations = [
+      {
+        URIPrefixes = [
+          "https://${aws_s3_bucket.example.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+        ]
+      }
+    ]
+    globalUploadSettings = {
+      format         = "CSV"
+      delimiter      = ","
+      textqualifier  = "\""
+      containsHeader = true
+    }
+  })
+}
+
+resource "aws_iam_role" "example" {
+  name = "example"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "quicksight.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "example" {
+  name        = "example"
+  description = "Policy to allow QuickSight access to S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action   = ["s3:GetObject"],
+        Effect   = "Allow",
+        Resource = "${aws_s3_bucket.example.arn}/${aws_s3_object.example.key}"
+      },
+      {
+        Action   = ["s3:ListBucket"],
+        Effect   = "Allow",
+        Resource = aws_s3_bucket.example.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "example" {
+  policy_arn = aws_iam_policy.example.arn
+  role       = aws_iam_role.example.name
+}
+
+resource "aws_quicksight_data_source" "example" {
+  data_source_id = "example-id"
+  name           = "manifest in S3"
+
+  parameters {
+    s3 {
+      manifest_file_location {
+        bucket = aws_s3_bucket.example.arn
+        key    = aws_s3_object.example.key
+      }
+      role_arn = aws_iam_role.example.arn
     }
   }
 
@@ -42,7 +140,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `aws_account_id` - (Optional, Forces new resource) The ID for the AWS account that the data source is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
-* `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. Currently, only credentials based on user name and password are supported. See [Credentials](#credentials-argument-reference) below for more details.
+* `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
 * `ssl_properties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [SSL Properties](#ssl_properties-argument-reference) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -50,9 +148,10 @@ The following arguments are optional:
 
 ### credentials Argument Reference
 
-* `copy_source_arn` (Optional, Conflicts with `credential_pair`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
+* `copy_source_arn` (Optional, Conflicts with `credential_pair` and `secret_arn`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
 When the value is not null, the `credential_pair` from the data source in the ARN is used.
-* `credential_pair` (Optional, Conflicts with `copy_source_arn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
+* `credential_pair` (Optional, Conflicts with `copy_source_arn` and `secret_arn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
+* `secret_arn` (Optional, Conflicts with `copy_source_arn` and `credential_pair`) - The Amazon Resource Name (ARN) of the secret associated with the data source in Amazon Secrets Manager.
 
 ### credential_pair Argument Reference
 
@@ -68,6 +167,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 * `aurora` - (Optional) [Parameters](#aurora-argument-reference) for connecting to Aurora MySQL.
 * `aurora_postgresql` - (Optional) [Parameters](#aurora_postgresql-argument-reference) for connecting to Aurora Postgresql.
 * `aws_iot_analytics` - (Optional) [Parameters](#aws_iot_analytics-argument-reference) for connecting to AWS IOT Analytics.
+* `databricks` - (Optional) [Parameters](#databricks-argument-reference) for connecting to Databricks.
 * `jira` - (Optional) [Parameters](#jira-fargument-reference) for connecting to Jira.
 * `maria_db` - (Optional) [Parameters](#maria_db-argument-reference) for connecting to MariaDB.
 * `mysql` - (Optional) [Parameters](#mysql-argument-reference) for connecting to MySQL.
@@ -121,6 +221,12 @@ To specify data source connection parameters, exactly one of the following sub-o
 
 * `data_set_name` - (Required) The name of the data set to which to connect.
 
+### databricks Argument Reference
+
+* `host` - (Required) The host name of the Databricks data source.
+* `port` - (Required) The port for the Databricks data source.
+* `sql_endpoint_path` - (Required) The HTTP path of the Databricks data source.
+
 ### jira fArgument Reference
 
 * `site_base_url` - (Required) The base URL of the Jira instance's site to which to connect.
@@ -170,6 +276,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### s3 Argument Reference
 
 * `manifest_file_location` - (Required) An [object containing the S3 location](#manifest_file_location-argument-reference) of the S3 manifest file.
+* `role_arn` - (Optional) Use the `role_arn` to override an account-wide role for a specific S3 data source. For example, say an account administrator has turned off all S3 access with an account-wide role. The administrator can then use `role_arn` to bypass the account-wide role and allow S3 access for the single S3 data source that is specified in the structure, even if the account-wide role forbidding S3 access is still active.
 
 ### manifest_file_location Argument Reference
 

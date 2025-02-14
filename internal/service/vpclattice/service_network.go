@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_vpclattice_service_network", name="Service Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkCreate,
@@ -144,9 +145,10 @@ func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPC Lattice Service Network: %s", d.Id())
-	_, err := conn.DeleteServiceNetwork(ctx, &vpclattice.DeleteServiceNetworkInput{
+	input := vpclattice.DeleteServiceNetworkInput{
 		ServiceNetworkIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteServiceNetwork(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

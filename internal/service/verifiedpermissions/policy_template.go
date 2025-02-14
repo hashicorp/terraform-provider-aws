@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Policy Template")
+// @FrameworkResource("aws_verifiedpermissions_policy_template", name="Policy Template")
 func newResourcePolicyTemplate(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyTemplate{}
 
@@ -223,8 +223,8 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 	})
 
 	input := &verifiedpermissions.DeletePolicyTemplateInput{
-		PolicyStoreId:    aws.String(state.PolicyStoreID.ValueString()),
-		PolicyTemplateId: aws.String(state.PolicyTemplateID.ValueString()),
+		PolicyStoreId:    state.PolicyStoreID.ValueStringPointer(),
+		PolicyTemplateId: state.PolicyTemplateID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePolicyTemplate(ctx, input)

@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_ec2_host", name="Host")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceHost() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostRead,
@@ -95,7 +96,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeHostsInput{
-		Filter: newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set)),
+		Filter: newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("host_id"); ok {
@@ -115,9 +116,9 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.ToString(host.HostId))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: aws.ToString(host.OwnerId),
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
@@ -135,7 +136,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	setTagsOutV2(ctx, host.Tags)
+	setTagsOut(ctx, host.Tags)
 
 	return diags
 }

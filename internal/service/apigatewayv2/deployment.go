@@ -145,10 +145,11 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Deployment (%s)", d.Id())
-	_, err := conn.DeleteDeployment(ctx, &apigatewayv2.DeleteDeploymentInput{
+	input := apigatewayv2.DeleteDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		DeploymentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDeployment(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

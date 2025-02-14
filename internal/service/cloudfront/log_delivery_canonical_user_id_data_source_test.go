@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,7 +42,7 @@ func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_default(t *testing.T)
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryCanonicalUserIdDataSourceConfig_basic(names.USWest2RegionID),
+				Config: testAccLogDeliveryCanonicalUserIdDataSourceConfig_basic(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"),
 				),
@@ -60,7 +61,7 @@ func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_cn(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryCanonicalUserIdDataSourceConfig_basic(names.CNNorthwest1RegionID),
+				Config: testAccLogDeliveryCanonicalUserIdDataSourceConfig_basic(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"),
 				),

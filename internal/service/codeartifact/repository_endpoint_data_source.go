@@ -61,7 +61,7 @@ func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk("domain_owner"); ok {
 		domainOwner = v.(string)
 	} else {
-		domainOwner = meta.(*conns.AWSClient).AccountID
+		domainOwner = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	format := types.PackageFormat(d.Get(names.AttrFormat).(string))
 	repositoryName := d.Get("repository").(string)

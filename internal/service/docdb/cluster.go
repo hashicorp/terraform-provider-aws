@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 	"time"
 
@@ -28,13 +27,14 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_docdb_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -225,6 +225,43 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"restore_to_point_in_time": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"restore_to_time": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  verify.ValidUTCTimestamp,
+							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+						},
+						"restore_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(restoreType_Values(), false),
+						},
+						"source_cluster_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"use_latest_restorable_time": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
+						},
+					},
+				},
+				ConflictsWith: []string{
+					"snapshot_identifier",
+				},
+			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -237,6 +274,9 @@ func ResourceCluster() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// allow snapshot_idenfitier to be removed without forcing re-creation
 					return new == ""
+				},
+				ConflictsWith: []string{
+					"restore_to_point_in_time",
 				},
 			},
 			names.AttrStorageEncrypted: {
@@ -331,6 +371,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("master_password"); ok {
+			inputM.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -359,6 +404,62 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore from snapshot) (%s): %s", identifier, err)
+		}
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		input := &docdb.RestoreDBClusterToPointInTimeInput{
+			DBClusterIdentifier:       aws.String(identifier),
+			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
+			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			Tags:                      getTagsIn(ctx),
+		}
+
+		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
+			t, _ := time.Parse(time.RFC3339, v)
+			input.RestoreToTime = aws.Time(t)
+		}
+
+		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
+			input.UseLatestRestorableTime = aws.Bool(v)
+		}
+
+		if input.RestoreToTime == nil && input.UseLatestRestorableTime == nil {
+			return sdkdiag.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
+		}
+
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]interface{}))
+		}
+
+		if v, ok := tfMap["restore_type"].(string); ok {
+			input.RestoreType = aws.String(v)
+		}
+
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk(names.AttrPort); ok {
+			input.Port = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
+			input.StorageType = aws.String(v.(string))
+		}
+
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.RestoreDBClusterToPointInTime(ctx, input)
+		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore to point-in-time) (%s): %s", identifier, err)
 		}
 	} else {
 		// Secondary DocDB clusters part of a global cluster will not supply the master_password
@@ -763,7 +864,7 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 	input := &docdb.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[awstypes.DBCluster]())
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DBCluster]())
 
 	if err != nil {
 		return nil, err
@@ -782,12 +883,12 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 func findClusterByARN(ctx context.Context, conn *docdb.Client, arn string) (*awstypes.DBCluster, error) {
 	input := &docdb.DescribeDBClustersInput{}
 
-	return findDBCluster(ctx, conn, input, func(v awstypes.DBCluster) bool {
+	return findDBCluster(ctx, conn, input, func(v *awstypes.DBCluster) bool {
 		return aws.ToString(v.DBClusterArn) == arn
 	})
 }
 
-func findDBCluster(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[awstypes.DBCluster]) (*awstypes.DBCluster, error) {
+func findDBCluster(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[*awstypes.DBCluster]) (*awstypes.DBCluster, error) {
 	output, err := findDBClusters(ctx, conn, input, filter)
 
 	if err != nil {
@@ -797,7 +898,7 @@ func findDBCluster(ctx context.Context, conn *docdb.Client, input *docdb.Describ
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[awstypes.DBCluster]) ([]awstypes.DBCluster, error) {
+func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[*awstypes.DBCluster]) ([]awstypes.DBCluster, error) {
 	var output []awstypes.DBCluster
 
 	pages := docdb.NewDescribeDBClustersPaginator(conn, input)
@@ -816,7 +917,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		}
 
 		for _, v := range page.DBClusters {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if !itypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}

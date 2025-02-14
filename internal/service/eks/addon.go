@@ -90,6 +90,23 @@ func resourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pod_identity_association": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRoleARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"service_account": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"preserve": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -146,6 +163,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("configuration_values"); ok {
 		input.ConfigurationValues = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
+		input.PodIdentityAssociations = expandAddonPodIdentityAssociations(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("resolve_conflicts"); ok {
@@ -226,6 +247,13 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	flatPIAs, err := flattenAddonPodIdentityAssociations(ctx, addon.PodIdentityAssociations, clusterName, meta)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening pod_identity_association: %s", err)
+	}
+	if err := d.Set("pod_identity_association", flatPIAs); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
+	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	setTagsOut(ctx, addon.Tags)
@@ -242,7 +270,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
+	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values", "pod_identity_association") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
 			ClientRequestToken: aws.String(sdkid.UniqueId()),
@@ -255,6 +283,14 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("configuration_values") {
 			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
+		}
+
+		if d.HasChange("pod_identity_association") {
+			if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
+				input.PodIdentityAssociations = expandAddonPodIdentityAssociations(v.(*schema.Set).List())
+			} else {
+				input.PodIdentityAssociations = []types.AddonPodIdentityAssociations{}
+			}
 		}
 
 		var conflictResolutionAttr string
@@ -319,6 +355,10 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
 	_, err = conn.DeleteAddon(ctx, input)
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EKS Add-On (%s): %s", d.Id(), err)
 	}
@@ -328,6 +368,67 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func expandAddonPodIdentityAssociations(tfList []interface{}) []types.AddonPodIdentityAssociations {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var addonPodIdentityAssociations []types.AddonPodIdentityAssociations
+	for _, raw := range tfList {
+		tfMap, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		pia := types.AddonPodIdentityAssociations{}
+		if roleArn, ok := tfMap[names.AttrRoleARN].(string); ok {
+			pia.RoleArn = aws.String(roleArn)
+		}
+		if service_account, ok := tfMap["service_account"].(string); ok {
+			pia.ServiceAccount = aws.String(service_account)
+		}
+
+		addonPodIdentityAssociations = append(addonPodIdentityAssociations, pia)
+	}
+
+	return addonPodIdentityAssociations
+}
+
+func flattenAddonPodIdentityAssociations(ctx context.Context, associations []string, clusterName string, meta interface{}) ([]interface{}, error) {
+	if len(associations) == 0 {
+		return nil, nil
+	}
+
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
+	var results []interface{}
+
+	for _, associationArn := range associations {
+		// CreateAddon returns the associationARN. The associationId is extracted from the end of the ARN,
+		// which is used in the DescribePodIdentityAssociation call to get the RoleARN and ServiceAccount
+		//
+		// Ex. "arn:aws:eks:<region>:<account-id>:podidentityassociation/<cluster-name>/a-1v95i5dqqiylbo3ud"
+		parts := strings.Split(associationArn, "/")
+		if len(parts) != 3 {
+			return nil, fmt.Errorf(`unable to extract association ID from ARN "%s"`, associationArn)
+		}
+
+		associationId := parts[2]
+		pia, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, associationId, clusterName)
+		if err != nil {
+			return nil, err
+		}
+
+		tfMap := map[string]interface{}{
+			names.AttrRoleARN: pia.RoleArn,
+			"service_account": pia.ServiceAccount,
+		}
+
+		results = append(results, tfMap)
+	}
+
+	return results, nil
 }
 
 func findAddonByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, addonName string) (*types.Addon, error) {

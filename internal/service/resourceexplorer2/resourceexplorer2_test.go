@@ -10,8 +10,6 @@ import (
 )
 
 func TestAccResourceExplorer2_serial(t *testing.T) {
-	t.Parallel()
-
 	testCases := map[string]map[string]func(t *testing.T){
 		"Index": {
 			acctest.CtBasic:      testAccIndex_basic,
@@ -24,6 +22,7 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 			"defaultView":        testAccView_defaultView,
 			acctest.CtDisappears: testAccView_disappears,
 			"filter":             testAccView_filter,
+			"scope":              testAccView_scope,
 			"tags":               testAccView_tags,
 		},
 		"SearchDataSource": {

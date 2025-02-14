@@ -24,8 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_vpclattice_auth_policy")
+// @SDKResource("aws_vpclattice_auth_policy", name="Auth Policy")
 func ResourceAuthPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthPolicyPut,
@@ -138,9 +137,10 @@ func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AuthPolicy: %s", d.Id())
-	_, err := conn.DeleteAuthPolicy(ctx, &vpclattice.DeleteAuthPolicyInput{
+	input := vpclattice.DeleteAuthPolicyInput{
 		ResourceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAuthPolicy(ctx, &input)
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException

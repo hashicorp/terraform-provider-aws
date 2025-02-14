@@ -256,6 +256,10 @@ func resourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -302,7 +306,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.ToString(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 

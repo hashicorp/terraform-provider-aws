@@ -6,7 +6,6 @@ package emr
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -20,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Supported Instance Types")
+// @FrameworkDataSource("aws_emr_supported_instance_types", name="Supported Instance Types")
 func newDataSourceSupportedInstanceTypes(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSupportedInstanceTypes{}, nil
 }
@@ -99,7 +98,7 @@ func (d *dataSourceSupportedInstanceTypes) Read(ctx context.Context, req datasou
 	data.ID = types.StringValue(data.ReleaseLabel.ValueString())
 
 	input := &emr.ListSupportedInstanceTypesInput{
-		ReleaseLabel: aws.String(data.ReleaseLabel.ValueString()),
+		ReleaseLabel: data.ReleaseLabel.ValueStringPointer(),
 	}
 
 	var results []awstypes.SupportedInstanceType

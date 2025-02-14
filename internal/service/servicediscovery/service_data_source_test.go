@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ func TestAccServiceDiscoveryServiceDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -55,7 +54,7 @@ func TestAccServiceDiscoveryServiceDataSource_private(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -87,7 +86,7 @@ func TestAccServiceDiscoveryServiceDataSource_public(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -160,7 +159,7 @@ resource "aws_service_discovery_service" "test" {
   }
 
   health_check_custom_config {
-    failure_threshold = 5
+    failure_threshold = 1
   }
 }
 

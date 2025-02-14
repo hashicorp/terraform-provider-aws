@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -115,7 +114,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
@@ -150,9 +149,10 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 VPC Link: %s", d.Id())
-	_, err := conn.DeleteVpcLink(ctx, &apigatewayv2.DeleteVpcLinkInput{
+	input := apigatewayv2.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcLink(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -258,11 +258,6 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.Client, vpcLinkI
 	return nil, err
 }
 
-func vpcLinkARN(c *conns.AWSClient, vpcLinkID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  "/vpclinks/" + vpcLinkID,
-	}.String()
+func vpcLinkARN(ctx context.Context, c *conns.AWSClient, vpcLinkID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", "/vpclinks/"+vpcLinkID)
 }

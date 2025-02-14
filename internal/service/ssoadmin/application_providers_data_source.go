@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Application Providers")
+// @FrameworkDataSource("aws_ssoadmin_application_providers", name="Application Providers")
 func newDataSourceApplicationProviders(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplicationProviders{}, nil
 }
@@ -81,7 +81,7 @@ func (d *dataSourceApplicationProviders) Read(ctx context.Context, req datasourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	paginator := ssoadmin.NewListApplicationProvidersPaginator(conn, &ssoadmin.ListApplicationProvidersInput{})
 	var apiObjects []awstypes.ApplicationProvider

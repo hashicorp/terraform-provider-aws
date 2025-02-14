@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -83,7 +83,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 	}
 }
 
-func expandScatterPlotVisual(tfList []interface{}) *quicksight.ScatterPlotVisual {
+func expandScatterPlotVisual(tfList []interface{}) *awstypes.ScatterPlotVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -93,31 +93,31 @@ func expandScatterPlotVisual(tfList []interface{}) *quicksight.ScatterPlotVisual
 		return nil
 	}
 
-	visual := &quicksight.ScatterPlotVisual{}
+	apiObject := &awstypes.ScatterPlotVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
+		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandScatterPlotConfiguration(v)
+		apiObject.ChartConfiguration = expandScatterPlotConfiguration(v)
 	}
 	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
-		visual.ColumnHierarchies = expandColumnHierarchies(v)
+		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return visual
+	return apiObject
 }
 
-func expandScatterPlotConfiguration(tfList []interface{}) *quicksight.ScatterPlotConfiguration {
+func expandScatterPlotConfiguration(tfList []interface{}) *awstypes.ScatterPlotConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -127,40 +127,40 @@ func expandScatterPlotConfiguration(tfList []interface{}) *quicksight.ScatterPlo
 		return nil
 	}
 
-	config := &quicksight.ScatterPlotConfiguration{}
+	apiObject := &awstypes.ScatterPlotConfiguration{}
 
 	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
-		config.DataLabels = expandDataLabelOptions(v)
+		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FieldWells = expandScatterPlotFieldWells(v)
+		apiObject.FieldWells = expandScatterPlotFieldWells(v)
 	}
 	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
-		config.Legend = expandLegendOptions(v)
+		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
-		config.Tooltip = expandTooltipOptions(v)
+		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
-		config.VisualPalette = expandVisualPalette(v)
+		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 	if v, ok := tfMap["x_axis_display_options"].([]interface{}); ok && len(v) > 0 {
-		config.XAxisDisplayOptions = expandAxisDisplayOptions(v)
+		apiObject.XAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
 	if v, ok := tfMap["x_axis_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.XAxisLabelOptions = expandChartAxisLabelOptions(v)
+		apiObject.XAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
 	if v, ok := tfMap["y_axis_display_options"].([]interface{}); ok && len(v) > 0 {
-		config.YAxisDisplayOptions = expandAxisDisplayOptions(v)
+		apiObject.YAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
 	if v, ok := tfMap["y_axis_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.YAxisLabelOptions = expandChartAxisLabelOptions(v)
+		apiObject.YAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandScatterPlotFieldWells(tfList []interface{}) *quicksight.ScatterPlotFieldWells {
+func expandScatterPlotFieldWells(tfList []interface{}) *awstypes.ScatterPlotFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -170,19 +170,19 @@ func expandScatterPlotFieldWells(tfList []interface{}) *quicksight.ScatterPlotFi
 		return nil
 	}
 
-	config := &quicksight.ScatterPlotFieldWells{}
+	apiObject := &awstypes.ScatterPlotFieldWells{}
 
 	if v, ok := tfMap["scatter_plot_categorically_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.ScatterPlotCategoricallyAggregatedFieldWells = expandScatterPlotCategoricallyAggregatedFieldWells(v)
+		apiObject.ScatterPlotCategoricallyAggregatedFieldWells = expandScatterPlotCategoricallyAggregatedFieldWells(v)
 	}
 	if v, ok := tfMap["scatter_plot_unaggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.ScatterPlotUnaggregatedFieldWells = expandScatterPlotUnaggregatedFieldWells(v)
+		apiObject.ScatterPlotUnaggregatedFieldWells = expandScatterPlotUnaggregatedFieldWells(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *quicksight.ScatterPlotCategoricallyAggregatedFieldWells {
+func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *awstypes.ScatterPlotCategoricallyAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -192,25 +192,25 @@ func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *q
 		return nil
 	}
 
-	config := &quicksight.ScatterPlotCategoricallyAggregatedFieldWells{}
+	apiObject := &awstypes.ScatterPlotCategoricallyAggregatedFieldWells{}
 
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
-		config.Category = expandDimensionFields(v)
+		apiObject.Category = expandDimensionFields(v)
 	}
 	if v, ok := tfMap[names.AttrSize].([]interface{}); ok && len(v) > 0 {
-		config.Size = expandMeasureFields(v)
+		apiObject.Size = expandMeasureFields(v)
 	}
 	if v, ok := tfMap["x_axis"].([]interface{}); ok && len(v) > 0 {
-		config.XAxis = expandMeasureFields(v)
+		apiObject.XAxis = expandMeasureFields(v)
 	}
 	if v, ok := tfMap["y_axis"].([]interface{}); ok && len(v) > 0 {
-		config.YAxis = expandMeasureFields(v)
+		apiObject.YAxis = expandMeasureFields(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *quicksight.ScatterPlotUnaggregatedFieldWells {
+func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *awstypes.ScatterPlotUnaggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -220,29 +220,30 @@ func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *quicksight.S
 		return nil
 	}
 
-	config := &quicksight.ScatterPlotUnaggregatedFieldWells{}
+	apiObject := &awstypes.ScatterPlotUnaggregatedFieldWells{}
 
 	if v, ok := tfMap[names.AttrSize].([]interface{}); ok && len(v) > 0 {
-		config.Size = expandMeasureFields(v)
+		apiObject.Size = expandMeasureFields(v)
 	}
 	if v, ok := tfMap["x_axis"].([]interface{}); ok && len(v) > 0 {
-		config.XAxis = expandDimensionFields(v)
+		apiObject.XAxis = expandDimensionFields(v)
 	}
 	if v, ok := tfMap["y_axis"].([]interface{}); ok && len(v) > 0 {
-		config.YAxis = expandDimensionFields(v)
+		apiObject.YAxis = expandDimensionFields(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func flattenScatterPlotVisual(apiObject *quicksight.ScatterPlotVisual) []interface{} {
+func flattenScatterPlotVisual(apiObject *awstypes.ScatterPlotVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
@@ -262,12 +263,13 @@ func flattenScatterPlotVisual(apiObject *quicksight.ScatterPlotVisual) []interfa
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotConfiguration(apiObject *quicksight.ScatterPlotConfiguration) []interface{} {
+func flattenScatterPlotConfiguration(apiObject *awstypes.ScatterPlotConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.DataLabels != nil {
 		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
@@ -299,7 +301,7 @@ func flattenScatterPlotConfiguration(apiObject *quicksight.ScatterPlotConfigurat
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotFieldWells(apiObject *quicksight.ScatterPlotFieldWells) []interface{} {
+func flattenScatterPlotFieldWells(apiObject *awstypes.ScatterPlotFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -315,12 +317,13 @@ func flattenScatterPlotFieldWells(apiObject *quicksight.ScatterPlotFieldWells) [
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *quicksight.ScatterPlotCategoricallyAggregatedFieldWells) []interface{} {
+func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *awstypes.ScatterPlotCategoricallyAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
@@ -337,12 +340,13 @@ func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *quicksight.S
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotUnaggregatedFieldWells(apiObject *quicksight.ScatterPlotUnaggregatedFieldWells) []interface{} {
+func flattenScatterPlotUnaggregatedFieldWells(apiObject *awstypes.ScatterPlotUnaggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Size != nil {
 		tfMap[names.AttrSize] = flattenMeasureFields(apiObject.Size)
 	}

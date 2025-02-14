@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Repositories")
+// @FrameworkDataSource("aws_ecr_repositories", name="Repositories")
 func newRepositoriesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &repositoriesDataSource{}, nil
 }
@@ -63,7 +63,7 @@ func (d *repositoriesDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region)
+	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region(ctx))
 	data.Names.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, tfslices.ApplyToAll(output, func(v awstypes.Repository) string {
 		return aws.ToString(v.RepositoryName)
 	}))

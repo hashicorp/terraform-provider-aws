@@ -55,7 +55,7 @@ func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "RAM Sharing With Organization failed")
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceSharingWithOrganizationRead(ctx, d, meta)...)
 }

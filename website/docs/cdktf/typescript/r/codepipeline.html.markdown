@@ -227,7 +227,7 @@ An `action` block supports the following arguments:
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. Provider names are listed in the [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
 * `version` - (Required) A string that identifies the action type.
-* `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
+* `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation. Note: The `DetectChanges` parameter (optional, default value is true) in the `configuration` section causes CodePipeline to automatically start your pipeline upon new commits. Please refer to AWS Documentation for more details: https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference-CodestarConnectionSource.html#action-reference-CodestarConnectionSource-config.
 * `inputArtifacts` - (Optional) A list of artifact names to be worked on.
 * `outputArtifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline.
 * `roleArn` - (Optional) The ARN of the IAM service role that will perform the declared action. This is assumed through the roleArn for the pipeline.
@@ -242,7 +242,7 @@ A `trigger` block supports the following arguments:
 
 A `gitConfiguration` block supports the following arguments:
 
-* `sourceActionName` - (Required) The name of the pipeline source action where the trigger configuration.
+* `sourceActionName` - (Required) The name of the pipeline source action where the trigger configuration, such as Git tags, is specified. The trigger configuration will start the pipeline upon the specified change only.
 * `pullRequest` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pullRequest` block is documented below.
 * `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
 
@@ -317,4 +317,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5520b5342dee2a90566e4663f10c917fd65e66a2734a38eeddba35384d88a406 -->
+<!-- cache-key: cdktf-0.20.8 input-33146aeb6f82e395d952df81565ba762b324c46eb51cf7e6935b24becccc0aea -->

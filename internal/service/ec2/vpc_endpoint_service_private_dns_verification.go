@@ -5,10 +5,9 @@ package ec2
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -16,24 +15,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_vpc_endpoint_service_private_dns_verification", name="Endpoint Service Private DNS Verification")
-func newResourceEndpointServicePrivateDNSVerification(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEndpointServicePrivateDNSVerification{}
+// @FrameworkResource("aws_vpc_endpoint_service_private_dns_verification", name="VPC Endpoint Service Private DNS Verification")
+func newVPCEndpointServicePrivateDNSVerificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &vpcEndpointServicePrivateDNSVerificationResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameEndpointServicePrivateDNSVerification = "Endpoint Service Private DNS Verification"
-)
-
-type resourceEndpointServicePrivateDNSVerification struct {
+type vpcEndpointServicePrivateDNSVerificationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoOpRead
 	framework.WithNoUpdate
@@ -41,12 +36,12 @@ type resourceEndpointServicePrivateDNSVerification struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceEndpointServicePrivateDNSVerification) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_vpc_endpoint_service_private_dns_verification"
+func (*vpcEndpointServicePrivateDNSVerificationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_vpc_endpoint_service_private_dns_verification"
 }
 
-func (r *resourceEndpointServicePrivateDNSVerification) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *vpcEndpointServicePrivateDNSVerificationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"service_id": schema.StringAttribute{
 				Required: true,
@@ -66,58 +61,39 @@ func (r *resourceEndpointServicePrivateDNSVerification) Schema(ctx context.Conte
 	}
 }
 
-func (r *resourceEndpointServicePrivateDNSVerification) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *vpcEndpointServicePrivateDNSVerificationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data vpcEndpointServicePrivateDNSVerificationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceEndpointServicePrivateDNSVerificationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	input := &ec2.StartVpcEndpointServicePrivateDnsVerificationInput{
+		ServiceId: fwflex.StringFromFramework(ctx, data.ServiceID),
 	}
 
-	in := &ec2.StartVpcEndpointServicePrivateDnsVerificationInput{
-		ServiceId: aws.String(plan.ServiceID.ValueString()),
-	}
+	_, err := conn.StartVpcEndpointServicePrivateDnsVerification(ctx, input)
 
-	out, err := conn.StartVpcEndpointServicePrivateDnsVerification(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEndpointServicePrivateDNSVerification, plan.ServiceID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.ReturnValue == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEndpointServicePrivateDNSVerification, plan.ServiceID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-	if !aws.ToBool(out.ReturnValue) {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEndpointServicePrivateDNSVerification, plan.ServiceID.String(), nil),
-			errors.New("request failed").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("starting VPC Endpoint Service Private DNS Verification (%s)", data.ServiceID.ValueString()), err.Error())
+
 		return
 	}
 
-	if plan.WaitForVerification.ValueBool() {
-		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-		_, err := waitVPCEndpointServicePrivateDNSNameVerified(ctx, conn, plan.ServiceID.ValueString(), createTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameEndpointServicePrivateDNSVerification, plan.ServiceID.String(), err),
-				err.Error(),
-			)
+	if data.WaitForVerification.ValueBool() {
+		if _, err := waitVPCEndpointServicePrivateDNSNameVerified(ctx, conn, data.ServiceID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Endpoint Service Private DNS Verification (%s)", data.ServiceID.ValueString()), err.Error())
+
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-type resourceEndpointServicePrivateDNSVerificationData struct {
+type vpcEndpointServicePrivateDNSVerificationResourceModel struct {
 	ServiceID           types.String   `tfsdk:"service_id"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 	WaitForVerification types.Bool     `tfsdk:"wait_for_verification"`

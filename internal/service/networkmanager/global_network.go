@@ -8,14 +8,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,7 +27,7 @@ import (
 
 // @SDKResource("aws_networkmanager_global_network", name="Global Network")
 // @Tags(identifierAttribute="arn")
-func ResourceGlobalNetwork() *schema.Resource {
+func resourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalNetworkCreate,
 		ReadWithoutTimeout:   resourceGlobalNetworkRead,
@@ -63,7 +65,7 @@ func ResourceGlobalNetwork() *schema.Resource {
 func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	input := &networkmanager.CreateGlobalNetworkInput{
 		Tags: getTagsIn(ctx),
@@ -73,14 +75,14 @@ func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Global Network: %s", input)
-	output, err := conn.CreateGlobalNetworkWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Network Manager Global Network: %#v", input)
+	output, err := conn.CreateGlobalNetwork(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager Global Network: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.GlobalNetwork.GlobalNetworkId))
+	d.SetId(aws.ToString(output.GlobalNetwork.GlobalNetworkId))
 
 	if _, err := waitGlobalNetworkCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Global Network (%s) create: %s", d.Id(), err)
@@ -92,9 +94,9 @@ func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, d.Id())
+	globalNetwork, err := findGlobalNetworkByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Global Network %s not found, removing from state", d.Id())
@@ -117,7 +119,7 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &networkmanager.UpdateGlobalNetworkInput{
@@ -125,8 +127,8 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 			GlobalNetworkId: aws.String(d.Id()),
 		}
 
-		log.Printf("[DEBUG] Updating Network Manager Global Network: %s", input)
-		_, err := conn.UpdateGlobalNetworkWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating Network Manager Global Network: %#v", input)
+		_, err := conn.UpdateGlobalNetwork(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Network Manager Global Network (%s): %s", d.Id(), err)
@@ -143,7 +145,7 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if diags := disassociateCustomerGateways(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); diags.HasError() {
 		return diags
@@ -160,12 +162,12 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, globalNetworkValidationExceptionTimeout,
 		func() (interface{}, error) {
-			return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
+			return conn.DeleteGlobalNetwork(ctx, &networkmanager.DeleteGlobalNetworkInput{
 				GlobalNetworkId: aws.String(d.Id()),
 			})
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "cannot be deleted due to existing devices, sites, or links") {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot be deleted due to existing devices, sites, or links") {
 				return true, err
 			}
 
@@ -173,7 +175,7 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 		},
 	)
 
-	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -188,10 +190,10 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func deregisterTransitGateways(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
+func deregisterTransitGateways(ctx context.Context, conn *networkmanager.Client, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	output, err := FindTransitGatewayRegistrations(ctx, conn, &networkmanager.GetTransitGatewayRegistrationsInput{
+	output, err := findTransitGatewayRegistrations(ctx, conn, &networkmanager.GetTransitGatewayRegistrationsInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
@@ -204,7 +206,7 @@ func deregisterTransitGateways(ctx context.Context, conn *networkmanager.Network
 	}
 
 	for _, v := range output {
-		err := deregisterTransitGateway(ctx, conn, globalNetworkID, aws.StringValue(v.TransitGatewayArn), timeout)
+		err := deregisterTransitGateway(ctx, conn, globalNetworkID, aws.ToString(v.TransitGatewayArn), timeout)
 
 		if err != nil {
 			diags = sdkdiag.AppendFromErr(diags, err)
@@ -218,10 +220,10 @@ func deregisterTransitGateways(ctx context.Context, conn *networkmanager.Network
 	return diags
 }
 
-func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
+func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Client, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	output, err := FindCustomerGatewayAssociations(ctx, conn, &networkmanager.GetCustomerGatewayAssociationsInput{
+	output, err := findCustomerGatewayAssociations(ctx, conn, &networkmanager.GetCustomerGatewayAssociationsInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
@@ -234,7 +236,7 @@ func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Netw
 	}
 
 	for _, v := range output {
-		err := disassociateCustomerGateway(ctx, conn, globalNetworkID, aws.StringValue(v.CustomerGatewayArn), timeout)
+		err := disassociateCustomerGateway(ctx, conn, globalNetworkID, aws.ToString(v.CustomerGatewayArn), timeout)
 
 		if err != nil {
 			diags = sdkdiag.AppendFromErr(diags, err)
@@ -248,10 +250,10 @@ func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Netw
 	return diags
 }
 
-func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
+func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkmanager.Client, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	output, err := FindTransitGatewayConnectPeerAssociations(ctx, conn, &networkmanager.GetTransitGatewayConnectPeerAssociationsInput{
+	output, err := findTransitGatewayConnectPeerAssociations(ctx, conn, &networkmanager.GetTransitGatewayConnectPeerAssociationsInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
@@ -264,7 +266,7 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 	}
 
 	for _, v := range output {
-		err := disassociateTransitGatewayConnectPeer(ctx, conn, globalNetworkID, aws.StringValue(v.TransitGatewayConnectPeerArn), timeout)
+		err := disassociateTransitGatewayConnectPeer(ctx, conn, globalNetworkID, aws.ToString(v.TransitGatewayConnectPeerArn), timeout)
 
 		if err != nil {
 			diags = sdkdiag.AppendFromErr(diags, err)
@@ -279,17 +281,17 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 }
 
 func globalNetworkIDNotFoundError(err error) bool {
-	return validationExceptionFieldsMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found")
+	return validationExceptionFieldsMessageContains(err, awstypes.ValidationExceptionReasonFieldValidationFailed, "Global network not found")
 }
 
-func FindGlobalNetwork(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.DescribeGlobalNetworksInput) (*networkmanager.GlobalNetwork, error) {
-	output, err := FindGlobalNetworks(ctx, conn, input)
+func findGlobalNetwork(ctx context.Context, conn *networkmanager.Client, input *networkmanager.DescribeGlobalNetworksInput) (*awstypes.GlobalNetwork, error) {
+	output, err := findGlobalNetworks(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -297,48 +299,39 @@ func FindGlobalNetwork(ctx context.Context, conn *networkmanager.NetworkManager,
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindGlobalNetworks(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.DescribeGlobalNetworksInput) ([]*networkmanager.GlobalNetwork, error) {
-	var output []*networkmanager.GlobalNetwork
+func findGlobalNetworks(ctx context.Context, conn *networkmanager.Client, input *networkmanager.DescribeGlobalNetworksInput) ([]awstypes.GlobalNetwork, error) {
+	var output []awstypes.GlobalNetwork
 
-	err := conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := networkmanager.NewDescribeGlobalNetworksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.GlobalNetworks {
-			if v == nil {
-				continue
-			}
-
-			output = append(output, v)
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.GlobalNetworks...)
 	}
 
 	return output, nil
 }
 
-func FindGlobalNetworkByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.GlobalNetwork, error) {
+func findGlobalNetworkByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.GlobalNetwork, error) {
 	input := &networkmanager.DescribeGlobalNetworksInput{
-		GlobalNetworkIds: aws.StringSlice([]string{id}),
+		GlobalNetworkIds: []string{id},
 	}
 
-	output, err := FindGlobalNetwork(ctx, conn, input)
+	output, err := findGlobalNetwork(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.GlobalNetworkId) != id {
+	if aws.ToString(output.GlobalNetworkId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -347,9 +340,9 @@ func FindGlobalNetworkByID(ctx context.Context, conn *networkmanager.NetworkMana
 	return output, nil
 }
 
-func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
+func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindGlobalNetworkByID(ctx, conn, id)
+		output, err := findGlobalNetworkByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -359,30 +352,30 @@ func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.NetworkM
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, string(output.State), nil
 	}
 }
 
-func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
+func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.GlobalNetworkStatePending},
-		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
+		Pending: enum.Slice(awstypes.GlobalNetworkStatePending),
+		Target:  enum.Slice(awstypes.GlobalNetworkStateAvailable),
 		Timeout: timeout,
 		Refresh: statusGlobalNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.GlobalNetwork); ok {
+	if output, ok := outputRaw.(*awstypes.GlobalNetwork); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
+func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{networkmanager.GlobalNetworkStateDeleting},
+		Pending:        enum.Slice(awstypes.GlobalNetworkStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusGlobalNetworkState(ctx, conn, id),
@@ -391,24 +384,24 @@ func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkM
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.GlobalNetwork); ok {
+	if output, ok := outputRaw.(*awstypes.GlobalNetwork); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitGlobalNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
+func waitGlobalNetworkUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.GlobalNetworkStateUpdating},
-		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
+		Pending: enum.Slice(awstypes.GlobalNetworkStateUpdating),
+		Target:  enum.Slice(awstypes.GlobalNetworkStateAvailable),
 		Timeout: timeout,
 		Refresh: statusGlobalNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.GlobalNetwork); ok {
+	if output, ok := outputRaw.(*awstypes.GlobalNetwork); ok {
 		return output, err
 	}
 

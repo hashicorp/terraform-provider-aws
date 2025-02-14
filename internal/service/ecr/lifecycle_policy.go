@@ -4,17 +4,15 @@
 package ecr
 
 import (
-	"bytes"
+	"cmp"
 	"context"
-	"encoding/json"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -200,8 +199,8 @@ type lifecyclePolicy struct {
 }
 
 func (lp *lifecyclePolicy) reduce() {
-	sort.Slice(lp.Rules, func(i, j int) bool {
-		return aws.ToInt64(lp.Rules[i].RulePriority) < aws.ToInt64(lp.Rules[j].RulePriority)
+	slices.SortFunc(lp.Rules, func(a, b *lifecyclePolicyRule) int {
+		return cmp.Compare(aws.ToInt64(a.RulePriority), aws.ToInt64(b.RulePriority))
 	})
 
 	for _, rule := range lp.Rules {
@@ -210,16 +209,16 @@ func (lp *lifecyclePolicy) reduce() {
 }
 
 func (lprs *lifecyclePolicyRuleSelection) reduce() {
-	sort.Slice(lprs.TagPatternList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPatternList[i]) < aws.ToString(lprs.TagPatternList[j])
+	slices.SortFunc(lprs.TagPatternList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPatternList) == 0 {
 		lprs.TagPatternList = nil
 	}
 
-	sort.Slice(lprs.TagPrefixList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPrefixList[i]) < aws.ToString(lprs.TagPrefixList[j])
+	slices.SortFunc(lprs.TagPrefixList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPrefixList) == 0 {
@@ -236,37 +235,27 @@ func equivalentLifecyclePolicyJSON(str1, str2 string) (bool, error) {
 		str2 = "{}"
 	}
 
-	var lp1, lp2 lifecyclePolicy
-
-	if err := json.Unmarshal([]byte(str1), &lp1); err != nil {
+	var lp1 lifecyclePolicy
+	err := tfjson.DecodeFromString(str1, &lp1)
+	if err != nil {
 		return false, err
 	}
-
 	lp1.reduce()
-
-	canonicalJSON1, err := jsonutil.BuildJSON(lp1)
-
+	b1, err := tfjson.EncodeToBytes(lp1)
 	if err != nil {
 		return false, err
 	}
 
-	if err := json.Unmarshal([]byte(str2), &lp2); err != nil {
+	var lp2 lifecyclePolicy
+	err = tfjson.DecodeFromString(str2, &lp2)
+	if err != nil {
 		return false, err
 	}
-
 	lp2.reduce()
-
-	canonicalJSON2, err := jsonutil.BuildJSON(lp2)
-
+	b2, err := tfjson.EncodeToBytes(lp2)
 	if err != nil {
 		return false, err
 	}
 
-	equal := bytes.Equal(canonicalJSON1, canonicalJSON2)
-
-	if !equal {
-		log.Printf("[DEBUG] Canonical Lifecycle Policy JSONs are not equal.\nFirst: %s\nSecond: %s\n", canonicalJSON1, canonicalJSON2)
-	}
-
-	return equal, nil
+	return tfjson.EqualBytes(b1, b2), nil
 }

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Model Invocation Logging Configuration")
+// @FrameworkResource("aws_bedrock_model_invocation_logging_configuration", name="Model Invocation Logging Configuration")
 func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceModelInvocationLoggingConfiguration{}, nil
 }
@@ -118,7 +118,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().Region)
+	data.ID = types.StringValue(r.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -179,7 +179,8 @@ func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
+	input := bedrock.DeleteModelInvocationLoggingConfigurationInput{}
+	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())

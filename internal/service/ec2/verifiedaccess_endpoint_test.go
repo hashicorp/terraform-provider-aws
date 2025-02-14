@@ -53,7 +53,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
 				),
@@ -139,7 +139,7 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 				Config: testAccVerifiedAccessEndpointConfig_tags1(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -155,7 +155,7 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 				Config: testAccVerifiedAccessEndpointConfig_tags2(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -164,7 +164,7 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 				Config: testAccVerifiedAccessEndpointConfig_tags1(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -242,6 +242,60 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policyBase(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
+// Verifies load balancer subnet ID's can be updated without a crash
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39186
+func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_subnetIDs(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_subnetIDsUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "2"),
+				),
+			},
 		},
 	})
 }
@@ -292,8 +346,10 @@ func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccVerifiedAccessEndpointConfig_base(rName, key, certificate string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+func testAccVerifiedAccessEndpointConfig_base(rName, key, certificate string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -392,8 +448,9 @@ resource "aws_verifiedaccess_group" "test" {
 }
 
 func testAccVerifiedAccessEndpointConfig_basic(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
+		fmt.Sprintf(`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -421,8 +478,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 }
 
 func testAccVerifiedAccessEndpointConfig_networkInterface(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
+		fmt.Sprintf(`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -448,8 +506,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 }
 
 func testAccVerifiedAccessEndpointConfig_tags1(rName, key, certificate, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
+		fmt.Sprintf(`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -475,9 +534,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 }
 
 func testAccVerifiedAccessEndpointConfig_tags2(rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
-
-
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
+		fmt.Sprintf(`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -502,7 +561,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 }
 
 func testAccVerifiedAccessEndpointConfig_policyBase(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), `
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
+		`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -522,7 +583,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 }
 
 func testAccVerifiedAccessEndpointConfig_policyUpdate(rName, key, certificate, policyDocument string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
+		fmt.Sprintf(`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -540,4 +603,62 @@ resource "aws_verifiedaccess_endpoint" "test" {
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
 `, rName, key, certificate, policyDocument))
+}
+
+func testAccVerifiedAccessEndpointConfig_subnetIDs(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 2),
+		fmt.Sprintf(`
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  attachment_type        = "vpc"
+  description            = "example"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  endpoint_type          = "load-balancer"
+  sse_specification {
+    customer_managed_key_enabled = false
+  }
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test.arn
+    port              = 443
+    protocol          = "https"
+    subnet_ids        = [for subnet in slice(aws_subnet.test, 0, 1) : subnet.id]
+  }
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, key, certificate))
+}
+
+func testAccVerifiedAccessEndpointConfig_subnetIDsUpdate(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 2), fmt.Sprintf(`
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  attachment_type        = "vpc"
+  description            = "example"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  endpoint_type          = "load-balancer"
+  sse_specification {
+    customer_managed_key_enabled = false
+  }
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test.arn
+    port              = 443
+    protocol          = "https"
+    subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
+  }
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, key, certificate))
 }

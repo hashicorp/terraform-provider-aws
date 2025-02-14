@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
-	"github.com/aws/aws-sdk-go/service/fsx"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -32,7 +31,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
@@ -43,17 +42,17 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "protocol.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocol.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.0.version", "NFS3"),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_virtual_machine_arn", svmResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^fsxn-(nfs|smb)://.+/`)),
 				),
 			},
@@ -76,7 +75,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
@@ -107,7 +106,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_smb(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
@@ -118,11 +117,11 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_smb(t *testing.T) {
 				Config: testAccLocationFSxONTAPFileSystemConfig_smb(rName, netBiosName, domainNetbiosName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "protocol.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocol.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.domain", domainName),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mount_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mount_options.0.version", "SMB3"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.password", "MyPassw0rd1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.user", "Admin"),
@@ -148,7 +147,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_subdirectory(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
@@ -181,7 +180,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
@@ -192,7 +191,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -206,7 +205,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 				Config: testAccLocationFSxONTAPFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -215,7 +214,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},

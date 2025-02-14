@@ -9,14 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,9 +34,9 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_basic(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -87,8 +86,8 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_nestedCell(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_andCell(rName, rNameCell),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.Ct1),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", "1"),
 				),
 			},
 			{
@@ -114,7 +113,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -127,7 +126,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -136,7 +135,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -158,9 +157,9 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -174,21 +173,24 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 
 func testAccCheckRecoveryGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoveryreadiness_recovery_group" {
 				continue
 			}
 
-			input := &route53recoveryreadiness.GetRecoveryGroupInput{
-				RecoveryGroupName: aws.String(rs.Primary.ID),
+			_, err := tfroute53recoveryreadiness.FindRecoveryGroupByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetRecoveryGroupWithContext(ctx, input)
-			if err == nil {
-				return fmt.Errorf("Route53RecoveryReadiness Recovery Group (%s) not deleted", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Route53 Recovery Readiness Recovery Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -202,13 +204,9 @@ func testAccCheckRecoveryGroupExists(ctx context.Context, name string) resource.
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
-		input := &route53recoveryreadiness.GetRecoveryGroupInput{
-			RecoveryGroupName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetRecoveryGroupWithContext(ctx, input)
+		_, err := tfroute53recoveryreadiness.FindRecoveryGroupByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

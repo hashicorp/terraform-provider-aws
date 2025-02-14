@@ -57,13 +57,7 @@ func testAccCheckVPCEndpointConnectionAccepterDestroy(ctx context.Context) resou
 				continue
 			}
 
-			serviceID, vpcEndpointID, err := tfec2.VPCEndpointConnectionAccepterParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
+			_, err := tfec2.FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes[names.AttrVPCEndpointID])
 
 			if tfresource.NotFound(err) {
 				continue

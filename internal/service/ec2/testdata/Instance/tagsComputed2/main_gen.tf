@@ -36,12 +36,6 @@ data "aws_ami" "amzn2-ami-minimal-hvm-ebs-arm64" {
 
 resource "null_resource" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "unknownTagKey" {
   type     = string
   nullable = false

@@ -71,6 +71,7 @@ This data source exports the following attributes in addition to the arguments a
 * `domain` - Whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
 * `id` - If VPC Elastic IP, the allocation identifier. If EC2-Classic Elastic IP, the public IP address.
 * `instance_id` - ID of the instance that the address is associated with (if any).
+* `ipam_pool_id`- The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
 * `network_interface_id` - The ID of the network interface.
 * `network_interface_owner_id` - The ID of the AWS account that owns the network interface.
 * `private_ip` - Private IP address associated with the Elastic IP address.

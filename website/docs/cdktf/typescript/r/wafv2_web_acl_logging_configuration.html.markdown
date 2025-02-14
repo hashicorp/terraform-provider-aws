@@ -228,7 +228,7 @@ The `condition` block supports the following arguments:
 
 The `actionCondition` block supports the following argument:
 
-* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, and `COUNT`.
+* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, `COUNT`, `CAPTCHA`, `CHALLENGE` and `EXCLUDED_AS_COUNT`.
 
 ### Label Name Condition
 
@@ -253,7 +253,7 @@ To redact a single header, provide the name of the header to be redacted. For ex
 
 The `singleHeader` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to redact. This setting must be provided in lowercase characters.
+* `name` - (Required) Name of the query header to redact. This setting must be provided in lowercase characters.
 
 ## Attribute Reference
 
@@ -293,4 +293,4 @@ Using `terraform import`, import WAFv2 Web ACL Logging Configurations using the 
 % terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-25f3c0d8db1fe2e19c84f4ebb5edd1ab40bd0204a16eb4042e8db839d72d6f44 -->
+<!-- cache-key: cdktf-0.20.8 input-77202e72b4847e387989a5959c4c52f53cf2808fd468712b7f94ab48b8195a39 -->

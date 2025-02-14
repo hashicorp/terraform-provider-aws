@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_drs_replication_configuration_template: Fix issues preventing creation and deletion
+```

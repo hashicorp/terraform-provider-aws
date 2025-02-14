@@ -207,7 +207,7 @@ func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("uplink_loss_percent", project.UplinkLossPercent)
 	d.Set(names.AttrType, project.Type)
 
-	projectArn, err := decodeProjectARN(arn, "networkprofile", meta)
+	projectArn, err := decodeProjectARN(ctx, meta.(*conns.AWSClient), arn, "networkprofile")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding project_arn (%s): %s", arn, err)
 	}

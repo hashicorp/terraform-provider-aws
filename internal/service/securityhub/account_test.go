@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -209,7 +209,7 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 		conn := awsClient.SecurityHubClient(ctx)
 
-		arn := tfsecurityhub.AccountHubARN(awsClient)
+		arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
 		_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 		return err
@@ -226,7 +226,7 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			arn := tfsecurityhub.AccountHubARN(awsClient)
+			arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
 			_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 			if tfresource.NotFound(err) {

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -126,10 +126,10 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("medical-vocabulary/%s", d.Id()),
 	}.String()
 
@@ -175,9 +175,10 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[INFO] Deleting Transcribe MedicalVocabulary %s", d.Id())
 
-	_, err := conn.DeleteMedicalVocabulary(ctx, &transcribe.DeleteMedicalVocabularyInput{
+	input := transcribe.DeleteMedicalVocabularyInput{
 		VocabularyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMedicalVocabulary(ctx, &input)
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {

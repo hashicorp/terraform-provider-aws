@@ -5,18 +5,16 @@ package cognitoidp_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -101,49 +99,31 @@ resource "aws_cognito_user_in_group" "test" {
 `, rName)
 }
 
-func testAccCheckUserInGroupExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckUserInGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
-		groupName := rs.Primary.Attributes[names.AttrGroupName]
-		userPoolId := rs.Primary.Attributes[names.AttrUserPoolID]
-		username := rs.Primary.Attributes[names.AttrUsername]
-
-		found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
-
-		if err != nil {
-			return err
-		}
-
-		if !found {
-			return errors.New("user in group not found")
-		}
-
-		return nil
+		return tfcognitoidp.FindGroupUserByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrGroupName], rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrUsername])
 	}
 }
 
 func testAccCheckUserInGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_in_group" {
 				continue
 			}
 
-			groupName := rs.Primary.Attributes[names.AttrGroupName]
-			userPoolId := rs.Primary.Attributes[names.AttrUserPoolID]
-			username := rs.Primary.Attributes[names.AttrUsername]
+			err := tfcognitoidp.FindGroupUserByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrGroupName], rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrUsername])
 
-			found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
-
-			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -151,9 +131,7 @@ func testAccCheckUserInGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			if found {
-				return fmt.Errorf("user in group still exists (%s)", rs.Primary.ID)
-			}
+			return fmt.Errorf("Cognito Group User %s still exists", rs.Primary.ID)
 		}
 
 		return nil

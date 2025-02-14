@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -156,11 +157,11 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		input := &elbv2.DescribeTargetHealthInput{
+		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: aws.String(rs.Primary.Attributes["target_group_arn"]),
-			Targets: []*elbv2.TargetDescription{{
+			Targets: []awstypes.TargetDescription{{
 				Id: aws.String(rs.Primary.Attributes["target_id"]),
 			}},
 		}
@@ -170,7 +171,7 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 		}
 
 		if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
-			input.Targets[0].Port = flex.StringValueToInt64(v)
+			input.Targets[0].Port = flex.StringValueToInt32(v)
 		}
 
 		_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)
@@ -181,16 +182,16 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 
 func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {
 				continue
 			}
 
-			input := &elbv2.DescribeTargetHealthInput{
+			input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 				TargetGroupArn: aws.String(rs.Primary.Attributes["target_group_arn"]),
-				Targets: []*elbv2.TargetDescription{{
+				Targets: []awstypes.TargetDescription{{
 					Id: aws.String(rs.Primary.Attributes["target_id"]),
 				}},
 			}
@@ -200,7 +201,7 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 			}
 
 			if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
-				input.Targets[0].Port = flex.StringValueToInt64(v)
+				input.Targets[0].Port = flex.StringValueToInt32(v)
 			}
 
 			_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)

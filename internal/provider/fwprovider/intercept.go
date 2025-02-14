@@ -7,17 +7,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,6 +45,12 @@ func (s dataSourceInterceptors) read() []dataSourceInterceptorReadFunc {
 		return e.read
 	})
 }
+
+type ephemeralResourceInterceptor interface {
+	// TODO implement me
+}
+
+type ephemeralResourceInterceptors []ephemeralResourceInterceptor
 
 type resourceCRUDRequest interface {
 	resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
@@ -190,194 +197,111 @@ func interceptedResourceHandler[Request resourceCRUDRequest, Response resourceCR
 	}
 }
 
-// contextFunc augments Context.
-type contextFunc func(context.Context, *conns.AWSClient) context.Context
-
-// wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
-type wrappedDataSource struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	inner            datasource.DataSourceWithConfigure
-	interceptors     dataSourceInterceptors
-	meta             *conns.AWSClient
-}
-
-func newWrappedDataSource(bootstrapContext contextFunc, inner datasource.DataSourceWithConfigure, interceptors dataSourceInterceptors) datasource.DataSourceWithConfigure {
-	return &wrappedDataSource{
-		bootstrapContext: bootstrapContext,
-		inner:            inner,
-		interceptors:     interceptors,
-	}
-}
-
-func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Metadata(ctx, request, response)
-}
-
-func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Schema(ctx, request, response)
-}
-
-func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	f := func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
-		w.inner.Read(ctx, request, response)
-		return response.Diagnostics
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedDataSourceReadHandler(w.interceptors.read(), f, w.meta)(ctx, request, response)
-	response.Diagnostics = diags
-}
-
-func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		w.meta = v
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Configure(ctx, request, response)
-}
-
 // tagsDataSourceInterceptor implements transparent tagging for data sources.
 type tagsDataSourceInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
 
 func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-	// TODO
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	sp := meta.ServicePackage(ctx, inContext.ServicePackageName)
+	if sp == nil {
+		return ctx, diags
+	}
+
+	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
+	if err != nil {
+		serviceName = "<service>"
+	}
+
+	resourceName := inContext.ResourceName
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	switch when {
+	case Before:
+		var configTags tftags.Map
+		diags.Append(request.Config.GetAttribute(ctx, path.Root(names.AttrTags), &configTags)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		tags := tftags.New(ctx, configTags)
+
+		tagsInContext.TagsIn = option.Some(tags)
+
+	case After:
+		// If the R handler didn't set tags, try and read them from the service API.
+		if tagsInContext.TagsOut.IsNone() {
+			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+				var identifier string
+				diags.Append(response.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
+				if diags.HasError() {
+					return ctx, diags
+				}
+
+				// If the service package has a generic resource list tags methods, call it.
+				var err error
+				if v, ok := sp.(interface {
+					ListTags(context.Context, any, string) error
+				}); ok {
+					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				} else if v, ok := sp.(interface {
+					ListTags(context.Context, any, string, string) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+				} else {
+					tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+						"ServicePackage": sp.ServicePackageName(),
+						"ResourceType":   r.tags.ResourceType,
+					})
+				}
+
+				// ISO partitions may not support tagging, giving error.
+				if errs.IsUnsupportedOperationInPartitionError(meta.Partition(ctx), err) {
+					return ctx, diags
+				}
+
+				if sp.ServicePackageName() == names.DynamoDB && err != nil {
+					// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+					if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+						err = nil
+					}
+				}
+
+				if err != nil {
+					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+					return ctx, diags
+				}
+			}
+		}
+
+		tags := tagsInContext.TagsOut.UnwrapOrDefault()
+
+		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+		stateTags := flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), tftags.NewMapFromMapValue(stateTags))...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+	}
+
 	return ctx, diags
-}
-
-// wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
-type wrappedResource struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	inner            resource.ResourceWithConfigure
-	interceptors     resourceInterceptors
-	meta             *conns.AWSClient
-}
-
-func newWrappedResource(bootstrapContext contextFunc, inner resource.ResourceWithConfigure, interceptors resourceInterceptors) resource.ResourceWithConfigure {
-	return &wrappedResource{
-		bootstrapContext: bootstrapContext,
-		inner:            inner,
-		interceptors:     interceptors,
-	}
-}
-
-func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Metadata(ctx, request, response)
-}
-
-func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Schema(ctx, request, response)
-}
-
-func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	f := func(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) diag.Diagnostics {
-		w.inner.Create(ctx, request, response)
-		return response.Diagnostics
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.interceptors.create(), f, w.meta)(ctx, request, response)
-	response.Diagnostics = diags
-}
-
-func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	f := func(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) diag.Diagnostics {
-		w.inner.Read(ctx, request, response)
-		return response.Diagnostics
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.interceptors.read(), f, w.meta)(ctx, request, response)
-	response.Diagnostics = diags
-}
-
-func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	f := func(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) diag.Diagnostics {
-		w.inner.Update(ctx, request, response)
-		return response.Diagnostics
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.interceptors.update(), f, w.meta)(ctx, request, response)
-	response.Diagnostics = diags
-}
-
-func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	f := func(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) diag.Diagnostics {
-		w.inner.Delete(ctx, request, response)
-		return response.Diagnostics
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedResourceHandler(w.interceptors.delete(), f, w.meta)(ctx, request, response)
-	response.Diagnostics = diags
-}
-
-func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		w.meta = v
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Configure(ctx, request, response)
-}
-
-func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		v.ImportState(ctx, request, response)
-
-		return
-	}
-
-	response.Diagnostics.AddError(
-		"Resource Import Not Implemented",
-		"This resource does not support import. Please contact the provider developer for additional information.",
-	)
-}
-
-func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		v.ModifyPlan(ctx, request, response)
-	}
-}
-
-func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		return v.ConfigValidators(ctx)
-	}
-
-	return nil
-}
-
-func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		v.ValidateConfig(ctx, request, response)
-	}
-}
-
-func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	if v, ok := w.inner.(resource.ResourceWithUpgradeState); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-
-		return v.UpgradeState(ctx)
-	}
-
-	return nil
-}
-
-func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
-	if v, ok := w.inner.(resource.ResourceWithMoveState); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-
-		return v.MoveState(ctx)
-	}
-
-	return nil
 }
 
 // tagsResourceInterceptor implements transparent tagging for resources.
@@ -402,7 +326,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -420,7 +344,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -440,12 +364,12 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		return ctx, diags
 	}
 
-	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-	if !ok {
+	sp := meta.ServicePackage(ctx, inContext.ServicePackageName)
+	if sp == nil {
 		return ctx, diags
 	}
 
-	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
 	if err != nil {
 		serviceName = "<service>"
 	}
@@ -484,14 +408,16 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 					// If the service package has a generic resource list tags methods, call it.
 					var err error
 
-					if v, ok := sp.(interface {
-						ListTags(context.Context, any, string) error
-					}); ok {
+					if v, ok := sp.(tftags.ServiceTagLister); ok {
 						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-					} else if v, ok := sp.(interface {
-						ListTags(context.Context, any, string, string) error
-					}); ok && r.tags.ResourceType != "" {
-						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
+						if r.tags.ResourceType == "" {
+							tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+							})
+						} else {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						}
 					} else {
 						tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
 							"ServicePackage": sp.ServicePackageName(),
@@ -500,7 +426,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 					}
 
 					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					if errs.IsUnsupportedOperationInPartitionError(meta.Partition(ctx), err) {
 						return ctx, diags
 					}
 
@@ -516,11 +442,12 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		apiTags := tagsInContext.TagsOut.UnwrapOrDefault()
 
 		// AWS APIs often return empty lists of tags when none have been configured.
-		stateTags := tftags.Null
+		var stateTags tftags.Map
+		response.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, diags).Map(); len(v) > 0 {
-			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
+		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, &diags).Map(); len(v) > 0 {
+			stateTags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 
@@ -529,8 +456,8 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		}
 
 		// Computed tags_all do.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -550,12 +477,12 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		return ctx, diags
 	}
 
-	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-	if !ok {
+	sp := meta.ServicePackage(ctx, inContext.ServicePackageName)
+	if sp == nil {
 		return ctx, diags
 	}
 
-	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	serviceName, err := names.HumanFriendly(sp.ServicePackageName())
 	if err != nil {
 		serviceName = "<service>"
 	}
@@ -572,7 +499,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -582,11 +509,11 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreSystem(inContext.ServicePackageName)
+		tags = tags.IgnoreSystem(sp.ServicePackageName())
 
 		tagsInContext.TagsIn = option.Some(tags)
 
-		var oldTagsAll, newTagsAll fwtypes.Map
+		var oldTagsAll, newTagsAll tftags.Map
 
 		diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
 
@@ -616,13 +543,9 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 					// If the service package has a generic resource update tags methods, call it.
 					var err error
 
-					if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, any, any) error
-					}); ok {
+					if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 						err = v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
-					} else if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, string, any, any) error
-					}); ok && r.tags.ResourceType != "" {
+					} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && r.tags.ResourceType != "" {
 						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
 					} else {
 						tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
@@ -632,7 +555,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 					}
 
 					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					if errs.IsUnsupportedOperationInPartitionError(meta.Partition(ctx), err) {
 						return ctx, diags
 					}
 

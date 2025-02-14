@@ -436,10 +436,11 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration: %s", d.Id())
-	_, err := conn.DeleteIntegration(ctx, &apigatewayv2.DeleteIntegrationInput{
+	input := apigatewayv2.DeleteIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -504,6 +505,33 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findIntegrations(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetIntegrationsInput) ([]awstypes.Integration, error) {
+	var output []awstypes.Integration
+
+	err := getIntegrationsPages(ctx, conn, input, func(page *apigatewayv2.GetIntegrationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil

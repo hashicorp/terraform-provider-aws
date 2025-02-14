@@ -166,10 +166,10 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("language-model/%s", d.Id()),
 	}.String()
 
@@ -196,9 +196,10 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 
-	_, err := conn.DeleteLanguageModel(ctx, &transcribe.DeleteLanguageModelInput{
+	input := transcribe.DeleteLanguageModelInput{
 		ModelName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLanguageModel(ctx, &input)
 
 	var resourceNotFoundException *types.NotFoundException
 	if errors.As(err, &resourceNotFoundException) {

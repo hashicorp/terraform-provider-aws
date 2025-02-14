@@ -28,7 +28,7 @@ resource "aws_sagemaker_app" "example" {
 This resource supports the following arguments:
 
 * `app_name` - (Required) The name of the app.
-* `app_type` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway` and `TensorBoard`.
+* `app_type` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway`, `TensorBoard`, `CodeEditor`, `JupyterLab`, `DetailedProfiler`, and `Canvas`.
 * `domain_id` - (Required) The domain ID.
 * `resource_spec` - (Optional) The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.See [Resource Spec](#resource-spec) below.
 * `space_name` - (Optional) The name of the space. At least one of `user_profile_name` or `space_name` required.

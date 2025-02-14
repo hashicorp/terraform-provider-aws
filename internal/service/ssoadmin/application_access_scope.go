@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Access Scope")
+// @FrameworkResource("aws_ssoadmin_application_access_scope", name="Application Access Scope")
 func newResourceApplicationAccessScope(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAccessScope{}, nil
 }
@@ -85,8 +85,8 @@ func (r *resourceApplicationAccessScope) Create(ctx context.Context, req resourc
 	}
 
 	in := &ssoadmin.PutApplicationAccessScopeInput{
-		ApplicationArn: aws.String(plan.ApplicationARN.ValueString()),
-		Scope:          aws.String(plan.Scope.ValueString()),
+		ApplicationArn: plan.ApplicationARN.ValueStringPointer(),
+		Scope:          plan.Scope.ValueStringPointer(),
 	}
 
 	if !plan.AuthorizedTargets.IsNull() {
@@ -181,8 +181,8 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 	}
 
 	in := &ssoadmin.DeleteApplicationAccessScopeInput{
-		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
-		Scope:          aws.String(state.Scope.ValueString()),
+		ApplicationArn: state.ApplicationARN.ValueStringPointer(),
+		Scope:          state.Scope.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteApplicationAccessScope(ctx, in)

@@ -32,8 +32,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Provisioned Model Throughput")
+// @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
+// @Testing(tagsTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProvisionedModelThroughput{}
 
@@ -184,9 +185,10 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteProvisionedModelThroughput(ctx, &bedrock.DeleteProvisionedModelThroughputInput{
+	input := bedrock.DeleteProvisionedModelThroughputInput{
 		ProvisionedModelId: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteProvisionedModelThroughput(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -197,6 +199,10 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 
 		return
 	}
+}
+
+func (r *resourceProvisionedModelThroughput) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
 }
 
 func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetProvisionedModelThroughputOutput, error) {
@@ -266,8 +272,8 @@ type provisionedModelThroughputResourceModel struct {
 	ModelUnits           types.Int64                                     `tfsdk:"model_units"`
 	ProvisionedModelARN  types.String                                    `tfsdk:"provisioned_model_arn"`
 	ProvisionedModelName types.String                                    `tfsdk:"provisioned_model_name"`
-	Tags                 types.Map                                       `tfsdk:"tags"`
-	TagsAll              types.Map                                       `tfsdk:"tags_all"`
+	Tags                 tftags.Map                                      `tfsdk:"tags"`
+	TagsAll              tftags.Map                                      `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                  `tfsdk:"timeouts"`
 }
 

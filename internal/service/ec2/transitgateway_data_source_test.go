@@ -53,6 +53,9 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"IDDifferentAccount":     testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount,
 			"Tags":                   testAccTransitGatewayPeeringAttachmentDataSource_Tags,
 		},
+		"PeeringAttachments": {
+			"Filter": testAccTransitGatewayPeeringAttachmentsDataSource_Filter,
+		},
 		"RouteTable": {
 			"Filter": testAccTransitGatewayRouteTableDataSource_Filter,
 			"ID":     testAccTransitGatewayRouteTableDataSource_ID,
@@ -120,6 +123,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T, semaphore tfsync.Semap
 					resource.TestCheckResourceAttrPair(resourceName, "multicast_support", dataSourceName, "multicast_support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerID, dataSourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),
@@ -158,6 +162,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T, semaphore tfsync.Semaphore
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerID, dataSourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),

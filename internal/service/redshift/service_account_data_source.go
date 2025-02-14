@@ -6,8 +6,8 @@ package redshift
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -70,7 +70,7 @@ func dataSourceServiceAccount() *schema.Resource {
 
 func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
@@ -78,7 +78,7 @@ func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, m
 	if accid, ok := ServiceAccountPerRegionMap[region]; ok {
 		d.SetId(accid)
 		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "iam",
 			AccountID: accid,
 			Resource:  "user/logs",

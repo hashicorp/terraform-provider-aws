@@ -46,7 +46,7 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceSerialConsoleAccessRead(ctx, d, meta)...)
 }

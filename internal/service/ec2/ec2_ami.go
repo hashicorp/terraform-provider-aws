@@ -267,7 +267,7 @@ func resourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  SriovNetSupportSimple,
+				Default:  sriovNetSupportSimple,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -276,6 +276,11 @@ func resourceAMI() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TpmSupportValues](),
+			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"usage_operation": {
 				Type:     schema.TypeString,
@@ -362,6 +367,10 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForAMIEphemeralBlockDevice(v.(*schema.Set).List())...)
 	}
 
+	if uefiData := d.Get("uefi_data").(string); uefiData != "" {
+		input.UefiData = aws.String(uefiData)
+	}
+
 	output, err := conn.RegisterImage(ctx, input)
 
 	if err != nil {
@@ -370,7 +379,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.ToString(output.ImageId))
 
-	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
@@ -422,8 +431,8 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("architecture", image.Architecture)
 	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   names.EC2,
 	}.String()
@@ -459,7 +468,14 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	setTagsOutV2(ctx, image.Tags)
+	instanceData, err := conn.GetInstanceUefiData(ctx, &ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	})
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
+	}
+
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }
@@ -530,7 +546,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 				errParts = append(errParts, fmt.Sprintf("%s: %s", snapshotId, err))
 			}
 			errParts = append(errParts, "These are no longer managed by Terraform and must be deleted manually.")
-			return sdkdiag.AppendErrorf(diags, strings.Join(errParts, "\n"))
+			return sdkdiag.AppendErrorf(diags, "%s", strings.Join(errParts, "\n"))
 		}
 	}
 

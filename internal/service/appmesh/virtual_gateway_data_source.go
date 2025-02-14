@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +18,9 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_virtual_gateway", name="Virtual Gateway")
+// @Tags
+// @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualGatewayRead,
@@ -61,8 +64,7 @@ func dataSourceVirtualGateway() *schema.Resource {
 
 func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	virtualGatewayName := d.Get(names.AttrName).(string)
 	virtualGateway, err := findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualGatewayName)
@@ -71,13 +73,13 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Gateway (%s): %s", virtualGatewayName, err)
 	}
 
-	d.SetId(aws.StringValue(virtualGateway.VirtualGatewayName))
-	arn := aws.StringValue(virtualGateway.Metadata.Arn)
+	d.SetId(aws.ToString(virtualGateway.VirtualGatewayName))
+	arn := aws.ToString(virtualGateway.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
-	meshOwner := aws.StringValue(virtualGateway.Metadata.MeshOwner)
+	meshOwner := aws.ToString(virtualGateway.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 	d.Set(names.AttrResourceOwner, virtualGateway.Metadata.ResourceOwner)
@@ -90,7 +92,7 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	if meshOwner == meta.(*conns.AWSClient).AccountID {
+	if meshOwner == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {
@@ -98,9 +100,7 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

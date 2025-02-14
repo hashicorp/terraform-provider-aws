@@ -37,11 +37,11 @@ func RegisterSweepers() {
 		},
 	})
 
-	sweep.Register("aws_iam_instance_profile", sweepInstanceProfile,
+	awsv2.Register("aws_iam_instance_profile", sweepInstanceProfile,
 		"aws_iam_role",
 	)
 
-	sweep.Register("aws_iam_openid_connect_provider", sweepOpenIDConnectProvider)
+	awsv2.Register("aws_iam_openid_connect_provider", sweepOpenIDConnectProvider)
 
 	resource.AddTestSweepers("aws_iam_policy", &resource.Sweeper{
 		Name: "aws_iam_policy",
@@ -86,18 +86,18 @@ func RegisterSweepers() {
 		F: sweepRoles,
 	})
 
-	sweep.Register("aws_iam_saml_provider", sweepSAMLProvider)
+	awsv2.Register("aws_iam_saml_provider", sweepSAMLProvider)
 
-	sweep.Register("aws_iam_service_specific_credential", sweepServiceSpecificCredentials)
+	awsv2.Register("aws_iam_service_specific_credential", sweepServiceSpecificCredentials)
 
-	sweep.Register("aws_iam_signing_certificate", sweepSigningCertificates)
+	awsv2.Register("aws_iam_signing_certificate", sweepSigningCertificates)
 
 	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
 		Name: "aws_iam_server_certificate",
 		F:    sweepServerCertificates,
 	})
 
-	sweep.Register("aws_iam_service_linked_role", sweepServiceLinkedRoles)
+	awsv2.Register("aws_iam_service_linked_role", sweepServiceLinkedRoles)
 
 	resource.AddTestSweepers("aws_iam_user", &resource.Sweeper{
 		Name: "aws_iam_user",
@@ -106,11 +106,10 @@ func RegisterSweepers() {
 			"aws_iam_service_specific_credential",
 			"aws_iam_virtual_mfa_device",
 			"aws_iam_signing_certificate",
-			"aws_opsworks_user_profile",
 		},
 	})
 
-	sweep.Register("aws_iam_virtual_mfa_device", sweepVirtualMFADevice)
+	awsv2.Register("aws_iam_virtual_mfa_device", sweepVirtualMFADevice)
 }
 
 func sweepGroups(region string) error {
@@ -193,14 +192,14 @@ func sweepGroups(region string) error {
 				GroupName: group.GroupName,
 			}
 
-			if err := DeleteGroupPolicyAttachments(ctx, conn, name); err != nil {
+			if err := deleteGroupPolicyAttachments(ctx, conn, name); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policy attachments: %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
 			}
 
-			if err := DeleteGroupPolicies(ctx, conn, name); err != nil {
+			if err := deleteGroupPolicies(ctx, conn, name); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policies: %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -234,9 +233,8 @@ func sweepInstanceProfile(ctx context.Context, client *conns.AWSClient) ([]sweep
 	pages := iam.NewListInstanceProfilesPaginator(conn, &iam.ListInstanceProfilesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Instance Profile sweep: %s", err)
-			return sweepResources, nil
+		if err != nil {
+			return nil, err
 		}
 
 		for _, instanceProfile := range page.InstanceProfiles {
@@ -556,11 +554,6 @@ func sweepServiceLinkedRoles(ctx context.Context, client *conns.AWSClient) ([]sw
 	pages := iam.NewListRolesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Service Linked Role sweep: %s", err)
-			return sweepResources, nil
-		}
-
 		if err != nil {
 			return sweepResources, err
 		}
@@ -720,11 +713,6 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 	pages := iam.NewListVirtualMFADevicesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Virtual MFA Device sweep: %s", err)
-			return sweepResources, nil
-		}
-
 		if err != nil {
 			return nil, err
 		}
@@ -740,6 +728,12 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 			r := resourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
+
+			if user := device.User; user != nil {
+				if userName := aws.ToString(user.UserName); userName != "" {
+					d.Set(names.AttrUserName, userName)
+				}
+			}
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}

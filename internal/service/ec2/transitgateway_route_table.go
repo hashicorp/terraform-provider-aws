@@ -71,7 +71,7 @@ func resourceTransitGatewayRouteTableCreate(ctx context.Context, d *schema.Resou
 
 	input := &ec2.CreateTransitGatewayRouteTableInput{
 		TransitGatewayId:  aws.String(d.Get(names.AttrTransitGatewayID).(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayRouteTable),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayRouteTable),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Route Table: %+v", input)
@@ -107,10 +107,10 @@ func resourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -118,7 +118,7 @@ func resourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 	d.Set(names.AttrTransitGatewayID, transitGatewayRouteTable.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayRouteTable.Tags)
+	setTagsOut(ctx, transitGatewayRouteTable.Tags)
 
 	return diags
 }

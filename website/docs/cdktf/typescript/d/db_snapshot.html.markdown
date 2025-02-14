@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** One of either `dbInstanceIdentifier` or `dbSnapshotIdentifier` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `mostRecent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
@@ -106,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
 * `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
 * `originalSnapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 
-<!-- cache-key: cdktf-0.20.1 input-c839ad8d58fed1752eb8fb0ecf7cb491e814d59ae1af484cefe56dffea031a1c -->
+<!-- cache-key: cdktf-0.20.8 input-be16a585a001a15ffaad224244653b982e1b01a2590868d66cebb7356017a9eb -->

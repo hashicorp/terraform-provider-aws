@@ -409,7 +409,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err := conn.UpdateStack(ctx, input)
 
 		if err != nil {
-			sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -422,9 +422,10 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream Stack: (%s)", d.Id())
-	_, err := conn.DeleteStack(ctx, &appstream.DeleteStackInput{
+	input := appstream.DeleteStackInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStack(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

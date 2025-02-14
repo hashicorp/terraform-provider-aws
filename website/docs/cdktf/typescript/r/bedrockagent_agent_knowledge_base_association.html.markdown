@@ -1,5 +1,5 @@
 ---
-subcategory: "Agents for Amazon Bedrock"
+subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_knowledge_base_association"
 description: |-
@@ -57,6 +57,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Agent ID, agent version, and knowledge base ID separated by `,`.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Agents for Amazon Bedrock Agent Knowledge Base Association using the agent ID, the agent version, and the knowledge base ID separated by `,`. For example:
@@ -89,4 +96,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Knowledge Base 
 % terraform import aws_bedrockagent_agent_knowledge_base_association.example GGRRAED6JP,DRAFT,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c4b7af410abb87f20636648a97ae48884cc244d0325ee03f69a32730624f8d22 -->
+<!-- cache-key: cdktf-0.20.8 input-ec99bbc1375de0b44bd95ecfff506618754fca29fc9679d2bb72678da1b2a443 -->

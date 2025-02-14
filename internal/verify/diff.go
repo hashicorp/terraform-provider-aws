@@ -22,8 +22,8 @@ import (
 // after resource READ operations as resource and provider-level tags
 // will be indistinguishable when returned from an AWS API.
 func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	resourceTags := tftags.New(ctx, diff.Get("tags").(map[string]interface{}))
 

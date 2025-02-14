@@ -6,17 +6,19 @@ package route53resolver
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_endpoint")
-func DataSourceEndpoint() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_endpoint", name="Endpoint")
+func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
 
@@ -83,7 +85,7 @@ func DataSourceEndpoint() *schema.Resource {
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	endpointID := d.Get("resolver_endpoint_id").(string)
 	input := &route53resolver.ListResolverEndpointsInput{}
@@ -92,28 +94,25 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.Filters = buildR53ResolverTagFilters(v.(*schema.Set))
 	}
 
-	var endpoints []*route53resolver.ResolverEndpoint
+	var endpoints []awstypes.ResolverEndpoint
 
-	err := conn.ListResolverEndpointsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := route53resolver.NewListResolverEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoints: %s", err)
 		}
 
 		for _, v := range page.ResolverEndpoints {
 			if endpointID != "" {
-				if aws.StringValue(v.Id) == endpointID {
+				if aws.ToString(v.Id) == endpointID {
 					endpoints = append(endpoints, v)
 				}
 			} else {
 				endpoints = append(endpoints, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoints: %s", err)
 	}
 
 	if n := len(endpoints); n == 0 {
@@ -123,11 +122,11 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	ep := endpoints[0]
-	d.SetId(aws.StringValue(ep.Id))
+	d.SetId(aws.ToString(ep.Id))
 	d.Set(names.AttrARN, ep.Arn)
 	d.Set("direction", ep.Direction)
 	d.Set(names.AttrName, ep.Name)
-	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
+	d.Set("protocols", flex.FlattenStringyValueSet(ep.Protocols))
 	d.Set("resolver_endpoint_id", ep.Id)
 	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
 	d.Set(names.AttrStatus, ep.Status)
@@ -142,24 +141,29 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	var ips []*string
 
 	for _, v := range ipAddresses {
-		ips = append(ips, v.Ip)
+		if v.Ip != nil {
+			ips = append(ips, v.Ip)
+		}
+		if v.Ipv6 != nil {
+			ips = append(ips, v.Ipv6)
+		}
 	}
 
-	d.Set(names.AttrIPAddresses, aws.StringValueSlice(ips))
+	d.Set(names.AttrIPAddresses, aws.ToStringSlice(ips))
 
 	return diags
 }
 
-func buildR53ResolverTagFilters(set *schema.Set) []*route53resolver.Filter {
-	var filters []*route53resolver.Filter
+func buildR53ResolverTagFilters(set *schema.Set) []awstypes.Filter {
+	var filters []awstypes.Filter
 
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
-		var filterValues []*string
+		var filterValues []string
 		for _, e := range m[names.AttrValues].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
+			filterValues = append(filterValues, e.(string))
 		}
-		filters = append(filters, &route53resolver.Filter{
+		filters = append(filters, awstypes.Filter{
 			Name:   aws.String(m[names.AttrName].(string)),
 			Values: filterValues,
 		})

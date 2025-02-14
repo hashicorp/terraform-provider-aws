@@ -21,26 +21,68 @@ func TestBoolFromFramework(t *testing.T) {
 		expected *bool
 	}
 	tests := map[string]testCase{
-		"valid bool": {
+		"true": {
 			input:    types.BoolValue(true),
 			expected: aws.Bool(true),
 		},
-		"null bool": {
+		"false": {
+			input:    types.BoolValue(false),
+			expected: aws.Bool(false),
+		},
+		"null": {
 			input:    types.BoolNull(),
 			expected: nil,
 		},
-		"unknown bool": {
+		"unknown": {
 			input:    types.BoolUnknown(),
 			expected: nil,
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			got := flex.BoolFromFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestBoolValueFromFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.Bool
+		expected bool
+	}
+	tests := map[string]testCase{
+		"true": {
+			input:    types.BoolValue(true),
+			expected: true,
+		},
+		"false": {
+			input:    types.BoolValue(false),
+			expected: false,
+		},
+		"null": {
+			input:    types.BoolNull(),
+			expected: false,
+		},
+		"unknown": {
+			input:    types.BoolUnknown(),
+			expected: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.BoolValueFromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -57,18 +99,21 @@ func TestBoolToFramework(t *testing.T) {
 		expected types.Bool
 	}
 	tests := map[string]testCase{
-		"valid bool": {
+		"true": {
 			input:    aws.Bool(true),
 			expected: types.BoolValue(true),
 		},
-		"nil bool": {
+		"false": {
+			input:    aws.Bool(false),
+			expected: types.BoolValue(false),
+		},
+		"nil": {
 			input:    nil,
 			expected: types.BoolNull(),
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -89,18 +134,21 @@ func TestBoolToFrameworkLegacy(t *testing.T) {
 		expected types.Bool
 	}
 	tests := map[string]testCase{
-		"valid bool": {
+		"true": {
 			input:    aws.Bool(true),
 			expected: types.BoolValue(true),
 		},
-		"nil bool": {
+		"false": {
+			input:    aws.Bool(false),
+			expected: types.BoolValue(false),
+		},
+		"nil": {
 			input:    nil,
 			expected: types.BoolValue(false),
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

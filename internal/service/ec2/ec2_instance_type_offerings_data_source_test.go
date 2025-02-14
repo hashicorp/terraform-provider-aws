@@ -89,7 +89,7 @@ data "aws_ec2_instance_type_offerings" "test" {
 }
 
 func testAccInstanceTypeOfferingsDataSourceConfig_location() string {
-	return acctest.ConfigAvailableAZsNoOptIn() + `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
     name   = "location"
@@ -98,5 +98,5 @@ data "aws_ec2_instance_type_offerings" "test" {
 
   location_type = "availability-zone"
 }
-`
+`)
 }

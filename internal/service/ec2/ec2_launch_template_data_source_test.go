@@ -119,7 +119,7 @@ func TestAccEC2LaunchTemplateDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2LaunchTemplateDataSource_tags(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
@@ -132,7 +132,7 @@ func TestAccEC2LaunchTemplateDataSource_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateDataSourceConfig_tags(rName),
+				Config: testAccLaunchTemplateDataSourceConfig_matchTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
@@ -264,7 +264,7 @@ data "aws_launch_template" "test" {
 `, rName)
 }
 
-func testAccLaunchTemplateDataSourceConfig_tags(rName string) string {
+func testAccLaunchTemplateDataSourceConfig_matchTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpclattice_service")
+// Caution: Because of cross account usage, using Tags(identifierAttribute="arn") causes Access Denied
+// errors because tags need special handling. See crossAccountSetTags().
+
+// @SDKDataSource("aws_vpclattice_service", name="Service")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
@@ -128,23 +131,5 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("service_identifier", out.Id)
 	d.Set(names.AttrStatus, out.Status)
 
-	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
-	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
-	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
-	parsedARN, err := arn.Parse(serviceARN)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
-		tags, err := listTags(ctx, conn, serviceARN)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service (%s): %s", serviceARN, err)
-		}
-
-		setTagsOut(ctx, Tags(tags))
-	}
-
-	return diags
+	return crossAccountSetTags(ctx, conn, diags, serviceARN, meta.(*conns.AWSClient).AccountID(ctx), "Service")
 }

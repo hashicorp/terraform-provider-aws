@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -56,7 +57,7 @@ func resourceResourcePolicy() *schema.Resource {
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	arn := d.Get(names.AttrResourceARN).(string)
 
@@ -70,20 +71,20 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 		Policy:      aws.String(policy),
 	}
 
-	out, err := conn.PutResourcePolicyWithContext(ctx, &input)
+	out, err := conn.PutResourcePolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Redshift Resource Policy (%s): %s", arn, err)
 	}
 
-	d.SetId(aws.StringValue(out.ResourcePolicy.ResourceArn))
+	d.SetId(aws.ToString(out.ResourcePolicy.ResourceArn))
 
 	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	out, err := findResourcePolicyByARN(ctx, conn, d.Id())
 
@@ -99,7 +100,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set(names.AttrResourceARN, out.ResourceArn)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(out.Policy))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(out.Policy))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
@@ -118,14 +119,14 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Resource Policy: %s", d.Id())
-	_, err := conn.DeleteResourcePolicyWithContext(ctx, &redshift.DeleteResourcePolicyInput{
+	_, err := conn.DeleteResourcePolicy(ctx, &redshift.DeleteResourcePolicyInput{
 		ResourceArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeResourceNotFoundFault) {
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
 	}
 

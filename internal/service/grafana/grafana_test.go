@@ -46,7 +46,8 @@ func TestAccGrafana_serial(t *testing.T) {
 			acctest.CtBasic: testAccWorkspaceDataSource_basic,
 		},
 		"LicenseAssociation": {
-			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
+			"enterpriseFreeTrial":    testAccLicenseAssociation_freeTrial,
+			"enterpriseGrafanaToken": testAccLicenseAssociation_enterpriseToken,
 		},
 		"SamlConfiguration": {
 			acctest.CtBasic: testAccWorkspaceSAMLConfiguration_basic,

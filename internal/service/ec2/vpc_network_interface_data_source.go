@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_network_interface", name="Network Interface")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInterfaceRead,
@@ -172,7 +173,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
@@ -188,9 +189,9 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.SetId(aws.ToString(eni.NetworkInterfaceId))
 	ownerID := aws.ToString(eni.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  "network-interface/" + d.Id(),
 	}.String()
@@ -224,7 +225,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrSubnetID, eni.SubnetId)
 	d.Set(names.AttrVPCID, eni.VpcId)
 
-	setTagsOutV2(ctx, eni.TagSet)
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }

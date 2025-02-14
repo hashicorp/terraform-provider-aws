@@ -153,7 +153,7 @@ The `condition` block supports the following arguments:
 
 The `action_condition` block supports the following argument:
 
-* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, and `COUNT`.
+* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, `COUNT`, `CAPTCHA`, `CHALLENGE` and `EXCLUDED_AS_COUNT`.
 
 ### Label Name Condition
 
@@ -178,7 +178,7 @@ To redact a single header, provide the name of the header to be redacted. For ex
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to redact. This setting must be provided in lowercase characters.
+* `name` - (Required) Name of the query header to redact. This setting must be provided in lowercase characters.
 
 ## Attribute Reference
 

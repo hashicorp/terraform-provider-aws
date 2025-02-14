@@ -40,7 +40,6 @@ func TestCanBeRevoked(t *testing.T) {
 		{"shared", types.ShareRequestStatusShared, true},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 

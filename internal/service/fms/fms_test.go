@@ -26,13 +26,15 @@ func TestAccFMS_serial(t *testing.T) {
 			"policyOption":           testAccPolicy_policyOption,
 			"resourceTags":           testAccPolicy_resourceTags,
 			"securityGroup":          testAccPolicy_securityGroup,
-			"tags":                   testAccPolicy_tags,
+			"tags":                   testAccFMSPolicy_tagsSerial,
 			"update":                 testAccPolicy_update,
+			"rscSet":                 testAccPolicy_rscSet,
+			"nacl":                   testAccPolicy_nacl,
 		},
 		"ResourceSet": {
 			acctest.CtBasic:      testAccFMSResourceSet_basic,
 			acctest.CtDisappears: testAccFMSResourceSet_disappears,
-			"tags":               testAccFMSResourceSet_tags,
+			"tags":               testAccFMSResourceSet_tagsSerial,
 		},
 	}
 

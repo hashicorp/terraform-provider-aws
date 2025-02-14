@@ -11,7 +11,20 @@ description: |-
 The S3 object data source allows access to the metadata and
 _optionally_ (see below) content of an object stored inside S3 bucket.
 
-~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type` (`text/*` and `application/json`). This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
+~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type`:
+
+* `text/*`
+* `application/json`
+* `application/ld+json`
+* `application/x-httpd-php`
+* `application/xhtml+xml`
+* `application/x-csh`
+* `application/x-sh`
+* `application/xml`
+* `application/atom+xml`
+* `application/x-sql`
+
+This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
 ## Example Usage
 

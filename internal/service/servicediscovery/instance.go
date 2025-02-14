@@ -10,21 +10,24 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_service_discovery_instance")
-func ResourceInstance() *schema.Resource {
+// @SDKResource("aws_service_discovery_instance", name="Instance")
+func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstancePut,
 		ReadWithoutTimeout:   resourceInstanceRead,
@@ -68,18 +71,17 @@ func ResourceInstance() *schema.Resource {
 
 func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &servicediscovery.RegisterInstanceInput{
-		Attributes:       flex.ExpandStringMap(d.Get(names.AttrAttributes).(map[string]interface{})),
+		Attributes:       flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]interface{})),
 		CreatorRequestId: aws.String(id.UniqueId()),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Registering Service Discovery Instance: %s", input)
-	output, err := conn.RegisterInstanceWithContext(ctx, input)
+	output, err := conn.RegisterInstance(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering Service Discovery Instance (%s): %s", instanceID, err)
@@ -88,7 +90,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Instance (%s) create: %s", d.Id(), err)
 		}
 	}
@@ -98,9 +100,9 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
-	instance, err := FindInstanceByServiceIDAndInstanceID(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
+	instance, err := findInstanceByTwoPartKey(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
@@ -119,7 +121,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		delete(attributes, "AWS_INSTANCE_IPV4")
 	}
 
-	d.Set(names.AttrAttributes, aws.StringValueMap(attributes))
+	d.Set(names.AttrAttributes, attributes)
 	d.Set(names.AttrInstanceID, instance.Id)
 
 	return diags
@@ -127,7 +129,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	err := deregisterInstance(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
 
@@ -151,4 +153,52 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(instanceID)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func deregisterInstance(ctx context.Context, conn *servicediscovery.Client, serviceID, instanceID string) error {
+	input := &servicediscovery.DeregisterInstanceInput{
+		InstanceId: aws.String(instanceID),
+		ServiceId:  aws.String(serviceID),
+	}
+
+	log.Printf("[INFO] Deregistering Service Discovery Service (%s) Instance: %s", serviceID, instanceID)
+	output, err := conn.DeregisterInstance(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
+	}
+
+	if output != nil && output.OperationId != nil {
+		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+			return fmt.Errorf("waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
+		}
+	}
+
+	return nil
+}
+
+func findInstanceByTwoPartKey(ctx context.Context, conn *servicediscovery.Client, serviceID, instanceID string) (*awstypes.Instance, error) {
+	input := &servicediscovery.GetInstanceInput{
+		InstanceId: aws.String(instanceID),
+		ServiceId:  aws.String(serviceID),
+	}
+
+	output, err := conn.GetInstance(ctx, input)
+
+	if errs.IsA[*awstypes.InstanceNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Instance == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Instance, nil
 }

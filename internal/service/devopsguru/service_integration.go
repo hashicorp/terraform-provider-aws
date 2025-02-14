@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Service Integration")
+// @FrameworkResource("aws_devopsguru_service_integration", name="Service Integration")
 func newResourceServiceIntegration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceServiceIntegration{}, nil
 }
@@ -141,7 +141,7 @@ func (r *resourceServiceIntegration) Create(ctx context.Context, req resource.Cr
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = types.StringValue(r.Meta().Region)
+	plan.ID = types.StringValue(r.Meta().Region(ctx))
 
 	integration := &awstypes.UpdateServiceIntegrationConfig{}
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, integration)...)

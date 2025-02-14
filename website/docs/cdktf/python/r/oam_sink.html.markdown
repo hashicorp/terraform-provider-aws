@@ -51,6 +51,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Sink.
+* `id` - ARN of the Sink. Use `arn` instead.
 * `sink_id` - ID string that AWS generated as part of the sink ARN.
 
 ## Timeouts
@@ -86,4 +87,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink us
 % terraform import aws_oam_sink.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfac1b8a7916df1eba20033d354f70066d912081ba258d1753faa7d442661fb5 -->
+<!-- cache-key: cdktf-0.20.8 input-fc14b3d0063a642e172a6862e1572eb26cd8eb72d3a2f437f10d25fb94f83b4e -->

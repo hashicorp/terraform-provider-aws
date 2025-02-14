@@ -75,7 +75,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &ec2.CreateVpnGatewayInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpnGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnGateway),
 		Type:              awstypes.GatewayTypeIpsec1,
 	}
 
@@ -126,10 +126,10 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("amazon_side_asn", flex.Int64ToStringValue(vpnGateway.AmazonSideAsn))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -143,7 +143,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	setTagsOutV2(ctx, vpnGateway.Tags)
+	setTagsOut(ctx, vpnGateway.Tags)
 
 	return diags
 }

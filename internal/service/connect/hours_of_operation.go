@@ -4,29 +4,31 @@
 package connect
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_hours_of_operation", name="Hours Of Operation")
 // @Tags(identifierAttribute="arn")
-func ResourceHoursOfOperation() *schema.Resource {
+func resourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHoursOfOperationCreate,
 		ReadWithoutTimeout:   resourceHoursOfOperationRead,
@@ -51,9 +53,9 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(connect.HoursOfOperationDays_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.HoursOfOperationDays](),
 						},
 						"end_time": {
 							Type:     schema.TypeList,
@@ -91,14 +93,6 @@ func ResourceHoursOfOperation() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(m["day"].(string))
-					buf.WriteString(fmt.Sprintf("%+v", m["end_time"].([]interface{})))
-					buf.WriteString(fmt.Sprintf("%+v", m[names.AttrStartTime].([]interface{})))
-					return create.StringHashcode(buf.String())
-				},
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -130,14 +124,12 @@ func ResourceHoursOfOperation() *schema.Resource {
 
 func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
-	config := expandConfigs(d.Get("config").(*schema.Set).List())
 	input := &connect.CreateHoursOfOperationInput{
-		Config:     config,
+		Config:     expandHoursOfOperationConfigs(d.Get("config").(*schema.Set).List()),
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
@@ -148,88 +140,75 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Connect Hours of Operation %s", input)
-	output, err := conn.CreateHoursOfOperationWithContext(ctx, input)
+	output, err := conn.CreateHoursOfOperation(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Hours of Operation (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Hours Of Operation (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Hours of Operation (%s): empty output", name)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HoursOfOperationId)))
+	id := hoursOfOperationCreateResourceID(instanceID, aws.ToString(output.HoursOfOperationId))
+	d.SetId(id)
 
 	return append(diags, resourceHoursOfOperationRead(ctx, d, meta)...)
 }
 
 func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
-
+	instanceID, hoursOfOperationID, err := hoursOfOperationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, &connect.DescribeHoursOfOperationInput{
-		HoursOfOperationId: aws.String(hoursOfOperationID),
-		InstanceId:         aws.String(instanceID),
-	})
+	hoursOfOperation, err := findHoursOfOperationByTwoPartKey(ctx, conn, instanceID, hoursOfOperationID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Connect Hours of Operation (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Connect Hours Of Operation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Hours of Operation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Hours Of Operation (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.HoursOfOperation == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Hours of Operation (%s): empty response", d.Id())
-	}
-
-	if err := d.Set("config", flattenConfigs(resp.HoursOfOperation.Config)); err != nil {
+	d.Set(names.AttrARN, hoursOfOperation.HoursOfOperationArn)
+	if err := d.Set("config", flattenHoursOfOperationConfigs(hoursOfOperation.Config)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	d.Set(names.AttrARN, resp.HoursOfOperation.HoursOfOperationArn)
-	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
+	d.Set(names.AttrDescription, hoursOfOperation.Description)
+	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
 	d.Set(names.AttrInstanceID, instanceID)
-	d.Set(names.AttrDescription, resp.HoursOfOperation.Description)
-	d.Set(names.AttrName, resp.HoursOfOperation.Name)
-	d.Set("time_zone", resp.HoursOfOperation.TimeZone)
+	d.Set(names.AttrName, hoursOfOperation.Name)
+	d.Set("time_zone", hoursOfOperation.TimeZone)
 
-	setTagsOut(ctx, resp.HoursOfOperation.Tags)
+	setTagsOut(ctx, hoursOfOperation.Tags)
 
 	return diags
 }
 
 func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
-
+	instanceID, hoursOfOperationID, err := hoursOfOperationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChanges("config", names.AttrDescription, names.AttrName, "time_zone") {
-		_, err = conn.UpdateHoursOfOperationWithContext(ctx, &connect.UpdateHoursOfOperationInput{
-			Config:             expandConfigs(d.Get("config").(*schema.Set).List()),
+		input := &connect.UpdateHoursOfOperationInput{
+			Config:             expandHoursOfOperationConfigs(d.Get("config").(*schema.Set).List()),
 			Description:        aws.String(d.Get(names.AttrDescription).(string)),
 			HoursOfOperationId: aws.String(hoursOfOperationID),
 			InstanceId:         aws.String(instanceID),
 			Name:               aws.String(d.Get(names.AttrName).(string)),
 			TimeZone:           aws.String(d.Get("time_zone").(string)),
-		})
+		}
+
+		_, err = conn.UpdateHoursOfOperation(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating HoursOfOperation (%s): %s", d.Id(), err)
 		}
@@ -240,89 +219,140 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
-
+	instanceID, hoursOfOperationID, err := hoursOfOperationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteHoursOfOperationWithContext(ctx, &connect.DeleteHoursOfOperationInput{
+	log.Printf("[DEBUG] Deleting Connect Hours Of Operation: %s", d.Id())
+	_, err = conn.DeleteHoursOfOperation(ctx, &connect.DeleteHoursOfOperationInput{
 		HoursOfOperationId: aws.String(hoursOfOperationID),
 		InstanceId:         aws.String(instanceID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting HoursOfOperation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Hours Of Operation (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandConfigs(configs []interface{}) []*connect.HoursOfOperationConfig {
-	if len(configs) == 0 {
-		return nil
-	}
+const hoursOfOperationResourceIDSeparator = ":"
 
-	hoursOfOperationConfigs := []*connect.HoursOfOperationConfig{}
-	for _, config := range configs {
-		data := config.(map[string]interface{})
-		hoursOfOperationConfig := &connect.HoursOfOperationConfig{
-			Day: aws.String(data["day"].(string)),
-		}
+func hoursOfOperationCreateResourceID(instanceID, hoursOfOperationID string) string {
+	parts := []string{instanceID, hoursOfOperationID}
+	id := strings.Join(parts, hoursOfOperationResourceIDSeparator)
 
-		tet := data["end_time"].([]interface{})
-		vet := tet[0].(map[string]interface{})
-		et := connect.HoursOfOperationTimeSlice{
-			Hours:   aws.Int64(int64(vet["hours"].(int))),
-			Minutes: aws.Int64(int64(vet["minutes"].(int))),
-		}
-		hoursOfOperationConfig.EndTime = &et
-
-		tst := data[names.AttrStartTime].([]interface{})
-		vst := tst[0].(map[string]interface{})
-		st := connect.HoursOfOperationTimeSlice{
-			Hours:   aws.Int64(int64(vst["hours"].(int))),
-			Minutes: aws.Int64(int64(vst["minutes"].(int))),
-		}
-		hoursOfOperationConfig.StartTime = &st
-
-		hoursOfOperationConfigs = append(hoursOfOperationConfigs, hoursOfOperationConfig)
-	}
-
-	return hoursOfOperationConfigs
+	return id
 }
 
-func flattenConfigs(configs []*connect.HoursOfOperationConfig) []interface{} {
-	configsList := []interface{}{}
-	for _, config := range configs {
-		values := map[string]interface{}{}
-		values["day"] = aws.StringValue(config.Day)
-
-		et := map[string]interface{}{
-			"hours":   aws.Int64Value(config.EndTime.Hours),
-			"minutes": aws.Int64Value(config.EndTime.Minutes),
-		}
-		values["end_time"] = []interface{}{et}
-
-		st := map[string]interface{}{
-			"hours":   aws.Int64Value(config.StartTime.Hours),
-			"minutes": aws.Int64Value(config.StartTime.Minutes),
-		}
-		values[names.AttrStartTime] = []interface{}{st}
-		configsList = append(configsList, values)
-	}
-	return configsList
-}
-
-func HoursOfOperationParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
+func hoursOfOperationParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, hoursOfOperationResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:hoursOfOperationID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected instanceID%[2]shoursOfOperationID", id, hoursOfOperationResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func findHoursOfOperationByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, hoursOfOperationID string) (*awstypes.HoursOfOperation, error) {
+	input := &connect.DescribeHoursOfOperationInput{
+		HoursOfOperationId: aws.String(hoursOfOperationID),
+		InstanceId:         aws.String(instanceID),
+	}
+
+	return findHoursOfOperation(ctx, conn, input)
+}
+
+func findHoursOfOperation(ctx context.Context, conn *connect.Client, input *connect.DescribeHoursOfOperationInput) (*awstypes.HoursOfOperation, error) {
+	output, err := conn.DescribeHoursOfOperation(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.HoursOfOperation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.HoursOfOperation, nil
+}
+
+func expandHoursOfOperationConfigs(tfList []interface{}) []awstypes.HoursOfOperationConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := []awstypes.HoursOfOperationConfig{}
+
+	for _, config := range tfList {
+		tfMap := config.(map[string]interface{})
+		apiObject := awstypes.HoursOfOperationConfig{
+			Day: awstypes.HoursOfOperationDays(tfMap["day"].(string)),
+		}
+
+		if v, ok := tfMap["end_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			apiObject.EndTime = &awstypes.HoursOfOperationTimeSlice{
+				Hours:   aws.Int32(int32(tfMap["hours"].(int))),
+				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+			}
+		}
+
+		if v, ok := tfMap[names.AttrStartTime].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			apiObject.StartTime = &awstypes.HoursOfOperationTimeSlice{
+				Hours:   aws.Int32(int32(tfMap["hours"].(int))),
+				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenHoursOfOperationConfigs(apiObjects []awstypes.HoursOfOperationConfig) []interface{} {
+	tfList := []interface{}{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"day": apiObject.Day,
+		}
+
+		if v := apiObject.EndTime; v != nil {
+			tfMap["end_time"] = []interface{}{map[string]interface{}{
+				"hours":   aws.ToInt32(v.Hours),
+				"minutes": aws.ToInt32(v.Minutes),
+			}}
+		}
+
+		if v := apiObject.StartTime; v != nil {
+			tfMap[names.AttrStartTime] = []interface{}{map[string]interface{}{
+				"hours":   aws.ToInt32(v.Hours),
+				"minutes": aws.ToInt32(v.Minutes),
+			}}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

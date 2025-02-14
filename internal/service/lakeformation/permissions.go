@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -28,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lakeformation_permissions")
+// @SDKResource("aws_lakeformation_permissions", name="Permissions")
 func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsCreate,
@@ -253,7 +254,7 @@ func ResourcePermissions() *schema.Resource {
 				},
 			},
 			names.AttrPermissions: {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				ForceNew: true,
 				MinItems: 1,
 				Required: true,
@@ -263,7 +264,7 @@ func ResourcePermissions() *schema.Resource {
 				},
 			},
 			"permissions_with_grant_option": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				ForceNew: true,
 				Optional: true,
@@ -421,7 +422,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GrantPermissionsInput{
-		Permissions: flex.ExpandStringyValueList[awstypes.Permission](d.Get(names.AttrPermissions).([]interface{})),
+		Permissions: flex.ExpandStringyValueSet[awstypes.Permission](d.Get(names.AttrPermissions).(*schema.Set)),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
@@ -437,7 +438,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
-		input.PermissionsWithGrantOption = flex.ExpandStringyValueList[awstypes.Permission](v.([]interface{}))
+		input.PermissionsWithGrantOption = flex.ExpandStringyValueSet[awstypes.Permission](v.(*schema.Set))
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
@@ -506,7 +507,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating Lake Formation Permissions: empty response")
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
 	return append(diags, resourcePermissionsRead(ctx, d, meta)...)
 }
@@ -740,8 +741,8 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.RevokePermissionsInput{
-		Permissions:                flex.ExpandStringyValueList[awstypes.Permission](d.Get(names.AttrPermissions).([]interface{})),
-		PermissionsWithGrantOption: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions_with_grant_option").([]interface{})),
+		Permissions:                flex.ExpandStringyValueSet[awstypes.Permission](d.Get(names.AttrPermissions).(*schema.Set)),
+		PermissionsWithGrantOption: flex.ExpandStringyValueSet[awstypes.Permission](d.Get("permissions_with_grant_option").(*schema.Set)),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
@@ -754,6 +755,10 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
 		input.Resource.Catalog = ExpandCatalogResource()
+	}
+
+	if v, ok := d.GetOk("data_cells_filter"); ok {
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -814,6 +819,10 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "cannot grant/revoke permission on non-existent column") {
+		return diags
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Cell Filter not found") {
 		return diags
 	}
 
@@ -1283,7 +1292,7 @@ func flattenResourcePermissions(apiObjects []awstypes.PrincipalResourcePermissio
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }
@@ -1301,7 +1310,7 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }

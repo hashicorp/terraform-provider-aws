@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -125,9 +124,10 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Connection: %s", d.Id())
-	_, err := conn.DeleteConnection(ctx, &apprunner.DeleteConnectionInput{
+	input := apprunner.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Get(names.AttrARN).(string)),
-	})
+	}
+	_, err := conn.DeleteConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -172,11 +172,11 @@ func findConnection(ctx context.Context, conn *apprunner.Client, input *apprunne
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findConnections(ctx context.Context, conn *apprunner.Client, input *apprunner.ListConnectionsInput) ([]*types.ConnectionSummary, error) {
-	var output []*types.ConnectionSummary
+func findConnections(ctx context.Context, conn *apprunner.Client, input *apprunner.ListConnectionsInput) ([]types.ConnectionSummary, error) {
+	var output []types.ConnectionSummary
 
 	pages := apprunner.NewListConnectionsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -193,7 +193,7 @@ func findConnections(ctx context.Context, conn *apprunner.Client, input *apprunn
 			return nil, err
 		}
 
-		output = append(output, tfslices.ToPointers(page.ConnectionSummaryList)...)
+		output = append(output, page.ConnectionSummaryList...)
 	}
 
 	return output, nil

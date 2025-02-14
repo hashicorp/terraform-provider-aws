@@ -148,10 +148,13 @@ func ResourceFleet() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"idle_disconnect_timeout_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(60, 360000),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+				ValidateFunc: validation.Any(
+					validation.IntBetween(60, 360000),
+					validation.IntInSlice([]int{0}),
+				),
 			},
 			"image_arn": {
 				Type:     schema.TypeString,
@@ -317,9 +320,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(aws.ToString(output.Fleet.Name))
 
 	// Start fleet workflow
-	_, err = conn.StartFleet(ctx, &appstream.StartFleetInput{
+	startFleetInput := appstream.StartFleetInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.StartFleet(ctx, &startFleetInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting Appstream Fleet (%s): %s", d.Id(), err)
 	}
@@ -336,7 +340,8 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{d.Id()}})
+	input := appstream.DescribeFleetsInput{Names: []string{d.Id()}}
+	resp, err := conn.DescribeFleets(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Appstream Fleet (%s) not found, removing from state", d.Id())
@@ -420,9 +425,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Stop fleet workflow if needed
 	if shouldStop {
-		_, err := conn.StopFleet(ctx, &appstream.StopFleetInput{
+		input := appstream.StopFleetInput{
 			Name: aws.String(d.Id()),
-		})
+		}
+		_, err := conn.StopFleet(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "stopping Appstream Fleet (%s): %s", d.Id(), err)
 		}
@@ -498,9 +504,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Start fleet workflow if stopped
 	if shouldStop {
-		_, err = conn.StartFleet(ctx, &appstream.StartFleetInput{
+		input := appstream.StartFleetInput{
 			Name: aws.String(d.Id()),
-		})
+		}
+		_, err = conn.StartFleet(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "starting Appstream Fleet (%s): %s", d.Id(), err)
 		}
@@ -520,9 +527,10 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Stop fleet workflow
 	log.Printf("[DEBUG] Stopping AppStream Fleet: (%s)", d.Id())
-	_, err := conn.StopFleet(ctx, &appstream.StopFleetInput{
+	stopFleetInput := appstream.StopFleetInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopFleet(ctx, &stopFleetInput)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -537,9 +545,10 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Deleting AppStream Fleet: (%s)", d.Id())
-	_, err = conn.DeleteFleet(ctx, &appstream.DeleteFleetInput{
+	deleteFleetInput := appstream.DeleteFleetInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteFleet(ctx, &deleteFleetInput)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

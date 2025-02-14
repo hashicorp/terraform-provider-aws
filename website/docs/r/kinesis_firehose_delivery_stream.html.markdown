@@ -90,7 +90,7 @@ resource "aws_lambda_function" "lambda_processor" {
   function_name = "firehose_lambda_processor"
   role          = aws_iam_role.lambda_iam.arn
   handler       = "exports.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 ```
 
@@ -526,6 +526,84 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
+### Iceberg Destination
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = "test-bucket"
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = "test"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = "test"
+  database_name = aws_glue_catalog_database.test.name
+  parameters = {
+    format = "parquet"
+  }
+
+  table_type = "EXTERNAL_TABLE"
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+    }
+  }
+
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.bucket.id}"
+
+    columns {
+      name = "my_column_1"
+      type = "int"
+    }
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn           = aws_iam_role.firehose_role.arn
+    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    buffering_size     = 10
+    buffering_interval = 400
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose_role.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
+
+    destination_table_configuration {
+      database_name = aws_glue_catalog_database.test.name
+      table_name    = aws_glue_catalog_table.test.name
+    }
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
+  }
+}
+```
+
 ### Splunk Destination
 
 ```terraform
@@ -600,13 +678,15 @@ resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" 
   destination = "snowflake"
 
   snowflake_configuration {
-    account_url = "https://example.snowflakecomputing.com"
-    database    = "example-db"
-    private_key = "..."
-    role_arn    = aws_iam_role.firehose.arn
-    schema      = "example-schema"
-    table       = "example-table"
-    user        = "example-usr"
+    account_url        = "https://example.snowflakecomputing.com"
+    buffering_size     = 15
+    buffering_interval = 600
+    database           = "example-db"
+    private_key        = "..."
+    role_arn           = aws_iam_role.firehose.arn
+    schema             = "example-schema"
+    table              = "example-table"
+    user               = "example-usr"
 
     s3_configuration {
       role_arn           = aws_iam_role.firehose.arn
@@ -634,6 +714,7 @@ This resource supports the following arguments:
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. See [`extended_s3_configuration` block](#extended_s3_configuration-block) below for details.
 * `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  See [`http_endpoint_configuration` block](#http_endpoint_configuration-block) below for details.
+* `iceberg_configuration` - (Optional) Configuration options when `destination` is `iceberg`. See [`iceberg_configuration` block](#iceberg_configuration-block) below for details.
 * `opensearch_configuration` - (Optional) Configuration options when `destination` is `opensearch`. See [`opensearch_configuration` block](#opensearch_configuration-block) below for details.
 * `opensearchserverless_configuration` - (Optional) Configuration options when `destination` is `opensearchserverless`. See [`opensearchserverless_configuration` block](#opensearchserverless_configuration-block) below for details.
 * `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. See [`redshift_configuration` block](#redshift_configuration-block) below for details.
@@ -687,13 +768,14 @@ The `extended_s3_configuration` configuration block supports the same fields fro
 The `redshift_configuration` configuration block supports the following arguments:
 
 * `cluster_jdbcurl` - (Required) The jdbcurl of the redshift cluster.
-* `username` - (Required) The username that the firehose delivery stream will assume. It is strongly recommended that the username and password provided is used exclusively for Amazon Kinesis Firehose purposes, and that the permissions for the account are restricted for Amazon Redshift INSERT permissions.
-* `password` - (Required) The password for the username above.
+* `username` - (Optional) The username that the firehose delivery stream will assume. It is strongly recommended that the username and password provided is used exclusively for Amazon Kinesis Firehose purposes, and that the permissions for the account are restricted for Amazon Redshift INSERT permissions. This value is required if `secrets_manager_configuration` is not provided.
+* `password` - (Optional) The password for the username above. This value is required if `secrets_manager_configuration` is not provided.
 * `retry_duration` - (Optional) The length of time during which Firehose retries delivery after a failure, starting from the initial request and including the first attempt. The default value is 3600 seconds (60 minutes). Firehose does not retry if the value of DurationInSeconds is 0 (zero) or if the first delivery attempt takes longer than the current value.
 * `role_arn` - (Required) The arn of the role the stream assumes.
 * `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3_configuration-block) below for details.
 * `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
+`secrets_manager_configuration` - (Optional) The Secrets Manager configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details. This value is required if `username` and `password` are not provided.
 * `data_table_name` - (Required) The name of the table in the redshift cluster that the s3 bucket will copy to.
 * `copy_options` - (Optional) Copy options for copying the data from the s3 intermediate bucket into redshift, for example to change the default delimiter. For valid values, see the [AWS documentation](http://docs.aws.amazon.com/firehose/latest/APIReference/API_CopyCommand.html)
 * `data_table_columns` - (Optional) The data table columns that will be targeted by the copy command.
@@ -718,6 +800,20 @@ The `elasticsearch_configuration` configuration block supports the following arg
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
 * `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to Elastic Search associated with the VPC. See [`vpc_config` block](#vpc_config-block) below for details.
 * `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
+
+### `iceberg_configuration` block
+
+The `iceberg_configuration` configuration block supports the following arguments:
+
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 0 and 900, before delivering it to the destination. The default value is 300.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 and 128, before delivering it to the destination. The default value is 5.
+* `catalog_arn` - (Required) Glue catalog ARN identifier of the destination Apache Iceberg Tables. You must specify the ARN in the format `arn:aws:glue:region:account-id:catalog`
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
+* `destination_table_configuration` - (Optional) Destination table configurations which Firehose uses to deliver data to Apache Iceberg Tables. Firehose will write data with insert if table specific configuration is not provided. See [`destination_table_configuration` block](#destination_table_configuration-block) below for details.
+* `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
+* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling Apache Iceberg Tables.
+* `retry_duration` - (Optional) The period of time, in seconds between 0 to 7200, during which Firehose retries to deliver data to the specified destination.
+* `s3_configuration` - (Required) The S3 Configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 
 ### `opensearch_configuration` block
 
@@ -764,9 +860,10 @@ The `splunk_configuration` configuration block supports the following arguments:
 * `hec_acknowledgment_timeout` - (Optional) The amount of time, in seconds between 180 and 600, that Kinesis Firehose waits to receive an acknowledgment from Splunk after it sends it data.
 * `hec_endpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
 * `hec_endpoint_type` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
-* `hec_token` - (Required) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
+* `hec_token` - (Optional) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint. This value is required if `secrets_manager_configuration` is not provided.
 * `s3_configuration` - (Required) The S3 Configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
+`secrets_manager_configuration` - (Optional) The Secrets Manager configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details. This value is required if `hec_token` is not provided.
 * `retry_duration` - (Optional) After an initial failure to deliver to Splunk, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
 * `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
@@ -787,15 +884,18 @@ The `http_endpoint_configuration` configuration block supports the following arg
 * `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
 * `request_configuration` - (Optional) The request configuration.  See [`request_configuration` block](#request_configuration-block) below for details.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. This duration starts after the initial attempt fails, It does not include the time periods during which Firehose waits for acknowledgment from the specified destination after each attempt. Valid values between `0` and `7200`. Default is `300`.
+* `secrets_manager_configuration` - (Optional) The Secret Manager Configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details.
 
 ### `snowflake_configuration` block
 
 The `snowflake_configuration` configuration block supports the following arguments:
 
 * `account_url` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
-* `private_key` - (Required) The private key for authentication.
-* `key_passphrase` - (Required) The passphrase for the private key.
-* `user` - (Required) The user for authentication.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 128, before delivering it to the destination.  The default value is 1MB.
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 0 to 900, before delivering it to the destination.  The default value is 0s.
+* `private_key` - (Optional) The private key for authentication. This value is required if `secrets_manager_configuration` is not provided.
+* `key_passphrase` - (Optional) The passphrase for the private key.
+* `user` - (Optional) The user for authentication. This value is required if `secrets_manager_configuration` is not provided.
 * `database` - (Required) The Snowflake database name.
 * `schema` - (Required) The Snowflake schema name.
 * `table` - (Required) The Snowflake table name.
@@ -813,6 +913,7 @@ The `snowflake_configuration` configuration block supports the following argumen
 * `retry_duration` - (Optional) After an initial failure to deliver to Snowflake, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 60s.  There will be no retry if the value is 0.
 * `s3_backup_mode` - (Optional) The S3 backup mode.
 * `s3_configuration` - (Required) The S3 configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
+* `secrets_manager_configuration` - (Optional) The Secrets Manager configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details. This value is required if `user` and `private_key` are not provided.
 
 ### `cloudwatch_logging_options` block
 
@@ -833,14 +934,14 @@ The `processing_configuration` configuration block supports the following argume
 
 The `processors` configuration block supports the following arguments:
 
-* `type` - (Required) The type of processor. Valid Values: `RecordDeAggregation`, `Lambda`, `MetadataExtraction`, `AppendDelimiterToRecord`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
+* `type` - (Required) The type of processor. Valid Values: `RecordDeAggregation`, `Lambda`, `MetadataExtraction`, `AppendDelimiterToRecord`, `Decompression`, `CloudWatchLogProcessing`. Validation is done against [AWS SDK constants](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/firehose/types#ProcessorType); so values not explicitly listed may also work.
 * `parameters` - (Optional) Specifies the processor parameters as multiple blocks. See [`parameters` block](#parameters-block) below for details.
 
 ### `parameters` block
 
 The `parameters` configuration block supports the following arguments:
 
-* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `MetadataExtractionQuery`, `JsonParsingEngine`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`, `SubRecordType`, `Delimiter`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
+* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `MetadataExtractionQuery`, `JsonParsingEngine`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`, `SubRecordType`, `Delimiter`, `CompressionFormat`, `DataMessageExtraction`. Validation is done against [AWS SDK constants](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/firehose/types#ProcessorParameterName); so values not explicitly listed may also work.
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
 ~> **NOTE:** Parameters with default values, including `NumberOfRetries`(default: 3), `RoleArn`(default: firehose role ARN), `BufferSizeInMBs`(default: 1), and `BufferIntervalInSeconds`(default: 60), are not stored in terraform state. To prevent perpetual differences, it is therefore recommended to only include parameters with non-default values.
@@ -927,6 +1028,14 @@ The `s3_configuration` configuration block supports the following arguments:
   be used.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
 
+### `secrets_manager_configuration` block
+
+The `secrets_manager_configuration` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Enables or disables the Secrets Manager configuration.
+* `secret_arn` - (Optional) The ARN of the Secrets Manager secret. This value is required if `enabled` is true.
+* `role_arn` - (Optional) The ARN of the role the stream assumes.
+
 ### `input_format_configuration` block
 
 The `input_format_configuration` configuration block supports the following arguments:
@@ -1007,6 +1116,15 @@ The `schema_configuration` configuration block supports the following arguments:
 * `catalog_id` - (Optional) The ID of the AWS Glue Data Catalog. If you don't supply this, the AWS account ID is used by default.
 * `region` - (Optional) If you don't specify an AWS Region, the default is the current region.
 * `version_id` - (Optional) Specifies the table version for the output data schema. Defaults to `LATEST`.
+
+### `destination_table_configuration` block
+
+The `destination_table_configuration` configuration block supports the following arguments:
+
+* `database_name` - (Required) The name of the Apache Iceberg database.
+* `table_name` - (Required) The name of the Apache Iceberg Table.
+* `s3_error_output_prefix` - (Optional) The table specific S3 error output prefix. All the errors that occurred while delivering to this table will be prefixed with this value in S3 destination.
+* `unique_keys` - (Optional) A list of unique keys for a given Apache Iceberg table. Firehose will use these for running Create, Update, or Delete operations on the given Iceberg table.
 
 ### `dynamic_partitioning_configuration` block
 

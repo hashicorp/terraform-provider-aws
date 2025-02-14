@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,8 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_security_group")
-func DataSourceSecurityGroup() *schema.Resource {
+// @SDKDataSource("aws_security_group", name="Security Group")
+// @Tags
+// @Testing(tagsIdentifierAttribute="id")
+func dataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityGroupRead,
 
@@ -62,8 +64,7 @@ func DataSourceSecurityGroup() *schema.Resource {
 func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
@@ -75,7 +76,7 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.GroupIds = aws.StringSlice([]string{v.(string)})
+		input.GroupIds = []string{v.(string)}
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
@@ -91,18 +92,18 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 		input.Filters = nil
 	}
 
-	sg, err := FindSecurityGroup(ctx, conn, input)
+	sg, err := findSecurityGroup(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Security Group", err))
 	}
 
-	d.SetId(aws.StringValue(sg.GroupId))
+	d.SetId(aws.ToString(sg.GroupId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.EC2,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: *sg.OwnerId,
 		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),
 	}.String()
@@ -111,9 +112,7 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrName, sg.GroupName)
 	d.Set(names.AttrVPCID, sg.VpcId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, sg.Tags)
 
 	return diags
 }

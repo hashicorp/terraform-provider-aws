@@ -128,7 +128,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("metadata", upload.Metadata)
 	d.Set(names.AttrARN, arn)
 
-	projectArn, err := decodeProjectARN(arn, "upload", meta)
+	projectArn, err := decodeProjectARN(ctx, meta.(*conns.AWSClient), arn, "upload")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding project_arn (%s): %s", arn, err)
 	}

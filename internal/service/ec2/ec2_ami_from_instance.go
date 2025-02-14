@@ -238,6 +238,10 @@ func resourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -263,7 +267,7 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeImage),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeImage),
 	}
 
 	output, err := conn.CreateImage(ctx, input)

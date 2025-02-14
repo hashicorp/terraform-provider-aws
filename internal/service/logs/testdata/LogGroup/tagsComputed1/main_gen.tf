@@ -4,7 +4,7 @@
 provider "null" {}
 
 resource "aws_cloudwatch_log_group" "test" {
-  name =var.rName
+  name = var.rName
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id

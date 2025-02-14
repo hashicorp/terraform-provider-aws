@@ -43,16 +43,55 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 			},
 			{
 				Config:            testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsync.Semaphore) {
+	acctest.Skip(t, "IncorrectState: You cannot create a dynamic peering attachment")
+
+	ctx := acctest.Context(t)
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayPeeringAttachmentConfig_options_sameAccount(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.dynamic_routing", "enable"),
+				),
+			},
+			{
+				Config:            testAccTransitGatewayPeeringAttachmentConfig_options_sameAccount(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -111,7 +150,7 @@ func testAccTransitGatewayPeeringAttachment_tags(t *testing.T, semaphore tfsync.
 				Config: testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -125,7 +164,7 @@ func testAccTransitGatewayPeeringAttachment_tags(t *testing.T, semaphore tfsync.
 				Config: testAccTransitGatewayPeeringAttachmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -134,7 +173,7 @@ func testAccTransitGatewayPeeringAttachment_tags(t *testing.T, semaphore tfsync.
 				Config: testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -168,7 +207,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T, semap
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					// Test that the peer account ID != the primary (request) account ID
 					func(s *terraform.State) error {
-						if acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id") == nil {
+						if acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id") == nil {
 							return fmt.Errorf("peer_account_id attribute incorrectly to the requester's account ID")
 						}
 						return nil
@@ -176,7 +215,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T, semap
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
@@ -280,6 +319,20 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
+}
+`, acctest.AlternateRegion()))
+}
+
+func testAccTransitGatewayPeeringAttachmentConfig_options_sameAccount(rName string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_region             = %[1]q
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
+
+  options {
+    dynamic_routing = "enable"
+  }
 }
 `, acctest.AlternateRegion()))
 }

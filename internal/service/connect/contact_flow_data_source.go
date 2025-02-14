@@ -5,22 +5,28 @@ package connect
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_contact_flow")
-func DataSourceContactFlow() *schema.Resource {
+// @SDKDataSource("aws_connect_contact_flow", name="Contact Flow")
+// @Tags
+func dataSourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactFlowRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -61,12 +67,9 @@ func DataSourceContactFlow() *schema.Resource {
 
 func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
-
 	input := &connect.DescribeContactFlowInput{
 		InstanceId: aws.String(instanceID),
 	}
@@ -75,78 +78,83 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactFlowId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		contactFlowSummary, err := dataSourceGetContactFlowSummaryByName(ctx, conn, instanceID, name)
+		contactFlowSummary, err := findContactFlowSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Summary by name (%s): %s", name, err)
-		}
-
-		if contactFlowSummary == nil {
-			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "reading Connect Contact Flow (%s) summary: %s", name, err)
 		}
 
 		input.ContactFlowId = contactFlowSummary.Id
 	}
 
-	resp, err := conn.DescribeContactFlowWithContext(ctx, input)
+	contactFlow, err := findContactFlow(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Contact Flow: %s", err)
 	}
 
-	if resp == nil || resp.ContactFlow == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow: empty response")
-	}
-
-	contactFlow := resp.ContactFlow
-
+	contactFlowID := aws.ToString(contactFlow.Id)
+	id := contactFlowCreateResourceID(instanceID, contactFlowID)
+	d.SetId(id)
 	d.Set(names.AttrARN, contactFlow.Arn)
-	d.Set(names.AttrInstanceID, instanceID)
-	d.Set("contact_flow_id", contactFlow.Id)
-	d.Set(names.AttrName, contactFlow.Name)
-	d.Set(names.AttrDescription, contactFlow.Description)
+	d.Set("contact_flow_id", contactFlowID)
 	d.Set(names.AttrContent, contactFlow.Content)
+	d.Set(names.AttrDescription, contactFlow.Description)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, contactFlow.Name)
 	d.Set(names.AttrType, contactFlow.Type)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlow.Id)))
+	setTagsOut(ctx, contactFlow.Tags)
 
 	return diags
 }
 
-func dataSourceGetContactFlowSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowSummary, error) {
-	var result *connect.ContactFlowSummary
-
+func findContactFlowSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.ContactFlowSummary, error) {
+	const maxResults = 60
 	input := &connect.ListContactFlowsInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListContactFlowsMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListContactFlowsPagesWithContext(ctx, input, func(page *connect.ListContactFlowsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, cf := range page.ContactFlowSummaryList {
-			if cf == nil {
-				continue
-			}
-
-			if aws.StringValue(cf.Name) == name {
-				result = cf
-				return false
-			}
-		}
-
-		return !lastPage
+	return findContactFlowSummary(ctx, conn, input, func(v *awstypes.ContactFlowSummary) bool {
+		return aws.ToString(v.Name) == name
 	})
+}
+
+func findContactFlowSummary(ctx context.Context, conn *connect.Client, input *connect.ListContactFlowsInput, filter tfslices.Predicate[*awstypes.ContactFlowSummary]) (*awstypes.ContactFlowSummary, error) {
+	output, err := findContactFlowSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findContactFlowSummaries(ctx context.Context, conn *connect.Client, input *connect.ListContactFlowsInput, filter tfslices.Predicate[*awstypes.ContactFlowSummary]) ([]awstypes.ContactFlowSummary, error) {
+	var output []awstypes.ContactFlowSummary
+
+	pages := connect.NewListContactFlowsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ContactFlowSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

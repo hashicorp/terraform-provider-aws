@@ -55,6 +55,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -231,9 +232,9 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -246,9 +247,9 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -332,7 +333,7 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "5"),
-					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -348,8 +349,8 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
-					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "10"),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -366,7 +367,8 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-		resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
+		input := appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}}
+		resp, err := conn.DescribeFleets(ctx, &input)
 
 		if err != nil {
 			return err
@@ -391,7 +393,8 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
+			input := appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}}
+			resp, err := conn.DescribeFleets(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
@@ -410,28 +413,34 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+const testAccFleetConfig_base = `
+data "aws_appstream_image" "test" {
+  name_regex  = "^Amazon-AppStream2-Sample-Image.*$"
+  type        = "PUBLIC"
+  most_recent = true
+}
+`
+
 func testAccFleetConfig_basic(name, instanceType string) string {
 	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_base, fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[2]q
 
   compute_capacity {
     desired_instances = 1
   }
 }
-`, name, instanceType)
+`, name, instanceType))
 }
 
 func testAccFleetConfig_complete(name, description, fleetType, instanceType string) string {
 	return acctest.ConfigCompose(
+		testAccFleetConfig_base,
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -445,7 +454,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name      = %[1]q
-  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_arn = data.aws_appstream_image.test.arn
 
   compute_capacity {
     desired_instances = 1
@@ -468,6 +477,7 @@ resource "aws_appstream_fleet" "test" {
 
 func testAccFleetConfig_completeNoStopping(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
+		testAccFleetConfig_base,
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -483,7 +493,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name = data.aws_appstream_image.test.name
 
   compute_capacity {
     desired_instances = 1
@@ -506,6 +516,7 @@ resource "aws_appstream_fleet" "test" {
 
 func testAccFleetConfig_tags(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
+		testAccFleetConfig_base,
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -521,7 +532,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name = data.aws_appstream_image.test.name
 
   compute_capacity {
     desired_instances = 1
@@ -548,10 +559,10 @@ resource "aws_appstream_fleet" "test" {
 
 func testAccFleetConfig_emptyDomainJoin(name, instanceType, empty string) string {
 	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_base, fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[2]q
 
   compute_capacity {
@@ -563,16 +574,13 @@ resource "aws_appstream_fleet" "test" {
     organizational_unit_distinguished_name = %[3]s
   }
 }
-`, name, instanceType, empty)
+`, name, instanceType, empty))
 }
 
 func testAccFleetConfig_multiSession(name, instanceType string, desiredSessions, maxSessionsPerInstance int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -584,9 +592,15 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 }
 
+data "aws_appstream_image" "test" {
+  name_regex  = "^AppStream-WinServer2022.*$"
+  type        = "PUBLIC"
+  most_recent = true
+}
+
 resource "aws_appstream_fleet" "test" {
   name      = %[1]q
-  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/AppStream-WinServer2019-01-26-2024"
+  image_arn = data.aws_appstream_image.test.arn
 
   compute_capacity {
     desired_sessions = %[3]d

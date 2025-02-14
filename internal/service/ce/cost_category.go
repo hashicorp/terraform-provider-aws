@@ -72,7 +72,7 @@ func resourceCostCategory() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 50),
 				},
 				names.AttrRule: {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -305,7 +305,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:         aws.String(name),
 		ResourceTags: getTagsIn(ctx),
-		Rules:        expandCostCategoryRules(d.Get(names.AttrRule).(*schema.Set).List()),
+		Rules:        expandCostCategoryRules(d.Get(names.AttrRule).([]interface{})),
 		RuleVersion:  awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 	}
 
@@ -375,7 +375,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
 			CostCategoryArn: aws.String(d.Id()),
 			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
-			Rules:           expandCostCategoryRules(d.Get(names.AttrRule).(*schema.Set).List()),
+			Rules:           expandCostCategoryRules(d.Get(names.AttrRule).([]interface{})),
 			RuleVersion:     awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 		}
 
@@ -716,9 +716,16 @@ func flattenCostCategoryRule(apiObject *awstypes.CostCategoryRule) map[string]in
 	tfMap := map[string]interface{}{}
 
 	tfMap["inherited_value"] = flattenCostCategoryInheritedValueDimension(apiObject.InheritedValue)
-	tfMap[names.AttrRule] = []interface{}{flattenExpression(apiObject.Rule)}
+
+	if v := apiObject.Rule; v != nil {
+		tfMap[names.AttrRule] = []interface{}{flattenExpression(apiObject.Rule)}
+	}
+
 	tfMap[names.AttrType] = string(apiObject.Type)
-	tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
+
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = aws.ToString(v)
+	}
 
 	return tfMap
 }
@@ -745,7 +752,10 @@ func flattenCostCategoryInheritedValueDimension(apiObject *awstypes.CostCategory
 	var tfList []map[string]interface{}
 	tfMap := map[string]interface{}{}
 
-	tfMap["dimension_key"] = aws.ToString(apiObject.DimensionKey)
+	if v := apiObject.DimensionKey; v != nil {
+		tfMap["dimension_key"] = aws.ToString(v)
+	}
+
 	tfMap["dimension_name"] = string(apiObject.DimensionName)
 
 	tfList = append(tfList, tfMap)
@@ -797,7 +807,10 @@ func flattenCostCategoryValues(apiObject *awstypes.CostCategoryValues) []map[str
 	var tfList []map[string]interface{}
 	tfMap := map[string]interface{}{}
 
-	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
+	if v := apiObject.Key; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
+	}
+
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
 	tfMap[names.AttrValues] = apiObject.Values
 
@@ -831,7 +844,10 @@ func flattenTagValues(apiObject *awstypes.TagValues) []map[string]interface{} {
 	var tfList []map[string]interface{}
 	tfMap := map[string]interface{}{}
 
-	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
+	if v := apiObject.Key; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
+	}
+
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
 	tfMap[names.AttrValues] = apiObject.Values
 

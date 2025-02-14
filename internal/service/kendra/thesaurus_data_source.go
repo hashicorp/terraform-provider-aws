@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kendra_thesaurus")
+// @SDKDataSource("aws_kendra_thesaurus", name="Thesaurus")
 func DataSourceThesaurus() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceThesaurusRead,
@@ -113,7 +113,7 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	thesaurusID := d.Get("thesaurus_id").(string)
 	indexID := d.Get("index_id").(string)
@@ -125,10 +125,10 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexID, thesaurusID),
 	}.String()
 	d.Set(names.AttrARN, arn)

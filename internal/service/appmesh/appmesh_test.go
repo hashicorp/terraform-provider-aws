@@ -29,17 +29,19 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"http2RouteWithQueryParameter": testAccGatewayRoute_http2RouteWithQueryParameter,
 			"tags":                         testAccAppMeshGatewayRoute_tagsSerial,
 			"dataSourceBasic":              testAccGatewayRouteDataSource_basic,
+			"dataSource_tags":              testAccAppMeshGatewayRouteDataSource_tagsSerial,
 		},
 		"Mesh": {
-			acctest.CtBasic:            testAccMesh_basic,
-			acctest.CtDisappears:       testAccMesh_disappears,
-			"egressFilter":             testAccMesh_egressFilter,
-			"serviceDiscovery":         testAccMesh_serviceDiscovery,
-			"tags":                     testAccAppMeshServiceMesh_tagsSerial,
-			"dataSourceBasic":          testAccMeshDataSource_basic,
-			"dataSourceMeshOwner":      testAccMeshDataSource_meshOwner,
-			"dataSourceSpecAndTagsSet": testAccMeshDataSource_specAndTagsSet,
-			"dataSourceShared":         testAccMeshDataSource_shared,
+			acctest.CtBasic:       testAccMesh_basic,
+			acctest.CtDisappears:  testAccMesh_disappears,
+			"egressFilter":        testAccMesh_egressFilter,
+			"serviceDiscovery":    testAccMesh_serviceDiscovery,
+			"tags":                testAccAppMeshServiceMesh_tagsSerial,
+			"dataSourceBasic":     testAccMeshDataSource_basic,
+			"dataSourceMeshOwner": testAccMeshDataSource_meshOwner,
+			"dataSourceSpecSet":   testAccMeshDataSource_specSet,
+			"dataSourceShared":    testAccMeshDataSource_shared,
+			"dataSource_tags":     testAccAppMeshServiceMeshDataSource_tagsSerial,
 		},
 		"Route": {
 			acctest.CtDisappears:               testAccRoute_disappears,
@@ -66,6 +68,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceHTTPRoute":              testAccRouteDataSource_httpRoute,
 			"dataSourceGRPCRoute":              testAccRouteDataSource_grpcRoute,
 			"dataSourceTCPRoute":               testAccRouteDataSource_tcpRoute,
+			"dataSource_tags":                  testAccAppMeshRouteDataSource_tagsSerial,
 		},
 		"VirtualGateway": {
 			acctest.CtBasic:              testAccVirtualGateway_basic,
@@ -80,6 +83,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"logging":                    testAccVirtualGateway_Logging,
 			"tags":                       testAccAppMeshVirtualGateway_tagsSerial,
 			"dataSourceBasic":            testAccVirtualGatewayDataSource_basic,
+			"dataSource_tags":            testAccAppMeshVirtualGatewayDataSource_tagsSerial,
 		},
 		"VirtualNode": {
 			acctest.CtBasic:              testAccVirtualNode_basic,
@@ -99,6 +103,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"logging":                    testAccVirtualNode_logging,
 			"tags":                       testAccAppMeshVirtualNode_tagsSerial,
 			"dataSourceBasic":            testAccVirtualNodeDataSource_basic,
+			"dataSource_tags":            testAccAppMeshVirtualNodeDataSource_tagsSerial,
 		},
 		"VirtualRouter": {
 			acctest.CtBasic:      testAccVirtualRouter_basic,
@@ -106,6 +111,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"multiListener":      testAccVirtualRouter_multiListener,
 			"tags":               testAccAppMeshVirtualRouter_tagsSerial,
 			"dataSourceBasic":    testAccVirtualRouterDataSource_basic,
+			"dataSource_tags":    testAccAppMeshVirtualRouterDataSource_tagsSerial,
 		},
 		"VirtualService": {
 			acctest.CtDisappears:      testAccVirtualService_disappears,
@@ -114,6 +120,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tags":                    testAccAppMeshVirtualService_tagsSerial,
 			"dataSourceVirtualNode":   testAccVirtualServiceDataSource_virtualNode,
 			"dataSourceVirtualRouter": testAccVirtualServiceDataSource_virtualRouter,
+			"dataSource_tags":         testAccAppMeshVirtualServiceDataSource_tagsSerial,
 		},
 	}
 

@@ -37,9 +37,9 @@ func testAccAnalyzer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.TypeAccount)),
 				),
 			},
@@ -127,8 +127,8 @@ func testAccAnalyzer_configuration(t *testing.T) {
 				Config: testAccAnalyzerConfig_configuration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
 				),
 			},

@@ -37,14 +37,14 @@ func testAccOrganizationManagedRule_basic(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule_identifier", "IAM_PASSWORD_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", ""),
@@ -152,7 +152,7 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
 				),
 			},
 			{
@@ -164,7 +164,7 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
 				),
 			},
 		},
@@ -295,7 +295,7 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_resourceTypesScope1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "1"),
 				),
 			},
 			{
@@ -307,7 +307,7 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_resourceTypesScope2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "2"),
 				),
 			},
 		},
@@ -466,7 +466,7 @@ func testAccCheckOrganizationManagedRuleDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccOrganizationManagedRuleConfigBase(rName string) string {
+func testAccOrganizationManagedRuleConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {
 }
@@ -511,7 +511,7 @@ resource "aws_organizations_organization" "test" {
 }
 
 func testAccOrganizationManagedRuleConfig_description(rName, description string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -519,7 +519,7 @@ resource "aws_config_organization_managed_rule" "test" {
   name            = %[1]q
   rule_identifier = "IAM_PASSWORD_POLICY"
 }
-`, rName, description)
+`, rName, description))
 }
 
 func testAccOrganizationManagedRuleConfig_errorHandling(rName string) string {
@@ -539,7 +539,7 @@ resource "aws_config_organization_managed_rule" "test" {
 }
 
 func testAccOrganizationManagedRuleConfig_excludedAccounts1(rName string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -547,11 +547,11 @@ resource "aws_config_organization_managed_rule" "test" {
   name              = %[1]q
   rule_identifier   = "IAM_PASSWORD_POLICY"
 }
-`, rName)
+`, rName))
 }
 
 func testAccOrganizationManagedRuleConfig_excludedAccounts2(rName string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -559,11 +559,11 @@ resource "aws_config_organization_managed_rule" "test" {
   name              = %[1]q
   rule_identifier   = "IAM_PASSWORD_POLICY"
 }
-`, rName)
+`, rName))
 }
 
 func testAccOrganizationManagedRuleConfig_inputParameters(rName, inputParameters string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -574,11 +574,11 @@ PARAMS
   name            = %[1]q
   rule_identifier = "REQUIRED_TAGS"
 }
-`, rName, inputParameters)
+`, rName, inputParameters))
 }
 
 func testAccOrganizationManagedRuleConfig_maximumExecutionFrequency(rName, maximumExecutionFrequency string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -586,11 +586,11 @@ resource "aws_config_organization_managed_rule" "test" {
   name                        = %[1]q
   rule_identifier             = "IAM_PASSWORD_POLICY"
 }
-`, rName, maximumExecutionFrequency)
+`, rName, maximumExecutionFrequency))
 }
 
 func testAccOrganizationManagedRuleConfig_resourceIdScope(rName, resourceIdScope string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -599,11 +599,11 @@ resource "aws_config_organization_managed_rule" "test" {
   resource_types_scope = ["AWS::EC2::Instance"]
   rule_identifier      = "EC2_INSTANCE_DETAILED_MONITORING_ENABLED"
 }
-`, rName, resourceIdScope)
+`, rName, resourceIdScope))
 }
 
 func testAccOrganizationManagedRuleConfig_resourceTypesScope1(rName string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -618,11 +618,11 @@ EOF
   resource_types_scope = ["AWS::EC2::Instance"]
   rule_identifier      = "REQUIRED_TAGS"
 }
-`, rName)
+`, rName))
 }
 
 func testAccOrganizationManagedRuleConfig_resourceTypesScope2(rName string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -637,22 +637,22 @@ EOF
   resource_types_scope = ["AWS::EC2::Instance", "AWS::EC2::VPC"]
   rule_identifier      = "REQUIRED_TAGS"
 }
-`, rName)
+`, rName))
 }
 
 func testAccOrganizationManagedRuleConfig_identifier(rName, ruleIdentifier string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
   name            = %[1]q
   rule_identifier = %[2]q
 }
-`, rName, ruleIdentifier)
+`, rName, ruleIdentifier))
 }
 
 func testAccOrganizationManagedRuleConfig_tagKeyScope(rName, tagKeyScope string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -660,11 +660,11 @@ resource "aws_config_organization_managed_rule" "test" {
   rule_identifier = "EC2_INSTANCE_DETAILED_MONITORING_ENABLED"
   tag_key_scope   = %[2]q
 }
-`, rName, tagKeyScope)
+`, rName, tagKeyScope))
 }
 
 func testAccOrganizationManagedRuleConfig_tagValueScope(rName, tagValueScope string) string {
-	return testAccOrganizationManagedRuleConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationManagedRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_organization_managed_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
 
@@ -673,5 +673,5 @@ resource "aws_config_organization_managed_rule" "test" {
   tag_key_scope   = "key1"
   tag_value_scope = %[2]q
 }
-`, rName, tagValueScope)
+`, rName, tagValueScope))
 }

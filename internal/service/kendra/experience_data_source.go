@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kendra_experience")
+// @SDKDataSource("aws_kendra_experience", name="Experience")
 func DataSourceExperience() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExperienceRead,
@@ -156,10 +156,10 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/experience/%s", indexID, experienceID),
 	}.String()
 	d.Set(names.AttrARN, arn)

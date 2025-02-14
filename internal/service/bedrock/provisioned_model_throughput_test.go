@@ -11,7 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
@@ -39,11 +43,21 @@ func TestAccBedrockProvisionedModelThroughput_basic(t *testing.T) {
 					testAccCheckProvisionedModelThroughputExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "commitment_duration", "OneMonth"),
 					resource.TestCheckResourceAttrSet(resourceName, "model_arn"),
-					resource.TestCheckResourceAttr(resourceName, "model_units", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "model_units", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioned_model_arn"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_model_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -106,15 +120,15 @@ func testAccCheckProvisionedModelThroughputExists(ctx context.Context, n string,
 
 func testAccProvisionedModelThroughputConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_bedrock_foundation_model" "test" {
-  model_id = "amazon.titan-text-express-v1:0:8k"
-}
-
 resource "aws_bedrock_provisioned_model_throughput" "test" {
   provisioned_model_name = %[1]q
   model_arn              = data.aws_bedrock_foundation_model.test.model_arn
   commitment_duration    = "OneMonth"
   model_units            = 1
+}
+
+data "aws_bedrock_foundation_model" "test" {
+  model_id = "amazon.titan-text-express-v1:0:8k"
 }
 `, rName)
 }

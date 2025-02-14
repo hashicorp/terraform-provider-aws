@@ -140,7 +140,7 @@ This resource supports the following arguments:
 
 Tag conditions (`selection_tag`) support the following:
 
-* `type` - (Required) An operation, such as `StringEquals`, that is applied to a key-value pair used to filter resources in a selection.
+* `type` - (Required) An operation, such as `STRINGEQUALS`, that is applied to a key-value pair used to filter resources in a selection.
 * `key` - (Required) The key in a key-value pair.
 * `value` - (Required) The value in a key-value pair.
 

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_static_ip")
+// @SDKResource("aws_lightsail_static_ip", name="Static IP")
 func ResourceStaticIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStaticIPCreate,
