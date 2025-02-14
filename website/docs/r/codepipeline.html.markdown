@@ -204,7 +204,7 @@ A `stage` block supports the following arguments:
 
 An `action` block supports the following arguments:
 
-* `category` - (Required) A category defines what kind of action can be taken in the stage, and constrains the provider type for the action. Possible values are `Approval`, `Build`, `Deploy`, `Invoke`, `Source` and `Test`.
+* `category` - (Required) A category defines what kind of action can be taken in the stage, and constrains the provider type for the action. Possible values are `Approval`, `Build`, `Compute`, `Deploy`, `Invoke`, `Source` and `Test`.
 * `owner` - (Required) The creator of the action being called. Possible values are `AWS`, `Custom` and `ThirdParty`.
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. Provider names are listed in the [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
@@ -216,6 +216,7 @@ An `action` block supports the following arguments:
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
+* `commands` - (Optional) A list of the shell commands to run with your compute action in CodePipeline.
 
 A `trigger` block supports the following arguments:
 
