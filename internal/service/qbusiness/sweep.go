@@ -15,8 +15,8 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_qbusiness_app", &resource.Sweeper{
-		Name: "aws_qbusiness_app",
+	resource.AddTestSweepers("aws_qbusiness_application", &resource.Sweeper{
+		Name: "aws_qbusiness_application",
 		F:    sweepApps,
 	})
 }

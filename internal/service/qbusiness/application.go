@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_qbusiness_app", name="Application")
+// @FrameworkResource("aws_qbusiness_application", name="Application")
 // @Tags(identifierAttribute="arn")
 func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceApplication{}
@@ -56,7 +56,7 @@ type resourceApplication struct {
 }
 
 func (r *resourceApplication) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_qbusiness_app"
+	response.TypeName = "aws_qbusiness_application"
 }
 
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

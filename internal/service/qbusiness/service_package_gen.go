@@ -22,7 +22,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory:  newResourceApplication,
-			TypeName: "aws_qbusiness_app",
+			TypeName: "aws_qbusiness_application",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,

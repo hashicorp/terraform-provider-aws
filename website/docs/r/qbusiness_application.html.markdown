@@ -1,19 +1,19 @@
 ---
 subcategory: "Amazon Q Business"
 layout: "aws"
-page_title: "AWS: aws_qbusiness_app"
+page_title: "AWS: aws_qbusiness_application"
 description: |-
-  Provides a Q Business App resource.
+  Provides a Q Business Application resource.
 ---
 
-# Resource: aws_qbusiness_app
+# Resource: aws_qbusiness_application
 
-Provides a Q Business App resource.
+Provides a Q Business Application resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_qbusiness_app" "example" {
+resource "aws_qbusiness_application" "example" {
   display_name = "test-app"
 
   iam_service_role_arn = aws_iam_role.this.arn
