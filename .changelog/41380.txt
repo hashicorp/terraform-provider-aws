@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rekognition_stream_processor: Fix `regions_of_interest.*.bounding_box` and `regions_of_interest.*.polygon` argument validation
+```
