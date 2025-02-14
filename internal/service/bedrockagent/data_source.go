@@ -924,10 +924,11 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteDataSource(ctx, &bedrockagent.DeleteDataSourceInput{
+	input := bedrockagent.DeleteDataSourceInput{
 		DataSourceId:    data.DataSourceID.ValueStringPointer(),
 		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteDataSource(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

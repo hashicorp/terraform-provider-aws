@@ -348,10 +348,11 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().BatchClient(ctx)
 
-	_, err := conn.UpdateJobQueue(ctx, &batch.UpdateJobQueueInput{
+	updateInput := batch.UpdateJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
 		State:    awstypes.JQStateDisabled,
-	})
+	}
+	_, err := conn.UpdateJobQueue(ctx, &updateInput)
 
 	// "An error occurred (ClientException) when calling the UpdateJobQueue operation: ... does not exist".
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "does not exist") {
@@ -371,9 +372,10 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	_, err = conn.DeleteJobQueue(ctx, &batch.DeleteJobQueueInput{
+	deleteInput := batch.DeleteJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err = conn.DeleteJobQueue(ctx, &deleteInput)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Batch Job Queue (%s)", data.ID.ValueString()), err.Error())

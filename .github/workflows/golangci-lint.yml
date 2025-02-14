@@ -41,7 +41,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
+        uses: golangci/golangci-lint-action@0adbc47a5910e47adb692df88187ec8c73c76778 # v6.4.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci.yml
@@ -64,7 +64,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
+        uses: golangci/golangci-lint-action@0adbc47a5910e47adb692df88187ec8c73c76778 # v6.4.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci2.yml
@@ -92,7 +92,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
+        uses: golangci/golangci-lint-action@0adbc47a5910e47adb692df88187ec8c73c76778 # v6.4.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci3.yml
@@ -120,7 +120,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
+        uses: golangci/golangci-lint-action@0adbc47a5910e47adb692df88187ec8c73c76778 # v6.4.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci4.yml
@@ -148,7 +148,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
+        uses: golangci/golangci-lint-action@0adbc47a5910e47adb692df88187ec8c73c76778 # v6.4.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci5.yml

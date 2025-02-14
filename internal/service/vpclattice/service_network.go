@@ -145,9 +145,10 @@ func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPC Lattice Service Network: %s", d.Id())
-	_, err := conn.DeleteServiceNetwork(ctx, &vpclattice.DeleteServiceNetworkInput{
+	input := vpclattice.DeleteServiceNetworkInput{
 		ServiceNetworkIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteServiceNetwork(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
