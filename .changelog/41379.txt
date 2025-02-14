@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_paymentcryptography_key: Set `key_attributes` and `key_attributes.*.key_modes_of_use` arguments to required
-```
