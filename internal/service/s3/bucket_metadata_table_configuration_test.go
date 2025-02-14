@@ -21,26 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccS3BucketMetadataTableConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
@@ -92,7 +72,6 @@ func TestAccS3BucketMetadataTableConfiguration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.S3ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -176,7 +155,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3tables_table_bucket" "test_destination" {
-  name          = "%s-destination"
+  name = "%s-destination"
 }
 `, bucketName, bucketName)
 }
@@ -187,10 +166,10 @@ resource "aws_s3_bucket_metadata_table_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 
   metadata_table_configuration {
-	s3_tables_destination {
-	  table_bucket_arn = aws_s3tables_table_bucket.test_destination.arn
+    s3_tables_destination {
+      table_bucket_arn = aws_s3tables_table_bucket.test_destination.arn
       table_name       = "s3metadata_test_uniq"
-	}
+    }
   }
 }
 `)

@@ -74,7 +74,7 @@ func (r *resourceBucketMetadataTableConfiguration) Schema(ctx context.Context, r
 					validators.Hash("md5"),
 				},
 			},
-			"expected_bucket_owner": schema.StringAttribute{
+			names.AttrExpectedBucketOwner: schema.StringAttribute{
 				Optional: true,
 			},
 			names.AttrStatus: schema.StringAttribute{
@@ -103,7 +103,7 @@ func (r *resourceBucketMetadataTableConfiguration) Schema(ctx context.Context, r
 											validators.ARN(),
 										},
 									},
-									"table_name": schema.StringAttribute{
+									names.AttrTableName: schema.StringAttribute{
 										Required: true,
 									},
 									"table_namespace": schema.StringAttribute{
@@ -116,7 +116,7 @@ func (r *resourceBucketMetadataTableConfiguration) Schema(ctx context.Context, r
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: false,
 				Delete: true,
@@ -206,7 +206,6 @@ func (r *resourceBucketMetadataTableConfiguration) Read(ctx context.Context, req
 }
 
 func (r *resourceBucketMetadataTableConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	return
 }
 
 func (r *resourceBucketMetadataTableConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -270,7 +269,7 @@ func (r *resourceBucketMetadataTableConfiguration) Delete(ctx context.Context, r
 }
 
 func (r *resourceBucketMetadataTableConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("bucket"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrBucket), req, resp)
 }
 
 // TIP: ==== STATUS CONSTANTS ====

@@ -1,10 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package validators
 
 import (
 	"context"
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"regexp"
 )
 
 type hashValidator struct {
@@ -56,7 +60,6 @@ func (validator hashValidator) ValidateString(ctx context.Context, request valid
 			"value must be a valid hash",
 		))
 	}
-	return
 }
 
 func Hash(algorithm string) validator.String {
