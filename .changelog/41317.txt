@@ -7,5 +7,5 @@ resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data
 ```
 
 ```release-note:bug
-resource/aws_bedrock_model_invocation_logging_configuration: Set `logging_config.*.cloudwatch_config.*.log_group_name`, `logging_config.*.cloudwatch_config.*.role_arn`, `logging_config.*.cloudwatch_config.*.large_data_delivery_s3_config.*.bucket_name`, and , `logging_config.*.s3_config.*.bucket_name` arguments to required
+resource/aws_bedrock_model_invocation_logging_configuration: Set `logging_config.*.cloudwatch_config.*.log_group_name`, `logging_config.*.cloudwatch_config.*.role_arn`, `logging_config.*.cloudwatch_config.*.large_data_delivery_s3_config.*.bucket_name`, and , `logging_config.*.s3_config.*.bucket_name` arguments to required. While technically a breaking change, these arguments are required by the AWS API and existing configurations omitting them would have been non-functional. For this reason we are considering a breaking change within a minor version acceptable.
 ```
