@@ -90,7 +90,6 @@ func resourceNATGateway() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"secondary_private_ip_addresses"},
 			},
 			"secondary_private_ip_addresses": {
@@ -374,6 +373,18 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 		if v, ok := diff.GetOk("secondary_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
 			return fmt.Errorf(`secondary_allocation_ids is not supported with connectivity_type = "%s"`, connectivityType)
 		}
+		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
+			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
+				if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
+					return fmt.Errorf("setting secondary_private_ip_address_count to force new: %s", err)
+				}
+			}
+		}
+		if diff.Id() != "" && diff.HasChange("secondary_private_ip_addresses") {
+			if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
+				return fmt.Errorf("setting secondary_private_ip_address_count to computed: %s", err)
+			}
+		}
 
 	case string(awstypes.ConnectivityTypePublic):
 		if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
@@ -385,7 +396,7 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 				return fmt.Errorf("setting secondary_private_ip_address_count to computed: %s", err)
 			}
 
-			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_addresses"); !v.IsKnown() {
+			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_addresses"); !v.IsKnown() || v.IsNull() {
 				if err := diff.SetNewComputed("secondary_private_ip_addresses"); err != nil {
 					return fmt.Errorf("setting secondary_private_ip_addresses to computed: %s", err)
 				}

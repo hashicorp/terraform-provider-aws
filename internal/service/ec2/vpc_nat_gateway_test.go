@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -201,7 +202,7 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 
 func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway awstypes.NatGateway
+	var natGateway, natGateway2 awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	eipResourceName := "aws_eip.secondary"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -230,7 +231,8 @@ func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 			{
 				Config: testAccVPCNATGatewayConfig_secondaryAllocationIDs(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway2),
+					testAccCheckNATGatewayNotRecreated(&natGateway, &natGateway2),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "0"),
@@ -240,6 +242,7 @@ func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryAllocationIDs(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					testAccCheckNATGatewayNotRecreated(&natGateway, &natGateway2),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "1"),
@@ -446,6 +449,15 @@ func testAccCheckNATGatewayExists(ctx context.Context, n string, v *awstypes.Nat
 
 		*v = *output
 
+		return nil
+	}
+}
+
+func testAccCheckNATGatewayNotRecreated(v1, v2 *awstypes.NatGateway) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToString(v1.NatGatewayId) != aws.ToString(v2.NatGatewayId) {
+			return fmt.Errorf("NAT Gateway recreated: %s to: %s", aws.ToString(v1.NatGatewayId), aws.ToString(v2.NatGatewayId))
+		}
 		return nil
 	}
 }
