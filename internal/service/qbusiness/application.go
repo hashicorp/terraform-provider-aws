@@ -6,8 +6,6 @@ package qbusiness
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -222,7 +220,6 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	data.IdentityCenterInstanceArn = fwflex.StringToFrameworkARN(ctx, convertARN(out.IdentityCenterApplicationArn))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -304,7 +301,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionDeleting, ResNameApplication, data.ApplicationId.String(), err),
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionDeleting, ResNameApplication, id, err),
 			err.Error(),
 		)
 		return
@@ -312,7 +309,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 
 	if _, err := waitApplicationDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForDeletion, ResNameApplication, data.ApplicationId.String(), err),
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForDeletion, ResNameApplication, id, err),
 			err.Error(),
 		)
 		return
@@ -323,21 +320,12 @@ func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.M
 	r.SetTagsAll(ctx, request, response)
 }
 
-// Converts the ARN of the Identity Center Application to the ARN of the Identity Center Instance
-func convertARN(arn *string) *string {
-	parts := strings.Split(*arn, ":")
-	subParts := strings.Split(parts[5], "/")
-	newArn := fmt.Sprintf("%s:%s:%s:::instance/%s", parts[0], parts[1], parts[2], subParts[1])
-	return &newArn
-}
-
 func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetApplicationOutput, error) {
 	input := &qbusiness.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
 	output, err := conn.GetApplication(ctx, input)
-
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
