@@ -14,9 +14,13 @@ Provides a Q Business Application resource.
 
 ```terraform
 resource "aws_qbusiness_application" "example" {
-  display_name = "test-app"
+  display_name                 = "example-app"
+  iam_service_role_arn         = aws_iam_role.example.arn
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
 
-  iam_service_role_arn = aws_iam_role.this.arn
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 ```
 
@@ -47,3 +51,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the Q Business App.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `identity_center_application_arn` - ARN of the AWS IAM Identity Center application attached to your Amazon Q Business application.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Q Business Application using the `id`. For example:
+
+```terraform
+import {
+  to = aws_qbusiness_application.example
+  id = "id-12345678"
+}
+```
+
+Using `terraform import`, import a Q Business Application using the `id`. For example:
+
+```console
+% terraform import aws_qbusiness_application.example id-12345678
+```

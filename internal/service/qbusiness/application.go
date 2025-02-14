@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -40,6 +41,7 @@ func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, 
 	r := &resourceApplication{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -132,6 +134,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -157,25 +160,36 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 
 	out, err := conn.CreateApplication(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create Q Business application", err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionCreating, ResNameApplication, data.DisplayName.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	appId := aws.ToString(out.ApplicationId)
-	if _, err := waitApplicationActive(ctx, conn, appId, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError("failed to wait for Q Business application creation", err.Error())
+	id := aws.ToString(out.ApplicationId)
+	if _, err := waitApplicationActive(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForCreation, ResNameApplication, id, err),
+			err.Error(),
+		)
 		return
 	}
 
-	app, err := findApplicationByID(ctx, conn, appId)
+	findOut, err := findApplicationByID(ctx, conn, id)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve created Q Business application (%s)", appId), err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionCreating, ResNameApplication, id, err),
+			err.Error(),
+		)
 		return
 	}
 
-	data.ApplicationId = fwflex.StringToFramework(ctx, app.ApplicationId)
-	data.ApplicationArn = fwflex.StringToFramework(ctx, app.ApplicationArn)
-	data.IdentityCenterApplicationArn = fwflex.StringToFramework(ctx, app.IdentityCenterApplicationArn)
+	// Set unknown values
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, findOut, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -196,7 +210,10 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve Q Business application (%s)", data.ApplicationId.ValueString()), err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionReading, ResNameApplication, data.ApplicationId.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -233,7 +250,34 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 
 		_, err := conn.UpdateApplication(ctx, input)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("failed to update Q Business application (%s)", state.ApplicationId.ValueString()), err.Error())
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.QBusiness, create.ErrActionUpdating, ResNameApplication, plan.ApplicationId.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		id := plan.ApplicationId.ValueString()
+		if _, err := waitApplicationActive(ctx, conn, id, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForUpdate, ResNameApplication, id, err),
+				err.Error(),
+			)
+			return
+		}
+
+		findOut, err := findApplicationByID(ctx, conn, id)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.QBusiness, create.ErrActionUpdating, ResNameApplication, id, err),
+				err.Error(),
+			)
+			return
+		}
+
+		// Set unknown values
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, findOut, &plan)...)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -250,24 +294,27 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 
 	conn := r.Meta().QBusinessClient(ctx)
 
-	appId := data.ApplicationId.ValueString()
+	id := data.ApplicationId.ValueString()
 	input := &qbusiness.DeleteApplicationInput{
-		ApplicationId: aws.String(appId),
+		ApplicationId: aws.String(id),
 	}
 
-	_, err := conn.DeleteApplication(ctx, input)
-
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+	if _, err := conn.DeleteApplication(ctx, input); err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("failed to delete Q Business application (%s)", data.ApplicationId.ValueString()), err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionDeleting, ResNameApplication, data.ApplicationId.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	if _, err := waitApplicationDeleted(ctx, conn, appId, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError("failed to wait for Q Business application deletion", err.Error())
+	if _, err := waitApplicationDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForDeletion, ResNameApplication, data.ApplicationId.String(), err),
+			err.Error(),
+		)
 		return
 	}
 }

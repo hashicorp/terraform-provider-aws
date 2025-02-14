@@ -83,6 +83,51 @@ func TestAccQBusinessApplication_disappears(t *testing.T) {
 	})
 }
 
+func TestAccQBusinessApplication_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application qbusiness.GetApplicationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	description := "description"
+	descriptionUpdated := "description updated"
+	resourceName := "aws_qbusiness_application.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckApplication(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_update(rName, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_update(rName, descriptionUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
+				),
+			},
+		},
+	})
+}
+
 func TestAccQBusinessApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
@@ -100,20 +145,32 @@ func TestAccQBusinessApplication_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, "value2updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
 				),
 			},
@@ -259,6 +316,21 @@ resource "aws_qbusiness_application" "test" {
 `, rName))
 }
 
+func testAccApplicationConfig_update(rName, description string) string {
+	return acctest.ConfigCompose(testAccApplicationConfig_base(rName), fmt.Sprintf(`
+resource "aws_qbusiness_application" "test" {
+  display_name                 = %[1]q
+  description                  = %[2]q
+  iam_service_role_arn         = aws_iam_role.test.arn
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
+}
+`, rName, description))
+}
+
 func testAccApplicationConfig_attachmentsConfiguration(rName, mode string) string {
 	return acctest.ConfigCompose(testAccApplicationConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_application" "test" {
@@ -273,7 +345,25 @@ resource "aws_qbusiness_application" "test" {
 `, rName, mode))
 }
 
-func testAccApplicationConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccApplicationConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccApplicationConfig_base(rName), fmt.Sprintf(`
+resource "aws_qbusiness_application" "test" {
+  display_name                 = %[1]q
+  iam_service_role_arn         = aws_iam_role.test.arn
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccApplicationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccApplicationConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_application" "test" {
   display_name                 = %[1]q
