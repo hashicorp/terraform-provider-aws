@@ -403,9 +403,10 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost Explorer Cost Category: %s", d.Id())
-	_, err := conn.DeleteCostCategoryDefinition(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
+	input := costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCostCategoryDefinition(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

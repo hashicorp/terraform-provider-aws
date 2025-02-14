@@ -189,10 +189,11 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Vocabulary: %s", d.Id())
-	_, err = conn.DeleteVocabulary(ctx, &connect.DeleteVocabularyInput{
+	input := connect.DeleteVocabularyInput{
 		InstanceId:   aws.String(instanceID),
 		VocabularyId: aws.String(vocabularyID),
-	})
+	}
+	_, err = conn.DeleteVocabulary(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -277,11 +277,12 @@ func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Instance Storage Config: %s", d.Id())
-	_, err = conn.DisassociateInstanceStorageConfig(ctx, &connect.DisassociateInstanceStorageConfigInput{
+	input := connect.DisassociateInstanceStorageConfigInput{
 		AssociationId: aws.String(associationID),
 		InstanceId:    aws.String(instanceID),
 		ResourceType:  resourceType,
-	})
+	}
+	_, err = conn.DisassociateInstanceStorageConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

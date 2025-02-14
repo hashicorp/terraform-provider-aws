@@ -176,10 +176,11 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting Cognito User Group: %s", d.Id())
-	_, err = conn.DeleteGroup(ctx, &cognitoidentityprovider.DeleteGroupInput{
+	input := cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  aws.String(groupName),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.DeleteGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -183,9 +183,10 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Host: %s", d.Id())
-	_, err := conn.DeleteHost(ctx, &codestarconnections.DeleteHostInput{
+	input := codestarconnections.DeleteHostInput{
 		HostArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteHost(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

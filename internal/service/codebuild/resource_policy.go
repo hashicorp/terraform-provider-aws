@@ -120,9 +120,10 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Resource Policy: %s", d.Id())
-	_, err := conn.DeleteResourcePolicy(ctx, &codebuild.DeleteResourcePolicyInput{
+	input := codebuild.DeleteResourcePolicyInput{
 		ResourceArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags

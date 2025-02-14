@@ -156,10 +156,11 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Deleting CodeCatalyst Project %s", d.Id())
 
-	_, err := conn.DeleteProject(ctx, &codecatalyst.DeleteProjectInput{
+	input := codecatalyst.DeleteProjectInput{
 		Name:      aws.String(d.Id()),
 		SpaceName: aws.String(d.Get("space_name").(string)),
-	})
+	}
+	_, err := conn.DeleteProject(ctx, &input)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
