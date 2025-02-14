@@ -134,10 +134,11 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
 
 	log.Printf("[INFO] Deleting Auto Scaling Traffic Source Attachment: %s", d.Id())
-	_, err = conn.DetachTrafficSources(ctx, &autoscaling.DetachTrafficSourcesInput{
+	input := autoscaling.DetachTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSources:       []awstypes.TrafficSourceIdentifier{trafficSource},
-	})
+	}
+	_, err = conn.DetachTrafficSources(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags

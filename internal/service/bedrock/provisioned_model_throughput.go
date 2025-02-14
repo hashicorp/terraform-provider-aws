@@ -185,9 +185,10 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteProvisionedModelThroughput(ctx, &bedrock.DeleteProvisionedModelThroughputInput{
+	input := bedrock.DeleteProvisionedModelThroughputInput{
 		ProvisionedModelId: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteProvisionedModelThroughput(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

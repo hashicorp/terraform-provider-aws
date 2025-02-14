@@ -126,11 +126,12 @@ func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer SSH Key: %s", d.Id())
-	_, err = conn.DeleteSshPublicKey(ctx, &transfer.DeleteSshPublicKeyInput{
+	input := transfer.DeleteSshPublicKeyInput{
 		UserName:       aws.String(userName),
 		ServerId:       aws.String(serverID),
 		SshPublicKeyId: aws.String(sshKeyID),
-	})
+	}
+	_, err = conn.DeleteSshPublicKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

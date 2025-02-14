@@ -386,12 +386,13 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteAgentActionGroup(ctx, &bedrockagent.DeleteAgentActionGroupInput{
+	input := bedrockagent.DeleteAgentActionGroupInput{
 		ActionGroupId:          fwflex.StringFromFramework(ctx, data.ActionGroupID),
 		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
 		AgentVersion:           fwflex.StringFromFramework(ctx, data.AgentVersion),
 		SkipResourceInUseCheck: data.SkipResourceInUseCheck.ValueBool(),
-	})
+	}
+	_, err := conn.DeleteAgentActionGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

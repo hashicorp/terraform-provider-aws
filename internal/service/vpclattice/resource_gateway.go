@@ -258,9 +258,10 @@ func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	_, err := conn.DeleteResourceGateway(ctx, &vpclattice.DeleteResourceGatewayInput{
+	input := vpclattice.DeleteResourceGatewayInput{
 		ResourceGatewayIdentifier: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteResourceGateway(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
