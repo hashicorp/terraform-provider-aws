@@ -53,7 +53,6 @@ rules:
         - "internal/service/auditmanager"
         - "internal/service/c*"
         - "internal/service/dms"
-        - "internal/service/ds"
         - "internal/service/dynamodb"
         - "internal/service/e*"
         - "internal/service/f*"
