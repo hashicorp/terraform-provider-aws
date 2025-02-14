@@ -5,7 +5,3 @@ resource/aws_bedrock_model_invocation_logging_configuration: Add `video_data_del
 ```release-note:bug
 resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true`
 ```
-
-```release-note:bug
-resource/aws_bedrock_model_invocation_logging_configuration: Set `logging_config.*.cloudwatch_config.*.log_group_name`, `logging_config.*.cloudwatch_config.*.role_arn`, `logging_config.*.cloudwatch_config.*.large_data_delivery_s3_config.*.bucket_name`, and , `logging_config.*.s3_config.*.bucket_name` arguments to required
-```
