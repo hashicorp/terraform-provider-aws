@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_nat_gateway: Fix resource so it does not need to be re-created to update secondary_allocation_ids. 
+```
+
