@@ -62,7 +62,6 @@ func (r *resourceApplication) Metadata(_ context.Context, request resource.Metad
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Description: "A description of the Amazon Q application.",
@@ -85,14 +84,15 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "The Amazon Resource Name (ARN) of the IAM service role that provides permissions for the Amazon Q application.",
 				Required:    true,
 			},
+			names.AttrID:                      framework.IDAttribute(),
+			"identity_center_application_arn": framework.ARNAttributeComputedOnly(),
 			"identity_center_instance_arn": schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Description: "ARN of the IAM Identity Center instance you are either creating for—or connecting to—your Amazon Q Business application",
 				Required:    true,
 			},
-			"identity_center_application_arn": framework.ARNAttributeComputedOnly(),
-			names.AttrTags:                    tftags.TagsAttribute(),
-			names.AttrTagsAll:                 tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"attachments_configuration": schema.ListNestedBlock{
@@ -149,7 +149,6 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 
 	input := &qbusiness.CreateApplicationInput{}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -157,21 +156,18 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	input.ClientToken = aws.String(id.UniqueId())
 
 	out, err := conn.CreateApplication(ctx, input)
-
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create Q Business application", err.Error())
 		return
 	}
 
 	appId := aws.ToString(out.ApplicationId)
-
-	if _, err := waitApplicationCreated(ctx, conn, appId, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitApplicationActive(ctx, conn, appId, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError("failed to wait for Q Business application creation", err.Error())
 		return
 	}
 
-	app, err := FindAppByID(ctx, conn, appId)
-
+	app, err := findApplicationByID(ctx, conn, appId)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve created Q Business application (%s)", appId), err.Error())
 		return
@@ -182,6 +178,67 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	data.IdentityCenterApplicationArn = fwflex.StringToFramework(ctx, app.IdentityCenterApplicationArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data resourceApplicationData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().QBusinessClient(ctx)
+
+	out, err := findApplicationByID(ctx, conn, data.ApplicationId.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve Q Business application (%s)", data.ApplicationId.ValueString()), err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.IdentityCenterInstanceArn = fwflex.StringToFrameworkARN(ctx, convertARN(out.IdentityCenterApplicationArn))
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state, plan resourceApplicationData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !state.AttachmentsConfiguration.Equal(plan.AttachmentsConfiguration) ||
+		!state.EncryptionConfiguration.Equal(plan.EncryptionConfiguration) ||
+		!state.Description.Equal(plan.Description) ||
+		!state.DisplayName.Equal(plan.DisplayName) ||
+		!state.RoleArn.Equal(plan.RoleArn) ||
+		!state.IdentityCenterInstanceArn.Equal(plan.IdentityCenterInstanceArn) {
+		conn := r.Meta().QBusinessClient(ctx)
+
+		input := &qbusiness.UpdateApplicationInput{}
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateApplication(ctx, input)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("failed to update Q Business application (%s)", state.ApplicationId.ValueString()), err.Error())
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -215,71 +272,8 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resourceApplicationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().QBusinessClient(ctx)
-
-	out, err := FindAppByID(ctx, conn, data.ApplicationId.ValueString())
-
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve Q Business application (%s)", data.ApplicationId.ValueString()), err.Error())
-		return
-	}
-
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	data.IdentityCenterInstanceArn = fwflex.StringToFrameworkARN(ctx, convertARN(out.IdentityCenterApplicationArn))
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var old, new resourceApplicationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !old.AttachmentsConfiguration.Equal(new.AttachmentsConfiguration) ||
-		!old.EncryptionConfiguration.Equal(new.EncryptionConfiguration) ||
-		!old.Description.Equal(new.Description) ||
-		!old.DisplayName.Equal(new.DisplayName) ||
-		!old.RoleArn.Equal(new.RoleArn) ||
-		!old.IdentityCenterInstanceArn.Equal(new.IdentityCenterInstanceArn) {
-		conn := r.Meta().QBusinessClient(ctx)
-
-		input := &qbusiness.UpdateApplicationInput{}
-
-		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		_, err := conn.UpdateApplication(ctx, input)
-
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("failed to update Q Business application (%s)", old.ApplicationId.ValueString()), err.Error())
-			return
-		}
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 // Converts the ARN of the Identity Center Application to the ARN of the Identity Center Instance
@@ -290,34 +284,7 @@ func convertARN(arn *string) *string {
 	return &newArn
 }
 
-func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-type resourceApplicationData struct {
-	ApplicationId                types.String                                                  `tfsdk:"id"`
-	ApplicationArn               types.String                                                  `tfsdk:"arn"`
-	Description                  types.String                                                  `tfsdk:"description"`
-	DisplayName                  types.String                                                  `tfsdk:"display_name"`
-	RoleArn                      fwtypes.ARN                                                   `tfsdk:"iam_service_role_arn"`
-	IdentityCenterInstanceArn    fwtypes.ARN                                                   `tfsdk:"identity_center_instance_arn"`
-	IdentityCenterApplicationArn types.String                                                  `tfsdk:"identity_center_application_arn"`
-	Tags                         tftags.Map                                                    `tfsdk:"tags"`
-	TagsAll                      tftags.Map                                                    `tfsdk:"tags_all"`
-	Timeouts                     timeouts.Value                                                `tfsdk:"timeouts"`
-	AttachmentsConfiguration     fwtypes.ListNestedObjectValueOf[attachmentsConfigurationData] `tfsdk:"attachments_configuration"`
-	EncryptionConfiguration      fwtypes.ListNestedObjectValueOf[encryptionConfigurationData]  `tfsdk:"encryption_configuration"`
-}
-
-type attachmentsConfigurationData struct {
-	AttachmentsControlMode fwtypes.StringEnum[awstypes.AttachmentsControlMode] `tfsdk:"attachments_control_mode"`
-}
-
-type encryptionConfigurationData struct {
-	KMSKeyID types.String `tfsdk:"kms_key_id"`
-}
-
-func FindAppByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetApplicationOutput, error) {
+func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetApplicationOutput, error) {
 	input := &qbusiness.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
@@ -340,4 +307,81 @@ func FindAppByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusi
 	}
 
 	return output, nil
+}
+
+func statusApplication(ctx context.Context, conn *qbusiness.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findApplicationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitApplicationActive(ctx context.Context, conn *qbusiness.Client, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ApplicationStatusCreating, awstypes.ApplicationStatusUpdating),
+		Target:     enum.Slice(awstypes.ApplicationStatusActive),
+		Refresh:    statusApplication(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitApplicationDeleted(ctx context.Context, conn *qbusiness.Client, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ApplicationStatusActive, awstypes.ApplicationStatusDeleting),
+		Target:     []string{},
+		Refresh:    statusApplication(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+type resourceApplicationData struct {
+	ApplicationId                types.String                                                  `tfsdk:"id"`
+	ApplicationArn               types.String                                                  `tfsdk:"arn"`
+	AttachmentsConfiguration     fwtypes.ListNestedObjectValueOf[attachmentsConfigurationData] `tfsdk:"attachments_configuration"`
+	Description                  types.String                                                  `tfsdk:"description"`
+	DisplayName                  types.String                                                  `tfsdk:"display_name"`
+	EncryptionConfiguration      fwtypes.ListNestedObjectValueOf[encryptionConfigurationData]  `tfsdk:"encryption_configuration"`
+	IdentityCenterInstanceArn    fwtypes.ARN                                                   `tfsdk:"identity_center_instance_arn"`
+	IdentityCenterApplicationArn types.String                                                  `tfsdk:"identity_center_application_arn"`
+	RoleArn                      fwtypes.ARN                                                   `tfsdk:"iam_service_role_arn"`
+	Tags                         tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                                `tfsdk:"timeouts"`
+}
+
+type attachmentsConfigurationData struct {
+	AttachmentsControlMode fwtypes.StringEnum[awstypes.AttachmentsControlMode] `tfsdk:"attachments_control_mode"`
+}
+
+type encryptionConfigurationData struct {
+	KMSKeyID types.String `tfsdk:"kms_key_id"`
 }

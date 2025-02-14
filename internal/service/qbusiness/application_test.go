@@ -182,7 +182,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfqbusiness.FindAppByID(ctx, conn, rs.Primary.ID)
+			_, err := tfqbusiness.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -208,7 +208,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *qbusiness.G
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
-		output, err := tfqbusiness.FindAppByID(ctx, conn, rs.Primary.ID)
+		output, err := tfqbusiness.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
