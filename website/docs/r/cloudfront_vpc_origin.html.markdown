@@ -22,7 +22,7 @@ The following example below creates a CloudFront VPC origin for a Application Lo
 ```terraform
 resource "aws_cloudfront_vpc_origin" "alb" {
   vpc_origin_endpoint_config {
-    name                   = "Example VPC Origin"
+    name                   = "example-vpc-origin"
     arn                    = aws_lb.this.arn
     http_port              = 8080
     https_port             = 8443
