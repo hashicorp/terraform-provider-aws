@@ -33,13 +33,34 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName),
+				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, "null", "null", "null", "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.video_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.s3_config.key_prefix", "bedrock"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.video_data_delivery_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, names.AttrID),
@@ -67,7 +88,7 @@ func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName),
+				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
@@ -118,7 +139,7 @@ func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context)
 	}
 }
 
-func testAccModelInvocationLoggingConfigurationConfig_basic(rName string) string {
+func testAccModelInvocationLoggingConfigurationConfig_basic(rName, embeddingDataDeliveryEnabled, imageDataDeliveryEnabled, textDataDeliveryEnabled, videoDataDeliveryEnabled string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -222,9 +243,10 @@ resource "aws_bedrock_model_invocation_logging_configuration" "test" {
   ]
 
   logging_config {
-    embedding_data_delivery_enabled = true
-    image_data_delivery_enabled     = true
-    text_data_delivery_enabled      = true
+    embedding_data_delivery_enabled = %[2]s
+    image_data_delivery_enabled     = %[3]s
+    text_data_delivery_enabled      = %[4]s
+    video_data_delivery_enabled     = %[5]s
 
     cloudwatch_config {
       log_group_name = aws_cloudwatch_log_group.test.name
@@ -237,5 +259,5 @@ resource "aws_bedrock_model_invocation_logging_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName, embeddingDataDeliveryEnabled, imageDataDeliveryEnabled, textDataDeliveryEnabled, videoDataDeliveryEnabled)
 }

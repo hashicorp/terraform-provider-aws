@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrock_model_invocation_logging_configuration: Add `video_data_delivery_enabled` argument
+```
+
+```release-note:bug
+resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true`
+```
