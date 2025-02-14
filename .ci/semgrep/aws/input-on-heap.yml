@@ -52,7 +52,6 @@ rules:
       exclude:
         - "internal/service/auditmanager"
         - "internal/service/c*"
-        - "internal/service/dms"
         - "internal/service/e*"
         - "internal/service/f*"
         - "internal/service/g*"

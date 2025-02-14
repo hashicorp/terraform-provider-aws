@@ -1429,9 +1429,10 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
-	_, err := conn.DeleteEndpoint(ctx, &dms.DeleteEndpointInput{
+	input := dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
-	})
+	}
+	_, err := conn.DeleteEndpoint(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
@@ -1758,10 +1759,11 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 	}
 
 	for _, task := range tasks {
-		_, err := conn.TestConnection(ctx, &dms.TestConnectionInput{
+		input := dms.TestConnectionInput{
 			EndpointArn:            aws.String(arn),
 			ReplicationInstanceArn: task.ReplicationInstanceArn,
-		})
+		}
+		_, err := conn.TestConnection(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidResourceStateFault](err, "already being tested") {
 			continue
@@ -1773,14 +1775,15 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 
 		waiter := dms.NewTestConnectionSucceedsWaiter(conn)
 
-		err = waiter.Wait(ctx, &dms.DescribeConnectionsInput{
+		input := dms.DescribeConnectionsInput{
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("endpoint-arn"),
 					Values: []string{arn},
 				},
 			},
-		}, maxConnTestWaitTime)
+		}
+		err = waiter.Wait(ctx, &input, maxConnTestWaitTime)
 
 		if err != nil {
 			return fmt.Errorf("waiting until test connection succeeds: %w", err)
