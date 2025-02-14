@@ -52,7 +52,6 @@ rules:
       exclude:
         - "internal/service/auditmanager"
         - "internal/service/c*"
-        - "internal/service/datasync"
         - "internal/service/dms"
         - "internal/service/docdb"
         - "internal/service/ds"
