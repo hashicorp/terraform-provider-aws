@@ -27,8 +27,12 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 	resourceName := "aws_qbusiness_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckApp(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -58,8 +62,12 @@ func TestAccQBusinessApp_disappears(t *testing.T) {
 	resourceName := "aws_qbusiness_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckApp(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,8 +90,12 @@ func TestAccQBusinessApp_tags(t *testing.T) {
 	resourceName := "aws_qbusiness_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckApp(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,8 +128,12 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 	resourceName := "aws_qbusiness_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckApp(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
