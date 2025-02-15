@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.5
 
 require (
-	github.com/bflad/tfproviderlint v0.30.0
+	github.com/bflad/tfproviderlint v0.31.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.62
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.0
 	golang.org/x/tools v0.30.0
