@@ -25,7 +25,7 @@ This resource supports the following arguments:
 * `admin_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the namespace's admin credentials secret.
 * `admin_user_password` - (Optional) The password of the administrator for the first database created in the namespace.
   Conflicts with `manage_admin_password` and `admin_user_password_wo`.
-* `admin_user_password_wo` - (Optional) The password of the administrator for the first database created in the namespace.
+* `admin_user_password_wo` - (Optional, Write-Only) The password of the administrator for the first database created in the namespace.
   Conflicts with `manage_admin_password` and `admin_user_password`.
 * `admin_user_password_wo_version` - (Optional) Used together with `admin_user_password_wo` to trigger an update. Increment this value when an update to the `admin_user_password_wo` is required
 * `admin_username` - (Optional) The username of the administrator for the first database created in the namespace.
