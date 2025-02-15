@@ -5717,6 +5717,58 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_BlueGreenDeployment_shrinkAllocatedStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	storageBefore := 20
+	storageAfter := 10
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_allocatedStorage(rName, storageBefore),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, fmt.Sprint(storageBefore)),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_allocatedStorage(rName, storageAfter),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, fmt.Sprint(storageAfter)),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+					"latest_restorable_time",
+				},
+			},
+		},
+	})
+}
+
 // Updating tags should bypass the Blue/Green Deployment
 func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -12642,6 +12694,30 @@ locals {
   engine_version = %[4]t ? data.aws_rds_engine_version.update : data.aws_rds_engine_version.initial
 }
 `, rName, mainInstanceClasses, tfrds.InstanceEngineMySQL, update))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_allocatedStorage(rName string, allocatedStorage int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassPostgres(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = %[2]d
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+
+  blue_green_update {
+    enabled = true
+  }
+}
+`, rName, allocatedStorage))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_pre(rName string, oddClasses bool) string {
