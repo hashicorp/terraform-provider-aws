@@ -3259,6 +3259,10 @@ service "mediapackagevod" {
     human_friendly      = "Elemental MediaPackage VOD"
   }
 
+  endpoint_info {
+    endpoint_api_call = "ListPackagingGroups"
+  }
+
   resource_prefix {
     correct = "aws_mediapackagevod_"
   }
@@ -3266,7 +3270,6 @@ service "mediapackagevod" {
   provider_package_correct = "mediapackagevod"
   doc_prefix               = ["mediapackagevod_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "mediastore" {

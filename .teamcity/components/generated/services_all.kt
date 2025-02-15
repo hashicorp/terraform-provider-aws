@@ -154,6 +154,7 @@ val services = mapOf(
     "medialive" to ServiceSpec("Elemental MediaLive"),
     "mediapackage" to ServiceSpec("Elemental MediaPackage"),
     "mediapackagev2" to ServiceSpec("Elemental MediaPackage Version 2"),
+    "mediapackagevod" to ServiceSpec("Elemental MediaPackage VOD"),
     "mediastore" to ServiceSpec("Elemental MediaStore"),
     "memorydb" to ServiceSpec("MemoryDB"),
     "mgn" to ServiceSpec("Application Migration (Mgn)"),
