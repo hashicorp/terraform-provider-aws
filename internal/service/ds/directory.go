@@ -239,9 +239,10 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 						"directory_id":       d.Id(),
 						names.AttrDomainName: name,
 					})
-					_, deleteErr := conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
+					input := directoryservice.DeleteDirectoryInput{
 						DirectoryId: aws.String(d.Id()),
-					})
+					}
+					_, deleteErr := conn.DeleteDirectory(ctx, &input)
 
 					if deleteErr != nil {
 						diags = append(diags, errs.NewWarningDiagnostic(

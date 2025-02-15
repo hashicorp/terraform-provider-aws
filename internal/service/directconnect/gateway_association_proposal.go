@@ -181,9 +181,10 @@ func resourceGatewayAssociationProposalDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association Proposal: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(ctx, &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
+	input := directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
 		ProposalId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "is not found") {
 		return diags

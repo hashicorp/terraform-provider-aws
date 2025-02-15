@@ -198,9 +198,10 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Parameter Group: %s", d.Id())
-	_, err := conn.DeleteDBClusterParameterGroup(ctx, &docdb.DeleteDBClusterParameterGroupInput{
+	input := docdb.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBClusterParameterGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
 		return diags

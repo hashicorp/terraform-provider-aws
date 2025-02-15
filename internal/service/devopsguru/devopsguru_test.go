@@ -52,7 +52,8 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
 
-	_, err := conn.DescribeAccountHealth(ctx, &devopsguru.DescribeAccountHealthInput{})
+	input := devopsguru.DescribeAccountHealthInput{}
+	_, err := conn.DescribeAccountHealth(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

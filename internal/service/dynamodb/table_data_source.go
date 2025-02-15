@@ -330,9 +330,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("table_class", awstypes.TableClassStandard)
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	pitrOut, err := conn.DescribeContinuousBackups(ctx, &describeBackupsInput)
 
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
@@ -343,9 +344,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting point_in_time_recovery: %s", err)
 	}
 
-	ttlOut, err := conn.DescribeTimeToLive(ctx, &dynamodb.DescribeTimeToLiveInput{
+	describeTTLInput := dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	ttlOut, err := conn.DescribeTimeToLive(ctx, &describeTTLInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
