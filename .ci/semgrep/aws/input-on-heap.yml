@@ -74,7 +74,7 @@ rules:
           metavariable: $INPUT
           regex: \w+Input
     fix-regex:
-      regex: '(?s)(.+= \w+\.\w+\(\w+, &)(\w+\.\w+\{.*\})(\))'
+      regex: '(?s)(.+= \w+\.\w+\(\w+, &)(\w+\.\w+\{.*\})((, optFn)?\))'
       replacement: |
         input := \2
         \1input\3
