@@ -154,7 +154,7 @@ rules:
         - "internal/service/pinpoint"
         - "internal/service/pinpointsmsvoicev2"
         - "internal/service/pipes"
-        - "internal/service/q*"
+        - "internal/service/quicksight"
         - "internal/service/r*"
         - "internal/service/s*"
     patterns:
