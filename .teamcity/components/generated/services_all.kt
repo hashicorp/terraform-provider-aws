@@ -245,7 +245,7 @@ val services = mapOf(
     "verifiedaccess" to ServiceSpec("Verified Access", vpcLock = true, patternOverride = "TestAccVerifiedAccess", splitPackageRealPackage = "ec2"),
     "verifiedpermissions" to ServiceSpec("Verified Permissions"),
     "vpc" to ServiceSpec("VPC (Virtual Private Cloud)", vpcLock = true, patternOverride = "TestAccVPC", splitPackageRealPackage = "ec2"),
-    "vpclattice" to ServiceSpec("VPC Lattice"),
+    "vpclattice" to ServiceSpec("VPC Lattice", vpcLock = true, parallelismOverride = 10),
     "vpnclient" to ServiceSpec("VPN (Client)", vpcLock = true, patternOverride = "TestAccClientVPN", splitPackageRealPackage = "ec2"),
     "vpnsite" to ServiceSpec("VPN (Site-to-Site)", vpcLock = true, patternOverride = "TestAccSiteVPN", splitPackageRealPackage = "ec2"),
     "waf" to ServiceSpec("WAF Classic", regionOverride = "us-east-1"),

@@ -613,6 +613,26 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"connection_tracking_specification": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"tcp_established_timeout": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"udp_stream_timeout": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"udp_timeout": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
 						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeString,
 							Computed: true,

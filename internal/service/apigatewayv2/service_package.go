@@ -12,16 +12,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*apigatewayv2.Client, error) {
+func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]any) []func(*apigatewayv2.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return apigatewayv2.NewFromConfig(cfg,
-		apigatewayv2.WithEndpointResolverV2(newEndpointResolverV2()),
-		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	return []func(*apigatewayv2.Options){
 		func(o *apigatewayv2.Options) {
 			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
 				if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "try again later") {
@@ -37,5 +33,5 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 				return aws.UnknownTernary // Delegate to configured Retryer.
 			}))
 		},
-	), nil
+	}
 }

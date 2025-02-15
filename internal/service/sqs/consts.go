@@ -3,12 +3,6 @@
 
 package sqs
 
-import "time"
-
-const (
-	propagationTimeout = 1 * time.Minute
-)
-
 const (
 	fifoQueueNameSuffix = ".fifo"
 )

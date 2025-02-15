@@ -318,11 +318,12 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 
-	_, err = conn.CreateBudget(ctx, &budgets.CreateBudgetInput{
+	input := budgets.CreateBudgetInput{
 		AccountId:    aws.String(accountID),
 		Budget:       budget,
 		ResourceTags: getTagsIn(ctx),
-	})
+	}
+	_, err = conn.CreateBudget(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Budget (%s): %s", name, err)
@@ -487,10 +488,11 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	_, err = conn.UpdateBudget(ctx, &budgets.UpdateBudgetInput{
+	input := budgets.UpdateBudgetInput{
 		AccountId: aws.String(accountID),
 		NewBudget: budget,
-	})
+	}
+	_, err = conn.UpdateBudget(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Budget (%s): %s", d.Id(), err)
@@ -517,10 +519,11 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Budget: %s", d.Id())
-	_, err = conn.DeleteBudget(ctx, &budgets.DeleteBudgetInput{
+	input := budgets.DeleteBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
-	})
+	}
+	_, err = conn.DeleteBudget(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -663,12 +666,13 @@ func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifi
 			return errors.New("Budget notification must have at least one subscriber")
 		}
 
-		_, err := conn.CreateNotification(ctx, &budgets.CreateNotificationInput{
+		input := budgets.CreateNotificationInput{
 			AccountId:    aws.String(accountID),
 			BudgetName:   aws.String(budgetName),
 			Notification: notification,
 			Subscribers:  subscribers,
-		})
+		}
+		_, err := conn.CreateNotification(ctx, &input)
 
 		if err != nil {
 			return err

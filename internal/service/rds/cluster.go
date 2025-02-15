@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -66,6 +67,10 @@ func resourceCluster() *schema.Resource {
 				Upgrade: clusterStateUpgradeV0,
 				Version: 0,
 			},
+		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("master_password"), cty.GetAttrPath("master_password_wo")),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -301,7 +306,7 @@ func resourceCluster() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"master_password"},
+				ConflictsWith: []string{"master_password", "master_password_wo"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -333,13 +338,36 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				ConflictsWith: []string{"manage_master_user_password", "master_password_wo"},
+			},
+			"master_password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				WriteOnly:     true,
+				ConflictsWith: []string{"manage_master_user_password", "master_password"},
+			},
+			"master_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"master_password_wo"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 				ForceNew: true,
+			},
+			"monitoring_interval": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"monitoring_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"network_type": {
 				Type:         schema.TypeString,
@@ -658,6 +686,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 
+	// get write-only value from configuration
+	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
 	// parameters or unsupported configurations, we may need to call
@@ -738,9 +773,22 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
+		if masterPasswordWO != "" {
+			modifyDbClusterInput.MasterUserPassword = aws.String(masterPasswordWO)
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("network_type"); ok {
@@ -878,6 +926,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if masterPasswordWO != "" {
+			input.MasterUserPassword = aws.String(masterPasswordWO)
+		}
+
 		if v, ok := d.GetOk("network_type"); ok {
 			input.NetworkType = aws.String(v.(string))
 		}
@@ -988,9 +1040,22 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
+		if masterPasswordWO != "" {
+			modifyDbClusterInput.MasterUserPassword = aws.String(masterPasswordWO)
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("network_type"); ok {
@@ -1170,12 +1235,24 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if masterPasswordWO != "" {
+			input.MasterUserPassword = aws.String(masterPasswordWO)
+		}
+
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("master_username"); ok {
 			input.MasterUsername = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("network_type"); ok {
@@ -1361,6 +1438,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("master_user_secret", nil)
 	}
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("monitoring_interval", dbc.MonitoringInterval)
+	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
@@ -1560,10 +1639,30 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
+		if d.HasChange("master_password_wo_version") {
+			masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if masterPasswordWO != "" {
+				input.MasterUserPassword = aws.String(masterPasswordWO)
+			}
+		}
+
 		if d.HasChange("master_user_secret_kms_key_id") {
 			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			}
+		}
+
+		if d.HasChange("monitoring_interval") {
+			input.MonitoringInterval = aws.Int32(int32(d.Get("monitoring_interval").(int)))
+		}
+
+		if d.HasChange("monitoring_role_arn") {
+			input.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
 		}
 
 		if d.HasChange("network_type") {

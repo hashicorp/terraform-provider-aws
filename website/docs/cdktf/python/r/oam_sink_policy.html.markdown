@@ -52,7 +52,7 @@ class MyConvertedCode(TerraformStack):
                     ],
                     "Version": "2012-10-17"
                 })),
-            sink_identifier=example.id
+            sink_identifier=example.arn
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_oam_sink_policy_example.override_logical_id("example")
@@ -70,7 +70,6 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Sink.
-* `id` - ARN of the sink to attach this policy to.
 * `sink_id` - ID string that AWS generated as part of the sink ARN.
 
 ## Timeouts
@@ -105,4 +104,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink Po
 % terraform import aws_oam_sink_policy.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3104be1032f63aa0777772ea39d5affcd9dbd045ec6dd561056122f6cf1be805 -->
+<!-- cache-key: cdktf-0.20.8 input-f0a210b181c1e125359fa31f8f67ddd96acc05b369593efca038ae96f2d16e8c -->

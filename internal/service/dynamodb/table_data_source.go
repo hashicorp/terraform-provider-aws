@@ -70,6 +70,22 @@ func dataSourceTable() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"on_demand_throughput": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_read_request_units": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"max_write_request_units": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"projection_type": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -121,6 +137,22 @@ func dataSourceTable() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"on_demand_throughput": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_read_request_units": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"max_write_request_units": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
@@ -267,6 +299,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_secondary_index: %s", err)
+	}
+
+	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting on_demand_throughput: %s", err)
 	}
 
 	if table.StreamSpecification != nil {

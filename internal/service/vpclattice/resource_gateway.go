@@ -36,6 +36,7 @@ import (
 
 // @FrameworkResource("aws_vpclattice_resource_gateway", name="Resource Gateway")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceGatewayOutput")
 func newResourceGatewayResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGatewayResource{}
 
@@ -67,6 +68,7 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -83,6 +85,9 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ResourceGatewayStatus](),
@@ -253,9 +258,10 @@ func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	_, err := conn.DeleteResourceGateway(ctx, &vpclattice.DeleteResourceGatewayInput{
+	input := vpclattice.DeleteResourceGatewayInput{
 		ResourceGatewayIdentifier: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteResourceGateway(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

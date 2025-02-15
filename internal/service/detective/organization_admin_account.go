@@ -64,7 +64,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	d.SetId(accountID)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
-		return FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
+		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -79,7 +79,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	administrator, err := FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
+	administrator, err := findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Detective Organization Admin Account (%s) not found, removing from state", d.Id())
@@ -102,8 +102,11 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	_, err := conn.DisableOrganizationAdminAccount(ctx, &detective.DisableOrganizationAdminAccountInput{})
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) { // nosemgrep:dgryski.semgrep-go.oddifsequence.odd-sequence-ifs // Semgrep ignores type parameters
+		return diags
+	}
+	// For some reason, the API is returning this instead of `ResourceNotFoundException`
+	if errs.IsA[*awstypes.ValidationException](err) {
 		return diags
 	}
 
@@ -112,7 +115,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
-		return FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
+		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -122,10 +125,10 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func FindOrganizationAdminAccountByAccountID(ctx context.Context, conn *detective.Client, accountID string) (*awstypes.Administrator, error) {
-	input := &detective.ListOrganizationAdminAccountsInput{}
+func findOrganizationAdminAccountByAccountID(ctx context.Context, conn *detective.Client, accountID string) (*awstypes.Administrator, error) {
+	input := detective.ListOrganizationAdminAccountsInput{}
 
-	return findOrganizationAdminAccount(ctx, conn, input, func(v awstypes.Administrator) bool {
+	return findOrganizationAdminAccount(ctx, conn, &input, func(v awstypes.Administrator) bool {
 		return aws.ToString(v.AccountId) == accountID
 	})
 }

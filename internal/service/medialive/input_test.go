@@ -45,7 +45,7 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 				Config: testAccInputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "input:{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
@@ -85,7 +85,7 @@ func TestAccMediaLiveInput_update(t *testing.T) {
 				Config: testAccInputConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "input:{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
@@ -95,7 +95,7 @@ func TestAccMediaLiveInput_update(t *testing.T) {
 				Config: testAccInputConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "input:{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),

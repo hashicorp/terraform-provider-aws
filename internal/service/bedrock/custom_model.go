@@ -140,8 +140,8 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 			},
 			names.AttrTags:       tftags.TagsAttribute(),
 			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
-			"training_metrics":   framework.ResourceComputedListOfObjectAttribute[trainingMetricsModel](ctx),
-			"validation_metrics": framework.ResourceComputedListOfObjectAttribute[validatorMetricModel](ctx),
+			"training_metrics":   framework.ResourceComputedListOfObjectsAttribute[trainingMetricsModel](ctx),
+			"validation_metrics": framework.ResourceComputedListOfObjectsAttribute[validatorMetricModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"output_data_config": schema.ListNestedBlock{
@@ -459,9 +459,10 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if !data.CustomModelARN.IsNull() {
-		_, err := conn.DeleteCustomModel(ctx, &bedrock.DeleteCustomModelInput{
+		input := bedrock.DeleteCustomModelInput{
 			ModelIdentifier: fwflex.StringFromFramework(ctx, data.CustomModelARN),
-		})
+		}
+		_, err := conn.DeleteCustomModel(ctx, &input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
