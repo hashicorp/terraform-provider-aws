@@ -522,7 +522,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrEncrypted); ok {
-		inputC.Encrypted = aws.Bool(v.(bool))
+		inputC.Encrypted = aws.Bool(v.(bool)) // encryption is true by default
 		inputR.Encrypted = aws.Bool(v.(bool))
 	}
 
@@ -614,7 +614,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
 	} else {
-		if _, ok := d.GetOk("master_password"); !ok || masterPasswordWO == "" {
+		if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
 			if _, ok := d.GetOk("manage_master_password"); !ok {
 				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: one of "manage_master_password" or "master_password" is required`, d.Get(names.AttrClusterIdentifier).(string))
 			}
