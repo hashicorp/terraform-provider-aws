@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mediapackagev2/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -82,15 +82,11 @@ func (r *resourceChannel) Schema(ctx context.Context, request resource.SchemaReq
 			"input_type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(func() []string {
-						values := awstypes.InputType("").Values()
-						strValues := make([]string, len(values))
-						for i, v := range values {
-							strValues[i] = string(v)
-						}
-						return strValues
-					}()...),
+					enum.FrameworkValidate[awstypes.InputType](),
 				},
 				Default: stringdefault.StaticString(string(awstypes.InputTypeHls)),
 			},
