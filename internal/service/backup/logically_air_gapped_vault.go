@@ -54,10 +54,6 @@ type logicallyAirGappedVaultResource struct {
 	framework.WithImportByID
 }
 
-func (*logicallyAirGappedVaultResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_backup_logically_air_gapped_vault"
-}
-
 func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

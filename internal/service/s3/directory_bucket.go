@@ -51,10 +51,6 @@ type directoryBucketResource struct {
 	framework.WithImportByID
 }
 
-func (r *directoryBucketResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3_directory_bucket"
-}
-
 func (r *directoryBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	dataRedundancyType := fwtypes.StringEnumType[awstypes.DataRedundancy]()
 	bucketTypeType := fwtypes.StringEnumType[awstypes.BucketType]()

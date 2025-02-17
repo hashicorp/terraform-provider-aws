@@ -68,10 +68,6 @@ type resourceCollection struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceCollection) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_collection"
-}
-
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

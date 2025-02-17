@@ -54,10 +54,6 @@ type resourceGlossaryTerm struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceGlossaryTerm) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_glossary_term"
-}
-
 func (r *resourceGlossaryTerm) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

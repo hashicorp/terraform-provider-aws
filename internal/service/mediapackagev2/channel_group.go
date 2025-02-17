@@ -49,10 +49,6 @@ type resourceChannelGroup struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceChannelGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_media_packagev2_channel_group"
-}
-
 func (r *resourceChannelGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{

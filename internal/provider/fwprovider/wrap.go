@@ -23,19 +23,21 @@ type wrappedDataSource struct {
 	inner            datasource.DataSourceWithConfigure
 	interceptors     dataSourceInterceptors
 	meta             *conns.AWSClient
+	typeName         string
 }
 
-func newWrappedDataSource(bootstrapContext contextFunc, inner datasource.DataSourceWithConfigure, interceptors dataSourceInterceptors) datasource.DataSourceWithConfigure {
+func newWrappedDataSource(bootstrapContext contextFunc, typeName string, inner datasource.DataSourceWithConfigure, interceptors dataSourceInterceptors) datasource.DataSourceWithConfigure {
 	return &wrappedDataSource{
 		bootstrapContext: bootstrapContext,
 		inner:            inner,
 		interceptors:     interceptors,
+		typeName:         typeName,
 	}
 }
 
 func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Metadata(ctx, request, response)
+	// This method does not call down to the inner data source.
+	response.TypeName = w.typeName
 }
 
 func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -70,26 +72,28 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 	return nil
 }
 
-// wrappedResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
+// wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
 type wrappedEphemeralResource struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	inner            ephemeral.EphemeralResourceWithConfigure
-	meta             *conns.AWSClient
 	interceptors     ephemeralResourceInterceptors
+	meta             *conns.AWSClient
+	typeName         string
 }
 
-func newWrappedEphemeralResource(bootstrapContext contextFunc, inner ephemeral.EphemeralResourceWithConfigure, interceptors ephemeralResourceInterceptors) ephemeral.EphemeralResourceWithConfigure {
+func newWrappedEphemeralResource(bootstrapContext contextFunc, typeName string, inner ephemeral.EphemeralResourceWithConfigure, interceptors ephemeralResourceInterceptors) ephemeral.EphemeralResourceWithConfigure {
 	return &wrappedEphemeralResource{
 		bootstrapContext: bootstrapContext,
 		inner:            inner,
 		interceptors:     interceptors,
+		typeName:         typeName,
 	}
 }
 
 func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Metadata(ctx, request, response)
+	// This method does not call down to the inner ephemeral resource.
+	response.TypeName = w.typeName
 }
 
 func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
@@ -147,19 +151,21 @@ type wrappedResource struct {
 	inner            resource.ResourceWithConfigure
 	interceptors     resourceInterceptors
 	meta             *conns.AWSClient
+	typeName         string
 }
 
-func newWrappedResource(bootstrapContext contextFunc, inner resource.ResourceWithConfigure, interceptors resourceInterceptors) resource.ResourceWithConfigure {
+func newWrappedResource(bootstrapContext contextFunc, typeName string, inner resource.ResourceWithConfigure, interceptors resourceInterceptors) resource.ResourceWithConfigure {
 	return &wrappedResource{
 		bootstrapContext: bootstrapContext,
 		inner:            inner,
 		interceptors:     interceptors,
+		typeName:         typeName,
 	}
 }
 
 func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Metadata(ctx, request, response)
+	// This method does not call down to the inner resource.
+	response.TypeName = w.typeName
 }
 
 func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

@@ -48,10 +48,6 @@ type ingestionResource struct {
 	framework.WithImportByID
 }
 
-func (*ingestionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion"
-}
-
 func (r *ingestionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

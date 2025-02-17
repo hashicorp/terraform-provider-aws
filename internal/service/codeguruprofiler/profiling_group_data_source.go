@@ -33,10 +33,6 @@ type dataSourceProfilingGroup struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceProfilingGroup) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
-}
-
 func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	computePlatform := fwtypes.StringEnumType[awstypes.ComputePlatform]()
 
