@@ -172,13 +172,13 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
-										Optional: true,
+										Required: true,
 									},
-									"public_key": {
+									names.AttrPublicKey: {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"subject_key": {
 										Type:     schema.TypeString,
