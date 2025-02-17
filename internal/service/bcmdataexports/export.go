@@ -55,10 +55,6 @@ type resourceExport struct {
 	framework.WithImportByID
 }
 
-func (r *resourceExport) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bcmdataexports_export"
-}
-
 func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	dataQueryLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),

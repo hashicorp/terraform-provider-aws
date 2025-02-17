@@ -45,10 +45,6 @@ type resourceControl struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceControl) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_control"
-}
-
 func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

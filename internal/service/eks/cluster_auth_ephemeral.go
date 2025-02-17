@@ -28,10 +28,6 @@ type ephemeralClusterAuth struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (e *ephemeralClusterAuth) Metadata(_ context.Context, _ ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "aws_eks_cluster_auth"
-}
-
 func (e *ephemeralClusterAuth) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

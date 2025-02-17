@@ -52,10 +52,6 @@ type teamsChannelConfigurationResource struct {
 	framework.WithTimeouts
 }
 
-func (r *teamsChannelConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_chatbot_teams_channel_configuration"
-}
-
 func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

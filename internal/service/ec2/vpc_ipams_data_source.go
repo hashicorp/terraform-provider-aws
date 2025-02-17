@@ -31,10 +31,6 @@ type dataSourceVPCIPAMs struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceVPCIPAMs) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_vpc_ipams"
-}
-
 func (d *dataSourceVPCIPAMs) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

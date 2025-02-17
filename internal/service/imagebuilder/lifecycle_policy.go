@@ -45,10 +45,6 @@ type lifecyclePolicyResource struct {
 	framework.WithImportByID
 }
 
-func (*lifecyclePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_imagebuilder_lifecycle_policy"
-}
-
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	lifecyclePolicyStatusType := fwtypes.StringEnumType[awstypes.LifecyclePolicyStatus]()
 

@@ -54,10 +54,6 @@ type vpcConnectionResource struct {
 	framework.WithImportByID
 }
 
-func (r *vpcConnectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_quicksight_vpc_connection"
-}
-
 const (
 	resNameVPCConnection = "VPC Connection"
 )

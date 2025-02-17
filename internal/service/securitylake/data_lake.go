@@ -57,10 +57,6 @@ type dataLakeResource struct {
 	framework.WithTimeouts
 }
 
-func (r *dataLakeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_data_lake"
-}
-
 func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

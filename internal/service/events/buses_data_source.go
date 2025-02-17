@@ -27,10 +27,6 @@ type eventBusesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*eventBusesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_cloudwatch_event_buses"
-}
-
 func (d *eventBusesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

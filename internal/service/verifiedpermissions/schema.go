@@ -45,10 +45,6 @@ type resourceSchema struct {
 	framework.WithImportByID
 }
 
-func (r *resourceSchema) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_schema"
-}
-
 func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
