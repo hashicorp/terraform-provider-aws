@@ -56,6 +56,26 @@ func resourceWorkgroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"price_performance_target": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"level": {
+							Type:         schema.TypeString,
+							Default:      performanceTargetLevelBalanced,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(performanceTargetLevel_Values(), false),
+						},
+					},
+				},
+			},
 			"config_parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -222,6 +242,14 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.BaseCapacity = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("price_performance_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.PricePerformanceTarget = expandPricePerformanceTarget(v.([]interface{}))
+	}
+
+	if input.BaseCapacity != nil && input.PricePerformanceTarget != nil && input.PricePerformanceTarget.Status == awstypes.PerformanceTargetStatusEnabled {
+		return sdkdiag.AppendErrorf(diags, "base_capacity cannot be set when price_performance_target.enabled is true")
+	}
+
 	if v, ok := d.GetOk("config_parameter"); ok && v.(*schema.Set).Len() > 0 {
 		input.ConfigParameters = expandConfigParameters(v.(*schema.Set).List())
 	}
@@ -283,6 +311,9 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set(names.AttrARN, out.WorkgroupArn)
 	d.Set("base_capacity", out.BaseCapacity)
+	if err := d.Set("price_performance_target", flattenPricePerformanceTarget(out.PricePerformanceTarget)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting price_performance_target: %s", err)
+	}
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
@@ -372,6 +403,17 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			updateWorkgroup(ctx, conn,
 				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int32(int32(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
 				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("price_performance_target") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			PricePerformanceTarget: expandPricePerformanceTarget(d.Get("price_performance_target").([]interface{})),
+			WorkgroupName:          aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -580,6 +622,67 @@ func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Client, 
 	}
 
 	return nil, err
+}
+
+func expandPricePerformanceTarget(list []interface{}) *awstypes.PerformanceTarget {
+	if len(list) == 0 {
+		return nil
+	}
+
+	tfMap := list[0].(map[string]interface{})
+	apiObject := &awstypes.PerformanceTarget{}
+	// bool is a nicer way to represent the enabled/disabled state but the API expects
+	// a string enumeration
+	if enabled, ok := tfMap[names.AttrEnabled].(bool); ok {
+		if enabled {
+			apiObject.Status = awstypes.PerformanceTargetStatusEnabled
+		} else {
+			apiObject.Status = awstypes.PerformanceTargetStatusDisabled
+		}
+	}
+	// The target price performance level for the workgroup. Valid values include 1,
+	// 25, 50, 75, and 100. These correspond to the price performance levels LOW_COST,
+	// ECONOMICAL, BALANCED, RESOURCEFUL, and HIGH_PERFORMANCE.
+	if level, ok := tfMap["level"].(string); ok {
+		switch level {
+		case performanceTargetLevelLowCost:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelLowCostValue))
+		case performanceTargetLevelEconomical:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelEconomicalValue))
+		case performanceTargetLevelBalanced:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelBalancedValue))
+		case performanceTargetLevelResourceful:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelResourcefulValue))
+		case performanceTargetLevelHighPerformance:
+			apiObject.Level = aws.Int32(int32(performanceTargetLevelHighPerformanceValue))
+		}
+	}
+
+	return apiObject
+}
+
+func flattenPricePerformanceTarget(apiObject *awstypes.PerformanceTarget) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap[names.AttrEnabled] = apiObject.Status == awstypes.PerformanceTargetStatusEnabled
+	switch aws.ToInt32(apiObject.Level) {
+	case performanceTargetLevelLowCostValue:
+		tfMap["level"] = performanceTargetLevelLowCost
+	case performanceTargetLevelEconomicalValue:
+		tfMap["level"] = performanceTargetLevelEconomical
+	case performanceTargetLevelBalancedValue:
+		tfMap["level"] = performanceTargetLevelBalanced
+	case performanceTargetLevelResourcefulValue:
+		tfMap["level"] = performanceTargetLevelResourceful
+	case performanceTargetLevelHighPerformanceValue:
+		tfMap["level"] = performanceTargetLevelHighPerformance
+	}
+
+	return []interface{}{tfMap}
 }
 
 func expandConfigParameter(tfMap map[string]interface{}) awstypes.ConfigParameter {
