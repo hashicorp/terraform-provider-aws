@@ -48,10 +48,6 @@ type resourceBillingGroup struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceBillingGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_iot_billing_group"
-}
-
 func (r *resourceBillingGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -252,10 +248,6 @@ func (r *resourceBillingGroup) Delete(ctx context.Context, request resource.Dele
 
 func (r *resourceBillingGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-func (r *resourceBillingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findBillingGroupByName(ctx context.Context, conn *iot.Client, name string) (*iot.DescribeBillingGroupOutput, error) {

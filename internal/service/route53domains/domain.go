@@ -55,10 +55,6 @@ type domainResource struct {
 	framework.WithTimeouts
 }
 
-func (*domainResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53domains_domain"
-}
-
 func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -632,8 +628,6 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 }
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		// duration_in_years can only be increased.
 		var oldDurationInYears, newDurationInYears types.Int64

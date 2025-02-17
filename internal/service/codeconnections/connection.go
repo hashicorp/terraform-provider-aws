@@ -55,10 +55,6 @@ type connectionResource struct {
 	framework.WithTimeouts
 }
 
-func (r *connectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeconnections_connection"
-}
-
 func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -267,10 +263,6 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 		return
 	}
-}
-
-func (r *connectionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *connectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

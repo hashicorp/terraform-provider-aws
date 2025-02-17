@@ -54,10 +54,6 @@ type multiRegionClusterResource struct {
 	framework.WithTimeouts
 }
 
-func (*multiRegionClusterResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_memorydb_multi_region_cluster"
-}
-
 func (r *multiRegionClusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -421,10 +417,6 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 
 func (r *multiRegionClusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("multi_region_cluster_name"), request, response)
-}
-
-func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 type multiRegionClusterResourceModel struct {

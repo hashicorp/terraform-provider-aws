@@ -310,8 +310,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 // DataSources returns a slice of functions to instantiate each DataSource
 // implementation.
 //
-// The data source type name is determined by the DataSource implementing
-// the Metadata method. All data sources must have unique names.
+// All data sources must have unique type names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	var errs []error
 	var dataSources []func() datasource.DataSource
@@ -331,28 +330,8 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				continue
 			}
 
-			metadataResponse := datasource.MetadataResponse{}
-			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
-			typeName := metadataResponse.TypeName
-
-			// Temporary check that type name from annotation equals Metadata response.
-			if typeName != v.TypeName {
-				errs = append(errs, fmt.Errorf("data source %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
-			}
-
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-					ctx = meta.RegisterLogger(ctx)
-					ctx = flex.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
+			typeName := v.TypeName
 			interceptors := dataSourceInterceptors{}
-
 			if v.Tags != nil {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -369,11 +348,26 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 					continue
 				}
 
-				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
 			}
 
+			opts := wrappedDataSourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if c != nil {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
+					}
+
+					return ctx
+				},
+				interceptors: interceptors,
+				typeName:     typeName,
+			}
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, inner, interceptors)
+				return newWrappedDataSource(inner, opts)
 			})
 		}
 	}
@@ -390,8 +384,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 // Resources returns a slice of functions to instantiate each Resource
 // implementation.
 //
-// The resource type name is determined by the Resource implementing
-// the Metadata method. All resources must have unique names.
+// All resources must have unique type names.
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var errs []error
 	var resources []func() resource.Resource
@@ -407,28 +400,8 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				continue
 			}
 
-			metadataResponse := resource.MetadataResponse{}
-			inner.Metadata(ctx, resource.MetadataRequest{}, &metadataResponse)
-			typeName := metadataResponse.TypeName
-
-			// Temporary check that type name from annotation equals Metadata response.
-			if typeName != v.TypeName {
-				errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
-			}
-
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-					ctx = meta.RegisterLogger(ctx)
-					ctx = flex.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
+			typeName := v.TypeName
 			interceptors := resourceInterceptors{}
-
 			if v.Tags != nil {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -454,11 +427,27 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
-				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
 			}
 
+			opts := wrappedResourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if c != nil {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
+					}
+
+					return ctx
+				},
+				interceptors:           interceptors,
+				typeName:               typeName,
+				usesTransparentTagging: v.Tags != nil,
+			}
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(bootstrapContext, inner, interceptors)
+				return newWrappedResource(inner, opts)
 			})
 		}
 	}
@@ -475,8 +464,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 // EphemeralResources returns a slice of functions to instantiate each Ephemeral Resource
 // implementation.
 //
-// The resource type name is determined by the Ephemeral Resource implementing
-// the Metadata method. All resources must have unique names.
+// All ephemeral resources must have unique type names.
 func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
 	var errs []error
 	var ephemeralResources []func() ephemeral.EphemeralResource
@@ -497,28 +485,23 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					continue
 				}
 
-				metadataResponse := ephemeral.MetadataResponse{}
-				inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
-				typeName := metadataResponse.TypeName
-
-				// Temporary check that type name from annotation equals Metadata response.
-				if typeName != v.TypeName {
-					errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
+				interceptors := ephemeralResourceInterceptors{}
+				opts := wrappedEphemeralResourceOptions{
+					// bootstrapContext is run on all wrapped methods before any interceptors.
+					bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
+						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+						if c != nil {
+							ctx = c.RegisterLogger(ctx)
+							ctx = flex.RegisterLogger(ctx)
+							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+						}
+						return ctx
+					},
+					interceptors: interceptors,
+					typeName:     v.TypeName,
 				}
-
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-					ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
-					if meta != nil {
-						ctx = meta.RegisterLogger(ctx)
-						ctx = flex.RegisterLogger(ctx)
-						ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
-					}
-					return ctx
-				}
-
 				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(bootstrapContext, inner, nil)
+					return newWrappedEphemeralResource(inner, opts)
 				})
 			}
 		}

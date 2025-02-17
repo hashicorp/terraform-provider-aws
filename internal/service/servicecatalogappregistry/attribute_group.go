@@ -44,10 +44,6 @@ type resourceAttributeGroup struct {
 	framework.WithImportByID
 }
 
-func (r *resourceAttributeGroup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicecatalogappregistry_attribute_group"
-}
-
 func (r *resourceAttributeGroup) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -223,10 +219,6 @@ func (r *resourceAttributeGroup) Delete(ctx context.Context, req resource.Delete
 		)
 		return
 	}
-}
-
-func (r *resourceAttributeGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.GetAttributeGroupOutput, error) {

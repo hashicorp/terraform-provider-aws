@@ -59,10 +59,6 @@ type resourceResiliencyPolicy struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceResiliencyPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_resiliencehub_resiliency_policy"
-}
-
 func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	requiredObjAttrs := map[string]schema.Attribute{
 		"rto": schema.StringAttribute{
@@ -425,10 +421,6 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 
 func (r *resourceResiliencyPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-}
-
-func (r *resourceResiliencyPolicy) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 const (

@@ -50,10 +50,6 @@ type instanceConnectEndpointResource struct {
 	framework.WithTimeouts
 }
 
-func (r *instanceConnectEndpointResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_instance_connect_endpoint"
-}
-
 func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -257,10 +253,6 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 
 		return
 	}
-}
-
-func (r *instanceConnectEndpointResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Ec2InstanceConnectEndpoint.html.

@@ -47,10 +47,6 @@ type resourceNamespace struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceNamespace) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_s3tables_namespace"
-}
-
 func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

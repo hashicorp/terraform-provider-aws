@@ -54,10 +54,6 @@ type namespaceResource struct {
 	framework.WithImportByID
 }
 
-func (r *namespaceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_namespace"
-}
-
 func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -246,10 +242,6 @@ func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		)
 		return
 	}
-}
-
-func (r *namespaceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findNamespaceByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) (*awstypes.NamespaceInfoV2, error) {

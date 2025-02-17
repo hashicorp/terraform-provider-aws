@@ -106,9 +106,6 @@ type resource{{ .Resource }} struct {
 	framework.WithTimeouts
 }
 
-func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the attributes in snake case (e.g.,
@@ -565,12 +562,6 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
-{{ if .IncludeTags -}}
-func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-{{- end }}
 
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====

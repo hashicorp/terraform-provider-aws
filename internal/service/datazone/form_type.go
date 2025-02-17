@@ -54,9 +54,6 @@ type resourceFormType struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceFormType) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_form_type"
-}
 func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

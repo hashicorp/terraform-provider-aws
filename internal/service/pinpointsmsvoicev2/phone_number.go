@@ -56,10 +56,6 @@ type phoneNumberResource struct {
 	framework.WithTimeouts
 }
 
-func (*phoneNumberResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_pinpointsmsvoicev2_phone_number"
-}
-
 func (r *phoneNumberResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -338,10 +334,6 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *phoneNumberResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type phoneNumberResourceModel struct {

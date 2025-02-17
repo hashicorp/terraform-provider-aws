@@ -58,10 +58,6 @@ type tlsInspectionConfigurationResource struct {
 	framework.WithTimeouts
 }
 
-func (*tlsInspectionConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkfirewall_tls_inspection_configuration"
-}
-
 func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -463,10 +459,6 @@ func (r *tlsInspectionConfigurationResource) ConfigValidators(context.Context) [
 			path.MatchRoot("tls_inspection_configuration").AtListIndex(0).AtName("server_certificate_configuration").AtListIndex(0).AtName("server_certificate"),
 		),
 	}
-}
-
-func (r *tlsInspectionConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {

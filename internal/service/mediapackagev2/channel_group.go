@@ -49,10 +49,6 @@ type resourceChannelGroup struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceChannelGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_media_packagev2_channel_group"
-}
-
 func (r *resourceChannelGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -237,10 +233,6 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 
 func (r *resourceChannelGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-}
-
-func (r *resourceChannelGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceChannelGroupData struct {

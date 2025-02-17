@@ -55,10 +55,6 @@ type serverlessCacheResource struct {
 	framework.WithTimeouts
 }
 
-func (*serverlessCacheResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_elasticache_serverless_cache"
-}
-
 func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -433,10 +429,6 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 		return
 	}
-}
-
-func (r *serverlessCacheResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findServerlessCache(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeServerlessCachesInput) (*awstypes.ServerlessCache, error) {

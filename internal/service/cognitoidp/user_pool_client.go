@@ -55,10 +55,6 @@ type userPoolClientResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*userPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cognito_user_pool_client"
-}
-
 // Schema returns the schema for this resource.
 func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
