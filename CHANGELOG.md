@@ -1,4 +1,10 @@
 ## 5.88.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_db_instance: Add `password_wo` write-only attribute ([#41366](https://github.com/hashicorp/terraform-provider-aws/issues/41366))
+* resource/aws_secretsmanager_secret_version: Add `secret_string_wo` write-only attribute ([#41371](https://github.com/hashicorp/terraform-provider-aws/issues/41371))
+
 ## 5.87.0 (February 13, 2025)
 
 FEATURES:
