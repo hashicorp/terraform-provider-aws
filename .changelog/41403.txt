@@ -1,4 +1,7 @@
 ```release-note:bug
-resource/aws_nat_gateway: Fix resource so it does not need to be re-created to update secondary_allocation_ids. 
+resource/aws_nat_gateway: Fix resource so it does not need to be re-created to update `secondary_allocation_ids`.
+```
+```release-note:enhancement
+resource/aws_nat_gateway: Make it possible to move from `secondary_private_ip_address_count` to `secondary_private_ip_addresses` for private NAT Gateways.
 ```
 
