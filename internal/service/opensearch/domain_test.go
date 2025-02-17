@@ -3639,12 +3639,12 @@ resource "aws_opensearch_domain" "test" {
   }
 
   advanced_security_options {
-    enabled                        = true
+    enabled = true
 	jwt_options {
-		enabled = true
-		public_key = "fake_public_key>"
+		enabled     = true
+		public_key  = "fake_public_key>"
 		subject_key = "sub"
-		roles_key = "roles"
+		roles_key   = "roles"
 	}
   }
 
