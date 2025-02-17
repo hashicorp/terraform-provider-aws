@@ -97,6 +97,11 @@ func ResourceCatalogTable() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 131072),
 						},
+						"parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			},
