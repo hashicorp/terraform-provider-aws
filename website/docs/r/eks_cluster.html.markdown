@@ -210,11 +210,11 @@ resource "aws_eks_cluster" "example" {
   role_arn = aws_iam_role.cluster.arn
   version  = "1.31"
 
-  cluster_remote_network_config = {
-    remote_node_networks = {
+  remote_network_config {
+    remote_node_networks {
       cidrs = ["172.16.0.0/18"]
     }
-    remote_pod_networks = {
+    remote_pod_networks {
       cidrs = ["172.16.64.0/18"]
     }
   }
