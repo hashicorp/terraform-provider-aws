@@ -58,7 +58,7 @@ func TestAccMacie2_serial(t *testing.T) {
 		"Member": {
 			acctest.CtBasic:                         testAccMember_basic,
 			acctest.CtDisappears:                    testAccMember_disappears,
-			"tags":                                  testAccMember_withTags,
+			"tags":                                  testAccMember_tags,
 			"invitation_disable_email_notification": testAccMember_invitationDisableEmailNotification,
 			"invite":                                testAccMember_invite,
 			"invite_removed":                        testAccMember_inviteRemoved,
