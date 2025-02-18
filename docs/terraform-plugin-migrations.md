@@ -1,14 +1,14 @@
 # Terraform Plugin Migrations
 
-With the introduction of [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) there are now two options for creating resource/data-sources in the provider. 
+With the introduction of [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) there are now two options for creating resource/data-sources in the provider.
 All new resources/data-sources [must](https://github.com/hashicorp/terraform-provider-aws/issues/32917) use the new [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) which is actively maintained and developed.
 At this time we do not intend to pursue migration of existing resources from [terraform-plugin-sdk](https://developer.hashicorp.com/terraform/plugin/sdkv2) to [terraform-plugin-framework](https://developer.hashicorp.com/terraform/plugin/framework). While they seem functionally identical, they exhibit enough differences
-in behavior that it has proven difficult to migrate resources of any complexity without introducing breaking changes. That said there are likely to be simple resources for which the migration will work fine, 
-but we would discourage any attempts to migrate resources of any complexity, particularly those that are heavily used. 
+in behavior that it has proven difficult to migrate resources of any complexity without introducing breaking changes. That said there are likely to be simple resources for which the migration will work fine,
+but we would discourage any attempts to migrate resources of any complexity, particularly those that are heavily used.
 
 ## Migration Tooling
 
-Tooling has been created that will scaffold an existing resource into a Framework resource. This tool is meant to be used as a starting point so additional editing will be needed.
+Tooling has been created that will scaff[gitra.sh](..%2F..%2Fgitra.sh)old an existing resource into a Framework resource. This tool is meant to be used as a starting point so additional editing will be needed.
 
 Build:
 
