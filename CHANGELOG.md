@@ -1,9 +1,14 @@
 ## 5.88.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_qbusiness_application` ([#35249](https://github.com/hashicorp/terraform-provider-aws/issues/35249))
+
 ENHANCEMENTS:
 
 * resource/aws_bedrock_model_invocation_logging_configuration: Add `video_data_delivery_enabled` argument ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
 * resource/aws_db_instance: Add `password_wo` write-only attribute ([#41366](https://github.com/hashicorp/terraform-provider-aws/issues/41366))
+* resource/aws_glue_partition: Add `storage_descriptor.additional_locations` argument ([#41434](https://github.com/hashicorp/terraform-provider-aws/issues/41434))
 * resource/aws_secretsmanager_secret_version: Add `secret_string_wo` write-only attribute ([#41371](https://github.com/hashicorp/terraform-provider-aws/issues/41371))
 
 BUG FIXES:
