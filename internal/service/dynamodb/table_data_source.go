@@ -98,6 +98,7 @@ func dataSourceTable() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"warm_throughput": warmThroughputSchema(),
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -245,6 +246,7 @@ func dataSourceTable() *schema.Resource {
 					},
 				},
 			},
+			"warm_throughput": warmThroughputSchema(),
 			"write_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -328,6 +330,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
 		d.Set("table_class", awstypes.TableClassStandard)
+	}
+
+	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting warm_throughput: %s", err)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
