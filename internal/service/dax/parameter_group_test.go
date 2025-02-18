@@ -86,9 +86,10 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := conn.DescribeParameterGroups(ctx, &dax.DescribeParameterGroupsInput{
+			input := dax.DescribeParameterGroupsInput{
 				ParameterGroupNames: []string{rs.Primary.ID},
-			})
+			}
+			_, err := conn.DescribeParameterGroups(ctx, &input)
 			if err != nil {
 				if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 					return nil
@@ -109,9 +110,10 @@ func testAccCheckParameterGroupExists(ctx context.Context, name string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
-		_, err := conn.DescribeParameterGroups(ctx, &dax.DescribeParameterGroupsInput{
+		input := dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []string{rs.Primary.ID},
-		})
+		}
+		_, err := conn.DescribeParameterGroups(ctx, &input)
 
 		return err
 	}

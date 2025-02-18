@@ -57,10 +57,11 @@ func sweepTables(region string) error {
 		}
 
 		for _, v := range page.TableNames {
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+			input := dynamodb.UpdateTableInput{
 				DeletionProtectionEnabled: aws.Bool(false),
 				TableName:                 aws.String(v),
-			})
+			}
+			_, err := conn.UpdateTable(ctx, &input)
 
 			if err != nil {
 				log.Printf("[WARN] DynamoDB Table (%s): %s", v, err)

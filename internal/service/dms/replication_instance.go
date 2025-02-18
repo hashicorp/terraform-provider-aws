@@ -314,9 +314,10 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Replication Instance: %s", d.Id())
-	_, err := conn.DeleteReplicationInstance(ctx, &dms.DeleteReplicationInstanceInput{
+	input := dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
-	})
+	}
+	_, err := conn.DeleteReplicationInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

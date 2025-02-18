@@ -331,9 +331,10 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Task: %s", d.Id())
-	_, err := conn.DeleteReplicationTask(ctx, &dms.DeleteReplicationTaskInput{
+	input := dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
-	})
+	}
+	_, err := conn.DeleteReplicationTask(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

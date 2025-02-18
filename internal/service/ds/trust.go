@@ -350,10 +350,11 @@ func (r *trustResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	conn := r.Meta().DSClient(ctx)
 
-	_, err := conn.DeleteTrust(ctx, &directoryservice.DeleteTrustInput{
+	input := directoryservice.DeleteTrustInput{
 		DeleteAssociatedConditionalForwarder: data.DeleteAssociatedConditionalForwarder.ValueBool(),
 		TrustId:                              fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteTrust(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return
