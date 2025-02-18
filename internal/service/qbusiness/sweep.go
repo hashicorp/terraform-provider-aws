@@ -4,65 +4,40 @@
 package qbusiness
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_qbusiness_application", &resource.Sweeper{
-		Name: "aws_qbusiness_application",
-		F:    sweepApps,
-	})
+	awsv2.Register("aws_qbusiness_application", sweepApplications)
 }
 
-func sweepApps(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.QBusinessClient(ctx)
-
+func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := &qbusiness.ListApplicationsInput{}
+	conn := client.QBusinessClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.ListApplications(ctx, input)
+	paginator := qbusiness.NewListApplicationsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping QBusiness app sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("error retrieving Qbusiness apps: %s", err)
+			return nil, err
 		}
 
-		if len(output.Applications) == 0 {
-			log.Print("[DEBUG] No QBusiness apps to sweep")
-			return nil
+		for _, v := range page.Applications {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ApplicationId))),
+			)
 		}
-
-		for _, item := range output.Applications {
-			name := item.DisplayName
-
-			log.Printf("[INFO] Deleting QBusiness app %s", aws.ToString(name))
-			_, err := conn.DeleteApplication(ctx, &qbusiness.DeleteApplicationInput{
-				ApplicationId: item.ApplicationId,
-			})
-			if err != nil {
-				return fmt.Errorf("error deleting QBusiness app %s: %s", aws.ToString(name), err)
-			}
-		}
-
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
 	}
 
-	return nil
+	return sweepResources, nil
 }
