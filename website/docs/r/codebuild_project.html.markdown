@@ -235,6 +235,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `auto_retry_limit` - (Optional) Specify a maximum number of additional automatic retries after a failed build. The default value is 0.
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as `badge_url` attribute when enabled.
 * `build_batch_config` - (Optional) Defines the batch build options for the project.
 * `build_timeout` - (Optional) Number of minutes, from 5 to 2160 (36 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes. The `build_timeout` property is not available on the `Lambda` compute type.
