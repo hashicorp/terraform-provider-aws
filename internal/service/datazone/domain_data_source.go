@@ -32,46 +32,46 @@ type dataSourceDataZoneDomain struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDataZoneDomain) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_datazone_domain"
+func (d *dataSourceDataZoneDomain) Metadata(_ context.Context, request datasource.Metadatarequestuest, response *datasource.Metadataresponseonse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_datazone_domain"
 }
 
-func (d *dataSourceDataZoneDomain) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *dataSourceDataZoneDomain) Schema(ctx context.Context, request datasource.Schemarequestuest, response *datasource.Schemaresponseonse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"id":  framework.IDAttribute(),
 			"name": schema.StringAttribute{
-				Required: true,
+				requestuired: true,
 			},
 		},
 	}
 }
 
-func (d *dataSourceDataZoneDomain) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.Readrequestuest, response *datasource.Readresponseonse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data dataSourceDomainModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	domain, err := findDomainByName(ctx, conn, data.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameDataZoneDomain, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, domain, &data, flex.WithFieldNamePrefix("DataZoneDomain"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, domain, &data, flex.WithFieldNamePrefix("DataZoneDomain"))...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func findDomainByName(ctx context.Context, conn *datazone.Client, name string) (*awstypes.DomainSummary, error) {

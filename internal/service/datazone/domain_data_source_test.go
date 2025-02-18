@@ -38,7 +38,7 @@ func TestAccRDSProxyDataSource_basic(t *testing.T) {
 }
 
 func testAccDomainDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDomainDataSourceConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), `
 data "aws_datazone_domain" "test" {
   name = aws_datazone_domain.test.name
 }
