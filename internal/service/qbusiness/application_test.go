@@ -88,7 +88,7 @@ func TestAccQBusinessApplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	description := "description"
+	description := names.AttrDescription
 	descriptionUpdated := "description updated"
 	resourceName := "aws_qbusiness_application.test"
 
