@@ -49,6 +49,7 @@ This resource supports the following arguments:
 
 * `s3_bucket_name` - (Required, Forces new resource) The name of the Amazon S3 bucket containing the package.
 * `s3_key` - (Required, Forces new resource) Key (file name) of the package.
+* `source_version` - (Optional) Reference to the file version (Etag for example). This ensures that the package gets update if the file content changes.
 
 ## Attribute Reference
 
