@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -166,6 +167,8 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	id := aws.ToString(out.ApplicationId)
+	resp.State.SetAttribute(ctx, path.Root(names.AttrID), id)
+
 	if _, err := waitApplicationActive(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForCreation, ResNameApplication, id, err),
