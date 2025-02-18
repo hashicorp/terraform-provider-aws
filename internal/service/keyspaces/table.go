@@ -228,7 +228,7 @@ func resourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
-											regexache.MustCompile(`^[0-9a-z]+(\<[0-9a-z]+(, *[0-9a-z]+){0,1}\>)?$`),
+											regexache.MustCompile(`^[0-9a-z]+(<[0-9a-z]+(, *[0-9a-z]+)?( *<[0-9a-z]+(, *[0-9a-z]+)?( *<[0-9a-z]+(, *[0-9a-z]+)?( *<[0-9a-z]+(, *[0-9a-z]+)?( *<[0-9a-z]+(, *[0-9a-z]+)?)?>)?>)?>)?>)?>?$`),
 											"The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'.",
 										),
 									},
