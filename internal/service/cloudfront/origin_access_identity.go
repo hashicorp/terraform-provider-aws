@@ -133,10 +133,11 @@ func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	_, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
+	input := cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchCloudFrontOriginAccessIdentity](err) {
 		return diags

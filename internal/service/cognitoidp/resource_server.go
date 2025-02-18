@@ -181,10 +181,11 @@ func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Cognito Resource Server: %s", d.Id())
-	_, err = conn.DeleteResourceServer(ctx, &cognitoidentityprovider.DeleteResourceServerInput{
+	input := cognitoidentityprovider.DeleteResourceServerInput{
 		Identifier: aws.String(identifier),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.DeleteResourceServer(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

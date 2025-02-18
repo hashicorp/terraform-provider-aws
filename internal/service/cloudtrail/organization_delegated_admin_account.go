@@ -171,9 +171,10 @@ func (r *organizationDelegatedAdminAccountResource) Delete(ctx context.Context, 
 
 	conn := r.Meta().CloudTrailClient(ctx)
 
-	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &cloudtrail.DeregisterOrganizationDelegatedAdminInput{
+	input := cloudtrail.DeregisterOrganizationDelegatedAdminInput{
 		DelegatedAdminAccountId: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &input)
 
 	if errs.IsA[*awstypes.AccountNotRegisteredException](err) {
 		return

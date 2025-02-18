@@ -249,10 +249,11 @@ func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Contact Flow: %s", d.Id())
-	_, err = conn.DeleteContactFlow(ctx, &connect.DeleteContactFlowInput{
+	input := connect.DeleteContactFlowInput{
 		ContactFlowId: aws.String(contactFlowID),
 		InstanceId:    aws.String(instanceID),
-	})
+	}
+	_, err = conn.DeleteContactFlow(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

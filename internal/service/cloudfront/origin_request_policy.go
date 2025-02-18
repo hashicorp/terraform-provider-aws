@@ -267,10 +267,11 @@ func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: %s", d.Id())
-	_, err := conn.DeleteOriginRequestPolicy(ctx, &cloudfront.DeleteOriginRequestPolicyInput{
+	input := cloudfront.DeleteOriginRequestPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteOriginRequestPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchOriginRequestPolicy](err) {
 		return diags

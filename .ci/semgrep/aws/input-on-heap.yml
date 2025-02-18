@@ -51,7 +51,6 @@ rules:
     paths:
       exclude:
         - "internal/service/auditmanager"
-        - "internal/service/c*"
         - "internal/service/d*"
         - "internal/service/e*"
         - "internal/service/f*"
