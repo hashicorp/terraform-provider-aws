@@ -59,6 +59,7 @@ to your network (for outbound endpoints) or on the way from your network to your
 * `security_group_ids` - (Required) ID of one or more security groups that you want to use to control access to this VPC.
 * `name` - (Optional) Friendly name of the Route 53 Resolver endpoint.
 * `protocols` - (Optional) Protocols you want to use for the Route 53 Resolver endpoint. Valid values: `DoH`, `Do53`, `DoH-FIPS`.
+* `resolver_endpoint_type` - (Optional) Route 53 Resolver endpoint IP address type. Valid values: `IPV4`, `IPV6`, `DUALSTACK`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `ip_address` object supports the following:
