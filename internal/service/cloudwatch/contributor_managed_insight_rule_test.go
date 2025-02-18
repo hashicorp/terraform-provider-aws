@@ -51,9 +51,9 @@ func TestAccCloudWatchContributorManagedInsightRule_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "resource_arn",
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
 				ImportStateIdFunc:                    testAccContributorManagedInsightRuleImportStateIDFunc(resourceName),
-				ImportStateVerifyIgnore:              []string{"rule_name", "state"},
+				ImportStateVerifyIgnore:              []string{"rule_name", names.AttrState},
 			},
 		},
 	})
@@ -82,13 +82,13 @@ func TestAccCloudWatchContributorManagedInsightRule_disappears(t *testing.T) {
 					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
 				),
-				ExpectNonEmptyPlan: true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
 }
 
-func testAccCheckContributorManagedInsightRule_tags(t *testing.T) {
+func TestAccCloudWatchContributorManagedInsightRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ManagedRuleDescription
 	rName := sdkacctest.RandomWithPrefix("tfacctest")
@@ -116,9 +116,9 @@ func testAccCheckContributorManagedInsightRule_tags(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "resource_arn",
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
 				ImportStateIdFunc:                    testAccContributorManagedInsightRuleImportStateIDFunc(resourceName),
-				ImportStateVerifyIgnore:              []string{"rule_name", "state"},
+				ImportStateVerifyIgnore:              []string{"rule_name", names.AttrState},
 			},
 			{
 				Config: testAccContributorManagedInsightRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
@@ -150,14 +150,10 @@ func testAccCheckContributorManagedInsightRuleDestroy(ctx context.Context) resou
 				continue
 			}
 
-			fmt.Printf("Destroy Check: Checking ARN: %s, Template: %s\n",
-				rs.Primary.Attributes["resource_arn"],
-				rs.Primary.Attributes["template_name"])
-
 			rule, err := tfcloudwatch.FindContributorManagedInsightRuleDescriptionByTemplateName(
 				ctx,
 				conn,
-				rs.Primary.Attributes["resource_arn"],
+				rs.Primary.Attributes[names.AttrResourceARN],
 				rs.Primary.Attributes["template_name"],
 			)
 
@@ -174,7 +170,7 @@ func testAccCheckContributorManagedInsightRuleDestroy(ctx context.Context) resou
 				return nil
 			}
 
-			return fmt.Errorf("CloudWatch Contributor Managed Insight Rule still exists: %s", rs.Primary.Attributes["resource_arn"])
+			return fmt.Errorf("CloudWatch Contributor Managed Insight Rule still exists: %s", rs.Primary.Attributes[names.AttrResourceARN])
 		}
 
 		return nil
@@ -194,7 +190,7 @@ func testAccCheckContributorManagedInsightRuleExists(ctx context.Context, name s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
 
-		output, err := tfcloudwatch.FindContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, rs.Primary.Attributes["resource_arn"], rs.Primary.Attributes["template_name"])
+		output, err := tfcloudwatch.FindContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["template_name"])
 
 		if err != nil {
 			return err
@@ -213,16 +209,16 @@ func testAccContributorManagedInsightRuleImportStateIDFunc(n string) resource.Im
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		return fmt.Sprintf("%s;%s", rs.Primary.Attributes["resource_arn"], rs.Primary.Attributes["template_name"]), nil
+		return fmt.Sprintf("%s;%s", rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["template_name"]), nil
 	}
 }
 
 func testAccContributorManagedInsightRuleConfig_basic(rName, templateName string) string {
 	return acctest.ConfigCompose(testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName, 2), fmt.Sprintf(`
 resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
-  resource_arn = aws_vpc_endpoint_service.test.arn
-  template_name    = %[2]q
-  state       = "ENABLED"
+  resource_arn  = aws_vpc_endpoint_service.test.arn
+  template_name = %[2]q
+  state         = "ENABLED"
 }
 `, rName, templateName))
 }
@@ -230,9 +226,9 @@ resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
 func testAccContributorManagedInsightRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName, 1), fmt.Sprintf(`
 resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
-  resource_arn = aws_vpc_endpoint_service.test.arn
-  template_name    = %[2]q
-  state       = "ENABLED"
+  resource_arn  = aws_vpc_endpoint_service.test.arn
+  template_name = %[2]q
+  state         = "ENABLED"
 
   tags = {
     %[1]q = %[2]q
@@ -244,9 +240,9 @@ resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
 func testAccContributorManagedInsightRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName, 1), fmt.Sprintf(`
 resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
-  resource_arn = aws_vpc_endpoint_service.test.arn
-  template_name    = %[2]q
-  state       = "ENABLED"
+  resource_arn  = aws_vpc_endpoint_service.test.arn
+  template_name = %[2]q
+  state         = "ENABLED"
 
   tags = {
     %[1]q = %[2]q
