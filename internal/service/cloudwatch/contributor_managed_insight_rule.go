@@ -175,10 +175,10 @@ func (r *resourceContributorManagedInsightRule) Read(ctx context.Context, req re
 		return
 	}
 
-	// state.RuleName = fwflex.StringValueToFramework(ctx, *out.RuleState.RuleName)
+	state.RuleName = fwflex.StringValueToFramework(ctx, *out.RuleState.RuleName)
 
-	// cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", state.RuleName.ValueString()))
-	cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", *out.RuleState.RuleName))
+	cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", state.RuleName.ValueString()))
+	// cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", *out.RuleState.RuleName))
 	state.ARN = fwflex.StringValueToFramework(ctx, cmirARN)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
