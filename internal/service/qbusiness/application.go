@@ -360,7 +360,7 @@ func statusApplication(ctx context.Context, conn *qbusiness.Client, id string) r
 	}
 }
 
-func waitApplicationActive(ctx context.Context, conn *qbusiness.Client, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
+func waitApplicationActive(ctx context.Context, conn *qbusiness.Client, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ApplicationStatusCreating, awstypes.ApplicationStatusUpdating),
 		Target:     enum.Slice(awstypes.ApplicationStatusActive),
