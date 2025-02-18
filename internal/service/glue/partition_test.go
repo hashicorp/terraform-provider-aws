@@ -189,6 +189,63 @@ func TestAccGluePartition_storageDescriptorBasic(t *testing.T) {
 	})
 }
 
+func TestAccGluePartition_storageDescriptorAdditionalLocations(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parValue := sdkacctest.RandString(10)
+	parValue2 := sdkacctest.RandString(10)
+	parValue3 := sdkacctest.RandString(10)
+	resourceName := "aws_glue_partition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPartitionConfig_storageDescriptorAdditionalLocationsSingle(rName, parValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", parValue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPartitionConfig_storageDescriptorAdditionalLocationsDouble(rName, parValue, parValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", parValue),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.1", parValue2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+			{
+				Config: testAccPartitionConfig_storageDescriptorAdditionalLocationsSingle(rName, parValue3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", parValue3),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGluePartition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -513,4 +570,64 @@ resource "aws_glue_partition" "test" {
   }
 }
 `, parValue)
+}
+
+func testAccPartitionConfig_storageDescriptorAdditionalLocationsSingle(rName, additionalLocation1 string) string {
+	return testAccPartitionConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_glue_partition" "test" {
+  database_name    = aws_glue_catalog_database.test.name
+  table_name       = aws_glue_catalog_table.test.name
+  partition_values = ["2025"]
+
+  storage_descriptor {
+    additional_locations = [%[1]q]
+    location             = "my_location"
+    input_format         = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format        = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+    compressed           = false
+    number_of_buckets    = 1
+
+    ser_de_info {
+      name = "ser_de_name"
+
+      parameters = {
+        "example" = "test"
+      }
+
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
+  }
+}
+`, additionalLocation1)
+}
+
+func testAccPartitionConfig_storageDescriptorAdditionalLocationsDouble(rName, additionalLocation1, additionalLocation2 string) string {
+	return testAccPartitionConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_glue_partition" "test" {
+  database_name    = aws_glue_catalog_database.test.name
+  table_name       = aws_glue_catalog_table.test.name
+  partition_values = ["2025"]
+
+  storage_descriptor {
+    additional_locations = [%[1]q, %[2]q]
+    location             = "my_location"
+    input_format         = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format        = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+    compressed           = false
+    number_of_buckets    = 1
+
+    ser_de_info {
+      name = "ser_de_name"
+
+      parameters = {
+        "example" = "test"
+      }
+
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
+  }
+}
+`, additionalLocation1, additionalLocation2)
 }
