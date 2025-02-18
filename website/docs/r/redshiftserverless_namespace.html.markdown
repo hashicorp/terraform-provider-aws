@@ -40,6 +40,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `admin_password_secret_arn` - Amazon Resource Name (ARN) of namespace's admin user credentials secret.
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
 * `id` - The Redshift Namespace Name.
 * `namespace_id` - The Redshift Namespace ID.
