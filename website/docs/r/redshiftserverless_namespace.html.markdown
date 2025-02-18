@@ -36,7 +36,7 @@ This resource supports the following arguments:
 * `log_exports` - (Optional) The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespace_name` - (Required) The name of the namespace.
 * `manage_admin_password` - (Optional) Whether to use AWS SecretManager to manage namespace's admin credentials.
-  Conflicts with `admin_user_password`.
+  Conflicts with `admin_user_password` and `admin_user_password_wo`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
