@@ -727,3 +727,46 @@ func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
 		t.Fatalf("Expected message '%[1]s', got '%[2]s'", expectedErr, err.Error())
 	}
 }
+
+func TestContainerDefinitionsAreEquivalent_FirelensConfiguration(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresentation := `
+[
+    {
+        "name": "log-router",
+        "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable",
+        "essential": true,
+        "firelensConfiguration": {
+            "type": "fluentbit"
+        }
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "name": "log-router",
+        "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable",
+        "cpu": 0,
+        "portMappings": [],
+        "essential": true,
+        "environment": [],
+        "mountPoints": [],
+        "volumesFrom": [],
+        "user": "0",
+        "systemControls": [],
+        "firelensConfiguration": {
+            "type": "fluentbit"
+        }
+    }
+]`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+}
