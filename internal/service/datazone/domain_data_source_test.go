@@ -33,6 +33,12 @@ func TestAccRDSProxyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 				),
 			},
+			{
+				Config: testAccDomainDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+				),
+			},
 		},
 	})
 }

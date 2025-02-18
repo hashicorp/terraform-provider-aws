@@ -32,23 +32,23 @@ type dataSourceDataZoneDomain struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDataZoneDomain) Metadata(_ context.Context, request datasource.Metadatarequestuest, response *datasource.Metadataresponseonse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceDataZoneDomain) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_datazone_domain"
 }
 
-func (d *dataSourceDataZoneDomain) Schema(ctx context.Context, request datasource.Schemarequestuest, response *datasource.Schemaresponseonse) {
+func (d *dataSourceDataZoneDomain) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"id":  framework.IDAttribute(),
 			"name": schema.StringAttribute{
-				requestuired: true,
+				Required: true,
 			},
 		},
 	}
 }
 
-func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.Readrequestuest, response *datasource.Readresponseonse) {
+func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data dataSourceDomainModel
