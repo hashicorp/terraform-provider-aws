@@ -40,11 +40,11 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `admin_password_secret_arn` - Amazon Resource Name (ARN) of namespace's admin user credentials secret.
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
 * `id` - The Redshift Namespace Name.
 * `namespace_id` - The Redshift Namespace ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `admin_password_secret_arn` - Amazon Resource Name (ARN) of namespace's admin user credentials secret.
 
 ## Import
 
