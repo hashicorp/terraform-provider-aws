@@ -135,7 +135,7 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 		cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", plan.RuleName.ValueString()))
 		plan.ARN = fwflex.StringValueToFramework(ctx, cmirARN)
 
-	}else if plan.State.ValueString() == disabled {
+	} else if plan.State.ValueString() == disabled {
 		rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, plan.ResourceArn.ValueString(), plan.TemplateName.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -222,7 +222,7 @@ func (r *resourceContributorManagedInsightRule) Update(ctx context.Context, req 
 					err.Error(),
 				)
 			}
-		}else if new.State.ValueString() == disabled {
+		} else if new.State.ValueString() == disabled {
 			rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, new.ResourceArn.ValueString(), new.TemplateName.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError(
