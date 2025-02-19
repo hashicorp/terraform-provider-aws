@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_datazone_data_zone_domain", name="Data Zone Domain")
+// @FrameworkDataSource("aws_datazone_domain", name="Domain")
 func newDataSourceDataZoneDomain(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDataZoneDomain{}, nil
 }
