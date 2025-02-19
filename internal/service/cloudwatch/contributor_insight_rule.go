@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,7 +45,6 @@ const (
 
 type resourceContributorInsightRule struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceContributorInsightRuleData]
 }
 
 func (r *resourceContributorInsightRule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -62,7 +62,8 @@ func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resourc
 				Required: true,
 			},
 			"rule_state": schema.StringAttribute{
-				Optional: true,
+				Optional:   true,
+				CustomType: fwtypes.StringEnumType[stateValue](),
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -109,6 +110,22 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 	cirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", plan.RuleName.ValueString()))
 	plan.ResourceARN = fwflex.StringValueToFramework(ctx, cirARN)
 
+	if !plan.RuleState.IsNull() {
+		if plan.RuleState.ValueEnum() == stateValueEnabled {
+			_, err = conn.EnableInsightRules(ctx, &cloudwatch.EnableInsightRulesInput{
+				RuleNames: []string{plan.RuleName.ValueString()},
+			})
+		}
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorInsightRule, plan.RuleName.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -139,6 +156,46 @@ func (r *resourceContributorInsightRule) Read(ctx context.Context, req resource.
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceContributorInsightRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourceContributorInsightRuleData
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudWatchClient(ctx)
+
+	if !new.RuleState.IsNull() && !old.RuleState.Equal(new.RuleState) {
+		if new.RuleState.ValueEnum() == stateValueEnabled {
+			_, err := conn.EnableInsightRules(ctx, &cloudwatch.EnableInsightRulesInput{
+				RuleNames: []string{new.RuleName.ValueString()},
+			})
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorInsightRule, new.RuleName.String(), err),
+					err.Error(),
+				)
+			}
+		} else if new.RuleState.ValueEnum() == stateValueDisabled {
+			_, err := conn.DisableInsightRules(ctx, &cloudwatch.DisableInsightRulesInput{
+				RuleNames: []string{new.RuleName.ValueString()},
+			})
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorInsightRule, new.RuleName.String(), err),
+					err.Error(),
+				)
+			}
+		}
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
 func (r *resourceContributorInsightRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -220,10 +277,10 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 }
 
 type resourceContributorInsightRuleData struct {
-	ResourceARN    types.String `tfsdk:"resource_arn"`
-	RuleDefinition types.String `tfsdk:"rule_definition"`
-	RuleName       types.String `tfsdk:"rule_name"`
-	RuleState      types.String `tfsdk:"rule_state"`
-	Tags           tftags.Map   `tfsdk:"tags"`
-	TagsAll        tftags.Map   `tfsdk:"tags_all"`
+	ResourceARN    types.String                   `tfsdk:"resource_arn"`
+	RuleDefinition types.String                   `tfsdk:"rule_definition"`
+	RuleName       types.String                   `tfsdk:"rule_name"`
+	RuleState      fwtypes.StringEnum[stateValue] `tfsdk:"rule_state"`
+	Tags           tftags.Map                     `tfsdk:"tags"`
+	TagsAll        tftags.Map                     `tfsdk:"tags_all"`
 }
