@@ -102,6 +102,16 @@ func resourcePolicy() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"enable_delay_after_policy_creation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"delay_after_policy_creation": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  3,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -238,33 +248,55 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		// Creating Policy and Setting the version as Default in one operation is causing
-		// Access issues. Hence to mitigate it, the SetAsDefault is set to false.
-		// Seperating the setDefaultPolicyVersion as a separate operation.
+		enableDelayAfterPolicyCreation := d.Get("enable_delay_after_policy_creation").(bool)
+		// Print the retrieved values to the console
+		fmt.Printf("enable_delay_after_policy_creation: %t\n", enableDelayAfterPolicyCreation)
 
-		input := &iam.CreatePolicyVersionInput{
-			PolicyArn:      aws.String(d.Id()),
-			PolicyDocument: aws.String(policy),
-			SetAsDefault:   false,
-		}
+		if !enableDelayAfterPolicyCreation {
+			input := &iam.CreatePolicyVersionInput{
+				PolicyArn:      aws.String(d.Id()),
+				PolicyDocument: aws.String(policy),
+				SetAsDefault:   true,
+			}
+			_, err = conn.CreatePolicyVersion(ctx, input)
 
-		var policyVersionOutput *iam.CreatePolicyVersionOutput
-		policyVersionOutput, err = conn.CreatePolicyVersion(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
+			}
+		} else {
+			// Creating Policy and Setting the version as Default in one operation is causing
+			// Access issues. Hence to mitigate it, the SetAsDefault is set to false.
+			// Seperating the setDefaultPolicyVersion as a separate operation.
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", d.Id(), err)
-		}
+			delayAfterPolicyCreation := d.Get("delay_after_policy_creation").(int)
+			fmt.Printf("delay_after_policy_creation: %d seconds\n", delayAfterPolicyCreation)
 
-		// Ensuring Thread Sleeps for 10 seconds before Setting version as default version
-		time.Sleep(10 * time.Second)
-		policyInput := &iam.SetDefaultPolicyVersionInput{
-			PolicyArn: aws.String(d.Id()),
-			VersionId: policyVersionOutput.PolicyVersion.VersionId,
-		}
+			input := &iam.CreatePolicyVersionInput{
+				PolicyArn:      aws.String(d.Id()),
+				PolicyDocument: aws.String(policy),
+				SetAsDefault:   false,
+			}
 
-		_, err = conn.SetDefaultPolicyVersion(ctx, policyInput)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting Default Policy version for IAM Policy (%s): %s", d.Id(), err)
+			var policyVersionOutput *iam.CreatePolicyVersionOutput
+			policyVersionOutput, err = conn.CreatePolicyVersion(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", d.Id(), err)
+			}
+
+			// Ensuring Thread Sleeps for n seconds before Setting version as default version
+			// The value is passed through a variable. Default value is 3secs
+			time.Sleep(time.Duration(delayAfterPolicyCreation) * time.Second)
+			policyInput := &iam.SetDefaultPolicyVersionInput{
+				PolicyArn: aws.String(d.Id()),
+				VersionId: policyVersionOutput.PolicyVersion.VersionId,
+			}
+
+			_, err = conn.SetDefaultPolicyVersion(ctx, policyInput)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting Default Policy version for IAM Policy (%s): %s", d.Id(), err)
+			}
+
 		}
 	}
 
