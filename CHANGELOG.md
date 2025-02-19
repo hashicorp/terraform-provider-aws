@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_cloudwatch_contributor_managed_insight_rule` ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
 * **New Resource:** `aws_qbusiness_application` ([#35249](https://github.com/hashicorp/terraform-provider-aws/issues/35249))
 
 ENHANCEMENTS:
@@ -14,6 +15,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true` ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
+* resource/aws_cloudwatch_contributor_insight_rule: Fix enable/disable rule state ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
 * resource/aws_dynamodb_table: Fixes long delay in creation of replicas ([#41451](https://github.com/hashicorp/terraform-provider-aws/issues/41451))
 
 ## 5.87.0 (February 13, 2025)
