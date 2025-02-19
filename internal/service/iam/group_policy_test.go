@@ -6,8 +6,10 @@ package iam_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -190,6 +192,34 @@ func TestAccIAMGroupPolicy_update(t *testing.T) {
 	})
 }
 
+func TestAccIAMGroupPolicy_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var groupPolicy string
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_group_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccGroupPolicyConfig_long_policy(rName, 5120),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 5120"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccGroupPolicyConfig_long_policy(rName, 5120-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
@@ -360,4 +390,36 @@ resource "aws_iam_group_policy" "test" {
   })
 }
 `, rName)
+}
+
+func testAccGroupPolicyConfig_long_policy(rName string, size int) string {
+	consumedLength := 107
+	longSid := strings.Repeat("a", size-consumedLength)
+	return fmt.Sprintf(`
+resource "aws_iam_group" "test" {
+  name = %[1]q
+  path = "/"
+}
+
+resource "aws_iam_group_policy" "test" {
+  name  = %[1]q
+  group = aws_iam_group.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": %[2]q,
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName, longSid)
 }

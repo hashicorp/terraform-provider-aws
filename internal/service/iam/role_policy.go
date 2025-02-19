@@ -29,6 +29,7 @@ import (
 const (
 	rolePolicyNameMaxLen       = 128
 	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - id.UniqueIDSuffixLength
+	rolePolicyMaxSize          = 10240
 )
 
 // @SDKResource("aws_iam_role_policy", name="Role Policy")
@@ -63,7 +64,7 @@ func resourceRolePolicy() *schema.Resource {
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(rolePolicyMaxSize),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
