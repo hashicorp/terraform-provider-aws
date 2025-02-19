@@ -908,10 +908,11 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Fleet: %s", d.Id())
-	output, err := conn.DeleteFleets(ctx, &ec2.DeleteFleetsInput{
+	input := ec2.DeleteFleetsInput{
 		FleetIds:           []string{d.Id()},
 		TerminateInstances: aws.Bool(d.Get("terminate_instances").(bool)),
-	})
+	}
+	output, err := conn.DeleteFleets(ctx, &input)
 
 	if err == nil && output != nil {
 		err = deleteFleetsError(output.UnsuccessfulFleetDeletions)

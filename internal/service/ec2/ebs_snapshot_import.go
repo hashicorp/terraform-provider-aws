@@ -251,10 +251,11 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+		input := ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
-		})
+		}
+		_, err = conn.ModifySnapshotTier(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) Storage Tier: %s", d.Id(), err)

@@ -481,7 +481,8 @@ func sweepCapacityReservations(region string) error {
 	}
 	conn := client.EC2Client(ctx)
 
-	resp, err := conn.DescribeCapacityReservations(ctx, &ec2.DescribeCapacityReservationsInput{})
+	input := ec2.DescribeCapacityReservationsInput{}
+	resp, err := conn.DescribeCapacityReservations(ctx, &input)
 
 	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Capacity Reservation sweep for %s: %s", region, err)

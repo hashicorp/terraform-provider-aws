@@ -156,10 +156,11 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+		input := ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
-		})
+		}
+		_, err = conn.ModifySnapshotTier(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
@@ -218,10 +219,11 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("storage_tier") {
 		if tier := d.Get("storage_tier").(string); tier == string(awstypes.TargetStorageTierArchive) {
-			_, err := conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+			input := ec2.ModifySnapshotTierInput{
 				SnapshotId:  aws.String(d.Id()),
 				StorageTier: awstypes.TargetStorageTier(tier),
-			})
+			}
+			_, err := conn.ModifySnapshotTier(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)

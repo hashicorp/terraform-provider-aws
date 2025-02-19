@@ -5973,7 +5973,7 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		_, err := conn.CreateTags(ctx, &ec2.CreateTagsInput{
+		input := ec2.CreateTagsInput{
 			Resources: []string{aws.ToString(instance.InstanceId)},
 			Tags: []awstypes.Tag{
 				{
@@ -5981,7 +5981,8 @@ func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCh
 					Value: aws.String("Happens"),
 				},
 			},
-		})
+		}
+		_, err := conn.CreateTags(ctx, &input)
 		return err
 	}
 }
@@ -6001,9 +6002,10 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 func defaultVPC(ctx context.Context, t *testing.T) string {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.DescribeAccountAttributes(ctx, &ec2.DescribeAccountAttributesInput{
+	input := ec2.DescribeAccountAttributesInput{
 		AttributeNames: flex.ExpandStringyValueList[awstypes.AccountAttributeName]([]any{string(awstypes.AccountAttributeNameDefaultVpc)}),
-	})
+	}
+	output, err := conn.DescribeAccountAttributes(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		return ""

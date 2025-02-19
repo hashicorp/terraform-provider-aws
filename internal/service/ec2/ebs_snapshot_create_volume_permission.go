@@ -121,7 +121,7 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Snapshot CreateVolumePermission: %s", d.Id())
-	_, err = conn.ModifySnapshotAttribute(ctx, &ec2.ModifySnapshotAttributeInput{
+	input := ec2.ModifySnapshotAttributeInput{
 		Attribute: awstypes.SnapshotAttributeNameCreateVolumePermission,
 		CreateVolumePermission: &awstypes.CreateVolumePermissionModifications{
 			Remove: []awstypes.CreateVolumePermission{
@@ -129,7 +129,8 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 			},
 		},
 		SnapshotId: aws.String(snapshotID),
-	})
+	}
+	_, err = conn.ModifySnapshotAttribute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
 		return diags

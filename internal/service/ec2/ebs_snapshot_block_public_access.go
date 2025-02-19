@@ -81,7 +81,8 @@ func resourceEBSSnapshotBlockPublicAccessDelete(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// Removing the resource disables blocking of EBS snapshot sharing.
-	_, err := conn.DisableSnapshotBlockPublicAccess(ctx, &ec2.DisableSnapshotBlockPublicAccessInput{})
+	input := ec2.DisableSnapshotBlockPublicAccessInput{}
+	_, err := conn.DisableSnapshotBlockPublicAccess(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EBS Snapshot Block Public Access: %s", err)

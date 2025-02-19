@@ -1192,9 +1192,10 @@ func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
-	_, err := conn.DeleteLaunchTemplate(ctx, &ec2.DeleteLaunchTemplateInput{
+	input := ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLaunchTemplate(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound) {
 		return diags

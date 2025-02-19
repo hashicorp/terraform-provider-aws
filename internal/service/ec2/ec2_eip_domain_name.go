@@ -192,10 +192,11 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.ResetAddressAttribute(ctx, &ec2.ResetAddressAttributeInput{
+	input := ec2.ResetAddressAttributeInput{
 		AllocationId: fwflex.StringFromFramework(ctx, data.ID),
 		Attribute:    awstypes.AddressAttributeNameDomainName,
-	})
+	}
+	_, err := conn.ResetAddressAttribute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 		return

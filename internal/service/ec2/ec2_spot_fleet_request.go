@@ -1165,10 +1165,11 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting EC2 Spot Fleet Request: %s", d.Id())
-	output, err := conn.CancelSpotFleetRequests(ctx, &ec2.CancelSpotFleetRequestsInput{
+	input := ec2.CancelSpotFleetRequestsInput{
 		SpotFleetRequestIds: []string{d.Id()},
 		TerminateInstances:  aws.Bool(terminateInstances),
-	})
+	}
+	output, err := conn.CancelSpotFleetRequests(ctx, &input)
 
 	if err == nil && output != nil {
 		err = cancelSpotFleetRequestsError(output.UnsuccessfulFleetRequests)

@@ -99,10 +99,11 @@ func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 
 	log.Printf("[INFO] Deleting EC2 VPN Gateway (%s) Attachment (%s)", vpnGatewayID, vpcID)
-	_, err := conn.DetachVpnGateway(ctx, &ec2.DetachVpnGatewayInput{
+	input := ec2.DetachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
-	})
+	}
+	_, err := conn.DetachVpnGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayAttachmentNotFound, errCodeInvalidVPNGatewayIDNotFound) {
 		return diags

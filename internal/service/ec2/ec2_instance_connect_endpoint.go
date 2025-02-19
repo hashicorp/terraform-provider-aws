@@ -236,9 +236,10 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.DeleteInstanceConnectEndpoint(ctx, &ec2.DeleteInstanceConnectEndpointInput{
+	input := ec2.DeleteInstanceConnectEndpointInput{
 		InstanceConnectEndpointId: fwflex.StringFromFramework(ctx, data.InstanceConnectEndpointId),
-	})
+	}
+	_, err := conn.DeleteInstanceConnectEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
 		return

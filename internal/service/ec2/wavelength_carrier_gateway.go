@@ -131,9 +131,10 @@ func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())
-	_, err := conn.DeleteCarrierGateway(ctx, &ec2.DeleteCarrierGatewayInput{
+	input := ec2.DeleteCarrierGatewayInput{
 		CarrierGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCarrierGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
 		return diags

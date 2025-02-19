@@ -303,9 +303,10 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
-	_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+	input := ec2.CancelSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []string{d.Id()},
-	})
+	}
+	_, err := conn.CancelSpotInstanceRequests(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
 		return diags

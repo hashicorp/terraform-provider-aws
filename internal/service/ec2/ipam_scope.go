@@ -172,9 +172,10 @@ func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
-	_, err := conn.DeleteIpamScope(ctx, &ec2.DeleteIpamScopeInput{
+	input := ec2.DeleteIpamScopeInput{
 		IpamScopeId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIpamScope(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMScopeIdNotFound) {
 		return diags

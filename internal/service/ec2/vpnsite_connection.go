@@ -942,9 +942,10 @@ func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
-	_, err := conn.DeleteVpnConnection(ctx, &ec2.DeleteVpnConnectionInput{
+	input := ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpnConnection(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return diags

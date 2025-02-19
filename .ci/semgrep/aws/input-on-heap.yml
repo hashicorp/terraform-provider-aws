@@ -267,7 +267,6 @@ rules:
         - "internal/service/costoptimizationhub"
         - "internal/service/cur"
         - "internal/service/customerprofiles"
-        - "internal/service/ec2"
         - "internal/service/ecr"
         - "internal/service/ecrpublic"
         - "internal/service/ecs"

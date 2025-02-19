@@ -531,9 +531,10 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
-	output, err := conn.DeleteVpcEndpoints(ctx, &ec2.DeleteVpcEndpointsInput{
+	input := ec2.DeleteVpcEndpointsInput{
 		VpcEndpointIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.DeleteVpcEndpoints(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unsuccessfulItemsError(output.Unsuccessful)

@@ -255,10 +255,11 @@ func stopVolumeAttachmentInstance(ctx context.Context, conn *ec2.Client, id stri
 		"ec2_instance_id": id,
 		"force":           force,
 	})
-	_, err := conn.StopInstances(ctx, &ec2.StopInstancesInput{
+	input := ec2.StopInstancesInput{
 		Force:       aws.Bool(force),
 		InstanceIds: []string{id},
-	})
+	}
+	_, err := conn.StopInstances(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)

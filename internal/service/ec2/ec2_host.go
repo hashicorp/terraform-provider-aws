@@ -232,9 +232,10 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Host: %s", d.Id())
-	output, err := conn.ReleaseHosts(ctx, &ec2.ReleaseHostsInput{
+	input := ec2.ReleaseHostsInput{
 		HostIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.ReleaseHosts(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unsuccessfulItemsError(output.Unsuccessful)

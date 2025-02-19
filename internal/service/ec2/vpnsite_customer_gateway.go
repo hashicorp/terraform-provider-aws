@@ -193,9 +193,10 @@ func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Customer Gateway: %s", d.Id())
-	_, err := conn.DeleteCustomerGateway(ctx, &ec2.DeleteCustomerGatewayInput{
+	input := ec2.DeleteCustomerGatewayInput{
 		CustomerGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCustomerGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
 		return diags

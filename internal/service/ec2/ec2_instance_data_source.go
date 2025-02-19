@@ -565,30 +565,33 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Lookup and Set Instance Attributes
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
 		d.Set("disable_api_stop", attr.DisableApiStop.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiTermination, err)
 		}
 		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameUserData,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameUserData, err)
 		}

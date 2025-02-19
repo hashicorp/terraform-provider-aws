@@ -264,9 +264,10 @@ func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Capacity Reservation: %s", d.Id())
-	_, err := conn.CancelCapacityReservation(ctx, &ec2.CancelCapacityReservationInput{
+	input := ec2.CancelCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.CancelCapacityReservation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound) {
 		return diags

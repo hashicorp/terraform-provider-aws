@@ -468,9 +468,10 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	instanceData, err := conn.GetInstanceUefiData(ctx, &ec2.GetInstanceUefiDataInput{
+	input := ec2.GetInstanceUefiDataInput{
 		InstanceId: aws.String(d.Id()),
-	})
+	}
+	instanceData, err := conn.GetInstanceUefiData(ctx, &input)
 	if err == nil {
 		d.Set("uefi_data", instanceData.UefiData)
 	}
@@ -511,9 +512,10 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
-	_, err := conn.DeregisterImage(ctx, &ec2.DeregisterImageInput{
+	input := ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterImage(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return diags

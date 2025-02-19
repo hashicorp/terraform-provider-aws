@@ -169,9 +169,10 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Key Pair: %s", d.Id())
-	_, err := conn.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
+	input := ec2.DeleteKeyPairInput{
 		KeyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteKeyPair(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Key Pair (%s): %s", d.Id(), err)

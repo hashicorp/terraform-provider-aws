@@ -170,9 +170,10 @@ func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
-	_, err := conn.DeletePlacementGroup(ctx, &ec2.DeletePlacementGroupInput{
+	input := ec2.DeletePlacementGroupInput{
 		GroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeletePlacementGroup(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
 		return diags

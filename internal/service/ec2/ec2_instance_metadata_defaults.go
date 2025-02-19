@@ -221,9 +221,8 @@ func (r *instanceMetadataDefaultsResource) Delete(ctx context.Context, request r
 }
 
 func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awstypes.InstanceMetadataDefaultsResponse, error) {
-	input := &ec2.GetInstanceMetadataDefaultsInput{}
-
-	output, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
+	input := ec2.GetInstanceMetadataDefaultsInput{}
+	output, err := conn.GetInstanceMetadataDefaults(ctx, &input)
 
 	if err != nil {
 		return nil, err

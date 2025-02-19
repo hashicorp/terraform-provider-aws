@@ -139,10 +139,11 @@ func resourceMainRouteTableAssociationDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting Main Route Table Association: %s", d.Id())
-	output, err := conn.ReplaceRouteTableAssociation(ctx, &ec2.ReplaceRouteTableAssociationInput{
+	input := ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
 		RouteTableId:  aws.String(d.Get("original_route_table_id").(string)),
-	})
+	}
+	output, err := conn.ReplaceRouteTableAssociation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Main Route Table Association (%s): %s", d.Get("route_table_id").(string), err)

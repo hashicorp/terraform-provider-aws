@@ -1406,10 +1406,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Instance attributes
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
@@ -1421,10 +1422,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if isSnowballEdgeInstance(d.Id()) {
 			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", d.Id())
 		} else {
-			output, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+			input := ec2.DescribeInstanceAttributeInput{
 				Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
 				InstanceId: aws.String(d.Id()),
-			})
+			}
+			output, err := conn.DescribeInstanceAttribute(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiTermination, err)
@@ -1434,10 +1436,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameUserData,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameUserData, err)
 		}
@@ -1831,10 +1834,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			// Thus, we need to actually modify the primary network interface for the new security groups, as the primary
 			// network interface is where we modify/create security group assignments during Create.
 			log.Printf("[INFO] Modifying `vpc_security_group_ids` on Instance %q", d.Id())
-			if _, err := conn.ModifyNetworkInterfaceAttribute(ctx, &ec2.ModifyNetworkInterfaceAttributeInput{
+			input := ec2.ModifyNetworkInterfaceAttributeInput{
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
 				Groups:             groups,
-			}); err != nil {
+			}
+			if _, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying network interface: %s", d.Id(), err)
 			}
 		}
@@ -1938,10 +1942,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		autoRecovery := d.Get("maintenance_options.0.auto_recovery").(string)
 
 		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
-		_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &ec2.ModifyInstanceMaintenanceOptionsInput{
+		input := ec2.ModifyInstanceMaintenanceOptionsInput{
 			AutoRecovery: awstypes.InstanceAutoRecoveryState(autoRecovery),
 			InstanceId:   aws.String(d.Id()),
-		})
+		}
+		_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
@@ -1956,14 +1961,16 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		var mErr error
 		if d.Get("monitoring").(bool) {
 			log.Printf("[DEBUG] Enabling monitoring for Instance (%s)", d.Id())
-			_, mErr = conn.MonitorInstances(ctx, &ec2.MonitorInstancesInput{
+			input := ec2.MonitorInstancesInput{
 				InstanceIds: []string{d.Id()},
-			})
+			}
+			_, mErr = conn.MonitorInstances(ctx, &input)
 		} else {
 			log.Printf("[DEBUG] Disabling monitoring for Instance (%s)", d.Id())
-			_, mErr = conn.UnmonitorInstances(ctx, &ec2.UnmonitorInstancesInput{
+			input := ec2.UnmonitorInstancesInput{
 				InstanceIds: []string{d.Id()},
-			})
+			}
+			_, mErr = conn.UnmonitorInstances(ctx, &input)
 		}
 		if mErr != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Instance monitoring: %s", mErr)
@@ -2223,9 +2230,10 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("instance_lifecycle"); ok && v != nil && v.(string) == string(awstypes.InstanceLifecycleSpot) {
 		spotInstanceRequestID := d.Get("spot_instance_request_id").(string)
-		_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+		input := ec2.CancelSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []string{spotInstanceRequestID},
-		})
+		}
+		_, err := conn.CancelSpotInstanceRequests(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Fleet Request (%s): %s", spotInstanceRequestID, err)
@@ -2382,9 +2390,10 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	// Need to call DescribeVolumes to get volume_size and volume_type for each
 	// EBS block device
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	volResp, err := conn.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
+	input := ec2.DescribeVolumesInput{
 		VolumeIds: volIDs,
-	})
+	}
+	volResp, err := conn.DescribeVolumes(ctx, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -2509,9 +2518,10 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 }
 
 func disassociateInstanceProfile(ctx context.Context, associationId *string, conn *ec2.Client) error {
-	_, err := conn.DisassociateIamInstanceProfile(ctx, &ec2.DisassociateIamInstanceProfileInput{
+	input := ec2.DisassociateIamInstanceProfileInput{
 		AssociationId: associationId,
-	})
+	}
+	_, err := conn.DisassociateIamInstanceProfile(ctx, &input)
 	if err != nil {
 		return fmt.Errorf("disassociating instance profile: %w", err)
 	}
@@ -2811,11 +2821,12 @@ func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([
 		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
 	}
 
-	resp, err := conn.DescribeTags(ctx, &ec2.DescribeTagsInput{
+	input := ec2.DescribeTagsInput{
 		Filters: attributeFiltersFromMultimap(map[string][]string{
 			"resource-id": volIDs,
 		}),
-	})
+	}
+	resp, err := conn.DescribeTags(ctx, &input)
 	if err != nil {
 		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
 	}
@@ -2878,10 +2889,11 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *a
 }
 
 func readInstanceShutdownBehavior(ctx context.Context, d *schema.ResourceData, conn *ec2.Client) error {
-	output, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+	input := ec2.DescribeInstanceAttributeInput{
 		InstanceId: aws.String(d.Id()),
 		Attribute:  awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior,
-	})
+	}
+	output, err := conn.DescribeInstanceAttribute(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
@@ -3230,9 +3242,10 @@ func startInstance(ctx context.Context, conn *ec2.Client, id string, retry bool,
 			errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
 		)
 	} else {
-		_, err = conn.StartInstances(ctx, &ec2.StartInstancesInput{
+		input := ec2.StartInstancesInput{
 			InstanceIds: []string{id},
-		})
+		}
+		_, err = conn.StartInstances(ctx, &input)
 	}
 
 	if err != nil {
@@ -3252,10 +3265,11 @@ func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, 
 		"ec2_instance_id": id,
 		"force":           force,
 	})
-	_, err := conn.StopInstances(ctx, &ec2.StopInstancesInput{
+	input := ec2.StopInstancesInput{
 		Force:       aws.Bool(force),
 		InstanceIds: []string{id},
-	})
+	}
+	_, err := conn.StopInstances(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
@@ -3271,9 +3285,10 @@ func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, 
 // terminateInstance shuts down an EC2 instance and waits for the instance to be deleted.
 func terminateInstance(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Terminating EC2 Instance: %s", id)
-	_, err := conn.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
+	input := ec2.TerminateInstancesInput{
 		InstanceIds: []string{id},
-	})
+	}
+	_, err := conn.TerminateInstances(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil
@@ -3432,11 +3447,12 @@ func userDataHashSum(userData string) string {
 func getInstanceVolIDs(ctx context.Context, conn *ec2.Client, instanceId string) ([]string, error) {
 	volIDs := []string{}
 
-	resp, err := conn.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
+	input := ec2.DescribeVolumesInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
-	})
+	}
+	resp, err := conn.DescribeVolumes(ctx, &input)
 	if err != nil {
 		return nil, fmt.Errorf("getting volumes: %s", err)
 	}
