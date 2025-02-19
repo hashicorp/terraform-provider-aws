@@ -138,7 +138,7 @@ This resource supports the following arguments:
 * `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan.
 * `not_resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to exclude from a backup plan.
 
-### selection_tag Configuration Block
+### selection_tag
 
 The `selection_tag` configuration block supports the following attributes:
 
@@ -146,7 +146,7 @@ The `selection_tag` configuration block supports the following attributes:
 * `key` - (Required) Key for the filter.
 * `value` - (Required) Value for the filter.
 
-### condition Configuration Block
+### condition
 
 The `condition` configuration block supports the following attributes:
 
@@ -155,28 +155,28 @@ The `condition` configuration block supports the following attributes:
 * `string_like` - (Optional) Filters the values of your tagged resources for matching tag values with the use of a wildcard character (`*`) anywhere in the string. For example, `prod*` or `*rod*` matches the tag value `production`. See [below](#string_like-configuration-block) for details.
 * `string_not_like` - (Optional) Filters the values of your tagged resources for non-matching tag values with the use of a wildcard character (`*`) anywhere in the string. See [below](#string_not_like-configuration-block) for details.
 
-### string_equals Configuration Block
+### string_equals
 
 The `string_equals` configuration block supports the following attributes:
 
 * `key` - (Required) Key for the filter.
 * `value` - (Required) Value for the filter.
 
-### string_not_equals Configuration Block
+### string_not_equals
 
 The `string_not_equals` configuration block supports the following attributes:
 
 * `key` - (Required) Key for the filter.
 * `value` - (Required) Value for the filter.
 
-### string_like Configuration Block
+### string_like
 
 The `string_like` configuration block supports the following attributes:
 
 * `key` - (Required) Key for the filter.
 * `value` - (Required) Value for the filter.
 
-### string_not_like Configuration Block
+### string_not_like
 
 The `string_not_like` configuration block supports the following attributes:
 
