@@ -2743,7 +2743,7 @@ func TestAccDynamoDBTable_Replica_tags_updateIsPropagated_twoOfTwo(t *testing.T)
 	})
 }
 
-func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
+func TestAccDynamoDBTable_Replica_tags_propagateToAddedReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2770,12 +2770,15 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 						"Name": rName,
 						"Pozo": "Amargo",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: acctest.CtTrue,
-					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(true),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccTableConfig_replicaTagsNext2(rName, acctest.AlternateRegion(), true, acctest.ThirdRegion(), true),
@@ -2789,17 +2792,43 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 						"Name": rName,
 						"Pozo": "Amargo",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: acctest.CtTrue,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: acctest.CtTrue,
-					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(true),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(true),
+						}),
+					})),
+				},
 			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_tags_notPropagatedToAddedReplica(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replicaTagsNext1(rName, acctest.AlternateRegion(), true),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2808,12 +2837,15 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 						"Name": rName,
 						"Pozo": "Amargo",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: acctest.CtTrue,
-					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(true),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccTableConfig_replicaTagsNext2(rName, acctest.AlternateRegion(), true, acctest.ThirdRegion(), false),
@@ -2824,37 +2856,19 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 						"Pozo": "Amargo",
 					}),
 					testAccCheckReplicaTags(ctx, resourceName, acctest.ThirdRegion(), map[string]string{}),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: acctest.CtTrue,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: acctest.CtFalse,
-					}),
 				),
-			},
-			{
-				Config: testAccTableConfig_replicaTagsNext2(rName, acctest.AlternateRegion(), false, acctest.ThirdRegion(), false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					// Does not remove already propagated tags
-					testAccCheckReplicaTags(ctx, resourceName, acctest.AlternateRegion(), map[string]string{
-						"Name": rName,
-						"Pozo": "Amargo",
-					}),
-					testAccCheckReplicaTags(ctx, resourceName, acctest.ThirdRegion(), map[string]string{}),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: acctest.CtFalse,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: acctest.CtFalse,
-					}),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(true),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(false),
+						}),
+					})),
+				},
 			},
 		},
 	})
