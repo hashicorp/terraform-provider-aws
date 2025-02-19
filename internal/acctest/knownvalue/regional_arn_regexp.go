@@ -35,7 +35,6 @@ func (v regionalARNRegexp) CheckValue(other any) error {
 	re, err := regexp.Compile(v.buildARNString())
 	if err != nil {
 		return fmt.Errorf("unable to compile ARN regexp (%s): %w", v.buildARNString(), err)
-
 	}
 
 	if !re.MatchString(otherVal) {
