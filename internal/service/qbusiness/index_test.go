@@ -27,13 +27,17 @@ func TestAccQBusinessIndex_basic(t *testing.T) {
 	description := names.AttrDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIndex(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName),
+				Config: testAccIndexConfig_basic(rName, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
@@ -57,15 +61,20 @@ func TestAccQBusinessIndex_disappears(t *testing.T) {
 	var index qbusiness.GetIndexOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_index.test"
+	description := names.AttrDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIndex(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName),
+				Config: testAccIndexConfig_basic(rName, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceIndex, resourceName),
@@ -83,26 +92,42 @@ func TestAccQBusinessIndex_tags(t *testing.T) {
 	resourceName := "aws_qbusiness_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIndex(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccIndexConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIndexConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccIndexConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Config: testAccIndexConfig_tags1(rName, acctest.CtKey2, "value2updated"),
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
 				),
 			},
@@ -115,12 +140,16 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 	var index qbusiness.GetIndexOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_index.test"
-	attr1 := "foo1"
-	attr2 := "foo2"
+	attr1 := "attr_name_1"
+	attr2 := "attr_name_2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIndex(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,6 +159,11 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccIndexConfig_documentAttributeConfigurations(rName, attr2, attr1),
@@ -206,23 +240,23 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *qbusiness.GetInde
 	}
 }
 
-func testAccIndexConfig_basic(rName string) string {
+func testAccIndexConfig_basic(rName, description string) string {
 	return acctest.ConfigCompose(testAccApplicationConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
+  application_id = aws_qbusiness_application.test.id
   display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description = "Index name"
+  description = %[2]q
 }
-`, rName))
+`, rName, description))
 }
 
 func testAccIndexConfig_documentAttributeConfigurations(rName, attr1, attr2 string) string {
 	return acctest.ConfigCompose(testAccApplicationConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
+  application_id = aws_qbusiness_application.test.id
   display_name   = %[1]q
   capacity_configuration {
     units = 1
@@ -242,10 +276,27 @@ resource "aws_qbusiness_index" "test" {
 `, rName, attr1, attr2))
 }
 
-func testAccIndexConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccIndexConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccApplicationConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
+  application_id = aws_qbusiness_application.test.id
+  display_name   = %[1]q
+  capacity_configuration {
+    units = 1
+  }
+  description = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccIndexConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccApplicationConfig_basic(rName), fmt.Sprintf(`
+resource "aws_qbusiness_index" "test" {
+  application_id = aws_qbusiness_application.test.id
   display_name   = %[1]q
   capacity_configuration {
     units = 1

@@ -266,7 +266,7 @@ func (r *resourceIndex) Delete(ctx context.Context, req resource.DeleteRequest, 
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionDeleting, ResNameIndex, data.IndexId.ValueString(), err),
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionDeleting, ResNameIndex, data.IndexId.String(), err),
 			err.Error(),
 		)
 		return
@@ -274,7 +274,7 @@ func (r *resourceIndex) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	if _, err := waitIndexDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForDeletion, ResNameIndex, data.IndexId.ValueString(), err),
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForDeletion, ResNameIndex, data.IndexId.String(), err),
 			err.Error(),
 		)
 		return
@@ -302,7 +302,7 @@ func (r *resourceIndex) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionReading, ResNameIndex, data.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionReading, ResNameIndex, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -349,7 +349,7 @@ func (r *resourceIndex) Update(ctx context.Context, req resource.UpdateRequest, 
 
 		_, err := conn.UpdateIndex(ctx, input)
 
-		id := plan.ID.ValueString()
+		id := plan.ID.String()
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.QBusiness, create.ErrActionUpdating, ResNameIndex, id, err),
