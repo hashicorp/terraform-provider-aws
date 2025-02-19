@@ -150,10 +150,10 @@ The `selection_tag` configuration block supports the following attributes:
 
 The `condition` configuration block supports the following attributes:
 
-* `string_equals` - (Optional) Filters resources that exactly match. See [below](#string_equals-configuration-block) for details.
-* `string_not_equals` - (Optional) Filters resources that do not exactly match. See [below](#string_not_equals-configuration-block) for details.
-* `string_like` - (Optional) Filters resources that match a pattern. See [below](#string_like-configuration-block) for details.
-* `string_not_like` - (Optional) Filters resources that do not match a pattern. See [below](#string_not_like-configuration-block) for details.
+* `string_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged with the same value. Also called "exact matching". See [below](#string_equals-configuration-block) for details.
+* `string_not_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged that do not have the same value. Also called "negated matching". See [below](#string_not_equals-configuration-block) for details.
+* `string_like` - (Optional) Filters the values of your tagged resources for matching tag values with the use of a wildcard character (`*`) anywhere in the string. For example, `prod*` or `*rod*` matches the tag value `production`. See [below](#string_like-configuration-block) for details.
+* `string_not_like` - (Optional) Filters the values of your tagged resources for non-matching tag values with the use of a wildcard character (`*`) anywhere in the string. See [below](#string_not_like-configuration-block) for details.
 
 ### string_equals Configuration Block
 
