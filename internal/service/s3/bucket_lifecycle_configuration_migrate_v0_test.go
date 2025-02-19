@@ -116,20 +116,22 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkExpiration_Days(365),
-								// names.AttrFilter:
-								names.AttrID:                    knownvalue.StringExact(rName),
-								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
-								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
-								names.AttrPrefix:                knownvalue.StringExact(""),
-								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
-								"transition":                    checkTransitions(),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
 							}),
 						})),
 						// This is checking the change _after_ the state migration step happens
 						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter),
 							checkFilter_Prefix(""),
 							checkFilter_None(),
+						),
+						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("expiration"),
+							checkExpiration_Days(365),
+							checkExpiration_DaysAfterMigration(365),
 						),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
