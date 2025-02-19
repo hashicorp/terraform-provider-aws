@@ -202,9 +202,9 @@ func resourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
 			},
 			"enable_zonal_shift": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
 			},
 			"enforce_security_group_inbound_rules_on_private_link_traffic": {
 				Type:             schema.TypeString,
