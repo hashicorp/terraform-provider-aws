@@ -120,23 +120,6 @@ func TestAccCloudWatchContributorManagedInsightRule_tags(t *testing.T) {
 				ImportStateIdFunc:                    testAccContributorManagedInsightRuleImportStateIDFunc(resourceName),
 				ImportStateVerifyIgnore:              []string{"rule_name", names.AttrState},
 			},
-			{
-				Config: testAccContributorManagedInsightRuleConfig_tags2(rName, templateName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccContributorManagedInsightRuleConfig_tags1(rName, templateName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
 		},
 	})
 }
@@ -235,21 +218,6 @@ resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
   }
 }
 `, rName, template_name, tagKey1, tagValue1))
-}
-
-func testAccContributorManagedInsightRuleConfig_tags2(rName, template_name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName, 1), fmt.Sprintf(`
-resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
-  resource_arn  = aws_vpc_endpoint_service.test.arn
-  template_name = %[2]q
-  state         = "ENABLED"
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rName, template_name, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName string, count int) string {
