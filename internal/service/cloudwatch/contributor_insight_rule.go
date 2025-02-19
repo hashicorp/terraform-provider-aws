@@ -113,10 +113,6 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 			_, err = conn.EnableInsightRules(ctx, &cloudwatch.EnableInsightRulesInput{
 				RuleNames: []string{plan.RuleName.ValueString()},
 			})
-		} else if plan.RuleState.ValueString() == "DISABLED" {
-			_, err = conn.DisableInsightRules(ctx, &cloudwatch.DisableInsightRulesInput{
-				RuleNames: []string{plan.RuleName.ValueString()},
-			})
 		}
 
 		if err != nil {

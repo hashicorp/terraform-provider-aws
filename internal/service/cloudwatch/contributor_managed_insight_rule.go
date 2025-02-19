@@ -28,6 +28,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	enabled  = "ENABLED"
+	disabled = "DISABLED"
+)
+
 // @FrameworkResource("aws_cloudwatch_contributor_managed_insight_rule", name="Contributor Managed Insight Rule")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
@@ -63,7 +68,7 @@ func (r *resourceContributorManagedInsightRule) Schema(ctx context.Context, req 
 			names.AttrState: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("ENABLED"),
+				Default:  stringdefault.StaticString(enabled),
 			},
 			"rule_name": schema.StringAttribute{
 				Computed: true,
@@ -98,7 +103,7 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 
 	in.ManagedRules[0].Tags = getTagsIn(ctx)
 
-	if plan.State.ValueString() == "ENABLED" || plan.State.IsNull() {
+	if plan.State.ValueString() == enabled || plan.State.IsNull() {
 		out, err := conn.PutManagedInsightRules(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -125,12 +130,12 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 			return
 		}
 
-		plan.RuleName = types.StringValue(*rule.RuleState.RuleName)
+		plan.RuleName = fwflex.StringToFramework(ctx, rule.RuleState.RuleName)
 
 		cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", plan.RuleName.ValueString()))
 		plan.ARN = fwflex.StringValueToFramework(ctx, cmirARN)
 
-	} else if plan.State.ValueString() == "DISABLED" {
+	} else if plan.State.ValueString() == disabled {
 		rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, plan.ResourceArn.ValueString(), plan.TemplateName.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -178,7 +183,7 @@ func (r *resourceContributorManagedInsightRule) Read(ctx context.Context, req re
 	}
 
 	if out.RuleState != nil && out.RuleState.RuleName != nil {
-		state.RuleName = fwflex.StringValueToFramework(ctx, *out.RuleState.RuleName)
+		state.RuleName = fwflex.StringToFramework(ctx, out.RuleState.RuleName)
 		cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", state.RuleName.ValueString()))
 		state.ARN = fwflex.StringValueToFramework(ctx, cmirARN)
 	}
@@ -202,7 +207,7 @@ func (r *resourceContributorManagedInsightRule) Update(ctx context.Context, req 
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	if !new.State.IsNull() && !old.State.Equal(new.State) {
-		if new.State.ValueString() == "ENABLED" || new.State.IsNull() {
+		if new.State.ValueString() == enabled || new.State.IsNull() {
 			_, err := conn.PutManagedInsightRules(ctx, &cloudwatch.PutManagedInsightRulesInput{
 				ManagedRules: []awstypes.ManagedRule{
 					{
@@ -217,7 +222,7 @@ func (r *resourceContributorManagedInsightRule) Update(ctx context.Context, req 
 					err.Error(),
 				)
 			}
-		} else if new.State.ValueString() == "DISABLED" {
+		} else if new.State.ValueString() == disabled {
 			rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, new.ResourceArn.ValueString(), new.TemplateName.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError(
@@ -253,9 +258,6 @@ func (r *resourceContributorManagedInsightRule) Delete(ctx context.Context, req 
 
 	rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, state.ResourceArn.ValueString(), state.TemplateName.ValueString())
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionDeleting, ResNameContributorManagedInsightRule, state.ResourceArn.String(), err),
 			err.Error(),
@@ -270,23 +272,22 @@ func (r *resourceContributorManagedInsightRule) Delete(ctx context.Context, req 
 	_, err = conn.DeleteInsightRules(ctx, &cloudwatch.DeleteInsightRulesInput{
 		RuleNames: []string{*rule.RuleState.RuleName},
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if !errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionDeleting, ResNameContributorManagedInsightRule, state.ResourceArn.String(), err),
-				err.Error(),
-			)
-		}
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting Contributor Managed Insight Rule (%s)", state.ResourceArn.ValueString()), err.Error())
 		return
 	}
 }
 
 func (r *resourceContributorManagedInsightRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, ";")
+	idParts := strings.Split(req.ID, ",")
 	if len(idParts) != 2 {
 		resp.Diagnostics.AddError(
 			"Resource Import Invalid ID",
-			fmt.Sprintf("Wrong format for import ID (%s), use: 'resource-arn;template-name'", req.ID),
+			fmt.Sprintf("Wrong format for import ID (%s), use: 'resource-arn,template-name'", req.ID),
 		)
 		return
 	}
@@ -378,6 +379,7 @@ func findContributorManagedInsightRuleByTwoPartKey(ctx context.Context, conn *cl
 }
 
 func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
+
 	input := &cloudwatch.ListManagedInsightRulesInput{
 		ResourceARN: aws.String(resourceARN),
 	}
@@ -385,6 +387,7 @@ func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Cont
 	rules, err := findContributorManagedInsightRules(ctx, conn, input, func(v *awstypes.ManagedRule) bool {
 		return aws.ToString(v.TemplateName) == templateName
 	})
+
 	if err != nil {
 		return nil, err
 	}

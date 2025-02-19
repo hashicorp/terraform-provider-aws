@@ -105,7 +105,7 @@ func TestAccCloudWatchContributorManagedInsightRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckContributorManagedInsightRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContributorManagedInsightRuleConfig_basic(rName, templateName),
+				Config: testAccContributorManagedInsightRuleConfig_tags1(rName, templateName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -121,16 +121,16 @@ func TestAccCloudWatchContributorManagedInsightRule_tags(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{"rule_name", names.AttrState},
 			},
 			{
-				Config: testAccContributorManagedInsightRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccContributorManagedInsightRuleConfig_tags2(rName, templateName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccContributorManagedInsightRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccContributorManagedInsightRuleConfig_tags1(rName, templateName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -209,7 +209,7 @@ func testAccContributorManagedInsightRuleImportStateIDFunc(n string) resource.Im
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		return fmt.Sprintf("%s;%s", rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["template_name"]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["template_name"]), nil
 	}
 }
 
@@ -223,7 +223,7 @@ resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
 `, rName, templateName))
 }
 
-func testAccContributorManagedInsightRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccContributorManagedInsightRuleConfig_tags1(rName, template_name, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName, 1), fmt.Sprintf(`
 resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
   resource_arn  = aws_vpc_endpoint_service.test.arn
@@ -231,25 +231,25 @@ resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
   state         = "ENABLED"
 
   tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccContributorManagedInsightRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName, 1), fmt.Sprintf(`
-resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
-  resource_arn  = aws_vpc_endpoint_service.test.arn
-  template_name = %[2]q
-  state         = "ENABLED"
-
-  tags = {
-    %[1]q = %[2]q
     %[3]q = %[4]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2))
+`, rName, template_name, tagKey1, tagValue1))
+}
+
+func testAccContributorManagedInsightRuleConfig_tags2(rName, template_name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName, 1), fmt.Sprintf(`
+resource "aws_cloudwatch_contributor_managed_insight_rule" "test" {
+  resource_arn  = aws_vpc_endpoint_service.test.arn
+  template_name = %[2]q
+  state         = "ENABLED"
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, template_name, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccContributorManagedInsightRuleConfig_baseNetworkLoadBalancer(rName string, count int) string {
