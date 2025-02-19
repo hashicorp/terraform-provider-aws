@@ -119,8 +119,6 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 			)
 			return
 		}
-
-		// Get the rule name from the list API
 		rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, plan.ResourceArn.ValueString(), plan.TemplateName.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -134,7 +132,6 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 
 		cmirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", plan.RuleName.ValueString()))
 		plan.ARN = fwflex.StringValueToFramework(ctx, cmirARN)
-
 	} else if plan.State.ValueString() == disabled {
 		rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, plan.ResourceArn.ValueString(), plan.TemplateName.ValueString())
 		if err != nil {
