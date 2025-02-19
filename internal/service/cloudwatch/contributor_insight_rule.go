@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -61,7 +62,8 @@ func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resourc
 				Required: true,
 			},
 			"rule_state": schema.StringAttribute{
-				Optional: true,
+				Optional:   true,
+				CustomType: fwtypes.StringEnumType[stateValue](),
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -109,7 +111,7 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 	plan.ResourceARN = fwflex.StringValueToFramework(ctx, cirARN)
 
 	if !plan.RuleState.IsNull() {
-		if plan.RuleState.ValueString() == "ENABLED" {
+		if plan.RuleState.ValueEnum() == stateValueEnabled {
 			_, err = conn.EnableInsightRules(ctx, &cloudwatch.EnableInsightRulesInput{
 				RuleNames: []string{plan.RuleName.ValueString()},
 			})
@@ -171,7 +173,7 @@ func (r *resourceContributorInsightRule) Update(ctx context.Context, req resourc
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	if !new.RuleState.IsNull() && !old.RuleState.Equal(new.RuleState) {
-		if new.RuleState.ValueString() == "ENABLED" {
+		if new.RuleState.ValueEnum() == stateValueEnabled {
 			_, err := conn.EnableInsightRules(ctx, &cloudwatch.EnableInsightRulesInput{
 				RuleNames: []string{new.RuleName.ValueString()},
 			})
@@ -181,7 +183,7 @@ func (r *resourceContributorInsightRule) Update(ctx context.Context, req resourc
 					err.Error(),
 				)
 			}
-		} else if new.RuleState.ValueString() == "DISABLED" {
+		} else if new.RuleState.ValueEnum() == stateValueDisabled {
 			_, err := conn.DisableInsightRules(ctx, &cloudwatch.DisableInsightRulesInput{
 				RuleNames: []string{new.RuleName.ValueString()},
 			})
@@ -275,10 +277,10 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 }
 
 type resourceContributorInsightRuleData struct {
-	ResourceARN    types.String `tfsdk:"resource_arn"`
-	RuleDefinition types.String `tfsdk:"rule_definition"`
-	RuleName       types.String `tfsdk:"rule_name"`
-	RuleState      types.String `tfsdk:"rule_state"`
-	Tags           tftags.Map   `tfsdk:"tags"`
-	TagsAll        tftags.Map   `tfsdk:"tags_all"`
+	ResourceARN    types.String                   `tfsdk:"resource_arn"`
+	RuleDefinition types.String                   `tfsdk:"rule_definition"`
+	RuleName       types.String                   `tfsdk:"rule_name"`
+	RuleState      fwtypes.StringEnum[stateValue] `tfsdk:"rule_state"`
+	Tags           tftags.Map                     `tfsdk:"tags"`
+	TagsAll        tftags.Map                     `tfsdk:"tags_all"`
 }
