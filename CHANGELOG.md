@@ -14,6 +14,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true` ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
+* resource/aws_dynamodb_table: Fixes long delay in creation of replicas ([#41451](https://github.com/hashicorp/terraform-provider-aws/issues/41451))
 
 ## 5.87.0 (February 13, 2025)
 
