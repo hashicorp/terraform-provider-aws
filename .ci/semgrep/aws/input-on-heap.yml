@@ -82,7 +82,6 @@ rules:
         - "internal/service/ec2/verifiedaccess_*"
         - "internal/service/ec2/vpc_*"
         - "internal/service/ec2/vpnclient_*"
-        - "internal/service/ec2/vpnsite_*"
         - "internal/service/ecr"
         - "internal/service/ecrpublic"
         - "internal/service/ecs"
