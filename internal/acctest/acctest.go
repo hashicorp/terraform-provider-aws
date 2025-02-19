@@ -700,7 +700,7 @@ func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestC
 
 func CheckResourceAttrJSONNoDiff(n, key, expectedJSON string) resource.TestCheckFunc {
 	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
-		if diff := jsoncmp.Diff(expectedJSON, value); diff != "" {
+		if diff := jsoncmp.Diff(value, expectedJSON); diff != "" {
 			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 

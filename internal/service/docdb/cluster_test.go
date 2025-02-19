@@ -1019,9 +1019,10 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
+			input := docdb.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
-			})
+			}
+			_, err := conn.DeleteDBClusterSnapshot(ctx, &input)
 
 			if err != nil {
 				return err

@@ -459,11 +459,12 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 					}
 
 					newQueryKey := tfdynamodb.ExpandTableItemQueryKey(attributes, hashKey, "")
-					_, err = conn.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+					input := dynamodb.UpdateItemInput{
 						AttributeUpdates: updates,
 						TableName:        aws.String(tableName),
 						Key:              newQueryKey,
-					})
+					}
+					_, err = conn.UpdateItem(ctx, &input)
 
 					if err != nil {
 						t.Fatalf("making out-of-band change: %s", err)
@@ -541,11 +542,12 @@ func testAccCheckTableItemCount(ctx context.Context, tableName string, count int
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
-		output, err := conn.Scan(ctx, &dynamodb.ScanInput{
+		input := dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			Select:         awstypes.SelectCount,
 			TableName:      aws.String(tableName),
-		})
+		}
+		output, err := conn.Scan(ctx, &input)
 
 		if err != nil {
 			return err
