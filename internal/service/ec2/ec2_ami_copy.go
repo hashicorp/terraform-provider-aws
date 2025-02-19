@@ -280,7 +280,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	name := d.Get(names.AttrName).(string)
 	sourceImageID := d.Get("source_ami_id").(string)
-	input := &ec2.CopyImageInput{
+	input := ec2.CopyImageInput{
 		ClientToken:   aws.String(id.UniqueId()),
 		Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		Encrypted:     aws.Bool(d.Get(names.AttrEncrypted).(bool)),
@@ -297,7 +297,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	output, err := conn.CopyImage(ctx, input)
+	output, err := conn.CopyImage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): %s", name, sourceImageID, err)

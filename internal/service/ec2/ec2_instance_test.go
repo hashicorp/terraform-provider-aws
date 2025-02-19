@@ -6032,7 +6032,7 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeSubnetsInput{
+	input := ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
@@ -6040,7 +6040,7 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 		),
 	}
 
-	subnets, err := tfec2.FindSubnets(ctx, conn, input)
+	subnets, err := tfec2.FindSubnets(ctx, conn, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		return 0

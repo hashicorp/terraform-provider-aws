@@ -106,13 +106,13 @@ func (r *instanceMetadataDefaultsResource) Create(ctx context.Context, request r
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyInstanceMetadataDefaultsInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.ModifyInstanceMetadataDefaultsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
+	_, err := conn.ModifyInstanceMetadataDefaults(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Instance Metadata Defaults", err.Error())
@@ -184,13 +184,13 @@ func (r *instanceMetadataDefaultsResource) Update(ctx context.Context, request r
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyInstanceMetadataDefaultsInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	input := ec2.ModifyInstanceMetadataDefaultsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
+	_, err := conn.ModifyInstanceMetadataDefaults(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("updating EC2 Instance Metadata Defaults", err.Error())
@@ -204,14 +204,14 @@ func (r *instanceMetadataDefaultsResource) Update(ctx context.Context, request r
 func (r *instanceMetadataDefaultsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyInstanceMetadataDefaultsInput{
+	input := ec2.ModifyInstanceMetadataDefaultsInput{
 		HttpEndpoint:            awstypes.DefaultInstanceMetadataEndpointStateNoPreference,
 		HttpPutResponseHopLimit: aws.Int32(httpPutResponseHopLimitNoPreference),
 		HttpTokens:              awstypes.MetadataDefaultHttpTokensStateNoPreference,
 		InstanceMetadataTags:    awstypes.DefaultInstanceMetadataTagsStateNoPreference,
 	}
 
-	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
+	_, err := conn.ModifyInstanceMetadataDefaults(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("deleting EC2 Instance Metadata Defaults", err.Error())

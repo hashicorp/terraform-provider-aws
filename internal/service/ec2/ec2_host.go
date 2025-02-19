@@ -106,7 +106,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.AllocateHostsInput{
+	input := ec2.AllocateHostsInput{
 		AutoPlacement:     awstypes.AutoPlacement(d.Get("auto_placement").(string)),
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
@@ -131,7 +131,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.OutpostArn = aws.String(v.(string))
 	}
 
-	output, err := conn.AllocateHosts(ctx, input)
+	output, err := conn.AllocateHosts(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "allocating EC2 Host: %s", err)
@@ -189,7 +189,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyHostsInput{
+		input := ec2.ModifyHostsInput{
 			HostIds: []string{d.Id()},
 		}
 
@@ -209,7 +209,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.InstanceType = aws.String(v)
 		}
 
-		output, err := conn.ModifyHosts(ctx, input)
+		output, err := conn.ModifyHosts(ctx, &input)
 
 		if err == nil && output != nil {
 			err = unsuccessfulItemsError(output.Unsuccessful)

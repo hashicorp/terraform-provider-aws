@@ -144,8 +144,8 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.CreateInstanceConnectEndpointInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, &data, input)...)
+	input := ec2.CreateInstanceConnectEndpointInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, &data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -154,7 +154,7 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	input.ClientToken = aws.String(id.UniqueId())
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
-	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
+	output, err := conn.CreateInstanceConnectEndpoint(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Instance Connect Endpoint", err.Error())

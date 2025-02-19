@@ -1008,7 +1008,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("volume_tags").(map[string]interface{}))),
 			string(awstypes.ResourceTypeVolume))...)
 
-	input := &ec2.RunInstancesInput{
+	input := ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
 		ClientToken:                       aws.String(id.UniqueId()),
@@ -1051,7 +1051,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.RunInstances(ctx, input)
+			return conn.RunInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -1505,11 +1505,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("instance_lifecycle", instance.InstanceLifecycle)
 		d.Set("spot_instance_request_id", spotInstanceRequestID)
 
-		input := &ec2.DescribeSpotInstanceRequestsInput{
+		input := ec2.DescribeSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []string{spotInstanceRequestID},
 		}
 
-		apiObject, err := findSpotInstanceRequest(ctx, conn, input)
+		apiObject, err := findSpotInstanceRequest(ctx, conn, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
@@ -1563,7 +1563,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("iam_instance_profile") && !d.IsNewResource() {
-		request := &ec2.DescribeIamInstanceProfileAssociationsInput{
+		input := ec2.DescribeIamInstanceProfileAssociationsInput{
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("instance-id"),
@@ -1572,7 +1572,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			},
 		}
 
-		resp, err := conn.DescribeIamInstanceProfileAssociations(ctx, request)
+		resp, err := conn.DescribeIamInstanceProfileAssociations(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 		}
@@ -1588,7 +1588,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			} else {
 				// Has an Iam Instance Profile associated with it, need to replace the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
-				input := &ec2.ReplaceIamInstanceProfileAssociationInput{
+				input := ec2.ReplaceIamInstanceProfileAssociationInput{
 					AssociationId: associationId,
 					IamInstanceProfile: &awstypes.IamInstanceProfileSpecification{
 						Name: aws.String(d.Get("iam_instance_profile").(string)),
@@ -1609,7 +1609,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 						}
 					} else {
 						err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
-							_, err := conn.ReplaceIamInstanceProfileAssociation(ctx, input)
+							_, err := conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 									return retry.RetryableError(err)
@@ -1619,7 +1619,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 							return nil
 						})
 						if tfresource.TimedOut(err) {
-							_, err = conn.ReplaceIamInstanceProfileAssociation(ctx, input)
+							_, err = conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
 						}
 						if err != nil {
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): replacing instance profile: %s", d.Id(), err)
@@ -1653,14 +1653,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
 		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
-			input := &ec2.ModifyInstanceAttributeInput{
+			input := ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				SourceDestCheck: &awstypes.AttributeBooleanValue{
 					Value: aws.Bool(sourceDestCheck),
 				},
 			}
 
-			_, err := conn.ModifyInstanceAttribute(ctx, input)
+			_, err := conn.ModifyInstanceAttribute(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) SourceDestCheck attribute: %s", d.Id(), err)
@@ -1720,12 +1720,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if ns > os {
 			// Add more to the primary NIC.
-			input := &ec2.AssignIpv6AddressesInput{
+			input := ec2.AssignIpv6AddressesInput{
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
 				Ipv6AddressCount:   aws.Int32(int32(ns - os)),
 			}
 
-			_, err := conn.AssignIpv6Addresses(ctx, input)
+			_, err := conn.AssignIpv6Addresses(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
@@ -1741,12 +1741,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				toRemove = append(toRemove, *addr.Ipv6Address)
 			}
 
-			input := &ec2.UnassignIpv6AddressesInput{
+			input := ec2.UnassignIpv6AddressesInput{
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
 				Ipv6Addresses:      toRemove,
 			}
 
-			_, err := conn.UnassignIpv6Addresses(ctx, input)
+			_, err := conn.UnassignIpv6Addresses(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
@@ -1787,12 +1787,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			// Unassign old IP addresses
 			unassignIps := os.Difference(ns)
 			if unassignIps.Len() != 0 {
-				input := &ec2.UnassignPrivateIpAddressesInput{
+				input := ec2.UnassignPrivateIpAddressesInput{
 					NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
 					PrivateIpAddresses: flex.ExpandStringValueSet(unassignIps),
 				}
 				log.Printf("[INFO] Unassigning secondary_private_ips on Instance %q", d.Id())
-				_, err := conn.UnassignPrivateIpAddresses(ctx, input)
+				_, err := conn.UnassignPrivateIpAddresses(ctx, &input)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "Failure to unassign Secondary Private IPs: %s", err)
 				}
@@ -1801,12 +1801,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			// Assign new IP addresses
 			assignIps := ns.Difference(os)
 			if assignIps.Len() != 0 {
-				input := &ec2.AssignPrivateIpAddressesInput{
+				input := ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
 					PrivateIpAddresses: flex.ExpandStringValueSet(assignIps),
 				}
 				log.Printf("[INFO] Assigning secondary_private_ips on Instance %q", d.Id())
-				_, err := conn.AssignPrivateIpAddresses(ctx, input)
+				_, err := conn.AssignPrivateIpAddresses(ctx, &input)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "Failure to assign Secondary Private IPs: %s", err)
 				}
@@ -1853,14 +1853,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange(names.AttrInstanceType) {
 			if !d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") {
 				instanceType := d.Get(names.AttrInstanceType).(string)
-				input := &ec2.ModifyInstanceAttributeInput{
+				input := ec2.ModifyInstanceAttributeInput{
 					InstanceId: aws.String(d.Id()),
 					InstanceType: &awstypes.AttributeValue{
 						Value: aws.String(instanceType),
 					},
 				}
 
-				if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, fmt.Sprintf("InstanceType (%s)", instanceType)); err != nil {
+				if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, fmt.Sprintf("InstanceType (%s)", instanceType)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
 				}
 			}
@@ -1878,14 +1878,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				v = []byte(d.Get("user_data").(string))
 			}
 
-			input := &ec2.ModifyInstanceAttributeInput{
+			input := ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &awstypes.BlobAttributeValue{
 					Value: v,
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, "UserData"); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData"); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data: %s", d.Id(), err)
 			}
 		}
@@ -1898,14 +1898,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				v = []byte(d.Get("user_data_base64").(string))
 			}
 
-			input := &ec2.ModifyInstanceAttributeInput{
+			input := ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &awstypes.BlobAttributeValue{
 					Value: v,
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, "UserData (base64)"); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData (base64)"); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data base64: %s", d.Id(), err)
 			}
 		}
@@ -1924,14 +1924,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("instance_initiated_shutdown_behavior") {
-		input := &ec2.ModifyInstanceAttributeInput{
+		input := ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
 			InstanceInitiatedShutdownBehavior: &awstypes.AttributeValue{
 				Value: aws.String(d.Get("instance_initiated_shutdown_behavior").(string)),
 			},
 		}
 
-		_, err := conn.ModifyInstanceAttribute(ctx, input)
+		_, err := conn.ModifyInstanceAttribute(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceInitiatedShutdownBehavior attribute: %s", d.Id(), err)
@@ -1981,13 +1981,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
-			input := &ec2.ModifyInstanceCreditSpecificationInput{
+			input := ec2.ModifyInstanceCreditSpecificationInput{
 				ClientToken:                  aws.String(id.UniqueId()),
 				InstanceCreditSpecifications: []awstypes.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 
 			log.Printf("[DEBUG] Modifying EC2 Instance credit specification: %s", d.Id())
-			_, err := conn.ModifyInstanceCreditSpecification(ctx, input)
+			_, err := conn.ModifyInstanceCreditSpecification(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) credit specification: %s", d.Id(), err)
@@ -1999,7 +1999,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOk("metadata_options"); ok {
 			if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 				httpEndpoint := awstypes.InstanceMetadataEndpointState(tfMap["http_endpoint"].(string))
-				input := &ec2.ModifyInstanceMetadataOptionsInput{
+				input := ec2.ModifyInstanceMetadataOptionsInput{
 					HttpEndpoint: httpEndpoint,
 					HttpTokens:   awstypes.HttpTokensState(tfMap["http_tokens"].(string)),
 					InstanceId:   aws.String(d.Id()),
@@ -2012,12 +2012,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					input.InstanceMetadataTags = awstypes.InstanceMetadataTagsState(tfMap["instance_metadata_tags"].(string))
 				}
 
-				_, err := conn.ModifyInstanceMetadataOptions(ctx, input)
+				_, err := conn.ModifyInstanceMetadataOptions(ctx, &input)
 
 				if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "InstanceMetadataTags") {
 					log.Printf("[WARN] updating EC2 Instance (%s) metadata options: %s. Retrying without instance metadata tags.", d.Id(), err)
 
-					_, err = conn.ModifyInstanceMetadataOptions(ctx, input)
+					_, err = conn.ModifyInstanceMetadataOptions(ctx, &input)
 				}
 
 				if err != nil {
@@ -2034,7 +2034,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("root_block_device.0") && !d.IsNewResource() {
 		volID := d.Get("root_block_device.0.volume_id").(string)
 
-		input := &ec2.ModifyVolumeInput{
+		input := ec2.ModifyVolumeInput{
 			VolumeId: aws.String(volID),
 		}
 		modifyVolume := false
@@ -2078,7 +2078,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		if modifyVolume {
 			log.Printf("[DEBUG] Modifying volume: %s", d.Id())
-			_, err := conn.ModifyVolume(ctx, input)
+			_, err := conn.ModifyVolume(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) volume (%s): %s", d.Id(), volID, err)
@@ -2092,7 +2092,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.delete_on_termination") {
 			deviceName := d.Get("root_block_device.0.device_name").(string)
 			if v, ok := d.Get("root_block_device.0.delete_on_termination").(bool); ok {
-				input := &ec2.ModifyInstanceAttributeInput{
+				input := ec2.ModifyInstanceAttributeInput{
 					BlockDeviceMappings: []awstypes.InstanceBlockDeviceMappingSpecification{
 						{
 							DeviceName: aws.String(deviceName),
@@ -2104,7 +2104,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					InstanceId: aws.String(d.Id()),
 				}
 
-				_, err := conn.ModifyInstanceAttribute(ctx, input)
+				_, err := conn.ModifyInstanceAttribute(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) BlockDeviceMappings (%s) attribute: %s", d.Id(), deviceName, err)
@@ -2144,26 +2144,26 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange(names.AttrInstanceType) {
 					instanceType := d.Get(names.AttrInstanceType).(string)
-					input := &ec2.ModifyInstanceAttributeInput{
+					input := ec2.ModifyInstanceAttributeInput{
 						InstanceId: aws.String(d.Id()),
 						InstanceType: &awstypes.AttributeValue{
 							Value: aws.String(instanceType),
 						},
 					}
 
-					if _, err := conn.ModifyInstanceAttribute(ctx, input); err != nil {
+					if _, err := conn.ModifyInstanceAttribute(ctx, &input); err != nil {
 						return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceType (%s) attribute: %s", d.Id(), instanceType, err)
 					}
 				}
 
-				input := &ec2.ModifyInstanceCapacityReservationAttributesInput{
+				input := ec2.ModifyInstanceCapacityReservationAttributesInput{
 					CapacityReservationSpecification: v,
 					InstanceId:                       aws.String(d.Id()),
 				}
 
 				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", d.Id())
 
-				_, err := conn.ModifyInstanceCapacityReservationAttributes(ctx, input)
+				_, err := conn.ModifyInstanceCapacityReservationAttributes(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) capacity reservation attributes: %s", d.Id(), err)
@@ -2184,7 +2184,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			input := &ec2.ModifyPrivateDnsNameOptionsInput{
+			input := ec2.ModifyPrivateDnsNameOptionsInput{
 				InstanceId: aws.String(d.Id()),
 			}
 
@@ -2200,7 +2200,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.PrivateDnsHostnameType = awstypes.HostnameType(tfMap["hostname_type"].(string))
 			}
 
-			_, err := conn.ModifyPrivateDnsNameOptions(ctx, input)
+			_, err := conn.ModifyPrivateDnsNameOptions(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying private DNS name options: %s", d.Id(), err)
@@ -2248,14 +2248,14 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func disableInstanceAPIStop(ctx context.Context, conn *ec2.Client, id string, disableAPIStop bool) error {
-	input := &ec2.ModifyInstanceAttributeInput{
+	input := ec2.ModifyInstanceAttributeInput{
 		DisableApiStop: &awstypes.AttributeBooleanValue{
 			Value: aws.Bool(disableAPIStop),
 		},
 		InstanceId: aws.String(id),
 	}
 
-	_, err := conn.ModifyInstanceAttribute(ctx, input)
+	_, err := conn.ModifyInstanceAttribute(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2270,14 +2270,14 @@ func disableInstanceAPIStop(ctx context.Context, conn *ec2.Client, id string, di
 }
 
 func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id string, disableAPITermination bool) error {
-	input := &ec2.ModifyInstanceAttributeInput{
+	input := ec2.ModifyInstanceAttributeInput{
 		DisableApiTermination: &awstypes.AttributeBooleanValue{
 			Value: aws.Bool(disableAPITermination),
 		},
 		InstanceId: aws.String(id),
 	}
 
-	_, err := conn.ModifyInstanceAttribute(ctx, input)
+	_, err := conn.ModifyInstanceAttribute(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2492,14 +2492,14 @@ func blockDeviceIsRoot(bd awstypes.InstanceBlockDeviceMapping, instance *awstype
 }
 
 func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn *ec2.Client) error {
-	input := &ec2.AssociateIamInstanceProfileInput{
+	input := ec2.AssociateIamInstanceProfileInput{
 		InstanceId: aws.String(d.Id()),
 		IamInstanceProfile: &awstypes.IamInstanceProfileSpecification{
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
 	err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
-		_, err := conn.AssociateIamInstanceProfile(ctx, input)
+		_, err := conn.AssociateIamInstanceProfile(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 				return retry.RetryableError(err)
@@ -2509,7 +2509,7 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateIamInstanceProfile(ctx, input)
+		_, err = conn.AssociateIamInstanceProfile(ctx, &input)
 	}
 	if err != nil {
 		return fmt.Errorf("associating instance profile: %s", err)
@@ -2911,12 +2911,12 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 
 	var passwordData string
 	var resp *ec2.GetPasswordDataOutput
-	input := &ec2.GetPasswordDataInput{
+	input := ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		resp, err = conn.GetPasswordData(ctx, input)
+		resp, err = conn.GetPasswordData(ctx, &input)
 
 		if err != nil {
 			return retry.NonRetryableError(err)
@@ -2932,7 +2932,7 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.GetPasswordData(ctx, input)
+		resp, err = conn.GetPasswordData(ctx, &input)
 		if err != nil {
 			return "", fmt.Errorf("getting password data: %s", err)
 		}
@@ -4008,7 +4008,7 @@ func findInstanceLaunchTemplateVersion(ctx context.Context, conn *ec2.Client, id
 }
 
 func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplateSpecification *awstypes.LaunchTemplateSpecification) (*awstypes.ResponseLaunchTemplateData, error) {
-	input := &ec2.DescribeLaunchTemplateVersionsInput{}
+	input := ec2.DescribeLaunchTemplateVersionsInput{}
 
 	if v := aws.ToString(launchTemplateSpecification.LaunchTemplateId); v != "" {
 		input.LaunchTemplateId = aws.String(v)
@@ -4031,7 +4031,7 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplat
 		}
 	}
 
-	output, err := findLaunchTemplateVersions(ctx, conn, input)
+	output, err := findLaunchTemplateVersions(ctx, conn, &input)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
@@ -4056,14 +4056,14 @@ func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id
 }
 
 func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tagKey string) (string, error) {
-	input := &ec2.DescribeTagsInput{
+	input := ec2.DescribeTagsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"resource-id": instanceID,
 			names.AttrKey: tagKey,
 		}),
 	}
 
-	output, err := conn.DescribeTags(ctx, input)
+	output, err := conn.DescribeTags(ctx, &input)
 
 	if err != nil {
 		return "", err

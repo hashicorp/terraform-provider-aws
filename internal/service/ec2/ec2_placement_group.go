@@ -91,7 +91,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &ec2.CreatePlacementGroupInput{
+	input := ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
 		Strategy:          awstypes.PlacementStrategy(d.Get("strategy").(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePlacementGroup),
@@ -105,7 +105,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		input.SpreadLevel = awstypes.SpreadLevel(v.(string))
 	}
 
-	_, err := conn.CreatePlacementGroup(ctx, input)
+	_, err := conn.CreatePlacementGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Placement Group (%s): %s", name, err)
