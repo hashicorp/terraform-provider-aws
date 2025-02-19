@@ -84,12 +84,12 @@ func (r *ebsFastSnapshotRestoreResource) Create(ctx context.Context, request res
 
 	availabilityZone := data.AvailabilityZone.ValueString()
 	snapshotID := data.SnapshotID.ValueString()
-	input := &ec2.EnableFastSnapshotRestoresInput{
+	input := ec2.EnableFastSnapshotRestoresInput{
 		AvailabilityZones: []string{availabilityZone},
 		SourceSnapshotIds: []string{snapshotID},
 	}
 
-	output, err := conn.EnableFastSnapshotRestores(ctx, input)
+	output, err := conn.EnableFastSnapshotRestores(ctx, &input)
 
 	if err == nil && output != nil {
 		err = enableFastSnapshotRestoreItemsError(output.Unsuccessful)

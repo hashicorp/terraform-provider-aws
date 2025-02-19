@@ -58,7 +58,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 	snapshotID := d.Get(names.AttrSnapshotID).(string)
 	accountID := d.Get(names.AttrAccountID).(string)
 	id := ebsSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID)
-	input := &ec2.ModifySnapshotAttributeInput{
+	input := ec2.ModifySnapshotAttributeInput{
 		Attribute: awstypes.SnapshotAttributeNameCreateVolumePermission,
 		CreateVolumePermission: &awstypes.CreateVolumePermissionModifications{
 			Add: []awstypes.CreateVolumePermission{
@@ -68,7 +68,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 		SnapshotId: aws.String(snapshotID),
 	}
 
-	_, err := conn.ModifySnapshotAttribute(ctx, input)
+	_, err := conn.ModifySnapshotAttribute(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot CreateVolumePermission (%s): %s", id, err)

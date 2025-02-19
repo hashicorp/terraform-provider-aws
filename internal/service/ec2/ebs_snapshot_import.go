@@ -198,7 +198,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.ImportSnapshotInput{
+	input := ec2.ImportSnapshotInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeImportSnapshotTask),
 	}
@@ -229,7 +229,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.ImportSnapshot(ctx, input)
+			return conn.ImportSnapshot(ctx, &input)
 		},
 		errCodeInvalidParameter, "provided does not exist or does not have sufficient permissions")
 

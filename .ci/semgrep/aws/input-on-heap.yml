@@ -76,7 +76,6 @@ rules:
         - "internal/service/drs"
         - "internal/service/ds"
         - "internal/service/dynamodb"
-        - "internal/service/ec2/ebs_*"
         - "internal/service/ec2/ec2_*"
         - "internal/service/ec2/find.go"
         - "internal/service/ec2/ipam_*"

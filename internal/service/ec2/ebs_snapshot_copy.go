@@ -123,7 +123,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CopySnapshotInput{
+	input := ec2.CopySnapshotInput{
 		SourceRegion:      aws.String(d.Get("source_region").(string)),
 		SourceSnapshotId:  aws.String(d.Get("source_snapshot_id").(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSnapshot),
@@ -145,7 +145,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	output, err := conn.CopySnapshot(ctx, input)
+	output, err := conn.CopySnapshot(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot Copy: %s", err)
@@ -166,12 +166,12 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && awstypes.TargetStorageTier(v.(string)) == awstypes.TargetStorageTierArchive {
-		input := &ec2.ModifySnapshotTierInput{
+		input := ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
 		}
 
-		_, err := conn.ModifySnapshotTier(ctx, input)
+		_, err := conn.ModifySnapshotTier(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Copy (%s) Storage Tier: %s", d.Id(), err)
