@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_elbv2: Add `enable_zonal_shift` support for Application Load Balancers
+```
