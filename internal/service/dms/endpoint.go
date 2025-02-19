@@ -1759,11 +1759,11 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 	}
 
 	for _, task := range tasks {
-		input := dms.TestConnectionInput{
+		testConnectionInput := dms.TestConnectionInput{
 			EndpointArn:            aws.String(arn),
 			ReplicationInstanceArn: task.ReplicationInstanceArn,
 		}
-		_, err := conn.TestConnection(ctx, &input)
+		_, err := conn.TestConnection(ctx, &testConnectionInput)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidResourceStateFault](err, "already being tested") {
 			continue
@@ -1775,7 +1775,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 
 		waiter := dms.NewTestConnectionSucceedsWaiter(conn)
 
-		input := dms.DescribeConnectionsInput{
+		describeConnectionsInput := dms.DescribeConnectionsInput{
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("endpoint-arn"),
@@ -1783,7 +1783,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 				},
 			},
 		}
-		err = waiter.Wait(ctx, &input, maxConnTestWaitTime)
+		err = waiter.Wait(ctx, &describeConnectionsInput, maxConnTestWaitTime)
 
 		if err != nil {
 			return fmt.Errorf("waiting until test connection succeeds: %w", err)
