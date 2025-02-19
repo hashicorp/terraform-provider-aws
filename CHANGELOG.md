@@ -7,7 +7,6 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/aws_elbv2: Add `enable_zonal_shift` support for Application Load Balancers ([#41355](https://github.com/hashicorp/terraform-provider-aws/issues/41355))
 * resource/aws_bedrock_model_invocation_logging_configuration: Add `video_data_delivery_enabled` argument ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
 * resource/aws_db_instance: Add `password_wo` write-only attribute ([#41366](https://github.com/hashicorp/terraform-provider-aws/issues/41366))
 * resource/aws_docdb_cluster: Add `master_password_wo` write-only attribute ([#41413](https://github.com/hashicorp/terraform-provider-aws/issues/41413))
