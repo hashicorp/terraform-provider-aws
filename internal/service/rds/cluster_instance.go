@@ -79,7 +79,6 @@ func resourceClusterInstance() *schema.Resource {
 			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,

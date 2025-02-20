@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_rds_cluster: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) for `cluster_identifier` and `cluster_identifier_prefix`
+resource/aws_rds_cluster_instance: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) for `cluster_identifier`
+```
