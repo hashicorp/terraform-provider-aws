@@ -42,9 +42,9 @@ import (
 func newShardGroupResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &shardGroupResource{}
 
-	r.SetDefaultCreateTimeout(10 * time.Minute)
-	r.SetDefaultUpdateTimeout(10 * time.Minute)
-	r.SetDefaultDeleteTimeout(10 * time.Minute)
+	r.SetDefaultCreateTimeout(45 * time.Minute)
+	r.SetDefaultUpdateTimeout(45 * time.Minute)
+	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
 }
