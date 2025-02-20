@@ -397,7 +397,7 @@ type shardGroupResourceModel struct {
 	DBShardGroupResourceID types.String   `tfsdk:"id"`
 	Endpoint               types.String   `tfsdk:"endpoint"`
 	MaxACU                 types.Float64  `tfsdk:"max_acu"`
-	MinACU                 types.Float64  `tfsdk:"max_acu"`
+	MinACU                 types.Float64  `tfsdk:"min_acu"`
 	PubliclyAccessible     types.Bool     `tfsdk:"publicly_accessible"`
 	Tags                   tftags.Map     `tfsdk:"tags"`
 	TagsAll                tftags.Map     `tfsdk:"tags_all"`
