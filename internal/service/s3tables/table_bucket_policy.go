@@ -37,10 +37,6 @@ type resourceTableBucketPolicy struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceTableBucketPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_s3tables_table_bucket_policy"
-}
-
 func (r *resourceTableBucketPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -58,10 +58,6 @@ type jobQueueResource struct {
 	framework.WithTimeouts
 }
 
-func (*jobQueueResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_batch_job_queue"
-}
-
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Version: 1,

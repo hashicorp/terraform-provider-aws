@@ -42,10 +42,6 @@ type vpcBlockPublicAccessOptionsResource struct {
 	framework.WithImportByID
 }
 
-func (*vpcBlockPublicAccessOptionsResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_block_public_access_options"
-}
-
 func (r *vpcBlockPublicAccessOptionsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

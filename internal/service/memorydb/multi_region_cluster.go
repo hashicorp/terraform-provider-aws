@@ -54,10 +54,6 @@ type multiRegionClusterResource struct {
 	framework.WithTimeouts
 }
 
-func (*multiRegionClusterResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_memorydb_multi_region_cluster"
-}
-
 func (r *multiRegionClusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
