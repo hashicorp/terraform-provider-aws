@@ -93,23 +93,3 @@ type ruleState struct {
 	RuleName types.String `tfsdk:"rule_name"`
 	State    types.String `tfsdk:"state"`
 }
-
-// func findContributorManagedInsightRulesDescription(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRuleDescription]) ([]awstypes.ManagedRuleDescription, error) {
-// 	var output []awstypes.ManagedRuleDescription
-
-// 	paginator := cloudwatch.NewListManagedInsightRulesPaginator(conn, input)
-// 	for paginator.HasMorePages() {
-// 		page, err := paginator.NextPage(ctx)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		for _, rule := range page.ManagedRules {
-// 			if filter(&rule) {
-// 				output = append(output, rule)
-// 			}
-// 		}
-// 	}
-
-// 	return output, nil
-// }

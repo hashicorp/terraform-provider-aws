@@ -354,13 +354,6 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 			if filter(&rule) {
 				output = append(output, rule)
 			}
-			// managedRule := awstypes.ManagedRule{
-			// 	ResourceARN:  v.ResourceARN,
-			// 	TemplateName: v.TemplateName,
-			// }
-			// if filter(&managedRule) {
-			// 	output = append(output, v)
-			// }
 		}
 	}
 
@@ -376,20 +369,6 @@ func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Cli
 	return tfresource.AssertSingleValueResult(output)
 }
 
-// func findContributorManagedInsightRuleByTwoPartKey(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
-// 	input := &cloudwatch.ListManagedInsightRulesInput{
-// 		ResourceARN: aws.String(resourceARN),
-// 	}
-
-// 	output, err := findContributorManagedInsightRule(ctx, conn, input, func(v *awstypes.ManagedRuleDescription) bool {
-// 		return aws.ToString(v.TemplateName) == templateName
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return output, nil
-// }
-
 func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
 	input := &cloudwatch.ListManagedInsightRulesInput{
 		ResourceARN: aws.String(resourceARN),
@@ -402,13 +381,6 @@ func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-
-	// if len(rules) == 0 {
-	// 	return nil, &retry.NotFoundError{
-	// 		LastError:   fmt.Errorf("no matching rule found"),
-	// 		LastRequest: input,
-	// 	}
-	// }
 
 	return rule, nil
 }
