@@ -582,7 +582,7 @@ resource "aws_amplify_domain_association" "test" {
     prefix      = "www"
   }
 
-  wait_for_verification  = %[3]t
+  wait_for_verification = %[3]t
 }
 
 resource "aws_amplify_app" "test" {
