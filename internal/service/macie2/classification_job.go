@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -640,82 +641,73 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.DescribeClassificationJobInput{
-		JobId: aws.String(d.Id()),
-	}
+	output, err := findClassificationJobByID(ctx, conn, d.Id())
 
-	resp, err := conn.DescribeClassificationJob(ctx, input)
-
-	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
-		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job")) {
-		log.Printf("[WARN] Macie ClassificationJob (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Macie Classification Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Macie ClassificationJob (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Macie Classification Job (%s): %s", d.Id(), err)
 	}
 
-	if err = d.Set("custom_data_identifier_ids", flex.FlattenStringValueList(resp.CustomDataIdentifierIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "custom_data_identifier_ids", d.Id(), err)
+	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
+	if err = d.Set("custom_data_identifier_ids", output.CustomDataIdentifierIds); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting custom_data_identifier_ids: %s", err)
 	}
-	if err = d.Set("schedule_frequency", flattenScheduleFrequency(resp.ScheduleFrequency)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "schedule_frequency", d.Id(), err)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("initial_run", output.InitialRun)
+	d.Set("job_arn", output.JobArn)
+	d.Set("job_id", output.JobId)
+	jobStatus := output.JobStatus
+	if jobStatus == awstypes.JobStatusComplete || jobStatus == awstypes.JobStatusIdle || jobStatus == awstypes.JobStatusPaused {
+		jobStatus = awstypes.JobStatusRunning
 	}
-	d.Set("sampling_percentage", resp.SamplingPercentage)
-	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(resp.Name)))
-	d.Set(names.AttrDescription, resp.Description)
-	d.Set("initial_run", resp.InitialRun)
-	d.Set("job_type", resp.JobType)
-	if err = d.Set("s3_job_definition", flattenS3JobDefinition(resp.S3JobDefinition)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "s3_job_definition", d.Id(), err)
+	d.Set("job_status", jobStatus)
+	d.Set("job_type", output.JobType)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	if err = d.Set("s3_job_definition", flattenS3JobDefinition(output.S3JobDefinition)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3_job_definition: %s", err)
+	}
+	d.Set("sampling_percentage", output.SamplingPercentage)
+	if err = d.Set("schedule_frequency", flattenScheduleFrequency(output.ScheduleFrequency)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting schedule_frequency: %s", err)
+	}
+	if err = d.Set("user_paused_details", flattenUserPausedDetails(output.UserPausedDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting user_paused_details: %s", err)
 	}
 
-	setTagsOut(ctx, resp.Tags)
-
-	d.Set("job_id", resp.JobId)
-	d.Set("job_arn", resp.JobArn)
-	status := resp.JobStatus
-	if status == awstypes.JobStatusComplete || status == awstypes.JobStatusIdle || status == awstypes.JobStatusPaused {
-		status = awstypes.JobStatusRunning
-	}
-	d.Set("job_status", string(status))
-	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	if err = d.Set("user_paused_details", flattenUserPausedDetails(resp.UserPausedDetails)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "user_paused_details", d.Id(), err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.UpdateClassificationJobInput{
-		JobId: aws.String(d.Id()),
-	}
-
 	if d.HasChange("job_status") {
-		status := d.Get("job_status").(string)
+		jobStatus := awstypes.JobStatus(d.Get("job_status").(string))
 
-		if status == string(awstypes.JobStatusCancelled) {
-			return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", awstypes.JobStatusCancelled))
+		if jobStatus == awstypes.JobStatusCancelled {
+			return sdkdiag.AppendErrorf(diags, "updating Macie Classification Job (%s): %s", d.Id(), fmt.Errorf("%s status cannot be set", awstypes.JobStatusCancelled))
 		}
 
-		input.JobStatus = awstypes.JobStatus(status)
-	}
+		input := macie2.UpdateClassificationJobInput{
+			JobId:     aws.String(d.Id()),
+			JobStatus: jobStatus,
+		}
 
-	_, err := conn.UpdateClassificationJob(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), err)
+		_, err := conn.UpdateClassificationJob(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Macie Classification Job (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceClassificationJobRead(ctx, d, meta)...)
@@ -723,25 +715,67 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.UpdateClassificationJobInput{
+	input := macie2.UpdateClassificationJobInput{
 		JobId:     aws.String(d.Id()),
 		JobStatus: awstypes.JobStatusCancelled,
 	}
 
-	_, err := conn.UpdateClassificationJob(ctx, input)
+	_, err := conn.UpdateClassificationJob(ctx, &input)
+
+	if isClassificationJobNotFoundError(err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
-			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job") {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting Macie ClassificationJob (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Macie Classification Job (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findClassificationJobByID(ctx context.Context, conn *macie2.Client, id string) (*macie2.DescribeClassificationJobOutput, error) {
+	input := macie2.DescribeClassificationJobInput{
+		JobId: aws.String(id),
+	}
+
+	return findClassificationJob(ctx, conn, &input)
+}
+
+func findClassificationJob(ctx context.Context, conn *macie2.Client, input *macie2.DescribeClassificationJobInput) (*macie2.DescribeClassificationJobOutput, error) {
+	output, err := conn.DescribeClassificationJob(ctx, input)
+
+	if isClassificationJobNotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func isClassificationJobNotFoundError(err error) bool {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job") {
+		return true
+	}
+
+	return false
 }
 
 func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *awstypes.S3JobDefinition {

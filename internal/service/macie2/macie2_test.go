@@ -25,12 +25,12 @@ func TestAccMacie2_serial(t *testing.T) {
 		},
 		"ClassificationJob": {
 			acctest.CtBasic:      testAccClassificationJob_basic,
-			"name_generated":     testAccClassificationJob_Name_Generated,
-			"name_prefix":        testAccClassificationJob_NamePrefix,
+			"name_generated":     testAccClassificationJob_nameGenerated,
+			"name_prefix":        testAccClassificationJob_namePrefix,
 			acctest.CtDisappears: testAccClassificationJob_disappears,
 			"status":             testAccClassificationJob_Status,
 			"complete":           testAccClassificationJob_complete,
-			"tags":               testAccClassificationJob_WithTags,
+			"tags":               testAccClassificationJob_tags,
 			"bucket_criteria":    testAccClassificationJob_BucketCriteria,
 		},
 		"CustomDataIdentifier": {

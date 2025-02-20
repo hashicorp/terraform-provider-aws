@@ -14,5 +14,6 @@ var (
 	ResourceMember                            = resourceMember
 	ResourceOrganizationAdminAccount          = resourceOrganizationAdminAccount
 
-	FindMemberByID = findMemberByID
+	FindClassificationJobByID = findClassificationJobByID
+	FindMemberByID            = findMemberByID
 )
