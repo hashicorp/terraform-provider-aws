@@ -49,7 +49,6 @@ func newShardGroupResource(_ context.Context) (resource.ResourceWithConfigure, e
 
 type shardGroupResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -85,13 +84,18 @@ func (r *shardGroupResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"db_shard_group_resource_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"max_acu": schema.Float64Attribute{
 				Optional: true,
 			},
@@ -132,7 +136,7 @@ func (r *shardGroupResource) Create(ctx context.Context, request resource.Create
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateDBShardGroup(ctx, &input)
+	_, err := conn.CreateDBShardGroup(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating RDS Shard Group (%s)", data.DBShardGroupIdentifier.ValueString()), err.Error())
@@ -141,19 +145,18 @@ func (r *shardGroupResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Set values for unknowns.
-	data.DBShardGroupResourceID = fwflex.StringToFramework(ctx, output.DBShardGroupResourceId)
 
-	shardGroup, err := waitShardGroupCreated(ctx, conn, data.DBShardGroupResourceID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	shardGroup, err := waitShardGroupCreated(ctx, conn, data.DBShardGroupIdentifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.DBShardGroupResourceID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) create", data.DBShardGroupResourceID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) create", data.DBShardGroupIdentifier.ValueString()), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
 	data.DBShardGroupARN = fwflex.StringToFramework(ctx, shardGroup.DBShardGroupArn)
+	data.DBShardGroupResourceID = fwflex.StringToFramework(ctx, shardGroup.DBShardGroupResourceId)
 	data.Endpoint = fwflex.StringToFramework(ctx, shardGroup.Endpoint)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -168,7 +171,7 @@ func (r *shardGroupResource) Read(ctx context.Context, request resource.ReadRequ
 
 	conn := r.Meta().RDSClient(ctx)
 
-	output, err := findDBShardGroupByID(ctx, conn, data.DBShardGroupResourceID.ValueString())
+	output, err := findDBShardGroupByID(ctx, conn, data.DBShardGroupIdentifier.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -178,7 +181,7 @@ func (r *shardGroupResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading RDS Shard Group (%s)", data.DBShardGroupResourceID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading RDS Shard Group (%s)", data.DBShardGroupIdentifier.ValueString()), err.Error())
 
 		return
 	}
@@ -217,13 +220,13 @@ func (r *shardGroupResource) Update(ctx context.Context, request resource.Update
 		_, err := conn.ModifyDBShardGroup(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating RDS Shard Group (%s)", new.DBShardGroupResourceID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating RDS Shard Group (%s)", new.DBShardGroupIdentifier.ValueString()), err.Error())
 
 			return
 		}
 
-		if _, err := waitShardGroupUpdated(ctx, conn, new.DBShardGroupResourceID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) delete", new.DBShardGroupResourceID.ValueString()), err.Error())
+		if _, err := waitShardGroupUpdated(ctx, conn, new.DBShardGroupIdentifier.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) update", new.DBShardGroupIdentifier.ValueString()), err.Error())
 
 			return
 		}
@@ -242,7 +245,7 @@ func (r *shardGroupResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().RDSClient(ctx)
 
 	_, err := conn.DeleteDBShardGroup(ctx, &rds.DeleteDBShardGroupInput{
-		DBShardGroupIdentifier: fwflex.StringFromFramework(ctx, data.DBShardGroupResourceID),
+		DBShardGroupIdentifier: fwflex.StringFromFramework(ctx, data.DBShardGroupIdentifier),
 	})
 
 	if errs.IsA[*awstypes.DBShardGroupNotFoundFault](err) {
@@ -250,16 +253,20 @@ func (r *shardGroupResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting RDS Shard Group (%s)", data.DBShardGroupResourceID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting RDS Shard Group (%s)", data.DBShardGroupIdentifier.ValueString()), err.Error())
 
 		return
 	}
 
-	if _, err := waitShardGroupDeleted(ctx, conn, data.DBShardGroupResourceID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) delete", data.DBShardGroupResourceID.ValueString()), err.Error())
+	if _, err := waitShardGroupDeleted(ctx, conn, data.DBShardGroupIdentifier.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) delete", data.DBShardGroupIdentifier.ValueString()), err.Error())
 
 		return
 	}
+}
+
+func (w *shardGroupResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("db_shard_group_identifier"), request, response)
 }
 
 func (r *shardGroupResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -394,7 +401,7 @@ type shardGroupResourceModel struct {
 	DBClusterIdentifier    types.String   `tfsdk:"db_cluster_identifier"`
 	DBShardGroupARN        types.String   `tfsdk:"arn"`
 	DBShardGroupIdentifier types.String   `tfsdk:"db_shard_group_identifier"`
-	DBShardGroupResourceID types.String   `tfsdk:"id"`
+	DBShardGroupResourceID types.String   `tfsdk:"db_shard_group_resource_id"`
 	Endpoint               types.String   `tfsdk:"endpoint"`
 	MaxACU                 types.Float64  `tfsdk:"max_acu"`
 	MinACU                 types.Float64  `tfsdk:"min_acu"`

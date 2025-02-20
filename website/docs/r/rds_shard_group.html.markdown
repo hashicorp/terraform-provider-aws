@@ -44,6 +44,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the shard group.
+* `db_shard_group_resource_id` - The AWS Region-unique, immutable identifier for the DB shard group.
 * `endpoint` - The connection endpoint for the DB shard group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
