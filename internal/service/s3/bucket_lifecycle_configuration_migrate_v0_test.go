@@ -125,13 +125,13 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 							}),
 						})),
 						// This is checking the change _after_ the state migration step happens
-						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter),
-							checkFilter_Prefix(""),
-							checkFilter_None(),
-						),
 						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("expiration"),
 							checkExpiration_Days(365),
 							checkExpiration_DaysAfterMigration(365),
+						),
+						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter),
+							checkFilter_Prefix(""),
+							checkFilter_None(),
 						),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
