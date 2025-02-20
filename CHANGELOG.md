@@ -1,4 +1,5 @@
-## 5.88.0 (Unreleased)
+## 5.89.0 (Unreleased)
+## 5.88.0 (February 20, 2025)
 
 NOTES:
 
