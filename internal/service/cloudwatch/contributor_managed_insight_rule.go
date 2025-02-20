@@ -332,7 +332,7 @@ type resourceContributorManagedInsightRuleData struct {
 	TagsAll      tftags.Map                     `tfsdk:"tags_all"`
 }
 
-func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRule]) ([]awstypes.ManagedRuleDescription, error) {
+func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRuleDescription]) ([]awstypes.ManagedRuleDescription, error) {
 	var output []awstypes.ManagedRuleDescription
 
 	pages := cloudwatch.NewListManagedInsightRulesPaginator(conn, input)
@@ -350,21 +350,24 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 			return nil, err
 		}
 
-		for _, v := range page.ManagedRules {
-			managedRule := awstypes.ManagedRule{
-				ResourceARN:  v.ResourceARN,
-				TemplateName: v.TemplateName,
+		for _, rule := range page.ManagedRules {
+			if filter(&rule) {
+				output = append(output, rule)
 			}
-			if filter(&managedRule) {
-				output = append(output, v)
-			}
+			// managedRule := awstypes.ManagedRule{
+			// 	ResourceARN:  v.ResourceARN,
+			// 	TemplateName: v.TemplateName,
+			// }
+			// if filter(&managedRule) {
+			// 	output = append(output, v)
+			// }
 		}
 	}
 
 	return output, nil
 }
 
-func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRule]) (*awstypes.ManagedRuleDescription, error) {
+func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRuleDescription]) (*awstypes.ManagedRuleDescription, error) {
 	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
 	if err != nil {
 		return nil, err
@@ -373,29 +376,26 @@ func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Cli
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findContributorManagedInsightRuleByTwoPartKey(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRule, error) {
-	input := &cloudwatch.ListManagedInsightRulesInput{
-		ResourceARN: aws.String(resourceARN),
-	}
+// func findContributorManagedInsightRuleByTwoPartKey(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
+// 	input := &cloudwatch.ListManagedInsightRulesInput{
+// 		ResourceARN: aws.String(resourceARN),
+// 	}
 
-	output, err := findContributorManagedInsightRule(ctx, conn, input, func(v *awstypes.ManagedRule) bool {
-		return aws.ToString(v.TemplateName) == templateName
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &awstypes.ManagedRule{
-		ResourceARN:  output.ResourceARN,
-		TemplateName: output.TemplateName,
-	}, nil
-}
+// 	output, err := findContributorManagedInsightRule(ctx, conn, input, func(v *awstypes.ManagedRuleDescription) bool {
+// 		return aws.ToString(v.TemplateName) == templateName
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return output, nil
+// }
 
 func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
 	input := &cloudwatch.ListManagedInsightRulesInput{
 		ResourceARN: aws.String(resourceARN),
 	}
 
-	rules, err := findContributorManagedInsightRules(ctx, conn, input, func(v *awstypes.ManagedRule) bool {
+	rule, err := findContributorManagedInsightRule(ctx, conn, input, func(v *awstypes.ManagedRuleDescription) bool {
 		return aws.ToString(v.TemplateName) == templateName
 	})
 
@@ -403,12 +403,12 @@ func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Cont
 		return nil, err
 	}
 
-	if len(rules) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   fmt.Errorf("no matching rule found"),
-			LastRequest: input,
-		}
-	}
+	// if len(rules) == 0 {
+	// 	return nil, &retry.NotFoundError{
+	// 		LastError:   fmt.Errorf("no matching rule found"),
+	// 		LastRequest: input,
+	// 	}
+	// }
 
-	return &rules[0], nil
+	return rule, nil
 }
