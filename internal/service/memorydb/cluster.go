@@ -294,7 +294,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &memorydb.CreateClusterInput{
+	input := memorydb.CreateClusterInput{
 		ACLName:                 aws.String(d.Get("acl_name").(string)),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
@@ -369,7 +369,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SubnetGroupName = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateCluster(ctx, input)
+	_, err := conn.CreateCluster(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Cluster (%s): %s", name, err)
@@ -468,7 +468,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		waitParameterGroupInSync := false
 		waitSecurityGroupsActive := false
 
-		input := &memorydb.UpdateClusterInput{
+		input := memorydb.UpdateClusterInput{
 			ClusterName: aws.String(d.Id()),
 		}
 
@@ -546,7 +546,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		_, err := conn.UpdateCluster(ctx, input)
+		_, err := conn.UpdateCluster(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MemoryDB Cluster (%s): %s", d.Id(), err)
@@ -576,7 +576,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	input := &memorydb.DeleteClusterInput{
+	input := memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
@@ -589,7 +589,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Get(names.AttrName).(string))
-	_, err := conn.DeleteCluster(ctx, input)
+	_, err := conn.DeleteCluster(ctx, &input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
@@ -607,12 +607,12 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func findClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Cluster, error) {
-	input := &memorydb.DescribeClustersInput{
+	input := memorydb.DescribeClustersInput{
 		ClusterName:      aws.String(name),
 		ShowShardDetails: aws.Bool(true),
 	}
 
-	return findCluster(ctx, conn, input)
+	return findCluster(ctx, conn, &input)
 }
 
 func findCluster(ctx context.Context, conn *memorydb.Client, input *memorydb.DescribeClustersInput) (*awstypes.Cluster, error) {

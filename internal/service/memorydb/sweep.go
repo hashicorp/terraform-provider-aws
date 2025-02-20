@@ -70,10 +70,10 @@ func sweepACLs(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeACLsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeACLsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeACLsPaginator(conn, input)
+	pages := memorydb.NewDescribeACLsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -118,10 +118,10 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeClustersInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeClustersInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeClustersPaginator(conn, input)
+	pages := memorydb.NewDescribeClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -161,10 +161,10 @@ func sweepParameterGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeParameterGroupsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeParameterGroupsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeParameterGroupsPaginator(conn, input)
+	pages := memorydb.NewDescribeParameterGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -209,10 +209,10 @@ func sweepSnapshots(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeSnapshotsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeSnapshotsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeSnapshotsPaginator(conn, input)
+	pages := memorydb.NewDescribeSnapshotsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -250,10 +250,10 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeSubnetGroupsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeSubnetGroupsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeSubnetGroupsPaginator(conn, input)
+	pages := memorydb.NewDescribeSubnetGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -298,10 +298,10 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeUsersInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeUsersInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeUsersPaginator(conn, input)
+	pages := memorydb.NewDescribeUsersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
