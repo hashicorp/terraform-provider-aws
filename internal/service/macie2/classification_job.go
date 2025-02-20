@@ -32,7 +32,7 @@ import (
 )
 
 // @SDKResource("aws_macie2_classification_job", name="Classification Job")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="job_arn")
 func resourceClassificationJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationJobCreate,

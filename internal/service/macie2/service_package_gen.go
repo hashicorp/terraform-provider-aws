@@ -42,7 +42,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceClassificationJob,
 			TypeName: "aws_macie2_classification_job",
 			Name:     "Classification Job",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "job_arn",
+			},
 		},
 		{
 			Factory:  resourceCustomDataIdentifier,
