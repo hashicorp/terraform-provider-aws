@@ -62,11 +62,6 @@ func (d *dataSourceContributorManagedInsightRules) Read(ctx context.Context, req
 	}
 
 	filter := tfslices.PredicateTrue[*awstypes.ManagedRuleDescription]()
-	if !data.ResourceARN.IsNull() {
-		filter = func(v *awstypes.ManagedRuleDescription) bool {
-			return aws.ToString(v.ResourceARN) == resourceARN
-		}
-	}
 
 	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
 	if err != nil {
