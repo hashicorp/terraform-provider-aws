@@ -369,7 +369,7 @@ func statusShardGroup(ctx context.Context, conn *rds.Client, id string) retry.St
 }
 
 const (
-	shardGroupStatusActive    = "active"
+	shardGroupStatusAvailable = "available"
 	shardGroupStatusCreating  = "creating"
 	shardGroupStatusDeleting  = "deleting"
 	shardGroupStatusModifying = "modifying"
@@ -378,7 +378,7 @@ const (
 func waitShardGroupCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.DBShardGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{shardGroupStatusCreating},
-		Target:  []string{shardGroupStatusActive},
+		Target:  []string{shardGroupStatusAvailable},
 		Refresh: statusShardGroup(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -398,10 +398,10 @@ func waitShardGroupUpdated(ctx context.Context, conn *rds.Client, id string, tim
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{shardGroupStatusModifying},
-		Target:  []string{shardGroupStatusActive},
+		Target:  []string{shardGroupStatusAvailable},
 		Refresh: statusShardGroup(ctx, conn, id),
-		Timeout: timeout,
 		Delay:   delay,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -414,10 +414,14 @@ func waitShardGroupUpdated(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 func waitShardGroupDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.DBShardGroup, error) {
+	const (
+		delay = 1 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{shardGroupStatusDeleting, shardGroupStatusActive},
+		Pending: []string{shardGroupStatusDeleting},
 		Target:  []string{},
 		Refresh: statusShardGroup(ctx, conn, id),
+		Delay:   delay,
 		Timeout: timeout,
 	}
 
