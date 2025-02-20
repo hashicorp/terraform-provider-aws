@@ -85,7 +85,7 @@ func (r *shardGroupResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -98,7 +98,7 @@ func (r *shardGroupResource) Schema(ctx context.Context, request resource.Schema
 			"min_acu": schema.Float64Attribute{
 				Optional: true,
 			},
-			"publicly_accessible": schema.BoolAttribute{
+			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

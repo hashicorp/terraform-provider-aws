@@ -3385,7 +3385,7 @@ func TestAccRDSCluster_auroraLimitless(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_interval"), knownvalue.Int64Exact(5)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(31)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_type"), knownvalue.StringExact("aurora-iopt1")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStorageType), knownvalue.StringExact("aurora-iopt1")),
 				},
 			},
 		},
