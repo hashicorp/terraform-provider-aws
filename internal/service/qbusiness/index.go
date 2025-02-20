@@ -492,7 +492,7 @@ func statusIndex(ctx context.Context, conn *qbusiness.Client, index_id string) r
 	}
 }
 
-func waitIndexActive(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
+func waitIndexActive(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
 		Target:     enum.Slice(awstypes.IndexStatusActive),
