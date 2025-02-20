@@ -255,8 +255,8 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", d.Id(), err)
 		}
 
-		// Ensuring Thread Sleeps for 10 seconds before Setting version as default version
-		time.Sleep(10 * time.Second)
+		// Ensuring Thread Sleeps for 5 seconds before Setting version as default version
+		time.Sleep(5 * time.Second)
 		policyInput := &iam.SetDefaultPolicyVersionInput{
 			PolicyArn: aws.String(d.Id()),
 			VersionId: policyVersionOutput.PolicyVersion.VersionId,
