@@ -122,9 +122,10 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Id()
 
-	resp, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
+	input := appintegrations.GetEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	resp, err := conn.GetEventIntegration(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] AppIntegrations Event Integration (%s) not found, removing from state", d.Id())
@@ -162,10 +163,11 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 	name := d.Id()
 
 	if d.HasChange(names.AttrDescription) {
-		_, err := conn.UpdateEventIntegration(ctx, &appintegrations.UpdateEventIntegrationInput{
+		input := appintegrations.UpdateEventIntegrationInput{
 			Name:        aws.String(name),
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-		})
+		}
+		_, err := conn.UpdateEventIntegration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventIntegration (%s): %s", d.Id(), err)
@@ -182,9 +184,10 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Id()
 
-	_, err := conn.DeleteEventIntegration(ctx, &appintegrations.DeleteEventIntegrationInput{
+	input := appintegrations.DeleteEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteEventIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

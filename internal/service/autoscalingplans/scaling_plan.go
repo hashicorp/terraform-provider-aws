@@ -437,10 +437,11 @@ func resourceScalingPlanDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Scaling Plan: %s", d.Id())
-	_, err = conn.DeleteScalingPlan(ctx, &autoscalingplans.DeleteScalingPlanInput{
+	input := autoscalingplans.DeleteScalingPlanInput{
 		ScalingPlanName:    aws.String(scalingPlanName),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
-	})
+	}
+	_, err = conn.DeleteScalingPlan(ctx, &input)
 
 	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
 		return diags

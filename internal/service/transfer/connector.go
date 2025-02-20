@@ -266,9 +266,10 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Connector: %s", d.Id())
-	_, err := conn.DeleteConnector(ctx, &transfer.DeleteConnectorInput{
+	input := transfer.DeleteConnectorInput{
 		ConnectorId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConnector(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

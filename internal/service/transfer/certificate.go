@@ -184,9 +184,10 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Certificate: %s", d.Id())
-	_, err := conn.DeleteCertificate(ctx, &transfer.DeleteCertificateInput{
+	input := transfer.DeleteCertificateInput{
 		CertificateId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCertificate(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -17,6 +17,10 @@ type mockWriteOnlyAttrGetter struct {
 	value cty.Value
 }
 
+func (m *mockWriteOnlyAttrGetter) Get(string) any {
+	return nil
+}
+
 func (m *mockWriteOnlyAttrGetter) GetRawConfigAt(path cty.Path) (cty.Value, diag.Diagnostics) {
 	if !path.Equals(m.path) {
 		return cty.NilVal, diag.Diagnostics{
@@ -29,6 +33,12 @@ func (m *mockWriteOnlyAttrGetter) GetRawConfigAt(path cty.Path) (cty.Value, diag
 		}
 	}
 	return m.value, nil
+}
+
+func (m *mockWriteOnlyAttrGetter) GetRawConfig() cty.Value {
+	return cty.MapVal(map[string]cty.Value{
+		"has_write_only_value": cty.BoolVal(true),
+	})
 }
 
 func (m *mockWriteOnlyAttrGetter) Id() string {
@@ -90,21 +100,18 @@ func TestGetWriteOnlyStringValue(t *testing.T) {
 	testCases := map[string]struct {
 		input         cty.Path
 		setPath       cty.Path
-		inputType     cty.Type
 		value         cty.Value
 		expectedValue string
 	}{
 		"valid value": {
 			input:         cty.GetAttrPath("test_path"),
 			setPath:       cty.GetAttrPath("test_path"),
-			inputType:     cty.String,
 			value:         cty.StringVal("test_value"),
 			expectedValue: "test_value",
 		},
 		"value empty string": {
 			input:         cty.GetAttrPath("test_path"),
 			setPath:       cty.GetAttrPath("test_path"),
-			inputType:     cty.String,
 			value:         cty.StringVal(""),
 			expectedValue: "",
 		},
@@ -118,7 +125,7 @@ func TestGetWriteOnlyStringValue(t *testing.T) {
 				path:  testCase.setPath,
 				value: testCase.value,
 			}
-			value, diags := flex.GetWriteOnlyStringValue(&m, testCase.input, testCase.inputType)
+			value, diags := flex.GetWriteOnlyStringValue(&m, testCase.input)
 
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %v", diags)

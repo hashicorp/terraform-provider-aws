@@ -461,10 +461,11 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting Appsync Data Source: %s", d.Id())
-	_, err = conn.DeleteDataSource(ctx, &appsync.DeleteDataSourceInput{
+	input := appsync.DeleteDataSourceInput{
 		ApiId: aws.String(apiID),
 		Name:  aws.String(name),
-	})
+	}
+	_, err = conn.DeleteDataSource(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

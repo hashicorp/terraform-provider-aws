@@ -13,9 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -916,6 +918,37 @@ func TestAccRedshiftCluster_multiAZ(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftCluster_passwordWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.RedshiftServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_passwordWriteOnly(rName, "Mustbe8characters", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				Config: testAccClusterConfig_passwordWriteOnly(rName, "Mustbe8charactersupdated", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
@@ -1082,6 +1115,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+  encrypted                           = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   multi_az                            = false
@@ -1859,4 +1893,24 @@ resource "aws_redshift_cluster" "test" {
   multi_az                             = %[2]t
 }
 `, rName, enabled))
+}
+
+func testAccClusterConfig_passwordWriteOnly(rName, password string, passwordVersion int) string {
+	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  encrypted                           = true
+  master_username                     = "foo_test"
+  master_password_wo                  = %[2]q
+  master_password_wo_version          = %[3]d
+  multi_az                            = false
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rName, password, passwordVersion))
 }

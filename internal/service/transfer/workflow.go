@@ -757,9 +757,10 @@ func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Workflow: %s", d.Id())
-	_, err := conn.DeleteWorkflow(ctx, &transfer.DeleteWorkflowInput{
+	input := transfer.DeleteWorkflowInput{
 		WorkflowId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteWorkflow(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -166,9 +166,10 @@ func (r *connectionAliasResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().WorkSpacesClient(ctx)
 
-	_, err := conn.DeleteConnectionAlias(ctx, &workspaces.DeleteConnectionAliasInput{
+	input := workspaces.DeleteConnectionAliasInput{
 		AliasId: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteConnectionAlias(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

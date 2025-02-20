@@ -221,11 +221,12 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &bedrockagent.DisassociateAgentKnowledgeBaseInput{
+	input := bedrockagent.DisassociateAgentKnowledgeBaseInput{
 		AgentId:         fwflex.StringFromFramework(ctx, data.AgentID),
 		AgentVersion:    fwflex.StringFromFramework(ctx, data.AgentVersion),
 		KnowledgeBaseId: fwflex.StringFromFramework(ctx, data.KnowledgeBaseID),
-	})
+	}
+	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
