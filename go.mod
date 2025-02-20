@@ -21,7 +21,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.19
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/amp v1.31.2
-	github.com/aws/aws-sdk-go-v2/service/amplify v1.29.0
+	github.com/aws/aws-sdk-go-v2/service/amplify v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.11
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.36.12
