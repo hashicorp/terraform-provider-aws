@@ -81,8 +81,8 @@ github.com/aws/aws-sdk-go-v2/service/appstream v1.43.3 h1:+SpyKbbzHIR10I5o+yXS1n
 github.com/aws/aws-sdk-go-v2/service/appstream v1.43.3/go.mod h1:AiO9+glo6SscLNe2SXsWmgz83EbRffK4i4GyPV3AdYE=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.43.1 h1:Q6vQvqjA1TuKKCGXNng0lzdpCwnk3XAcmyrKp2I0aa8=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.43.1/go.mod h1:0GoWXybWOdWPzEbEitHBH5m3bzLnC9cQ8eoK65tJnjU=
-github.com/aws/aws-sdk-go-v2/service/athena v1.49.10 h1:ZmeifAscJrXrNrbtwwDRHUBuingJeXuzt5Is/tgkrq0=
-github.com/aws/aws-sdk-go-v2/service/athena v1.49.10/go.mod h1:EdOpoTphKVuE17FbNbOCXSOMovKjAlqtUlW3veeKhJM=
+github.com/aws/aws-sdk-go-v2/service/athena v1.49.11 h1:Y5Wbvb1HtBO3cEadojAf/0WGhKw2tw9iwoTOumYrqt0=
+github.com/aws/aws-sdk-go-v2/service/athena v1.49.11/go.mod h1:WR3FsLKUu8ZQaxtFmWybgKig5F5VtReCoOm1jyqkVnU=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.15 h1:6IGiaxr5FVTqeZLPyCo6DNE+LvYtaih2WfsLgZYvqYM=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.15/go.mod h1:rbNroxNZJ6MJHy4k4vbJZA/ZkQh1h6TvA4Y9RkdXcKs=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.12 h1:Bfz5hDqAgm9NByWdA0zfof70CVkjb6SE3RwU75lj66Y=
