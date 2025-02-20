@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,10 +29,7 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_memorydb_cluster", &resource.Sweeper{
-		Name: "aws_memorydb_cluster",
-		F:    sweepClusters,
-	})
+	awsv2.Register("aws_memorydb_cluster", sweepClusters)
 
 	awsv2.Register("aws_memorydb_multi_region_cluster", sweepMultiRegionClusters,
 		"aws_memorydb_cluster",
@@ -118,47 +116,31 @@ func sweepACLs(region string) error {
 	return nil
 }
 
-func sweepClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.MemoryDBClient(ctx)
-	input := memorydb.DescribeClustersInput{}
-	var sweepResources []sweep.Sweepable
 
+	var sweepResources []sweep.Sweepable
+	r := resourceCluster()
+
+	input := memorydb.DescribeClustersInput{}
 	pages := memorydb.NewDescribeClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Clusters {
-			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
 			d.Set(names.AttrName, v.Name)
 			d.Set("multi_region_cluster_name", v.MultiRegionClusterName)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping MemoryDB Clusters (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepMultiRegionClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
