@@ -115,15 +115,18 @@ func resourceClassificationJob() *schema.Resource {
 							ConflictsWith: []string{"s3_job_definition.0.bucket_criteria"},
 							Type:          schema.TypeList,
 							Optional:      true,
+							ForceNew:      true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"buckets": {
 										Type:     schema.TypeList,
 										Required: true,
+										ForceNew: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
@@ -134,6 +137,7 @@ func resourceClassificationJob() *schema.Resource {
 							Type:          schema.TypeList,
 							Optional:      true,
 							Computed:      true,
+							ForceNew:      true,
 							MaxItems:      1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -141,6 +145,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -148,12 +153,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_criterion": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -161,18 +168,21 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																	},
 																},
@@ -181,6 +191,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -188,22 +199,26 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -221,6 +236,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -228,12 +244,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_criterion": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -241,18 +259,21 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																	},
 																},
@@ -261,6 +282,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -268,22 +290,26 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -304,6 +330,7 @@ func resourceClassificationJob() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -311,6 +338,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -318,12 +346,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_scope_term": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -331,18 +361,21 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.ScopeFilterKey](),
 																		},
 																	},
@@ -352,6 +385,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -359,23 +393,27 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -384,12 +422,14 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
+																			ForceNew:     true,
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
 																		names.AttrTarget: {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
@@ -405,6 +445,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -412,12 +453,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_scope_term": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -425,17 +468,20 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																	},
 																},
@@ -444,6 +490,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -451,21 +498,25 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -474,12 +525,14 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
+																			ForceNew:     true,
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
 																		names.AttrTarget: {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
@@ -507,25 +560,28 @@ func resourceClassificationJob() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				MaxItems: 1,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily_schedule": {
 							Type:          schema.TypeBool,
 							Optional:      true,
+							ForceNew:      true,
 							ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
 						},
 						"weekly_schedule": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
+							ForceNew:      true,
 							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
 						},
 						"monthly_schedule": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Computed:      true,
+							ForceNew:      true,
 							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
 						},
 					},
