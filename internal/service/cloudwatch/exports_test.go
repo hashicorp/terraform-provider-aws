@@ -17,6 +17,5 @@ var (
 	FindMetricAlarmByName                                      = findMetricAlarmByName
 	FindMetricStreamByName                                     = findMetricStreamByName
 	FindContributorInsightRuleByName                           = findContributorInsightRuleByName
-	FindContributorManagedInsightRuleByTwoPartKey              = findContributorManagedInsightRuleByTwoPartKey
 	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
 )
