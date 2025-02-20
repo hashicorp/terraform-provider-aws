@@ -1,5 +1,9 @@
 ## 5.88.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_service_thing: A warning diagnostic has been added for configurations where `rule.exipration.expired_object_delete_marker` is set with either `rule.exipration.date` or `rule.exipration.days`. While historically the provider allowed this invalid configuration, the migration of this resource to the Terraform Plugin Framework in `v5.86.0` resulted in this misconfiguration surfacing as a hard `inconsistent result after apply` error. This diagnostic aims to direct users how to resolve the issue at plan time. See [this issue comment](https://github.com/hashicorp/terraform-provider-aws/issues/41277#issuecomment-2654728812) for additional context. ([#41462](https://github.com/hashicorp/terraform-provider-aws/issues/41462))
+
 FEATURES:
 
 * **New Resource:** `aws_cloudwatch_contributor_managed_insight_rule` ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
@@ -17,6 +21,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_amplify_domain_association: Prevents unexpected state error when creating with multiple `sub_domain` ([#36961](https://github.com/hashicorp/terraform-provider-aws/issues/36961))
 * resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true` ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
 * resource/aws_cloudwatch_contributor_insight_rule: Fix enable/disable rule state ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
 * resource/aws_dynamodb_table: Fixes long delay in creation of replicas ([#41451](https://github.com/hashicorp/terraform-provider-aws/issues/41451))
