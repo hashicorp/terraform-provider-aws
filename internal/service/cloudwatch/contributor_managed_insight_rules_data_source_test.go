@@ -34,7 +34,10 @@ func TestAccCloudWatchContributorManagedInsightRulesDataSource_basic(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "managed_rules.#", "4"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceARN, vpcResource, names.AttrARN),
-					resource.TestCheckResourceAttrSet(dataSourceName, "managed_rules.0.template_name"),
+					resource.TestCheckResourceAttr(dataSourceName, "managed_rules.0.template_name", "VpcEndpointService-NewConnectionsByEndpointId-v1"),
+					resource.TestCheckResourceAttr(dataSourceName, "managed_rules.1.template_name", "VpcEndpointService-BytesByEndpointId-v1"),
+					resource.TestCheckResourceAttr(dataSourceName, "managed_rules.2.template_name", "VpcEndpointService-RstPacketsByEndpointId-v1"),
+					resource.TestCheckResourceAttr(dataSourceName, "managed_rules.3.template_name", "VpcEndpointService-ActiveConnectionsByEndpointId-v1"),
 				),
 			},
 		},
@@ -42,37 +45,9 @@ func TestAccCloudWatchContributorManagedInsightRulesDataSource_basic(t *testing.
 }
 
 func testAccContributorManagedInsightRulesDataSourceConfig_basic(rName string, count int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = %[2]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
 resource "aws_lb" "test" {
   count = %[2]d
 
@@ -98,5 +73,5 @@ resource "aws_vpc_endpoint_service" "test" {
 data "aws_cloudwatch_contributor_managed_insight_rules" "test" {
   resource_arn = aws_vpc_endpoint_service.test.arn
 }
-`, rName, count)
+`, rName, count))
 }

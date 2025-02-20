@@ -6,7 +6,9 @@ package cloudwatch
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,26 +56,37 @@ func (d *dataSourceContributorManagedInsightRules) Read(ctx context.Context, req
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	resourceARN := data.ResourceARN.ValueString()
+	input := &cloudwatch.ListManagedInsightRulesInput{
+		ResourceARN: aws.String(resourceARN),
+	}
 
-	paginator := cloudwatch.NewListManagedInsightRulesPaginator(conn, &cloudwatch.ListManagedInsightRulesInput{
-		ResourceARN: data.ResourceARN.ValueStringPointer(),
-	})
+	filter := tfslices.PredicateTrue[*awstypes.ManagedRuleDescription]()
+	if !data.ResourceARN.IsNull() {
+		filter = func(v *awstypes.ManagedRuleDescription) bool {
+			return aws.ToString(v.ResourceARN) == resourceARN
+		}
+	}
 
-	var out cloudwatch.ListManagedInsightRulesOutput
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionReading, ResNameContributorManagedInsightRule, data.ResourceARN.String(), err)
-			return
-		}
+	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionReading, DSNameContributorManagedInsightRules, data.ResourceARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-		if page != nil && len(page.ManagedRules) > 0 {
-			out.ManagedRules = append(out.ManagedRules, page.ManagedRules...)
-		}
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(fwflex.Flatten(
+		ctx,
+		struct {
+			ManagedRules []awstypes.ManagedRuleDescription
+		}{
+			ManagedRules: output,
+		},
+		&data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -84,9 +98,9 @@ type dataSourceContributorManagedInsightRulesData struct {
 }
 
 type managedRuleDescription struct {
-	ResourceARN  types.String                     `tfsdk:"resource_arn"`
-	RuleState    fwtypes.ObjectValueOf[ruleState] `tfsdk:"rule_state"`
-	TemplateName types.String                     `tfsdk:"template_name"`
+	ResourceARN  types.String                               `tfsdk:"resource_arn"`
+	RuleState    fwtypes.ListNestedObjectValueOf[ruleState] `tfsdk:"rule_state"`
+	TemplateName types.String                               `tfsdk:"template_name"`
 }
 
 type ruleState struct {
