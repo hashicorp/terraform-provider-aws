@@ -95,12 +95,15 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1,
-				[]fwtypes.ListNestedObjectOfOption[s3DeliveryConfigurationModel]{fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality)}, listplanmodifier.UseStateForUnknown()),
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
+			names.AttrTags:              tftags.TagsAttribute(),
+			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
 		},
 	}
+}
+
+var s3DeliveryConfigurationListOptions = []fwtypes.ListNestedObjectOfOption[s3DeliveryConfigurationModel]{
+	fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality),
 }
 
 func s3DeliverySemanticEquality(ctx context.Context, oldValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel], newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
