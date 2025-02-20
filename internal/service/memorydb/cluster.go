@@ -724,10 +724,12 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name strin
 
 func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusDeleting},
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, name),
-		Timeout: timeout,
+		Pending:      []string{clusterStatusDeleting},
+		Target:       []string{},
+		Refresh:      statusCluster(ctx, conn, name),
+		Timeout:      timeout,
+		Delay:        5 * time.Minute,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
