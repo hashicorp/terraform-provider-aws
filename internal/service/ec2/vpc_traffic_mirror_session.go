@@ -232,9 +232,10 @@ func resourceTrafficMirrorSessionDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Session: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorSession(ctx, &ec2.DeleteTrafficMirrorSessionInput{
+	input := ec2.DeleteTrafficMirrorSessionInput{
 		TrafficMirrorSessionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorSession(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorSessionIdNotFound) {
 		return diags

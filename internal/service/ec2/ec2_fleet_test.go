@@ -3198,12 +3198,12 @@ func testAccCheckFleetHistory(ctx context.Context, resourceName string, errorMsg
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		input := &ec2.DescribeFleetHistoryInput{
+		input := ec2.DescribeFleetHistoryInput{
 			FleetId:   aws.String(rs.Primary.ID),
 			StartTime: aws.Time(time.Now().Add(time.Hour * -2)),
 		}
 
-		output, err := conn.DescribeFleetHistory(ctx, input)
+		output, err := conn.DescribeFleetHistory(ctx, &input)
 
 		if err != nil {
 			return err
@@ -3301,11 +3301,11 @@ func testAccCheckFleetRecreated(i, j *awstypes.FleetData) resource.TestCheckFunc
 func testAccPreCheckFleet(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeFleetsInput{
+	input := ec2.DescribeFleetsInput{
 		MaxResults: aws.Int32(1),
 	}
 
-	_, err := conn.DescribeFleets(ctx, input)
+	_, err := conn.DescribeFleets(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

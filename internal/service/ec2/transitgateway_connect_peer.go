@@ -212,9 +212,10 @@ func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect Peer: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayConnectPeer(ctx, &ec2.DeleteTransitGatewayConnectPeerInput{
+	input := ec2.DeleteTransitGatewayConnectPeerInput{
 		TransitGatewayConnectPeerId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayConnectPeer(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayConnectPeerIDNotFound) {
 		return diags
