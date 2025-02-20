@@ -69,8 +69,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
 				),
 			},
@@ -1106,8 +1105,7 @@ func TestAccMemoryDBCluster_valkeyEngine(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
 				),
 			},
@@ -1217,10 +1215,6 @@ func testAccClusterConfig_basic(rName string) string {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_memorydb_cluster" "test" {
@@ -1232,10 +1226,6 @@ resource "aws_memorydb_cluster" "test" {
   security_group_ids         = [aws_security_group.test.id]
   snapshot_retention_limit   = 7
   subnet_group_name          = aws_memorydb_subnet_group.test.id
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName),
 	)
@@ -1249,10 +1239,6 @@ func testAccClusterConfig_engine(rName, engine, engineVersion string) string {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_memorydb_cluster" "test" {
@@ -1266,10 +1252,6 @@ resource "aws_memorydb_cluster" "test" {
   security_group_ids         = [aws_security_group.test.id]
   snapshot_retention_limit   = 7
   subnet_group_name          = aws_memorydb_subnet_group.test.id
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, engine, engineVersion),
 	)
@@ -1408,10 +1390,6 @@ func testAccClusterConfig_multiRegionClusterName(rName string) string {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_memorydb_multi_region_cluster" "test" {
@@ -1577,10 +1555,6 @@ resource "aws_security_group" "test" {
 
   vpc_id = aws_vpc.test.id
   name   = "%[1]s-${count.index}"
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_memorydb_cluster" "test" {
