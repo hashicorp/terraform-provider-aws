@@ -4,6 +4,7 @@
 package memorydb
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -11,8 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,6 +32,10 @@ func RegisterSweepers() {
 		Name: "aws_memorydb_cluster",
 		F:    sweepClusters,
 	})
+
+	awsv2.Register("aws_memorydb_multi_region_cluster", sweepMultiRegionClusters,
+		"aws_memorydb_cluster",
+	)
 
 	resource.AddTestSweepers("aws_memorydb_parameter_group", &resource.Sweeper{
 		Name: "aws_memorydb_parameter_group",
@@ -152,6 +159,29 @@ func sweepClusters(region string) error {
 	}
 
 	return nil
+}
+
+func sweepMultiRegionClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.MemoryDBClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	input := memorydb.DescribeMultiRegionClustersInput{}
+	pages := memorydb.NewDescribeMultiRegionClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, clusters := range page.MultiRegionClusters {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMultiRegionClusterResource, client,
+				framework.NewAttribute("multi_region_cluster_name", clusters.MultiRegionClusterName),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepParameterGroups(region string) error {
