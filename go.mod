@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.11
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.16
 	github.com/aws/aws-sdk-go-v2/service/oam v1.15.19
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.11
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.12
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.16
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.37.8
