@@ -90,37 +90,34 @@ If an AWS service must be customized after creation, for example, retry handling
 1. Add a file `internal/<service>/service_package.go` that contains an API client customization function, for example:
 
 ```go
-package shield
+package apigateway
 
 import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/shield"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield.Client, error) {
+func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]any) []func(*apigateway.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return shield.NewFromConfig(cfg,
-		shield.WithEndpointResolverV2(newEndpointResolverV2()),
-		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-		func(o *shield.Options) {
-			// Force "global" services to correct Regions.
-			if config["partition"].(string) == endpoints.AwsPartitionID {
-				if cfg.Region != names.USEast1RegionID {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
-						"override_region": names.USEast1RegionID,
-					})
-					o.Region = names.USEast1RegionID
+	return []func(*apigateway.Options){
+		func(o *apigateway.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				// Many operations can return an error such as:
+				//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
+				// Handle them all globally for the service client.
+				if errs.IsAErrorMessageContains[*types.ConflictException](err, "try again later") {
+					return aws.TrueTernary
 				}
-			}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
 		},
-	), nil
+	}
 }
 ```

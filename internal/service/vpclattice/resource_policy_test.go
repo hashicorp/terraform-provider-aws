@@ -95,9 +95,10 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			policy, err := conn.GetResourcePolicy(ctx, &vpclattice.GetResourcePolicyInput{
+			input := vpclattice.GetResourcePolicyInput{
 				ResourceArn: aws.String(rs.Primary.ID),
-			})
+			}
+			policy, err := conn.GetResourcePolicy(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if errors.As(err, &nfe) {
@@ -127,9 +128,10 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetResourcePolicy(ctx, &vpclattice.GetResourcePolicyInput{
+		input := vpclattice.GetResourcePolicyInput{
 			ResourceArn: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetResourcePolicy(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameResourcePolicy, rs.Primary.ID, err)

@@ -397,10 +397,11 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Stage: %s", d.Id())
-	_, err := conn.DeleteStage(ctx, &apigatewayv2.DeleteStageInput{
+	input := apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStage(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

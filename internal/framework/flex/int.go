@@ -77,12 +77,37 @@ func Int32FromFramework(ctx context.Context, v basetypes.Int64Valuable) *int32 {
 	return output
 }
 
-// Int32ValueFromFramework coverts a Framework Int64 value to an int32 pointer.
+// Int32FromFrameworkInt32 coverts a Framework Int32 value to an int32 pointer.
+// A null Int32 is converted to a nil int32 pointer.
+// TODO: Rename to Int32FromFramework
+func Int32FromFrameworkInt32(ctx context.Context, v basetypes.Int32Valuable) *int32 {
+	var output *int32
+
+	must(Expand(ctx, v, &output))
+
+	return output
+}
+
+// Int32ValueFromFrameworkInt64 coverts a Framework Int64 value to an int32 value.
 // A null Int64 is converted to a nil int32 pointer.
-func Int32ValueFromFramework(ctx context.Context, v basetypes.Int64Valuable) int32 {
+func Int32ValueFromFrameworkInt64(ctx context.Context, v basetypes.Int64Valuable) int32 {
 	var output int32
 
 	must(Expand(ctx, v, &output))
 
 	return output
+}
+
+var Int32ValueFromFramework = Int32ValueFromFrameworkInt64
+
+func ZeroInt32AsNull(v types.Int32) types.Int32 {
+	if v.IsNull() || v.IsUnknown() {
+		return v
+	}
+
+	if v.ValueInt32() == 0 {
+		return types.Int32Null()
+	}
+
+	return v
 }

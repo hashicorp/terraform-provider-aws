@@ -531,10 +531,11 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
 	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
-	_, err := conn.UpdateComputeEnvironment(ctx, &batch.UpdateComputeEnvironmentInput{
+	updateInput := batch.UpdateComputeEnvironmentInput{
 		ComputeEnvironment: aws.String(d.Id()),
 		State:              awstypes.CEStateDisabled,
-	})
+	}
+	_, err := conn.UpdateComputeEnvironment(ctx, &updateInput)
 
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "does not exist") {
 		return diags
@@ -549,9 +550,10 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Deleting Batch Compute Environment: %s", d.Id())
-	_, err = conn.DeleteComputeEnvironment(ctx, &batch.DeleteComputeEnvironmentInput{
+	deleteInput := batch.DeleteComputeEnvironmentInput{
 		ComputeEnvironment: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteComputeEnvironment(ctx, &deleteInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Batch Compute Environment (%s): %s", d.Id(), err)

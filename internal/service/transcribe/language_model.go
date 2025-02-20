@@ -196,9 +196,10 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 
-	_, err := conn.DeleteLanguageModel(ctx, &transcribe.DeleteLanguageModelInput{
+	input := transcribe.DeleteLanguageModelInput{
 		ModelName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLanguageModel(ctx, &input)
 
 	var resourceNotFoundException *types.NotFoundException
 	if errors.As(err, &resourceNotFoundException) {

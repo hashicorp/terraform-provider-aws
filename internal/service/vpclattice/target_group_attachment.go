@@ -141,10 +141,11 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	targetPort := int(aws.ToInt32(target.Port))
 
 	log.Printf("[INFO] Deleting VPC Lattice Target Group Attachment: %s", d.Id())
-	_, err := conn.DeregisterTargets(ctx, &vpclattice.DeregisterTargetsInput{
+	input := vpclattice.DeregisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets:               []types.Target{target},
-	})
+	}
+	_, err := conn.DeregisterTargets(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

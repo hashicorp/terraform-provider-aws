@@ -279,10 +279,11 @@ func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Deleting AppConfig Configuration Profile: %s", d.Id())
-	_, err = conn.DeleteConfigurationProfile(ctx, &appconfig.DeleteConfigurationProfileInput{
+	input := appconfig.DeleteConfigurationProfileInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-	})
+	}
+	_, err = conn.DeleteConfigurationProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -376,6 +376,8 @@ This resource supports the following arguments:
 * `masterPassword` - (Required unless `manageMasterUserPassword` is set to true or unless a `snapshotIdentifier` or `replicationSourceIdentifier` is provided or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints][5]. Cannot be set if `manageMasterUserPassword` is set to `true`.
 * `masterUserSecretKmsKeyId` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `masterUsername` - (Required unless a `snapshotIdentifier` or `replicationSourceIdentifier` is provided or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]. This argument does not support in-place updates and cannot be changed during a restore from snapshot.
+* `monitoringInterval` - (Optional) Interval, in seconds, in seconds, between points when Enhanced Monitoring metrics are collected for the DB cluster. To turn off collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
+* `monitoringRoleArn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html#USER_Monitoring.OS.IAMRole.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Clusters.
 * `networkType` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
 * `performanceInsightsEnabled` - (Optional) Enables Performance Insights.
 * `performanceInsightsKmsKeyId` - (Optional) Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (`aws/rds`).
@@ -650,4 +652,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-14537d1d0b3bc071f4f8c2ac650845b15f76cc3102091e32483bc8c5025e75aa -->
+<!-- cache-key: cdktf-0.20.8 input-6d8a427135bad383df0885c068672483c29f910fc30476a19ffe5377881ae8e1 -->

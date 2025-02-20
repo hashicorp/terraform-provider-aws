@@ -1487,9 +1487,10 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
-	_, err := conn.DeleteFlow(ctx, &appflow.DeleteFlowInput{
+	input := appflow.DeleteFlowInput{
 		FlowName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteFlow(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

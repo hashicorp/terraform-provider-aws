@@ -10,13 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -60,6 +61,13 @@ func resourceAccessLogSubscription() *schema.Resource {
 				ForceNew:         true,
 				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
+			"service_network_log_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ServiceNetworkLogType](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -81,6 +89,10 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 		DestinationArn:     aws.String(d.Get(names.AttrDestinationARN).(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
 		Tags:               getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("service_network_log_type"); ok {
+		in.ServiceNetworkLogType = awstypes.ServiceNetworkLogType(v.(string))
 	}
 
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
@@ -114,6 +126,7 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrDestinationARN, out.DestinationArn)
 	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("resource_identifier", out.ResourceId)
+	d.Set("service_network_log_type", out.ServiceNetworkLogType)
 
 	return diags
 }
@@ -128,11 +141,12 @@ func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AccessLogSubscription %s", d.Id())
-	_, err := conn.DeleteAccessLogSubscription(ctx, &vpclattice.DeleteAccessLogSubscriptionInput{
+	input := vpclattice.DeleteAccessLogSubscriptionInput{
 		AccessLogSubscriptionIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAccessLogSubscription(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -149,7 +163,7 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 	}
 	out, err := conn.GetAccessLogSubscription(ctx, in)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
