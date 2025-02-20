@@ -154,7 +154,8 @@ func (r *shardGroupResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	shardGroup, err := waitShardGroupCreated(ctx, conn, data.DBShardGroupIdentifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	deadline := tfresource.NewDeadline(r.CreateTimeout(ctx, data.Timeouts))
+	shardGroup, err := waitShardGroupCreated(ctx, conn, data.DBShardGroupIdentifier.ValueString(), deadline.Remaining())
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) create", data.DBShardGroupIdentifier.ValueString()), err.Error())
@@ -165,6 +166,12 @@ func (r *shardGroupResource) Create(ctx context.Context, request resource.Create
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, shardGroup, &data)...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if _, err := waitDBClusterUpdated(ctx, conn, data.DBClusterIdentifier.ValueString(), false, deadline.Remaining()); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Cluster (%s) update", data.DBClusterIdentifier.ValueString()), err.Error())
+
 		return
 	}
 
@@ -234,8 +241,15 @@ func (r *shardGroupResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 
-		if _, err := waitShardGroupUpdated(ctx, conn, new.DBShardGroupIdentifier.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		deadline := tfresource.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
+		if _, err := waitShardGroupUpdated(ctx, conn, new.DBShardGroupIdentifier.ValueString(), deadline.Remaining()); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) update", new.DBShardGroupIdentifier.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitDBClusterUpdated(ctx, conn, new.DBClusterIdentifier.ValueString(), false, deadline.Remaining()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Cluster (%s) update", new.DBClusterIdentifier.ValueString()), err.Error())
 
 			return
 		}
@@ -267,8 +281,15 @@ func (r *shardGroupResource) Delete(ctx context.Context, request resource.Delete
 		return
 	}
 
-	if _, err := waitShardGroupDeleted(ctx, conn, data.DBShardGroupIdentifier.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	deadline := tfresource.NewDeadline(r.DeleteTimeout(ctx, data.Timeouts))
+	if _, err := waitShardGroupDeleted(ctx, conn, data.DBShardGroupIdentifier.ValueString(), deadline.Remaining()); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) delete", data.DBShardGroupIdentifier.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitDBClusterUpdated(ctx, conn, data.DBClusterIdentifier.ValueString(), false, deadline.Remaining()); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Cluster (%s) update", data.DBClusterIdentifier.ValueString()), err.Error())
 
 		return
 	}
