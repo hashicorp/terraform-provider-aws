@@ -34,7 +34,7 @@ This resource supports the following arguments:
     * `2` - Creates a DB shard group with two standby DB shard groups in two different AZs.
 * `db_cluster_identifier` - (Required) The name of the primary DB cluster for the DB shard group.
 * `db_shard_group_identifier` - (Required) The name of the DB shard group.
-* `max_acu` - (Optional) The maximum capacity of the DB shard group in Aurora capacity units (ACUs).
+* `max_acu` - (Required) The maximum capacity of the DB shard group in Aurora capacity units (ACUs).
 * `min_acu` - (Optional) The minimum capacity of the DB shard group in Aurora capacity units (ACUs).
 * `publicly_accessible` - (Optional) Indicates whether the DB shard group is publicly accessible.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -97,13 +99,21 @@ func (r *shardGroupResource) Schema(ctx context.Context, request resource.Schema
 				},
 			},
 			"max_acu": schema.Float64Attribute{
-				Optional: true,
+				Required: true,
 			},
 			"min_acu": schema.Float64Attribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float64{
+					float64planmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -144,8 +154,6 @@ func (r *shardGroupResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	// Set values for unknowns.
-
 	shardGroup, err := waitShardGroupCreated(ctx, conn, data.DBShardGroupIdentifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
@@ -155,9 +163,10 @@ func (r *shardGroupResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Set values for unknowns.
-	data.DBShardGroupARN = fwflex.StringToFramework(ctx, shardGroup.DBShardGroupArn)
-	data.DBShardGroupResourceID = fwflex.StringToFramework(ctx, shardGroup.DBShardGroupResourceId)
-	data.Endpoint = fwflex.StringToFramework(ctx, shardGroup.Endpoint)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, shardGroup, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -363,11 +372,15 @@ func waitShardGroupCreated(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 func waitShardGroupUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.DBShardGroup, error) {
+	const (
+		delay = 1 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{shardGroupStatusModifying},
 		Target:  []string{shardGroupStatusActive},
 		Refresh: statusShardGroup(ctx, conn, id),
 		Timeout: timeout,
+		Delay:   delay,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
