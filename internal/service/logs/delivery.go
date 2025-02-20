@@ -6,12 +6,14 @@ package logs
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -93,11 +95,33 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, listplanmodifier.UseStateForUnknown()),
-			names.AttrTags:              tftags.TagsAttribute(),
-			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1,
+				[]fwtypes.ListNestedObjectOfOption[s3DeliveryConfigurationModel]{fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality)}, listplanmodifier.UseStateForUnknown()),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
+}
+
+func s3DeliverySemanticEquality(ctx context.Context, oldValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel], newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	oldValPtr, di := oldValue.ToPtr(ctx)
+	diags = append(diags, di...)
+
+	newValPtr, di := newValue.ToPtr(ctx)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	if oldValPtr != nil && newValPtr != nil {
+		if strings.HasSuffix(oldValPtr.SuffixPath.ValueString(), newValPtr.SuffixPath.ValueString()) {
+			return true, diags
+		}
+	}
+
+	return false, diags
 }
 
 func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -153,6 +177,20 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 			}
 			if s3DeliveryConfiguration == nil || s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
 				delivery.S3DeliveryConfiguration.EnableHiveCompatiblePath = nil
+			}
+		}
+	}
+
+	if delivery.S3DeliveryConfiguration != nil && aws.ToString(delivery.S3DeliveryConfiguration.SuffixPath) != "" {
+		if !data.S3DeliveryConfiguration.IsNull() {
+			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if s3DeliveryConfiguration != nil && !s3DeliveryConfiguration.SuffixPath.IsNull() {
+				delivery.S3DeliveryConfiguration.SuffixPath = s3DeliveryConfiguration.SuffixPath.ValueStringPointer()
 			}
 		}
 	}
