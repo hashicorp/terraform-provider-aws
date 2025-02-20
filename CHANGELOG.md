@@ -1,4 +1,63 @@
-## 5.86.0 (Unreleased)
+## 5.88.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_contributor_managed_insight_rule` ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
+* **New Resource:** `aws_qbusiness_application` ([#35249](https://github.com/hashicorp/terraform-provider-aws/issues/35249))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrock_model_invocation_logging_configuration: Add `video_data_delivery_enabled` argument ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
+* resource/aws_db_instance: Add `password_wo` write-only attribute ([#41366](https://github.com/hashicorp/terraform-provider-aws/issues/41366))
+* resource/aws_docdb_cluster: Add `master_password_wo` write-only attribute ([#41413](https://github.com/hashicorp/terraform-provider-aws/issues/41413))
+* resource/aws_glue_partition: Add `storage_descriptor.additional_locations` argument ([#41434](https://github.com/hashicorp/terraform-provider-aws/issues/41434))
+* resource/aws_redshift_cluster: Add `master_password_wo` write-only attribute ([#41411](https://github.com/hashicorp/terraform-provider-aws/issues/41411))
+* resource/aws_redshiftserverless_namespace: Add `admin_user_password_wo` write-only attribute ([#41412](https://github.com/hashicorp/terraform-provider-aws/issues/41412))
+* resource/aws_secretsmanager_secret_version: Add `secret_string_wo` write-only attribute ([#41371](https://github.com/hashicorp/terraform-provider-aws/issues/41371))
+
+BUG FIXES:
+
+* resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true` ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
+* resource/aws_cloudwatch_contributor_insight_rule: Fix enable/disable rule state ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
+* resource/aws_dynamodb_table: Fixes long delay in creation of replicas ([#41451](https://github.com/hashicorp/terraform-provider-aws/issues/41451))
+
+## 5.87.0 (February 13, 2025)
+
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_contributor_insight_rule` ([#41373](https://github.com/hashicorp/terraform-provider-aws/issues/41373))
+
+ENHANCEMENTS:
+
+* resource/aws_dynamodb_table_export: Add `export_type` and `incremental_export_specification` arguments ([#41303](https://github.com/hashicorp/terraform-provider-aws/issues/41303))
+* resource/aws_quicksight_data_source: Add `parameters.s3.role_arn` argument to allow override an account-wide role for a specific S3 data source ([#41284](https://github.com/hashicorp/terraform-provider-aws/issues/41284))
+* resource/aws_rds_cluster: Add `master_password_wo` write-only attribute ([#41314](https://github.com/hashicorp/terraform-provider-aws/issues/41314))
+* resource/aws_rekognition_stream_processor: Deprecates `stream_processor_arn` in favor of `arn`. ([#41271](https://github.com/hashicorp/terraform-provider-aws/issues/41271))
+* resource/aws_ssm_parameter: Add `value_wo` write-only attribute ([#40952](https://github.com/hashicorp/terraform-provider-aws/issues/40952))
+* resource/aws_vpclattice_access_log_subscription: Add `service_network_log_type` argument ([#41304](https://github.com/hashicorp/terraform-provider-aws/issues/41304))
+
+BUG FIXES:
+
+* data-source/aws_dynamodb_table: Add missing `on_demand_throughput` and `global_secondary_index.*.on_demand_throughput` attributes to resolve read error ([#41350](https://github.com/hashicorp/terraform-provider-aws/issues/41350))
+* resource/aws_cloudformation_stack_set_instance: Prevents overly-long creation times and possible `OperationInProgress` errors ([#41388](https://github.com/hashicorp/terraform-provider-aws/issues/41388))
+* resource/aws_detective_member: No longer fails with unexpected status when adding Organization member accounts. ([#41344](https://github.com/hashicorp/terraform-provider-aws/issues/41344))
+* resource/aws_ec2_transit_gateway_route_table_association: Fix deleting and recreating resource when dependencies changes don't require the resource be recreated. ([#41292](https://github.com/hashicorp/terraform-provider-aws/issues/41292))
+* resource/aws_internet_gateway: Fix to continue deletion when attachment is not found ([#41346](https://github.com/hashicorp/terraform-provider-aws/issues/41346))
+
+## 5.86.1 (February 11, 2025)
+
+BUG FIXES:
+
+* data-source/aws_vpclattice_service: Fix regression resulting in `AccessDeniedError` attempting to list tags ([#41295](https://github.com/hashicorp/terraform-provider-aws/issues/41295))
+* data-source/aws_vpclattice_service_network: Fix regression resulting in `AccessDeniedError` attempting to list tags ([#41295](https://github.com/hashicorp/terraform-provider-aws/issues/41295))
+* resource/aws_cloudtrail: Fix regression issue where `sns_topic_name` shows perpectual diff when an ARN of a SNS topic from a different region is specified ([#41279](https://github.com/hashicorp/terraform-provider-aws/issues/41279))
+* resource/aws_s3_bucket_lifecycle_configuration: Fixes "inconsistent result" error when `rule[*].prefix` is an empty string. ([#41296](https://github.com/hashicorp/terraform-provider-aws/issues/41296))
+
+## 5.86.0 (February  6, 2025)
+
+NOTES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: When upgrading existing resources with no defined `prefix`, the Terraform plan will show the removal of `prefix` from state. This is expected, and should not occur on subsequent plans. ([#41159](https://github.com/hashicorp/terraform-provider-aws/issues/41159))
 
 ENHANCEMENTS:
 
@@ -12,6 +71,8 @@ BUG FIXES:
 
 * resource/aws_gamelift_game_server_group: Correctly plan `tags_all` value ([#41256](https://github.com/hashicorp/terraform-provider-aws/issues/41256))
 * resource/aws_instance: Properly cancel spot instance requests on destroy when `instance_lifecycle` is `spot` ([#41206](https://github.com/hashicorp/terraform-provider-aws/issues/41206))
+* resource/aws_route53_zone: Fix `panic: runtime error: invalid memory address or nil pointer dereference` when deleting the resource would otherwise return an error ([#41260](https://github.com/hashicorp/terraform-provider-aws/issues/41260))
+* resource/aws_s3_bucket_lifecycle_configuration: Properly handle default value of `transition_default_minimum_object_size` ([#41159](https://github.com/hashicorp/terraform-provider-aws/issues/41159))
 * resource/aws_wafv2_web_acl: Properly set `rule` during import ([#41205](https://github.com/hashicorp/terraform-provider-aws/issues/41205))
 
 ## 5.85.0 (February  3, 2025)

@@ -90,7 +90,8 @@ This resource supports the following arguments:
 * `capture_options` - (Required) Specifies what data to capture. Fields are documented below.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt the captured data on Amazon S3.
 * `enable_capture` - (Optional) Flag to enable data capture. Defaults to `false`.
-* `capture_content_type_header` - (Optional) The content type headers to capture. Fields are documented below.
+* `capture_content_type_header` - (Optional) The content type headers to capture.
+  See [`capture_content_type_header`](#capture_content_type_header) below.
 
 #### capture_options
 
@@ -99,7 +100,9 @@ This resource supports the following arguments:
 #### capture_content_type_header
 
 * `csv_content_types` - (Optional) The CSV content type headers to capture.
+  One of `csv_content_types` or `json_content_types` is required.
 * `json_content_types` - (Optional) The JSON content type headers to capture.
+  One of `json_content_types` or `csv_content_types` is required.
 
 ### async_inference_config
 

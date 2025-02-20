@@ -175,9 +175,10 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[INFO] Deleting Transcribe MedicalVocabulary %s", d.Id())
 
-	_, err := conn.DeleteMedicalVocabulary(ctx, &transcribe.DeleteMedicalVocabularyInput{
+	input := transcribe.DeleteMedicalVocabularyInput{
 		VocabularyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMedicalVocabulary(ctx, &input)
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {

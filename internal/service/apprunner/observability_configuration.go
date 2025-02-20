@@ -151,9 +151,10 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Observability Configuration: %s", d.Id())
-	_, err := conn.DeleteObservabilityConfiguration(ctx, &apprunner.DeleteObservabilityConfigurationInput{
+	input := apprunner.DeleteObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteObservabilityConfiguration(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -157,9 +157,10 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Application: %s", d.Id())
-	_, err := conn.DeleteApplication(ctx, &appconfig.DeleteApplicationInput{
+	input := appconfig.DeleteApplicationInput{
 		ApplicationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -165,10 +165,11 @@ func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.
 		return
 	}
 
-	_, err := conn.DeleteGuardrail(ctx, &bedrock.DeleteGuardrailInput{
+	input := bedrock.DeleteGuardrailInput{
 		GuardrailIdentifier: data.GuardrailARN.ValueStringPointer(),
 		GuardrailVersion:    data.Version.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteGuardrail(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

@@ -329,10 +329,11 @@ func (r *restoreTestingSelectionResource) Delete(ctx context.Context, request re
 
 	restoreTestingPlanName := data.RestoreTestingPlanName.ValueString()
 	name := data.RestoreTestingSelectionName.ValueString()
-	_, err := conn.DeleteRestoreTestingSelection(ctx, &backup.DeleteRestoreTestingSelectionInput{
+	input := backup.DeleteRestoreTestingSelectionInput{
 		RestoreTestingPlanName:      aws.String(restoreTestingPlanName),
 		RestoreTestingSelectionName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRestoreTestingSelection(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

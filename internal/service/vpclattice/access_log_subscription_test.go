@@ -95,6 +95,7 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceNetworkResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "service_network_log_type", "SERVICE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -288,6 +289,50 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchWildcard(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeAccessLogSubscription_serviceNetworkLogType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var accesslogsubscription vpclattice.GetAccessLogSubscriptionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_access_log_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessLogSubscriptionConfig_serviceNetworkLogType(rName, "SERVICE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
+					resource.TestCheckResourceAttr(resourceName, "service_network_log_type", "SERVICE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccessLogSubscriptionConfig_serviceNetworkLogType(rName, "RESOURCE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
+					resource.TestCheckResourceAttr(resourceName, "service_network_log_type", "RESOURCE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAccessLogSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
@@ -424,4 +469,14 @@ resource "aws_vpclattice_access_log_subscription" "test" {
   destination_arn     = "${aws_cloudwatch_log_group.test.arn}:*"
 }
 `)
+}
+
+func testAccAccessLogSubscriptionConfig_serviceNetworkLogType(rName, serviceNetworkLogType string) string {
+	return acctest.ConfigCompose(testAccAccessLogSubscriptionConfig_baseS3(rName), fmt.Sprintf(`
+resource "aws_vpclattice_access_log_subscription" "test" {
+  resource_identifier      = aws_vpclattice_service_network.test.arn
+  destination_arn          = aws_s3_bucket.test.arn
+  service_network_log_type = %[1]q
+}
+`, serviceNetworkLogType))
 }

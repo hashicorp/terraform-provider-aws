@@ -272,11 +272,12 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DisassociateAgentCollaborator(ctx, &bedrockagent.DisassociateAgentCollaboratorInput{
+	input := bedrockagent.DisassociateAgentCollaboratorInput{
 		AgentId:        data.AgentID.ValueStringPointer(),
 		AgentVersion:   data.AgentVersion.ValueStringPointer(),
 		CollaboratorId: data.CollaboratorID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DisassociateAgentCollaborator(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

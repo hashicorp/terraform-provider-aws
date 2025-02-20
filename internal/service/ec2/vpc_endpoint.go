@@ -606,7 +606,7 @@ func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec
 }
 
 func isAmazonS3VPCEndpoint(serviceName string) bool {
-	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName)
+	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9]{1,2})\\.s3", serviceName)
 	return ok
 }
 

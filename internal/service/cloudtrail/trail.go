@@ -398,7 +398,11 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "parsing SNS Topic ARN (%s): %s", aws.ToString(trail.SnsTopicARN), err)
 		}
-		d.Set("sns_topic_name", parsedSNSTopicARN.Resource)
+		if parsedSNSTopicARN.Region != aws.ToString(trail.HomeRegion) || parsedSNSTopicARN.AccountID != meta.(*conns.AWSClient).AccountID(ctx) {
+			d.Set("sns_topic_name", trail.SnsTopicARN)
+		} else {
+			d.Set("sns_topic_name", parsedSNSTopicARN.Resource)
+		}
 	} else {
 		d.Set("sns_topic_name", nil)
 	}

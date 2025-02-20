@@ -166,10 +166,11 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[INFO] Deleting App Runner Custom Domain Association: %s", d.Id())
-	_, err = conn.DisassociateCustomDomain(ctx, &apprunner.DisassociateCustomDomainInput{
+	input := apprunner.DisassociateCustomDomainInput{
 		DomainName: aws.String(domainName),
 		ServiceArn: aws.String(serviceARN),
-	})
+	}
+	_, err = conn.DisassociateCustomDomain(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

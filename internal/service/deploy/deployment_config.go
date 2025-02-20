@@ -249,9 +249,10 @@ func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeDeploy Deployment Config: %s", d.Id())
-	_, err := conn.DeleteDeploymentConfig(ctx, &codedeploy.DeleteDeploymentConfigInput{
+	input := codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDeploymentConfig(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Config (%s): %s", d.Id(), err)
