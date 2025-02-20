@@ -57,6 +57,7 @@ This data source exports the following attributes in addition to the arguments a
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - If the DB instance is a Multi-AZ deployment.
+* `multi_tenant` - If the DB instance uses multi-tenant configuration.
 * `network_type` - Network type of the DB instance.
 * `option_group_memberships` - Provides the list of option group memberships for this DB instance.
 * `port` - Database endpoint port, primarily used by an Aurora DB cluster. For a conventional RDS DB instance, the `db_instance_port` is typically the preferred choice.
