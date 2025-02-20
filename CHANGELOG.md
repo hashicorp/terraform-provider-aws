@@ -21,6 +21,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_codebuild_fleet: Prevents panic when `scaling_configuration` is not empty. ([#41377](https://github.com/hashicorp/terraform-provider-aws/issues/41377))
 * resource/aws_amplify_domain_association: Prevents unexpected state error when creating with multiple `sub_domain` ([#36961](https://github.com/hashicorp/terraform-provider-aws/issues/36961))
 * resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true` ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
 * resource/aws_cloudwatch_contributor_insight_rule: Fix enable/disable rule state ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
