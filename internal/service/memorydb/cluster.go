@@ -577,7 +577,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	input := &memorydb.DeleteClusterInput{
-		ClusterName: aws.String(d.Id()),
+		ClusterName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v := d.Get("multi_region_cluster_name"); v != nil && len(v.(string)) > 0 {
@@ -588,7 +588,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		input.FinalSnapshotName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Get(names.AttrName).(string))
 	_, err := conn.DeleteCluster(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
@@ -596,11 +596,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Cluster (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) delete: %s", d.Id(), err)
+	if _, err := waitClusterDeleted(ctx, conn, d.Get(names.AttrName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) delete: %s", d.Get(names.AttrName).(string), err)
 	}
 
 	return diags
