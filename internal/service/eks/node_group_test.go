@@ -1065,6 +1065,16 @@ func TestAccEKSNodeGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "40"),
 				),
 			},
+			{
+				Config: testAccNodeGroupConfig_update2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "0"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "40"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.update_strategy", "MINIMAL"),
+				),
+			},
 		},
 	})
 }
