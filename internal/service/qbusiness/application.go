@@ -56,9 +56,6 @@ type resourceApplication struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceApplication) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_qbusiness_application"
-}
 
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{

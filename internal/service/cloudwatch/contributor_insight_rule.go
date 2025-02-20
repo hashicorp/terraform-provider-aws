@@ -47,9 +47,6 @@ type resourceContributorInsightRule struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceContributorInsightRule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_cloudwatch_contributor_insight_rule"
-}
 
 func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
