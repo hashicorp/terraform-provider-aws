@@ -50,10 +50,6 @@ type restoreTestingSelectionResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*restoreTestingSelectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_backup_restore_testing_selection"
-}
-
 func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

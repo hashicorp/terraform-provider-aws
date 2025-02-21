@@ -58,10 +58,6 @@ const (
 	ResNameCluster = "Cluster"
 )
 
-func (r *resourceCluster) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_docdbelastic_cluster"
-}
-
 func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{

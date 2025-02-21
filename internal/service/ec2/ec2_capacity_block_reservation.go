@@ -47,10 +47,6 @@ type capacityBlockReservationResource struct {
 	framework.WithNoOpDelete
 }
 
-func (*capacityBlockReservationResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_capacity_block_reservation"
-}
-
 func (r *capacityBlockReservationResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{

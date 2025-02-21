@@ -40,10 +40,6 @@ type eipDomainNameResource struct {
 	framework.WithTimeouts
 }
 
-func (*eipDomainNameResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_eip_domain_name"
-}
-
 func (r *eipDomainNameResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -29,10 +29,6 @@ type securityGroupRuleDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*securityGroupRuleDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_rule"
-}
-
 func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

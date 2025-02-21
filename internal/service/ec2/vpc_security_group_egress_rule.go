@@ -27,10 +27,6 @@ type securityGroupEgressRuleResource struct {
 	securityGroupRuleResource
 }
 
-func (*securityGroupEgressRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_egress_rule"
-}
-
 func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
 	return []resource.StateMover{}
 }

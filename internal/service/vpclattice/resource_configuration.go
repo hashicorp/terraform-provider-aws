@@ -60,10 +60,6 @@ type resourceConfigurationResource struct {
 	framework.WithTimeouts
 }
 
-func (*resourceConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_resource_configuration"
-}
-
 func (r *resourceConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	typeType := fwtypes.StringEnumType[awstypes.ResourceConfigurationType]()
 

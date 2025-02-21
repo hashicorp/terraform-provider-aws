@@ -50,10 +50,6 @@ type resourceRotation struct {
 	framework.WithImportByID
 }
 
-func (r *resourceRotation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ssmcontacts_rotation"
-}
-
 func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -43,10 +43,6 @@ type automationRuleResource struct {
 	framework.WithImportByID
 }
 
-func (r *automationRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securityhub_automation_rule"
-}
-
 func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	const (
 		defaultFilterSchemaMaxSize = 20

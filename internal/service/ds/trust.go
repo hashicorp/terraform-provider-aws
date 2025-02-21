@@ -47,10 +47,6 @@ type trustResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*trustResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_directory_service_trust"
-}
-
 func (r *trustResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	trustType := fwtypes.StringEnumType[awstypes.TrustType]()
 
