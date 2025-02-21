@@ -113,6 +113,7 @@ func (r *shardGroupResource) Schema(ctx context.Context, request resource.Schema
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
