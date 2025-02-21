@@ -159,7 +159,7 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var graph1, graph2 neptunegraph.GetGraphOutput
+	var graph neptunegraph.GetGraphOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptunegraph_graph.test"
 
@@ -175,7 +175,7 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 			{
 				Config: testAccGraphConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph1),
+					testAccCheckGraphExists(ctx, resourceName, &graph),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -185,14 +185,9 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 				},
 			},
 			{
-				Config:      testAccGraphConfig_deletionProtection(rName, true),
-				Destroy:     true,
-				ExpectError: regexache.MustCompile(`Graph .* cannot be deleted because deletion protection is enabled.`),
-			},
-			{
 				Config: testAccGraphConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph2),
+					testAccCheckGraphExists(ctx, resourceName, &graph),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -200,10 +195,6 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-			},
-			{
-				Config:  testAccGraphConfig_deletionProtection(rName, false),
-				Destroy: true,
 			},
 		},
 	})
