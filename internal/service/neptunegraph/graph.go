@@ -6,6 +6,7 @@ package neptunegraph
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -27,9 +28,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -38,8 +41,8 @@ import (
 
 // @FrameworkResource("aws_neptunegraph_graph", name="Graph")
 // @Tags(identifierAttribute="arn")
-func newResourceGraph(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceGraph{}
+func newGraphResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &graphResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -48,28 +51,20 @@ func newResourceGraph(_ context.Context) (resource.ResourceWithConfigure, error)
 	return r, nil
 }
 
-const (
-	ResNameGraph = "Graph"
-)
-
-type resourceGraph struct {
+type graphResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceGraph) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_neptunegraph_graph"
+func (r *graphResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_neptunegraph_graph"
 }
 
-func (r *resourceGraph) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *graphResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDeletionProtection: schema.BoolAttribute{
 				Description: "A value that indicates whether the graph has deletion protection enabled. The graph can't be deleted when deletion protection is enabled.",
 				Computed:    true,
@@ -79,12 +74,6 @@ func (r *resourceGraph) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 			names.AttrEndpoint: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -112,11 +101,13 @@ func (r *resourceGraph) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"graph_name_prefix": schema.StringAttribute{
 				Description: "Allows user to specify name prefix and have remainder of name automatically generated.",
 				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			"kms_key_identifier": schema.StringAttribute{
 				Description: "Specifies a KMS key to use to encrypt data in the new graph.  Value must be ARN of KMS Key.",
 				Optional:    true,
@@ -168,7 +159,7 @@ func (r *resourceGraph) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Delete: true,
 			}),
 			"vector_search_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[vectorSearchConfiguration](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[vectorSearchConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -192,265 +183,210 @@ func (r *resourceGraph) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
-func (r *resourceGraph) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().NeptuneGraphClient(ctx)
-
-	var plan resourceGraphModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *graphResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data graphResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var input neptunegraph.CreateGraphInput
-	input.Tags = getTagsIn(ctx)
+	conn := r.Meta().NeptuneGraphClient(ctx)
 
+	var input neptunegraph.CreateGraphInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
 	// NeptuneGraph Sdk GetGraphOutput param for Name differs from CreateGraphInput param as GraphName
 	input.GraphName = aws.String(
 		create.NewNameGenerator(
-			create.WithConfiguredName(plan.Name.ValueString()),
-			create.WithConfiguredPrefix(plan.NamePrefix.ValueString()),
+			create.WithConfiguredName(data.Name.ValueString()),
+			create.WithConfiguredPrefix(data.NamePrefix.ValueString()),
 			create.WithDefaultPrefix("tf-"),
 		).Generate(),
 	)
+	input.Tags = getTagsIn(ctx)
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.CreateGraph(ctx, &input)
 
-	out, err := conn.CreateGraph(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionCreating, ResNameGraph, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Id == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionCreating, ResNameGraph, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Neptune Graph Graph (%s)", aws.ToString(input.GraphName)), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Set values for unknowns.
+	data.ID = fwflex.StringToFramework(ctx, output.Id)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitGraphCreated(ctx, conn, *out.Id, createTimeout)
+	graph, err := waitGraphCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionWaitingForCreation, ResNameGraph, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Neptune Graph Graph (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, graph, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceGraph) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().NeptuneGraphClient(ctx)
-
-	var state resourceGraphModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *graphResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data graphResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findGraphByID(ctx, conn, state.Id.ValueString())
+	conn := r.Meta().NeptuneGraphClient(ctx)
+
+	output, err := findGraphByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionSetting, ResNameGraph, state.Id.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Neptune Graph Graph (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceGraph) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().NeptuneGraphClient(ctx)
-
-	var plan, state resourceGraphModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *graphResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new graphResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.NamePrefix.Equal(state.NamePrefix) ||
-		!plan.DeletionProtection.Equal(state.DeletionProtection) ||
-		!plan.ProvisionedMemory.Equal(state.ProvisionedMemory) ||
-		!plan.PublicConnectivity.Equal(state.PublicConnectivity) ||
-		!plan.ReplicaCount.Equal(state.ReplicaCount) {
+	conn := r.Meta().NeptuneGraphClient(ctx)
+
+	if !new.Name.Equal(old.Name) ||
+		!new.NamePrefix.Equal(old.NamePrefix) ||
+		!new.DeletionProtection.Equal(old.DeletionProtection) ||
+		!new.ProvisionedMemory.Equal(old.ProvisionedMemory) ||
+		!new.PublicConnectivity.Equal(old.PublicConnectivity) ||
+		!new.ReplicaCount.Equal(old.ReplicaCount) {
 		input := neptunegraph.UpdateGraphInput{
-			GraphIdentifier: state.Id.ValueStringPointer(),
+			GraphIdentifier: new.ID.ValueStringPointer(),
 		}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateGraph(ctx, &input)
+		_, err := conn.UpdateGraph(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionUpdating, ResNameGraph, plan.Id.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.Id == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionUpdating, ResNameGraph, plan.Id.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Neptune Graph Graph (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		output, err := waitGraphUpdated(ctx, conn, state.Id.ValueString(), updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionWaitingForUpdate, ResNameGraph, plan.Id.String(), err),
-				err.Error(),
-			)
-			return
-		}
+		if _, err := waitGraphUpdated(ctx, conn, old.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Neptune Graph Graph (%s) update", new.ID.ValueString()), err.Error())
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
-		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceGraph) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().NeptuneGraphClient(ctx)
-
-	var state resourceGraphModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *graphResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data graphResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().NeptuneGraphClient(ctx)
 
 	//SkipSnapshot is hardcoded here as this is the same behavior currently supported
 	//in AWS CloudFormation.
-	input := neptunegraph.DeleteGraphInput{
-		GraphIdentifier: state.Id.ValueStringPointer(),
+	_, err := conn.DeleteGraph(ctx, &neptunegraph.DeleteGraphInput{
+		GraphIdentifier: data.ID.ValueStringPointer(),
 		SkipSnapshot:    aws.Bool(true),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeleteGraph(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Neptune Graph Graph (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitGraphDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Neptune Graph Graph (%s) delete", data.ID.ValueString()), err.Error())
+
+		return
+	}
+}
+
+func (r *graphResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+func findGraphByID(ctx context.Context, conn *neptunegraph.Client, id string) (*neptunegraph.GetGraphOutput, error) {
+	input := neptunegraph.GetGraphInput{
+		GraphIdentifier: aws.String(id),
+	}
+
+	return findGraph(ctx, conn, &input)
+}
+
+func findGraph(ctx context.Context, conn *neptunegraph.Client, input *neptunegraph.GetGraphInput) (*neptunegraph.GetGraphOutput, error) {
+	output, err := conn.GetGraph(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionDeleting, ResNameGraph, state.Id.String(), err),
-			err.Error(),
-		)
-		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitGraphDeleted(ctx, conn, state.Id.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NeptuneGraph, create.ErrActionWaitingForDeletion, ResNameGraph, state.Id.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceGraph) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceGraph) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
-const (
-	statusChangePending = "UPDATING"
-	statusDeleting      = "DELETING"
-	statusAvailable     = "AVAILABLE"
-)
-
-func waitGraphCreated(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.CreateGraphOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusAvailable},
-		Refresh:                   statusGraph(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		return nil, err
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*neptunegraph.CreateGraphOutput); ok {
-		return out, err
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return nil, err
-}
-
-func waitGraphUpdated(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.GetGraphOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusAvailable},
-		Refresh:                   statusGraph(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*neptunegraph.GetGraphOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitGraphDeleted(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.DeleteGraphOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusAvailable},
-		Target:  []string{},
-		Refresh: statusGraph(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*neptunegraph.DeleteGraphOutput); ok {
-		return out, err
-	}
-
-	return nil, err
+	return output, nil
 }
 
 func statusGraph(ctx context.Context, conn *neptunegraph.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findGraphByID(ctx, conn, id)
+		output, err := findGraphByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -459,51 +395,90 @@ func statusGraph(ctx context.Context, conn *neptunegraph.Client, id string) retr
 			return nil, "", err
 		}
 
-		return out, string(out.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func findGraphByID(ctx context.Context, conn *neptunegraph.Client, id string) (*neptunegraph.GetGraphOutput, error) {
-	in := &neptunegraph.GetGraphInput{
-		GraphIdentifier: aws.String(id),
+func waitGraphCreated(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.GetGraphOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.GraphStatusCreating),
+		Target:                    enum.Slice(awstypes.GraphStatusAvailable),
+		Refresh:                   statusGraph(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
-	out, err := conn.GetGraph(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-		return nil, err
+	if output, ok := outputRaw.(*neptunegraph.GetGraphOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
-	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+	return nil, err
 }
 
-type resourceGraphModel struct {
-	Arn                       types.String                                               `tfsdk:"arn"`
-	DeletionProtection        types.Bool                                                 `tfsdk:"deletion_protection"`
-	Endpoint                  types.String                                               `tfsdk:"endpoint"`
-	Id                        types.String                                               `tfsdk:"id"`
-	Name                      types.String                                               `tfsdk:"graph_name"`
-	NamePrefix                types.String                                               `tfsdk:"graph_name_prefix"`
-	KmsKeyIdentifier          types.String                                               `tfsdk:"kms_key_identifier"`
-	ProvisionedMemory         types.Int32                                                `tfsdk:"provisioned_memory"`
-	PublicConnectivity        types.Bool                                                 `tfsdk:"public_connectivity"`
-	ReplicaCount              types.Int32                                                `tfsdk:"replica_count"`
-	Tags                      tftags.Map                                                 `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                 `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                             `tfsdk:"timeouts"`
-	VectorSearchConfiguration fwtypes.ListNestedObjectValueOf[vectorSearchConfiguration] `tfsdk:"vector_search_configuration"`
+func waitGraphUpdated(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.GetGraphOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.GraphStatusUpdating),
+		Target:                    enum.Slice(awstypes.GraphStatusAvailable),
+		Refresh:                   statusGraph(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptunegraph.GetGraphOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
-type vectorSearchConfiguration struct {
+func waitGraphDeleted(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.GetGraphOutput, error) {
+	const (
+		delay = 10 * time.Second
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.GraphStatusDeleting),
+		Target:  []string{},
+		Refresh: statusGraph(ctx, conn, id),
+		Delay:   delay,
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptunegraph.GetGraphOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+type graphResourceModel struct {
+	ARN                       types.String                                                    `tfsdk:"arn"`
+	DeletionProtection        types.Bool                                                      `tfsdk:"deletion_protection"`
+	Endpoint                  types.String                                                    `tfsdk:"endpoint"`
+	ID                        types.String                                                    `tfsdk:"id"`
+	Name                      types.String                                                    `tfsdk:"graph_name"`
+	NamePrefix                types.String                                                    `tfsdk:"graph_name_prefix"`
+	KMSKeyIdentifier          types.String                                                    `tfsdk:"kms_key_identifier"`
+	ProvisionedMemory         types.Int32                                                     `tfsdk:"provisioned_memory"`
+	PublicConnectivity        types.Bool                                                      `tfsdk:"public_connectivity"`
+	ReplicaCount              types.Int32                                                     `tfsdk:"replica_count"`
+	Tags                      tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
+	VectorSearchConfiguration fwtypes.ListNestedObjectValueOf[vectorSearchConfigurationModel] `tfsdk:"vector_search_configuration"`
+}
+
+type vectorSearchConfigurationModel struct {
 	Dimension types.Int32 `tfsdk:"vector_search_dimension"`
 }

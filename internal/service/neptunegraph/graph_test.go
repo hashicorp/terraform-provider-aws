@@ -5,19 +5,17 @@ package neptunegraph_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfneptunegraph "github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -180,6 +178,11 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 					testAccCheckGraphExists(ctx, resourceName, &graph1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config:      testAccGraphConfig_deletionProtection(rName, true),
@@ -190,9 +193,13 @@ func TestAccNeptuneGraphGraph_deletionProtection(t *testing.T) {
 				Config: testAccGraphConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph2),
-					testAccCheckGraphNotRecreated(&graph2, &graph1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config:  testAccGraphConfig_deletionProtection(rName, false),
@@ -331,39 +338,38 @@ func testAccCheckGraphDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfneptunegraph.FindGraphByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.NeptuneGraph, create.ErrActionCheckingDestroyed, tfneptunegraph.ResNameGraph, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.NeptuneGraph, create.ErrActionCheckingDestroyed, tfneptunegraph.ResNameGraph, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Neptune Graph Graph %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGraphExists(ctx context.Context, name string, graph *neptunegraph.GetGraphOutput) resource.TestCheckFunc {
+func testAccCheckGraphExists(ctx context.Context, n string, v *neptunegraph.GetGraphOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.NeptuneGraph, create.ErrActionCheckingExistence, tfneptunegraph.ResNameGraph, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.NeptuneGraph, create.ErrActionCheckingExistence, tfneptunegraph.ResNameGraph, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneGraphClient(ctx)
 
-		resp, err := tfneptunegraph.FindGraphByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptunegraph.FindGraphByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.NeptuneGraph, create.ErrActionCheckingExistence, tfneptunegraph.ResNameGraph, rs.Primary.ID, err)
+			return err
 		}
 
-		*graph = *resp
+		*v = *output
 
 		return nil
 	}
@@ -381,16 +387,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckGraphNotRecreated(before, after *neptunegraph.GetGraphOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.NeptuneGraph, create.ErrActionCheckingNotRecreated, tfneptunegraph.ResNameGraph, before, errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 

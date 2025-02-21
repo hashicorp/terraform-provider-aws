@@ -5,7 +5,7 @@ package neptunegraph
 
 // Exports for use in tests only.
 var (
-	ResourceGraph = newResourceGraph
+	ResourceGraph = newGraphResource
 
 	FindGraphByID = findGraphByID
 )
