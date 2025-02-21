@@ -340,7 +340,6 @@ func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.Modi
 				}
 			}
 		}
-
 	}
 	r.SetTagsAll(ctx, request, response)
 }
