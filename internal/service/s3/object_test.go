@@ -2236,7 +2236,7 @@ func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestChe
 }
 
 func testAccObjectCreateTempFile(t *testing.T, data string) string {
-	tmpFile, err := os.CreateTemp("", "tf-acc-s3-obj")
+	tmpFile, err := os.CreateTemp(t.TempDir(), "tf-acc-s3-obj")
 	if err != nil {
 		t.Fatal(err)
 	}
