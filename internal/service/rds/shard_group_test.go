@@ -58,9 +58,11 @@ func TestAccRDSShardGroup_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccShardGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "db_shard_group_identifier",
 			},
 		},
 	})
@@ -119,9 +121,11 @@ func TestAccRDSShardGroup_tags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccShardGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "db_shard_group_identifier",
 			},
 			{
 				Config: testAccShardGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -204,6 +208,17 @@ func testAccCheckShardGroupExists(ctx context.Context, n string, v *awstypes.DBS
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccShardGroupImportStateIDFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		return rs.Primary.Attributes["db_shard_group_identifier"], nil
 	}
 }
 
