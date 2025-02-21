@@ -119,7 +119,8 @@ func s3DeliverySemanticEquality(ctx context.Context, oldValue fwtypes.ListNested
 	}
 
 	if oldValPtr != nil && newValPtr != nil {
-		if strings.HasSuffix(oldValPtr.SuffixPath.ValueString(), newValPtr.SuffixPath.ValueString()) {
+		if strings.HasSuffix(oldValPtr.SuffixPath.ValueString(), newValPtr.SuffixPath.ValueString()) &&
+			oldValPtr.EnableHiveCompatiblePath.Equal(newValPtr.EnableHiveCompatiblePath) {
 			return true, diags
 		}
 	}
@@ -184,6 +185,7 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 		}
 	}
 
+	// set s3_delivery_configuration.suffix_path to what was in configuration
 	if delivery.S3DeliveryConfiguration != nil && aws.ToString(delivery.S3DeliveryConfiguration.SuffixPath) != "" {
 		if !data.S3DeliveryConfiguration.IsNull() {
 			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
@@ -320,6 +322,26 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 }
 
 func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
+		var plan, state deliveryResourceModel
+
+		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// state can remain null after create/refresh.
+		if !plan.FieldDelimiter.Equal(state.FieldDelimiter) {
+			if state.FieldDelimiter.IsNull() && plan.FieldDelimiter.IsUnknown() {
+				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("field_delimiter"), types.StringNull())...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+			}
+		}
+
+	}
 	r.SetTagsAll(ctx, request, response)
 }
 
