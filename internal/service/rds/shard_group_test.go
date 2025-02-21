@@ -90,6 +90,76 @@ func TestAccRDSShardGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSShardGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBShardGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_shard_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckShardGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccShardGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckShardGroupExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccShardGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckShardGroupExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccShardGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckShardGroupExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckShardGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
@@ -194,4 +264,33 @@ resource "aws_rds_shard_group" "test" {
   max_acu                   = 1000
 }
 `, rName))
+}
+
+func testAccShardGroupConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccShardGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_shard_group" "test" {
+  db_shard_group_identifier = %[1]q
+  db_cluster_identifier     = aws_rds_cluster.test.id
+  max_acu                   = 1000
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value))
+}
+
+func testAccShardGroupConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccShardGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_shard_group" "test" {
+  db_shard_group_identifier = %[1]q
+  db_cluster_identifier     = aws_rds_cluster.test.id
+  max_acu                   = 1000
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
