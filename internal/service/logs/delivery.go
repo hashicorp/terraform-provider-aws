@@ -111,6 +111,9 @@ func s3DeliverySemanticEquality(ctx context.Context, oldValue fwtypes.ListNested
 
 	oldValPtr, di := oldValue.ToPtr(ctx)
 	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
 
 	newValPtr, di := newValue.ToPtr(ctx)
 	diags = append(diags, di...)
