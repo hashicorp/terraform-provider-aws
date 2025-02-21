@@ -1,0 +1,1822 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../id-attributes/">
+      
+      
+        <link rel="next" href="../naming/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Makefile Cheat Sheet - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#makefile-cheat-sheet" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Makefile Cheat Sheet
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Makefile Cheat Sheet
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Makefile Cheat Sheet
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basics" class="md-nav__link">
+    Basics
+  </a>
+  
+    <nav class="md-nav" aria-label="Basics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    Location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phony-targets" class="md-nav__link">
+    Phony Targets
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meta-targets-and-dependent-targets" class="md-nav__link">
+    Meta Targets and Dependent Targets
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables" class="md-nav__link">
+    Variables
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cheat-sheet" class="md-nav__link">
+    Cheat Sheet
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basics" class="md-nav__link">
+    Basics
+  </a>
+  
+    <nav class="md-nav" aria-label="Basics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    Location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phony-targets" class="md-nav__link">
+    Phony Targets
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meta-targets-and-dependent-targets" class="md-nav__link">
+    Meta Targets and Dependent Targets
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables" class="md-nav__link">
+    Variables
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cheat-sheet" class="md-nav__link">
+    Cheat Sheet
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="makefile-cheat-sheet">Makefile Cheat Sheet<a class="headerlink" href="#makefile-cheat-sheet" title="Permanent link">#</a></h1>
+<p>The Terraform AWS Provider Makefile includes a lot of functionality to make working on the provider easier and more efficient. Many contributors are familiar with using the Makefile for running acceptance tests, but there is a lot more functionality hidden in this humble file.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>See <a href="../continuous-integration/">Continuous Integration</a> for more information about the CI-focused parts of the Makefile.</p>
+</div>
+<h2 id="basics">Basics<a class="headerlink" href="#basics" title="Permanent link">#</a></h2>
+<p>If you're new to our Makefile, this section will bring you up to speed.</p>
+<h3 id="location">Location<a class="headerlink" href="#location" title="Permanent link">#</a></h3>
+<p>The Makefile is located in the root of the provider repository and is called <a href="https://github.com/hashicorp/terraform-provider-aws/blob/main/GNUmakefile">GNUmakefile</a>.</p>
+<h3 id="phony-targets">Phony Targets<a class="headerlink" href="#phony-targets" title="Permanent link">#</a></h3>
+<p>Historically, Makefiles were used to help with the complexities of compiling and linking software projects, managing dependencies, and enabling the creation of various <em>target</em> files. <code>make</code> would create a "target" file as determined by the command line:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">% </span>make<span class="w"> </span>&lt;target&gt;
+</code></pre></div>
+<p>Today, we use <em>phony</em> targets in the Makefile to automate many tasks. "Phony" simply means that the target doesn't define the file we're trying to make but rather the recipe we want to perform, such as running tests.</p>
+<p>For example, <code>testacc</code> is a phony target to simplify the command for running acceptance tests:</p>
+<div class="highlight"><pre><span></span><code><span class="go">make testacc TESTS=TestAccIAMRole_basic PKG=iam</span>
+</code></pre></div>
+<h3 id="meta-targets-and-dependent-targets">Meta Targets and Dependent Targets<a class="headerlink" href="#meta-targets-and-dependent-targets" title="Permanent link">#</a></h3>
+<p><em>Meta</em> targets are <code>make</code> targets that only run other targets. They aggregate the functionality of other targets for convenience. In the <a href="#cheat-sheet">Cheat Sheet</a>, meta targets are marked with <sup>M</sup>.</p>
+<p><em>Dependent</em> targets also run other targets but, in addition, have their own functionality. A dependent target generally runs the other targets first before executing its own functionality. In the <a href="#cheat-sheet">Cheat Sheet</a>, dependent targets are marked with <sup>D</sup>.</p>
+<p>For example, in the cheat sheet, the <code>ci</code>, <code>clean</code>, and <code>misspell</code> targets are meta targets that only run other targets.</p>
+<p>On the other hand, examples of dependent targets are <code>deps-check</code>, <code>gen-check</code>, and <code>semgrep-code-quality</code>.</p>
+<p>When you call a meta or dependent target and it runs other targets, those targets must complete successfully in order for the target you called to succeed.</p>
+<h2 id="variables">Variables<a class="headerlink" href="#variables" title="Permanent link">#</a></h2>
+<p>In the <a href="#cheat-sheet">Cheat Sheet</a>, you can see which variables affect which <a href="#phony-targets">targets</a>. This section describes the variables in more detail.</p>
+<p>Variables are often defined before the <code>make</code> call on the same line, such as <code>MY_VAR=42 make my-target</code>. However, they can also be set on the same line <em>after</em> the <code>make</code> call or in your environment, using, for example, <code>export MY_VAR=42</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Targets that <a href="#meta-targets-and-dependent-targets">meta and dependent targets</a> run may not all respect the same set of variables.</p>
+</div>
+<ul>
+<li><code>ACCTEST_PARALLELISM</code> - (Default: <code>20</code>) Number of concurrent acceptance tests to run. Overridden if <code>P</code> is set.</li>
+<li><code>ACCTEST_TIMEOUT</code> - (Default: <code>360m</code>) Timeout before acceptance tests panic.</li>
+<li><code>BASE_REF</code> - (Default: <code>main</code>) Origin reference to use for Git <code>diff</code> comparison, as in <code>origin/BASE_REF</code>.</li>
+<li><code>CURDIR</code> - (Default: Value of <code>$PWD</code>) Root path to use for <code>/.ci/scripts/</code>.</li>
+<li><code>GO_VER</code> - (Default: Value in <code>.go-version</code> file) Version of Go to use. To use the default version on your system, use <code>GO_VER=go</code>.</li>
+<li><code>K</code> - (Default: <em>None</em>) Name of the service package you want to use, such as <code>ec2</code>, <code>iam</code>, or <code>lambda</code>, limiting Go processing to that package and dependencies. Equivalent to <code>PKG</code> variable. Assigns values to <code>PKG_NAME</code>, <code>SVC_DIR</code>, and <code>TEST</code> overridding any values set.</li>
+<li><code>P</code> - (Default: <code>20</code>) Number of concurrent acceptance tests to run. Assigns a value to <code>ACCTEST_PARALLELISM</code> overridding any value set.</li>
+<li><code>PKG</code> - (Default: <em>None</em>) Name of the service package you want to use, such as <code>ec2</code>, <code>iam</code>, or <code>lambda</code>, limiting Go processing to that package and dependencies. Equivalent to <code>K</code> variable. Assigns values to <code>PKG_NAME</code>, <code>SVC_DIR</code>, and <code>TEST</code> overridding any values set.</li>
+<li><code>PKG_NAME</code> - (Default: <code>internal</code>) Subdirectory (Go package) to use as the basis for Go processing. Overridden if <code>PKG</code> or <code>K</code> is set.</li>
+<li><code>RUNARGS</code> - (Default: <em>None</em>) Raw arguments passed to Go when running acceptance tests. For example, <code>RUNARGS=-run=TestMyTest</code>. Overridden if <code>TESTS</code> or <code>T</code> is set.</li>
+<li><code>SEMGREP_ARGS</code> - (Default: <code>--error</code>) Semgrep arguments. See the <a href="https://semgrep.dev/docs/cli-reference#semgrep-scan-command-options">Semgrep reference</a>.</li>
+<li><code>SEMGREP_ENABLE_VERSION_CHECK</code> - (Default: <code>false</code>) Whether to check Semgrep servers to verify you are running the latest Semgrep version.</li>
+<li><code>SEMGREP_SEND_METRICS</code> - (Default: <code>off</code>) When Semgrep usage metrics are sent to Semgrep.</li>
+<li><code>SEMGREP_TIMEOUT</code> - (Default: <code>900</code>) Maximum time to spend running a rule on a single file, in seconds.</li>
+<li><code>SVC_DIR</code> - (Default: <code>./internal/service</code>) Directory to as the base for recursive processing. Overridden if <code>PKG</code> or <code>K</code> is set.</li>
+<li><code>SWEEP_DIR</code> - (Default: <code>./internal/sweep</code>) Location of the sweep directory.</li>
+<li><code>SWEEP</code> - (Default: <code>us-west-2,us-east-1,us-east-2,us-west-1</code>) Comma-separated list of AWS regions to sweep.</li>
+<li><code>SWEEP_TIMEOUT</code> - (Default: <code>360m</code>) Time Go will spend sweeping resources before panicking.</li>
+<li><code>SWEEPARGS</code> - (Default: <em>None</em>) Raw arguments that define what to sweep, including dependencies. Similar to <code>SWEEPERS</code>. For example, <code>SWEEPARGS=-sweep-run=aws_example_thing</code>.</li>
+<li><code>SWEEPERS</code> - (Default: <em>None</em>) Resources to sweep, including dependencies. Similar to <code>SWEEPARGS</code>. For example, <code>SWEEPERS=aws_example_thing</code>. Assigns a value to <code>SWEEPARGS</code> overridding any value set.</li>
+<li><code>T</code> - (Default: <em>None</em>) Names of tests to run. Equivalent to <code>TESTS</code>. Assigns a value to <code>RUNARGS</code> overridding any value set.</li>
+<li><code>TEST</code> - (Default: <code>./...</code>) Limit tests to this directory and dependencies. Overridden if <code>PKG</code> or <code>K</code> is set.</li>
+<li><code>TEST_COUNT</code> - (Default: <code>1</code>) Number of times to run each acceptance or unit test.</li>
+<li><code>TESTS</code> - (Default: <em>None</em>) Names of tests to run. Equivalent to <code>T</code>. Assigns a value to <code>RUNARGS</code> overridding any value set.</li>
+<li><code>TESTARGS</code> - (Default: <em>None</em>) Raw arguments passed to Go when running tests. Unlike <code>RUNARGS</code>, this is <em>not</em> overridden if <code>TESTS</code> or <code>T</code> is set.</li>
+</ul>
+<h2 id="cheat-sheet">Cheat Sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">#</a></h2>
+<ul>
+<li><strong>Target</strong>: Use as a subcommand to <code>make</code>, such as <code>make gen</code>. <a href="#meta-targets-and-dependent-targets">Meta and dependent targets</a> are marked with <sup>M</sup> and <sup>D</sup>, respectively.</li>
+<li><strong>Description</strong>: When CI-related, this aligns with the name of the check as seen on GitHub.</li>
+<li><strong>CI?</strong>: Indicates whether the target is equivalent or largely equivalent to a check run on the GitHub repository for a pull request. See <a href="../continuous-integration/">continuous integration</a> for more details.</li>
+<li><strong>Legacy?</strong>: Indicates whether the target is a legacy holdover. Use caution with a legacy target! It may not work, or it may perform checks or fixes that do <em>not</em> align with current practices. In the future, this target should be removed, modernized, or verified to still have value.</li>
+<li><strong>Vars</strong>: <a href="#variables">Variables</a> that you can set when using the target, such as <code>MY_VAR=42 make my-target</code>. <a href="#meta-targets-and-dependent-targets">Meta and dependent targets</a> run other targets that may not respect the same variables.</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Makefile autocompletion works out of the box on Zsh (the default shell for Terminal on macOS) and Fish shells. For Bash, the <code>bash-completion</code> package, among others, provides Makefile autocompletion. Using autocompletion allows you, for example, to type <code>make ac</code>, press <em>tab</em>, and the shell autocompletes <code>make acctest-lint</code>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Description</th>
+<th>CI?</th>
+<th>Legacy?</th>
+<th>Vars</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>acctest-lint</code><sup>M</sup></td>
+<td>Run all CI acceptance test checks</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>build</code><sup>D</sup></td>
+<td>Build the provider</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>changelog-misspell</code></td>
+<td>CHANGELOG Misspell / misspell</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ci</code><sup>M</sup></td>
+<td>Run all CI checks</td>
+<td>✔️</td>
+<td></td>
+<td><code>BASE_REF</code>, <code>GO_VER</code>, <code>K</code>, <code>PKG</code>, <code>SEMGREP_ARGS</code>, <code>SVC_DIR</code>, <code>TEST</code>, <code>TESTARGS</code></td>
+</tr>
+<tr>
+<td><code>ci-quick</code><sup>M</sup></td>
+<td>Run quicker CI checks</td>
+<td>✔️</td>
+<td></td>
+<td><code>BASE_REF</code>, <code>GO_VER</code>, <code>K</code>, <code>PKG</code>, <code>SEMGREP_ARGS</code>, <code>SVC_DIR</code>, <code>TEST</code>, <code>TESTARGS</code></td>
+</tr>
+<tr>
+<td><code>clean</code><sup>M</sup></td>
+<td>Clean up Go cache, tidy and re-install tools</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>clean-go</code><sup>D</sup></td>
+<td>Clean up Go cache</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>clean-make-tests</code></td>
+<td>Clean up artifacts from make tests</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>clean-tidy</code><sup>D</sup></td>
+<td>Clean up tidy</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>copyright</code></td>
+<td>Copyright Checks / add headers check</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><em>default</em></td>
+<td>= <code>build</code></td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>deps-check</code><sup>D</sup></td>
+<td>Dependency Checks / go_mod</td>
+<td>✔️</td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>docs</code><sup>M</sup></td>
+<td>Run all CI documentation checks</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>docs-check</code></td>
+<td>Check provider documentation</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>docs-link-check</code></td>
+<td>Documentation Checks / markdown-link-check</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>docs-lint</code></td>
+<td>Lint documentation</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>docs-lint-fix</code></td>
+<td>Fix documentation linter findings</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>docs-markdown-lint</code></td>
+<td>Documentation Checks / markdown-lint</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>docs-misspell</code></td>
+<td>Documentation Checks / misspell</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>examples-tflint</code></td>
+<td>Examples Checks / tflint</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fix-constants</code><sup>M</sup></td>
+<td>Use Semgrep to fix constants</td>
+<td></td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>fix-imports</code></td>
+<td>Fixing source code imports with goimports</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fmt</code></td>
+<td>Fix Go source formatting</td>
+<td></td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code></td>
+</tr>
+<tr>
+<td><code>fmt-check</code></td>
+<td>Verify Go source is formatted</td>
+<td></td>
+<td></td>
+<td><code>CURDIR</code></td>
+</tr>
+<tr>
+<td><code>fumpt</code></td>
+<td>Run gofumpt</td>
+<td></td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code></td>
+</tr>
+<tr>
+<td><code>gen</code><sup>D</sup></td>
+<td>Run all Go generators</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>gen-check</code><sup>D</sup></td>
+<td>Provider Checks / go_generate</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>generate-changelog</code></td>
+<td>Generate changelog</td>
+<td></td>
+<td></td>
+<td><code>CURDIR</code></td>
+</tr>
+<tr>
+<td><code>gh-workflow-lint</code></td>
+<td>Workflow Linting / actionlint</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>go-build</code></td>
+<td>Provider Checks / go-build</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>go-misspell</code></td>
+<td>Provider Checks / misspell</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>golangci-lint</code><sup>M</sup></td>
+<td>All golangci-lint Checks</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>TEST</code></td>
+</tr>
+<tr>
+<td><code>golangci-lint1</code></td>
+<td>golangci-lint Checks / 1 of 5</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>TEST</code></td>
+</tr>
+<tr>
+<td><code>golangci-lint2</code></td>
+<td>golangci-lint Checks / 2 of 5</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>TEST</code></td>
+</tr>
+<tr>
+<td><code>golangci-lint3</code></td>
+<td>golangci-lint Checks / 3 of 5</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>TEST</code></td>
+</tr>
+<tr>
+<td><code>golangci-lint4</code></td>
+<td>golangci-lint Checks / 4 of 5</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>TEST</code></td>
+</tr>
+<tr>
+<td><code>golangci-lint5</code></td>
+<td>golangci-lint Checks / 5 of 5</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>TEST</code></td>
+</tr>
+<tr>
+<td><code>help</code></td>
+<td>Display help</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>import-lint</code></td>
+<td>Provider Checks / import-lint</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>TEST</code></td>
+</tr>
+<tr>
+<td><code>install</code><sup>M</sup></td>
+<td>= <code>build</code></td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>lint</code><sup>M</sup></td>
+<td>Legacy target, use caution</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>lint-fix</code><sup>M</sup></td>
+<td>Fix acceptance test, website, and docs linter findings</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>misspell</code><sup>M</sup></td>
+<td>Run all CI misspell checks</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>prereq-go</code></td>
+<td>Install the project's Go version</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>provider-lint</code></td>
+<td>ProviderLint Checks / providerlint</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>provider-markdown-lint</code></td>
+<td>Provider Check / markdown-lint</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sane</code><sup>D</sup></td>
+<td>Run sane check</td>
+<td></td>
+<td></td>
+<td><code>ACCTEST_PARALLELISM</code>, <code>ACCTEST_TIMEOUT</code>, <code>GO_VER</code>, <code>TEST_COUNT</code></td>
+</tr>
+<tr>
+<td><code>sanity</code><sup>D</sup></td>
+<td>Run sanity check (failures allowed)</td>
+<td></td>
+<td></td>
+<td><code>ACCTEST_PARALLELISM</code>, <code>ACCTEST_TIMEOUT</code>, <code>GO_VER</code>, <code>TEST_COUNT</code></td>
+</tr>
+<tr>
+<td><code>semgrep</code><sup>M</sup></td>
+<td>Run all CI Semgrep checks</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-all</code><sup>D</sup></td>
+<td>Run semgrep on all files</td>
+<td></td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-code-quality</code><sup>D</sup></td>
+<td>Semgrep Checks / Code Quality Scan</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-constants</code><sup>D</sup></td>
+<td>Fix constants with Semgrep --autofix</td>
+<td></td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-docker</code><sup>D</sup></td>
+<td>Run Semgrep</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>semgrep-fix</code><sup>D</sup></td>
+<td>Fix Semgrep issues that have fixes</td>
+<td></td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-naming</code><sup>D</sup></td>
+<td>Semgrep Checks / Test Configs Scan</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-naming-cae</code><sup>D</sup></td>
+<td>Semgrep Checks / Naming Scan Caps/<code>AWS</code>/EC2</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-service-naming</code><sup>D</sup></td>
+<td>Semgrep Checks / Service Name Scan A-Z</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>SEMGREP_ARGS</code></td>
+</tr>
+<tr>
+<td><code>semgrep-validate</code></td>
+<td>Validate Semgrep configuration files</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>skaff</code><sup>D</sup></td>
+<td>Install skaff</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>skaff-check-compile</code></td>
+<td>Skaff Checks / Compile skaff</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sweep</code><sup>D</sup></td>
+<td>Run sweepers</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code>, <code>SWEEP_DIR</code>, <code>SWEEP_TIMEOUT</code>, <code>SWEEP</code>, <code>SWEEPARGS</code></td>
+</tr>
+<tr>
+<td><code>sweeper</code><sup>D</sup></td>
+<td>Run sweepers with failures allowed</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code>, <code>SWEEP_DIR</code>, <code>SWEEP_TIMEOUT</code>, <code>SWEEP</code></td>
+</tr>
+<tr>
+<td><code>sweeper-check</code><sup>M</sup></td>
+<td>Provider Checks / Sweeper Linked, Unlinked</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sweeper-linked</code></td>
+<td>Provider Checks / Sweeper Functions Linked</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sweeper-unlinked</code><sup>D</sup></td>
+<td>Provider Checks / Sweeper Functions Not Linked</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>t</code><sup>D</sup></td>
+<td>Run acceptance tests  (similar to <code>testacc</code>)</td>
+<td></td>
+<td></td>
+<td><code>ACCTEST_PARALLELISM</code>, <code>ACCTEST_TIMEOUT</code>, <code>GO_VER</code>, <code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>RUNARGS</code>, <code>TEST_COUNT</code>, <code>TESTARGS</code></td>
+</tr>
+<tr>
+<td><code>test</code><sup>D</sup></td>
+<td>Run unit tests</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code>, <code>K</code>, <code>PKG</code>, <code>TEST</code>, <code>TESTARGS</code></td>
+</tr>
+<tr>
+<td><code>test-compile</code><sup>D</sup></td>
+<td>Test package compilation</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code>, <code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>TEST</code>, <code>TESTARGS</code></td>
+</tr>
+<tr>
+<td><code>testacc</code><sup>D</sup></td>
+<td>Run acceptance tests</td>
+<td></td>
+<td></td>
+<td><code>ACCTEST_PARALLELISM</code>, <code>ACCTEST_TIMEOUT</code>, <code>GO_VER</code>, <code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>RUNARGS</code>, <code>TEST_COUNT</code>, <code>TESTARGS</code></td>
+</tr>
+<tr>
+<td><code>testacc-lint</code></td>
+<td>Acceptance Test Linting / terrafmt</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>testacc-lint-fix</code></td>
+<td>Fix acceptance test linter findings</td>
+<td></td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>testacc-short</code><sup>D</sup></td>
+<td>Run acceptace tests with the -short flag</td>
+<td></td>
+<td></td>
+<td><code>ACCTEST_PARALLELISM</code>, <code>ACCTEST_TIMEOUT</code>, <code>GO_VER</code>, <code>K</code>, <code>PKG</code>, <code>PKG_NAME</code>, <code>RUNARGS</code>, <code>TEST_COUNT</code>, <code>TESTARGS</code></td>
+</tr>
+<tr>
+<td><code>testacc-tflint</code></td>
+<td>Acceptance Test Linting / tflint</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>testacc-tflint-dir</code></td>
+<td>Run <code>tflint</code> on Terraform acceptance test directories</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>testacc-tflint-dir-fix</code></td>
+<td>Fix <code>tflint</code> issues in Terraform acceptance test directories</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>testacc-tflint-embedded</code></td>
+<td>Run <code>tflint</code> on embedded Terraform configurations</td>
+<td>✔️</td>
+<td></td>
+<td><code>K</code>, <code>PKG</code>, <code>SVC_DIR</code></td>
+</tr>
+<tr>
+<td><code>tfproviderdocs</code><sup>D</sup></td>
+<td>Provider Checks / tfproviderdocs</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tfsdk2fw</code><sup>D</sup></td>
+<td>Install tfsdk2fw</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>tools</code><sup>D</sup></td>
+<td>Install tools</td>
+<td></td>
+<td></td>
+<td><code>GO_VER</code></td>
+</tr>
+<tr>
+<td><code>ts</code><sup>M</sup></td>
+<td>Alias to <code>testacc-short</code></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>website</code><sup>M</sup></td>
+<td>Run all CI website checks</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-link-check</code></td>
+<td>Check website links</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-link-check-ghrc</code></td>
+<td>Check website links with ghrc</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-link-check-markdown</code></td>
+<td>Website Checks / markdown-link-check-a-z-markdown</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-link-check-md</code></td>
+<td>Website Checks / markdown-link-check-md</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-lint</code></td>
+<td>Lint website files</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-lint-fix</code></td>
+<td>Fix website linter findings</td>
+<td></td>
+<td>✔️</td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-markdown-lint</code></td>
+<td>Website Checks / markdown-lint</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-misspell</code></td>
+<td>Website Checks / misspell</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-terrafmt</code></td>
+<td>Website Checks / terrafmt</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>website-tflint</code></td>
+<td>Website Checks / tflint</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>yamllint</code></td>
+<td><code>YAML</code> Linting / yamllint</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1624 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../makefile-cheat-sheet/">
+      
+      
+        <link rel="next" href="../provider-design/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Naming Standards - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#naming-conventions-for-the-aws-provider" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Naming Standards
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Naming Standards
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Naming Standards
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#service-identifier" class="md-nav__link">
+    Service Identifier
+  </a>
+  
+    <nav class="md-nav" aria-label="Service Identifier">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-well-is-it-followed" class="md-nav__link">
+    How Well Is It Followed?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packages" class="md-nav__link">
+    Packages
+  </a>
+  
+    <nav class="md-nav" aria-label="Packages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_1" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-and-data-sources" class="md-nav__link">
+    Resources and Data Sources
+  </a>
+  
+    <nav class="md-nav" aria-label="Resources and Data Sources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_2" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files" class="md-nav__link">
+    Files
+  </a>
+  
+    <nav class="md-nav" aria-label="Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-and-data-source-documentation-rule" class="md-nav__link">
+    Resource and Data Source Documentation Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#go-file-rule" class="md-nav__link">
+    Go File Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mixed-caps" class="md-nav__link">
+    Mixed Caps
+  </a>
+  
+    <nav class="md-nav" aria-label="Mixed Caps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_3" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_4" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables-and-constants" class="md-nav__link">
+    Variables and Constants
+  </a>
+  
+    <nav class="md-nav" aria-label="Variables and Constants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_5" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-and-unit-tests" class="md-nav__link">
+    Acceptance and Unit Tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance and Unit Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#acceptance-test-rule" class="md-nav__link">
+    Acceptance Test Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialized-acceptance-test-rule" class="md-nav__link">
+    Serialized Acceptance Test Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unit-test-rule" class="md-nav__link">
+    Unit Test Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-support-functions" class="md-nav__link">
+    Test Support Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Support Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_6" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-test-configurations" class="md-nav__link">
+    Acceptance Test Configurations
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance Test Configurations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_7" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#service-identifier" class="md-nav__link">
+    Service Identifier
+  </a>
+  
+    <nav class="md-nav" aria-label="Service Identifier">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-well-is-it-followed" class="md-nav__link">
+    How Well Is It Followed?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packages" class="md-nav__link">
+    Packages
+  </a>
+  
+    <nav class="md-nav" aria-label="Packages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_1" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-and-data-sources" class="md-nav__link">
+    Resources and Data Sources
+  </a>
+  
+    <nav class="md-nav" aria-label="Resources and Data Sources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_2" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files" class="md-nav__link">
+    Files
+  </a>
+  
+    <nav class="md-nav" aria-label="Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-and-data-source-documentation-rule" class="md-nav__link">
+    Resource and Data Source Documentation Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#go-file-rule" class="md-nav__link">
+    Go File Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mixed-caps" class="md-nav__link">
+    Mixed Caps
+  </a>
+  
+    <nav class="md-nav" aria-label="Mixed Caps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_3" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_4" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables-and-constants" class="md-nav__link">
+    Variables and Constants
+  </a>
+  
+    <nav class="md-nav" aria-label="Variables and Constants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_5" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-and-unit-tests" class="md-nav__link">
+    Acceptance and Unit Tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance and Unit Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#acceptance-test-rule" class="md-nav__link">
+    Acceptance Test Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialized-acceptance-test-rule" class="md-nav__link">
+    Serialized Acceptance Test Rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unit-test-rule" class="md-nav__link">
+    Unit Test Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-support-functions" class="md-nav__link">
+    Test Support Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Support Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_6" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-test-configurations" class="md-nav__link">
+    Acceptance Test Configurations
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance Test Configurations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule_7" class="md-nav__link">
+    Rule
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="naming-conventions-for-the-aws-provider">Naming Conventions for the AWS Provider<a class="headerlink" href="#naming-conventions-for-the-aws-provider" title="Permanent link">#</a></h1>
+<h2 id="service-identifier">Service Identifier<a class="headerlink" href="#service-identifier" title="Permanent link">#</a></h2>
+<p>In the AWS Provider, a service identifier should consistently identify an AWS service from code to documentation to provider used by a practitioner. Prominent places you will see service identifiers:</p>
+<ul>
+<li>The package name (e.g., <code>internal/service/&lt;serviceidentifier&gt;</code>)</li>
+<li>In resource and data source names (e.g., <code>aws_&lt;serviceidentifier&gt;_thing</code>)</li>
+<li>Documentation file names (e.g., <code>website/docs/r/&lt;serviceidentifier&gt;_thing</code>)</li>
+</ul>
+<p>Typically, choosing the AWS Provider identifier for a service is simple. AWS consistently uses one name and we use that name as the identifier. However, some services are not simple. To provide consistency, and to help contributors and practitioners know what to expect, we provide this rule for defining a service identifier:</p>
+<h3 id="rule">Rule<a class="headerlink" href="#rule" title="Permanent link">#</a></h3>
+<ol>
+<li>Determine the service package name for <a href="https://pkg.go.dev/github.com/aws/aws-sdk-go-v2">AWS Go SDK v2</a>.</li>
+<li>Determine the <a href="https://awscli.amazonaws.com/v2/documentation/api/latest/index.html">AWS CLI v2</a> <em>command</em> corresponding to the service (i.e., the word following <code>aws</code> in CLI commands; e.g., for <code>aws sts get-caller-identity</code>, <code>sts</code> is the <em>command</em>, <code>get-caller-identity</code> is the <em>subcommand</em>).</li>
+<li>If the SDK and CLI agree, use that. If the service only exists in one, use that.</li>
+<li>If they differ, use the shorter of the two.</li>
+<li>Use lowercase letters and do not include any underscores (<code>_</code>).</li>
+</ol>
+<h3 id="how-well-is-it-followed">How Well Is It Followed?<a class="headerlink" href="#how-well-is-it-followed" title="Permanent link">#</a></h3>
+<p>With 156+ services having some level of implementation, the following is a summary of how well this rule is currently followed.</p>
+<p>For AWS provider service package names, only five packages violate this rule: <code>appautoscaling</code> should be <code>applicationautoscaling</code>, <code>codedeploy</code> should be <code>deploy</code>, <code>elasticsearch</code> should be <code>es</code>, <code>cloudwatchlogs</code> should be <code>logs</code>, and <code>simpledb</code> should be <code>sdb</code>.</p>
+<p>For the service identifiers used in resource and data source configuration names (e.g., <code>aws_acmpca_certificate_authority</code>), 32 wholly or partially violate the rule.</p>
+<ul>
+<li>EC2, ELB, ELBv2, and RDS have legacy but heavily used resources and data sources that do not or inconsistently use service identifiers.</li>
+<li>The remaining 28 services violate the rule in a consistent way: <code>appautoscaling</code> should be <code>applicationautoscaling</code>, <code>codedeploy</code> should be <code>deploy</code>, <code>elasticsearch</code> should be <code>es</code>, <code>cloudwatch_log</code> should be <code>logs</code>, <code>simpledb</code> should be <code>sdb</code>, <code>prometheus</code> should be <code>amp</code>, <code>api_gateway</code> should be <code>apigateway</code>, <code>cloudcontrolapi</code> should be <code>cloudcontrol</code>, <code>cognito_identity</code> should be <code>cognitoidentity</code>, <code>cognito</code> should be <code>cognitoidp</code>, <code>config</code> should be <code>configservice</code>, <code>dx</code> should be <code>directconnect</code>, <code>directory_service</code> should be <code>ds</code>, <code>elastic_beanstalk</code> should be <code>elasticbeanstalk</code>, <code>cloudwatch_event</code> should be <code>events</code>, <code>kinesis_firehose</code> should be <code>firehose</code>, <code>msk</code> should be <code>kafka</code>, <code>mskconnect</code> should be <code>kafkaconnect</code>, <code>kinesis_analytics</code> should be <code>kinesisanalytics</code>, <code>kinesis_video</code> should be <code>kinesisvideo</code>, <code>lex</code> should be <code>lexmodels</code>, <code>media_convert</code> should be <code>mediaconvert</code>, <code>media_package</code> should be <code>mediapackage</code>, <code>media_store</code> should be <code>mediastore</code>, <code>route53_resolver</code> should be <code>route53resolver</code>, relevant <code>s3</code> should be <code>s3control</code>, <code>serverlessapplicationrepository</code> should be <code>serverlessrepo</code>, and <code>service_discovery</code> should be <code>servicediscovery</code>.</li>
+</ul>
+<h2 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">#</a></h2>
+<p>Package names are not seen or used by practitioners. However, they should still be carefully considered.</p>
+<h3 id="rule_1">Rule<a class="headerlink" href="#rule_1" title="Permanent link">#</a></h3>
+<ol>
+<li>For service packages (i.e., packages under <code>internal/service</code>), use the AWS Provider <a href="#service-identifier">service identifier</a> as the package name.</li>
+<li>For other packages, use a short name for the package. Common Go lengths are 3-9 characters.</li>
+<li>Use a descriptive name. The name should capture the key purpose of the package.</li>
+<li>Use lowercase letters and do not include any underscores (<code>_</code>).</li>
+<li>Avoid useless names like <code>helper</code>. These names convey zero information. Everything in the AWS Provider is helping something or someone do something so the name <code>helper</code> doesn't narrow down the purpose of the package within the codebase.</li>
+<li>Use a name that is not too narrow or too broad as Go packages should not be too big or too small. Tiny packages can be combined using a broader name encompassing both. For example, <code>verify</code> is a good name because it tells you <em>what</em> the package does and allows a broad set of validation, comparison, and checking functionality.</li>
+</ol>
+<h2 id="resources-and-data-sources">Resources and Data Sources<a class="headerlink" href="#resources-and-data-sources" title="Permanent link">#</a></h2>
+<p>When creating a new resource or data source, it is important to get names right. Once practitioners rely on names, we can only change them through breaking changes. If you are unsure about what to call a resource or data source, discuss it with the community and maintainers.</p>
+<h3 id="rule_2">Rule<a class="headerlink" href="#rule_2" title="Permanent link">#</a></h3>
+<ol>
+<li>Follow the <a href="https://pkg.go.dev/github.com/aws/aws-sdk-go-v2">AWS SDK for Go v2</a>. Almost always, the API operations make determining the name simple. For example, the <a href="https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/evidently">Amazon CloudWatch Evidently</a> service includes <code>CreateExperiment</code>, <code>GetExperiment</code>, <code>UpdateExperiment</code>, and <code>DeleteExperiment</code>. Thus, the resource (or data source) name is "Experiment."</li>
+<li>Give a resource its Terraform configuration (i.e., HCL) name (e.g., <code>aws_imagebuilder_image_pipeline</code>) by joining these three parts with underscores:<ul>
+<li><code>aws</code> prefix</li>
+<li><a href="#service-identifier">Service identifier</a> (service identifiers do not include underscores), all lowercase (e.g., <code>imagebuilder</code>)</li>
+<li>Resource (or data source) name in snake case (spaces replaced with underscores, if any), all lowercase (e.g., <code>image_pipeline</code>)</li>
+</ul>
+</li>
+<li>Name the main resource function <code>Resource&lt;ResourceName&gt;()</code>, with the resource name in <a href="#mixed-caps">Mixed Caps</a>. Do not include the service name or identifier. For example, define <code>ResourceImagePipeline()</code> in a file called <code>internal/service/imagebuilder/image_pipeline.go</code>.</li>
+<li>Similarly, name the main data source function <code>DataSource&lt;ResourceName&gt;()</code>, with the data source name in <a href="#mixed-caps">Mixed Caps</a>. Do not include the service name or identifier. For example, define <code>DataSourceImagePipeline()</code> in a file called <code>internal/service/imagebuilder/image_pipeline_data_source.go</code>.</li>
+</ol>
+<h2 id="files">Files<a class="headerlink" href="#files" title="Permanent link">#</a></h2>
+<p>File names should follow Go and Markdown conventions with these additional points.</p>
+<h3 id="resource-and-data-source-documentation-rule">Resource and Data Source Documentation Rule<a class="headerlink" href="#resource-and-data-source-documentation-rule" title="Permanent link">#</a></h3>
+<ol>
+<li>Resource markdown goes in the <code>website/docs/r</code> directory. Data source markdown goes in the <code>website/docs/d</code> directory.</li>
+<li>Use the <a href="#service-identifier">service identifier</a> and resource or data source name, separated by an underscore (<code>_</code>).</li>
+<li>All letters are lowercase.</li>
+<li>Use <code>.html.markdown</code> as the extension.</li>
+<li>Do not include "aws" in the name.</li>
+</ol>
+<p>A correct example is <code>accessanalyzer_analyzer.html.markdown</code>. An incorrect example is <code>service_discovery_instance.html.markdown</code> because the <a href="#service-identifier">service identifier</a> should not include an underscore.</p>
+<h3 id="go-file-rule">Go File Rule<a class="headerlink" href="#go-file-rule" title="Permanent link">#</a></h3>
+<ol>
+<li>Resource and data source files are in the <code>internal/service/&lt;service&gt;</code> directory.</li>
+<li>Do not include the service as part of the file name.</li>
+<li>Data sources should include <code>_data_source</code> after the data source name (e.g., <code>application_data_source.go</code>).</li>
+<li>Put unit and acceptance tests in a file ending with <code>_test.go</code> (e.g., <code>custom_domain_association_test.go</code>).</li>
+<li>Use snake case for multiword names (i.e., all letters are lowercase, words separated by underscores).</li>
+<li>Use the <code>.go</code> extension.</li>
+<li>Idiomatic names for common non-resource, non-data-source files include <code>consts.go</code> (service-wide constants), <code>find.go</code> (finders), <code>flex.go</code> (FLatteners and EXpanders), <code>generate.go</code> (directives for code generation), <code>id.go</code> (ID creators and parsers), <code>status.go</code> (status functions), <code>sweep.go</code> (sweepers), <code>tags_gen.go</code> (generated tag code), <code>validate.go</code> (validators), and <code>wait.go</code> (waiters).</li>
+</ol>
+<h2 id="mixed-caps">Mixed Caps<a class="headerlink" href="#mixed-caps" title="Permanent link">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Mixed Caps is different than camel case, Pascal case, or snake case!</p>
+</div>
+<p>Idiomatic Go uses <a href="https://go.dev/wiki/CodeReviewComments#initialisms"><em>Mixed Caps</em></a> for multiword names in code. Mixed caps is similar to camel case except <strong>initialisms and abbreviations in mixed caps should be the correct, human-readable case</strong>, such as <code>VPCEndpoint</code> not <code>VpcEndpoint</code>. After all, names in code <em>are for humans</em>.</p>
+<p>An acronym such as "VPC" should either be all capitalized ("VPC") or all lowercase ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."</p>
+<p>For more details on capitalizations we enforce with CI Semgrep tests, see the <a href="https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md">Caps List</a>.</p>
+<h3 id="rule_3">Rule<a class="headerlink" href="#rule_3" title="Permanent link">#</a></h3>
+<ol>
+<li>Use <em>mixedCaps</em> for names (such as for functions, types, methods, variables, and constants) in the Terraform AWS Provider Go code.</li>
+</ol>
+<h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">#</a></h2>
+<p>In general, follow Go best practices for good function naming. This rule is for functions defined outside of the <em>test</em> context (i.e., not in a file ending with <code>_test.go</code>). For test functions, see <a href="#test-support-functions">Test Support Functions</a> or <a href="#acceptance-test-configurations">Acceptance Test Configurations</a> below.</p>
+<h3 id="rule_4">Rule<a class="headerlink" href="#rule_4" title="Permanent link">#</a></h3>
+<ol>
+<li>Only export functions (capitalize) when necessary, i.e., when the function is used outside the current package, including in the <code>_test</code> (<code>.test</code>) package.</li>
+<li>Use <a href="#mixed-caps">MixedCaps</a> (exported) or <a href="#mixed-caps">mixedCaps</a> (not exported). Do not use underscores for multiwords.</li>
+<li>Do not include the service name in the function name. (If functions are used outside the current package, the import package clarifies a function's origin. For example, the EC2 function <code>FindVPCEndpointByID()</code> is used outside the <code>internal/service/ec2</code> package but where it is used, the call is <code>tfec2.FindVPCEndpointByID()</code>.)</li>
+<li>For CRUD functions for resources, use this format: <code>resource&lt;ResourceName&gt;&lt;CRUDFunction&gt;</code>. For example, <code>resourceImageRecipeUpdate()</code>, <code>resourceBaiduChannelRead()</code>.</li>
+<li>For data sources, for Read functions, use this format: <code>dataSource&lt;DataSourceName&gt;Read</code>. For example, <code>dataSourceBrokerRead()</code>, <code>dataSourceEngineVersionRead()</code>.</li>
+<li>To improve readability, consider including the resource name in helper function names that pertain only to that resource. For example, for an expander function for an "App" resource and a "Campaign Hook" expander, use <code>expandAppCampaignHook()</code>.</li>
+<li>Do not include "AWS" or "Aws" in the name.</li>
+</ol>
+<h2 id="variables-and-constants">Variables and Constants<a class="headerlink" href="#variables-and-constants" title="Permanent link">#</a></h2>
+<p>In general, follow Go best practices for good variable and constant naming.</p>
+<h3 id="rule_5">Rule<a class="headerlink" href="#rule_5" title="Permanent link">#</a></h3>
+<ol>
+<li>Only export variables and constants (capitalize) when necessary, i.e., the variable or constant is used outside the current package, including in the <code>_test</code> (<code>.test</code>) package.</li>
+<li>Use <a href="#mixed-caps">MixedCaps</a> (exported) or <a href="#mixed-caps">mixedCaps</a> (not exported). Do not use underscores for multiwords.</li>
+<li>Do not include the service name in variable or constant names. (If variables or constants are used outside the current package, the import package clarifies its origin. For example, IAM's <code>PropagationTimeout</code> is widely used outside of IAM but each instance is through the package import alias, <code>tfiam.PropagationTimeout</code>. "IAM" is unnecessary in the constant name.)</li>
+<li>To improve readability, consider including the resource name in variable and constant names that pertain only to that resource. For example, for a string constant for a "Role" resource and a "not found" status, use <code>roleStatusNotFound</code> or <code>RoleStatusNotFound</code>, if used outside the service's package.</li>
+<li>Do not include "AWS" or "Aws" in the name.</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Give priority to constants from the AWS SDK for Go rather than defining new constants for the same values.</p>
+</div>
+<h2 id="acceptance-and-unit-tests">Acceptance and Unit Tests<a class="headerlink" href="#acceptance-and-unit-tests" title="Permanent link">#</a></h2>
+<p>With about 6000 acceptance and unit tests, following these naming conventions is essential to organization and (human) context switching between services.</p>
+<p>There are three types of tests in the AWS Provider: (regular) acceptance tests, serialized acceptance tests, and unit tests. All are functions that take a variable of type <code>*testing.T</code>. Acceptance tests and unit tests have exported (i.e., capitalized) names while serialized tests do not. Serialized tests are called by another exported acceptance test, often ending with <code>_serial</code>. The majority of tests in the AWS provider are acceptance tests.</p>
+<h3 id="acceptance-test-rule">Acceptance Test Rule<a class="headerlink" href="#acceptance-test-rule" title="Permanent link">#</a></h3>
+<p>Acceptance test names have a minimum of two (e.g., <code>TestAccBackupPlan_tags</code>) or a maximum of three (e.g., <code>TestAccDynamoDBTable_Replica_multiple</code>) parts, joined with underscores:</p>
+<ol>
+<li>First part: All have a <em>prefix</em> (i.e., <code>TestAcc</code>), <em>service name</em> (e.g., <code>Backup</code>, <code>DynamoDB</code>), and <em>resource name</em> (e.g., <code>Plan</code>, <code>Table</code>), <a href="#mixed-caps">Mixed Caps</a> without underscores between. Do not include "AWS" or "Aws" in the name.</li>
+<li>Middle part (Optional): <em>Test group</em> (e.g., <code>Replica</code>), uppercase, <a href="#mixed-caps">Mixed Caps</a>. Consider a metaphor where tests are chapters in a book. If it is helpful, tests can be grouped together like chapters in a book that are sometimes grouped into parts or sections of the book.</li>
+<li>Last part: <em>Test identifier</em> (e.g., <code>basic</code>, <code>tags</code>, or <code>multiple</code>), lowercase, <a href="#mixed-caps">mixedCaps</a>). The identifier should make the test's purpose clear but be concise. For example, the identifier <code>conflictsWithCloudFrontDefaultCertificate</code> (41 characters) conveys no more information than <code>conflictDefaultCertificate</code> (26 characters), since "CloudFront" is implied and "with" is <em>always</em> implicit. Avoid words that convey no meaning or whose meaning is implied. For example, "with" (e.g., <code>_withTags</code>) is not needed because we imply the name is telling us what the test is <em>with</em>. <code>withTags</code> can be simplified to <code>tags</code>.</li>
+</ol>
+<h3 id="serialized-acceptance-test-rule">Serialized Acceptance Test Rule<a class="headerlink" href="#serialized-acceptance-test-rule" title="Permanent link">#</a></h3>
+<p>The names of serialized acceptance tests follow the regular <a href="#acceptance-test-rule">acceptance test name rule</a> <strong><em>except</em></strong> for serialized acceptance test names:</p>
+<ol>
+<li>Start with <code>testAcc</code> instead of <code>TestAcc</code></li>
+<li>Do not include the name of the service (e.g., a serialized acceptance test would be called <code>testAccApp_basic</code> not <code>testAccAmplifyApp_basic</code>).</li>
+</ol>
+<h3 id="unit-test-rule">Unit Test Rule<a class="headerlink" href="#unit-test-rule" title="Permanent link">#</a></h3>
+<p>Unit test names follow the same <a href="#acceptance-test-rule">rule</a> as acceptance test names except for unit test names:</p>
+<ol>
+<li>Start with <code>Test</code>, not <code>TestAcc</code></li>
+<li>Do not include the name of the service</li>
+<li>Usually do not have any underscores</li>
+<li>If they test a function, should include the function name (e.g., a unit test of <code>ExpandListener()</code> should be called <code>TestExpandListener()</code>)</li>
+</ol>
+<h2 id="test-support-functions">Test Support Functions<a class="headerlink" href="#test-support-functions" title="Permanent link">#</a></h2>
+<p>This rule is for functions defined in the <em>test</em> context (i.e., in a file ending with <code>_test.go</code>) that do not return a string with Terraform configuration. For non-test functions, see <a href="#functions">Functions</a> above. Or, see <a href="#acceptance-test-configurations">Acceptance Test Configurations</a> below.</p>
+<h3 id="rule_6">Rule<a class="headerlink" href="#rule_6" title="Permanent link">#</a></h3>
+<ol>
+<li>Only export functions (capitalize) when necessary, i.e., when the function is used outside the current package. <em>This is very rare.</em></li>
+<li>Use <a href="#mixed-caps">MixedCaps</a> (exported) or <a href="#mixed-caps">mixedCaps</a> (not exported). Do not use underscores for multiwords.</li>
+<li>Do not include the service name in the function name. For example, <code>testAccCheckAMPWorkspaceExists()</code> should be named <code>testAccCheckWorkspaceExists()</code> instead, dropping the service name.</li>
+<li>Several types of support functions occur commonly and should follow these patterns:<ul>
+<li>Destroy: <code>testAccCheck&lt;Resource&gt;Destroy</code></li>
+<li>Disappears: <code>testAccCheck&lt;Resource&gt;Disappears</code></li>
+<li>Exists: <code>testAccCheck&lt;Resource&gt;Exists</code></li>
+<li>Not Recreated: <code>testAccCheck&lt;Resource&gt;NotRecreated</code></li>
+<li>PreCheck: <code>testAccPreCheck</code> (often, only one PreCheck is needed per service so no resource name is needed)</li>
+<li>Recreated: <code>testAccCheck&lt;Resource&gt;Recreated</code></li>
+</ul>
+</li>
+<li>Do not include "AWS" or "Aws" in the name.</li>
+</ol>
+<h2 id="acceptance-test-configurations">Acceptance Test Configurations<a class="headerlink" href="#acceptance-test-configurations" title="Permanent link">#</a></h2>
+<p>This rule is for functions defined in the <em>test</em> context (i.e., in a file ending with <code>_test.go</code>) that return a string with Terraform configuration. For test support functions, see <a href="#test-support-functions">Test Support Functions</a> above. Or, for non-test functions, see <a href="#functions">Functions</a> above.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This rule is not widely used currently. However, new functions and functions you change should follow it.</p>
+</div>
+<h3 id="rule_7">Rule<a class="headerlink" href="#rule_7" title="Permanent link">#</a></h3>
+<ol>
+<li>Only export functions (capitalize) when necessary, i.e., when the function is used outside the current package. <em>This is very rare.</em></li>
+<li>Use <a href="#mixed-caps">MixedCaps</a> (exported) or <a href="#mixed-caps">mixedCaps</a> (not exported). Do not use underscores for multiwords.</li>
+<li>Do not include the service name in the function name.</li>
+<li>Follow this pattern: <code>testAccConfig&lt;Resource&gt;_&lt;TestGroup&gt;_&lt;configDescription&gt;</code><ul>
+<li><code>_&lt;TestGroup&gt;</code> is optional. Refer to the <a href="#acceptance-test-rule">Acceptance Test Rule</a> test group discussion.</li>
+<li>Especially when an acceptance test only uses one configuration, the <code>&lt;configDescription&gt;</code> should be the same as the test identifier discussed in the <a href="#acceptance-test-rule">Acceptance Test Rule</a>.</li>
+</ul>
+</li>
+<li>Do not include "AWS" or "Aws" in the name.</li>
+</ol>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>

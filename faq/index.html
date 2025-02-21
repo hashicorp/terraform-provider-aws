@@ -1,0 +1,1193 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../issue-reporting-and-lifecycle/">
+      
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>FAQ - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#frequently-asked-questions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              FAQ
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          FAQ
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        FAQ
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#who-are-the-maintainers" class="md-nav__link">
+    Who are the maintainers?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-isnt-my-pr-merged-yet" class="md-nav__link">
+    Why isn’t my PR merged yet?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-do-you-decide-what-gets-merged-for-each-release" class="md-nav__link">
+    How do you decide what gets merged for each release?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#my-pr-hasnt-been-merged-and-it-now-has-merge-conflictsfailed-checks-should-i-keep-it-up-to-date" class="md-nav__link">
+    My PR hasn't been merged and it now has merge conflicts/failed checks, should I keep it up to date?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-often-do-you-release" class="md-nav__link">
+    How often do you release?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backward-compatibility-promise" class="md-nav__link">
+    Backward Compatibility Promise
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#once-a-major-release-is-published-will-new-features-and-fixes-be-backported-to-previous-versions" class="md-nav__link">
+    Once a major release is published, will new features and fixes be backported to previous versions?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aws-just-announced-a-new-region-when-will-i-see-it-in-the-provider" class="md-nav__link">
+    AWS just announced a new region, when will I see it in the provider?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-can-i-help" class="md-nav__link">
+    How can I help?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-can-i-become-a-maintainer" class="md-nav__link">
+    How can I become a maintainer?
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#who-are-the-maintainers" class="md-nav__link">
+    Who are the maintainers?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-isnt-my-pr-merged-yet" class="md-nav__link">
+    Why isn’t my PR merged yet?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-do-you-decide-what-gets-merged-for-each-release" class="md-nav__link">
+    How do you decide what gets merged for each release?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#my-pr-hasnt-been-merged-and-it-now-has-merge-conflictsfailed-checks-should-i-keep-it-up-to-date" class="md-nav__link">
+    My PR hasn't been merged and it now has merge conflicts/failed checks, should I keep it up to date?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-often-do-you-release" class="md-nav__link">
+    How often do you release?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backward-compatibility-promise" class="md-nav__link">
+    Backward Compatibility Promise
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#once-a-major-release-is-published-will-new-features-and-fixes-be-backported-to-previous-versions" class="md-nav__link">
+    Once a major release is published, will new features and fixes be backported to previous versions?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aws-just-announced-a-new-region-when-will-i-see-it-in-the-provider" class="md-nav__link">
+    AWS just announced a new region, when will I see it in the provider?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-can-i-help" class="md-nav__link">
+    How can I help?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-can-i-become-a-maintainer" class="md-nav__link">
+    How can I become a maintainer?
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="frequently-asked-questions">Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permanent link">#</a></h1>
+<!-- markdownlint-disable no-trailing-punctuation -->
+
+<h2 id="who-are-the-maintainers">Who are the maintainers?<a class="headerlink" href="#who-are-the-maintainers" title="Permanent link">#</a></h2>
+<p>The HashiCorp Terraform AWS provider team is :</p>
+<ul>
+<li>Marc Cosentino, Product Manager - GitHub <a href="https://github.com/marcosentino">@marcosentino</a></li>
+<li>Simon Davis, Engineering Manager - GitHub <a href="https://github.com/breathingdust">@breathingdust</a></li>
+<li>Justin Retzolk, Technical Community Manager - GitHub <a href="https://github.com/justinretzolk">@justinretzolk</a></li>
+<li>Adrian Johnson, Engineer - GitHub <a href="https://github.com/johnsonaj">@johnsonaj</a></li>
+<li>Dirk Avery, Engineer - GitHub <a href="https://github.com/yakdriver">@YakDriver</a></li>
+<li>Graham Davison, Engineer - GitHub <a href="https://github.com/gdavison">@gdavison</a></li>
+<li>Jared Baker, Engineer - GitHub <a href="https://github.com/jar-b">@jar-b</a></li>
+<li>Kerim Satirli, Developer Advocate - GitHub <a href="https://github.com/ksatirli">@ksatirli</a></li>
+<li>Kit Ewbank, Engineer - GitHub <a href="https://github.com/ewbankkit">@ewbankkit</a></li>
+<li>Sharon Nam, Engineer - GitHub <a href="https://github.com/nam054">@nam054</a></li>
+</ul>
+<h2 id="why-isnt-my-pr-merged-yet">Why isn’t my PR merged yet?<a class="headerlink" href="#why-isnt-my-pr-merged-yet" title="Permanent link">#</a></h2>
+<p>Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members. For more information on how we prioritize pull requests, see the <a href="../prioritization/">prioritization guide</a>.</p>
+<h2 id="how-do-you-decide-what-gets-merged-for-each-release">How do you decide what gets merged for each release?<a class="headerlink" href="#how-do-you-decide-what-gets-merged-for-each-release" title="Permanent link">#</a></h2>
+<p>We have a large backlog of pull requests to get through and the team is moving through them as quickly as we can. All pull requests must be reviewed by a HashiCorp engineer before inclusion. This is to ensure that the design of the addition fits with what provider users have come to expect, and to ensure that testing and best practices are adhered to. This is particularly important for such a large codebase, to ensure that we sustain its maintainability as it grows.</p>
+<p>The number one factor we look at when deciding what issues to look at are your 👍 <a href="https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/">reactions</a> to the original issue/PR description as these can be <a href="https://github.com/hashicorp/terraform-provider-aws/issues?q=is%3Aopen+sort%3Areactions-%2B1-desc">easily discovered</a>. Comments that further explain desired use cases or poor user experience are also heavily factored in. The items with the most support are always on our radar, and we commit to keeping the community updated on their status and potential timelines.</p>
+<p>We publish a <a href="https://github.com/hashicorp/terraform-provider-aws/blob/main/ROADMAP.md">roadmap</a> every quarter which describes major themes or specific product areas of focus. What is excluded from the public roadmap is work performed under NDA with AWS on new services, and any ad-hoc work we pick up during the quarter. This ad-hoc work can be responding to bugs, gardening day activity, customer prioritization, and technical debt items.</p>
+<p>We also are investing time to improve the contributing experience by improving documentation, adding more linter coverage to ensure that incoming PRs can be in as good shape as possible. This will allow us to get through them quicker.</p>
+<h2 id="my-pr-hasnt-been-merged-and-it-now-has-merge-conflictsfailed-checks-should-i-keep-it-up-to-date">My PR hasn't been merged and it now has merge conflicts/failed checks, should I keep it up to date?<a class="headerlink" href="#my-pr-hasnt-been-merged-and-it-now-has-merge-conflictsfailed-checks-should-i-keep-it-up-to-date" title="Permanent link">#</a></h2>
+<p>We realize that sometimes pull requests sit for a considerable amount of time without being addressed. During this time period they may accumulate merge conflicts and failed linter checks as the provider codebase moves forward. As maintainers we have no expectation that you keep your PR up to date, these issues will be addressed at review time most often by the maintainers themselves. Obviously we would hope that your PR is mergeable when first raised! The mergeability of the PR does not affect its prioritization for review.</p>
+<h2 id="how-often-do-you-release">How often do you release?<a class="headerlink" href="#how-often-do-you-release" title="Permanent link">#</a></h2>
+<p>We release weekly on Thursday. We release often to ensure we can bring value to the community at a frequent cadence and to ensure we are in a good place to react to AWS region launches and service announcements.</p>
+<h2 id="backward-compatibility-promise">Backward Compatibility Promise<a class="headerlink" href="#backward-compatibility-promise" title="Permanent link">#</a></h2>
+<p>Our policy is described on the Terraform website <a href="https://www.terraform.io/plugin/sdkv2/best-practices/versioning">here</a>. While we do our best to prevent breaking changes until major version releases of the provider, it is generally recommended to <a href="https://www.terraform.io/language/providers/configuration#provider-versions">pin the provider version in your configuration</a>.</p>
+<p>Due to the constant release pace of AWS and the relatively infrequent major version releases of the provider, there can be cases where a minor version update may contain unexpected changes depending on your configuration or environment. These may include items such as a resource requiring additional IAM permissions to support newer functionality. We typically base these decisions on a pragmatic compromise between introducing a relatively minor one-time inconvenience for a subset of the community versus a better overall user experience for the entire community.</p>
+<h2 id="once-a-major-release-is-published-will-new-features-and-fixes-be-backported-to-previous-versions">Once a major release is published, will new features and fixes be backported to previous versions?<a class="headerlink" href="#once-a-major-release-is-published-will-new-features-and-fixes-be-backported-to-previous-versions" title="Permanent link">#</a></h2>
+<p>Generally, new features and fixes will only be added to the most recent major version. Due to the high-touch nature of provider development and the extensive regression testing required to ensure stability, maintaining multiple versions of the provider is not sustainable at this time. An exception to this could be a discovered security vulnerability for which backporting may be the most reasonable course of action. These would be reviewed on a case-by-case basis.</p>
+<h2 id="aws-just-announced-a-new-region-when-will-i-see-it-in-the-provider">AWS just announced a new region, when will I see it in the provider?<a class="headerlink" href="#aws-just-announced-a-new-region-when-will-i-see-it-in-the-provider" title="Permanent link">#</a></h2>
+<p>Normally pretty quickly. We usually see the region appear within the <code>aws-go-sdk</code> within a couple of days of the announcement. Depending on when it lands, we can often get it out within the current or following weekly release. Comparatively, adding support for a new region in the S3 backend can take a little longer, as it is shipped as part of Terraform Core and not via the AWS Provider.</p>
+<p>Please note that this new region requires a manual process to enable in your account. Once enabled in the console, it takes a few minutes for everything to work properly.</p>
+<p>If the region is not enabled properly, or the enablement process is still in progress, you may receive errors like these:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>terraform<span class="w"> </span>apply
+
+<span class="go">Error: error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid.</span>
+<span class="go">    status code: 403, request id: 142f947b-b2c3-11e9-9959-c11ab17bcc63</span>
+
+<span class="go">  on main.tf line 1, in provider &quot;aws&quot;:</span>
+<span class="go">   1: provider &quot;aws&quot; {</span>
+</code></pre></div>
+<p>To use this new region before support has been added to the Terraform AWS Provider, you can disable the provider's automatic region validation via:</p>
+<div class="highlight"><pre><span></span><code><span class="kr">provider</span><span class="w"> </span><span class="nv">&quot;aws&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="c1">  # ... potentially other configuration ...</span>
+
+<span class="w">  </span><span class="na">region</span><span class="w">                 </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;af-south-1&quot;</span>
+<span class="w">  </span><span class="na">skip_region_validation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="how-can-i-help">How can I help?<a class="headerlink" href="#how-can-i-help" title="Permanent link">#</a></h2>
+<p>Great question, if you have contributed before check out issues with the <code>help-wanted</code> label. These are normally enhancement issues that will have a great impact, but the maintainers are unable to develop them in the near future. If you are just getting started, take a look at issues with the <code>good-first-issue</code> label. Items with these labels will always be given priority for response.</p>
+<p>Check out the <a href="https://hashicorp.github.io/terraform-provider-aws/">Contributing Guide</a> for additional information.</p>
+<h2 id="how-can-i-become-a-maintainer">How can I become a maintainer?<a class="headerlink" href="#how-can-i-become-a-maintainer" title="Permanent link">#</a></h2>
+<p>This is an area under active research. Stay tuned!</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
