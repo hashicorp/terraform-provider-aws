@@ -35,7 +35,7 @@ func (d *recordsDataSource) Schema(ctx context.Context, request datasource.Schem
 				CustomType: fwtypes.RegexpType,
 				Optional:   true,
 			},
-			"resource_record_sets": framework.DataSourceComputedListOfObjectAttribute[resourceRecordSetModel](ctx),
+			"resource_record_sets": framework.DataSourceComputedListOfObjectAttribute[resourceRecordSetModelReadonly](ctx),
 			"zone_id": schema.StringAttribute{
 				Required: true,
 			},
@@ -87,12 +87,12 @@ func (d *recordsDataSource) Read(ctx context.Context, request datasource.ReadReq
 }
 
 type recordsDataSourceModel struct {
-	NameRegex          fwtypes.Regexp                                          `tfsdk:"name_regex"`
-	ResourceRecordSets fwtypes.ListNestedObjectValueOf[resourceRecordSetModel] `tfsdk:"resource_record_sets"`
-	ZoneID             types.String                                            `tfsdk:"zone_id"`
+	NameRegex          fwtypes.Regexp                                                  `tfsdk:"name_regex"`
+	ResourceRecordSets fwtypes.ListNestedObjectValueOf[resourceRecordSetModelReadonly] `tfsdk:"resource_record_sets"`
+	ZoneID             types.String                                                    `tfsdk:"zone_id"`
 }
 
-type resourceRecordSetModel struct {
+type resourceRecordSetModelReadonly struct {
 	AliasTarget             fwtypes.ObjectValueOf[aliasTargetModel]                `tfsdk:"alias_target"`
 	CIDRRoutingConfig       fwtypes.ObjectValueOf[cidrRoutingConfigModel]          `tfsdk:"cidr_routing_config"`
 	Failover                fwtypes.StringEnum[awstypes.ResourceRecordSetFailover] `tfsdk:"failover"`
@@ -108,37 +108,4 @@ type resourceRecordSetModel struct {
 	TTL                     types.Int64                                            `tfsdk:"ttl"`
 	Type                    fwtypes.StringEnum[awstypes.RRType]                    `tfsdk:"type"`
 	Weight                  types.Int64                                            `tfsdk:"weight"`
-}
-
-type aliasTargetModel struct {
-	DNSName              types.String `tfsdk:"dns_name"`
-	EvaluateTargetHealth types.Bool   `tfsdk:"evaluate_target_health"`
-	HostedZoneID         types.String `tfsdk:"hosted_zone_id"`
-}
-
-type cidrRoutingConfigModel struct {
-	CollectionID types.String `tfsdk:"collection_id"`
-	LocationName types.String `tfsdk:"location_name"`
-}
-
-type geoLocationModel struct {
-	ContinentCode   types.String `tfsdk:"continent_code"`
-	CountryCode     types.String `tfsdk:"country_code"`
-	SubdivisionCode types.String `tfsdk:"subdivision_code"`
-}
-
-type geoProximityLocationModel struct {
-	AWSRegion      types.String                            `tfsdk:"aws_region"`
-	Bias           types.Int64                             `tfsdk:"bias"`
-	Coordinates    fwtypes.ObjectValueOf[coordinatesModel] `tfsdk:"coordinates"`
-	LocalZoneGroup types.String                            `tfsdk:"local_zone_group"`
-}
-
-type coordinatesModel struct {
-	Latitude  types.String `tfsdk:"latitude"`
-	Longitude types.String `tfsdk:"longitude"`
-}
-
-type resourceRecordModel struct {
-	Value types.String `tfsdk:"value"`
 }
