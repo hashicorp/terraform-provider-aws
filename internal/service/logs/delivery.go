@@ -106,7 +106,7 @@ var s3DeliveryConfigurationListOptions = []fwtypes.ListNestedObjectOfOption[s3De
 	fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality),
 }
 
-func s3DeliverySemanticEquality(ctx context.Context, oldValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel], newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
+func s3DeliverySemanticEquality(ctx context.Context, oldValue, newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	oldValPtr, di := oldValue.ToPtr(ctx)
