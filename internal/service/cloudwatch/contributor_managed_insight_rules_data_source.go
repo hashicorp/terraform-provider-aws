@@ -33,10 +33,6 @@ type dataSourceContributorManagedInsightRules struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceContributorManagedInsightRules) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_cloudwatch_contributor_managed_insight_rules"
-}
-
 func (d *dataSourceContributorManagedInsightRules) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
