@@ -163,6 +163,10 @@ func dataSourceTable() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"recovery_period_in_days": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
