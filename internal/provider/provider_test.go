@@ -204,7 +204,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			defer popEnv(oldEnv)
 
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v) //nolint:usetesting
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
 			endpoints := make(map[string]interface{})
@@ -288,7 +288,7 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 			defer popEnv(oldEnv)
 
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v) //nolint:usetesting
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
 			results := expandDefaultTags(ctx, map[string]interface{}{
@@ -405,7 +405,7 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 			defer popEnv(oldEnv)
 
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v) //nolint:usetesting
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
 			results := expandIgnoreTags(ctx, map[string]interface{}{
