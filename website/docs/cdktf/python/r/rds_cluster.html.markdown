@@ -344,6 +344,7 @@ This resource supports the following arguments:
 * `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html#USER_Monitoring.OS.IAMRole.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Clusters.
 * `network_type` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
 * `performance_insights_enabled` - (Optional) Enables Performance Insights.
+* `performance_insights_mode` - (Optional) The Performance Insights mode for analyzing database performance. Valid values: `standard`, `advanced`. Setting to `advanced` enables lock contention diagnostics for Aurora PostgreSQL. Default: `standard`.
 * `performance_insights_kms_key_id` - (Optional) Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (`aws/rds`).
 * `performance_insights_retention_period` - (Optional) Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are `7`, `month * 31` (where month is a number of months from 1-23), and `731`. See [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.Overview.cost.html) for more information on retention periods.
 * `port` - (Optional) Port on which the DB accepts connections.
