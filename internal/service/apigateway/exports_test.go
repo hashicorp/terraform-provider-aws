@@ -25,6 +25,7 @@ var (
 	ResourceResource                    = resourceResource
 	ResourceRestAPI                     = resourceRestAPI
 	ResourceRestAPIPolicy               = resourceRestAPIPolicy
+	ResourceRestAPIPut                  = newResourceRestAPIPut
 	ResourceStage                       = resourceStage
 	ResourceUsagePlan                   = resourceUsagePlan
 	ResourceUsagePlanKey                = resourceUsagePlanKey
