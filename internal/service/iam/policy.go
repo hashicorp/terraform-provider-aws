@@ -240,7 +240,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		// Creating Policy and Setting the version as Default in one operation is causing
 		// Access issues. Hence to mitigate it, the SetAsDefault is set to false.
-		// Seperating the setDefaultPolicyVersion as a separate operation.
+		// Separating the setDefaultPolicyVersion as a separate operation.
 
 		input := &iam.CreatePolicyVersionInput{
 			PolicyArn:      aws.String(d.Id()),
