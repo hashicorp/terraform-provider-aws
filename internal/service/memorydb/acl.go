@@ -301,10 +301,12 @@ func waitACLDeleted(ctx context.Context, conn *memorydb.Client, name string) (*a
 		timeout = 5 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{aclStatusDeleting},
-		Target:  []string{},
-		Refresh: statusACL(ctx, conn, name),
-		Timeout: timeout,
+		Pending:      []string{aclStatusDeleting},
+		Target:       []string{},
+		Refresh:      statusACL(ctx, conn, name),
+		Timeout:      timeout,
+		Delay:        30 * time.Second,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
