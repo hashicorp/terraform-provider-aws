@@ -146,8 +146,6 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	serviceCode := d.Get("service_code").(string)
 	value := d.Get(names.AttrValue).(float64)
 
-	d.SetId(fmt.Sprintf("%s/%s", serviceCode, quotaCode))
-
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
 	defaultQuota, err := findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
@@ -183,6 +181,8 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 		d.Set("request_id", output.RequestedQuota.Id)
 	}
+
+	d.SetId(fmt.Sprintf("%s/%s", serviceCode, quotaCode))
 
 	return append(diags, resourceServiceQuotaRead(ctx, d, meta)...)
 }
