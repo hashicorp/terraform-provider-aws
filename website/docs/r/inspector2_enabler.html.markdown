@@ -8,9 +8,9 @@ description: |-
 
 # Resource: aws_inspector2_enabler
 
-Terraform resource for enabling Amazon Inspector resource scans.
+Terraform resource for enabling Amazon Inspector2 resource scans.
 
-This resource must be created in the Organization's Administrator Account.
+This resource could be created either in the Organization's Administrator Account to be enabled in several accounts at once or in a particular account.
 
 ## Example Usage
 
