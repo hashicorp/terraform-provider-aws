@@ -22,11 +22,11 @@ func RegisterSweepers() {
 }
 
 func sweepGraphs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := &neptunegraph.ListGraphsInput{}
+	var input neptunegraph.ListGraphsInput
 	conn := client.NeptuneGraphClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := neptunegraph.NewListGraphsPaginator(conn, input)
+	pages := neptunegraph.NewListGraphsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

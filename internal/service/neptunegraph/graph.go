@@ -326,10 +326,12 @@ func (r *graphResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	//SkipSnapshot is hardcoded here as this is the same behavior currently supported
 	//in AWS CloudFormation.
-	_, err := conn.DeleteGraph(ctx, &neptunegraph.DeleteGraphInput{
+	input := neptunegraph.DeleteGraphInput{
 		GraphIdentifier: data.ID.ValueStringPointer(),
 		SkipSnapshot:    aws.Bool(true),
-	})
+	}
+
+	_, err := conn.DeleteGraph(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

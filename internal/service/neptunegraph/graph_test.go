@@ -377,10 +377,9 @@ func testAccCheckGraphExists(ctx context.Context, n string, v *neptunegraph.GetG
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneGraphClient(ctx)
+	var input neptunegraph.ListGraphsInput
 
-	input := &neptunegraph.ListGraphsInput{}
-
-	_, err := conn.ListGraphs(ctx, input)
+	_, err := conn.ListGraphs(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
