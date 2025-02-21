@@ -23,6 +23,7 @@ _optionally_ (see below) content of an object stored inside S3 bucket.
 * `application/xml`
 * `application/atom+xml`
 * `application/x-sql`
+* `application/yaml`
 
 This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
