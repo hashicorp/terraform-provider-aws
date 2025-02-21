@@ -50,7 +50,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceCustomDataIdentifier,
 			TypeName: "aws_macie2_custom_data_identifier",
 			Name:     "Custom Data Identifier",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  resourceFindingsFilter,

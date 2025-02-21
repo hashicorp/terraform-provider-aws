@@ -35,11 +35,11 @@ func TestAccMacie2_serial(t *testing.T) {
 		},
 		"CustomDataIdentifier": {
 			acctest.CtBasic:      testAccCustomDataIdentifier_basic,
-			"name_generated":     testAccCustomDataIdentifier_Name_Generated,
+			"name_generated":     testAccCustomDataIdentifier_nameGenerated,
 			acctest.CtDisappears: testAccCustomDataIdentifier_disappears,
-			"name_prefix":        testAccCustomDataIdentifier_NamePrefix,
+			"name_prefix":        testAccCustomDataIdentifier_namePrefix,
 			"classification_job": testAccCustomDataIdentifier_WithClassificationJob,
-			"tags":               testAccCustomDataIdentifier_WithTags,
+			"tags":               testAccCustomDataIdentifier_tags,
 		},
 		"FindingsFilter": {
 			acctest.CtBasic:      testAccFindingsFilter_basic,
