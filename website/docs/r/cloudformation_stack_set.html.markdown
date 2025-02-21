@@ -112,6 +112,7 @@ This resource supports the following arguments:
 
 The `operation_preferences` configuration block supports the following arguments:
 
+* `concurrency_mode` - (Optional) Specifies how the concurrency level behaves during the operation execution. Valid values are `STRICT_FAILURE_TOLERANCE` and `SOFT_FAILURE_TOLERANCE`.
 * `failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
 * `failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
 * `max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time.
