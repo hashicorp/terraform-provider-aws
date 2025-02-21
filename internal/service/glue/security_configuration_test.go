@@ -47,6 +47,11 @@ func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.s3_encryption_mode", "DISABLED"),
+					// new code block start
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.data_quality_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.data_quality_encryption.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.data_quality_encryption.0.data_quality_encryption_mode", "DISABLED"),
+					// new code block end
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -190,6 +195,42 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *test
 	})
 }
 
+// new code block start
+func TestAccGlueSecurityConfiguration_DataQualityEncryptionDataQualityEncryptionMode_sseKms(t *testing.T) {
+	ctx := acctest.Context(t)
+	var securityConfiguration awstypes.SecurityConfiguration
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_glue_security_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityConfigurationConfig_dataQualityEncryptionModeSSEKMS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityConfigurationExists(ctx, resourceName, &securityConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.data_quality_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.data_quality_encryption.0.data_quality_encryption_mode", "SSE-KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.data_quality_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// new code block end
+
 func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName string, securityConfiguration *awstypes.SecurityConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -271,6 +312,12 @@ resource "aws_glue_security_configuration" "test" {
     s3_encryption {
       s3_encryption_mode = "DISABLED"
     }
+
+	// new code block start
+    data_quality_encryption {
+      data_quality_encryption_mode = "DISABLED"
+    }
+	// new code block end
   }
 }
 `, rName)
@@ -378,3 +425,37 @@ resource "aws_glue_security_configuration" "test" {
 }
 `, rName)
 }
+
+// new code block start
+func testAccSecurityConfigurationConfig_dataQualityEncryptionModeSSEKMS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_glue_security_configuration" "test" {
+  name = %q
+
+  encryption_configuration {
+    cloudwatch_encryption {
+      cloudwatch_encryption_mode = "DISABLED"
+    }
+
+    job_bookmarks_encryption {
+      job_bookmarks_encryption_mode = "DISABLED"
+    }
+
+    s3_encryption {
+      s3_encryption_mode = "DISABLED"
+    }
+
+    data_quality_encryption {
+      data_quality_encryption_mode = "SSE-KMS"
+      kms_key_arn                   = aws_kms_key.test.arn
+    }
+  }
+}
+`, rName)
+}
+
+// new code block end
