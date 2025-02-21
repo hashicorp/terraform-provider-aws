@@ -289,6 +289,7 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 
 * `instance_url` (Optional) - The location of the Salesforce resource.
 * `is_sandbox_environment` (Optional) - Indicates whether the connector profile applies to a sandbox or production environment.
+* `use_privatelink_for_metadata_and_authorization` (Optional) - Indicates whether Amazon AppFlow uses the private network to send metadata and authorization calls to Salesforce. Amazon AppFlow sends private calls through AWS PrivateLink. These calls travel through AWS infrastructure without being exposed to the public internet.
 
 #### SAPOData Connector Profile Properties
 

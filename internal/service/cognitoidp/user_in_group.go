@@ -105,11 +105,12 @@ func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito Group User: %s", d.Id())
-	_, err := conn.AdminRemoveUserFromGroup(ctx, &cognitoidentityprovider.AdminRemoveUserFromGroupInput{
+	input := cognitoidentityprovider.AdminRemoveUserFromGroupInput{
 		GroupName:  aws.String(d.Get(names.AttrGroupName).(string)),
 		Username:   aws.String(d.Get(names.AttrUsername).(string)),
 		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
-	})
+	}
+	_, err := conn.AdminRemoveUserFromGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Group User (%s): %s", d.Id(), err)

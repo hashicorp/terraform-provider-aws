@@ -997,9 +997,10 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v := d.Get("deregister_on_new_revision"); v == true {
 			log.Printf("[DEBUG] Deleting previous Batch Job Definition: %s", currentARN)
-			_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+			input := batch.DeregisterJobDefinitionInput{
 				JobDefinition: aws.String(currentARN),
-			})
+			}
+			_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
@@ -1030,9 +1031,10 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 		arn := aws.ToString(jds[i].JobDefinitionArn)
 
 		log.Printf("[DEBUG] Deregistering Batch Job Definition: %s", arn)
-		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+		input := batch.DeregisterJobDefinitionInput{
 			JobDefinition: aws.String(arn),
-		})
+		}
+		_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deregistering Batch Job Definition (%s): %s", arn, err)

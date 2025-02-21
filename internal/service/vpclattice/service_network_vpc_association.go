@@ -176,9 +176,10 @@ func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.R
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network VPC Association %s", d.Id())
 
-	_, err := conn.DeleteServiceNetworkVpcAssociation(ctx, &vpclattice.DeleteServiceNetworkVpcAssociationInput{
+	input := vpclattice.DeleteServiceNetworkVpcAssociationInput{
 		ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteServiceNetworkVpcAssociation(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

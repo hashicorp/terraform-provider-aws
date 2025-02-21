@@ -32,13 +32,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newResourceProject,
 			TypeName: "aws_rekognition_project",
 			Name:     "Project",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  newResourceStreamProcessor,
 			TypeName: "aws_rekognition_stream_processor",
 			Name:     "Stream Processor",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "stream_processor_arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}

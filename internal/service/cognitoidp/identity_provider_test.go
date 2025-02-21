@@ -6,6 +6,7 @@ package cognitoidp_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -123,6 +124,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 	var identityProvider awstypes.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUTF8 := strings.Repeat("あ", 32)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -131,7 +133,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderConfig_saml(rName, acctest.CtFalse),
+				Config: testAccIdentityProviderConfig_saml(rName, rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
@@ -152,7 +154,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIdentityProviderConfig_saml(rName, acctest.CtTrue),
+				Config: testAccIdentityProviderConfig_saml(rName, rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
@@ -164,6 +166,22 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rName),
+					resource.TestCheckResourceAttr(resourceName, "provider_type", "SAML"),
+				),
+			},
+			{
+				Config: testAccIdentityProviderConfig_saml(rNameUTF8, rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", names.AttrEmail),
+					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rNameUTF8),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", "SAML"),
 				),
 			},
@@ -354,10 +372,10 @@ resource "aws_cognito_identity_provider" "test" {
 `, rName, attribute)
 }
 
-func testAccIdentityProviderConfig_saml(rName, encryptedResponses string) string {
+func testAccIdentityProviderConfig_saml(rName, userPoolName, encryptedResponses string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name                     = %[1]q
+  name                     = %[2]q
   auto_verified_attributes = ["email"]
 }
 
@@ -367,7 +385,7 @@ resource "aws_cognito_identity_provider" "test" {
   provider_type = "SAML"
 
   provider_details = {
-    EncryptedResponses    = %[2]q
+    EncryptedResponses    = %[3]q
     MetadataFile          = file("./test-fixtures/saml-metadata.xml")
     SSORedirectBindingURI = "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"
   }
@@ -380,5 +398,5 @@ resource "aws_cognito_identity_provider" "test" {
     ignore_changes = [provider_details["ActiveEncryptionCertificate"]]
   }
 }
-`, rName, encryptedResponses)
+`, rName, userPoolName, encryptedResponses)
 }

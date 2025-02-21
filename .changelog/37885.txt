@@ -1,4 +1,4 @@
-```new-resource
+```release-note:new-resource
 aws_route53domains_domain
 ```
 

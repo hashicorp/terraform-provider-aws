@@ -123,10 +123,11 @@ func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *s
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table Propagation: %s", d.Id())
-	_, err = conn.DisableTransitGatewayRouteTablePropagation(ctx, &ec2.DisableTransitGatewayRouteTablePropagationInput{
+	input := ec2.DisableTransitGatewayRouteTablePropagationInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DisableTransitGatewayRouteTablePropagation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound, errCodeTransitGatewayRouteTablePropagationNotFound) {
 		return diags

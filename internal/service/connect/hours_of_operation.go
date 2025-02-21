@@ -227,10 +227,11 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Hours Of Operation: %s", d.Id())
-	_, err = conn.DeleteHoursOfOperation(ctx, &connect.DeleteHoursOfOperationInput{
+	input := connect.DeleteHoursOfOperationInput{
 		HoursOfOperationId: aws.String(hoursOfOperationID),
 		InstanceId:         aws.String(instanceID),
-	})
+	}
+	_, err = conn.DeleteHoursOfOperation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

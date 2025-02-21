@@ -202,10 +202,11 @@ func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Agreement: %s", d.Id())
-	_, err = conn.DeleteAgreement(ctx, &transfer.DeleteAgreementInput{
+	input := transfer.DeleteAgreementInput{
 		AgreementId: aws.String(agreementID),
 		ServerId:    aws.String(serverID),
-	})
+	}
+	_, err = conn.DeleteAgreement(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

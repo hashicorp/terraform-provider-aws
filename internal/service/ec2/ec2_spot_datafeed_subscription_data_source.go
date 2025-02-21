@@ -56,7 +56,8 @@ func (d *dataSourceSpotDataFeedSubscription) Read(ctx context.Context, req datas
 		return
 	}
 
-	out, err := conn.DescribeSpotDatafeedSubscription(ctx, &ec2.DescribeSpotDatafeedSubscriptionInput{})
+	input := ec2.DescribeSpotDatafeedSubscriptionInput{}
+	out, err := conn.DescribeSpotDatafeedSubscription(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameSpotDataFeedSubscription, accountID, err),

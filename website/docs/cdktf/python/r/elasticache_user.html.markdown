@@ -31,7 +31,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         ElasticacheUser(self, "test",
             access_string="on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember",
-            engine="REDIS",
+            engine="redis",
             passwords=["password123456789"],
             user_id="testUserId",
             user_name="testUserName"
@@ -55,7 +55,7 @@ class MyConvertedCode(TerraformStack):
             authentication_mode=ElasticacheUserAuthenticationMode(
                 type="iam"
             ),
-            engine="REDIS",
+            engine="redis",
             user_id="testUserId",
             user_name="testUserName"
         )
@@ -79,7 +79,7 @@ class MyConvertedCode(TerraformStack):
                 passwords=["password1", "password2"],
                 type="password"
             ),
-            engine="REDIS",
+            engine="redis",
             user_id="testUserId",
             user_name="testUserName"
         )
@@ -90,7 +90,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `access_string` - (Required) Access permissions string used for this user. See [Specifying Permissions Using an Access String](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.RBAC.html#Access-string) for more details.
-* `engine` - (Required) The current supported values are `REDIS`, `VALKEY`.
+* `engine` - (Required) The current supported values are `redis`, `valkey` (case insensitive).
 * `user_id` - (Required) The ID of the user.
 * `user_name` - (Required) The username of the user.
 
@@ -146,4 +146,4 @@ Using `terraform import`, import ElastiCache users using the `user_id`. For exam
 % terraform import aws_elasticache_user.my_user userId1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-feee5459f755de2c1b960e96f1cab1eff6d80cd3a3b572cad808a7d31fb9009f -->
+<!-- cache-key: cdktf-0.20.8 input-97cef210e7726baf22963048340777bb75439e8a75dd9ee9f6e9c239ca9293b1 -->

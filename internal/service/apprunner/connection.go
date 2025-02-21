@@ -124,9 +124,10 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Connection: %s", d.Id())
-	_, err := conn.DeleteConnection(ctx, &apprunner.DeleteConnectionInput{
+	input := apprunner.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Get(names.AttrARN).(string)),
-	})
+	}
+	_, err := conn.DeleteConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

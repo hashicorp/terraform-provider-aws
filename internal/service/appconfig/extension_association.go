@@ -156,9 +156,10 @@ func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Extension Association: %s", d.Id())
-	_, err := conn.DeleteExtensionAssociation(ctx, &appconfig.DeleteExtensionAssociationInput{
+	input := appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteExtensionAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

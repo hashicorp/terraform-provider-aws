@@ -12,6 +12,8 @@ Resource for managing QuickSight Data Source
 
 ## Example Usage
 
+### S3 Data Source
+
 ```terraform
 resource "aws_quicksight_data_source" "default" {
   data_source_id = "example-id"
@@ -23,6 +25,102 @@ resource "aws_quicksight_data_source" "default" {
         bucket = "my-bucket"
         key    = "path/to/manifest.json"
       }
+    }
+  }
+
+  type = "S3"
+}
+```
+
+### S3 Data Source with IAM Role ARN
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "example" {
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket.example.bucket
+  key    = "manifest.json"
+  content = jsonencode({
+    fileLocations = [
+      {
+        URIPrefixes = [
+          "https://${aws_s3_bucket.example.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+        ]
+      }
+    ]
+    globalUploadSettings = {
+      format         = "CSV"
+      delimiter      = ","
+      textqualifier  = "\""
+      containsHeader = true
+    }
+  })
+}
+
+resource "aws_iam_role" "example" {
+  name = "example"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "quicksight.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "example" {
+  name        = "example"
+  description = "Policy to allow QuickSight access to S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action   = ["s3:GetObject"],
+        Effect   = "Allow",
+        Resource = "${aws_s3_bucket.example.arn}/${aws_s3_object.example.key}"
+      },
+      {
+        Action   = ["s3:ListBucket"],
+        Effect   = "Allow",
+        Resource = aws_s3_bucket.example.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "example" {
+  policy_arn = aws_iam_policy.example.arn
+  role       = aws_iam_role.example.name
+}
+
+resource "aws_quicksight_data_source" "example" {
+  data_source_id = "example-id"
+  name           = "manifest in S3"
+
+  parameters {
+    s3 {
+      manifest_file_location {
+        bucket = aws_s3_bucket.example.arn
+        key    = aws_s3_object.example.key
+      }
+      role_arn = aws_iam_role.example.arn
     }
   }
 
@@ -178,6 +276,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### s3 Argument Reference
 
 * `manifest_file_location` - (Required) An [object containing the S3 location](#manifest_file_location-argument-reference) of the S3 manifest file.
+* `role_arn` - (Optional) Use the `role_arn` to override an account-wide role for a specific S3 data source. For example, say an account administrator has turned off all S3 access with an account-wide role. The administrator can then use `role_arn` to bypass the account-wide role and allow S3 access for the single S3 data source that is specified in the structure, even if the account-wide role forbidding S3 access is still active.
 
 ### manifest_file_location Argument Reference
 

@@ -383,10 +383,11 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteAppAuthorization(ctx, &appfabric.DeleteAppAuthorizationInput{
+	input := appfabric.DeleteAppAuthorizationInput{
 		AppAuthorizationIdentifier: fwflex.StringFromFramework(ctx, data.AppAuthorizationARN),
 		AppBundleIdentifier:        fwflex.StringFromFramework(ctx, data.AppBundleARN),
-	})
+	}
+	_, err := conn.DeleteAppAuthorization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
