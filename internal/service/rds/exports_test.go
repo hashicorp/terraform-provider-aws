@@ -29,6 +29,7 @@ var (
 	ResourceProxyEndpoint                       = resourceProxyEndpoint
 	ResourceProxyTarget                         = resourceProxyTarget
 	ResourceReservedInstance                    = resourceReservedInstance
+	ResourceShardGroup                          = newShardGroupResource
 	ResourceSnapshot                            = resourceSnapshot
 	ResourceSnapshotCopy                        = resourceSnapshotCopy
 	ResourceSubnetGroup                         = resourceSubnetGroup
