@@ -419,7 +419,7 @@ func waitGraphCreated(ctx context.Context, conn *neptunegraph.Client, id string,
 	return nil, err
 }
 
-func waitGraphUpdated(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.GetGraphOutput, error) {
+func waitGraphUpdated(ctx context.Context, conn *neptunegraph.Client, id string, timeout time.Duration) (*neptunegraph.GetGraphOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GraphStatusUpdating),
 		Target:                    enum.Slice(awstypes.GraphStatusAvailable),
