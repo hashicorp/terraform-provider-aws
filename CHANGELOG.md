@@ -1,5 +1,9 @@
 ## 5.89.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_neptunegraph_graph` ([#41216](https://github.com/hashicorp/terraform-provider-aws/issues/41216))
+
 ENHANCEMENTS:
 
 * data-source/aws_s3_bucket_object: Add `application/yaml` to the list of `Content-Type`s that return a body ([#41443](https://github.com/hashicorp/terraform-provider-aws/issues/41443))
