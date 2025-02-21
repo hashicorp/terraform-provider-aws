@@ -4627,7 +4627,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName),
+				Config: testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName, "postgresql", "upgrade"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
@@ -4644,6 +4644,34 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
+			},
+		},
+	})
+}
+func TestAccRDSInstance_CloudWatchLogsExport_postgresql_iam_db_auth(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName, "postgresql", "iam-db-auth-error"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "iam-db-auth-error"),
+				),
 			},
 		},
 	})
@@ -9070,11 +9098,12 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName string) string {
+func testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName,
+	enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage               = 10
-  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  enabled_cloudwatch_logs_exports = [%[2]q, %[3]q]
   engine                          = data.aws_rds_engine_version.default.engine
   identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
@@ -9082,7 +9111,7 @@ resource "aws_db_instance" "test" {
   username                        = "tfacctest"
   skip_final_snapshot             = true
 }
-`, rName))
+`, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2))
 }
 
 func testAccInstanceConfig_Storage_maxAllocated(rName string, maxAllocatedStorage int) string {

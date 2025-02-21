@@ -316,9 +316,10 @@ func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway VPC Attachment: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayVpcAttachment(ctx, &ec2.DeleteTransitGatewayVpcAttachmentInput{
+	input := ec2.DeleteTransitGatewayVpcAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayVpcAttachment(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return diags

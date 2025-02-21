@@ -157,7 +157,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ec2.RequestSpotInstancesInput{
+	input := ec2.RequestSpotInstancesInput{
 		ClientToken: aws.String(id.UniqueId()),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
@@ -208,7 +208,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.RequestSpotInstances(ctx, input)
+			return conn.RequestSpotInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -303,9 +303,10 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
-	_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+	input := ec2.CancelSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []string{d.Id()},
-	})
+	}
+	_, err := conn.CancelSpotInstanceRequests(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
 		return diags

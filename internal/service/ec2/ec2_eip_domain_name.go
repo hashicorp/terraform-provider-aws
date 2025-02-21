@@ -79,13 +79,13 @@ func (r *eipDomainNameResource) Create(ctx context.Context, request resource.Cre
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyAddressAttributeInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.ModifyAddressAttributeInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := conn.ModifyAddressAttribute(ctx, input)
+	output, err := conn.ModifyAddressAttribute(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 EIP Domain Name", err.Error())
@@ -155,13 +155,13 @@ func (r *eipDomainNameResource) Update(ctx context.Context, request resource.Upd
 	conn := r.Meta().EC2Client(ctx)
 
 	if !new.DomainName.Equal(old.DomainName) {
-		input := &ec2.ModifyAddressAttributeInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		input := ec2.ModifyAddressAttributeInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.ModifyAddressAttribute(ctx, input)
+		_, err := conn.ModifyAddressAttribute(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating EC2 EIP Domain Name (%s)", new.ID.ValueString()), err.Error())
@@ -188,10 +188,11 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.ResetAddressAttribute(ctx, &ec2.ResetAddressAttributeInput{
+	input := ec2.ResetAddressAttributeInput{
 		AllocationId: fwflex.StringFromFramework(ctx, data.ID),
 		Attribute:    awstypes.AddressAttributeNameDomainName,
-	})
+	}
+	_, err := conn.ResetAddressAttribute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 		return

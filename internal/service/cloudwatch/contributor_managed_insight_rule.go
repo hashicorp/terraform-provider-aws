@@ -99,7 +99,7 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 		return
 	}
 
-	in := &cloudwatch.PutManagedInsightRulesInput{
+	input := cloudwatch.PutManagedInsightRulesInput{
 		ManagedRules: []awstypes.ManagedRule{
 			{
 				ResourceARN:  plan.ResourceArn.ValueStringPointer(),
@@ -107,15 +107,15 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 			},
 		},
 	}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in.ManagedRules[0].Tags = getTagsIn(ctx)
+	input.ManagedRules[0].Tags = getTagsIn(ctx)
 
 	if plan.State.ValueEnum() == stateValueEnabled || plan.State.IsNull() {
-		out, err := conn.PutManagedInsightRules(ctx, in)
+		out, err := conn.PutManagedInsightRules(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorManagedInsightRule, plan.ResourceArn.String(), err),
@@ -152,9 +152,10 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 			)
 			return
 		}
-		_, err = conn.DisableInsightRules(ctx, &cloudwatch.DisableInsightRulesInput{
+		input := cloudwatch.DisableInsightRulesInput{
 			RuleNames: []string{*rule.RuleState.RuleName},
-		})
+		}
+		_, err = conn.DisableInsightRules(ctx, &input)
 
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -216,14 +217,15 @@ func (r *resourceContributorManagedInsightRule) Update(ctx context.Context, req 
 
 	if !new.State.IsNull() && !old.State.Equal(new.State) {
 		if new.State.ValueEnum() == stateValueEnabled || new.State.IsNull() {
-			_, err := conn.PutManagedInsightRules(ctx, &cloudwatch.PutManagedInsightRulesInput{
+			input := cloudwatch.PutManagedInsightRulesInput{
 				ManagedRules: []awstypes.ManagedRule{
 					{
 						ResourceARN:  new.ResourceArn.ValueStringPointer(),
 						TemplateName: new.TemplateName.ValueStringPointer(),
 					},
 				},
-			})
+			}
+			_, err := conn.PutManagedInsightRules(ctx, &input)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorManagedInsightRule, new.ResourceArn.String(), err),
@@ -238,9 +240,10 @@ func (r *resourceContributorManagedInsightRule) Update(ctx context.Context, req 
 					err.Error(),
 				)
 			}
-			_, err = conn.DisableInsightRules(ctx, &cloudwatch.DisableInsightRulesInput{
+			input := cloudwatch.DisableInsightRulesInput{
 				RuleNames: []string{aws.ToString(rule.RuleState.RuleName)},
-			})
+			}
+			_, err = conn.DisableInsightRules(ctx, &input)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorManagedInsightRule, new.ResourceArn.String(), err),
@@ -277,9 +280,10 @@ func (r *resourceContributorManagedInsightRule) Delete(ctx context.Context, req 
 		return
 	}
 
-	_, err = conn.DeleteInsightRules(ctx, &cloudwatch.DeleteInsightRulesInput{
+	input := cloudwatch.DeleteInsightRulesInput{
 		RuleNames: []string{aws.ToString(rule.RuleState.RuleName)},
-	})
+	}
+	_, err = conn.DeleteInsightRules(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -332,7 +336,7 @@ type resourceContributorManagedInsightRuleData struct {
 	TagsAll      tftags.Map                     `tfsdk:"tags_all"`
 }
 
-func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRule]) ([]awstypes.ManagedRuleDescription, error) {
+func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRuleDescription]) ([]awstypes.ManagedRuleDescription, error) {
 	var output []awstypes.ManagedRuleDescription
 
 	pages := cloudwatch.NewListManagedInsightRulesPaginator(conn, input)
@@ -350,13 +354,9 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 			return nil, err
 		}
 
-		for _, v := range page.ManagedRules {
-			managedRule := awstypes.ManagedRule{
-				ResourceARN:  v.ResourceARN,
-				TemplateName: v.TemplateName,
-			}
-			if filter(&managedRule) {
-				output = append(output, v)
+		for _, rule := range page.ManagedRules {
+			if filter(&rule) {
+				output = append(output, rule)
 			}
 		}
 	}
@@ -364,7 +364,7 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 	return output, nil
 }
 
-func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRule]) (*awstypes.ManagedRuleDescription, error) {
+func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRuleDescription]) (*awstypes.ManagedRuleDescription, error) {
 	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
 	if err != nil {
 		return nil, err
@@ -373,29 +373,12 @@ func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Cli
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findContributorManagedInsightRuleByTwoPartKey(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRule, error) {
-	input := &cloudwatch.ListManagedInsightRulesInput{
-		ResourceARN: aws.String(resourceARN),
-	}
-
-	output, err := findContributorManagedInsightRule(ctx, conn, input, func(v *awstypes.ManagedRule) bool {
-		return aws.ToString(v.TemplateName) == templateName
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &awstypes.ManagedRule{
-		ResourceARN:  output.ResourceARN,
-		TemplateName: output.TemplateName,
-	}, nil
-}
-
 func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
 	input := &cloudwatch.ListManagedInsightRulesInput{
 		ResourceARN: aws.String(resourceARN),
 	}
 
-	rules, err := findContributorManagedInsightRules(ctx, conn, input, func(v *awstypes.ManagedRule) bool {
+	rule, err := findContributorManagedInsightRule(ctx, conn, input, func(v *awstypes.ManagedRuleDescription) bool {
 		return aws.ToString(v.TemplateName) == templateName
 	})
 
@@ -403,12 +386,5 @@ func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Cont
 		return nil, err
 	}
 
-	if len(rules) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   fmt.Errorf("no matching rule found"),
-			LastRequest: input,
-		}
-	}
-
-	return &rules[0], nil
+	return rule, nil
 }
