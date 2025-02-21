@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_macie2_member: Allow `tags` to be updated in-place
+```
+
+```release-note:enhancement
+resource/aws_macie2_classification_job: Allow `tags` to be updated in-place
+```
+
+```release-note:bug
+resource/aws_macie2_classification_job: Ensure that only `status` and `tags` can be updated in-place
+```
+
+```release-note:enhancement
+resource/aws_macie2_custom_data_identifier: Allow `tags` to be updated in-place
+```
+
+```release-note:enhancement
+resource/aws_macie2_findings_filter: Allow `tags` to be updated in-place
+```
