@@ -28,16 +28,16 @@ func sweepScalingPlans(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.AutoScalingPlansClient(ctx)
-	input := &autoscalingplans.DescribeScalingPlansInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
+	r := ResourceScalingPlan()
+	input := autoscalingplans.DescribeScalingPlansInput{}
 
-	err = describeScalingPlansPages(ctx, conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
+	err = describeScalingPlansPages(ctx, conn, &input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, scalingPlan := range page.ScalingPlans {
-			r := ResourceScalingPlan()
 			d := r.Data(nil)
 			d.SetId("unused")
 			d.Set(names.AttrName, scalingPlan.ScalingPlanName)

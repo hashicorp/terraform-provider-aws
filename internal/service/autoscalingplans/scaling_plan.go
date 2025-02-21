@@ -337,14 +337,13 @@ func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AutoScalingPlansClient(ctx)
 
 	scalingPlanName := d.Get(names.AttrName).(string)
-	input := &autoscalingplans.CreateScalingPlanInput{
+	input := autoscalingplans.CreateScalingPlanInput{
 		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 	}
 
-	log.Printf("[DEBUG] Creating Auto Scaling Scaling Plan: %+v", input)
-	output, err := conn.CreateScalingPlan(ctx, input)
+	output, err := conn.CreateScalingPlan(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Scaling Plan (%s): %s", scalingPlanName, err)
@@ -409,15 +408,14 @@ func resourceScalingPlanUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
-	input := &autoscalingplans.UpdateScalingPlanInput{
+	input := autoscalingplans.UpdateScalingPlanInput{
 		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 		ScalingPlanVersion:  aws.Int64(int64(scalingPlanVersion)),
 	}
 
-	log.Printf("[DEBUG] Updating Auto Scaling Scaling Plan: %+v", input)
-	_, err = conn.UpdateScalingPlan(ctx, input)
+	_, err = conn.UpdateScalingPlan(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
@@ -822,17 +820,16 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 }
 
 func findScalingPlanByNameAndVersion(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
-	input := &autoscalingplans.DescribeScalingPlansInput{
+	input := autoscalingplans.DescribeScalingPlansInput{
 		ScalingPlanNames:   []string{scalingPlanName},
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
 	}
 
-	output, err := conn.DescribeScalingPlans(ctx, input)
+	output, err := conn.DescribeScalingPlans(ctx, &input)
 
 	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
