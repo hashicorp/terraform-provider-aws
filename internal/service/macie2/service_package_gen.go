@@ -58,7 +58,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceFindingsFilter,
 			TypeName: "aws_macie2_findings_filter",
 			Name:     "Findings Filter",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  resourceInvitationAccepter,

@@ -16,5 +16,6 @@ var (
 
 	FindClassificationJobByID    = findClassificationJobByID
 	FindCustomDataIdentifierByID = findCustomDataIdentifierByID
+	FindFindingsFilterByID       = findFindingsFilterByID
 	FindMemberByID               = findMemberByID
 )

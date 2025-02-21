@@ -43,13 +43,13 @@ func TestAccMacie2_serial(t *testing.T) {
 		},
 		"FindingsFilter": {
 			acctest.CtBasic:      testAccFindingsFilter_basic,
-			"name_generated":     testAccFindingsFilter_Name_Generated,
-			"name_prefix":        testAccFindingsFilter_NamePrefix,
+			"name_generated":     testAccFindingsFilter_nameGenerated,
+			"name_prefix":        testAccFindingsFilter_namePrefix,
 			acctest.CtDisappears: testAccFindingsFilter_disappears,
 			"complete":           testAccFindingsFilter_complete,
 			"date":               testAccFindingsFilter_WithDate,
 			"number":             testAccFindingsFilter_WithNumber,
-			"tags":               testAccFindingsFilter_withTags,
+			"tags":               testAccFindingsFilter_tags,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
