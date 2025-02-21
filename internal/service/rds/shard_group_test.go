@@ -94,6 +94,73 @@ func TestAccRDSShardGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSShardGroup_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBShardGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_shard_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckShardGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccShardGroupConfig_full(rName, 1200, 120),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckShardGroupExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("rds", regexache.MustCompile(`shard-group:shardgroup-[a-z0-9]+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("compute_redundancy"), knownvalue.Int64Exact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("db_shard_group_identifier"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("db_shard_group_resource_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_acu"), knownvalue.Float64Exact(1200)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("min_acu"), knownvalue.Float64Exact(120)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccShardGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "db_shard_group_identifier",
+			},
+			{
+				Config: testAccShardGroupConfig_full(rName, 1300, 130),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckShardGroupExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("rds", regexache.MustCompile(`shard-group:shardgroup-[a-z0-9]+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("compute_redundancy"), knownvalue.Int64Exact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("db_shard_group_identifier"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("db_shard_group_resource_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_acu"), knownvalue.Float64Exact(1300)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("min_acu"), knownvalue.Float64Exact(130)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSShardGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBShardGroup
@@ -281,6 +348,19 @@ resource "aws_rds_shard_group" "test" {
   max_acu                   = 1000
 }
 `, rName))
+}
+
+func testAccShardGroupConfig_full(rName string, maxACU, minACU int) string {
+	return acctest.ConfigCompose(testAccShardGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_shard_group" "test" {
+  db_shard_group_identifier = %[1]q
+  db_cluster_identifier     = aws_rds_cluster.test.id
+  max_acu                   = %[2]d
+  min_acu                   = %[3]d
+  publicly_accessible       = true
+  compute_redundancy        = 1
+}
+`, rName, maxACU, minACU))
 }
 
 func testAccShardGroupConfig_tags1(rName, tag1Key, tag1Value string) string {
