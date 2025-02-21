@@ -295,7 +295,7 @@ func (r *shardGroupResource) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (w *shardGroupResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *shardGroupResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("db_shard_group_identifier"), request, response)
 }
 
