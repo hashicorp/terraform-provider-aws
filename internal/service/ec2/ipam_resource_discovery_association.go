@@ -156,9 +156,10 @@ func resourceIPAMResourceDiscoveryAssociationDelete(ctx context.Context, d *sche
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Resource Discovery Association: %s", d.Id())
-	_, err := conn.DisassociateIpamResourceDiscovery(ctx, &ec2.DisassociateIpamResourceDiscoveryInput{
+	input := ec2.DisassociateIpamResourceDiscoveryInput{
 		IpamResourceDiscoveryAssociationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateIpamResourceDiscovery(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIdNotFound) {
 		return diags

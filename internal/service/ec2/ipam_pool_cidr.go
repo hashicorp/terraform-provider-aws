@@ -188,10 +188,11 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())
-	_, err = conn.DeprovisionIpamPoolCidr(ctx, &ec2.DeprovisionIpamPoolCidrInput{
+	input := ec2.DeprovisionIpamPoolCidrInput{
 		Cidr:       aws.String(cidrBlock),
 		IpamPoolId: aws.String(poolID),
-	})
+	}
+	_, err = conn.DeprovisionIpamPoolCidr(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return diags

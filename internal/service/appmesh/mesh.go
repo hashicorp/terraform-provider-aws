@@ -203,9 +203,10 @@ func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Service Mesh: %s", d.Id())
-	_, err := conn.DeleteMesh(ctx, &appmesh.DeleteMeshInput{
+	input := appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMesh(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

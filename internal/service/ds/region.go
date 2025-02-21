@@ -232,9 +232,10 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		o.Region = regionName
 	}
 
-	_, err = conn.RemoveRegion(ctx, &directoryservice.RemoveRegionInput{
+	input := directoryservice.RemoveRegionInput{
 		DirectoryId: aws.String(directoryID),
-	}, optFn)
+	}
+	_, err = conn.RemoveRegion(ctx, &input, optFn)
 
 	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags

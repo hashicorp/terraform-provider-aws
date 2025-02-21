@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 )
 
 func findInvitationByAccount(ctx context.Context, conn *macie2.Client, accountID string) (string, error) {
@@ -29,27 +28,4 @@ func findInvitationByAccount(ctx context.Context, conn *macie2.Client, accountID
 	}
 
 	return "", nil
-}
-
-// findMemberNotAssociated Return a list of members not associated and compare with account ID
-func findMemberNotAssociated(ctx context.Context, conn *macie2.Client, accountID string) (*awstypes.Member, error) {
-	input := &macie2.ListMembersInput{
-		OnlyAssociated: aws.String("false"),
-	}
-
-	pages := macie2.NewListMembersPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, member := range page.Members {
-			if aws.ToString(member.AccountId) == accountID {
-				return &member, nil
-			}
-		}
-	}
-
-	return nil, nil
 }

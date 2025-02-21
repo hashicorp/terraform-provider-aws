@@ -231,9 +231,10 @@ func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	_, err := conn.DeleteExtension(ctx, &appconfig.DeleteExtensionInput{
+	input := appconfig.DeleteExtensionInput{
 		ExtensionIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteExtension(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

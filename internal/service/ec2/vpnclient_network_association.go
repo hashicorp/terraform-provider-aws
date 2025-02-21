@@ -119,10 +119,11 @@ func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.Re
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Network Association: %s", d.Id())
-	_, err := conn.DisassociateClientVpnTargetNetwork(ctx, &ec2.DisassociateClientVpnTargetNetworkInput{
+	input := ec2.DisassociateClientVpnTargetNetworkInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 		AssociationId:       aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateClientVpnTargetNetwork(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNAssociationIdNotFound, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return diags

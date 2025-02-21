@@ -10,7 +10,7 @@ jobs:
     name: open-pr-stats
     if: github.repository_owner == 'hashicorp'
     steps:
-      - uses: actions/create-github-app-token@136412a57a7081aa63c935a2cc2918f76c34f514 # v1.11.2
+      - uses: actions/create-github-app-token@0d564482f06ca65fa9e77e2510873638c82206f2 # v1.11.5
         id: app-token
         with:
           app-id: ${{ secrets.APP_ID }}

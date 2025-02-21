@@ -1110,9 +1110,10 @@ func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 	tflog.Info(ctx, "Deleting EC2 Network Interface", map[string]any{
 		names.AttrNetworkInterfaceID: networkInterfaceID,
 	})
-	_, err := conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
+	input := ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
-	})
+	}
+	_, err := conn.DeleteNetworkInterface(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInterfaceIDNotFound) {
 		return nil
@@ -1129,10 +1130,11 @@ func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 	tflog.Info(ctx, "Detaching EC2 Network Interface", map[string]any{
 		names.AttrNetworkInterfaceID: networkInterfaceID,
 	})
-	_, err := conn.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{
+	input := ec2.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),
-	})
+	}
+	_, err := conn.DetachNetworkInterface(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAttachmentIDNotFound) {
 		return nil

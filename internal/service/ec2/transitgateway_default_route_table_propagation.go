@@ -192,12 +192,13 @@ func (r *transitGatewayDefaultRouteTablePropagationResource) Delete(ctx context.
 
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.ModifyTransitGateway(ctx, &ec2.ModifyTransitGatewayInput{
+	input := ec2.ModifyTransitGatewayInput{
 		Options: &awstypes.ModifyTransitGatewayOptions{
 			PropagationDefaultRouteTableId: fwflex.StringFromFramework(ctx, data.OriginalDefaultRouteTableID),
 		},
 		TransitGatewayId: fwflex.StringFromFramework(ctx, data.TransitGatewayID),
-	})
+	}
+	_, err := conn.ModifyTransitGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeIncorrectState) {
 		return

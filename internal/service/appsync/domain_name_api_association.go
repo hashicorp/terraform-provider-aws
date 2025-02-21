@@ -123,9 +123,10 @@ func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	log.Printf("[INFO] Deleting Appsync Domain Name API Association: %s", d.Id())
-	_, err := conn.DisassociateApi(ctx, &appsync.DisassociateApiInput{
+	input := appsync.DisassociateApiInput{
 		DomainName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateApi(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

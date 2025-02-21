@@ -37,18 +37,20 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `name` - (Required) Desired name of the project
+* `name` - (Required) Desired name of the project.
 
 The following arguments are optional:
 
-* `auto_update` - (Optional) Specify if automatic retraining should occur. Valid values are `ENABLED` or `DISABLED`. Defaults to `DISABLED`
-* `feature` - (Optional) Specify the feature being customized. Valid values are `CONTENT_MODERATION` or `CUSTOM_LABELS`. Defaults to `CUSTOM_LABELS`
+* `auto_update` - (Optional) Specify if automatic retraining should occur. Valid values are `ENABLED` or `DISABLED`. Defaults to `DISABLED`.
+* `feature` - (Optional) Specify the feature being customized. Valid values are `CONTENT_MODERATION` or `CUSTOM_LABELS`. Defaults to `CUSTOM_LABELS`.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Project.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -82,4 +84,4 @@ Using `terraform import`, import Rekognition Project using the `name`. For examp
 % terraform import aws_rekognition_project.example project-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0fa7b988bdeb66bc32a12a7cbbd2066aa8d91a04d6af41519857096637e28d9d -->
+<!-- cache-key: cdktf-0.20.8 input-2911f88ffdd746ae5c0ae2f4557150fcdb3003e8a3d7b928bade028d86f4b442 -->

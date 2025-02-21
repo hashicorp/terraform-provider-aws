@@ -1488,7 +1488,8 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-	output, err := conn.GetAccount(ctx, &apigateway.GetAccountInput{})
+	input := apigateway.GetAccountInput{}
+	output, err := conn.GetAccount(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping tests: %s", err)
