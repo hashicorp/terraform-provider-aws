@@ -101,9 +101,7 @@ func (r *graphResource) Schema(ctx context.Context, request resource.SchemaReque
 			"graph_name_prefix": schema.StringAttribute{
 				Description: "Allows user to specify name prefix and have remainder of name automatically generated.",
 				Optional:    true,
-				Computed:    true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
