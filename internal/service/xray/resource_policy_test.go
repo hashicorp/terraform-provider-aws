@@ -41,6 +41,7 @@ func TestAccXRayResourcePolicy_basic(t *testing.T) {
 					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_revision_id", "1"),
 				),
 			},
 			{
