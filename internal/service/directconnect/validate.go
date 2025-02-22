@@ -15,6 +15,7 @@ func validConnectionBandWidth() schema.SchemaValidateFunc {
 		"5Gbps",
 		"10Gbps",
 		"100Gbps",
+		"400Gbps",
 		"50Mbps",
 		"100Mbps",
 		"200Mbps",
