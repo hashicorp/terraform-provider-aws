@@ -44,7 +44,7 @@ func testAccMediaPackageVODPackagingGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackagingGroupExists(ctx, resourceName, &packagingGroup),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackage-vod", regexache.MustCompile(`packaging-groups/[a-zA-Z0-9_-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(packagingGroupRName)),
+					resource.TestMatchResourceAttr(resourceName, acctest.CtName, regexache.MustCompile(packagingGroupRName)),
 					resource.TestMatchResourceAttr(resourceName, "domain_name", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z]+.egress.mediapackage-vod.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
 				),
 			},
@@ -82,9 +82,9 @@ func testAccMediaPackageVODPackagingGroup_logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackagingGroupExists(ctx, resourceName, &packagingGroup),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackage-vod", regexache.MustCompile(`packaging-groups/[a-zA-Z0-9_-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(packagingGroupRName)),
+					resource.TestMatchResourceAttr(resourceName, acctest.CtName, regexache.MustCompile(packagingGroupRName)),
 					resource.TestMatchResourceAttr(resourceName, "domain_name", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z]+.egress.mediapackage-vod.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
-					resource.TestMatchResourceAttr(resourceName, "egress_access_logs.log_group_name", regexache.MustCompile(fmt.Sprintf(`^/aws/MediaPackage/tf-acc-test-\d+$`))),
+					resource.TestMatchResourceAttr(resourceName, "egress_access_logs.log_group_name", regexache.MustCompile(`^/aws/MediaPackage/tf-acc-test-\d+$`)),
 				),
 			},
 			{
@@ -121,7 +121,7 @@ func testAccMediaPackageVODPackagingGroup_authorization(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackagingGroupExists(ctx, resourceName, &packagingGroup),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackage-vod", regexache.MustCompile(`packaging-groups/[a-zA-Z0-9_-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(packagingGroupRName)),
+					resource.TestMatchResourceAttr(resourceName, acctest.CtName, regexache.MustCompile(packagingGroupRName)),
 					resource.TestMatchResourceAttr(resourceName, "domain_name", regexache.MustCompile(fmt.Sprintf("^(https://[0-9a-z]+.egress.mediapackage-vod.%s.amazonaws.com(/.*)?)$", acctest.Region()))),
 				),
 			},
@@ -268,9 +268,9 @@ resource "aws_mediapackagevod_packaging_group" "packagingGroup" {
   }
 
   depends_on = [
-	  aws_secretsmanager_secret_version.packagingGroupSecretVersion,
-	  aws_iam_role_policy.packagingGroupRolePolicy
-	]
+    aws_secretsmanager_secret_version.packagingGroupSecretVersion,
+    aws_iam_role_policy.packagingGroupRolePolicy
+  ]
 }
 
 resource "aws_secretsmanager_secret" "packagingGroupSecret" {
