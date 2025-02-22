@@ -167,9 +167,6 @@ func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.Delete
 	}
 
 	_, err = conn.DeleteResourcePolicy(ctx, in)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
-	}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.XRay, create.ErrActionDeleting, ResNameResourcePolicy, state.PolicyName.String(), err),

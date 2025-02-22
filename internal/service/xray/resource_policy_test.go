@@ -149,8 +149,8 @@ func testAccResourcePolicyImportStateIDFunc(resourceName string) resource.Import
 func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_resource_policy" "test" {
-  policy_name = %[1]q
-  policy_document = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowXRayAccess\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":[\"xray:*\",\"xray:PutResourcePolicy\"],\"Resource\":\"*\"}]}"
+  policy_name                 = %[1]q
+  policy_document             = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowXRayAccess\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":[\"xray:*\",\"xray:PutResourcePolicy\"],\"Resource\":\"*\"}]}"
   bypass_policy_lockout_check = true
 }
 `, rName)
