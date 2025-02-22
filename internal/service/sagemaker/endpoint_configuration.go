@@ -334,7 +334,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 						},
 						"model_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"routing_config": {
@@ -595,6 +595,12 @@ func resourceEndpointConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"execution_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -685,6 +691,10 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		createOpts.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("execution_role_arn"); ok {
+		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]interface{})) > 0 {
@@ -810,8 +820,10 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
 
-		l := awstypes.ProductionVariant{
-			ModelName: aws.String(data["model_name"].(string)),
+		l := awstypes.ProductionVariant{}
+
+		if v, ok := data["model_name"].(string); ok && v != "" {
+			l.ModelName = aws.String(v)
 		}
 
 		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
@@ -840,10 +852,17 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 			l.VariantName = aws.String(id.UniqueId())
 		}
 
-		if v, ok := data["initial_variant_weight"].(float64); ok {
-			l.InitialVariantWeight = aws.Float32(float32(v))
-		}
+		// Do not set initial variant weight or SSM access if we're using inference components
+		// Inference component usage is determined by a nonexistent model_name
+		if modelName, ok := data["model_name"].(string); ok && modelName != "" {
+			if v, ok := data["initial_variant_weight"].(float64); ok {
+				l.InitialVariantWeight = aws.Float32(float32(v))
+			}
 
+			if v, ok := data["enable_ssm_access"].(bool); ok {
+				l.EnableSSMAccess = aws.Bool(v)
+			}
+		}
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
 			l.AcceleratorType = awstypes.ProductionVariantAcceleratorType(v)
 		}
@@ -858,10 +877,6 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 
 		if v, ok := data["core_dump_config"].([]interface{}); ok && len(v) > 0 {
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
-		}
-
-		if v, ok := data["enable_ssm_access"].(bool); ok {
-			l.EnableSSMAccess = aws.Bool(v)
 		}
 
 		if v, ok := data["managed_instance_scaling"].([]interface{}); ok && len(v) > 0 {
@@ -887,8 +902,11 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]i
 			names.AttrInstanceType:   i.InstanceType,
 			"inference_ami_version":  i.InferenceAmiVersion,
 			"initial_variant_weight": aws.ToFloat32(i.InitialVariantWeight),
-			"model_name":             aws.ToString(i.ModelName),
 			"variant_name":           aws.ToString(i.VariantName),
+		}
+
+		if i.ModelName != nil {
+			l["model_name"] = aws.ToString(i.ModelName)
 		}
 
 		if i.InitialInstanceCount != nil {
