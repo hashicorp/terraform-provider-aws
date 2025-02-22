@@ -59,6 +59,7 @@ func (r *resourceResourcePolicy) Schema(ctx context.Context, req resource.Schema
 			},
 			"policy_revision_id": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 			},
 			names.AttrLastUpdatedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -78,7 +79,7 @@ func (r *resourceResourcePolicy) Create(ctx context.Context, req resource.Create
 	}
 
 	in := &xray.PutResourcePolicyInput{
-		PolicyDocument: plan.PolicyName.ValueStringPointer(),
+		PolicyDocument: plan.PolicyDocument.ValueStringPointer(),
 		PolicyName:     plan.PolicyName.ValueStringPointer(),
 	}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
@@ -103,6 +104,7 @@ func (r *resourceResourcePolicy) Create(ctx context.Context, req resource.Create
 	}
 
 	plan.LastUpdatedTime = fwflex.TimeToFramework(ctx, out.ResourcePolicy.LastUpdatedTime)
+	plan.PolicyRevisionID = fwflex.StringValueToFramework(ctx, *out.ResourcePolicy.PolicyRevisionId)
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -133,37 +135,42 @@ func (r *resourceResourcePolicy) Read(ctx context.Context, req resource.ReadRequ
 		)
 		return
 	}
-	state.LastUpdatedTime = fwflex.TimeToFramework(ctx, out.LastUpdatedTime)
+
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().XRayClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceResourcePolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &xray.DeleteResourcePolicyInput{
-		PolicyName: aws.String(state.PolicyName.ValueString()),
+	policy, err := findResourcePolicyByName(ctx, conn, state.PolicyName.ValueString())
+	if tfresource.NotFound(err) {
+		return
 	}
-
-	if !state.PolicyRevisionID.IsNull() {
-		in.PolicyRevisionId = aws.String(state.PolicyRevisionID.ValueString())
-	}
-
-	_, err := conn.DeleteResourcePolicy(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.XRay, create.ErrActionDeleting, ResNameResourcePolicy, state.PolicyName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	in := &xray.DeleteResourcePolicyInput{
+		PolicyName:       aws.String(state.PolicyName.ValueString()),
+		PolicyRevisionId: policy.PolicyRevisionId,
+	}
+
+	_, err = conn.DeleteResourcePolicy(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.XRay, create.ErrActionDeleting, ResNameResourcePolicy, state.PolicyName.String(), err),
 			err.Error(),
@@ -179,18 +186,18 @@ func (r *resourceResourcePolicy) ImportState(ctx context.Context, req resource.I
 func findResourcePolicyByName(ctx context.Context, conn *xray.Client, name string) (*awstypes.ResourcePolicy, error) {
 	in := &xray.ListResourcePoliciesInput{}
 
-	out, err := findResourcePolicy(ctx, conn, in, func(policy *awstypes.ResourcePolicy) bool {
-		return *policy.PolicyName == name
+	policy, err := findResourcePolicy(ctx, conn, in, func(policy *awstypes.ResourcePolicy) bool {
+		return aws.ToString(policy.PolicyName) == name
 	})
+
 	if err != nil {
 		return nil, err
 	}
-
-	if out == nil {
+	if policy == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out, nil
+	return policy, nil
 }
 
 func findResourcePolicy(ctx context.Context, conn *xray.Client, input *xray.ListResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) (*awstypes.ResourcePolicy, error) {

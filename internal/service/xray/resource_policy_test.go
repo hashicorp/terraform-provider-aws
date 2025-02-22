@@ -23,12 +23,6 @@ import (
 
 func TestAccXRayResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var resourcepolicy types.ResourcePolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_xray_resource_policy.test"
@@ -36,7 +30,7 @@ func TestAccXRayResourcePolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.XRayServiceID)
+			// acctest.PreCheckPartitionHasService(t, names.XRayServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,14 +41,18 @@ func TestAccXRayResourcePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", "true"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
+				ImportStateIdFunc:                    testAccResourcePolicyImportStateIDFunc(resourceName),
+				ImportStateVerifyIgnore: []string{
+					"bypass_policy_lockout_check",
+				},
 			},
 		},
 	})
@@ -62,9 +60,6 @@ func TestAccXRayResourcePolicy_basic(t *testing.T) {
 
 func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var resourcepolicy types.ResourcePolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -73,7 +68,7 @@ func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.XRayServiceID)
+			// acctest.PreCheckPartitionHasService(t, names.XRayServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -133,12 +128,23 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 		output, err := tfxray.FindResourcePolicyByName(ctx, conn, rs.Primary.Attributes["policy_name"])
 
 		if err != nil {
-			return create.Error(names.XRay, create.ErrActionCheckingExistence, tfxray.ResNameResourcePolicy, rs.Primary.Attributes["policy_name"], err)
+			return err
 		}
 
 		*resourcepolicy = *output
 
 		return nil
+	}
+}
+
+func testAccResourcePolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["policy_name"], nil
 	}
 }
 
