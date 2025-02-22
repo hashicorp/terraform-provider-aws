@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dx_connection: Support 400Gbps direct connect in aws_dx_connection
+```
+
+```release-note:enhancement
+resource/aws_dx_lag: Support 400Gbps direct connect in aws_dx_connection
+```
