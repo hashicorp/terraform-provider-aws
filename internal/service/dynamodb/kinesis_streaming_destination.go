@@ -149,10 +149,11 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Deleting DynamoDB Kinesis Streaming Destination: %s", d.Id())
-	_, err = conn.DisableKinesisStreamingDestination(ctx, &dynamodb.DisableKinesisStreamingDestinationInput{
+	input := dynamodb.DisableKinesisStreamingDestinationInput{
 		TableName: aws.String(tableName),
 		StreamArn: aws.String(streamARN),
-	})
+	}
+	_, err = conn.DisableKinesisStreamingDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

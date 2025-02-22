@@ -89,10 +89,11 @@ func (r *securityGroupIngressRuleResource) create(ctx context.Context, data *sec
 func (r *securityGroupIngressRuleResource) delete(ctx context.Context, data *securityGroupRuleResourceModel) error {
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.RevokeSecurityGroupIngress(ctx, &ec2.RevokeSecurityGroupIngressInput{
+	input := ec2.RevokeSecurityGroupIngressInput{
 		GroupId:              fwflex.StringFromFramework(ctx, data.SecurityGroupID),
 		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.RevokeSecurityGroupIngress(ctx, &input)
 
 	return err
 }

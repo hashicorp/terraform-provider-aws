@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -50,13 +51,24 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 				},
 				Attributes: map[string]schema.Attribute{
 					"embedding_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
 					},
 					"image_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
 					},
 					"text_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
+					},
+					"video_data_delivery_enabled": schema.BoolAttribute{
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
 					},
 				},
 				Blocks: map[string]schema.Block{
@@ -64,6 +76,8 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							names.AttrLogGroupName: schema.StringAttribute{
+								// Must set to optional to avoid validation error
+								// See: https://github.com/hashicorp/terraform-plugin-framework/issues/740
 								// Required: true,
 								Optional: true,
 							},
@@ -245,6 +259,7 @@ type loggingConfigModel struct {
 	ImageDataDeliveryEnabled     types.Bool                                   `tfsdk:"image_data_delivery_enabled"`
 	S3Config                     fwtypes.ObjectValueOf[s3ConfigModel]         `tfsdk:"s3_config"`
 	TextDataDeliveryEnabled      types.Bool                                   `tfsdk:"text_data_delivery_enabled"`
+	VideoDataDeliveryEnabled     types.Bool                                   `tfsdk:"video_data_delivery_enabled"`
 }
 
 type cloudWatchConfigModel struct {

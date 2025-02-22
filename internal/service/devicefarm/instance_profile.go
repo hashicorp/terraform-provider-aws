@@ -184,9 +184,10 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
-	_, err := conn.DeleteInstanceProfile(ctx, &devicefarm.DeleteInstanceProfileInput{
+	input := devicefarm.DeleteInstanceProfileInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteInstanceProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

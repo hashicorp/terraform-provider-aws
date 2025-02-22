@@ -20,7 +20,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -88,7 +92,9 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_scalability_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", "standard"),
 					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", acctest.CtTrue),
@@ -3189,6 +3195,57 @@ func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_databaseInsightsMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_databaseInsightsMode(rName, "advanced", true, "465"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+			{
+				Config: testAccClusterConfig_databaseInsightsMode(rName, "standard", false, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(false)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_enhancedMonitoring_enabledToUpdatedMonitoringInterval(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3292,6 +3349,44 @@ func TestAccRDSCluster_enhancedMonitoring_disabledToEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, names.AttrARN),
 				),
+			},
+		},
+	})
+}
+func TestAccRDSCluster_auroraLimitless(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraLimitless(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("aurora-postgresql")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngineVersion), knownvalue.StringExact("16.6-limitless")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_interval"), knownvalue.Int64Exact(5)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(31)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStorageType), knownvalue.StringExact("aurora-iopt1")),
+				},
 			},
 		},
 	})
@@ -6438,4 +6533,72 @@ resource "aws_rds_cluster" "test" {
   monitoring_interval       = 0
 }
 `, rName, tfrds.ClusterEngineMySQL)
+}
+
+func testAccClusterConfig_auroraLimitless(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "monitoring.rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = aws_iam_role.test.name
+}
+
+# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless-create-cluster.html.
+resource "aws_rds_cluster" "test" {
+  cluster_identifier                    = %[1]q
+  engine                                = "aurora-postgresql"
+  engine_version                        = "16.6-limitless"
+  engine_mode                           = ""
+  storage_type                          = "aurora-iopt1"
+  cluster_scalability_type              = "limitless"
+  master_username                       = "tfacctest"
+  master_password                       = "avoid-plaintext-passwords"
+  skip_final_snapshot                   = true
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 31
+  enabled_cloudwatch_logs_exports       = ["postgresql"]
+  monitoring_interval                   = 5
+  monitoring_role_arn                   = aws_iam_role.test.arn
+}
+`, rName)
+}
+
+func testAccClusterConfig_databaseInsightsMode(rName, databaseInsightsMode string, performanceInsightsEnabled bool, performanceInsightsRetentionPeriond string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier                    = %[1]q
+  engine                                = %[2]q
+  db_cluster_instance_class             = "db.m6gd.large"
+  storage_type                          = "io1"
+  allocated_storage                     = 100
+  iops                                  = 1000
+  master_username                       = "tfacctest"
+  master_password                       = "avoid-plaintext-passwords"
+  skip_final_snapshot                   = true
+  database_insights_mode                = %[3]q
+  performance_insights_enabled          = %[4]t
+  performance_insights_retention_period = %[5]s
+}
+`, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriond)
 }

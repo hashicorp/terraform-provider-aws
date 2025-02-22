@@ -68,7 +68,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstancesInput{}
+	input := ec2.DescribeInstancesInput{}
 
 	if v, ok := d.GetOk("instance_state_names"); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = append(input.Filters, awstypes.Filter{
@@ -94,7 +94,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := findInstances(ctx, conn, input)
+	output, err := findInstances(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
