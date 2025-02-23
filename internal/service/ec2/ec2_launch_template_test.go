@@ -3550,6 +3550,7 @@ func testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName string, enaSrdEnab
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -3558,6 +3559,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.0.0/24"
+
   tags = {
     Name = %[1]q
   }
@@ -3571,10 +3573,11 @@ resource "aws_launch_template" "test" {
     subnet_id    = aws_subnet.test.id
 
     ena_srd_specification {
-      ena_srd_enabled      = %[2]t
-	  ena_srd_udp_specification {
-      	ena_srd_udp_enabled  = %[3]t
-	  }
+      ena_srd_enabled = %[2]t
+
+      ena_srd_udp_specification {
+        ena_srd_udp_enabled = %[3]t
+      }
     }
   }
 }
