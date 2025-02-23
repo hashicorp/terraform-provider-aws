@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_ec2_fleet: Implement the missing `spot_options` arguments that are mentioned in the provider documentation: `max_total_price`, `min_target_capacity`, `single_instance_type`, and `single_availability_zone`
+resource/aws_ec2_fleet: Add `spot_options.max_total_price`, `spot_options.min_target_capacity`, `spot_options.single_instance_type`, and `spot_options.single_availability_zone` arguments
 ```
