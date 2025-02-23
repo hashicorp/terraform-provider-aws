@@ -4,9 +4,9 @@
 package schema
 
 import (
+	"sync"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,7 +31,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -51,7 +51,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -70,7 +70,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -89,7 +89,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -105,6 +105,14 @@ func ParametersSchema() *schema.Schema {
 		},
 	}
 }
+
+var stringNonEmptyRequiredSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringIsNotWhiteSpace,
+	}
+})
 
 func ExpandParameters(tfList []interface{}) *awstypes.Parameters {
 	if len(tfList) == 0 || tfList[0] == nil {

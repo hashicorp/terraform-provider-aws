@@ -145,9 +145,9 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 
 	ownerID := aws.ToString(session.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  "traffic-mirror-session/" + d.Id(),
 	}.String()
@@ -232,9 +232,10 @@ func resourceTrafficMirrorSessionDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Session: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorSession(ctx, &ec2.DeleteTrafficMirrorSessionInput{
+	input := ec2.DeleteTrafficMirrorSessionInput{
 		TrafficMirrorSessionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorSession(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorSessionIdNotFound) {
 		return diags

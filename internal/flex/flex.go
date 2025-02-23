@@ -36,34 +36,6 @@ func ExpandStringList(configured []interface{}) []*string {
 	return vs
 }
 
-// ExpandStringListEmpty the result of flatmap. Expand for an array of strings
-// and returns a []*string. Adds an empty element for every nil or uncastable.
-func ExpandStringListEmpty(configured []interface{}) []*string {
-	vs := make([]*string, 0, len(configured))
-	for _, v := range configured {
-		if v, ok := v.(string); ok { // empty string in config turns into nil in []interface{} so !ok
-			vs = append(vs, aws.String(v))
-		} else {
-			vs = append(vs, aws.String(""))
-		}
-	}
-	return vs
-}
-
-// Takes the result of flatmap.Expand for an array of strings
-// and returns a []*time.Time
-func ExpandStringTimeList(configured []interface{}, format string) []*time.Time {
-	vs := make([]*time.Time, 0, len(configured))
-	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			t, _ := time.Parse(format, v.(string))
-			vs = append(vs, aws.Time(t))
-		}
-	}
-	return vs
-}
-
 func ExpandStringTimeValueList(configured []interface{}, format string) []time.Time {
 	return tfslices.ApplyToAll(ExpandStringValueList(configured), func(v string) time.Time {
 		t, _ := time.Parse(format, v)
@@ -118,16 +90,6 @@ func FlattenStringList(list []*string) []interface{} {
 	return vs
 }
 
-// Takes list of pointers to time.Time. Expand to an array
-// of strings and returns a []interface{}
-func FlattenTimeStringList(list []*time.Time, format string) []interface{} {
-	vs := make([]interface{}, 0, len(list))
-	for _, v := range list {
-		vs = append(vs, v.Format(format))
-	}
-	return vs
-}
-
 func FlattenTimeStringValueList(list []time.Time, format string) []interface{} {
 	return tfslices.ApplyToAll(list, func(v time.Time) any {
 		return v.Format(format)
@@ -157,13 +119,6 @@ func FlattenStringyValueList[E ~string](configured []E) []any {
 func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
 	return tfmaps.ApplyToAllValues(m, func(v any) int32 {
 		return int32(v.(int))
-	})
-}
-
-// Expands a map of string to interface to a map of string to *int64
-func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
-	return tfmaps.ApplyToAllValues(m, func(v any) *int64 {
-		return aws.Int64(int64(v.(int)))
 	})
 }
 
@@ -202,13 +157,6 @@ func ExpandStringyValueMap[M ~map[K]V, K ~string, V ~string](m M) map[string]str
 func ExpandStringValueMap(m map[string]interface{}) map[string]string {
 	return tfmaps.ApplyToAllValues(m, func(v any) string {
 		return v.(string)
-	})
-}
-
-// Expands a map of string to interface to a map of string to *bool
-func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
-	return tfmaps.ApplyToAllValues(m, func(v any) *bool {
-		return aws.Bool(v.(bool))
 	})
 }
 
@@ -252,30 +200,15 @@ func FlattenStringyValueSet[E ~string](list []E) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringyValueList[E](list))
 }
 
-func FlattenStringMap(m map[string]*string) map[string]interface{} {
-	return tfmaps.ApplyToAllValues(m, func(v *string) any {
-		return aws.ToString(v)
-	})
-}
-
 func FlattenStringValueMap(m map[string]string) map[string]interface{} {
 	return tfmaps.ApplyToAllValues(m, func(v string) any {
 		return v
 	})
 }
 
-// Takes the result of schema.Set of strings and returns a []*int64
-func ExpandInt64Set(configured *schema.Set) []*int64 {
-	return ExpandInt64List(configured.List())
-}
-
 // Takes the result of schema.Set of strings and returns a []int64
 func ExpandInt64ValueSet(configured *schema.Set) []int64 {
 	return ExpandInt64ValueList(configured.List())
-}
-
-func FlattenInt64Set(list []*int64) *schema.Set {
-	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
 }
 
 // Takes the result of flatmap.Expand for an array of int32
@@ -291,10 +224,6 @@ func ExpandInt32ValueSet(configured *schema.Set) []int32 {
 	return ExpandInt32ValueList(configured.List())
 }
 
-func FlattenInt32Set(set []*int32) *schema.Set {
-	return schema.NewSet(schema.HashInt, FlattenInt32List(set))
-}
-
 func FlattenInt32ValueSet(set []int32) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt32ValueList(set))
 }
@@ -307,20 +236,6 @@ func ExpandInt64ValueList(configured []interface{}) []int64 {
 	})
 }
 
-// Takes the result of flatmap.Expand for an array of int64
-// and returns a []*int64
-func ExpandInt64List(configured []interface{}) []*int64 {
-	return tfslices.ApplyToAll(configured, func(v any) *int64 {
-		return aws.Int64(int64(v.(int)))
-	})
-}
-
-func ExpandFloat64List(configured []interface{}) []*float64 {
-	return tfslices.ApplyToAll(configured, func(v any) *float64 {
-		return aws.Float64(v.(float64))
-	})
-}
-
 func ExpandFloat64ValueList(configured []interface{}) []float64 {
 	return tfslices.ApplyToAll(configured, func(v any) float64 {
 		return v.(float64)
@@ -330,33 +245,6 @@ func ExpandFloat64ValueList(configured []interface{}) []float64 {
 func FlattenInt32ValueList(list []int32) []interface{} {
 	return tfslices.ApplyToAll(list, func(v int32) any {
 		return int(v)
-	})
-}
-
-// Takes list of pointers to int64s. Expand to an array
-// of raw ints and returns a []interface{}
-// to keep compatibility w/ schema.NewSet
-func FlattenInt64List(list []*int64) []interface{} {
-	return tfslices.ApplyToAll(list, func(v *int64) any {
-		return int(aws.ToInt64(v))
-	})
-}
-
-// Takes list of pointers to float64s. Expand to an array
-// of raw floats and returns a []interface{}
-// to keep compatibility w/ schema.NewSet
-func FlattenFloat64List(list []*float64) []interface{} {
-	return tfslices.ApplyToAll(list, func(v *float64) any {
-		return int(aws.ToFloat64(v))
-	})
-}
-
-// Takes list of pointers to int32s. Expand to an array
-// of raw ints and returns a []interface{}
-// to keep compatibility w/ schema.NewSet
-func FlattenInt32List(list []*int32) []interface{} {
-	return tfslices.ApplyToAll(list, func(v *int32) any {
-		return int(aws.ToInt32(v))
 	})
 }
 
@@ -529,30 +417,6 @@ func StringValueToInt64Value(v string) int64 {
 func ResourceIdPartCount(id string) int {
 	idParts := strings.Split(id, ResourceIdSeparator)
 	return len(idParts)
-}
-
-// DiffStringMaps returns the set of keys and values that must be created, the set of keys
-// and values that must be destroyed, and the set of keys and values that are unchanged.
-func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
-	// First, we're creating everything we have.
-	add := ExpandStringMap(newMap)
-
-	// Build the maps of what to remove and what is unchanged.
-	remove := make(map[string]*string)
-	unchanged := make(map[string]*string)
-	for k, v := range oldMap {
-		v := v.(string)
-		if old, ok := add[k]; !ok || aws.ToString(old) != v {
-			// Delete it!
-			remove[k] = aws.String(v)
-		} else if ok {
-			unchanged[k] = aws.String(v)
-			// Already present, so remove from new.
-			delete(add, k)
-		}
-	}
-
-	return add, remove, unchanged
 }
 
 // DiffStringValueMaps returns the set of keys and values that must be created, the set of keys

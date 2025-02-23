@@ -32,6 +32,8 @@ import (
 
 // @SDKResource("aws_quicksight_theme", name="Theme")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Theme")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceTheme() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThemeCreate,
@@ -112,7 +114,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}

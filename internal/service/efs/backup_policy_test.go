@@ -35,7 +35,7 @@ func TestAccEFSBackupPolicy_basic(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
 			},
@@ -102,7 +102,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
 			},

@@ -197,7 +197,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.PolicyDocument = aws.String(v.(string))
 		} else {
 			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
-			regions := []interface{}{meta.(*conns.AWSClient).Region}
+			regions := []interface{}{meta.(*conns.AWSClient).Region(ctx)}
 			if v, ok := d.GetOk("base_policy_region"); ok {
 				regions = []interface{}{v.(string)}
 			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
@@ -288,7 +288,7 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("create_base_policy") {
 		if _, ok := d.GetOk("create_base_policy"); ok {
 			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
-			regions := []interface{}{meta.(*conns.AWSClient).Region}
+			regions := []interface{}{meta.(*conns.AWSClient).Region(ctx)}
 			if v, ok := d.GetOk("base_policy_region"); ok {
 				regions = []interface{}{v.(string)}
 			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {

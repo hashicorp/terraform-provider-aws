@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_oam_sinks")
+// @SDKDataSource("aws_oam_sinks", name="Sinks")
 func DataSourceSinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSinksRead,
@@ -54,7 +54,7 @@ func dataSourceSinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 
 	return nil

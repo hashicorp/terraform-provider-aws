@@ -281,7 +281,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
 		AccountID: aws.ToString(connection.OwnerAccount),
@@ -349,9 +349,10 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func deleteConnection(ctx context.Context, conn *directconnect.Client, connectionID string, waiter func(context.Context, *directconnect.Client, string) (*awstypes.Connection, error)) error {
 	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
-	_, err := conn.DeleteConnection(ctx, &directconnect.DeleteConnectionInput{
+	input := directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(connectionID),
-	})
+	}
+	_, err := conn.DeleteConnection(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
 		return nil

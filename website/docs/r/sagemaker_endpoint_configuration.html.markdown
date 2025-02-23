@@ -58,6 +58,7 @@ This resource supports the following arguments:
 * `model_name` - (Required) The name of the model to use.
 * `routing_config` - (Optional) Sets how the endpoint routes incoming traffic. See [routing_config](#routing_config) below.
 * `serverless_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
+* `managed_instance_scaling` - (Optional) Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
 * `variant_name` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volume_size_in_gb` - (Optional) The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
 
@@ -76,6 +77,12 @@ This resource supports the following arguments:
 * `memory_size_in_mb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
 * `provisioned_concurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `max_concurrency`. Valid values are between `1` and `200`.
 
+#### managed_instance_scaling
+
+* `status` - (Optional) Indicates whether managed instance scaling is enabled. Valid values are `ENABLED` and `DISABLED`.
+* `min_instance_count` - (Optional) The minimum number of instances that the endpoint must retain when it scales down to accommodate a decrease in traffic.
+* `max_instance_count` - (Optional) The maximum number of instances that the endpoint can provision when it scales up to accommodate an increase in traffic.
+
 ### data_capture_config
 
 * `initial_sampling_percentage` - (Required) Portion of data to capture. Should be between 0 and 100.
@@ -83,7 +90,8 @@ This resource supports the following arguments:
 * `capture_options` - (Required) Specifies what data to capture. Fields are documented below.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt the captured data on Amazon S3.
 * `enable_capture` - (Optional) Flag to enable data capture. Defaults to `false`.
-* `capture_content_type_header` - (Optional) The content type headers to capture. Fields are documented below.
+* `capture_content_type_header` - (Optional) The content type headers to capture.
+  See [`capture_content_type_header`](#capture_content_type_header) below.
 
 #### capture_options
 
@@ -92,7 +100,9 @@ This resource supports the following arguments:
 #### capture_content_type_header
 
 * `csv_content_types` - (Optional) The CSV content type headers to capture.
+  One of `csv_content_types` or `json_content_types` is required.
 * `json_content_types` - (Optional) The JSON content type headers to capture.
+  One of `json_content_types` or `csv_content_types` is required.
 
 ### async_inference_config
 

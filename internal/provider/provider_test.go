@@ -18,6 +18,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=Bench -v ./internal/provider
+func BenchmarkSDKProviderInitialization(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		_, err := New(context.Background())
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
 func TestProvider(t *testing.T) {
 	t.Parallel()
 
@@ -194,7 +204,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			defer popEnv(oldEnv)
 
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v)
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
 			endpoints := make(map[string]interface{})
@@ -276,8 +286,9 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 		t.Run(name, func(t *testing.T) {
 			oldEnv := stashEnv()
 			defer popEnv(oldEnv)
+
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v)
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
 			results := expandDefaultTags(ctx, map[string]interface{}{
@@ -392,8 +403,9 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 		t.Run(name, func(t *testing.T) {
 			oldEnv := stashEnv()
 			defer popEnv(oldEnv)
+
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v)
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
 			results := expandIgnoreTags(ctx, map[string]interface{}{

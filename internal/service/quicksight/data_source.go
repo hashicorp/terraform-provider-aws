@@ -5,6 +5,7 @@ package quicksight
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -28,8 +29,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	// Allow IAM role to become visible to the index
+	propagationTimeout = 2 * time.Minute
+
+	// accessDeniedExceptionMessage describes the error returned when the IAM role has not yet propagated
+	accessDeniedExceptionAssumeRoleMessage              = "Failed to assume your role. Verify the trust relationships of the role in the IAM console"
+	accessDeniedExceptionInsufficientPermissionsMessage = "Insufficient permission to access the manifest file"
+)
+
 // @SDKResource("aws_quicksight_data_source", name="Data Source")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSource")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -91,7 +103,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -122,10 +134,27 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]interface{}))
 	}
 
-	_, err := conn.CreateDataSource(ctx, input)
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateDataSource(ctx, input)
+		},
+		func(err error) (bool, error) {
+			var accessDeniedException *awstypes.AccessDeniedException
+
+			if errors.As(err, &accessDeniedException) && (strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionAssumeRoleMessage) || strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionInsufficientPermissionsMessage)) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source (%s): %s", id, err)
+	}
+
+	if outputRaw == nil {
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source (%s): empty output", id)
 	}
 
 	d.SetId(id)
@@ -218,10 +247,27 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]interface{}))
 		}
 
-		_, err = conn.UpdateDataSource(ctx, input)
+		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateDataSource(ctx, input)
+			},
+			func(err error) (bool, error) {
+				var accessDeniedException *awstypes.AccessDeniedException
+
+				if errors.As(err, &accessDeniedException) && (strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionAssumeRoleMessage) || strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionInsufficientPermissionsMessage)) {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s): %s", d.Id(), err)
+		}
+
+		if outputRaw == nil {
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s): empty output", d.Id())
 		}
 
 		if _, err := waitDataSourceUpdated(ctx, conn, awsAccountID, dataSourceID); err != nil {

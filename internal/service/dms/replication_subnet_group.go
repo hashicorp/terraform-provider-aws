@@ -115,10 +115,10 @@ func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceD
 	// The AWS API for DMS subnet groups does not return the ARN which is required to
 	// retrieve tags. This ARN can be built.
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "dms",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
@@ -164,9 +164,10 @@ func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Replication Subnet Group: %s", d.Id())
-	_, err := conn.DeleteReplicationSubnetGroup(ctx, &dms.DeleteReplicationSubnetGroupInput{
+	input := dms.DeleteReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReplicationSubnetGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

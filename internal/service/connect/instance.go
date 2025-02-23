@@ -24,7 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,6 +45,7 @@ var (
 )
 
 // @SDKResource("aws_connect_instance", name="Instance")
+// @Tags(identifierAttribute="arn")
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -53,6 +56,8 @@ func resourceInstance() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -139,6 +144,8 @@ func resourceInstance() *schema.Resource {
 			// 	Optional: true,
 			// 	Default:  false, //verified default result from ListInstanceAttributes()
 			// },
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -152,6 +159,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		IdentityManagementType: awstypes.DirectoryType(d.Get("identity_management_type").(string)),
 		InboundCallsEnabled:    aws.Bool(d.Get("inbound_calls_enabled").(bool)),
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("directory_id"); ok {
@@ -212,6 +220,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	setTagsOut(ctx, instance.Tags)
+
 	return diags
 }
 
@@ -223,7 +233,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return diags
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -231,9 +241,10 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Instance: %s", d.Id())
-	_, err := conn.DeleteInstance(ctx, &connect.DeleteInstanceInput{
+	input := connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

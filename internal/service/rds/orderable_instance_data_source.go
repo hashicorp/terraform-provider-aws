@@ -477,7 +477,7 @@ func sortInstanceClassesByVersion(ic []awstypes.OrderableDBInstanceOption) {
 		return
 	}
 
-	sort.Slice(ic, func(i, j int) bool {
+	sort.Slice(ic, func(i, j int) bool { // nosemgrep:ci.semgrep.stdlib.prefer-slices-sortfunc
 		return version.LessThan(aws.ToString(ic[i].EngineVersion), aws.ToString(ic[j].EngineVersion))
 	})
 }

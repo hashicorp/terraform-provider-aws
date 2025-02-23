@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -11,13 +12,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func dateTimeParameterDeclarationSchema() *schema.Schema {
+var dateTimeParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -55,7 +55,7 @@ func dateTimeParameterDeclarationSchema() *schema.Schema {
 						},
 					},
 				},
-				"time_granularity": stringSchema(false, enum.Validate[awstypes.TimeGranularity]()),
+				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 				"values_when_unset": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeValueWhenUnsetConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -68,16 +68,16 @@ func dateTimeParameterDeclarationSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: verify.ValidUTCTimestamp,
 							},
-							"value_when_unset_option": stringSchema(false, enum.Validate[awstypes.ValueWhenUnsetOption]()),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func decimalParameterDeclarationSchema() *schema.Schema {
+var decimalParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -93,7 +93,7 @@ func decimalParameterDeclarationSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
-				"parameter_value_type": stringSchema(true, enum.Validate[awstypes.ParameterValueType]()),
+				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](attrRequired),
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalDefaultValues.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -125,16 +125,16 @@ func decimalParameterDeclarationSchema() *schema.Schema {
 								Type:     schema.TypeFloat,
 								Optional: true,
 							},
-							"value_when_unset_option": stringSchema(false, enum.Validate[awstypes.ValueWhenUnsetOption]()),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func integerParameterDeclarationSchema() *schema.Schema {
+var integerParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -150,7 +150,7 @@ func integerParameterDeclarationSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
-				"parameter_value_type": stringSchema(true, enum.Validate[awstypes.ParameterValueType]()),
+				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](attrRequired),
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerDefaultValues.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -182,16 +182,16 @@ func integerParameterDeclarationSchema() *schema.Schema {
 								Type:     schema.TypeInt,
 								Optional: true,
 							},
-							"value_when_unset_option": stringSchema(false, enum.Validate[awstypes.ValueWhenUnsetOption]()),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func stringParameterDeclarationSchema() *schema.Schema {
+var stringParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringParameterDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -207,7 +207,7 @@ func stringParameterDeclarationSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
-				"parameter_value_type": stringSchema(true, enum.Validate[awstypes.ParameterValueType]()),
+				"parameter_value_type": stringEnumSchema[awstypes.ParameterValueType](attrRequired),
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringDefaultValues.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -239,16 +239,16 @@ func stringParameterDeclarationSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"value_when_unset_option": stringSchema(false, enum.Validate[awstypes.ValueWhenUnsetOption]()),
+							"value_when_unset_option": stringEnumSchema[awstypes.ValueWhenUnsetOption](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func dynamicValueSchema() *schema.Schema {
+var dynamicValueSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DynamicDefaultValue.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -262,9 +262,9 @@ func dynamicValueSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func parameterControlsSchema() *schema.Schema {
+var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -281,7 +281,7 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
 						},
 					},
@@ -295,11 +295,11 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":            idSchema(),
 							"source_parameter_name":           parameterNameSchema(true),
-							"title":                           stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
-							names.AttrType:                    stringSchema(false, enum.Validate[awstypes.SheetControlListType]()),
+							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
 					},
 				},
@@ -312,11 +312,11 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":            idSchema(),
 							"source_parameter_name":           parameterNameSchema(true),
-							"title":                           stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
-							names.AttrType:                    stringSchema(false, enum.Validate[awstypes.SheetControlListType]()),
+							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
 					},
 				},
@@ -329,7 +329,7 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
 							"maximum_value": {
 								Type:     schema.TypeFloat,
@@ -355,9 +355,9 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       textAreaControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
-							"delimiter":             stringSchema(false, validation.StringLenBetween(1, 2048)),
+							"delimiter":             stringLenBetweenSchema(attrOptional, 1, 2048),
 						},
 					},
 				},
@@ -370,7 +370,7 @@ func parameterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idSchema(),
 							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":       textFieldControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 						},
 					},
@@ -378,9 +378,9 @@ func parameterControlsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func parameterSelectableValuesSchema() *schema.Schema {
+var parameterSelectableValuesSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -401,7 +401,7 @@ func parameterSelectableValuesSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func parameterNameSchema(required bool) *schema.Schema {
 	return &schema.Schema{
@@ -1097,7 +1097,7 @@ func flattenParameterListControl(apiObject *awstypes.ParameterListControl) []int
 	}
 
 	if apiObject.CascadingControlConfiguration != nil {
-		tfMap["cacading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
+		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenListControlDisplayOptions(apiObject.DisplayOptions)

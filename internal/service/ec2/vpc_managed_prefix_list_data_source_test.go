@@ -23,14 +23,15 @@ func testAccManagedPrefixListGetIdByNameDataSource(ctx context.Context, name str
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := conn.DescribeManagedPrefixLists(ctx, &ec2.DescribeManagedPrefixListsInput{
+		input := ec2.DescribeManagedPrefixListsInput{
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("prefix-list-name"),
 					Values: []string{name},
 				},
 			},
-		})
+		}
+		output, err := conn.DescribeManagedPrefixLists(ctx, &input)
 
 		if err != nil {
 			return err
@@ -67,9 +68,9 @@ func TestAccVPCManagedPrefixListDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceByName, names.AttrOwnerID, "AWS"),
 					resource.TestCheckResourceAttr(resourceByName, "address_family", "IPv4"),
 					resource.TestCheckResourceAttrPtr(resourceByName, names.AttrARN, &prefixListArn),
-					resource.TestCheckResourceAttr(resourceByName, "max_entries", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceByName, "max_entries", "0"),
+					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, "0"),
+					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, "0"),
 
 					resource.TestCheckResourceAttrPtr(resourceById, names.AttrID, &prefixListId),
 					resource.TestCheckResourceAttr(resourceById, names.AttrName, prefixListName),
@@ -122,9 +123,9 @@ func TestAccVPCManagedPrefixListDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceByName, names.AttrOwnerID, "AWS"),
 					resource.TestCheckResourceAttr(resourceByName, "address_family", "IPv4"),
 					resource.TestCheckResourceAttrPtr(resourceByName, names.AttrARN, &prefixListArn),
-					resource.TestCheckResourceAttr(resourceByName, "max_entries", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceByName, "max_entries", "0"),
+					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, "0"),
+					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, "0"),
 
 					resource.TestCheckResourceAttrPair(resourceByName, names.AttrID, resourceById, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceByName, names.AttrName, resourceById, names.AttrName),

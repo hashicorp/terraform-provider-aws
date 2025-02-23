@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Policy")
+// @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -191,9 +191,10 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	_, err := conn.DeleteResourcePolicy(ctx, &dynamodb.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(data.ID.ValueString()),
-	})
+	input := dynamodb.DeleteResourcePolicyInput{
+		ResourceArn: data.ID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

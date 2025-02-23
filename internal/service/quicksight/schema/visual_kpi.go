@@ -4,12 +4,9 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,7 +49,7 @@ func kpiVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"comparison":                       comparisonConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
-										"primary_value_display_type":       stringSchema(false, enum.Validate[awstypes.PrimaryValueDisplayType]()),
+										"primary_value_display_type":       stringEnumSchema[awstypes.PrimaryValueDisplayType](attrOptional),
 										"primary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 										"progress_bar": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ProgressBarOptions.html
 											Type:     schema.TypeList,
@@ -61,7 +58,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -72,7 +69,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -84,10 +81,10 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-													"tooltip_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-													names.AttrType:       stringSchema(true, enum.Validate[awstypes.KPISparklineType]()),
-													"visibility":         stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"color":              hexColorSchema(attrOptional),
+													"tooltip_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+													names.AttrType:       stringEnumSchema[awstypes.KPISparklineType](attrRequired),
+													"visibility":         stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -98,7 +95,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -116,7 +113,7 @@ func kpiVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																names.AttrType: stringSchema(true, enum.Validate[awstypes.KPIVisualStandardLayoutType]()),
+																names.AttrType: stringEnumSchema[awstypes.KPIVisualStandardLayoutType](attrRequired),
 															},
 														},
 													},
@@ -134,7 +131,7 @@ func kpiVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"trend_group_sort": fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"trend_group_sort": fieldSortOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 									},
 								},
 							},

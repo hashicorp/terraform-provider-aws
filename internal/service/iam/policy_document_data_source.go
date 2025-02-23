@@ -143,6 +143,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 							"principals":        principalsSchema(),
 							names.AttrResources: setOfStringSchema(),
 							"sid": {
+								// Because policy documents are widely used outside IAM, we don't enforce
+								// IAM validation rules requiring alphanumeric and no spaces.
 								Type:     schema.TypeString,
 								Optional: true,
 							},

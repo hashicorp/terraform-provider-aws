@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_docdb_subnet_group", name="Subnet Group")
 // @Tags(identifierAttribute="arn")
-func ResourceSubnetGroup() *schema.Resource {
+func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,
@@ -156,9 +156,10 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Subnet Group: %s", d.Id())
-	_, err := conn.DeleteDBSubnetGroup(ctx, &docdb.DeleteDBSubnetGroupInput{
+	input := docdb.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBSubnetGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
 		return diags

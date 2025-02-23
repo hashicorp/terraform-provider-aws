@@ -56,7 +56,7 @@ func dataSourceEventCategoriesRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading RDS Event Categories: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("event_categories", slices.Concat(tfslices.ApplyToAll(output, func(v types.EventCategoriesMap) []string {
 		return v.EventCategories
 	})...))

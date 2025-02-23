@@ -4,12 +4,13 @@
 package ec2
 
 import (
+	"cmp"
 	"context"
 	"encoding/xml"
 	"fmt"
 	"log"
 	"net"
-	"sort"
+	"slices"
 	"strconv"
 	"time"
 
@@ -681,7 +682,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateVpnConnectionInput{
+	input := ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnConnection),
@@ -696,7 +697,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVpnConnection(ctx, input)
+	output, err := conn.CreateVpnConnection(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection: %s", err)
@@ -729,10 +730,10 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -743,7 +744,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
-		input := &ec2.DescribeTransitGatewayAttachmentsInput{
+		input := ec2.DescribeTransitGatewayAttachmentsInput{
 			Filters: newAttributeFilterList(map[string]string{
 				"resource-id":        d.Id(),
 				"resource-type":      string(awstypes.TransitGatewayAttachmentResourceTypeVpn),
@@ -751,7 +752,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 			}),
 		}
 
-		output, err := findTransitGatewayAttachment(ctx, conn, input)
+		output, err := findTransitGatewayAttachment(ctx, conn, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
@@ -854,7 +855,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_gateway_id") {
-		input := &ec2.ModifyVpnConnectionInput{
+		input := ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
 
@@ -870,7 +871,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.VpnGatewayId = aws.String(v)
 		}
 
-		_, err := conn.ModifyVpnConnection(ctx, input)
+		_, err := conn.ModifyVpnConnection(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s): %s", d.Id(), err)
@@ -882,7 +883,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr") {
-		input := &ec2.ModifyVpnConnectionOptionsInput{
+		input := ec2.ModifyVpnConnectionOptionsInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
 
@@ -902,7 +903,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
 		}
 
-		_, err := conn.ModifyVpnConnectionOptions(ctx, input)
+		_, err := conn.ModifyVpnConnectionOptions(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) connection options: %s", d.Id(), err)
@@ -915,13 +916,13 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
-			input := &ec2.ModifyVpnTunnelOptionsInput{
+			input := ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
-			_, err := conn.ModifyVpnTunnelOptions(ctx, input)
+			_, err := conn.ModifyVpnTunnelOptions(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) tunnel (%d) options: %s", d.Id(), i+1, err)
@@ -941,9 +942,10 @@ func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
-	_, err := conn.DeleteVpnConnection(ctx, &ec2.DeleteVpnConnectionInput{
+	input := ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpnConnection(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return diags
@@ -1565,18 +1567,6 @@ type tunnelInfo struct {
 	Tunnel2VgwInsideAddress string
 }
 
-func (slice xmlVpnConnectionConfig) Len() int {
-	return len(slice.Tunnels)
-}
-
-func (slice xmlVpnConnectionConfig) Less(i, j int) bool {
-	return slice.Tunnels[i].OutsideAddress < slice.Tunnels[j].OutsideAddress
-}
-
-func (slice xmlVpnConnectionConfig) Swap(i, j int) {
-	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
-}
-
 // customerGatewayConfigurationToTunnelInfo converts the configuration information for the
 // VPN connection's customer gateway (in the native XML format) to a tunnelInfo structure.
 // The tunnel1 parameters are optionally used to correctly order tunnel configurations.
@@ -1616,7 +1606,9 @@ func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 			}
 		}
 	} else {
-		sort.Sort(vpnConfig)
+		slices.SortFunc(vpnConfig.Tunnels, func(a, b xmlIpsecTunnel) int {
+			return cmp.Compare(a.OutsideAddress, b.OutsideAddress)
+		})
 	}
 
 	tunnelInfo := &tunnelInfo{

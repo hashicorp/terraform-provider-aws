@@ -112,7 +112,7 @@ func resourceReplicationConfigurationPut(ctx context.Context, d *schema.Resource
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).AccountID)
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	return append(diags, resourceReplicationConfigurationRead(ctx, d, meta)...)

@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Retention Configuration")
+// @FrameworkResource("aws_config_retention_configuration", name="Retention Configuration")
 func newRetentionConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &retentionConfigurationResource{}, nil
 }
@@ -158,9 +158,10 @@ func (r *retentionConfigurationResource) Delete(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	name := data.ID.ValueString()
-	_, err := conn.DeleteRetentionConfiguration(ctx, &configservice.DeleteRetentionConfigurationInput{
+	input := configservice.DeleteRetentionConfigurationInput{
 		RetentionConfigurationName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRetentionConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchRetentionConfigurationException](err) {
 		return

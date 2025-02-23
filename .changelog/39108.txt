@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_rolesanywhere_profile: Fix `role_arns` to make it optional and sent an empty list if unset
+resource/aws_rolesanywhere_profile: Mark `role_arns` as Optional and send an empty list if unconfigured
 ```
 
 ```release-note:enhancement

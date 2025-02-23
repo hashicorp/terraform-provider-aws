@@ -48,11 +48,11 @@ func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/+.`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "oam", "link/{link_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.0", "AWS::CloudWatch::Metric"),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_identifier"),
@@ -125,11 +125,11 @@ func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.0", "AWS::CloudWatch::Metric"),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_identifier"),
@@ -139,11 +139,11 @@ func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 				Config: testAccLinkConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.0", "AWS::CloudWatch::Metric"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.1", "AWS::Logs::LogGroup"),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_arn"),
@@ -184,7 +184,7 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -192,7 +192,7 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -201,7 +201,7 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -241,9 +241,9 @@ func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 				Config: testAccLinkConfig_logGroupConfiguration(rName, filter1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.0.filter", filter1),
 				),
 			},
@@ -256,9 +256,9 @@ func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 				Config: testAccLinkConfig_logGroupConfiguration(rName, filter2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.0.filter", filter2),
 				),
 			},
@@ -293,9 +293,9 @@ func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
 				Config: testAccLinkConfig_metricConfiguration(rName, filter1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.0.filter", filter1),
 				),
 			},
@@ -308,9 +308,9 @@ func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
 				Config: testAccLinkConfig_metricConfiguration(rName, filter2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.0.filter", filter2),
 				),
 			},
@@ -396,7 +396,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -420,7 +420,11 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName))
 }
@@ -448,7 +452,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -472,7 +476,11 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName))
 }
@@ -500,7 +508,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -524,10 +532,14 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, tag1Key, tag1Value))
 }
@@ -555,7 +567,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -579,12 +591,16 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
@@ -612,7 +628,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -641,7 +657,11 @@ resource "aws_oam_link" "test" {
     }
   }
   resource_types  = ["AWS::Logs::LogGroup"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, filter))
 }
@@ -669,7 +689,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -698,7 +718,11 @@ resource "aws_oam_link" "test" {
     }
   }
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, filter))
 }

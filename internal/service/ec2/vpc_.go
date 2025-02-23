@@ -52,6 +52,7 @@ var (
 // @SDKResource("aws_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
+// @Testing(generator=false)
 func resourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -287,9 +288,9 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	ownerID := aws.ToString(vpc.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
@@ -549,7 +550,7 @@ func defaultIPv6CIDRBlockAssociation(vpc *types.Vpc, associationID string) *type
 
 	if associationID != "" {
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
-			if state := string(v.Ipv6CidrBlockState.State); state == string(types.VpcCidrBlockStateCodeAssociated) && aws.ToString(v.AssociationId) == associationID {
+			if state := v.Ipv6CidrBlockState.State; state == types.VpcCidrBlockStateCodeAssociated && aws.ToString(v.AssociationId) == associationID {
 				ipv6CIDRBlockAssociation = v
 				break
 			}
@@ -558,7 +559,7 @@ func defaultIPv6CIDRBlockAssociation(vpc *types.Vpc, associationID string) *type
 
 	if ipv6CIDRBlockAssociation == (types.VpcIpv6CidrBlockAssociation{}) {
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
-			if string(v.Ipv6CidrBlockState.State) == string(types.VpcCidrBlockStateCodeAssociated) {
+			if v.Ipv6CidrBlockState.State == types.VpcCidrBlockStateCodeAssociated {
 				ipv6CIDRBlockAssociation = v
 			}
 		}
@@ -740,7 +741,7 @@ func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID
 	}
 
 	output = tfslices.Filter(output, func(v types.IpamPoolAllocation) bool {
-		return string(v.ResourceType) == string(types.IpamPoolAllocationResourceTypeVpc) && aws.ToString(v.ResourceId) == vpcID
+		return v.ResourceType == types.IpamPoolAllocationResourceTypeVpc && aws.ToString(v.ResourceId) == vpcID
 	})
 
 	if len(output) == 0 {

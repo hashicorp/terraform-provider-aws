@@ -55,7 +55,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
-					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -232,9 +232,9 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -247,9 +247,9 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -333,7 +333,7 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "5"),
-					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -349,8 +349,8 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
-					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "10"),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
@@ -367,7 +367,8 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-		resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
+		input := appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}}
+		resp, err := conn.DescribeFleets(ctx, &input)
 
 		if err != nil {
 			return err
@@ -392,7 +393,8 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
+			input := appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}}
+			resp, err := conn.DescribeFleets(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
@@ -591,7 +593,7 @@ resource "aws_subnet" "test" {
 }
 
 data "aws_appstream_image" "test" {
-  name_regex  = "^AppStream-WinServer.*$"
+  name_regex  = "^AppStream-WinServer2022.*$"
   type        = "PUBLIC"
   most_recent = true
 }

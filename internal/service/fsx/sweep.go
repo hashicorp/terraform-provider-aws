@@ -4,6 +4,7 @@
 package fsx
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
@@ -48,10 +50,7 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_fsx_ontap_volume", &resource.Sweeper{
-		Name: "aws_fsx_ontap_volume",
-		F:    sweepONTAPVolumes,
-	})
+	awsv2.Register("aws_fsx_ontap_volume", sweepONTAPVolumes)
 
 	resource.AddTestSweepers("aws_fsx_openzfs_file_system", &resource.Sweeper{
 		Name: "aws_fsx_openzfs_file_system",
@@ -251,54 +250,44 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 	return nil
 }
 
-func sweepONTAPVolumes(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeVolumesInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeVolumesPaginator(conn, input)
+	var sweepResources []sweep.Sweepable
+
+	input := fsx.DescribeVolumesInput{}
+	pages := fsx.NewDescribeVolumesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx ONTAP Volume sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx ONTAP Volumes (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Volumes {
 			if v.VolumeType != awstypes.VolumeTypeOntap {
 				continue
 			}
+			// Skip root volumes
 			if v.OntapConfiguration != nil && aws.ToBool(v.OntapConfiguration.StorageVirtualMachineRoot) {
 				continue
+			}
+
+			var bypassSnaplock bool
+			if v.OntapConfiguration != nil && v.OntapConfiguration.SnaplockConfiguration != nil {
+				bypassSnaplock = true
 			}
 
 			r := resourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VolumeId))
-			d.Set("bypass_snaplock_enterprise_retention", true)
+			d.Set("bypass_snaplock_enterprise_retention", bypassSnaplock)
 			d.Set("skip_final_backup", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx ONTAP Volumes (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepOpenZFSFileSystems(region string) error {

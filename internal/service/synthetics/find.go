@@ -102,3 +102,18 @@ func FindAssociatedGroup(ctx context.Context, conn *synthetics.Client, canaryArn
 
 	return &group, nil
 }
+
+func findRuntimeVersions(ctx context.Context, conn *synthetics.Client) ([]awstypes.RuntimeVersion, error) {
+	input := &synthetics.DescribeRuntimeVersionsInput{}
+	output, err := conn.DescribeRuntimeVersions(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RuntimeVersions == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RuntimeVersions, nil
+}

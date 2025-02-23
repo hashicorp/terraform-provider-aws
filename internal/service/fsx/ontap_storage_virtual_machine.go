@@ -478,11 +478,12 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 
 func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
+		Pending:      enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
+		Target:       []string{},
+		Refresh:      statusStorageVirtualMachine(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        1 * time.Minute,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

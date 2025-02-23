@@ -9,13 +9,14 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	_ "embed"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -78,7 +79,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filenameCAE)
 
-	if err := d.WriteTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
+	if err := d.BufferTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
 		g.Fatalf("generating file (%s): %s", filenameCAE, err)
 	}
 
@@ -90,7 +91,7 @@ func main() {
 
 	d = g.NewUnformattedFileDestination(filenameConfigs)
 
-	if err := d.WriteBytes([]byte(configs)); err != nil {
+	if err := d.BufferBytes([]byte(configs)); err != nil {
 		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
 	}
 
@@ -158,16 +159,17 @@ func main() {
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		if td.Services[i].LowerAlias == td.Services[j].LowerAlias {
-			return len(td.Services[i].ServiceAlias) > len(td.Services[j].ServiceAlias)
-		}
-		return td.Services[i].LowerAlias < td.Services[j].LowerAlias
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Or(
+			cmp.Compare(a.LowerAlias, b.LowerAlias),
+			// Reverse order
+			cmp.Compare(b.ServiceAlias, a.ServiceAlias),
+		)
 	})
 
 	d = g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("servicesemgrep", tmpl, td); err != nil {
+	if err := d.BufferTemplate("servicesemgrep", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -210,11 +212,12 @@ func readBadCaps(capsDataFile string) ([]string, error) {
 		capsList = append(capsList, row[0])
 	}
 
-	sort.SliceStable(capsList, func(i, j int) bool {
-		if len(capsList[i]) == len(capsList[j]) {
-			return capsList[i] < capsList[j]
-		}
-		return len(capsList[j]) < len(capsList[i])
+	slices.SortStableFunc(capsList, func(a, b string) int {
+		return cmp.Or(
+			// Reverse length order
+			cmp.Compare(len(b), len(a)),
+			cmp.Compare(a, b),
+		)
 	})
 
 	var chunks [][]string

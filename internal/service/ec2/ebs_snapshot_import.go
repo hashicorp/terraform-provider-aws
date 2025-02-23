@@ -198,7 +198,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.ImportSnapshotInput{
+	input := ec2.ImportSnapshotInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeImportSnapshotTask),
 	}
@@ -229,7 +229,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.ImportSnapshot(ctx, input)
+			return conn.ImportSnapshot(ctx, &input)
 		},
 		errCodeInvalidParameter, "provided does not exist or does not have sufficient permissions")
 
@@ -251,10 +251,11 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+		input := ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
-		})
+		}
+		_, err = conn.ModifySnapshotTier(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) Storage Tier: %s", d.Id(), err)
@@ -287,9 +288,9 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

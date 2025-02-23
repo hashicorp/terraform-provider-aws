@@ -31,8 +31,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Namespace")
+// @FrameworkResource("aws_quicksight_namespace", name="Namespace")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.NamespaceInfoV2")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
 	r.SetDefaultCreateTimeout(2 * time.Minute)
@@ -117,7 +119,7 @@ func (r *namespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, namespace := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.Namespace)
 	in := quicksight.CreateNamespaceInput{
@@ -307,8 +309,8 @@ type resourceNamespaceData struct {
 	ID             types.String   `tfsdk:"id"`
 	IdentityStore  types.String   `tfsdk:"identity_store"`
 	Namespace      types.String   `tfsdk:"namespace"`
-	Tags           types.Map      `tfsdk:"tags"`
-	TagsAll        types.Map      `tfsdk:"tags_all"`
+	Tags           tftags.Map     `tfsdk:"tags"`
+	TagsAll        tftags.Map     `tfsdk:"tags_all"`
 	Timeouts       timeouts.Value `tfsdk:"timeouts"`
 }
 

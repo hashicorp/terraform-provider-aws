@@ -4,21 +4,21 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const fieldSortOptionsMaxItems100 = 100
 
-func fieldSortOptionsSchema(maxItems int) *schema.Schema {
+var fieldSortOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
 		MinItems: 1,
-		MaxItems: maxItems,
+		MaxItems: fieldSortOptionsMaxItems100,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"column_sort": columnSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
@@ -26,9 +26,9 @@ func fieldSortOptionsSchema(maxItems int) *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func columnSortSchema() *schema.Schema {
+var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -36,15 +36,15 @@ func columnSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringSchema(true, enum.Validate[awstypes.SortDirection]()),
+				"direction":            stringEnumSchema[awstypes.SortDirection](attrRequired),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
 		},
 	}
-}
+})
 
-func fieldSortSchema() *schema.Schema {
+var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -52,12 +52,12 @@ func fieldSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringSchema(true, enum.Validate[awstypes.SortDirection]()),
-				"field_id":  stringSchema(true, validation.StringLenBetween(1, 512)),
+				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
+				"field_id":  stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}
-}
+})
 
 func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOptions {
 	if len(tfList) == 0 {

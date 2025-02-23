@@ -167,7 +167,7 @@ func resourceWebACL() *schema.Resource {
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -190,10 +190,10 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]interface{}); len(loggingConfiguration) == 1 {
 		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "waf-regional",
-			Region:    meta.(*conns.AWSClient).Region,
-			AccountID: meta.(*conns.AWSClient).AccountID,
+			Region:    meta.(*conns.AWSClient).Region(ctx),
+			AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 			Resource:  "webacl/" + d.Id(),
 		}.String()
 
@@ -245,10 +245,10 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf-regional",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "webacl/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -286,7 +286,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if d.HasChanges(names.AttrDefaultAction, names.AttrRule) {
 		o, n := d.GetChange(names.AttrRule)
@@ -338,7 +338,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if rules := d.Get(names.AttrRule).(*schema.Set).List(); len(rules) > 0 {
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {

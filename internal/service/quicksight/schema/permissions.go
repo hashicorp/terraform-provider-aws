@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,14 +23,10 @@ func PermissionsSchema() *schema.Schema {
 					Type:     schema.TypeSet,
 					Required: true,
 					MinItems: 1,
-					MaxItems: 16,
+					MaxItems: 20,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrPrincipal: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 256),
-				},
+				names.AttrPrincipal: stringLenBetweenSchema(attrRequired, 1, 256),
 			},
 		},
 	}

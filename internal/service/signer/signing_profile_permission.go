@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_signer_signing_profile_permission")
+// @SDKResource("aws_signer_signing_profile_permission", name="Signing Profile Permission")
 func ResourceSigningProfilePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfilePermissionCreate,

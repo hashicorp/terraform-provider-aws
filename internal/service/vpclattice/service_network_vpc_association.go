@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_vpclattice_service_network_vpc_association", name="Service Network VPC Association")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceServiceNetworkVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkVPCAssociationCreate,
@@ -175,9 +176,10 @@ func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.R
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network VPC Association %s", d.Id())
 
-	_, err := conn.DeleteServiceNetworkVpcAssociation(ctx, &vpclattice.DeleteServiceNetworkVpcAssociationInput{
+	input := vpclattice.DeleteServiceNetworkVpcAssociationInput{
 		ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteServiceNetworkVpcAssociation(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -35,10 +35,11 @@ func TestAccRoute53ResolverFirewallDomainList_basic(t *testing.T) {
 				Config: testAccFirewallDomainListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "route53resolver", "firewall-domain-list/{id}"),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -69,7 +70,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName1),
 				),
 			},
@@ -83,7 +84,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName2),
 				),
 			},
@@ -92,7 +93,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", "0"),
 				),
 			},
 		},
@@ -140,7 +141,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -154,7 +155,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -164,7 +165,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

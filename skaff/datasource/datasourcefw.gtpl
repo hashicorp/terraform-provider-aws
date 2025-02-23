@@ -30,23 +30,19 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-{{- end }}
-{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 {{- end }}
 	"context"
-{{ if .AWSGoSDKV2 }}
+
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
-{{- else }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-{{- end }}
+	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -72,7 +68,7 @@ import (
 {{- end }}
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource(name="{{ .HumanDataSourceName }}")
+// @FrameworkDataSource("{{ .ProviderResourceName }}", name="{{ .HumanDataSourceName }}")
 func newDataSource{{ .DataSource }}(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSource{{ .DataSource }}{}, nil
 }
@@ -86,7 +82,7 @@ type dataSource{{ .DataSource }} struct {
 }
 
 func (d *dataSource{{ .DataSource }}) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}"
+	resp.TypeName = "{{ .ProviderResourceName }}"
 }
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
@@ -178,7 +174,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := d.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := d.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}
@@ -201,9 +197,9 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 
 	{{ if .IncludeComments -}}
 	// TIP: -- 4. Set the ID, arguments, and attributes
-	// Using a field name prefix allows mapping fields such as `{{ .Resource }}Id` to `ID`
+	// Using a field name prefix allows mapping fields such as `{{ .DataSource }}Id` to `ID`
 	{{- end }}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .Resource }}"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -212,9 +208,9 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	// TIP: -- 5. Set the tags
 	{{- end }}
 	{{- if .IncludeTags }}
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 	{{- end }}
 
 	{{ if .IncludeComments -}}
@@ -244,7 +240,7 @@ type dataSource{{ .DataSource }}Model struct {
 	ID              types.String                                          `tfsdk:"id"`
 	Name            types.String                                          `tfsdk:"name"`
 	{{- if .IncludeTags }}
-	Tags            types.Map                                             `tfsdk:"tags"`
+	Tags            tftags.Map                                            `tfsdk:"tags"`
 	{{- end }}
 	Type            types.String                                          `tfsdk:"type"`
 }

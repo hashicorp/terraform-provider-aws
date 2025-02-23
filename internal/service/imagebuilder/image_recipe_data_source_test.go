@@ -83,6 +83,12 @@ resource "aws_imagebuilder_component" "test" {
 }
 
 resource "aws_imagebuilder_image_recipe" "test" {
+  block_device_mapping {
+    ebs {
+      delete_on_termination = true
+    }
+  }
+
   component {
     component_arn = aws_imagebuilder_component.test.arn
 

@@ -1,12 +1,10 @@
 val orgacctServices = mapOf(
     "accessanalyzer" to ServiceSpec("IAM Access Analyzer"),
     "backup" to ServiceSpec("Backup", "TestAccBackupGlobalSettings_basic"),
-    "cloudformation" to ServiceSpec(
-        "CloudFormation",
-        "TestAccCloudFormationStackSet_PermissionModel_serviceManaged|TestAccCloudFormationStackSetInstance_deploymentTargets"
-    ),
-    "cloudtrail" to ServiceSpec("CloudTrail"),
+    "cloudformation" to ServiceSpec("CloudFormation"),
+    "cloudtrail" to ServiceSpec("CloudTrail", parallelismOverride = 5),
     "config" to ServiceSpec("Config" /*"TestAccConfig_serial|TestAccConfigConfigurationAggregator_"*/),
+    "detective" to ServiceSpec("Detective"),
     "fms" to ServiceSpec("FMS (Firewall Manager)", regionOverride = "us-east-1"),
     "guardduty" to ServiceSpec("GuardDuty"),
     "inspector" to ServiceSpec("Inspector Classic"),

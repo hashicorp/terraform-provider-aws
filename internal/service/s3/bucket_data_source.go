@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -63,13 +64,15 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.S3Client(ctx)
-	var optFns []func(*s3.Options)
 
 	bucket := d.Get(names.AttrBucket).(string)
+
+	var optFns []func(*s3.Options)
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
-	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
+
 	err := findBucket(ctx, conn, bucket, optFns...)
 
 	if err != nil {
@@ -87,7 +90,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set(names.AttrARN, bucket)
 	} else {
 		arn := arn.ARN{
-			Partition: awsClient.Partition,
+			Partition: awsClient.Partition(ctx),
 			Service:   "s3",
 			Resource:  bucket,
 		}.String()

@@ -5,10 +5,12 @@ package ec2
 
 import (
 	"bytes"
+	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -172,7 +174,10 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 
 	ipPermission := expandIPPermission(d, sg)
 	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
-	id := securityGroupRuleCreateID(securityGroupID, string(ruleType), &ipPermission)
+	id, err := securityGroupRuleCreateID(securityGroupID, string(ruleType), &ipPermission)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
+	}
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
@@ -306,7 +311,10 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	if strings.Contains(d.Id(), securityGroupRuleIDSeparator) {
 		// import so fix the id
-		id := securityGroupRuleCreateID(securityGroupID, string(ruleType), &ipPermission)
+		id, err := securityGroupRuleCreateID(securityGroupID, string(ruleType), &ipPermission)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), err)
+		}
 		d.SetId(id)
 	}
 
@@ -518,7 +526,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 }
 
 func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*awstypes.IpPermission, *string) {
-	var rule awstypes.IpPermission
+	var rule *awstypes.IpPermission
 	var description *string
 
 	for _, r := range rules {
@@ -616,10 +624,10 @@ func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*aws
 			continue
 		}
 
-		rule = r
+		rule = &r
 	}
 
-	return &rule, description
+	return rule, description
 }
 
 func findSecurityGroupRuleMatch(p awstypes.IpPermission, securityGroupRules []awstypes.SecurityGroupRule, ruleType securityGroupRuleType) string {
@@ -673,25 +681,7 @@ func findSecurityGroupRuleMatch(p awstypes.IpPermission, securityGroupRules []aw
 
 const securityGroupRuleIDSeparator = "_"
 
-// byGroupPair implements sort.Interface for []*ec2.UserIDGroupPairs based on
-// GroupID or GroupName field (only one should be set).
-type byGroupPair []awstypes.UserIdGroupPair
-
-func (b byGroupPair) Len() int      { return len(b) }
-func (b byGroupPair) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-func (b byGroupPair) Less(i, j int) bool {
-	if b[i].GroupId != nil && b[j].GroupId != nil {
-		return aws.ToString(b[i].GroupId) < aws.ToString(b[j].GroupId)
-	}
-	if b[i].GroupName != nil && b[j].GroupName != nil {
-		return aws.ToString(b[i].GroupName) < aws.ToString(b[j].GroupName)
-	}
-
-	//lintignore:R009
-	panic("mismatched security group rules, may be a terraform bug")
-}
-
-func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.IpPermission) string {
+func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.IpPermission) (string, error) {
 	var buf bytes.Buffer
 
 	buf.WriteString(fmt.Sprintf("%s-", securityGroupID))
@@ -711,7 +701,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		for i, r := range ip.IpRanges {
 			s[i] = aws.ToString(r.CidrIp)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -723,7 +713,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		for i, r := range ip.Ipv6Ranges {
 			s[i] = aws.ToString(r.CidrIpv6)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -735,7 +725,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		for i, pl := range ip.PrefixListIds {
 			s[i] = aws.ToString(pl.PrefixListId)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -743,22 +733,35 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 	}
 
 	if len(ip.UserIdGroupPairs) > 0 {
-		sort.Sort(byGroupPair(ip.UserIdGroupPairs))
+		var err error
+		slices.SortFunc(ip.UserIdGroupPairs, func(a, b awstypes.UserIdGroupPair) int {
+			if a.GroupId != nil && b.GroupId != nil {
+				return cmp.Compare(aws.ToString(a.GroupId), aws.ToString(b.GroupId))
+			}
+			if a.GroupName != nil && b.GroupName != nil {
+				return cmp.Compare(aws.ToString(a.GroupName), aws.ToString(b.GroupName))
+			}
+			err = errors.New("mismatched security group rules: contains both GroupId and GroupName")
+			return 0
+		})
+		if err != nil {
+			return "", err
+		}
 		for _, pair := range ip.UserIdGroupPairs {
 			if pair.GroupId != nil {
-				buf.WriteString(fmt.Sprintf("%s-", *pair.GroupId))
+				buf.WriteString(fmt.Sprintf("%s-", aws.ToString(pair.GroupId)))
 			} else {
 				buf.WriteString("-")
 			}
 			if pair.GroupName != nil {
-				buf.WriteString(fmt.Sprintf("%s-", *pair.GroupName))
+				buf.WriteString(fmt.Sprintf("%s-", aws.ToString(pair.GroupName)))
 			} else {
 				buf.WriteString("-")
 			}
 		}
 	}
 
-	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String()))
+	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String())), nil
 }
 
 func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awstypes.IpPermission { // nosemgrep:ci.caps5-in-func-name

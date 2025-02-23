@@ -116,7 +116,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			},
 			Timeout: time.Second * 10,
 		}
-		region := meta.(*conns.AWSClient).Region
+		region := meta.(*conns.AWSClient).Region(ctx)
 
 		var requestURL string
 		if v, ok := d.GetOk("private_link_endpoint"); ok {
@@ -277,9 +277,10 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
-	_, err := conn.DeleteAgent(ctx, &datasync.DeleteAgentInput{
+	input := datasync.DeleteAgentInput{
 		AgentArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAgent(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags

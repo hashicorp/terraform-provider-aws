@@ -52,7 +52,7 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -82,7 +82,7 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -142,7 +142,7 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -172,7 +172,7 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -202,7 +202,7 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "fargateTaskRetirementWaitPeriod"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "14"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{

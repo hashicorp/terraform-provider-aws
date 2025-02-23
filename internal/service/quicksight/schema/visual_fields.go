@@ -7,140 +7,181 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const measureFieldsMaxItems5 = 5
-const measureFieldsMaxItems20 = 20
-const measureFieldsMaxItems40 = 40
-const measureFieldsMaxItems200 = 200
-const dimensionsFieldMaxItems10 = 10
-const dimensionsFieldMaxItems40 = 40
-const dimensionsFieldMaxItems200 = 200
+type measureFieldsSize int
 
-func dimensionFieldSchema(maxItems int) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-		Type:     schema.TypeList,
-		MinItems: 1,
-		MaxItems: maxItems,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"categorical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalDimensionField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
-							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
+const (
+	measureFieldsMaxItems5   measureFieldsSize = 5
+	measureFieldsMaxItems20  measureFieldsSize = 20
+	measureFieldsMaxItems40  measureFieldsSize = 40
+	measureFieldsMaxItems200 measureFieldsSize = 200
+)
+
+type dimensionFieldSize int
+
+const (
+	dimensionsFieldMaxItems10  dimensionFieldSize = 10
+	dimensionsFieldMaxItems40  dimensionFieldSize = 40
+	dimensionsFieldMaxItems200 dimensionFieldSize = 200
+)
+
+type dimensionFieldSchemaIdentity dimensionFieldSize
+
+var dimensionFieldSchemaCache syncMap[dimensionFieldSchemaIdentity, *schema.Schema]
+
+func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
+	id := dimensionFieldSchemaIdentity(maxItems)
+
+	s, ok := dimensionFieldSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = dimensionFieldSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+			Type:     schema.TypeList,
+			MinItems: 1,
+			MaxItems: int(maxItems),
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"categorical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalDimensionField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+							},
 						},
 					},
-				},
-				"date_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateDimensionField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"date_granularity":     stringSchema(false, enum.Validate[awstypes.TimeGranularity]()),
-							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
-							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
+					"date_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateDimensionField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"date_granularity":     stringEnumSchema[awstypes.TimeGranularity](attrOptional),
+								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+							},
 						},
 					},
-				},
-				"numerical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalDimensionField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
-							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
+					"numerical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalDimensionField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+							},
 						},
 					},
 				},
 			},
 		},
-	}
+	)
+	return s
 }
 
-func measureFieldSchema(maxItems int) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-		Type:     schema.TypeList,
-		MinItems: 1,
-		MaxItems: maxItems,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"calculated_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"field_id":           stringSchema(true, validation.StringLenBetween(1, 512)),
+type meaureFieldSchemaIdentity measureFieldsSize
+
+var measureFieldSchemaCache syncMap[meaureFieldSchemaIdentity, *schema.Schema]
+
+func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
+	id := meaureFieldSchemaIdentity(maxItems)
+
+	s, ok := measureFieldSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = measureFieldSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+			Type:     schema.TypeList,
+			MinItems: 1,
+			MaxItems: int(maxItems),
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"calculated_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
+								"field_id":           stringLenBetweenSchema(attrRequired, 1, 512),
+							},
 						},
 					},
-				},
-				"categorical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"aggregation_function": stringSchema(false, enum.Validate[awstypes.CategoricalAggregationFunction]()),
-							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+					"categorical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
+								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+							},
 						},
 					},
-				},
-				"date_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"aggregation_function": stringSchema(false, enum.Validate[awstypes.DateAggregationFunction]()),
-							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+					"date_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function": stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
+								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+							},
 						},
 					},
-				},
-				"numerical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-							"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+					"numerical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+								"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+							},
 						},
 					},
 				},
 			},
 		},
-	}
+	)
+	return s
 }
 
 func expandDimensionFields(tfList []interface{}) []awstypes.DimensionField {

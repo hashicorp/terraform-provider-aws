@@ -32,6 +32,8 @@ import (
 
 // @SDKResource("aws_quicksight_analysis", name="Analysis")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Analysis")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceAnalysis() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalysisCreate,
@@ -121,7 +123,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -148,6 +150,10 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]interface{}))
+	}
+
+	if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+		input.ThemeArn = aws.String(v)
 	}
 
 	_, err := conn.CreateAnalysis(ctx, input)
@@ -193,6 +199,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrLastUpdatedTime, analysis.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, analysis.Name)
 	d.Set(names.AttrStatus, analysis.Status)
+	d.Set("theme_arn", analysis.ThemeArn)
 
 	definition, err := findAnalysisDefinitionByTwoPartKey(ctx, conn, awsAccountID, analysisID)
 
@@ -241,6 +248,10 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+		}
+
+		if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+			input.ThemeArn = aws.String(v)
 		}
 
 		_, err := conn.UpdateAnalysis(ctx, input)

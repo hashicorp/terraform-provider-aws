@@ -24,12 +24,17 @@ import (
 func TestAccEC2SpotDatafeedSubscription_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccSpotDatafeedSubscription_basic,
-		acctest.CtDisappears: testAccSpotDatafeedSubscription_disappears,
+	testCases := map[string]map[string]func(t *testing.T){
+		"SpotDatafeedSubscription": {
+			acctest.CtBasic:      testAccSpotDatafeedSubscription_basic,
+			acctest.CtDisappears: testAccSpotDatafeedSubscription_disappears,
+		},
+		"SpotDatafeedSubscriptionDataSource": {
+			acctest.CtBasic: testAccSpotDataFeedSubscriptionDataSource_basic,
+		},
 	}
 
-	acctest.RunSerialTests1Level(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccSpotDatafeedSubscription_basic(t *testing.T) {
@@ -137,7 +142,8 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.T
 func testAccPreCheckSpotDatafeedSubscription(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeSpotDatafeedSubscription(ctx, &ec2.DescribeSpotDatafeedSubscriptionInput{})
+	input := ec2.DescribeSpotDatafeedSubscriptionInput{}
+	_, err := conn.DescribeSpotDatafeedSubscription(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

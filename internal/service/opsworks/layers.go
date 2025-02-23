@@ -1213,7 +1213,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) awstypes.VolumeConf
 	}
 
 	if v, ok := tfMap["raid_level"].(string); ok && v != "" {
-		if v, err := strconv.Atoi(v); err == nil {
+		if v, err := strconv.ParseInt(v, 10, 32); err == nil {
 			apiObject.RaidLevel = aws.Int32(int32(v))
 		}
 	}

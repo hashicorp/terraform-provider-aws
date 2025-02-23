@@ -7,19 +7,15 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,7 +66,7 @@ func TestAccSESTemplate_update(t *testing.T) {
 				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("template/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", fmt.Sprintf("template/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "html", "html"),
 					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
@@ -130,32 +126,22 @@ func TestAccSESTemplate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTemplateExists(ctx context.Context, pr string, template *awstypes.Template) resource.TestCheckFunc {
+func testAccCheckTemplateExists(ctx context.Context, n string, v *awstypes.Template) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
-		rs, ok := s.RootModule().Resources[pr]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		input := ses.GetTemplateInput{
-			TemplateName: aws.String(rs.Primary.ID),
-		}
+		output, err := tfses.FindTemplateByName(ctx, conn, rs.Primary.ID)
 
-		templateOutput, err := conn.GetTemplate(ctx, &input)
 		if err != nil {
 			return err
 		}
 
-		if templateOutput == nil || templateOutput.Template == nil {
-			return fmt.Errorf("SES Template (%s) not found", rs.Primary.ID)
-		}
-
-		*template = *templateOutput.Template
+		*v = *output
 
 		return nil
 	}
@@ -169,28 +155,18 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_ses_template" {
 				continue
 			}
-			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-				input := ses.GetTemplateInput{
-					TemplateName: aws.String(rs.Primary.ID),
-				}
 
-				gto, err := conn.GetTemplate(ctx, &input)
-				if err != nil {
-					if errs.IsA[*awstypes.TemplateDoesNotExistException](err) {
-						return nil
-					}
-					return retry.NonRetryableError(err)
-				}
-				if gto.Template != nil {
-					return retry.RetryableError(fmt.Errorf("Template exists: %v", gto.Template))
-				}
+			_, err := tfses.FindTemplateByName(ctx, conn, rs.Primary.ID)
 
-				return nil
-			})
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("SES Template %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -200,7 +176,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccTemplateConfig_resourceBasic1(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
-  name    = "%s"
+  name    = %[1]q
   subject = "subject"
   html    = "html"
 }
@@ -210,7 +186,7 @@ resource "aws_ses_template" "test" {
 func testAccTemplateConfig_resourceBasic2(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
-  name    = "%s"
+  name    = %[1]q
   subject = "subject"
   html    = "html"
   text    = "text"
@@ -221,7 +197,7 @@ resource "aws_ses_template" "test" {
 func testAccTemplateConfig_resourceBasic3(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
-  name    = "%s"
+  name    = %[1]q
   subject = "subject"
   html    = "html update"
 }

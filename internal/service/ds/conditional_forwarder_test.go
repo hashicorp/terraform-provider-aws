@@ -35,7 +35,7 @@ func TestAccDSConditionalForwarder_basic(t *testing.T) {
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConditionalForwarderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dns_ips.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "dns_ips.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.0", ip1),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.1", ip2),
 				),
@@ -44,7 +44,7 @@ func TestAccDSConditionalForwarder_basic(t *testing.T) {
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConditionalForwarderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dns_ips.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "dns_ips.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.0", ip1),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.1", ip3),
 				),

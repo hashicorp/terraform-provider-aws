@@ -63,7 +63,7 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.test", &domain),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
+						expectedArn, err := buildDomainARN(name, awsClient.Partition(ctx), awsClient.AccountID(ctx), awsClient.Region(ctx))
 						if err != nil {
 							return err
 						}

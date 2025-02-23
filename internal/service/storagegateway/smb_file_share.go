@@ -340,7 +340,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
 	d.Set("invalid_user_list", aws.StringSlice(fileshare.InvalidUserList))
-	d.Set("kms_encrypted", fileshare.KMSEncrypted)
+	d.Set("kms_encrypted", fileshare.KMSEncrypted) //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 	d.Set(names.AttrKMSKeyARN, fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
 	d.Set("notification_policy", fileshare.NotificationPolicy)

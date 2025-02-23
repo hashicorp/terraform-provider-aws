@@ -234,9 +234,9 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	routeTable := outputRaw.(*awstypes.RouteTable)
 	ownerID := aws.ToString(routeTable.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
 	}.String()
@@ -375,9 +375,10 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting Route Table: %s", d.Id())
-	_, err = conn.DeleteRouteTable(ctx, &ec2.DeleteRouteTableInput{
+	input := ec2.DeleteRouteTableInput{
 		RouteTableId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteRouteTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return diags

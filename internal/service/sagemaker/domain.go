@@ -43,14 +43,12 @@ func resourceDomain() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"app_network_access_type": {
 				Type:             schema.TypeString,
-				ForceNew:         true,
 				Optional:         true,
 				Default:          awstypes.AppNetworkAccessTypePublicInternetOnly,
 				ValidateDiagFunc: enum.Validate[awstypes.AppNetworkAccessType](),
 			},
 			"app_security_group_management": {
 				Type:             schema.TypeString,
-				ForceNew:         true,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AppSecurityGroupManagement](),
 			},
@@ -216,6 +214,230 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 5,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"jupyter_lab_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 200,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrInstanceType: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"emr_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assumable_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"execution_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+						},
+						"space_storage_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_ebs_storage_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"default_ebs_volume_size_in_gb": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"maximum_ebs_volume_size_in_gb": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"custom_file_system_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"efs_file_system_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFileSystemID: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"file_system_path": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"custom_posix_user_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"gid": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1001),
+									},
+									"uid": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(10000),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -225,6 +447,12 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auto_mount_home_efs": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AutoMountHomeEFS](),
+						},
 						"canvas_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -237,6 +465,25 @@ func resourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												names.AttrStatus: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+												},
+											},
+										},
+									},
+									"emr_serverless_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrExecutionRoleARN: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Optional:         true,
@@ -365,6 +612,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -490,6 +780,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -554,6 +887,31 @@ func resourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"emr_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assumable_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"execution_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
@@ -891,6 +1249,39 @@ func resourceDomain() *schema.Resource {
 								},
 							},
 						},
+						"studio_web_portal_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hidden_app_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.AppType](),
+										},
+									},
+									"hidden_instance_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+										},
+									},
+									"hidden_ml_tools": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.MlTools](),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -909,6 +1300,29 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"docker_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable_docker_access": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+									},
+									"vpc_only_trusted_accounts": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidAccountID,
+										},
+										MaxItems: 20,
+									},
+								},
+							},
+						},
 						"execution_role_identity_config": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -1023,6 +1437,12 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 16,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tag_propagation": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.TagPropagationDisabled,
+				ValidateDiagFunc: enum.Validate[awstypes.TagPropagation](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrURL: {
@@ -1054,7 +1474,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("app_security_group_management"); ok {
+	if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]interface{})) {
 		input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
 	}
 
@@ -1068,6 +1488,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tag_propagation"); ok {
+		input.TagPropagation = awstypes.TagPropagation(v.(string))
 	}
 
 	log.Printf("[DEBUG] SageMaker Domain create config: %#v", *input)
@@ -1115,6 +1539,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("single_sign_on_application_arn", domain.SingleSignOnApplicationArn)
+	d.Set("tag_propagation", domain.TagPropagation)
 	d.Set(names.AttrURL, domain.Url)
 	d.Set(names.AttrVPCID, domain.VpcId)
 
@@ -1146,6 +1571,14 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			DomainId: aws.String(d.Id()),
 		}
 
+		if v, ok := d.GetOk("app_network_access_type"); ok {
+			input.AppNetworkAccessType = awstypes.AppNetworkAccessType(v.(string))
+		}
+
+		if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]interface{})) {
+			input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
+		}
+
 		if v, ok := d.GetOk("default_user_settings"); ok && len(v.([]interface{})) > 0 {
 			input.DefaultUserSettings = expandUserSettings(v.([]interface{}))
 		}
@@ -1156,6 +1589,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if v, ok := d.GetOk("default_space_settings"); ok && len(v.([]interface{})) > 0 {
 			input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("tag_propagation"); ok {
+			input.TagPropagation = awstypes.TagPropagation(v.(string))
 		}
 
 		log.Printf("[DEBUG] SageMaker Domain update config: %#v", *input)
@@ -1231,6 +1668,10 @@ func expandDomainSettings(l []interface{}) *awstypes.DomainSettings {
 
 	config := &awstypes.DomainSettings{}
 
+	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+		config.DockerSettings = expandDockerSettings(v)
+	}
+
 	if v, ok := m["execution_role_identity_config"].(string); ok && v != "" {
 		config.ExecutionRoleIdentityConfig = awstypes.ExecutionRoleIdentityConfig(v)
 	}
@@ -1241,6 +1682,26 @@ func expandDomainSettings(l []interface{}) *awstypes.DomainSettings {
 
 	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettings = expandRStudioServerProDomainSettings(v)
+	}
+
+	return config
+}
+
+func expandDockerSettings(l []interface{}) *awstypes.DockerSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.DockerSettings{}
+
+	if v, ok := m["enable_docker_access"].(string); ok && v != "" {
+		config.EnableDockerAccess = awstypes.FeatureStatus(v)
+	}
+
+	if v, ok := m["vpc_only_trusted_accounts"].(*schema.Set); ok && v.Len() > 0 {
+		config.VpcOnlyTrustedAccounts = flex.ExpandStringValueSet(v)
 	}
 
 	return config
@@ -1283,8 +1744,74 @@ func expandDomainSettingsUpdate(l []interface{}) *awstypes.DomainSettingsForUpda
 
 	config := &awstypes.DomainSettingsForUpdate{}
 
+	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+		config.DockerSettings = expandDockerSettings(v)
+	}
+
 	if v, ok := m["execution_role_identity_config"].(string); ok && v != "" {
 		config.ExecutionRoleIdentityConfig = awstypes.ExecutionRoleIdentityConfig(v)
+	}
+
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+		config.SecurityGroupIds = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
+		config.RStudioServerProDomainSettingsForUpdate = expandRStudioServerProDomainSettingsUpdate(v)
+	}
+
+	return config
+}
+
+// rstudioDomainEnabled takes domain_settings and returns true if rstudio is enabled
+func rstudioDomainEnabled(domainSettings []interface{}) bool {
+	if len(domainSettings) == 0 || domainSettings[0] == nil {
+		return false
+	}
+
+	m := domainSettings[0].(map[string]interface{})
+
+	v, ok := m["r_studio_server_pro_domain_settings"].([]interface{})
+	if !ok || len(v) < 1 {
+		return false
+	}
+
+	rsspds, ok := v[0].(map[string]interface{})
+	if !ok || len(rsspds) == 0 {
+		return false
+	}
+
+	domainExecutionRoleArn, ok := rsspds["domain_execution_role_arn"].(string)
+	if !ok || domainExecutionRoleArn == "" {
+		return false
+	}
+
+	return true
+}
+
+func expandRStudioServerProDomainSettingsUpdate(l []interface{}) *awstypes.RStudioServerProDomainSettingsForUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.RStudioServerProDomainSettingsForUpdate{}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandResourceSpec(v)
+	}
+
+	if v, ok := m["domain_execution_role_arn"].(string); ok && v != "" {
+		config.DomainExecutionRoleArn = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_connect_url"].(string); ok && v != "" {
+		config.RStudioConnectUrl = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_package_manager_url"].(string); ok && v != "" {
+		config.RStudioPackageManagerUrl = aws.String(v)
 	}
 
 	return config
@@ -1314,6 +1841,10 @@ func expandUserSettings(l []interface{}) *awstypes.UserSettings {
 	m := l[0].(map[string]interface{})
 
 	config := &awstypes.UserSettings{}
+
+	if v, ok := m["auto_mount_home_efs"].(string); ok && v != "" {
+		config.AutoMountHomeEFS = awstypes.AutoMountHomeEFS(v)
+	}
 
 	if v, ok := m["canvas_app_settings"].([]interface{}); ok && len(v) > 0 {
 		config.CanvasAppSettings = expandCanvasAppSettings(v)
@@ -1379,6 +1910,10 @@ func expandUserSettings(l []interface{}) *awstypes.UserSettings {
 		config.RStudioServerProAppSettings = expandRStudioServerProAppSettings(v)
 	}
 
+	if v, ok := m["studio_web_portal_settings"].([]interface{}); ok && len(v) > 0 {
+		config.StudioWebPortalSettings = expandStudioWebPortalSettings(v)
+	}
+
 	return config
 }
 
@@ -1433,6 +1968,14 @@ func expandDomainCodeEditorAppSettings(l []interface{}) *awstypes.CodeEditorAppS
 
 	config := &awstypes.CodeEditorAppSettings{}
 
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandAppLifecycleManagement(v)
+	}
+
+	if v, ok := m["built_in_lifecycle_config_arn"].(string); ok && v != "" {
+		config.BuiltInLifecycleConfigArn = aws.String(v)
+	}
+
 	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
 		config.CustomImages = expandDomainCustomImages(v)
 	}
@@ -1457,6 +2000,14 @@ func expandDomainJupyterLabAppSettings(l []interface{}) *awstypes.JupyterLabAppS
 
 	config := &awstypes.JupyterLabAppSettings{}
 
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandAppLifecycleManagement(v)
+	}
+
+	if v, ok := m["built_in_lifecycle_config_arn"].(string); ok && v != "" {
+		config.BuiltInLifecycleConfigArn = aws.String(v)
+	}
+
 	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
@@ -1471,6 +2022,54 @@ func expandDomainJupyterLabAppSettings(l []interface{}) *awstypes.JupyterLabAppS
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
 		config.LifecycleConfigArns = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m["emr_settings"].([]interface{}); ok && len(v) > 0 {
+		config.EmrSettings = expandEMRSettings(v)
+	}
+
+	return config
+}
+
+func expandAppLifecycleManagement(l []interface{}) *awstypes.AppLifecycleManagement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.AppLifecycleManagement{}
+
+	if v, ok := m["idle_settings"].([]interface{}); ok && len(v) > 0 {
+		config.IdleSettings = expandIdleSettings(v)
+	}
+
+	return config
+}
+
+func expandIdleSettings(l []interface{}) *awstypes.IdleSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.IdleSettings{}
+
+	if v, ok := m["idle_timeout_in_minutes"].(int); ok {
+		config.IdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["lifecycle_management"].(string); ok && v != "" {
+		config.LifecycleManagement = awstypes.LifecycleManagement(v)
+	}
+
+	if v, ok := m["max_idle_timeout_in_minutes"].(int); ok {
+		config.MaxIdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["min_idle_timeout_in_minutes"].(int); ok {
+		config.MinIdleTimeoutInMinutes = aws.Int32(int32(v))
 	}
 
 	return config
@@ -1628,6 +2227,26 @@ func expandResourceSpec(l []interface{}) *awstypes.ResourceSpec {
 	return config
 }
 
+func expandEMRSettings(l []interface{}) *awstypes.EmrSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.EmrSettings{}
+
+	if v, ok := m["assumable_role_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.AssumableRoleArns = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m["execution_role_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.ExecutionRoleArns = flex.ExpandStringValueSet(v)
+	}
+
+	return config
+}
+
 func expandDomainShareSettings(l []interface{}) *awstypes.SharingSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1662,6 +2281,11 @@ func expandCanvasAppSettings(l []interface{}) *awstypes.CanvasAppSettings {
 	if v, ok := m["direct_deploy_settings"].([]interface{}); ok {
 		config.DirectDeploySettings = expandDirectDeploySettings(v)
 	}
+
+	if v, ok := m["emr_serverless_settings"].([]interface{}); ok {
+		config.EmrServerlessSettings = expandEMRServerlessSettings(v)
+	}
+
 	if v, ok := m["generative_ai_settings"].([]interface{}); ok {
 		config.GenerativeAiSettings = expandGenerativeAiSettings(v)
 	}
@@ -1679,6 +2303,26 @@ func expandCanvasAppSettings(l []interface{}) *awstypes.CanvasAppSettings {
 	}
 	if v, ok := m["workspace_settings"].([]interface{}); ok {
 		config.WorkspaceSettings = expandWorkspaceSettings(v)
+	}
+
+	return config
+}
+
+func expandEMRServerlessSettings(l []interface{}) *awstypes.EmrServerlessSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.EmrServerlessSettings{}
+
+	if v, ok := m[names.AttrExecutionRoleARN].(string); ok && v != "" {
+		config.ExecutionRoleArn = aws.String(v)
+	}
+
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
+		config.Status = awstypes.FeatureStatus(v)
 	}
 
 	return config
@@ -1839,12 +2483,38 @@ func expandDomainCustomImages(l []interface{}) []awstypes.CustomImage {
 	return images
 }
 
+func expandStudioWebPortalSettings(l []interface{}) *awstypes.StudioWebPortalSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.StudioWebPortalSettings{}
+
+	if v, ok := m["hidden_app_types"].(*schema.Set); ok && v.Len() > 0 {
+		config.HiddenAppTypes = flex.ExpandStringyValueSet[awstypes.AppType](v)
+	}
+
+	if v, ok := m["hidden_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		config.HiddenInstanceTypes = flex.ExpandStringyValueSet[awstypes.AppInstanceType](v)
+	}
+
+	if v, ok := m["hidden_ml_tools"].(*schema.Set); ok && v.Len() > 0 {
+		config.HiddenMlTools = flex.ExpandStringyValueSet[awstypes.MlTools](v)
+	}
+
+	return config
+}
+
 func flattenUserSettings(config *awstypes.UserSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{}
+
+	m["auto_mount_home_efs"] = config.AutoMountHomeEFS
 
 	if config.CanvasAppSettings != nil {
 		m["canvas_app_settings"] = flattenCanvasAppSettings(config.CanvasAppSettings)
@@ -1908,6 +2578,10 @@ func flattenUserSettings(config *awstypes.UserSettings) []map[string]interface{}
 		m["r_studio_server_pro_app_settings"] = flattenRStudioServerProAppSettings(config.RStudioServerProAppSettings)
 	}
 
+	if config.StudioWebPortalSettings != nil {
+		m["studio_web_portal_settings"] = flattenStudioWebPortalSettings(config.StudioWebPortalSettings)
+	}
+
 	return []map[string]interface{}{m}
 }
 
@@ -1952,6 +2626,44 @@ func flattenResourceSpec(config *awstypes.ResourceSpec) []map[string]interface{}
 	return []map[string]interface{}{m}
 }
 
+func flattenAppLifecycleManagement(config *awstypes.AppLifecycleManagement) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleSettings != nil {
+		m["idle_settings"] = flattenIdleSettings(config.IdleSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenIdleSettings(config *awstypes.IdleSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleTimeoutInMinutes != nil {
+		m["idle_timeout_in_minutes"] = aws.ToInt32(config.IdleTimeoutInMinutes)
+	}
+
+	m["lifecycle_management"] = config.LifecycleManagement
+
+	if config.MaxIdleTimeoutInMinutes != nil {
+		m["max_idle_timeout_in_minutes"] = aws.ToInt32(config.MaxIdleTimeoutInMinutes)
+	}
+
+	if config.MinIdleTimeoutInMinutes != nil {
+		m["min_idle_timeout_in_minutes"] = aws.ToInt32(config.MinIdleTimeoutInMinutes)
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenDefaultSpaceStorageSettings(config *awstypes.DefaultSpaceStorageSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -1961,6 +2673,24 @@ func flattenDefaultSpaceStorageSettings(config *awstypes.DefaultSpaceStorageSett
 
 	if config.DefaultEbsStorageSettings != nil {
 		m["default_ebs_storage_settings"] = flattenDefaultEBSStorageSettings(config.DefaultEbsStorageSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEMRSettings(config *awstypes.EmrSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.AssumableRoleArns != nil {
+		m["assumable_role_arns"] = flex.FlattenStringValueSet(config.AssumableRoleArns)
+	}
+
+	if config.ExecutionRoleArns != nil {
+		m["execution_role_arns"] = flex.FlattenStringValueSet(config.ExecutionRoleArns)
 	}
 
 	return []map[string]interface{}{m}
@@ -2023,6 +2753,14 @@ func flattenDomainCodeEditorAppSettings(config *awstypes.CodeEditorAppSettings) 
 
 	m := map[string]interface{}{}
 
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenAppLifecycleManagement(config.AppLifecycleManagement)
+	}
+
+	if config.BuiltInLifecycleConfigArn != nil {
+		m["built_in_lifecycle_config_arn"] = aws.ToString(config.BuiltInLifecycleConfigArn)
+	}
+
 	if config.CustomImages != nil {
 		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
 	}
@@ -2045,6 +2783,14 @@ func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) 
 
 	m := map[string]interface{}{}
 
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenAppLifecycleManagement(config.AppLifecycleManagement)
+	}
+
+	if config.BuiltInLifecycleConfigArn != nil {
+		m["built_in_lifecycle_config_arn"] = aws.ToString(config.BuiltInLifecycleConfigArn)
+	}
+
 	if config.CodeRepositories != nil {
 		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
 	}
@@ -2059,6 +2805,10 @@ func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) 
 
 	if config.LifecycleConfigArns != nil {
 		m["lifecycle_config_arns"] = flex.FlattenStringValueSet(config.LifecycleConfigArns)
+	}
+
+	if config.EmrSettings != nil {
+		m["emr_settings"] = flattenEMRSettings(config.EmrSettings)
 	}
 
 	return []map[string]interface{}{m}
@@ -2153,6 +2903,7 @@ func flattenCanvasAppSettings(config *awstypes.CanvasAppSettings) []map[string]i
 
 	m := map[string]interface{}{
 		"direct_deploy_settings":           flattenDirectDeploySettings(config.DirectDeploySettings),
+		"emr_serverless_settings":          flattenEMRServerlessSettings(config.EmrServerlessSettings),
 		"generative_ai_settings":           flattenGenerativeAiSettings(config.GenerativeAiSettings),
 		"identity_provider_oauth_settings": flattenIdentityProviderOAuthSettings(config.IdentityProviderOAuthSettings),
 		"kendra_settings":                  flattenKendraSettings(config.KendraSettings),
@@ -2171,6 +2922,19 @@ func flattenDirectDeploySettings(config *awstypes.DirectDeploySettings) []map[st
 
 	m := map[string]interface{}{
 		names.AttrStatus: config.Status,
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEMRServerlessSettings(config *awstypes.EmrServerlessSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrExecutionRoleARN: aws.ToString(config.ExecutionRoleArn),
+		names.AttrStatus:           config.Status,
 	}
 
 	return []map[string]interface{}{m}
@@ -2265,9 +3029,28 @@ func flattenDomainSettings(config *awstypes.DomainSettings) []map[string]interfa
 	}
 
 	m := map[string]interface{}{
+		"docker_settings":                     flattenDockerSettings(config.DockerSettings),
 		"execution_role_identity_config":      config.ExecutionRoleIdentityConfig,
 		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
 		names.AttrSecurityGroupIDs:            flex.FlattenStringValueSet(config.SecurityGroupIds),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDockerSettings(config *awstypes.DockerSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.EnableDockerAccess != "" {
+		m["enable_docker_access"] = config.EnableDockerAccess
+	}
+
+	if config.VpcOnlyTrustedAccounts != nil {
+		m["vpc_only_trusted_accounts"] = flex.FlattenStringValueSet(config.VpcOnlyTrustedAccounts)
 	}
 
 	return []map[string]interface{}{m}
@@ -2342,6 +3125,22 @@ func expanDefaultSpaceSettings(l []interface{}) *awstypes.DefaultSpaceSettings {
 		config.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
+	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.JupyterLabAppSettings = expandDomainJupyterLabAppSettings(v)
+	}
+
+	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+		config.SpaceStorageSettings = expandDefaultSpaceStorageSettings(v)
+	}
+
+	if v, ok := m["custom_file_system_config"].([]interface{}); ok && len(v) > 0 {
+		config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+	}
+
+	if v, ok := m["custom_posix_user_config"].([]interface{}); ok && len(v) > 0 {
+		config.CustomPosixUserConfig = expandCustomPOSIXUserConfig(v)
+	}
+
 	return config
 }
 
@@ -2366,6 +3165,22 @@ func flattenDefaultSpaceSettings(config *awstypes.DefaultSpaceSettings) []map[st
 
 	if config.SecurityGroups != nil {
 		m[names.AttrSecurityGroups] = flex.FlattenStringValueSet(config.SecurityGroups)
+	}
+
+	if config.JupyterLabAppSettings != nil {
+		m["jupyter_lab_app_settings"] = flattenDomainJupyterLabAppSettings(config.JupyterLabAppSettings)
+	}
+
+	if config.SpaceStorageSettings != nil {
+		m["space_storage_settings"] = flattenDefaultSpaceStorageSettings(config.SpaceStorageSettings)
+	}
+
+	if config.CustomFileSystemConfigs != nil {
+		m["custom_file_system_config"] = flattenCustomFileSystemConfigs(config.CustomFileSystemConfigs)
+	}
+
+	if config.CustomPosixUserConfig != nil {
+		m["custom_posix_user_config"] = flattenCustomPOSIXUserConfig(config.CustomPosixUserConfig)
 	}
 
 	return []map[string]interface{}{m}
@@ -2507,4 +3322,26 @@ func flattenEFSFileSystemConfig(apiObject awstypes.EFSFileSystemConfig) []map[st
 	}
 
 	return []map[string]interface{}{tfMap}
+}
+
+func flattenStudioWebPortalSettings(config *awstypes.StudioWebPortalSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.HiddenAppTypes != nil {
+		m["hidden_app_types"] = flex.FlattenStringyValueSet[awstypes.AppType](config.HiddenAppTypes)
+	}
+
+	if config.HiddenInstanceTypes != nil {
+		m["hidden_instance_types"] = flex.FlattenStringyValueSet[awstypes.AppInstanceType](config.HiddenInstanceTypes)
+	}
+
+	if config.HiddenMlTools != nil {
+		m["hidden_ml_tools"] = flex.FlattenStringyValueSet[awstypes.MlTools](config.HiddenMlTools)
+	}
+
+	return []map[string]interface{}{m}
 }

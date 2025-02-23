@@ -126,10 +126,10 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("medical-vocabulary/%s", d.Id()),
 	}.String()
 
@@ -175,9 +175,10 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[INFO] Deleting Transcribe MedicalVocabulary %s", d.Id())
 
-	_, err := conn.DeleteMedicalVocabulary(ctx, &transcribe.DeleteMedicalVocabularyInput{
+	input := transcribe.DeleteMedicalVocabularyInput{
 		VocabularyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMedicalVocabulary(ctx, &input)
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {

@@ -51,7 +51,7 @@ func testAccBlockPublicAccessConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "0"),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func testAccBlockPublicAccessConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "0"),
 				),
 			},
 			{
@@ -121,7 +121,7 @@ func testAccBlockPublicAccessConfiguration_default(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.min_range", "22"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.max_range", "22"),
 				),
@@ -154,7 +154,7 @@ func testAccBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.min_range", "22"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.max_range", "22"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.1.min_range", "100"),

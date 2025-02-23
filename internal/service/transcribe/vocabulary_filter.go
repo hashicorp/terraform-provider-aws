@@ -143,10 +143,10 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("vocabulary-filter/%s", d.Id()),
 	}.String()
 
@@ -197,9 +197,10 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[INFO] Deleting Transcribe VocabularyFilter %s", d.Id())
 
-	_, err := conn.DeleteVocabularyFilter(ctx, &transcribe.DeleteVocabularyFilterInput{
+	input := transcribe.DeleteVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVocabularyFilter(ctx, &input)
 
 	if err != nil {
 		var bre *types.BadRequestException

@@ -156,7 +156,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    aws.ToString(lag.Region),
 		Service:   "directconnect",
 		AccountID: aws.ToString(lag.OwnerAccount),
@@ -221,9 +221,10 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Deleting Direct Connect LAG: %s", d.Id())
-	_, err := conn.DeleteLag(ctx, &directconnect.DeleteLagInput{
+	input := directconnect.DeleteLagInput{
 		LagId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLag(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
 		return diags

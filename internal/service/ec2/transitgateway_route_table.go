@@ -107,10 +107,10 @@ func resourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -136,9 +136,10 @@ func resourceTransitGatewayRouteTableDelete(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayRouteTable(ctx, &ec2.DeleteTransitGatewayRouteTableInput{
+	input := ec2.DeleteTransitGatewayRouteTableInput{
 		TransitGatewayRouteTableId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayRouteTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return diags

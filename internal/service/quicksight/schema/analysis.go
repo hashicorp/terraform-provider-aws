@@ -7,9 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +35,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringSchema(false, enum.Validate[awstypes.ColumnRole]()),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -48,11 +46,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, enum.Validate[awstypes.CrossDatasetTypes]()),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringSchema(false, enum.Validate[awstypes.Status]()),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](attrOptional),
 						},
 					},
 				},
@@ -77,17 +75,12 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id": idSchema(),
-							names.AttrContentType: {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Computed:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SheetContentType](),
-							},
-							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"sheet_id":              idSchema(),
+							names.AttrContentType:   stringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
+							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -98,11 +91,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -110,6 +103,10 @@ func AnalysisDefinitionSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func AnalysisDefinitionDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(AnalysisDefinitionSchema())
 }
 
 func AnalysisSourceEntitySchema() *schema.Schema {
@@ -129,11 +126,7 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN:         arnStringSchema(attrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},

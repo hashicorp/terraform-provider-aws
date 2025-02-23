@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -157,15 +156,15 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 
 	conn := r.Meta().DRSClient(ctx)
 
-	input := &drs.CreateReplicationConfigurationTemplateInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input, flexOpt)...)
+	var input drs.CreateReplicationConfigurationTemplateInput
+	response.Diagnostics.Append(flex.Expand(ctx, data, &input, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := conn.CreateReplicationConfigurationTemplate(ctx, input)
+	_, err := conn.CreateReplicationConfigurationTemplate(ctx, &input)
 	if err != nil {
 		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionCreating, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
@@ -284,7 +283,7 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 	})
 
 	input := &drs.DeleteReplicationConfigurationTemplateInput{
-		ReplicationConfigurationTemplateID: aws.String(data.ID.ValueString()),
+		ReplicationConfigurationTemplateID: data.ID.ValueStringPointer(),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
@@ -427,9 +426,9 @@ type replicationConfigurationTemplateResourceModel struct {
 	ReplicationServersSecurityGroupsIDs types.List                                                                       `tfsdk:"replication_servers_security_groups_ids"`
 	StagingAreaSubnetID                 types.String                                                                     `tfsdk:"staging_area_subnet_id"`
 	UseDedicatedReplicationServer       types.Bool                                                                       `tfsdk:"use_dedicated_replication_server"`
-	StagingAreaTags                     types.Map                                                                        `tfsdk:"staging_area_tags"`
-	Tags                                types.Map                                                                        `tfsdk:"tags"`
-	TagsAll                             types.Map                                                                        `tfsdk:"tags_all"`
+	StagingAreaTags                     tftags.Map                                                                       `tfsdk:"staging_area_tags"`
+	Tags                                tftags.Map                                                                       `tfsdk:"tags"`
+	TagsAll                             tftags.Map                                                                       `tfsdk:"tags_all"`
 	Timeouts                            timeouts.Value                                                                   `tfsdk:"timeouts"`
 }
 

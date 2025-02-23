@@ -8,13 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/smithy-go/middleware"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -152,32 +152,6 @@ func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{}),
 					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{}),
 					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccProvider_endpoints(t *testing.T) {
-	ctx := acctest.Context(t)
-	var provider *schema.Provider
-	var endpoints strings.Builder
-
-	// Initialize each endpoint configuration with matching name and value
-	for _, serviceKey := range names.ProviderPackages() {
-		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", serviceKey, serviceKey))
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProviderConfig_endpoints(endpoints.String()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpoints(ctx, &provider),
 				),
 			},
 		},
@@ -507,6 +481,9 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_envVarMerged(t *testing.T) {
 }
 
 func TestAccProvider_Region_c2s(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -517,10 +494,10 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USISOEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
-					testAccCheckPartition(ctx, t, &provider, names.ISOPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.ic.c2s"),
 				),
 				PlanOnly: true,
@@ -530,6 +507,9 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 }
 
 func TestAccProvider_Region_china(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -540,10 +520,10 @@ func TestAccProvider_Region_china(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.CNNorthwest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com.cn"),
-					testAccCheckPartition(ctx, t, &provider, names.ChinaPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsCnPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -553,6 +533,9 @@ func TestAccProvider_Region_china(t *testing.T) {
 }
 
 func TestAccProvider_Region_commercial(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -563,10 +546,10 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USWest2RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, names.StandardPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -576,6 +559,9 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 }
 
 func TestAccProvider_Region_govCloud(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -586,10 +572,10 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USGovWest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, names.USGovCloudPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -599,6 +585,9 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 }
 
 func TestAccProvider_Region_sc2s(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -609,10 +598,10 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USISOBEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
-					testAccCheckPartition(ctx, t, &provider, names.ISOBPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
@@ -622,6 +611,9 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 }
 
 func TestAccProvider_Region_stsRegion(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -632,10 +624,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_stsRegion(names.USEast1RegionID, names.USWest2RegionID),
+				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegion(ctx, t, &provider, names.USEast1RegionID),
-					testAccCheckSTSRegion(ctx, t, &provider, names.USWest2RegionID),
+					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
+					testAccCheckSTSRegion(ctx, t, &provider, endpoints.UsWest2RegionID),
 				),
 				PlanOnly: true,
 			},
@@ -643,8 +635,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 	})
 }
 
+// For historical reasons, ignore a single empty `assume_role` block
 func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
@@ -654,7 +648,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 			{
 				Config: testAccProviderConfig_assumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+					acctest.CheckCallerIdentityAccountID(ctx, "data.aws_caller_identity.current"),
 				),
 			},
 		},
@@ -684,7 +678,7 @@ func testAccCheckPartition(ctx context.Context, t *testing.T, p **schema.Provide
 			return fmt.Errorf("provider not initialized")
 		}
 
-		providerPartition := (*p).Meta().(*conns.AWSClient).Partition
+		providerPartition := (*p).Meta().(*conns.AWSClient).Partition(ctx)
 
 		if providerPartition != expectedPartition {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)
@@ -716,7 +710,7 @@ func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, 
 			return fmt.Errorf("provider not initialized")
 		}
 
-		if got := (*p).Meta().(*conns.AWSClient).Region; got != expectedRegion {
+		if got := (*p).Meta().(*conns.AWSClient).Region(ctx); got != expectedRegion {
 			return fmt.Errorf("expected Region (%s), got: %s", expectedRegion, got)
 		}
 
@@ -733,8 +727,9 @@ func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provide
 		var stsRegion string
 
 		stsClient := (*p).Meta().(*conns.AWSClient).STSClient(ctx)
-		_, err := stsClient.GetCallerIdentity(ctx, &sts_sdkv2.GetCallerIdentityInput{},
-			func(opts *sts_sdkv2.Options) {
+		input := sts.GetCallerIdentityInput{}
+		_, err := stsClient.GetCallerIdentity(ctx, &input,
+			func(opts *sts.Options) {
 				opts.APIOptions = append(opts.APIOptions,
 					addRegionRetrieverMiddleware(&stsRegion),
 					addCancelRequestMiddleware(),
@@ -816,7 +811,7 @@ func testAccCheckIgnoreTagsKeyPrefixes(ctx context.Context, t *testing.T, p **sc
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.KeyPrefixes == nil {
 			if len(expectedKeyPrefixes) != 0 {
@@ -873,7 +868,7 @@ func testAccCheckIgnoreTagsKeys(ctx context.Context, t *testing.T, p **schema.Pr
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.Keys == nil {
 			if len(expectedKeys) != 0 {
@@ -930,7 +925,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		defaultTagsConfig := providerClient.DefaultTagsConfig
+		defaultTagsConfig := providerClient.DefaultTagsConfig(ctx)
 
 		if defaultTagsConfig == nil || len(defaultTagsConfig.Tags) == 0 {
 			if len(expectedTags) != 0 {
@@ -973,55 +968,6 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 
 			if !found {
 				return fmt.Errorf("unexpected tags element: %s", actualElement)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
-			return fmt.Errorf("provider not initialized")
-		}
-
-		providerClient := (*p).Meta().(*conns.AWSClient)
-
-		for _, serviceKey := range names.Aliases() {
-			methodName := serviceClient(serviceKey)
-			method := reflect.ValueOf(providerClient).MethodByName(methodName)
-			if !method.IsValid() {
-				continue
-			}
-			if method.Kind() != reflect.Func {
-				return fmt.Errorf("value %q is not a function", methodName)
-			}
-			if !funcHasConnFuncSignature(method) {
-				return fmt.Errorf("function %q does not match expected signature", methodName)
-			}
-
-			result := method.Call([]reflect.Value{
-				reflect.ValueOf(context.Background()),
-			})
-			if l := len(result); l != 1 {
-				return fmt.Errorf("expected 1 result, got %d", l)
-			}
-			providerClientField := result[0]
-
-			if !providerClientField.IsValid() {
-				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
-			}
-
-			if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
-				continue // currently unknown how to do this check for v2 clients
-			}
-
-			actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-			expectedEndpoint := fmt.Sprintf("http://%s", serviceKey)
-
-			if actualEndpoint != expectedEndpoint {
-				return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", serviceKey, expectedEndpoint, actualEndpoint)
 			}
 		}
 
@@ -1086,7 +1032,7 @@ func funcHasConnFuncSignature(method reflect.Value) bool {
 }
 
 func serviceClient(key string) string {
-	serviceUpper := ""
+	var serviceUpper string
 	var err error
 	if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 		return ""
@@ -1113,21 +1059,6 @@ data "aws_service" "provider_test" {
   service_id = "s3"
 }
 `
-
-func testAccProviderConfig_endpoints(endpoints string) string {
-	//lintignore:AT004
-	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
-provider "aws" {
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-
-  endpoints {
-    %[1]s
-  }
-}
-`, endpoints))
-}
 
 func testAccProviderConfig_customS3Endpoint(endpoint, rName string) string {
 	//lintignore:AT004

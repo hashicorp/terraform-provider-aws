@@ -76,14 +76,14 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 				Optional:     true,
 				Default:      25,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"min_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -177,11 +177,12 @@ func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version: %s", d.Id())
-	_, err := conn.DeleteAutoScalingConfiguration(ctx, &apprunner.DeleteAutoScalingConfigurationInput{
+	input := apprunner.DeleteAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAutoScalingConfiguration(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "The auto scaling configuration you specified has been deleted") {
 		return diags
 	}
 
@@ -235,11 +236,11 @@ func findAutoScalingConfigurationSummary(ctx context.Context, conn *apprunner.Cl
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) ([]*types.AutoScalingConfigurationSummary, error) {
-	var output []*types.AutoScalingConfigurationSummary
+func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) ([]types.AutoScalingConfigurationSummary, error) {
+	var output []types.AutoScalingConfigurationSummary
 
 	pages := apprunner.NewListAutoScalingConfigurationsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -250,7 +251,7 @@ func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.
 		}
 
 		for _, v := range page.AutoScalingConfigurationSummaryList {
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

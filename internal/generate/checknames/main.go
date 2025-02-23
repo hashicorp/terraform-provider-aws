@@ -89,15 +89,15 @@ func main() {
 			}
 		}
 
-		if !l.ClientSDKV1() && !l.ClientSDKV2() && !l.Exclude() {
+		if !l.IsClientSDKV1() && !l.IsClientSDKV2() && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV1() && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
+		if l.IsClientSDKV1() && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV2() && l.GoV2Package() == "" {
+		if l.IsClientSDKV2() && l.GoV2Package() == "" && l.ProviderPackage() != "meta" {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", i+lineOffset, l.HumanFriendly())
 		}
 
@@ -272,7 +272,7 @@ func checkDocFile(dir, name string, prefixes []DocPrefix) error {
 			sc := scanner.Text()
 			sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
 			if hf != sc {
-				return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", name, sc, hf)
+				return fmt.Errorf("file (%s) subcategory (%s) doesn't match HumanFriendly, expecting %s", name, sc, hf)
 			}
 		case 2:
 			continue

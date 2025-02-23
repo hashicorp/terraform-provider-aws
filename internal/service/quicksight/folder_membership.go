@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Folder Membership")
+// @FrameworkResource("aws_quicksight_folder_membership", name="Folder Membership")
 func newFolderMembershipResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &folderMembershipResource{}, nil
 }
@@ -95,7 +95,7 @@ func (r *folderMembershipResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, folderID, memberType, memberID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.FolderID), flex.StringValueFromFramework(ctx, plan.MemberType), flex.StringValueFromFramework(ctx, plan.MemberID)
 	in := &quicksight.CreateFolderMembershipInput{

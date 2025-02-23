@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_resource_policy")
+// @SDKResource("aws_glue_resource_policy", name="Resource Policy")
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut(awstypes.ExistConditionNotExist),
@@ -78,7 +78,7 @@ func resourceResourcePolicyPut(condition awstypes.ExistCondition) func(context.C
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting policy request: %s", err)
 		}
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 		return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 	}

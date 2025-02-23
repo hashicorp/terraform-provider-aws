@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
-	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -110,11 +109,23 @@ func dataSourceEngineVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
+			"supports_certificate_rotation_without_restart": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"supports_global_databases": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"supports_integrations": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"supports_limitless_database": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"supports_local_write_forwarding": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -176,7 +187,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).RDSFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	if v, ok := d.GetOk("parameter_group_family"); ok {
@@ -393,8 +404,11 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("supported_timezones", tfslices.ApplyToAll(found.SupportedTimezones, func(v awstypes.Timezone) string {
 		return aws.ToString(v.TimezoneName)
 	}))
+	d.Set("supports_certificate_rotation_without_restart", found.SupportsCertificateRotationWithoutRestart)
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
+	d.Set("supports_integrations", found.SupportsIntegrations)
 	d.Set("supports_limitless_database", found.SupportsLimitlessDatabase)
+	d.Set("supports_local_write_forwarding", found.SupportsLocalWriteForwarding)
 	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
 	d.Set("supports_parallel_query", found.SupportsParallelQuery)
 	d.Set("supports_read_replica", found.SupportsReadReplica)
@@ -428,7 +442,7 @@ func sortEngineVersions(engineVersions []awstypes.DBEngineVersion) {
 		return
 	}
 
-	sort.Slice(engineVersions, func(i, j int) bool {
+	sort.Slice(engineVersions, func(i, j int) bool { // nosemgrep:ci.semgrep.stdlib.prefer-slices-sortfunc
 		return version.LessThanWithTime(engineVersions[i].CreateTime, engineVersions[j].CreateTime, aws.ToString(engineVersions[i].EngineVersion), aws.ToString(engineVersions[j].EngineVersion))
 	})
 }

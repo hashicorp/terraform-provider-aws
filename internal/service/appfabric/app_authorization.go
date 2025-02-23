@@ -38,8 +38,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="App Authorization")
+// @FrameworkResource("aws_appfabric_app_authorization", name="App Authorization")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppAuthorization")
+// @Testing(importIgnore="credential")
 func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationResource{}
 
@@ -213,8 +217,13 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	input.AppBundleIdentifier = aws.String(data.AppBundleARN.ValueString())
-	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
+	}
+
+	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
+	input.ClientToken = aws.String(uuid)
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAppAuthorization(ctx, input)
@@ -227,7 +236,12 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 
 	// Set values for unknowns.
 	data.AppAuthorizationARN = fwflex.StringToFramework(ctx, output.AppAuthorization.AppAuthorizationArn)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	appAuthorization, err := waitAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -369,10 +383,11 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteAppAuthorization(ctx, &appfabric.DeleteAppAuthorizationInput{
+	input := appfabric.DeleteAppAuthorizationInput{
 		AppAuthorizationIdentifier: fwflex.StringFromFramework(ctx, data.AppAuthorizationARN),
 		AppBundleIdentifier:        fwflex.StringFromFramework(ctx, data.AppBundleARN),
-	})
+	}
+	_, err := conn.DeleteAppAuthorization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -498,8 +513,8 @@ type appAuthorizationResourceModel struct {
 	Credential          fwtypes.ListNestedObjectValueOf[credentialModel] `tfsdk:"credential"`
 	ID                  types.String                                     `tfsdk:"id"`
 	Persona             types.String                                     `tfsdk:"persona"`
-	Tags                types.Map                                        `tfsdk:"tags"`
-	TagsAll             types.Map                                        `tfsdk:"tags_all"`
+	Tags                tftags.Map                                       `tfsdk:"tags"`
+	TagsAll             tftags.Map                                       `tfsdk:"tags_all"`
 	Tenant              fwtypes.ListNestedObjectValueOf[tenantModel]     `tfsdk:"tenant"`
 	Timeouts            timeouts.Value                                   `tfsdk:"timeouts"`
 	UpdatedAt           timetypes.RFC3339                                `tfsdk:"updated_at"`
@@ -521,8 +536,13 @@ func (m *appAuthorizationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *appAuthorizationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppAuthorizationARN.ValueString(), m.AppBundleARN.ValueString()}, appAuthorizationResourceIDPartCount, false)))
+func (m *appAuthorizationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppAuthorizationARN.ValueString(),
+		m.AppBundleARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, appAuthorizationResourceIDPartCount, false)
 }
 
 var (

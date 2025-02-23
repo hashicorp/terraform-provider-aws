@@ -7,6 +7,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"maps"
 	"slices"
 	"strings"
 
@@ -34,12 +35,14 @@ func (sr ServiceRecord) AWSCLIV2CommandNoDashes() string {
 	return result
 }
 
-func (sr ServiceRecord) GoPackageName(version int) string {
-	switch version {
+func (sr ServiceRecord) GoPackageName() string {
+	switch sr.SDKVersion() {
 	case 1:
 		return sr.GoV1Package()
+	case 2:
+		return sr.GoV2Package()
 	}
-	return sr.GoV2Package()
+	return ""
 }
 
 func (sr ServiceRecord) GoV1Package() string {
@@ -111,27 +114,19 @@ func (sr ServiceRecord) GenerateClient() bool {
 	return !sr.skipClientGenerate()
 }
 
-func (sr ServiceRecord) ClientSDKV1() bool {
-	return slices.Contains(sr.service.ServiceSDK.Version, 1)
+func (sr ServiceRecord) IsClientSDKV1() bool {
+	return sr.SDKVersion() == 1
 }
 
-func (sr ServiceRecord) ClientSDKV2() bool {
-	return slices.Contains(sr.service.ServiceSDK.Version, 2) //nolint:mnd
+func (sr ServiceRecord) IsClientSDKV2() bool {
+	return sr.SDKVersion() == 2 //nolint:mnd
 }
 
-// SDKVersion returns:
-// * "1" if only SDK v1 is implemented
-// * "2" if only SDK v2 is implemented
-// * "1,2" if both are implemented
-func (sr ServiceRecord) SDKVersion() string {
-	if sr.ClientSDKV1() && sr.ClientSDKV2() {
-		return "1,2"
-	} else if sr.ClientSDKV1() {
-		return "1"
-	} else if sr.ClientSDKV2() {
-		return "2"
+func (sr ServiceRecord) SDKVersion() int {
+	if sr.service.ServiceSDK != nil {
+		return sr.service.ServiceSDK.Version
 	}
-	return ""
+	return 0
 }
 
 func (sr ServiceRecord) ResourcePrefix() string {
@@ -208,7 +203,10 @@ func (sr ServiceRecord) TFAWSEnvVar() string {
 }
 
 func (sr ServiceRecord) SDKID() string {
-	return sr.service.ServiceSDK.ID
+	if sr.service.ServiceSDK != nil {
+		return sr.service.ServiceSDK.ID
+	}
+	return ""
 }
 
 func (sr ServiceRecord) AWSServiceEnvVar() string {
@@ -233,8 +231,11 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 	return ""
 }
 
-func (sr ServiceRecord) EndpointOverrideRegion() string {
-	return sr.service.ServiceEndpoints.EndpointRegionOverride
+func (sr ServiceRecord) EndpointRegionOverrides() map[string]string {
+	if sr.service.ServiceEndpoints != nil && len(sr.service.ServiceEndpoints.EndpointRegionOverrides) > 0 {
+		return maps.Clone(sr.service.ServiceEndpoints.EndpointRegionOverrides)
+	}
+	return nil
 }
 
 func (sr ServiceRecord) Note() string {
@@ -252,13 +253,16 @@ func ReadAllServiceData() (results []ServiceRecord, err error) {
 	parser := hclparse.NewParser()
 	toParse, parseErr := parser.ParseHCL(b, "names_data.hcl")
 	if parseErr.HasErrors() {
-		log.Fatal("Parser error : ", parseErr)
+		log.Fatalf("Parser error: %s", parseErr)
 	}
 	decodeErr := gohcl.DecodeBody(toParse.Body, nil, &decodedServiceList)
 	if decodeErr.HasErrors() {
-		log.Fatal("Decode error", decodeErr)
+		log.Fatalf("Decode error: %s", decodeErr)
 	}
 	for _, curr := range decodedServiceList.ServiceList {
+		if curr.ServiceSDK != nil && curr.ServiceSDK.Version == 0 {
+			curr.ServiceSDK.Version = 2
+		}
 		if len(curr.SubService) > 0 {
 			for _, sub := range curr.SubService {
 				results = append(results, parseService(sub))
@@ -287,7 +291,7 @@ type ResourcePrefix struct {
 
 type SDK struct {
 	ID      string `hcl:"id,optional"`
-	Version []int  `hcl:"client_version,attr"`
+	Version int    `hcl:"client_version,optional"`
 }
 
 type Names struct {
@@ -312,17 +316,17 @@ type EnvVar struct {
 }
 
 type EndpointInfo struct {
-	EndpointAPICall        string `hcl:"endpoint_api_call,optional"`
-	EndpointAPIParams      string `hcl:"endpoint_api_params,optional"`
-	EndpointRegionOverride string `hcl:"endpoint_region_override,optional"`
-	EndpointOnly           bool   `hcl:"endpoint_only,optional"`
+	EndpointAPICall         string            `hcl:"endpoint_api_call,optional"`
+	EndpointAPIParams       string            `hcl:"endpoint_api_params,optional"`
+	EndpointRegionOverrides map[string]string `hcl:"endpoint_region_overrides,optional"`
+	EndpointOnly            bool              `hcl:"endpoint_only,optional"`
 }
 
 type Service struct {
 	ProviderPackage       string         `hcl:",label"`
 	ServiceCli            *CLIV2Command  `hcl:"cli_v2_command,block"`
 	ServiceGoPackages     *GoPackages    `hcl:"go_packages,block"`
-	ServiceSDK            SDK            `hcl:"sdk,block"`
+	ServiceSDK            *SDK           `hcl:"sdk,block"`
 	ServiceNames          Names          `hcl:"names,block"`
 	ServiceClient         *Client        `hcl:"client,block"`
 	ServiceEnvVars        *EnvVar        `hcl:"env_var,block"`
@@ -335,7 +339,7 @@ type Service struct {
 	ServiceSplitPackage           string   `hcl:"split_package,optional"`
 	FilePrefix                    string   `hcl:"file_prefix,optional"`
 	DocPrefix                     []string `hcl:"doc_prefix,optional"`
-	Brand                         string   `hcl:"brand,attr"`
+	Brand                         string   `hcl:"brand,optional"`
 	Exclude                       bool     `hcl:"exclude,optional"`
 	NotImplemented                bool     `hcl:"not_implemented,optional"`
 	AllowedSubcategory            bool     `hcl:"allowed_subcategory,optional"`

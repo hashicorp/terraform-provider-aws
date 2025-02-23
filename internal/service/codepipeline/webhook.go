@@ -230,9 +230,10 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	log.Printf("[INFO] Deleting CodePipeline Webhook: %s", d.Id())
-	_, err := conn.DeleteWebhook(ctx, &codepipeline.DeleteWebhookInput{
+	input := codepipeline.DeleteWebhookInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteWebhook(ctx, &input)
 
 	if errs.IsA[*types.WebhookNotFoundException](err) {
 		return diags
@@ -260,11 +261,11 @@ func findWebhook(ctx context.Context, conn *codepipeline.Client, input *codepipe
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findWebhooks(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListWebhooksInput, filter tfslices.Predicate[*types.ListWebhookItem]) ([]*types.ListWebhookItem, error) {
-	var output []*types.ListWebhookItem
+func findWebhooks(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListWebhooksInput, filter tfslices.Predicate[*types.ListWebhookItem]) ([]types.ListWebhookItem, error) {
+	var output []types.ListWebhookItem
 
 	pages := codepipeline.NewListWebhooksPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -275,7 +276,7 @@ func findWebhooks(ctx context.Context, conn *codepipeline.Client, input *codepip
 		}
 
 		for _, v := range page.Webhooks {
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

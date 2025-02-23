@@ -23,7 +23,7 @@ func DataSourceCredentialsSchema() *schema.Schema {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ValidateFunc:  verify.ValidARN,
-					ConflictsWith: []string{"credentials.0.credential_pair"},
+					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.secret_arn"},
 				},
 				"credential_pair": {
 					Type:     schema.TypeList,
@@ -51,7 +51,12 @@ func DataSourceCredentialsSchema() *schema.Schema {
 							},
 						},
 					},
-					ConflictsWith: []string{"credentials.0.copy_source_arn"},
+					ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.secret_arn"},
+				},
+				"secret_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn"},
 				},
 			},
 		},
@@ -65,6 +70,7 @@ func DataSourceParametersSchema() *schema.Schema {
 		"parameters.0.aurora",
 		"parameters.0.aurora_postgresql",
 		"parameters.0.aws_iot_analytics",
+		"parameters.0.databricks",
 		"parameters.0.jira",
 		"parameters.0.maria_db",
 		"parameters.0.mysql",
@@ -176,6 +182,31 @@ func DataSourceParametersSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"data_set_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+						},
+					},
+					ExactlyOneOf: exactlyOneOf,
+				},
+				"databricks": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"host": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"sql_endpoint_path": {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -397,6 +428,11 @@ func DataSourceParametersSchema() *schema.Schema {
 									},
 								},
 							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 					ExactlyOneOf: exactlyOneOf,
@@ -540,6 +576,7 @@ func SSLPropertiesSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -559,11 +596,7 @@ func VPCConnectionPropertiesSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"vpc_connection_arn": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
+				"vpc_connection_arn": arnStringSchema(attrRequired),
 			},
 		},
 	}
@@ -587,6 +620,10 @@ func ExpandDataSourceCredentials(tfList []interface{}) *awstypes.DataSourceCrede
 
 	if v, ok := tfMap["credential_pair"].([]interface{}); ok && len(v) > 0 {
 		apiObject.CredentialPair = expandCredentialPair(v)
+	}
+
+	if v, ok := tfMap["secret_arn"].(string); ok && v != "" {
+		apiObject.SecretArn = aws.String(v)
 	}
 
 	return apiObject
@@ -693,6 +730,24 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 
 			if v, ok := tfMap["data_set_name"].(string); ok && v != "" {
 				ps.Value.DataSetName = aws.String(v)
+			}
+
+			apiObject = ps
+		}
+	}
+
+	if v := tfMap["databricks"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberDatabricksParameters{}
+
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
+			}
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
+			}
+			if v, ok := tfMap["sql_endpoint_path"].(string); ok && v != "" {
+				ps.Value.SqlEndpointPath = aws.String(v)
 			}
 
 			apiObject = ps
@@ -856,6 +911,10 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 				}
 			}
 
+			if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+				ps.Value.RoleArn = aws.String(v)
+			}
+
 			apiObject = ps
 		}
 	}
@@ -1001,6 +1060,14 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []inte
 				"data_set_name": aws.ToString(v.Value.DataSetName),
 			},
 		}
+	case *awstypes.DataSourceParametersMemberDatabricksParameters:
+		tfMap["databricks"] = []interface{}{
+			map[string]interface{}{
+				"host":              aws.ToString(v.Value.Host),
+				names.AttrPort:      aws.ToInt32(v.Value.Port),
+				"sql_endpoint_path": aws.ToString(v.Value.SqlEndpointPath),
+			},
+		}
 	case *awstypes.DataSourceParametersMemberJiraParameters:
 		tfMap["jira"] = []interface{}{
 			map[string]interface{}{
@@ -1072,6 +1139,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []inte
 						names.AttrKey:    aws.ToString(v.Value.ManifestFileLocation.Key),
 					},
 				},
+				names.AttrRoleARN: aws.ToString(v.Value.RoleArn),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberServiceNowParameters:

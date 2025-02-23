@@ -152,9 +152,9 @@ func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("replicate_to", output.ReplicateTo)
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("deploymentstrategy/%s", d.Id()),
 		Service:   "appconfig",
 	}.String()
@@ -207,9 +207,10 @@ func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Deployment Strategy: %s", d.Id())
-	_, err := conn.DeleteDeploymentStrategy(ctx, &appconfig.DeleteDeploymentStrategyInput{
+	input := appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDeploymentStrategy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

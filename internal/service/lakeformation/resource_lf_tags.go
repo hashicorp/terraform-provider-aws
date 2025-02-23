@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -29,7 +30,7 @@ const (
 	ResNameLFTags = "Resource LF Tags"
 )
 
-// @SDKResource("aws_lakeformation_resource_lf_tags")
+// @SDKResource("aws_lakeformation_resource_lf_tags", name="Resource LF Tags")
 func ResourceResourceLFTags() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceLFTagsCreate,
@@ -288,7 +289,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
 	return append(diags, resourceResourceLFTagsRead(ctx, d, meta)...)
 }

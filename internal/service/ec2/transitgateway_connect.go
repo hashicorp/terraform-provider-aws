@@ -242,9 +242,10 @@ func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayConnect(ctx, &ec2.DeleteTransitGatewayConnectInput{
+	input := ec2.DeleteTransitGatewayConnectInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayConnect(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return diags

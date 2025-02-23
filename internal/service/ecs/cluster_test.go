@@ -35,17 +35,17 @@ func TestAccECSCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "setting.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						names.AttrName:  "containerInsights",
 						names.AttrValue: "disabled",
 					}),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -112,7 +112,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -121,7 +121,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -148,7 +148,7 @@ func TestAccECSCluster_serviceConnectDefaults(t *testing.T) {
 				Config: testAccClusterConfig_serviceConnectDefaults(rName, ns, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_connect_defaults.0.namespace", namespace1ResourceName, names.AttrARN),
 				),
 			},
@@ -162,7 +162,7 @@ func TestAccECSCluster_serviceConnectDefaults(t *testing.T) {
 				Config: testAccClusterConfig_serviceConnectDefaults(rName, ns, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_connect_defaults.0.namespace", namespace2ResourceName, names.AttrARN),
 				),
 			},
@@ -186,16 +186,16 @@ func TestAccECSCluster_containerInsights(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
 				),
 			},
 			{
 				Config: testAccClusterConfig_containerInsights(rName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "setting.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						names.AttrName:  "containerInsights",
 						names.AttrValue: names.AttrEnabled,
@@ -206,7 +206,7 @@ func TestAccECSCluster_containerInsights(t *testing.T) {
 				Config: testAccClusterConfig_containerInsights(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "setting.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						names.AttrName:  "containerInsights",
 						names.AttrValue: "disabled",
@@ -233,11 +233,11 @@ func TestAccECSCluster_configuration(t *testing.T) {
 				Config: testAccClusterConfig_configuration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
 				),
@@ -252,11 +252,11 @@ func TestAccECSCluster_configuration(t *testing.T) {
 				Config: testAccClusterConfig_configuration(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
 				),
@@ -281,8 +281,8 @@ func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 				Config: testAccClusterConfig_managedStorageConfiguration(rName, "aws_kms_key.test.arn", "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.managed_storage_configuration.0.fargate_ephemeral_storage_kms_key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.0.kms_key_id", ""),
 				),
@@ -297,8 +297,8 @@ func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 				Config: testAccClusterConfig_managedStorageConfiguration(rName, "null", "aws_kms_key.test.arn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.0.fargate_ephemeral_storage_kms_key_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.managed_storage_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),

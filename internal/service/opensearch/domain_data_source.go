@@ -430,7 +430,7 @@ func dataSourceDomain() *schema.Resource {
 func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 	if err != nil {

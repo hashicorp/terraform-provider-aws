@@ -80,7 +80,7 @@ func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
 	return slices.Clip(v)
 }
 
-// All returns `true` if the filter function `f` retruns `true` for all items in slice `s`.
+// All returns `true` if the filter function `f` returns `true` for all items in slice `s`.
 func All[S ~[]E, E any](s S, f Predicate[E]) bool {
 	for _, e := range s {
 		if !f(e) {
@@ -90,7 +90,7 @@ func All[S ~[]E, E any](s S, f Predicate[E]) bool {
 	return true
 }
 
-// Any returns `true` if the filter function `f` retruns `true` for any item in slice `s`.
+// Any returns `true` if the filter function `f` returns `true` for any item in slice `s`.
 func Any[S ~[]E, E any](s S, f Predicate[E]) bool {
 	for _, e := range s {
 		if f(e) {
@@ -98,23 +98,6 @@ func Any[S ~[]E, E any](s S, f Predicate[E]) bool {
 		}
 	}
 	return false
-}
-
-// Chunks returns a slice of S, each of the specified size (or less).
-func Chunks[S ~[]E, E any](s S, size int) []S {
-	chunks := make([]S, 0)
-
-	for i := 0; i < len(s); i += size {
-		end := i + size
-
-		if end > len(s) {
-			end = len(s)
-		}
-
-		chunks = append(chunks, s[i:end])
-	}
-
-	return chunks
 }
 
 // AppendUnique appends unique (not already in the slice) values to a slice.

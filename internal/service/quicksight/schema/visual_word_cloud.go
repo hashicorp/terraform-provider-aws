@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,8 +59,8 @@ func wordCloudVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_items_limit": itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":        fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"category_items_limit": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":        fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
@@ -73,12 +71,12 @@ func wordCloudVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringSchema(false, enum.Validate[awstypes.WordCloudCloudLayout]()),
-										"maximum_string_length": intSchema(false, validation.IntBetween(1, 100)),
-										"word_casing":           stringSchema(false, enum.Validate[awstypes.WordCloudWordCasing]()),
-										"word_orientation":      stringSchema(false, enum.Validate[awstypes.WordCloudWordOrientation]()),
-										"word_padding":          stringSchema(false, enum.Validate[awstypes.WordCloudWordPadding]()),
-										"word_scaling":          stringSchema(false, enum.Validate[awstypes.WordCloudWordScaling]()),
+										"cloud_layout":          stringEnumSchema[awstypes.WordCloudCloudLayout](attrOptional),
+										"maximum_string_length": intBetweenSchema(attrOptional, 1, 100),
+										"word_casing":           stringEnumSchema[awstypes.WordCloudWordCasing](attrOptional),
+										"word_orientation":      stringEnumSchema[awstypes.WordCloudWordOrientation](attrOptional),
+										"word_padding":          stringEnumSchema[awstypes.WordCloudWordPadding](attrOptional),
+										"word_scaling":          stringEnumSchema[awstypes.WordCloudWordScaling](attrOptional),
 									},
 								},
 							},

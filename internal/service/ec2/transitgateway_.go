@@ -116,6 +116,12 @@ func resourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_group_referencing_support": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
+				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
@@ -149,12 +155,13 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.CreateTransitGatewayInput{
 		Options: &awstypes.TransitGatewayRequestOptions{
-			AutoAcceptSharedAttachments:  awstypes.AutoAcceptSharedAttachmentsValue(d.Get("auto_accept_shared_attachments").(string)),
-			DefaultRouteTableAssociation: awstypes.DefaultRouteTableAssociationValue(d.Get("default_route_table_association").(string)),
-			DefaultRouteTablePropagation: awstypes.DefaultRouteTablePropagationValue(d.Get("default_route_table_propagation").(string)),
-			DnsSupport:                   awstypes.DnsSupportValue(d.Get("dns_support").(string)),
-			MulticastSupport:             awstypes.MulticastSupportValue(d.Get("multicast_support").(string)),
-			VpnEcmpSupport:               awstypes.VpnEcmpSupportValue(d.Get("vpn_ecmp_support").(string)),
+			AutoAcceptSharedAttachments:     awstypes.AutoAcceptSharedAttachmentsValue(d.Get("auto_accept_shared_attachments").(string)),
+			DefaultRouteTableAssociation:    awstypes.DefaultRouteTableAssociationValue(d.Get("default_route_table_association").(string)),
+			DefaultRouteTablePropagation:    awstypes.DefaultRouteTablePropagationValue(d.Get("default_route_table_propagation").(string)),
+			DnsSupport:                      awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+			MulticastSupport:                awstypes.MulticastSupportValue(d.Get("multicast_support").(string)),
+			SecurityGroupReferencingSupport: awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string)),
+			VpnEcmpSupport:                  awstypes.VpnEcmpSupportValue(d.Get("vpn_ecmp_support").(string)),
 		},
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGateway),
 	}
@@ -214,6 +221,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	d.Set("security_group_referencing_support", transitGateway.Options.SecurityGroupReferencingSupport)
 	d.Set("transit_gateway_cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
@@ -254,6 +262,10 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if d.HasChange("dns_support") {
 			input.Options.DnsSupport = awstypes.DnsSupportValue(d.Get("dns_support").(string))
+		}
+
+		if d.HasChange("security_group_referencing_support") {
+			input.Options.SecurityGroupReferencingSupport = awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string))
 		}
 
 		if d.HasChange("transit_gateway_cidr_blocks") {

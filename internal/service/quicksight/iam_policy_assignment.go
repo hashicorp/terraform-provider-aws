@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="IAM Policy Assignment")
+// @FrameworkResource("aws_quicksight_iam_policy_assignment", name="IAM Policy Assignment")
 func newIAMPolicyAssignmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &iamPolicyAssignmentResource{}, nil
 }
@@ -125,7 +125,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, namespace, assignmentName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.Namespace), flex.StringValueFromFramework(ctx, plan.AssignmentName)
 	in := quicksight.CreateIAMPolicyAssignmentInput{
@@ -144,7 +144,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 		in.Identities = expandIdentities(ctx, identities)
 	}
 	if !plan.PolicyARN.IsNull() {
-		in.PolicyArn = aws.String(plan.PolicyARN.ValueString())
+		in.PolicyArn = plan.PolicyARN.ValueStringPointer()
 	}
 
 	out, err := conn.CreateIAMPolicyAssignment(ctx, &in)
@@ -238,9 +238,9 @@ func (r *iamPolicyAssignmentResource) Update(ctx context.Context, req resource.U
 		!plan.Identities.Equal(state.Identities) ||
 		!plan.PolicyARN.Equal(state.PolicyARN) {
 		in := quicksight.UpdateIAMPolicyAssignmentInput{
-			AwsAccountId:     aws.String(plan.AWSAccountID.ValueString()),
-			Namespace:        aws.String(plan.Namespace.ValueString()),
-			AssignmentName:   aws.String(plan.AssignmentName.ValueString()),
+			AwsAccountId:     plan.AWSAccountID.ValueStringPointer(),
+			Namespace:        plan.Namespace.ValueStringPointer(),
+			AssignmentName:   plan.AssignmentName.ValueStringPointer(),
 			AssignmentStatus: awstypes.AssignmentStatus(plan.AssignmentStatus.ValueString()),
 		}
 
@@ -253,7 +253,7 @@ func (r *iamPolicyAssignmentResource) Update(ctx context.Context, req resource.U
 			in.Identities = expandIdentities(ctx, identities)
 		}
 		if !plan.PolicyARN.IsNull() {
-			in.PolicyArn = aws.String(plan.PolicyARN.ValueString())
+			in.PolicyArn = plan.PolicyARN.ValueStringPointer()
 		}
 
 		out, err := conn.UpdateIAMPolicyAssignment(ctx, &in)

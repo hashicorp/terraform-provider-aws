@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnets", name "Subnets")
+// @SDKDataSource("aws_subnets", name="Subnets")
 func dataSourceSubnets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetsRead,
@@ -71,7 +71,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, subnetIDs)
 
 	return diags

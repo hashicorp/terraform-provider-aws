@@ -13,9 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -40,7 +42,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
@@ -50,8 +52,8 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_track_name", "current"),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
 			{
@@ -323,7 +325,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "1"),
 				),
 			},
 			{
@@ -331,7 +333,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "3"),
 				),
 			},
 		},
@@ -354,14 +356,14 @@ func TestAccRedshiftCluster_iamRoles(t *testing.T) {
 				Config: testAccClusterConfig_iamRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_updateIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
 				),
 			},
 		},
@@ -415,14 +417,14 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "1"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_updateNodeCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "multi-node"),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.large"),
 				),
@@ -477,7 +479,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -496,7 +498,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -505,7 +507,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -916,6 +918,37 @@ func TestAccRedshiftCluster_multiAZ(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftCluster_passwordWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.RedshiftServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_passwordWriteOnly(rName, "Mustbe8characters", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				Config: testAccClusterConfig_passwordWriteOnly(rName, "Mustbe8charactersupdated", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
@@ -1082,6 +1115,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+  encrypted                           = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   multi_az                            = false
@@ -1859,4 +1893,24 @@ resource "aws_redshift_cluster" "test" {
   multi_az                             = %[2]t
 }
 `, rName, enabled))
+}
+
+func testAccClusterConfig_passwordWriteOnly(rName, password string, passwordVersion int) string {
+	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  encrypted                           = true
+  master_username                     = "foo_test"
+  master_password_wo                  = %[2]q
+  master_password_wo_version          = %[3]d
+  multi_az                            = false
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rName, password, passwordVersion))
 }

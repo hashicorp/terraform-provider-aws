@@ -96,7 +96,7 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
+					ParameterValue: aws.String("0"),
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
@@ -135,7 +135,7 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
+					ParameterValue: aws.String("0"),
 				},
 			},
 		},
@@ -166,7 +166,7 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
+					ParameterValue: aws.String("0"),
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
@@ -203,7 +203,7 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
+					ParameterValue: aws.String("0"),
 				},
 			},
 			ExpectedRemainder: []types.Parameter{
@@ -268,7 +268,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -283,7 +283,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 						names.AttrName:  "character_set_client",
 						names.AttrValue: "utf8",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_addParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -318,17 +318,17 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 						names.AttrName:  "character_set_client",
 						names.AttrValue: "utf8",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
 				),
 			},
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					testAccCheckParameterNotUserDefined(ctx, resourceName, "collation_connection"),
 					testAccCheckParameterNotUserDefined(ctx, resourceName, "collation_server"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
 						names.AttrValue: "utf8",
@@ -387,7 +387,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -400,7 +400,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -409,7 +409,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -451,7 +451,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 				Config: testAccParameterGroupConfig_exceedDefaultLimit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
@@ -489,7 +489,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "performance_schema",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "performance_schema_users_size",
@@ -521,7 +521,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_flush_log_at_trx_commit",
-						names.AttrValue: acctest.Ct0,
+						names.AttrValue: "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_open_files",
@@ -533,7 +533,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_thread_concurrency",
-						names.AttrValue: acctest.Ct0,
+						names.AttrValue: "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_write_io_threads",
@@ -561,7 +561,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_buffer_pool_dump_at_shutdown",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_file_format",
@@ -585,11 +585,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_bin_trust_function_creators",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_warnings",
-						names.AttrValue: acctest.Ct2,
+						names.AttrValue: "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_output",
@@ -609,11 +609,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "slow_query_log",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "sync_binlog",
-						names.AttrValue: acctest.Ct0,
+						names.AttrValue: "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tx_isolation",
@@ -630,7 +630,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 				Config: testAccParameterGroupConfig_updateExceedDefaultLimit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
@@ -668,7 +668,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "performance_schema",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "performance_schema_users_size",
@@ -700,7 +700,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_flush_log_at_trx_commit",
-						names.AttrValue: acctest.Ct0,
+						names.AttrValue: "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_open_files",
@@ -712,7 +712,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_thread_concurrency",
-						names.AttrValue: acctest.Ct0,
+						names.AttrValue: "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_write_io_threads",
@@ -740,7 +740,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_buffer_pool_dump_at_shutdown",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_file_format",
@@ -764,11 +764,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_bin_trust_function_creators",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_warnings",
-						names.AttrValue: acctest.Ct2,
+						names.AttrValue: "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_output",
@@ -788,11 +788,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "slow_query_log",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "sync_binlog",
-						names.AttrValue: acctest.Ct0,
+						names.AttrValue: "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tx_isolation",
@@ -807,6 +807,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
+	resourceName := "aws_db_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -815,11 +816,17 @@ func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBParameterGroupConfig_namePrefix,
+				Config: testAccDBParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, "aws_db_parameter_group.test", &v),
-					resource.TestMatchResourceAttr("aws_db_parameter_group.test", names.AttrName, regexache.MustCompile("^tf-test-")),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -861,7 +868,7 @@ func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 				Config: testAccParameterGroupConfig_applyMethod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
@@ -902,7 +909,7 @@ func TestAccRDSParameterGroup_only(t *testing.T) {
 				Config: testAccParameterGroupConfig_only(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 				),
@@ -962,7 +969,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_updateParametersInitial(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -988,7 +995,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_updateParametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
 						names.AttrValue: "ascii",
@@ -1000,6 +1007,51 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_client",
 						names.AttrValue: "utf8",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSParameterGroup_updateParameters2(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBParameterGroup
+	resourceName := "aws_db_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	fam := "mysql5.7"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_updateParameters(rName, fam, "pending-reboot", "default_password_lifetime", "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupAttributes(&v, rName, fam),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, fam),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method":  "pending-reboot",
+						names.AttrName:  "default_password_lifetime",
+						names.AttrValue: "0",
+					}),
+				),
+			},
+			{
+				Config: testAccParameterGroupConfig_updateParameters(rName, fam, "immediate", "default_password_lifetime", "1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupAttributes(&v, rName, fam),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, fam),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method":  "immediate",
+						names.AttrName:  "default_password_lifetime",
+						names.AttrValue: "1",
 					}),
 				),
 			},
@@ -1023,7 +1075,7 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_upperCase(rName, "Max_connections"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckParameterGroupAttributes(&v, rName),
+					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -1112,15 +1164,14 @@ func testAccCheckParameterGroupNoDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckParameterGroupAttributes(v *types.DBParameterGroup, name string) resource.TestCheckFunc {
+func testAccCheckParameterGroupAttributes(v *types.DBParameterGroup, name, fam string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *v.DBParameterGroupName != name {
 			return fmt.Errorf("Bad Parameter Group name, expected (%s), got (%s)", name, *v.DBParameterGroupName)
 		}
 
-		family := "mysql5.6"
-		if aws.ToString(v.DBParameterGroupFamily) != family {
-			return fmt.Errorf("bad family, got: %s, expecting: %s", aws.ToString(v.DBParameterGroupFamily), family)
+		if aws.ToString(v.DBParameterGroupFamily) != fam {
+			return fmt.Errorf("bad family, got: %s, expecting: %s", aws.ToString(v.DBParameterGroupFamily), fam)
 		}
 
 		return nil
@@ -1883,6 +1934,21 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
+func testAccParameterGroupConfig_updateParameters(rName, family, apply, param, value string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = %[2]q
+
+  parameter {
+    apply_method = %[3]q
+    name         = %[4]q
+    value        = %[5]s
+  }
+}
+`, rName, family, apply, param, value)
+}
+
 func testAccParameterGroupConfig_upperCase(rName, paramName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
@@ -1897,9 +1963,10 @@ resource "aws_db_parameter_group" "test" {
 `, rName, paramName)
 }
 
-const testAccDBParameterGroupConfig_namePrefix = `
+func testAccDBParameterGroupConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name_prefix = "tf-test-"
+  name_prefix = %[1]q
   family      = "mysql5.6"
 
   parameter {
@@ -1907,7 +1974,8 @@ resource "aws_db_parameter_group" "test" {
     value = 0
   }
 }
-`
+`, namePrefix)
+}
 
 const testAccDBParameterGroupConfig_generatedName = `
 resource "aws_db_parameter_group" "test" {

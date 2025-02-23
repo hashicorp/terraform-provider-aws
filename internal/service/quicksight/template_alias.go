@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template Alias")
+// @FrameworkResource("aws_quicksight_template_alias", name="Template Alias")
 func newTemplateAliasResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &templateAliasResource{}, nil
 }
@@ -86,14 +86,14 @@ func (r *templateAliasResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, templateID, aliasName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.TemplateID), flex.StringValueFromFramework(ctx, plan.AliasName)
 	in := &quicksight.CreateTemplateAliasInput{
 		AliasName:             aws.String(aliasName),
 		AwsAccountId:          aws.String(awsAccountID),
 		TemplateId:            aws.String(templateID),
-		TemplateVersionNumber: aws.Int64(plan.TemplateVersionNumber.ValueInt64()),
+		TemplateVersionNumber: plan.TemplateVersionNumber.ValueInt64Pointer(),
 	}
 
 	out, err := conn.CreateTemplateAlias(ctx, in)
@@ -182,7 +182,7 @@ func (r *templateAliasResource) Update(ctx context.Context, req resource.UpdateR
 			AliasName:             aws.String(aliasName),
 			AwsAccountId:          aws.String(awsAccountID),
 			TemplateId:            aws.String(templateID),
-			TemplateVersionNumber: aws.Int64(plan.TemplateVersionNumber.ValueInt64()),
+			TemplateVersionNumber: plan.TemplateVersionNumber.ValueInt64Pointer(),
 		}
 
 		out, err := conn.UpdateTemplateAlias(ctx, in)

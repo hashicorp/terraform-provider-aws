@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_pinpointsmsvoicev2_phone_number
+```
+
+```release-note:new-resource
+aws_pinpointsmsvoicev2_opt_out_list
+```

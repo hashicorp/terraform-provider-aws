@@ -111,9 +111,9 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("application/%s", aws.ToString(output.Id)),
 		Service:   "appconfig",
 	}.String()
@@ -157,9 +157,10 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Application: %s", d.Id())
-	_, err := conn.DeleteApplication(ctx, &appconfig.DeleteApplicationInput{
+	input := appconfig.DeleteApplicationInput{
 		ApplicationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

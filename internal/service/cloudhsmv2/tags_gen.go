@@ -20,12 +20,12 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string, optFns ...func(*cloudhsmv2.Options)) (tftags.KeyValueTags, error) {
-	input := &cloudhsmv2.ListTagsInput{
+	input := cloudhsmv2.ListTagsInput{
 		ResourceId: aws.String(identifier),
 	}
 	var output []awstypes.Tag
 
-	pages := cloudhsmv2.NewListTagsPaginator(conn, input)
+	pages := cloudhsmv2.NewListTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -117,12 +117,12 @@ func updateTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string,
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.CloudHSMV2)
 	if len(removedTags) > 0 {
-		input := &cloudhsmv2.UntagResourceInput{
+		input := cloudhsmv2.UntagResourceInput{
 			ResourceId: aws.String(identifier),
 			TagKeyList: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -132,12 +132,12 @@ func updateTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string,
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.CloudHSMV2)
 	if len(updatedTags) > 0 {
-		input := &cloudhsmv2.TagResourceInput{
+		input := cloudhsmv2.TagResourceInput{
 			ResourceId: aws.String(identifier),
 			TagList:    Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

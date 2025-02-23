@@ -39,6 +39,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			acctest.CtDisappears:        testAccGraphQLAPI_disappears,
 			"tags":                      testAccGraphQLAPI_tags,
 			"schema":                    testAccGraphQLAPI_schema,
+			"apiType":                   testAccGraphQLAPI_apiType,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
 			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
 			"AuthenticationType_awsIAM": testAccGraphQLAPI_AuthenticationType_iam,
@@ -108,6 +109,11 @@ func TestAccAppSync_serial(t *testing.T) {
 		"DomainNameAssociation": {
 			acctest.CtBasic:      testAccDomainNameAPIAssociation_basic,
 			acctest.CtDisappears: testAccDomainNameAPIAssociation_disappears,
+		},
+		"SourceApiAssociation": {
+			acctest.CtBasic:      testAccAppSyncSourceAPIAssociation_basic,
+			acctest.CtDisappears: testAccAppSyncSourceAPIAssociation_disappears,
+			"update":             testAccAppSyncSourceAPIAssociation_update,
 		},
 	}
 

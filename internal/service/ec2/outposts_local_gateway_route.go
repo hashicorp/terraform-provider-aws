@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ec2_local_gateway_route")
+// @SDKResource("aws_ec2_local_gateway_route", name="Local Gateway Route")
 func resourceLocalGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteCreate,
@@ -123,10 +123,11 @@ func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route: %s", d.Id())
-	_, err = conn.DeleteLocalGatewayRoute(ctx, &ec2.DeleteLocalGatewayRouteInput{
+	input := ec2.DeleteLocalGatewayRouteInput{
 		DestinationCidrBlock:     aws.String(destination),
 		LocalGatewayRouteTableId: aws.String(localGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DeleteLocalGatewayRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound, errCodeInvalidLocalGatewayRouteTableIDNotFound) {
 		return diags

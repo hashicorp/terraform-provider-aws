@@ -717,7 +717,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	fleetType := awstypes.FleetType(d.Get(names.AttrType).(string))
-	input := &ec2.CreateFleetInput{
+	input := ec2.CreateFleetInput{
 		ClientToken:                 aws.String(id.UniqueId()),
 		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})[0].(map[string]interface{})),
@@ -766,7 +766,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ValidUntil = aws.Time(validUntil)
 	}
 
-	output, err := conn.CreateFleet(ctx, input)
+	output, err := conn.CreateFleet(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
@@ -807,10 +807,10 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("fleet/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -868,7 +868,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyFleetInput{
+		input := ec2.ModifyFleetInput{
 			FleetId: aws.String(d.Id()),
 		}
 
@@ -889,7 +889,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			TotalTargetCapacity: aws.Int32(int32(d.Get("target_capacity_specification.0.total_target_capacity").(int))),
 		}
 
-		_, err := conn.ModifyFleet(ctx, input)
+		_, err := conn.ModifyFleet(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Fleet (%s): %s", d.Id(), err)
@@ -908,10 +908,11 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Fleet: %s", d.Id())
-	output, err := conn.DeleteFleets(ctx, &ec2.DeleteFleetsInput{
+	input := ec2.DeleteFleetsInput{
 		FleetIds:           []string{d.Id()},
 		TerminateInstances: aws.Bool(d.Get("terminate_instances").(bool)),
-	})
+	}
+	output, err := conn.DeleteFleets(ctx, &input)
 
 	if err == nil && output != nil {
 		err = deleteFleetsError(output.UnsuccessfulFleetDeletions)

@@ -53,7 +53,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `aws_account_id` - (Optional, Forces new resource) The ID for the AWS account that the data source is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
-* `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. Currently, only credentials based on user name and password are supported. See [Credentials](#credentials-argument-reference) below for more details.
+* `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
 * `ssl_properties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [SSL Properties](#ssl_properties-argument-reference) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -61,9 +61,10 @@ The following arguments are optional:
 
 ### credentials Argument Reference
 
-* `copy_source_arn` (Optional, Conflicts with `credential_pair`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
+* `copy_source_arn` (Optional, Conflicts with `credential_pair` and `secret_arn`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
 When the value is not null, the `credential_pair` from the data source in the ARN is used.
-* `credential_pair` (Optional, Conflicts with `copy_source_arn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
+* `credential_pair` (Optional, Conflicts with `copy_source_arn` and `secret_arn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
+* `secret_arn` (Optional, Conflicts with `copy_source_arn` and `credential_pair`) - The Amazon Resource Name (ARN) of the secret associated with the data source in Amazon Secrets Manager.
 
 ### credential_pair Argument Reference
 
@@ -79,6 +80,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 * `aurora` - (Optional) [Parameters](#aurora-argument-reference) for connecting to Aurora MySQL.
 * `aurora_postgresql` - (Optional) [Parameters](#aurora_postgresql-argument-reference) for connecting to Aurora Postgresql.
 * `aws_iot_analytics` - (Optional) [Parameters](#aws_iot_analytics-argument-reference) for connecting to AWS IOT Analytics.
+* `databricks` - (Optional) [Parameters](#databricks-argument-reference) for connecting to Databricks.
 * `jira` - (Optional) [Parameters](#jira-fargument-reference) for connecting to Jira.
 * `maria_db` - (Optional) [Parameters](#maria_db-argument-reference) for connecting to MariaDB.
 * `mysql` - (Optional) [Parameters](#mysql-argument-reference) for connecting to MySQL.
@@ -131,6 +133,12 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### aws_iot_analytics Argument Reference
 
 * `data_set_name` - (Required) The name of the data set to which to connect.
+
+### databricks Argument Reference
+
+* `host` - (Required) The host name of the Databricks data source.
+* `port` - (Required) The port for the Databricks data source.
+* `sql_endpoint_path` - (Required) The HTTP path of the Databricks data source.
 
 ### jira fArgument Reference
 
@@ -251,4 +259,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2de42ab036dbf7d192e1e61ccf217d0b3cc58fb437a7906bb08bf538070833e7 -->
+<!-- cache-key: cdktf-0.20.8 input-c03af6ff31ed75df225f166782f3175243a0d74ce90961f6621fe586d1eded0b -->

@@ -81,7 +81,7 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(authorizerID)
-	d.Set(names.AttrARN, authorizerARN(meta.(*conns.AWSClient), apiID, d.Id()))
+	d.Set(names.AttrARN, authorizerARN(ctx, meta.(*conns.AWSClient), apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)

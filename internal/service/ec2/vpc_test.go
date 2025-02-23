@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,7 +38,7 @@ func TestAccVPC_basic(t *testing.T) {
 				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -54,10 +55,10 @@ func TestAccVPC_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -112,11 +113,11 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
@@ -130,11 +131,11 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
@@ -167,10 +168,10 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
 				),
@@ -183,10 +184,10 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
 				),
@@ -407,7 +408,7 @@ func TestAccVPC_enableNetworkAddressUsageMetrics(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
@@ -489,7 +490,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 			// https://docs.aws.amazon.com/vpc/latest/userguide/Extend_VPCs.html#local-zone:
 			// "You can request the IPv6 Amazon-provided IP addresses and associate them with the network border group
 			//  for a new or existing VPCs only for us-west-2-lax-1a and use-west-2-lax-1b. All other Local Zones don't support IPv6."
@@ -508,7 +509,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_cidr_block_network_border_group", azDataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 				),
 			},
 			{
@@ -525,7 +526,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 				),
 			},
 		},

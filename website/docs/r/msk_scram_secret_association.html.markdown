@@ -10,6 +10,8 @@ description: |-
 
 Associates SCRAM secrets stored in the Secrets Manager service with a Managed Streaming for Kafka (MSK) cluster.
 
+!> This resource takes exclusive ownership over SCRAM secrets associated with a cluster. This includes removal of SCRAM secrets which are not explicitly configured. To prevent persistent drift, ensure any `aws_msk_single_scram_secret_association` resources managed alongside this resource are included in the `secret_arn_list` argument.
+
 -> **Note:** The following assumes the MSK cluster has SASL/SCRAM authentication enabled. See below for example usage or refer to the [Username/Password Authentication](https://docs.aws.amazon.com/msk/latest/developerguide/msk-password.html) section of the MSK Developer Guide for more details.
 
 To set up username and password authentication for a cluster, create an [`aws_secretsmanager_secret` resource](/docs/providers/aws/r/secretsmanager_secret.html) and associate

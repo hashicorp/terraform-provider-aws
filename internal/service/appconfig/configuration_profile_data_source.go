@@ -108,9 +108,9 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrApplicationID, appId)
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appId, profileId),
 		Service:   "appconfig",
 	}.String()
@@ -132,10 +132,11 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 }
 
 func findConfigurationProfileByApplicationAndProfile(ctx context.Context, conn *appconfig.Client, appId string, cpId string) (*appconfig.GetConfigurationProfileOutput, error) {
-	res, err := conn.GetConfigurationProfile(ctx, &appconfig.GetConfigurationProfileInput{
+	input := appconfig.GetConfigurationProfileInput{
 		ApplicationId:          aws.String(appId),
 		ConfigurationProfileId: aws.String(cpId),
-	})
+	}
+	res, err := conn.GetConfigurationProfile(ctx, &input)
 
 	if err != nil {
 		return nil, err

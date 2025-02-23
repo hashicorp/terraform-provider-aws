@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Ingestion")
+// @FrameworkResource("aws_quicksight_ingestion", name="Ingestion")
 func newIngestionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ingestionResource{}, nil
 }
@@ -100,7 +100,7 @@ func (r *ingestionResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, dataSetID, ingestionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.DataSetID), flex.StringValueFromFramework(ctx, plan.IngestionID)
 	in := quicksight.CreateIngestionInput{

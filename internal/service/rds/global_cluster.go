@@ -24,11 +24,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_global_cluster", name="Global Cluster")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.GlobalCluster")
 func resourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
@@ -54,12 +58,17 @@ func resourceGlobalCluster() *schema.Resource {
 			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrEngine: {
 				Type:          schema.TypeString,
@@ -128,7 +137,11 @@ func resourceGlobalCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -139,6 +152,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	globalClusterID := d.Get("global_cluster_identifier").(string)
 	input := &rds.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(globalClusterID),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
@@ -210,6 +224,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
 	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
 	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
+	d.Set(names.AttrEndpoint, globalCluster.Endpoint)
 	d.Set(names.AttrEngine, globalCluster.Engine)
 	d.Set("engine_lifecycle_support", globalCluster.EngineLifecycleSupport)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
@@ -234,6 +249,8 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("engine_version_actual", newEngineVersion)
 	}
 
+	setTagsOut(ctx, globalCluster.TagList)
+
 	return diags
 }
 
@@ -247,23 +264,25 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	input := &rds.ModifyGlobalClusterInput{
-		DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-		GlobalClusterIdentifier: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &rds.ModifyGlobalClusterInput{
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			GlobalClusterIdentifier: aws.String(d.Id()),
+		}
 
-	_, err := conn.ModifyGlobalCluster(ctx, input)
+		_, err := conn.ModifyGlobalCluster(ctx, input)
 
-	if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
-		return diags
-	}
+		if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
+			return diags
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating RDS Global Cluster (%s): %s", d.Id(), err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS Global Cluster (%s): %s", d.Id(), err)
+		}
 
-	if _, err := waitGlobalClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
+		if _, err := waitGlobalClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
@@ -345,12 +364,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		// This operation will be quick if successful
 		globalClusterClusterDeleteTimeout = 5 * time.Minute
 	)
-	var timeout time.Duration
-	if x, y := deadline.Remaining(), globalClusterClusterDeleteTimeout; x < y {
-		timeout = x
-	} else {
-		timeout = y
-	}
+	timeout := max(deadline.Remaining(), globalClusterClusterDeleteTimeout)
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidGlobalClusterStateFault](ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteGlobalCluster(ctx, &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),

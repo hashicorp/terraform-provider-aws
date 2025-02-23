@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_quicksight_folder", name="Folder")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Folder")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceFolder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFolderCreate,
@@ -117,7 +119,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}

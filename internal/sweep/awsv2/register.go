@@ -43,5 +43,6 @@ func Register(name string, f sweep.SweeperFn, dependencies ...string) {
 
 			return nil
 		},
+		Dependencies: dependencies,
 	})
 }

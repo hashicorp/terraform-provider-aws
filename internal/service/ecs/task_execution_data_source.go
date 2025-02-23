@@ -285,7 +285,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		TaskDefinition: aws.String(taskDefinition),
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())

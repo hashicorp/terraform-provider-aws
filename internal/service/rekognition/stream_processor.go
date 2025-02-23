@@ -73,7 +73,7 @@ var (
 )
 
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
-// @Tags(identifierAttribute="stream_processor_arn")
+// @Tags(identifierAttribute="arn")
 func newResourceStreamProcessor(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceStreamProcessor{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -99,6 +99,7 @@ func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.Metad
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrKMSKeyID: schema.StringAttribute{
 				Description: "The identifier for your AWS Key Management Service key (AWS KMS key). You can supply the Amazon Resource Name (ARN) of your KMS key, the ID of your KMS key, an alias for your KMS key, or an alias ARN.",
 				Optional:    true,
@@ -134,6 +135,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				DeprecationMessage: "Use 'arn' instead. This attribute will be removed in a future version of the provider.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -483,8 +485,6 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	plan.StreamProcessorARN = fwflex.StringToFrameworkARN(ctx, out.StreamProcessorArn)
-
 	if plan.DataSharingPreference.IsNull() {
 		dataSharing, diag := fwtypes.NewListNestedObjectValueOfPtr(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
 		resp.Diagnostics.Append(diag...)
@@ -506,6 +506,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	plan.ARN = fwflex.StringToFramework(ctx, out.StreamProcessorArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -537,6 +538,7 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.ARN = fwflex.StringToFramework(ctx, out.StreamProcessorArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -670,6 +672,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		plan.ARN = fwflex.StringToFramework(ctx, updated.StreamProcessorArn)
 
 		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	}
@@ -685,7 +688,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 	}
 
 	in := &rekognition.DeleteStreamProcessorInput{
-		Name: aws.String(state.Name.ValueString()),
+		Name: state.Name.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteStreamProcessor(ctx, in)
@@ -829,6 +832,7 @@ func unwrapListNestedObjectValueOf[T any](ctx context.Context, diagnostics diag.
 }
 
 type resourceStreamProcessorDataModel struct {
+	ARN                   types.String                                                `tfsdk:"arn"`
 	DataSharingPreference fwtypes.ListNestedObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
 	Input                 fwtypes.ListNestedObjectValueOf[inputModel]                 `tfsdk:"input"`
 	KmsKeyId              types.String                                                `tfsdk:"kms_key_id"`
@@ -839,8 +843,8 @@ type resourceStreamProcessorDataModel struct {
 	RoleARN               fwtypes.ARN                                                 `tfsdk:"role_arn"`
 	Settings              fwtypes.ListNestedObjectValueOf[settingsModel]              `tfsdk:"settings"`
 	StreamProcessorARN    fwtypes.ARN                                                 `tfsdk:"stream_processor_arn"`
-	Tags                  types.Map                                                   `tfsdk:"tags"`
-	TagsAll               types.Map                                                   `tfsdk:"tags_all"`
+	Tags                  tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll               tftags.Map                                                  `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                              `tfsdk:"timeouts"`
 }
 

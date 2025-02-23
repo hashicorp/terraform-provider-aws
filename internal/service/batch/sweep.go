@@ -105,11 +105,11 @@ func sweepComputeEnvironments(region string) error {
 					continue
 				}
 
-				servicePrincipal := fmt.Sprintf("%s.%s", names.BatchEndpointID, sweep.PartitionDNSSuffix(region))
+				servicePrincipal := fmt.Sprintf("%s.%s", names.BatchEndpointID, client.DNSSuffix(ctx))
 				serviceRoleName := strings.TrimPrefix(serviceRoleARN.Resource, "role/")
 				serviceRolePolicyARN := arn.ARN{
 					AccountID: "aws",
-					Partition: sweep.Partition(region),
+					Partition: client.Partition(ctx),
 					Resource:  "policy/service-role/AWSBatchServiceRole",
 					Service:   "iam",
 				}.String()

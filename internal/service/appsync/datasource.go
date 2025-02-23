@@ -284,7 +284,7 @@ func resourceDataSource() *schema.Resource {
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	apiID := d.Get("api_id").(string)
 	name := d.Get(names.AttrName).(string)
@@ -397,7 +397,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	apiID, name, err := dataSourceParseResourceID(d.Id())
 	if err != nil {
@@ -461,10 +461,11 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting Appsync Data Source: %s", d.Id())
-	_, err = conn.DeleteDataSource(ctx, &appsync.DeleteDataSourceInput{
+	input := appsync.DeleteDataSourceInput{
 		ApiId: aws.String(apiID),
 		Name:  aws.String(name),
-	})
+	}
+	_, err = conn.DeleteDataSource(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

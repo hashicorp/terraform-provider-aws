@@ -41,6 +41,11 @@ func resourceBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
 			"event_source_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -76,6 +81,10 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Tags: getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("event_source_name"); ok {
 		input.EventSourceName = aws.String(v.(string))
 	}
@@ -87,7 +96,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	output, err := conn.CreateEventBus(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = conn.CreateEventBus(ctx, input)
@@ -104,7 +113,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		err := createTags(ctx, conn, aws.ToString(output.EventBusArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceBusRead(ctx, d, meta)...)
 		}
 
@@ -133,6 +142,7 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 
@@ -143,9 +153,16 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChange("kms_key_identifier") {
+	if d.HasChanges(names.AttrDescription, "kms_key_identifier") {
 		input := &eventbridge.UpdateEventBusInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
+		}
+
+		// To unset the description, the only way is to explicitly set it to the empty string
+		if v, ok := d.GetOk(names.AttrDescription); ok {
+			input.Description = aws.String(v.(string))
+		} else {
+			input.Description = aws.String("")
 		}
 
 		if v, ok := d.GetOk("kms_key_identifier"); ok {

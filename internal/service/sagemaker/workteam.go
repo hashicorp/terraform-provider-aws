@@ -166,7 +166,7 @@ func resourceWorkteam() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"workforce_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"workteam_name": {
@@ -191,7 +191,6 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("workteam_name").(string)
 	input := &sagemaker.CreateWorkteamInput{
 		WorkteamName:      aws.String(name),
-		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 		Tags:              getTagsIn(ctx),
@@ -205,7 +204,10 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating SageMaker Workteam: %#v", input)
+	if v, ok := d.GetOk("workforce_name"); ok {
+		input.WorkforceName = aws.String(v.(string))
+	}
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateWorkteam(ctx, input)
 	}, ErrCodeValidationException)
@@ -277,7 +279,6 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(d.Get("worker_access_configuration").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating SageMaker Workteam: %#v", input)
 		_, err := conn.UpdateWorkteam(ctx, input)
 
 		if err != nil {

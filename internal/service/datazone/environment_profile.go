@@ -93,9 +93,7 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -257,10 +255,11 @@ func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	_, err := conn.DeleteEnvironmentProfile(ctx, &datazone.DeleteEnvironmentProfileInput{
+	input := datazone.DeleteEnvironmentProfileInput{
 		Identifier:       state.Id.ValueStringPointer(),
 		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteEnvironmentProfile(ctx, &input)
 
 	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		resp.Diagnostics.AddError(

@@ -1,0 +1,32 @@
+# IMPORTANT: Only add linters whose names start with letters T-Z here.
+issues:
+  exclude-rules:
+    - linters:
+        - tparallel
+      text: "TestAcc"
+    - linters:
+        - unparam
+      text: "always receives"
+  max-issues-per-linter: 10
+  max-same-issues: 3
+
+linters:
+  disable-all: true
+  enable:
+    # !! only add t-z linters here
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - usetesting
+    - wastedassign
+    - whitespace
+
+linters-settings:
+  usetesting:
+    os-setenv: true
+
+run:
+  timeout: 75m

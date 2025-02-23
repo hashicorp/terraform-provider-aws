@@ -4,12 +4,9 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,7 +80,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+																			"color": hexColorSchema(attrOptional),
 																		},
 																	},
 																},
@@ -93,7 +90,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_point_style": stringSchema(false, enum.Validate[awstypes.GeospatialSelectedPointStyle]()),
+										"selected_point_style": stringEnumSchema[awstypes.GeospatialSelectedPointStyle](attrOptional),
 									},
 								},
 							},

@@ -25,20 +25,56 @@ type tfSingleStringField struct {
 	Field1 types.String `tfsdk:"field1"`
 }
 
+type tfSingleStringFieldIgnore struct {
+	Field1 types.String `tfsdk:"field1" autoflex:"-"`
+}
+
+type tfSingleStringFieldOmitEmpty struct {
+	Field1 types.String `tfsdk:"field1" autoflex:",omitempty"`
+}
+
+type tfSingleStringFieldLegacy struct {
+	Field1 types.String `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfSingleFloat64Field struct {
 	Field1 types.Float64 `tfsdk:"field1"`
+}
+
+type tfSingleFloat64FieldLegacy struct {
+	Field1 types.Float64 `tfsdk:"field1" autoflex:",legacy"`
 }
 
 type tfSingleFloat32Field struct {
 	Field1 types.Float32 `tfsdk:"field1"`
 }
 
+type tfSingleFloat32FieldLegacy struct {
+	Field1 types.Float32 `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfSingleInt64Field struct {
 	Field1 types.Int64 `tfsdk:"field1"`
 }
 
+type tfSingleInt64FieldLegacy struct {
+	Field1 types.Int64 `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfSingleInt32Field struct {
 	Field1 types.Int32 `tfsdk:"field1"`
+}
+
+type tfSingleInt32FieldLegacy struct {
+	Field1 types.Int32 `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSingleBoolField struct {
+	Field1 types.Bool `tfsdk:"field1"`
+}
+
+type tfSingleBoolFieldLegacy struct {
+	Field1 types.Bool `tfsdk:"field1" autoflex:",legacy"`
 }
 
 // All primitive types.
@@ -101,12 +137,40 @@ type awsCollectionsOfPrimitiveElements struct {
 	Field6 map[string]*string
 }
 
+type awsSimpleStringValueSlice struct {
+	Field1 []string
+}
+
+type tfSimpleSet struct {
+	Field1 types.Set `tfsdk:"field1"`
+}
+
+type tfSimpleSetLegacy struct {
+	Field1 types.Set `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSimpleList struct {
+	Field1 types.List `tfsdk:"field1"`
+}
+
+type tfSimpleListLegacy struct {
+	Field1 types.List `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfListOfNestedObject struct {
 	Field1 fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
 }
 
+type tfListOfNestedObjectLegacy struct {
+	Field1 fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfSetOfNestedObject struct {
 	Field1 fwtypes.SetNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
+}
+
+type tfSetOfNestedObjectLegacy struct {
+	Field1 fwtypes.SetNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1" autoflex:",legacy"`
 }
 
 type tfComplexValue struct {
@@ -162,12 +226,24 @@ type awsCapitalizationDiff struct {
 	FieldUrl *string
 }
 
+type awsSingleBoolValue struct {
+	Field1 bool
+}
+
+type awsSingleBoolPointer struct {
+	Field1 *bool
+}
+
 type awsSingleStringValue struct {
 	Field1 string
 }
 
 type awsSingleStringPointer struct {
 	Field1 *string
+}
+
+type awsSingleByteSliceValue struct {
+	Field1 []byte
 }
 
 type awsSingleFloat64Value struct {
@@ -222,6 +298,14 @@ type tfFieldNamePrefix struct {
 // awsFieldNamePrefix has prefix to test matching on prefix
 type awsFieldNamePrefix struct {
 	IntentName *string
+}
+
+type tfFieldNamePrefixInsensitive struct {
+	ID types.String `tfsdk:"id"`
+}
+
+type awsFieldNamePrefixInsensitive struct {
+	ClientId *string
 }
 
 // tfFieldNameSuffix has no suffix to test matching on suffix
@@ -605,4 +689,16 @@ type awsExpanderStructSlice struct {
 
 type awsExpanderPtrSlice struct {
 	Field1 []*awsExpander
+}
+
+type tfListOfStringEnum struct {
+	Field1 fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]] `tfsdk:"field1"`
+}
+
+type tfSetOfStringEnum struct {
+	Field1 fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]] `tfsdk:"field1"`
+}
+
+type awsSliceOfStringEnum struct {
+	Field1 []testEnum
 }

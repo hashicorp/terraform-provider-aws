@@ -209,7 +209,7 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	destination := &awstypes.DestinationMemberAmpConfiguration{}
+	destination := awstypes.DestinationMemberAmpConfiguration{}
 	resp.Diagnostics.Append(flex.Expand(ctx, ampDestinationData, &destination.Value)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -227,27 +227,28 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	source := &awstypes.SourceMemberEksConfiguration{}
+	source := awstypes.SourceMemberEksConfiguration{}
 	resp.Diagnostics.Append(flex.Expand(ctx, eksSourceData, &source.Value)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &amp.CreateScraperInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
-		Destination: destination,
-		Source:      source,
-		ScrapeConfiguration: &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-			Value: []byte(data.ScrapeConfiguration.ValueString()),
-		},
-		Tags: getTagsIn(ctx),
+	scrapeConfiguration := awstypes.ScrapeConfigurationMemberConfigurationBlob{
+		Value: []byte(data.ScrapeConfiguration.ValueString()),
+	}
+	input := amp.CreateScraperInput{
+		ClientToken:         aws.String(sdkid.UniqueId()),
+		Destination:         &destination,
+		Source:              &source,
+		ScrapeConfiguration: &scrapeConfiguration,
+		Tags:                getTagsIn(ctx),
 	}
 
 	if !data.Alias.IsNull() {
-		input.Alias = aws.String(data.Alias.ValueString())
+		input.Alias = data.Alias.ValueStringPointer()
 	}
 
-	output, err := conn.CreateScraper(ctx, input)
+	output, err := conn.CreateScraper(ctx, &input)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -366,10 +367,11 @@ func (r *scraperResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	_, err := conn.DeleteScraper(ctx, &amp.DeleteScraperInput{
+	input := amp.DeleteScraperInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		ScraperId:   aws.String(data.ID.ValueString()),
-	})
+		ScraperId:   data.ID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteScraper(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -404,8 +406,8 @@ type scraperResourceModel struct {
 	RoleARN             types.String                                             `tfsdk:"role_arn"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
-	Tags                types.Map                                                `tfsdk:"tags"`
-	TagsAll             types.Map                                                `tfsdk:"tags_all"`
+	Tags                tftags.Map                                               `tfsdk:"tags"`
+	TagsAll             tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
@@ -428,11 +430,11 @@ type scraperEKSSourceModel struct {
 }
 
 func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.ScraperDescription, error) {
-	input := &amp.DescribeScraperInput{
+	input := amp.DescribeScraperInput{
 		ScraperId: aws.String(id),
 	}
 
-	output, err := conn.DescribeScraper(ctx, input)
+	output, err := conn.DescribeScraper(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

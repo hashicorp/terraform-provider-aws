@@ -4,48 +4,54 @@
 package resourcegroups
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_resourcegroups_group", &resource.Sweeper{
-		Name: "aws_resourcegroups_group",
-		F:    sweepGroups,
-	})
+	awsv2.Register("aws_resourcegroups_group", sweepGroups,
+		"aws_servicecatalogappregistry_application",
+	)
 }
 
-func sweepGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.ResourceGroupsClient(ctx)
-	input := &resourcegroups.ListGroupsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := resourcegroups.NewListGroupsPaginator(conn, input)
+	var sweepResources []sweep.Sweepable
+
+	r := resourceGroup()
+	pages := resourcegroups.NewListGroupsPaginator(conn, &resourcegroups.ListGroupsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Resource Groups Group sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Resource Groups Groups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.GroupIdentifiers {
-			r := resourceGroup()
+			tags, err := listTags(ctx, conn, aws.ToString(v.GroupArn))
+			if err != nil {
+				tflog.Warn(ctx, "Skipping resource", map[string]any{
+					"error": err.Error(),
+				})
+				continue
+			}
+
+			if slices.Contains(tags.Keys(), "aws:servicecatalog:applicationId") {
+				tflog.Warn(ctx, "Skipping resource", map[string]any{
+					"skip_reason":       "managed by AppRegistry",
+					names.AttrGroupName: aws.ToString(v.GroupName),
+				})
+				continue
+			}
+
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.GroupName))
 
@@ -53,11 +59,5 @@ func sweepGroups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Resource Groups Groups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

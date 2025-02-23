@@ -30,6 +30,7 @@ func newResourceDefaultAutoScalingConfigurationVersion(context.Context) (resourc
 
 type defaultAutoScalingConfigurationVersionResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpDelete
 	framework.WithImportByID
 }
 
@@ -51,9 +52,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Schema(ctx context.Cont
 
 func (r *defaultAutoScalingConfigurationVersionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data defaultAutoScalingConfigurationVersionResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -67,16 +66,14 @@ func (r *defaultAutoScalingConfigurationVersionResource) Create(ctx context.Cont
 	}
 
 	// Set values for unknowns.
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data defaultAutoScalingConfigurationVersionResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -105,9 +102,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Contex
 
 func (r *defaultAutoScalingConfigurationVersionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new defaultAutoScalingConfigurationVersionResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -121,10 +116,6 @@ func (r *defaultAutoScalingConfigurationVersionResource) Update(ctx context.Cont
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
-}
-
-func (*defaultAutoScalingConfigurationVersionResource) Delete(context.Context, resource.DeleteRequest, *resource.DeleteResponse) {
-	// NoOp.
 }
 
 func findDefaultAutoScalingConfigurationSummary(ctx context.Context, conn *apprunner.Client) (*awstypes.AutoScalingConfigurationSummary, error) {

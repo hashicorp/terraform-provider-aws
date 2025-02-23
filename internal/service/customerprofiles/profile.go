@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_customerprofiles_profile")
+// @SDKResource("aws_customerprofiles_profile", name="Profile")
 func ResourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
@@ -436,10 +436,11 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Customer Profiles Profile: %s", d.Id())
-	_, err := conn.DeleteProfile(ctx, &customerprofiles.DeleteProfileInput{
+	input := customerprofiles.DeleteProfileInput{
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		ProfileId:  aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProfile(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

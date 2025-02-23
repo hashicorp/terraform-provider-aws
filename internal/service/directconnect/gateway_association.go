@@ -242,9 +242,10 @@ func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	associationID := d.Get("dx_gateway_association_id").(string)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGatewayAssociation(ctx, &directconnect.DeleteDirectConnectGatewayAssociationInput{
+	input := directconnect.DeleteDirectConnectGatewayAssociationInput{
 		AssociationId: aws.String(associationID),
-	})
+	}
+	_, err := conn.DeleteDirectConnectGatewayAssociation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 		return diags

@@ -5,8 +5,8 @@ package codeguruprofiler
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceProfilingGroup,
-			Name:    "Profiling Group",
+			Factory:  newDataSourceProfilingGroup,
+			TypeName: "aws_codeguruprofiler_profiling_group",
+			Name:     "Profiling Group",
 		},
 	}
 }
@@ -26,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceProfilingGroup,
-			Name:    "Profiling Group",
+			Factory:  newResourceProfilingGroup,
+			TypeName: "aws_codeguruprofiler_profiling_group",
+			Name:     "Profiling Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -48,13 +50,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*codeguruprofiler_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return codeguruprofiler_sdkv2.NewFromConfig(cfg,
-		codeguruprofiler_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*codeguruprofiler.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*codeguruprofiler.Options){
+		codeguruprofiler.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return codeguruprofiler.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*codeguruprofiler.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*codeguruprofiler.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *codeguruprofiler.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*codeguruprofiler.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -23,12 +23,12 @@ func TestQueuePolicyMigrateState(t *testing.T) {
 	}{
 		"v0_1": {
 			StateVersion: 0,
-			ID:           "sqs-policy-https://queue.amazonaws.com/0123456789012/myqueue",
+			ID:           "sqs-policy-https://queue.amazonaws.com/123456789012/myqueue",
 			Attributes: map[string]string{
 				names.AttrPolicy: "{}",
-				"queue_url":      "https://queue.amazonaws.com/0123456789012/myqueue",
+				"queue_url":      "https://queue.amazonaws.com/123456789012/myqueue",
 			},
-			Expected: "https://queue.amazonaws.com/0123456789012/myqueue",
+			Expected: "https://queue.amazonaws.com/123456789012/myqueue",
 		},
 	}
 

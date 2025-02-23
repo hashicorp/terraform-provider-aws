@@ -103,7 +103,7 @@ func TestAccQuickSightAnalysis_sourceEntity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
 			{
@@ -238,18 +238,50 @@ func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.calculated_fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.calculated_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
-						"data_set_identifier": acctest.Ct1,
-						names.AttrExpression:  acctest.Ct1,
+						"data_set_identifier": "1",
+						names.AttrExpression:  "1",
 						names.AttrName:        "test1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
-						"data_set_identifier": acctest.Ct1,
-						names.AttrExpression:  acctest.Ct2,
+						"data_set_identifier": "1",
+						names.AttrExpression:  "2",
 						names.AttrName:        "test2",
 					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccQuickSightAnalysis_theme(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analysis awstypes.Analysis
+	resourceName := "aws_quicksight_analysis.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	themeArn := "arn:aws:quicksight::aws:theme/MIDNIGHT" //lintignore:AWSAT005
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalysisConfig_theme(rId, rName, themeArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
+					resource.TestCheckResourceAttr(resourceName, "theme_arn", themeArn),
 				),
 			},
 			{
@@ -721,4 +753,72 @@ resource "aws_quicksight_analysis" "test" {
   }
 }
 `, rId, rName))
+}
+
+func testAccAnalysisConfig_theme(rId, rName, themeArn string) string {
+	return acctest.ConfigCompose(
+		testAccAnalysisConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_analysis" "test" {
+  analysis_id = %[1]q
+  name        = %[2]q
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        custom_content_visual {
+          data_set_identifier = "1"
+          title {
+            format_text {
+              plain_text = "Test"
+            }
+          }
+          visual_id = "Test1"
+        }
+      }
+      visuals {
+        line_chart_visual {
+          visual_id = "LineChart"
+          title {
+            format_text {
+              plain_text = "Line Chart Test"
+            }
+          }
+          chart_configuration {
+            field_wells {
+              line_chart_aggregated_field_wells {
+                category {
+                  categorical_dimension_field {
+                    field_id = "1"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
+                    }
+                  }
+                }
+                values {
+                  categorical_measure_field {
+                    field_id = "2"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
+                    }
+                    aggregation_function = "COUNT"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  theme_arn = %[3]q
+}
+`, rId, rName, themeArn))
 }
