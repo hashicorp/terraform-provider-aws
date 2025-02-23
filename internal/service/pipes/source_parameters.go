@@ -1148,7 +1148,7 @@ func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface
 		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["server_root_ca_certificate"].(string); ok {
+	if v, ok := tfMap["server_root_ca_certificate"].(string); ok && v != "" {
 		apiObject.ServerRootCaCertificate = aws.String(v)
 	}
 
