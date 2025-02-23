@@ -121,7 +121,7 @@ The following arguments are optional:
 
 ### configuration Configuration Block
 
-* `custom_data_identifier` - (Optional) Configures custom regular expressions to detect sensitive data. Read more in [Custom data identifiers](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL-custom-data-identifiers.html#using-custom-data-identifiers).
+* `custom_data_identifier` - (Optional) Configures custom regular expressions to detect sensitive data. Read more in [Custom data identifiers](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL-custom-data-identifiers.html).
 
 #### custom_data_identifier Configuration Block
 
