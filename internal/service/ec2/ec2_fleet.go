@@ -595,18 +595,22 @@ func resourceFleet() *schema.Resource {
 						"max_total_price": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"min_target_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"single_availability_zone": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"single_instance_type": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
