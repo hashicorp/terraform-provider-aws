@@ -949,6 +949,72 @@ func TestAccRedshiftCluster_passwordWriteOnly(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftCluster_masterUsernameValidation_valid(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster awstypes.Cluster
+	resourceName1 := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_masterUsername(rName, "valid-username"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName1, &cluster),
+					resource.TestCheckResourceAttr(resourceName1, "master_username", "valid-username"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_masterUsernameValidation_inValid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_masterUsername(rName, "valid username"),
+				ExpectError: regexache.MustCompile(`Error: invalid value for master_username`),
+			},
+			{
+				Config:      testAccClusterConfig_masterUsername(rName, "1validusername"),
+				ExpectError: regexache.MustCompile(`Error: invalid value for master_username`),
+			},
+			{
+				Config:      testAccClusterConfig_masterUsername(rName, "-validusername"),
+				ExpectError: regexache.MustCompile(`Error: invalid value for master_username`),
+			},
+		},
+	})
+}
+
+func testAccClusterConfig_masterUsername(rName, username string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  encrypted                           = true
+  master_username                     = %[2]q
+  master_password                     = "Mustbe8characters"
+  multi_az                            = false
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rName, username))
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
