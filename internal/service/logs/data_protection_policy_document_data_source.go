@@ -41,6 +41,37 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 				Optional: true,
 				Default:  "2021-06-01",
 			},
+			"configuration": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: map[string]*schema.Schema{
+					"custom_data_identifier": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MaxItems: 10,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								names.AttrName: {
+									Type:     schema.TypeString,
+									Required: true,
+									ValidateFunc: validation.All(
+										validation.StringIsNotEmpty,
+										validation.StringLenBetween(1, 128),
+									),
+								},
+								"regex": {
+									Type:     schema.TypeString,
+									Required: true,
+									ValidateFunc: validation.All(
+										validation.StringIsNotEmpty,
+										validation.StringLenBetween(1, 200),
+									),
+								},
+							},
+						},
+					},
+				},
+			},
 			"statement": {
 				Type:     schema.TypeList,
 				Required: true,
