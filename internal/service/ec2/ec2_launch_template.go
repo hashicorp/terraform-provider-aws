@@ -3346,7 +3346,7 @@ func flattenLaunchTemplateEnaSrdSpecification(apiObject *awstypes.LaunchTemplate
 	}
 
 	if v := apiObject.EnaSrdUdpSpecification; v != nil {
-		tfMap["ena_srd_specification"] = []interface{}{flattenLaunchTemplateEnaSrdUdpSpecification(v)}
+		tfMap["ena_srd_udp_specification"] = []interface{}{flattenLaunchTemplateEnaSrdUdpSpecification(v)}
 	}
 
 	return tfMap
