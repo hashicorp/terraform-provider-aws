@@ -38,6 +38,7 @@ const (
 	AttrCloudWatchLogs             = "cloudwatch_logs"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrClusterName                = "cluster_name"
+	AttrClusterStatus              = "cluster_status"
 	AttrComment                    = "comment"
 	AttrCondition                  = "condition"
 	AttrConfiguration              = "configuration"
