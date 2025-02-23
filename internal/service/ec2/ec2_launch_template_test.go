@@ -1400,7 +1400,7 @@ func TestAccEC2LaunchTemplate_NetworkInterface_enaSrd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.0.ena_srd_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -1409,7 +1409,7 @@ func TestAccEC2LaunchTemplate_NetworkInterface_enaSrd(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"network_interfaces.0.ena_srd_specification.0.ena_srd_udp_specification.0.ena_srd_udp_enabled", // <-- Nested path
-						"true",
+						acctest.CtTrue,
 					),
 				),
 			},
