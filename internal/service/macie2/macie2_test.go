@@ -55,6 +55,9 @@ func TestAccMacie2_serial(t *testing.T) {
 			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
 			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
 		},
+		"OrganizationConfiguration": {
+			acctest.CtBasic: testAccOrganizationConfiguration_basic,
+		},
 		"Member": {
 			acctest.CtBasic:                         testAccMember_basic,
 			acctest.CtDisappears:                    testAccMember_disappears,

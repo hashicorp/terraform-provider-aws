@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_macie2_organization_configuration` ([#41475](https://github.com/hashicorp/terraform-provider-aws/issues/41475))
 * **New Resource:** `aws_neptunegraph_graph` ([#41216](https://github.com/hashicorp/terraform-provider-aws/issues/41216))
 * **New Resource:** `aws_rds_shard_group` ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
 
@@ -11,6 +12,8 @@ ENHANCEMENTS:
 * data-source/aws_rds_cluster: Add `database_insights_mode` attribute ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
 * data-source/aws_s3_bucket_object: Add `application/yaml` to the list of `Content-Type`s that return a body ([#41443](https://github.com/hashicorp/terraform-provider-aws/issues/41443))
 * data-source/aws_s3_object: Add `application/yaml` to the list of `Content-Type`s that return a body ([#41443](https://github.com/hashicorp/terraform-provider-aws/issues/41443))
+* resource/aws_autoscaling_policy: Add `target_tracking_configuration.customized_metric_specification.period` argument to support [high-resolution metrics](https://docs.aws.amazon.com/autoscaling/ec2/userguide/policy-creating-high-resolution-metrics.html) ([#41385](https://github.com/hashicorp/terraform-provider-aws/issues/41385))
+* resource/aws_launch_template: Add `network_interfaces.ena_srd_specification` configuration block ([#41367](https://github.com/hashicorp/terraform-provider-aws/issues/41367))
 * resource/aws_macie2_classification_job: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
 * resource/aws_macie2_custom_data_identifier: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
 * resource/aws_macie2_findings_filter: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))

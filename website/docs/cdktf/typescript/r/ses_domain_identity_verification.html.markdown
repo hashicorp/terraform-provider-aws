@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_amazonses_verification_record",
       {
-        name: "_amazonses.${" + example.id + "}",
+        name: "_amazonses.${" + example.domain + "}",
         records: [example.verificationToken],
         ttl: Token.asNumber("600"),
         type: "TXT",
@@ -50,7 +50,7 @@ class MyConvertedCode extends TerraformStack {
     );
     new SesDomainIdentityVerification(this, "example_verification", {
       dependsOn: [exampleAmazonsesVerificationRecord],
-      domain: example.id,
+      domain: example.domain,
     });
   }
 }
@@ -76,4 +76,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `45m`)
 
-<!-- cache-key: cdktf-0.20.8 input-01264da5e2e5cedeff8b5da6bb3720236b99d8827e99483d8586f6e5626fdcb4 -->
+<!-- cache-key: cdktf-0.20.8 input-021644f49c4d599dab4357fc67e76ebf4062a899a265f2381049f02cbe7e5f20 -->
