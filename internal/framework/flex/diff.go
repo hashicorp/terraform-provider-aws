@@ -37,8 +37,8 @@ func (r *Results) IgnoredFieldNames() []string {
 	return r.ignoredFieldNames
 }
 
-// Calculate compares the plan and state values and returns whether there are changes
-func Calculate(ctx context.Context, plan, state any, options ...ChangeOption) (*Results, diag.Diagnostics) {
+// CalculateDiff compares the plan and state values and returns whether there are changes
+func CalculateDiff(ctx context.Context, plan, state any, options ...ChangeOption) (*Results, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	opts := NewChangeOptions(options...)
 
