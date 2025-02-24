@@ -1225,7 +1225,7 @@ func TestAccELBV2Listener_attributes_alb_HTTPRequestHeaders(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccListenerConfig_attributes_albHTTPRequestHeaders(rName, "https://www.example.com", "ALLOW"),
+				Config: testAccListenerConfig_attributes_albHTTPRequestHeaders(rName, "https://www.example.com", "SAMEORIGIN"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -1241,7 +1241,7 @@ func TestAccELBV2Listener_attributes_alb_HTTPRequestHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value", "default-src 'self'"),
 					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value", "nosniff"),
-					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", "SAMEORIGIN"),
 				),
 			},
 		},
@@ -3268,7 +3268,7 @@ resource "aws_lb_listener" "test" {
 
   routing_http_response_server_enabled                                = true
   routing_http_response_strict_transport_security_header_value        = "max-age=31536000; includeSubDomains"
-  routing_http_response_access_control_allow_origin_header_value      = "https://example.com"
+  routing_http_response_access_control_allow_origin_header_value      = %[2]q
   routing_http_response_access_control_allow_methods_header_value     = "GET,POST,OPTIONS"
   routing_http_response_access_control_allow_headers_header_value     = "Content-Type,X-Custom-Header"
   routing_http_response_access_control_allow_credentials_header_value = "true"
@@ -3276,7 +3276,7 @@ resource "aws_lb_listener" "test" {
   routing_http_response_access_control_max_age_header_value           = "3600"
   routing_http_response_content_security_policy_header_value          = "default-src 'self'"
   routing_http_response_x_content_type_options_header_value           = "nosniff"
-  routing_http_response_x_frame_options_header_value                  = "DENY"
+  routing_http_response_x_frame_options_header_value                  = %[3]q
 
   default_action {
     type             = "forward"
