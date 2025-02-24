@@ -991,9 +991,9 @@ var (
 )
 
 type lifecycleRuleAndOperatorModel struct {
-	ObjectSizeGreaterThan types.Int64  `tfsdk:"object_size_greater_than" autoflex:",legacy"`
-	ObjectSizeLessThan    types.Int64  `tfsdk:"object_size_less_than" autoflex:",legacy"`
-	Prefix                types.String `tfsdk:"prefix" autoflex:",legacy"`
+	ObjectSizeGreaterThan types.Int64  `tfsdk:"object_size_greater_than"`
+	ObjectSizeLessThan    types.Int64  `tfsdk:"object_size_less_than"`
+	Prefix                types.String `tfsdk:"prefix"`
 	Tags                  tftags.Map   `tfsdk:"tags"`
 }
 
