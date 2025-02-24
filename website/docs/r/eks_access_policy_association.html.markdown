@@ -14,9 +14,9 @@ Access Entry Policy Association for an EKS Cluster.
 
 ```terraform
 resource "aws_eks_access_entry" "example" {
-  cluster_name      = aws_eks_cluster.example.name
-  principal_arn     = aws_iam_role.example.arn
-  type              = "STANDARD"
+  cluster_name  = aws_eks_cluster.example.name
+  principal_arn = aws_iam_role.example.arn
+  type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "example" {
@@ -29,7 +29,7 @@ resource "aws_eks_access_policy_association" "example" {
     namespaces = ["example-namespace"]
   }
 
-  depends_on = [ aws_eks_access_entry.example ]
+  depends_on = [aws_eks_access_entry.example]
 }
 ```
 
