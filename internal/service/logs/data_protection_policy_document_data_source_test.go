@@ -28,7 +28,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_basic(logGroupName, targetName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(
+					acctest.CheckResourceAttrJSONNoDiff(
 						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_basic_expectedJSON(targetName)),
 				),
@@ -50,7 +50,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 			{
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_empty(logGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(
+					acctest.CheckResourceAttrJSONNoDiff(
 						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON),
 				),
@@ -86,6 +86,29 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnNoOperation(t *tes
 			{
 				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnNoOperation,
 				ExpectError: regexache.MustCompile(`the second policy statement must contain only the deidentify operation`),
+			},
+		},
+	})
+}
+
+func TestAccLogsDataProtectionPolicyDocumentDataSource_customDataIdentifiers(t *testing.T) {
+	ctx := acctest.Context(t)
+	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers(logGroupName, targetName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff(
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
+						testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers_expectedJSON(targetName)),
+				),
 			},
 		},
 	})
@@ -328,29 +351,6 @@ data "aws_cloudwatch_log_data_protection_policy_document" "test" {
 		logGroupName)
 }
 
-func TestAccLogsDataProtectionPolicyDocumentDataSource_customDataIdentifiers(t *testing.T) {
-	ctx := acctest.Context(t)
-	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers(logGroupName, targetName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(
-						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
-						testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers_expectedJSON(targetName)),
-				),
-			},
-		},
-	})
-}
-
 func testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers(logGroupName, targetName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -447,8 +447,8 @@ func testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers_e
       {
           "Sid": "Audit",
           "DataIdentifier": [
-              "CustomIdentifier1",
-              "CustomIdentifier2"
+              "CustomIdentifier2",
+              "CustomIdentifier1"
           ],
           "Operation": {
               "Audit": {
@@ -463,8 +463,8 @@ func testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers_e
       {
           "Sid": "Deidentify",
           "DataIdentifier": [
-              "CustomIdentifier1",
-              "CustomIdentifier2"
+              "CustomIdentifier2",
+              "CustomIdentifier1"
           ],
           "Operation": {
               "Deidentify": {

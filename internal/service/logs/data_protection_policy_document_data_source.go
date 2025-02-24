@@ -5,7 +5,6 @@ package logs
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,30 +24,33 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrConfiguration: {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"custom_data_identifier": {
-						Type:     schema.TypeList,
-						Optional: true,
-						MaxItems: 10,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								names.AttrName: {
-									Type:     schema.TypeString,
-									Required: true,
-									ValidateFunc: validation.All(
-										validation.StringIsNotEmpty,
-										validation.StringLenBetween(1, 128),
-									),
-								},
-								"regex": {
-									Type:     schema.TypeString,
-									Required: true,
-									ValidateFunc: validation.All(
-										validation.StringIsNotEmpty,
-										validation.StringLenBetween(1, 200),
-									),
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_data_identifier": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 10,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringIsNotEmpty,
+											validation.StringLenBetween(1, 128),
+										),
+									},
+									"regex": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringIsNotEmpty,
+											validation.StringLenBetween(1, 200),
+										),
+									},
 								},
 							},
 						},
@@ -66,11 +69,6 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2021-06-01",
 			},
 			"statement": {
 				Type:     schema.TypeList,
@@ -180,13 +178,14 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 					},
 				},
 			},
+			names.AttrVersion: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2021-06-01",
+			},
 		},
 	}
 }
-
-const (
-	DSNameDataProtectionPolicyDocument = "Data Protection Policy Document Data Source"
-)
 
 func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -197,26 +196,44 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 		Version:     d.Get(names.AttrVersion).(string),
 	}
 
-	// unwrap expects m to be a configuration block -- a TypeList schema
+	// unwrap expects v to be a configuration block -- a TypeList schema
 	// element with MaxItems: 1 and with a sub-schema.
-	unwrap := func(m interface{}) (map[string]interface{}, bool) {
-		if m == nil {
+	unwrap := func(v interface{}) (map[string]interface{}, bool) {
+		if v == nil {
 			return nil, false
 		}
 
-		if v, ok := m.([]interface{}); ok && len(v) > 0 {
-			if v[0] == nil {
+		if tfList, ok := v.([]interface{}); ok && len(tfList) > 0 {
+			if tfList[0] == nil {
 				// Configuration block was present, but the sub-schema is empty.
 				return map[string]interface{}{}, true
 			}
 
-			if m, ok := v[0].(map[string]interface{}); ok && m != nil {
+			if tfMap, ok := tfList[0].(map[string]interface{}); ok && tfMap != nil {
 				// This should be the most typical path.
-				return m, true
+				return tfMap, true
 			}
 		}
 
 		return nil, false
+	}
+
+	if tfMap, ok := unwrap(d.Get(names.AttrConfiguration)); ok {
+		document.Configuration = &DataProtectionPolicyStatementConfiguration{}
+
+		if tfList, ok := tfMap["custom_data_identifier"].([]interface{}); ok && len(tfList) > 0 {
+			for _, tfMapRaw := range tfList {
+				tfMap, ok := tfMapRaw.(map[string]interface{})
+				if !ok {
+					continue
+				}
+
+				document.Configuration.CustomDataIdentifiers = append(document.Configuration.CustomDataIdentifiers, &DataProtectionPolicyCustomDataIdentifier{
+					Name:  tfMap[names.AttrName].(string),
+					Regex: tfMap["regex"].(string),
+				})
+			}
+		}
 	}
 
 	for _, statementIface := range d.Get("statement").([]interface{}) {
@@ -293,13 +310,11 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "the second policy statement must contain only the deidentify operation")
 	}
 
-	jsonBytes, err := json.MarshalIndent(document, "", "  ")
+	jsonString, err := tfjson.EncodeToStringIndent(document, "", "  ")
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	jsonString := string(jsonBytes)
 
 	d.Set(names.AttrJSON, jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
@@ -308,10 +323,20 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 }
 
 type DataProtectionPolicyDocument struct {
-	Description string                           `json:",omitempty"`
-	Version     string                           `json:",omitempty"`
-	Name        string                           `json:",omitempty"`
-	Statements  []*DataProtectionPolicyStatement `json:"Statement,omitempty"`
+	Configuration *DataProtectionPolicyStatementConfiguration `json:",omitempty"`
+	Description   string                                      `json:",omitempty"`
+	Name          string                                      `json:",omitempty"`
+	Statements    []*DataProtectionPolicyStatement            `json:"Statement,omitempty"`
+	Version       string                                      `json:",omitempty"`
+}
+
+type DataProtectionPolicyStatementConfiguration struct {
+	CustomDataIdentifiers []*DataProtectionPolicyCustomDataIdentifier `json:"CustomDataIdentifier,omitempty"`
+}
+
+type DataProtectionPolicyCustomDataIdentifier struct {
+	Name  string `json:",omitempty"`
+	Regex string `json:",omitempty"`
 }
 
 type DataProtectionPolicyStatement struct {
