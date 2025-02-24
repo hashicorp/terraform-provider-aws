@@ -152,7 +152,6 @@ resource "aws_api_gateway_rest_api_put" "test" {
 func testAccRestAPIPutConfig_multistage(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  #name = %[1]q
   name = "Simple API"
 }
 
