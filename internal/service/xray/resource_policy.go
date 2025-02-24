@@ -78,16 +78,16 @@ func (r *resourceResourcePolicy) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	in := &xray.PutResourcePolicyInput{
+	in := xray.PutResourcePolicyInput{
 		PolicyDocument: plan.PolicyDocument.ValueStringPointer(),
 		PolicyName:     plan.PolicyName.ValueStringPointer(),
 	}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.PutResourcePolicy(ctx, in)
+	out, err := conn.PutResourcePolicy(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.XRay, create.ErrActionCreating, ResNameResourcePolicy, plan.PolicyName.String(), err),
@@ -161,12 +161,12 @@ func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	in := &xray.DeleteResourcePolicyInput{
-		PolicyName:       aws.String(state.PolicyName.ValueString()),
+	in := xray.DeleteResourcePolicyInput{
+		PolicyName:       state.PolicyName.ValueStringPointer(),
 		PolicyRevisionId: policy.PolicyRevisionId,
 	}
 
-	_, err = conn.DeleteResourcePolicy(ctx, in)
+	_, err = conn.DeleteResourcePolicy(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.XRay, create.ErrActionDeleting, ResNameResourcePolicy, state.PolicyName.String(), err),
@@ -181,9 +181,9 @@ func (r *resourceResourcePolicy) ImportState(ctx context.Context, req resource.I
 }
 
 func findResourcePolicyByName(ctx context.Context, conn *xray.Client, name string) (*awstypes.ResourcePolicy, error) {
-	in := &xray.ListResourcePoliciesInput{}
+	in := xray.ListResourcePoliciesInput{}
 
-	policy, err := findResourcePolicy(ctx, conn, in, func(policy *awstypes.ResourcePolicy) bool {
+	policy, err := findResourcePolicy(ctx, conn, &in, func(policy *awstypes.ResourcePolicy) bool {
 		return aws.ToString(policy.PolicyName) == name
 	})
 
