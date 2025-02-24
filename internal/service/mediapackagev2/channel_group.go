@@ -156,7 +156,7 @@ func (r *resourceChannelGroup) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.CalculateDiff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return

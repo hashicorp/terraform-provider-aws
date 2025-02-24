@@ -317,7 +317,7 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.CalculateDiff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
