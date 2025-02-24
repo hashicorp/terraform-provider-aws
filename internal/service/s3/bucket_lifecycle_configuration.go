@@ -1002,7 +1002,7 @@ func (m lifecycleRuleAndOperatorModel) Expand(ctx context.Context) (result any, 
 
 	r.ObjectSizeGreaterThan = fwflex.Int64FromFramework(ctx, m.ObjectSizeGreaterThan)
 
-	r.ObjectSizeLessThan = fwflex.Int64FromFramework(ctx, m.ObjectSizeLessThan)
+	r.ObjectSizeLessThan = fwflex.Int64FromFrameworkLegacy(ctx, m.ObjectSizeLessThan)
 
 	r.Prefix = fwflex.StringFromFramework(ctx, m.Prefix)
 
