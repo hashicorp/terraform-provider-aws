@@ -51,7 +51,7 @@ func (r *resourceResourcePolicy) Schema(ctx context.Context, req resource.Schema
 		Attributes: map[string]schema.Attribute{
 			"policy_document": schema.StringAttribute{
 				CustomType: jsontypes.NormalizedType{},
-				Required: true,
+				Required:   true,
 			},
 			"policy_name": schema.StringAttribute{
 				Required: true,
@@ -238,9 +238,9 @@ func findResourcePolicies(ctx context.Context, conn *xray.Client, input *xray.Li
 }
 
 type resourceResourcePolicyData struct {
-	LastUpdatedTime          timetypes.RFC3339 `tfsdk:"last_updated_time"`
-	PolicyDocument           types.String      `tfsdk:"policy_document"`
-	PolicyName               types.String      `tfsdk:"policy_name"`
-	PolicyRevisionID         types.String      `tfsdk:"policy_revision_id"`
-	BypassPolicyLockoutCheck types.Bool        `tfsdk:"bypass_policy_lockout_check"`
+	LastUpdatedTime          timetypes.RFC3339    `tfsdk:"last_updated_time"`
+	PolicyDocument           jsontypes.Normalized `tfsdk:"policy_document"`
+	PolicyName               types.String         `tfsdk:"policy_name"`
+	PolicyRevisionID         types.String         `tfsdk:"policy_revision_id"`
+	BypassPolicyLockoutCheck types.Bool           `tfsdk:"bypass_policy_lockout_check"`
 }
