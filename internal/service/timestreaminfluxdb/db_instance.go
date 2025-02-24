@@ -73,10 +73,10 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrAllocatedStorage: schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Int64{
-					int64validator.Between(20, 16384),
+					int64validator.Between(20, 15360),
 				},
 				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).`,
 			},
@@ -100,8 +100,8 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 						"",
 					),
 				},
-				Description: `The name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. 
-					A bucket combines the concept of a database and a retention period (the duration of time 
+				Description: `The name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket.
+					A bucket combines the concept of a database and a retention period (the duration of time
 					that each data point persists). A bucket belongs to an organization.`,
 			},
 			"db_instance_type": schema.StringAttribute{
@@ -136,9 +136,9 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: `The Timestream for InfluxDB DB storage type to read and write InfluxDB data. 
-					You can choose between 3 different types of provisioned Influx IOPS included storage according 
-					to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, 
+				Description: `The Timestream for InfluxDB DB storage type to read and write InfluxDB data.
+					You can choose between 3 different types of provisioned Influx IOPS included storage according
+					to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS,
 					Influx IO Included 16000 IOPS.`,
 			},
 			"deployment_type": schema.StringAttribute{
@@ -149,7 +149,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: `Specifies whether the DB instance will be deployed as a standalone instance or 
+				Description: `Specifies whether the DB instance will be deployed as a standalone instance or
 					with a Multi-AZ standby for high availability.`,
 			},
 			names.AttrEndpoint: schema.StringAttribute{
@@ -165,9 +165,9 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: `The Amazon Resource Name (ARN) of the AWS Secrets Manager secret containing the 
-					initial InfluxDB authorization parameters. The secret value is a JSON formatted 
-					key-value pair holding InfluxDB authorization values: organization, bucket, 
+				Description: `The Amazon Resource Name (ARN) of the AWS Secrets Manager secret containing the
+					initial InfluxDB authorization parameters. The secret value is a JSON formatted
+					key-value pair holding InfluxDB authorization values: organization, bucket,
 					username, and password.`,
 			},
 			names.AttrName: schema.StringAttribute{
@@ -182,9 +182,9 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 						"",
 					),
 				},
-				Description: `The name that uniquely identifies the DB instance when interacting with the 
-					Amazon Timestream for InfluxDB API and CLI commands. This name will also be a 
-					prefix included in the endpoint. DB instance names must be unique per customer 
+				Description: `The name that uniquely identifies the DB instance when interacting with the
+					Amazon Timestream for InfluxDB API and CLI commands. This name will also be a
+					prefix included in the endpoint. DB instance names must be unique per customer
 					and per region.`,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -197,7 +197,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
 				},
-				Description: `The name of the initial organization for the initial admin user in InfluxDB. An 
+				Description: `The name of the initial organization for the initial admin user in InfluxDB. An
 					InfluxDB organization is a workspace for a group of users.`,
 			},
 			names.AttrPassword: schema.StringAttribute{
@@ -210,9 +210,9 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					stringvalidator.LengthBetween(8, 64),
 					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9]+$"), ""),
 				},
-				Description: `The password of the initial admin user created in InfluxDB. This password will 
-					allow you to access the InfluxDB UI to perform various administrative tasks and 
-					also use the InfluxDB CLI to create an operator token. These attributes will be 
+				Description: `The password of the initial admin user created in InfluxDB. This password will
+					allow you to access the InfluxDB UI to perform various administrative tasks and
+					also use the InfluxDB CLI to create an operator token. These attributes will be
 					stored in a Secret created in AWS SecretManager in your account.`,
 			},
 			names.AttrPubliclyAccessible: schema.BoolAttribute{
@@ -229,7 +229,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: `The Availability Zone in which the standby instance is located when deploying 
+				Description: `The Availability Zone in which the standby instance is located when deploying
 					with a MultiAZ standby instance.`,
 			},
 			names.AttrUsername: schema.StringAttribute{
@@ -240,16 +240,16 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
 						regexache.MustCompile("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$"),
-						`Must start with a letter and can't end with a hyphen or contain two 
+						`Must start with a letter and can't end with a hyphen or contain two
 						consecutive hyphens`,
 					),
 				},
-				Description: `The username of the initial admin user created in InfluxDB. 
-					Must start with a letter and can't end with a hyphen or contain two 
-					consecutive hyphens. For example, my-user1. This username will allow 
-					you to access the InfluxDB UI to perform various administrative tasks 
-					and also use the InfluxDB CLI to create an operator token. These 
-					attributes will be stored in a Secret created in Amazon Secrets 
+				Description: `The username of the initial admin user created in InfluxDB.
+					Must start with a letter and can't end with a hyphen or contain two
+					consecutive hyphens. For example, my-user1. This username will allow
+					you to access the InfluxDB UI to perform various administrative tasks
+					and also use the InfluxDB CLI to create an operator token. These
+					attributes will be stored in a Secret created in Amazon Secrets
 					Manager in your account`,
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
@@ -280,7 +280,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 						stringvalidator.RegexMatches(regexache.MustCompile("^subnet-[a-z0-9]+$"), ""),
 					),
 				},
-				Description: `A list of VPC subnet IDs to associate with the DB instance. Provide at least 
+				Description: `A list of VPC subnet IDs to associate with the DB instance. Provide at least
 					two VPC subnet IDs in different availability zones when deploying with a Multi-AZ standby.`,
 			},
 		},
@@ -453,48 +453,102 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
-		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
-		in := timestreaminfluxdb.UpdateDbInstanceInput{
-			Identifier: plan.ID.ValueStringPointer(),
-		}
-
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
-
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		_, err := conn.UpdateDbInstance(ctx, &in)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
-
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// flatten using legacy since this computed output may be null
-		plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+	hasChanges := false
+	in := timestreaminfluxdb.UpdateDbInstanceInput{
+		Identifier: plan.ID.ValueStringPointer(),
 	}
 
+	// Only set fields that have actually changed
+	if !plan.AllocatedStorage.Equal(state.AllocatedStorage) {
+		hasChanges = true
+		in.AllocatedStorage = aws.Int32(int32(plan.AllocatedStorage.ValueInt64()))
+	}
+
+	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) {
+		hasChanges = true
+		in.DbParameterGroupIdentifier = plan.DBParameterGroupIdentifier.ValueStringPointer()
+	}
+
+	if !plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
+		hasChanges = true
+		if !plan.LogDeliveryConfiguration.IsNull() && !plan.LogDeliveryConfiguration.IsUnknown() {
+			var logConfig []logDeliveryConfigurationData
+			resp.Diagnostics.Append(plan.LogDeliveryConfiguration.ElementsAs(ctx, &logConfig, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			if len(logConfig) > 0 {
+				in.LogDeliveryConfiguration = &awstypes.LogDeliveryConfiguration{
+					S3Configuration: expandS3Config(logConfig[0].S3Configuration),
+				}
+			}
+		}
+	}
+
+	if !hasChanges {
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		return
+	}
+
+	// Validate at least one parameter is changing
+	if in.AllocatedStorage == nil &&
+		in.DbParameterGroupIdentifier == nil &&
+		in.LogDeliveryConfiguration == nil {
+		resp.Diagnostics.AddError(
+			"No Modifiable Changes",
+			"Update requires at least one of allocated_storage, db_parameter_group_identifier, or log_delivery_configuration to change",
+		)
+		return
+	}
+
+	_, err := conn.UpdateDbInstance(ctx, &in)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Wait for update completion
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Flatten the updated state
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func expandS3Config(config fwtypes.ListNestedObjectValueOf[s3ConfigurationData]) *awstypes.S3Configuration {
+	if config.IsNull() || config.IsUnknown() {
+		return nil
+	}
+
+	var s3Data []s3ConfigurationData
+	config.ElementsAs(context.Background(), &s3Data, false)
+
+	if len(s3Data) == 0 {
+		return nil
+	}
+
+	return &awstypes.S3Configuration{
+		BucketName: aws.String(s3Data[0].BucketName.ValueString()),
+		Enabled:    aws.Bool(s3Data[0].Enabled.ValueBool()),
+	}
 }
 
 func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

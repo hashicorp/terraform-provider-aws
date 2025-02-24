@@ -425,3 +425,70 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 }
 `, rName))
 }
+
+func TestAccTimestreamInfluxDBDBInstance_allocatedStorageUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance1, dbInstance2 timestreaminfluxdb.GetDbInstanceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBInstanceConfig_allocatedStorage(rName, 20),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "20"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket,
+					"organization",
+					names.AttrUsername,
+					names.AttrPassword,
+				},
+			},
+			{
+				Config: testAccDBInstanceConfig_allocatedStorage(rName, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
+					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDBInstanceConfig_allocatedStorage(rName string, storage int) string {
+	return acctest.ConfigCompose(
+		testAccDBInstanceConfig_base(rName, 1),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = %[2]d  // ONLY CHANGING PARAMETER
+  db_instance_type       = "db.influx.medium"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  bucket                 = "initial-bucket"
+  organization           = "test-org"
+  username               = "admin"
+  password               = "testpassword"
+}
+`, rName, storage))
+}
