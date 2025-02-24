@@ -43,7 +43,6 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the Detective Graph.
 * `graph_arn` - ARN of the Detective Graph.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the Amazon Detective Graph was created.
 
@@ -72,4 +71,4 @@ Using `terraform import`, import `aws_detective_graph` using the ARN. For exampl
 % terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ee8961bdda24bd4636640d877e7c8cec4877ed2d26e63964d9fab2e0003f440c -->
+<!-- cache-key: cdktf-0.20.8 input-be2f4b052a492a73ae063c08638a56bf78aeda1de7ee05a8132df7d40eaa27a7 -->
