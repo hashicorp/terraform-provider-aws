@@ -48,10 +48,6 @@ const (
 	ResNameCollection = "Collection"
 )
 
-func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_collection"
-}
-
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	collectionRegex := regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`)
 

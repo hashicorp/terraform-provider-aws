@@ -47,10 +47,6 @@ type customDomainAssociationResource struct {
 	framework.WithTimeouts
 }
 
-func (*customDomainAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_redshiftserverless_custom_domain_association"
-}
-
 func (r *customDomainAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -24,10 +24,6 @@ type clustersDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*clustersDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_ecs_clusters"
-}
-
 func (d *clustersDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

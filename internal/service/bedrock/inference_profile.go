@@ -57,10 +57,6 @@ type resourceInferenceProfile struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceInferenceProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_inference_profile"
-}
-
 func (r *resourceInferenceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	modelsAttribute := framework.ResourceComputedListOfObjectsAttribute[resourceInferenceProfileModelModel](ctx)
 	modelsAttribute.PlanModifiers = []planmodifier.List{

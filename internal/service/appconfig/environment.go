@@ -47,10 +47,6 @@ type resourceEnvironment struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceEnvironment) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appconfig_environment"
-}
-
 func (r *resourceEnvironment) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{

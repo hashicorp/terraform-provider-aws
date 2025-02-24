@@ -40,10 +40,6 @@ type hostedZoneIDDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *hostedZoneIDDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_hosted_zone_id"
-}
-
 func (d *hostedZoneIDDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

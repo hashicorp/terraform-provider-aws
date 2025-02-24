@@ -41,10 +41,6 @@ type resourceGroupPolicyAttachmentsExclusive struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceGroupPolicyAttachmentsExclusive) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_iam_group_policy_attachments_exclusive"
-}
-
 func (r *resourceGroupPolicyAttachmentsExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

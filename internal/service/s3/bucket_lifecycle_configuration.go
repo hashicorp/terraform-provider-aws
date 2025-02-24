@@ -61,12 +61,6 @@ type resourceBucketLifecycleConfiguration struct {
 	framework.WithTimeouts
 }
 
-// Metadata should return the full name of the resource, such as
-// examplecloud_thing.
-func (r *resourceBucketLifecycleConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3_bucket_lifecycle_configuration"
-}
-
 // Schema returns the schema for this resource.
 func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{

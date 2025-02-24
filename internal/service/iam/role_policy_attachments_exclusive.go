@@ -41,10 +41,6 @@ type resourceRolePolicyAttachmentsExclusive struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceRolePolicyAttachmentsExclusive) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_iam_role_policy_attachments_exclusive"
-}
-
 func (r *resourceRolePolicyAttachmentsExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
