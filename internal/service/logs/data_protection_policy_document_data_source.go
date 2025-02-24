@@ -23,25 +23,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrJSON: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2021-06-01",
-			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: map[string]*schema.Schema{
@@ -71,6 +53,24 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 						},
 					},
 				},
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrJSON: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+			names.AttrVersion: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2021-06-01",
 			},
 			"statement": {
 				Type:     schema.TypeList,
