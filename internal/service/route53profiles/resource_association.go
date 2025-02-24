@@ -52,10 +52,6 @@ type resourceResourceAssociation struct {
 	framework.WithImportByID
 }
 
-func (r *resourceResourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_resource_association"
-}
-
 func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

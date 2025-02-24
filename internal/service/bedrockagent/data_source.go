@@ -66,10 +66,6 @@ type dataSourceResource struct {
 	framework.WithTimeouts
 }
 
-func (*dataSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_data_source"
-}
-
 func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	crawlerConfigurationNestedObjectSchema := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{

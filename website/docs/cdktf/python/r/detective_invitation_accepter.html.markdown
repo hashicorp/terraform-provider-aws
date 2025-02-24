@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
         aws_detective_member_primary = DetectiveMember(self, "primary_1",
             account_id="ACCOUNT ID",
             email_address="EMAIL",
-            graph_arn=primary.id,
+            graph_arn=primary.graph_arn,
             message="Message of the invite"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -81,4 +81,4 @@ Using `terraform import`, import `aws_detective_invitation_accepter` using the g
 % terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ca2bf5e5cb9affcfcf860965a82f07a76d1193a82b4cdb53e84a5d10e901c8a0 -->
+<!-- cache-key: cdktf-0.20.8 input-81e08d14c73cef5cbc5e343860aa5b69fd1a25bdaeb8b3896e4b2d5eb1c41393 -->

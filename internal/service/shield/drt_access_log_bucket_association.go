@@ -45,10 +45,6 @@ type drtAccessLogBucketAssociationResource struct {
 	framework.WithTimeouts
 }
 
-func (r *drtAccessLogBucketAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_drt_access_log_bucket_association"
-}
-
 func (r *drtAccessLogBucketAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -113,6 +113,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
@@ -285,6 +286,7 @@ func registerSweepers() {
 	mq.RegisterSweepers()
 	mwaa.RegisterSweepers()
 	neptune.RegisterSweepers()
+	neptunegraph.RegisterSweepers()
 	networkfirewall.RegisterSweepers()
 	networkmanager.RegisterSweepers()
 	opensearch.RegisterSweepers()

@@ -158,7 +158,7 @@ This resource supports the following arguments:
 
 ### recording_mode Configuration Block
 
-* `recordingFrequency` - (Required) Default reecording frequency. `CONTINUOUS` or `DAILY`.
+* `recordingFrequency` - (Required) Default recording frequency. `CONTINUOUS` or `DAILY`.
 * `recordingModeOverride` - (Optional) Recording mode overrides. Detailed below.
 
 #### recording_mode_override Configuration Block
@@ -201,4 +201,4 @@ Using `terraform import`, import Configuration Recorder using the name. For exam
 % terraform import aws_config_configuration_recorder.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-abb2a30c6aaa0f7b0debfcd2ded1ca9be070019688f41914c9c15ae47a17cbc7 -->
+<!-- cache-key: cdktf-0.20.8 input-09ce3c3636c91a57da17e3f28fb9289f2bb752eda6f2b3cf9ecdfc3655979cba -->

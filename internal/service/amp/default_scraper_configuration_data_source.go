@@ -25,10 +25,6 @@ type defaultScraperConfigurationDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*defaultScraperConfigurationDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_prometheus_default_scraper_configuration"
-}
-
 func (d *defaultScraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

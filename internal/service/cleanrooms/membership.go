@@ -51,10 +51,6 @@ type resourceMembership struct {
 	framework.WithImportByID
 }
 
-func (r *resourceMembership) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cleanrooms_membership"
-}
-
 func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
