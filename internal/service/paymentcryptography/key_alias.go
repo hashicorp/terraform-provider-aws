@@ -39,10 +39,6 @@ type keyAliasResource struct {
 	framework.WithImportByID
 }
 
-func (*keyAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_paymentcryptography_key_alias"
-}
-
 func (r *keyAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

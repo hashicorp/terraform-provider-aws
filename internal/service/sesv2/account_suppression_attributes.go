@@ -33,10 +33,6 @@ type accountSuppressionAttributesResource struct {
 	framework.WithImportByID
 }
 
-func (*accountSuppressionAttributesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_sesv2_account_suppression_attributes"
-}
-
 func (r *accountSuppressionAttributesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

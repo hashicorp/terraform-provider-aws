@@ -43,10 +43,6 @@ type optOutListResource struct {
 	framework.WithImportByID
 }
 
-func (*optOutListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_pinpointsmsvoicev2_opt_out_list"
-}
-
 func (r *optOutListResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

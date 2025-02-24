@@ -29,10 +29,6 @@ type ephemeralParameter struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (e *ephemeralParameter) Metadata(_ context.Context, _ ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "aws_ssm_parameter"
-}
-
 func (e *ephemeralParameter) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

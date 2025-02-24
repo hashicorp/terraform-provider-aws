@@ -76,9 +76,6 @@ type ephemeral{{ .EphemeralResource }} struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (e *ephemeral{{ .EphemeralResource }}) Metadata(_ context.Context, req ephemeral.MetadataRequest, resp *ephemeral.MetadataResponse) {
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the arguments and attributes in snake

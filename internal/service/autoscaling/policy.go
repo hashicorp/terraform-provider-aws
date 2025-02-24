@@ -457,6 +457,11 @@ func resourcePolicy() *schema.Resource {
 											Optional:      true,
 											ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
 										},
+										"period": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntInSlice([]int{10, 30, 60}),
+										},
 										"statistic": {
 											Type:          schema.TypeString,
 											Optional:      true,
@@ -799,6 +804,9 @@ func expandTargetTrackingConfiguration(tfList []interface{}) *awstypes.TargetTra
 			}
 			customizedMetricSpecification.MetricName = aws.String(tfMap[names.AttrMetricName].(string))
 			customizedMetricSpecification.Namespace = aws.String(tfMap[names.AttrNamespace].(string))
+			if v, ok := tfMap["period"].(int); ok && v != 0 {
+				customizedMetricSpecification.Period = aws.Int32(int32(v))
+			}
 			customizedMetricSpecification.Statistic = awstypes.MetricStatistic(tfMap["statistic"].(string))
 			if v, ok := tfMap[names.AttrUnit]; ok && len(v.(string)) > 0 {
 				customizedMetricSpecification.Unit = aws.String(v.(string))
@@ -1109,6 +1117,9 @@ func flattenTargetTrackingConfiguration(apiObject *awstypes.TargetTrackingConfig
 			}
 			tfMapCustomizedMetricSpecification[names.AttrMetricName] = aws.ToString(apiObject.MetricName)
 			tfMapCustomizedMetricSpecification[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
+			if v := apiObject.Period; v != nil {
+				tfMapCustomizedMetricSpecification["period"] = aws.ToInt32(v)
+			}
 			tfMapCustomizedMetricSpecification["statistic"] = apiObject.Statistic
 			if v := apiObject.Unit; v != nil {
 				tfMapCustomizedMetricSpecification[names.AttrUnit] = aws.ToString(v)
