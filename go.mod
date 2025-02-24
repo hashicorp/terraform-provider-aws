@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.11
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.16
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.16
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.43.3
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/athena v1.49.11
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.16
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.49.13
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.16
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.8
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.35.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.1.8
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.29.11
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.10
@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.49.5
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.19
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.41.8
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.51.13
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.51.14
 	github.com/aws/aws-sdk-go-v2/service/connect v1.125.1
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.20.10
