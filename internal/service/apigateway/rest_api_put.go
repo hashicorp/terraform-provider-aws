@@ -96,8 +96,6 @@ func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequ
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
-				Delete: true,
 			}),
 		},
 	}
