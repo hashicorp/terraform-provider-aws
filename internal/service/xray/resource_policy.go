@@ -42,10 +42,6 @@ type resourceResourcePolicy struct {
 	framework.WithNoOpUpdate[resourceResourcePolicyData]
 }
 
-func (r *resourceResourcePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_xray_resource_policy"
-}
-
 func (r *resourceResourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
