@@ -96,7 +96,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_tls_version_and_cipher_suite_headers", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_xff_client_port", acctest.CtFalse),
-					resource.TestCheckNoResourceAttr(resourceName, "enable_zonal_shift"),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "30"),
 					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtTrue),
