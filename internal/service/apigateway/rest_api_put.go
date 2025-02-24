@@ -35,8 +35,6 @@ func newResourceRestAPIPut(_ context.Context) (resource.ResourceWithConfigure, e
 	r := &resourceRestAPIPut{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
