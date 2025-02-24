@@ -331,20 +331,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			}
 
 			typeName := v.TypeName
-
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-					ctx = meta.RegisterLogger(ctx)
-					ctx = flex.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := dataSourceInterceptors{}
-
 			if v.Tags != nil {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -361,11 +348,26 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 					continue
 				}
 
-				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
 			}
 
+			opts := wrappedDataSourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if c != nil {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
+					}
+
+					return ctx
+				},
+				interceptors: interceptors,
+				typeName:     typeName,
+			}
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, typeName, inner, interceptors)
+				return newWrappedDataSource(inner, opts)
 			})
 		}
 	}
@@ -399,20 +401,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			typeName := v.TypeName
-
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
-					ctx = meta.RegisterLogger(ctx)
-					ctx = flex.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := resourceInterceptors{}
-
 			if v.Tags != nil {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -438,11 +427,26 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
-				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
 			}
 
+			opts := wrappedResourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if c != nil {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
+					}
+
+					return ctx
+				},
+				interceptors: interceptors,
+				typeName:     typeName,
+			}
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(bootstrapContext, typeName, inner, interceptors)
+				return newWrappedResource(inner, opts)
 			})
 		}
 	}
@@ -480,21 +484,23 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					continue
 				}
 
-				typeName := v.TypeName
-
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-					ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
-					if meta != nil {
-						ctx = meta.RegisterLogger(ctx)
-						ctx = flex.RegisterLogger(ctx)
-						ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
-					}
-					return ctx
+				interceptors := ephemeralResourceInterceptors{}
+				opts := wrappedEphemeralResourceOptions{
+					// bootstrapContext is run on all wrapped methods before any interceptors.
+					bootstrapContext: func(ctx context.Context, c *conns.AWSClient) context.Context {
+						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+						if c != nil {
+							ctx = c.RegisterLogger(ctx)
+							ctx = flex.RegisterLogger(ctx)
+							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+						}
+						return ctx
+					},
+					interceptors: interceptors,
+					typeName:     v.TypeName,
 				}
-
 				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(bootstrapContext, typeName, inner, nil)
+					return newWrappedEphemeralResource(inner, opts)
 				})
 			}
 		}
