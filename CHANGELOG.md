@@ -5,6 +5,7 @@ FEATURES:
 * **New Resource:** `aws_macie2_organization_configuration` ([#41475](https://github.com/hashicorp/terraform-provider-aws/issues/41475))
 * **New Resource:** `aws_neptunegraph_graph` ([#41216](https://github.com/hashicorp/terraform-provider-aws/issues/41216))
 * **New Resource:** `aws_rds_shard_group` ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
+* **New Resource:** `aws_xray_resource_policy` ([#41517](https://github.com/hashicorp/terraform-provider-aws/issues/41517))
 
 ENHANCEMENTS:
 
