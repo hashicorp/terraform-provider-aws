@@ -804,7 +804,7 @@ func expandTargetTrackingConfiguration(tfList []interface{}) *awstypes.TargetTra
 			}
 			customizedMetricSpecification.MetricName = aws.String(tfMap[names.AttrMetricName].(string))
 			customizedMetricSpecification.Namespace = aws.String(tfMap[names.AttrNamespace].(string))
-			customizedMetricSpecification.Period = aws.Int32(tfMap["period"].(int32))
+			customizedMetricSpecification.Period = aws.Int32(int32(tfMap["period"].(int)))
 			customizedMetricSpecification.Statistic = awstypes.MetricStatistic(tfMap["statistic"].(string))
 			if v, ok := tfMap[names.AttrUnit]; ok && len(v.(string)) > 0 {
 				customizedMetricSpecification.Unit = aws.String(v.(string))
@@ -1115,7 +1115,7 @@ func flattenTargetTrackingConfiguration(apiObject *awstypes.TargetTrackingConfig
 			}
 			tfMapCustomizedMetricSpecification[names.AttrMetricName] = aws.ToString(apiObject.MetricName)
 			tfMapCustomizedMetricSpecification[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
-			tfMapCustomizedMetricSpecification["period"] = apiObject.Period
+			tfMapCustomizedMetricSpecification["period"] = aws.ToInt32(apiObject.Period)
 			tfMapCustomizedMetricSpecification["statistic"] = apiObject.Statistic
 			if v := apiObject.Unit; v != nil {
 				tfMapCustomizedMetricSpecification[names.AttrUnit] = aws.ToString(v)
