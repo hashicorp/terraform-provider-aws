@@ -278,7 +278,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := fwflex.CalculateDiff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return

@@ -178,7 +178,7 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().LogsClient(ctx)
 
-	diff, d := fwflex.CalculateDiff(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
