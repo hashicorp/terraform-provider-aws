@@ -41,10 +41,6 @@ type memberDetectorFeatureResource struct {
 	framework.WithNoOpDelete
 }
 
-func (*memberDetectorFeatureResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_guardduty_member_detector_feature"
-}
-
 func (r *memberDetectorFeatureResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -30,10 +30,6 @@ type ephemeralSecrets struct {
 	framework.EphemeralResourceWithConfigure
 }
 
-func (e *ephemeralSecrets) Metadata(_ context.Context, _ ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "aws_kms_secrets"
-}
-
 func (e *ephemeralSecrets) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

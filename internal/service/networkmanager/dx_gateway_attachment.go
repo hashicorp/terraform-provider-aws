@@ -50,10 +50,6 @@ type directConnectGatewayAttachmentResource struct {
 	framework.WithImportByID
 }
 
-func (*directConnectGatewayAttachmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmanager_dx_gateway_attachment"
-}
-
 func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

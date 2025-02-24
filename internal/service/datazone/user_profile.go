@@ -51,10 +51,6 @@ type resourceUserProfile struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceUserProfile) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_user_profile"
-}
-
 func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

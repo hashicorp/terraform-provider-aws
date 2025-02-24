@@ -38,10 +38,6 @@ type resourceTablePolicy struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceTablePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_s3tables_table_policy"
-}
-
 func (r *resourceTablePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

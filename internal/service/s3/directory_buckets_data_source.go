@@ -29,10 +29,6 @@ type directoryBucketsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *directoryBucketsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_s3_directory_buckets"
-}
-
 func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

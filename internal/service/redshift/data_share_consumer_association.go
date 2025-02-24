@@ -44,10 +44,6 @@ type resourceDataShareConsumerAssociation struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceDataShareConsumerAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_data_share_consumer_association"
-}
-
 func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

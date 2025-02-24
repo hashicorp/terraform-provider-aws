@@ -310,8 +310,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 // DataSources returns a slice of functions to instantiate each DataSource
 // implementation.
 //
-// The data source type name is determined by the DataSource implementing
-// the Metadata method. All data sources must have unique names.
+// All data sources must have unique type names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	var errs []error
 	var dataSources []func() datasource.DataSource
@@ -331,14 +330,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				continue
 			}
 
-			metadataResponse := datasource.MetadataResponse{}
-			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
-			typeName := metadataResponse.TypeName
-
-			// Temporary check that type name from annotation equals Metadata response.
-			if typeName != v.TypeName {
-				errs = append(errs, fmt.Errorf("data source %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
-			}
+			typeName := v.TypeName
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
@@ -373,7 +365,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			}
 
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, inner, interceptors)
+				return newWrappedDataSource(bootstrapContext, typeName, inner, interceptors)
 			})
 		}
 	}
@@ -390,8 +382,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 // Resources returns a slice of functions to instantiate each Resource
 // implementation.
 //
-// The resource type name is determined by the Resource implementing
-// the Metadata method. All resources must have unique names.
+// All resources must have unique type names.
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var errs []error
 	var resources []func() resource.Resource
@@ -407,14 +398,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				continue
 			}
 
-			metadataResponse := resource.MetadataResponse{}
-			inner.Metadata(ctx, resource.MetadataRequest{}, &metadataResponse)
-			typeName := metadataResponse.TypeName
-
-			// Temporary check that type name from annotation equals Metadata response.
-			if typeName != v.TypeName {
-				errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
-			}
+			typeName := v.TypeName
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
@@ -458,7 +442,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(bootstrapContext, inner, interceptors)
+				return newWrappedResource(bootstrapContext, typeName, inner, interceptors)
 			})
 		}
 	}
@@ -475,8 +459,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 // EphemeralResources returns a slice of functions to instantiate each Ephemeral Resource
 // implementation.
 //
-// The resource type name is determined by the Ephemeral Resource implementing
-// the Metadata method. All resources must have unique names.
+// All ephemeral resources must have unique type names.
 func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
 	var errs []error
 	var ephemeralResources []func() ephemeral.EphemeralResource
@@ -497,14 +480,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					continue
 				}
 
-				metadataResponse := ephemeral.MetadataResponse{}
-				inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
-				typeName := metadataResponse.TypeName
-
-				// Temporary check that type name from annotation equals Metadata response.
-				if typeName != v.TypeName {
-					errs = append(errs, fmt.Errorf("resource %s %s annotation: %s Metadata: %s", servicePackageName, v.Name, typeName, v.TypeName))
-				}
+				typeName := v.TypeName
 
 				// bootstrapContext is run on all wrapped methods before any interceptors.
 				bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
@@ -518,7 +494,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 				}
 
 				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(bootstrapContext, inner, nil)
+					return newWrappedEphemeralResource(bootstrapContext, typeName, inner, nil)
 				})
 			}
 		}
