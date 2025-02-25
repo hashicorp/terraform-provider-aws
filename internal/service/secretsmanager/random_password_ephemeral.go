@@ -32,7 +32,7 @@ type ephemeralRandomPassword struct {
 func (e *ephemeralRandomPassword) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"exclude_characters": schema.BoolAttribute{
+			"exclude_characters": schema.StringAttribute{
 				Optional: true,
 			},
 			"exclude_lowercase": schema.BoolAttribute{
@@ -94,7 +94,7 @@ func (e *ephemeralRandomPassword) Open(ctx context.Context, req ephemeral.OpenRe
 }
 
 type ephemeralRandomPasswordModel struct {
-	ExcludeCharacters       types.Bool   `tfsdk:"exclude_characters"`
+	ExcludeCharacters       types.String `tfsdk:"exclude_characters"`
 	ExcludeLowercase        types.Bool   `tfsdk:"exclude_lowercase"`
 	ExcludeNumbers          types.Bool   `tfsdk:"exclude_numbers"`
 	ExcludePunctuation      types.Bool   `tfsdk:"exclude_punctuation"`
