@@ -9,17 +9,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // StringFromFramework converts a Framework String value to a string pointer.
 // A null String is converted to a nil string pointer.
 func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *string {
-	var output *string
-
-	must(Expand(ctx, v, &output))
-
-	return output
+	if v.IsUnknown() {
+		return nil
+	}
+	val := fwdiag.Must(v.ToStringValue(ctx))
+	return val.ValueStringPointer()
 }
 
 // StringValueFromFramework converts a Framework String value to a string.

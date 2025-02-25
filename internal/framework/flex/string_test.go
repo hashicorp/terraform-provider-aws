@@ -53,6 +53,17 @@ func TestStringFromFramework(t *testing.T) {
 	}
 }
 
+func BenchmarkStringFromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.StringValue("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringFromFramework(ctx, input)
+		if r == nil {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestStringToFramework(t *testing.T) {
 	t.Parallel()
 
