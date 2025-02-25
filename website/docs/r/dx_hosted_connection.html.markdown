@@ -27,7 +27,7 @@ resource "aws_dx_hosted_connection" "hosted" {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the connection.
-* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps and 10Gbps. Case sensitive.
+* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps, and 25Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Hosted Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/hosted_connection.html).
 * `connection_id` - (Required) The ID of the interconnect or LAG.
 * `owner_account_id` - (Required) The ID of the AWS account of the customer for the connection.
 * `vlan` - (Required) The dedicated VLAN provisioned to the hosted connection.
