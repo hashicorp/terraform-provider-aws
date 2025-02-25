@@ -65,6 +65,9 @@ func ResourceRule() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 50,
+				ConflictsWith: []string{
+					names.AttrExcludeResourceTags,
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_tag_key": {
@@ -74,7 +77,7 @@ func ResourceRule() *schema.Resource {
 						},
 						"resource_tag_value": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
@@ -83,8 +86,10 @@ func ResourceRule() *schema.Resource {
 			names.AttrExcludeResourceTags: {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
-				MaxItems: 50,
+				MaxItems: 5,
+				ConflictsWith: []string{
+					names.AttrResourceTags,
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_tag_key": {
@@ -94,7 +99,7 @@ func ResourceRule() *schema.Resource {
 						},
 						"resource_tag_value": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
@@ -278,13 +283,14 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
 		if in.ResourceTags == nil {
 			in.ResourceTags = []types.ResourceTag{}
-			in.ResourceType = types.ResourceType(d.Get(names.AttrResourceType).(string))
-			in.RetentionPeriod = expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{}))
 		}
 		update = true
 	}
 	if d.HasChanges(names.AttrExcludeResourceTags) {
 		in.ExcludeResourceTags = expandResourceTags(d.Get(names.AttrExcludeResourceTags).(*schema.Set).List())
+		if in.ExcludeResourceTags == nil {
+			in.ExcludeResourceTags = []types.ResourceTag{}
+		}
 		update = true
 	}
 

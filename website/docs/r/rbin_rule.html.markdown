@@ -45,6 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) The retention rule description.
+* `exclude_resource_tags` - (Optional) Specifies the exclusion tags to use to identify resources that are to be excluded, or ignored, by a Region-level retention rule.  See [`exclude_resource_tags`](#exclude_resource_tags) below.
 * `resource_tags` - (Optional) Specifies the resource tags to use to identify resources that are to be retained by a tag-level retention rule. See [`resource_tags`](#resource_tags) below.
 * `lock_configuration` - (Optional) Information about the retention rule lock configuration. See [`lock_configuration`](#lock_configuration) below.
 
@@ -55,6 +56,17 @@ The following arguments are required:
 * `retention_period_unit` - (Required) The unit of time in which the retention period is measured. Currently, only DAYS is supported.
 * `retention_period_value` - (Required) The period value for which the retention rule is to retain resources. The period is measured using the unit specified for RetentionPeriodUnit.
 
+
+### exclude_resource_tags
+
+The following argument is required:
+
+* `resource_tag_key` - (Required) The tag key.
+
+The following argument is optional:
+
+* `resource_tag_value` - (Optional) The tag value.
+
 ### resource_tags
 
 The following argument is required:
@@ -64,6 +76,7 @@ The following argument is required:
 The following argument is optional:
 
 * `resource_tag_value` - (Optional) The tag value.
+
 
 ### lock_configuration
 
