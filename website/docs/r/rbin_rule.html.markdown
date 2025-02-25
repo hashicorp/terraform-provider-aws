@@ -56,7 +56,6 @@ The following arguments are required:
 * `retention_period_unit` - (Required) The unit of time in which the retention period is measured. Currently, only DAYS is supported.
 * `retention_period_value` - (Required) The period value for which the retention rule is to retain resources. The period is measured using the unit specified for RetentionPeriodUnit.
 
-
 ### exclude_resource_tags
 
 The following argument is required:
@@ -76,7 +75,6 @@ The following argument is required:
 The following argument is optional:
 
 * `resource_tag_value` - (Optional) The tag value.
-
 
 ### lock_configuration
 
