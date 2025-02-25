@@ -423,13 +423,15 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Populate a modify input structure and check for changes
+	// TIP: -- 3. Get the difference between the plan and state, if any
 	{{- end }}
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
-		!plan.Type.Equal(state.Type) {
+	diff, d := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
+	if diff.HasChanges() {
 		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
 		if resp.Diagnostics.HasError() {

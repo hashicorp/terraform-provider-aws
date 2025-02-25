@@ -669,7 +669,7 @@ func (r *resourceScheduledQuery) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return

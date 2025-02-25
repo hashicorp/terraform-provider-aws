@@ -217,7 +217,7 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
