@@ -149,38 +149,14 @@ func TestStringToFramework(t *testing.T) {
 	}
 }
 
-func TestStringToFrameworkLegacy(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    *string
-		expected types.String
-	}
-	tests := map[string]testCase{
-		"valid string": {
-			input:    aws.String("TEST"),
-			expected: types.StringValue("TEST"),
-		},
-		"empty string": {
-			input:    aws.String(""),
-			expected: types.StringValue(""),
-		},
-		"nil string": {
-			input:    nil,
-			expected: types.StringValue(""),
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.StringToFrameworkLegacy(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
+func BenchmarkStringToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := aws.String("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
 	}
 }
 
@@ -213,6 +189,41 @@ func TestStringValueToFramework(t *testing.T) {
 			t.Parallel()
 
 			got := flex.StringValueToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStringToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    aws.String("TEST"),
+			expected: types.StringValue("TEST"),
+		},
+		"empty string": {
+			input:    aws.String(""),
+			expected: types.StringValue(""),
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.StringValue(""),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.StringToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

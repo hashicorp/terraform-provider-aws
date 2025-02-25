@@ -40,6 +40,12 @@ func StringSliceValueFromFramework(ctx context.Context, v basetypes.StringValuab
 	return []string{StringValueFromFramework(ctx, v)}
 }
 
+// StringToFramework converts a string pointer to a Framework String value.
+// A nil string pointer is converted to a null String.
+func StringToFramework(ctx context.Context, v *string) types.String {
+	return types.StringPointerValue(v)
+}
+
 // StringValueToFramework converts a string value to a Framework String value.
 // An empty string is converted to a null String.
 func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
@@ -58,12 +64,6 @@ func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
 // An empty string is left as an empty String.
 func StringValueToFrameworkLegacy[T ~string](_ context.Context, v T) types.String {
 	return types.StringValue(string(v))
-}
-
-// StringToFramework converts a string pointer to a Framework String value.
-// A nil string pointer is converted to a null String.
-func StringToFramework(ctx context.Context, v *string) types.String {
-	return StringToFrameworkValuable[types.String](ctx, v)
 }
 
 // StringToFrameworkLegacy converts a string pointer to a Framework String value.
