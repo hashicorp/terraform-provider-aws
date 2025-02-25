@@ -30,11 +30,7 @@ func BoolValueFromFramework(ctx context.Context, v basetypes.BoolValuable) bool 
 // BoolToFramework converts a bool pointer to a Framework Bool value.
 // A nil bool pointer is converted to a null Bool.
 func BoolToFramework(ctx context.Context, v *bool) types.Bool {
-	var output types.Bool
-
-	must(Flatten(ctx, v, &output))
-
-	return output
+	return types.BoolPointerValue(v)
 }
 
 // BoolToFrameworkLegacy converts a bool pointer to a Framework Bool value.
