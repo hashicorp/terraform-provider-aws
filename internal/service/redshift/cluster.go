@@ -52,10 +52,6 @@ func resourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("master_password"), cty.GetAttrPath("master_password_wo")),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"allow_version_upgrade": {
 				Type:     schema.TypeBool,
@@ -306,6 +302,7 @@ func resourceCluster() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
 				),
 				ConflictsWith: []string{"manage_master_password", "master_password"},
+				RequiredWith:  []string{"master_password_wo_version"},
 			},
 			"master_password_wo_version": {
 				Type:         schema.TypeInt,
