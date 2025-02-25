@@ -66,10 +66,6 @@ type dataSourceResource struct {
 	framework.WithTimeouts
 }
 
-func (*dataSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_data_source"
-}
-
 func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	crawlerConfigurationNestedObjectSchema := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{
@@ -924,10 +920,11 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteDataSource(ctx, &bedrockagent.DeleteDataSourceInput{
+	input := bedrockagent.DeleteDataSourceInput{
 		DataSourceId:    data.DataSourceID.ValueStringPointer(),
 		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteDataSource(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

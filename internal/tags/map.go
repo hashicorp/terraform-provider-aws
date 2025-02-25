@@ -182,7 +182,22 @@ func (v Map) MapSemanticEquals(ctx context.Context, oValuable basetypes.MapValua
 	return true, diags
 }
 
-// FlattenStringValueMap returns an empty, non-nil Map when the source map has no elements
+// IsWhollyKnown returns true if the map is known and all of its elements are known.
+func (v Map) IsWhollyKnown() bool {
+	if v.IsUnknown() {
+		return false
+	}
+
+	for _, elem := range v.Elements() {
+		if elem.IsUnknown() {
+			return false
+		}
+	}
+
+	return true
+}
+
+// FlattenStringValueMap returns an empty, non-nil Map when the source map has no elements.
 func FlattenStringValueMap(ctx context.Context, m map[string]string) Map {
 	elems := make(map[string]attr.Value, len(m))
 

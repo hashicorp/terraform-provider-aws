@@ -132,9 +132,10 @@ func resourceTransitGatewayPolicyTableDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayPolicyTable(ctx, &ec2.DeleteTransitGatewayPolicyTableInput{
+	input := ec2.DeleteTransitGatewayPolicyTableInput{
 		TransitGatewayPolicyTableId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayPolicyTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
 		return diags

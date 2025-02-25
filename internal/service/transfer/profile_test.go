@@ -39,9 +39,10 @@ func TestAccTransferProfile_basic(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "profile/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "profile_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "profile_type", "LOCAL"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

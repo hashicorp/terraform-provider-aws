@@ -534,9 +534,10 @@ func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppSync GraphQL API: %s", d.Id())
-	_, err := conn.DeleteGraphqlApi(ctx, &appsync.DeleteGraphqlApiInput{
+	input := appsync.DeleteGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGraphqlApi(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

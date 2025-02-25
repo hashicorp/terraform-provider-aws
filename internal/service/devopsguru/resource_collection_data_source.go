@@ -30,10 +30,6 @@ type dataSourceResourceCollection struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceResourceCollection) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_devopsguru_resource_collection"
-}
-
 func (d *dataSourceResourceCollection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

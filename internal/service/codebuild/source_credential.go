@@ -118,9 +118,10 @@ func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Source Credential: %s", d.Id())
-	_, err := conn.DeleteSourceCredentials(ctx, &codebuild.DeleteSourceCredentialsInput{
+	input := codebuild.DeleteSourceCredentialsInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSourceCredentials(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

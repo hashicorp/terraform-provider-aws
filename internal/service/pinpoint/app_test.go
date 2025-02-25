@@ -40,7 +40,8 @@ func TestAccPinpointApp_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "mobiletargeting", "apps/{id}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),

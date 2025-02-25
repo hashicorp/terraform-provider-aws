@@ -189,10 +189,6 @@ func (r *deliverySourceResource) ImportState(ctx context.Context, request resour
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
-func (r *deliverySourceResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDeliverySourceByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.DeliverySource, error) {
 	input := cloudwatchlogs.GetDeliverySourceInput{
 		Name: aws.String(name),

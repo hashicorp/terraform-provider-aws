@@ -48,10 +48,6 @@ const (
 	ResNameCollection = "Collection"
 )
 
-func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_collection"
-}
-
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	collectionRegex := regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`)
 
@@ -208,10 +204,6 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 		return
 	}
-}
-
-func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {

@@ -47,10 +47,6 @@ type resourceEnvironmentProfile struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceEnvironmentProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_environment_profile"
-}
-
 func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -255,10 +251,11 @@ func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	_, err := conn.DeleteEnvironmentProfile(ctx, &datazone.DeleteEnvironmentProfileInput{
+	input := datazone.DeleteEnvironmentProfileInput{
 		Identifier:       state.Id.ValueStringPointer(),
 		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteEnvironmentProfile(ctx, &input)
 
 	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		resp.Diagnostics.AddError(

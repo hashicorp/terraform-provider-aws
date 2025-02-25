@@ -96,7 +96,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeVolumesInput{}
+	input := ec2.DescribeVolumesInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
@@ -106,7 +106,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := findEBSVolumes(ctx, conn, input)
+	output, err := findEBSVolumes(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)

@@ -32,10 +32,6 @@ type dataSourcePatchBaselines struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourcePatchBaselines) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_ssm_patch_baselines"
-}
-
 func (d *dataSourcePatchBaselines) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -13,6 +13,5 @@ import (
 	_ "github.com/pavius/impi/cmd/impi"
 	_ "github.com/rhysd/actionlint/cmd/actionlint"
 	_ "github.com/terraform-linters/tflint"
-	_ "github.com/uber-go/gopatch"
 	_ "mvdan.cc/gofumpt"
 )

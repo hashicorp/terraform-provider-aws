@@ -157,10 +157,11 @@ func resourceDomainPermissionsPolicyDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
-	_, err = conn.DeleteDomainPermissionsPolicy(ctx, &codeartifact.DeleteDomainPermissionsPolicyInput{
+	input := codeartifact.DeleteDomainPermissionsPolicyInput{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(owner),
-	})
+	}
+	_, err = conn.DeleteDomainPermissionsPolicy(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

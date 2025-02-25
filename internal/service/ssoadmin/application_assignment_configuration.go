@@ -37,10 +37,6 @@ type resourceApplicationAssignmentConfiguration struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceApplicationAssignmentConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application_assignment_configuration"
-}
-
 func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

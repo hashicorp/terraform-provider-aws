@@ -57,10 +57,6 @@ type knowledgeBaseResource struct {
 	framework.WithTimeouts
 }
 
-func (*knowledgeBaseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_knowledge_base"
-}
-
 func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -669,9 +665,10 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteKnowledgeBase(ctx, &bedrockagent.DeleteKnowledgeBaseInput{
+	input := bedrockagent.DeleteKnowledgeBaseInput{
 		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteKnowledgeBase(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -690,10 +687,6 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 
 		return
 	}
-}
-
-func (r *knowledgeBaseResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {

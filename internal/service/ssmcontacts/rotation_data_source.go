@@ -32,10 +32,6 @@ type dataSourceRotation struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceRotation) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ssmcontacts_rotation"
-}
-
 func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

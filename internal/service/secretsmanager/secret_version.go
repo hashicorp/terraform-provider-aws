@@ -12,10 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -40,12 +42,23 @@ func resourceSecretVersion() *schema.Resource {
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("has_secret_string_wo", false)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("secret_string"), cty.GetAttrPath("secret_string_wo")),
 		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"has_secret_string_wo": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"secret_id": {
@@ -58,7 +71,7 @@ func resourceSecretVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"secret_string"},
+				ConflictsWith: []string{"secret_string", "secret_string_wo"},
 				ValidateFunc:  verify.ValidBase64String,
 			},
 			"secret_string": {
@@ -66,7 +79,20 @@ func resourceSecretVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"secret_binary"},
+				ConflictsWith: []string{"secret_binary", "secret_string_wo"},
+			},
+			"secret_string_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secret_binary", "secret_string"},
+			},
+			"secret_string_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"secret_string_wo"},
 			},
 			"version_id": {
 				Type:     schema.TypeString,
@@ -98,8 +124,20 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-	} else if v, ok := d.GetOk("secret_string"); ok {
+	}
+
+	if v, ok := d.GetOk("secret_string"); ok {
 		input.SecretString = aws.String(v.(string))
+	}
+
+	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if secretStringWO != "" {
+		input.SecretString = aws.String(secretStringWO)
 	}
 
 	if v, ok := d.GetOk("version_stages"); ok && v.(*schema.Set).Len() > 0 {
@@ -153,6 +191,23 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
 	d.Set("version_stages", output.VersionStages)
+
+	// unset secret_string if the value is configured as write-only
+	hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
+	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if secretStringWO != "" {
+		hasWriteOnly = true
+	}
+
+	if hasWriteOnly {
+		d.Set("has_secret_string_wo", true)
+		d.Set("secret_string", nil)
+	}
 
 	return diags
 }

@@ -306,10 +306,11 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting Timestream Table: %s", d.Id())
-	_, err = conn.DeleteTable(ctx, &timestreamwrite.DeleteTableInput{
+	input := timestreamwrite.DeleteTableInput{
 		DatabaseName: aws.String(databaseName),
 		TableName:    aws.String(tableName),
-	})
+	}
+	_, err = conn.DeleteTable(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

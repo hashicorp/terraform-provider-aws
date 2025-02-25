@@ -141,10 +141,11 @@ func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route: %s", d.Id())
-	_, err = conn.DeleteTransitGatewayRoute(ctx, &ec2.DeleteTransitGatewayRouteInput{
+	input := ec2.DeleteTransitGatewayRouteInput{
 		DestinationCidrBlock:       aws.String(destination),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DeleteTransitGatewayRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound, errCodeInvalidRouteTableIDNotFound) {
 		return diags

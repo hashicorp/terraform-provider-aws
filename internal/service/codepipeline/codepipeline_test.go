@@ -1100,7 +1100,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T, regions ...string) {
 		}
 		conn := client.CodePipelineClient(ctx)
 
-		_, err := conn.ListPipelines(ctx, &codepipeline.ListPipelinesInput{})
+		input := codepipeline.ListPipelinesInput{}
+		_, err := conn.ListPipelines(ctx, &input)
 
 		if acctest.PreCheckSkipError(err) {
 			t.Skipf("skipping acceptance testing: %s", err)

@@ -55,10 +55,6 @@ type securityGroupIngressRuleResource struct {
 	securityGroupRuleResource
 }
 
-func (*securityGroupIngressRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_ingress_rule"
-}
-
 func (r *securityGroupIngressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
 	return []resource.StateMover{
 		{
@@ -89,10 +85,11 @@ func (r *securityGroupIngressRuleResource) create(ctx context.Context, data *sec
 func (r *securityGroupIngressRuleResource) delete(ctx context.Context, data *securityGroupRuleResourceModel) error {
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.RevokeSecurityGroupIngress(ctx, &ec2.RevokeSecurityGroupIngressInput{
+	input := ec2.RevokeSecurityGroupIngressInput{
 		GroupId:              fwflex.StringFromFramework(ctx, data.SecurityGroupID),
 		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.RevokeSecurityGroupIngress(ctx, &input)
 
 	return err
 }
@@ -398,8 +395,6 @@ func (r *securityGroupRuleResource) ModifyPlan(ctx context.Context, request reso
 			response.RequiresReplace = []path.Path{path.Root(old), path.Root(new)}
 		}
 	}
-
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource.ConfigValidator {
