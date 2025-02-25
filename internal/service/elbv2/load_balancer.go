@@ -55,7 +55,6 @@ func resourceLoadBalancer() *schema.Resource {
 			customizeDiffLoadBalancerALB,
 			customizeDiffLoadBalancerNLB,
 			customizeDiffLoadBalancerGWLB,
-			verify.SetTagsDiff,
 		),
 
 		Timeouts: &schema.ResourceTimeout{

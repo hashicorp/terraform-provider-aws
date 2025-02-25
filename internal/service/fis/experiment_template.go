@@ -48,8 +48,6 @@ func resourceExperimentTemplate() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrAction: {
 				Type:     schema.TypeSet,

@@ -96,8 +96,6 @@ func resourceVerifiedAccessGroup() *schema.Resource {
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

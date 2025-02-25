@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -47,10 +46,7 @@ func resourceComputeEnvironment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceComputeEnvironmentCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceComputeEnvironmentCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

@@ -59,7 +59,6 @@ func resourceLoadBalancer() *schema.Resource {
 
 				return removed.Equal(os)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Timeouts: &schema.ResourceTimeout{

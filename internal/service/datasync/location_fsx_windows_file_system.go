@@ -112,8 +112,6 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 104),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

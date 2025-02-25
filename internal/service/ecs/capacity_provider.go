@@ -40,8 +40,6 @@ func resourceCapacityProvider() *schema.Resource {
 			StateContext: resourceCapacityProviderImport,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,

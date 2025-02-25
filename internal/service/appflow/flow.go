@@ -1343,8 +1343,6 @@ func resourceFlow() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

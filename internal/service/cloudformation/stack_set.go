@@ -212,8 +212,6 @@ func resourceStackSet() *schema.Resource {
 				ConflictsWith: []string{"template_body"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

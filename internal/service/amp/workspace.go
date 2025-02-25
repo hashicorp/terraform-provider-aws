@@ -46,7 +46,6 @@ func resourceWorkspace() *schema.Resource {
 			customdiff.ForceNewIfChange(names.AttrAlias, func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

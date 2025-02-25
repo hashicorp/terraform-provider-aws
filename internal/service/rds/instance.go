@@ -703,7 +703,6 @@ func resourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil

@@ -466,7 +466,6 @@ func resourceListenerRule() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			validateListenerActionsCustomDiff(names.AttrAction),
 		),
 	}

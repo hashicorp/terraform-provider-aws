@@ -89,8 +89,6 @@ func ResourceAssessmentTemplate() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
