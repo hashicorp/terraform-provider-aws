@@ -31,8 +31,8 @@ func Float32ToFrameworkFloat64(_ context.Context, v *float32) types.Float64 {
 	return types.Float64Value(float64(aws.ToFloat32(v)))
 }
 
-// Float32ToFrameworkLegacy converts a float32 pointer to a Framework Float64 value.
+// Float32ToFrameworkFloat64Legacy converts a float32 pointer to a Framework Float64 value.
 // A nil float32 pointer is converted to a zero float64.
-func Float32ToFrameworkLegacy(_ context.Context, v *float32) types.Float64 {
+func Float32ToFrameworkFloat64Legacy(_ context.Context, v *float32) types.Float64 {
 	return types.Float64Value(float64(aws.ToFloat32(v)))
 }
