@@ -48,6 +48,17 @@ func TestFloat64ToFramework(t *testing.T) {
 	}
 }
 
+func BenchmarkFloat64ToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Float64(42.1)
+	for n := 0; n < b.N; n++ {
+		r := flex.Float64ToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestFloat64ToFrameworkLegacy(t *testing.T) {
 	t.Parallel()
 
