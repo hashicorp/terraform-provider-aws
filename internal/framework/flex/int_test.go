@@ -477,3 +477,53 @@ func BenchmarkInt32ValueFromFrameworkInt64(b *testing.B) {
 		}
 	}
 }
+
+func TestInt32FromFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.Int32
+		expected *int32
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    types.Int32Value(42),
+			expected: aws.Int32(42),
+		},
+		"zero int64": {
+			input:    types.Int32Value(0),
+			expected: aws.Int32(0),
+		},
+		"null int64": {
+			input:    types.Int32Null(),
+			expected: nil,
+		},
+		"unknown int64": {
+			input:    types.Int32Unknown(),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.Int32FromFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkInt32FromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.Int32Value(42)
+	for n := 0; n < b.N; n++ {
+		r := flex.Int32FromFramework(ctx, input)
+		if r == nil {
+			b.Fatal("should never see this")
+		}
+	}
+}
