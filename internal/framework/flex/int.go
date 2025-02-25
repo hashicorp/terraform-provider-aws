@@ -53,11 +53,10 @@ func Int64ToFrameworkLegacy(_ context.Context, v *int64) types.Int64 {
 }
 
 func Int32ToFrameworkInt64(ctx context.Context, v *int32) types.Int64 {
-	var output types.Int64
-
-	must(Flatten(ctx, v, &output))
-
-	return output
+	if v == nil {
+		return types.Int64Null()
+	}
+	return types.Int64Value(int64(aws.ToInt32(v)))
 }
 
 func Int32ValueToFrameworkInt64(ctx context.Context, v int32) types.Int64 {

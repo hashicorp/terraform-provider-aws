@@ -240,6 +240,17 @@ func TestInt32ToFrameworkInt64(t *testing.T) {
 	}
 }
 
+func BenchmarkInt32ToFrameworkInt64(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Int32(42)
+	for n := 0; n < b.N; n++ {
+		r := flex.Int32ToFrameworkInt64(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestInt32ToFrameworkInt64Legacy(t *testing.T) {
 	t.Parallel()
 
