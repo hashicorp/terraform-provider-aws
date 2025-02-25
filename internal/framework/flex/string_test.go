@@ -64,6 +64,56 @@ func BenchmarkStringFromFramework(b *testing.B) {
 	}
 }
 
+func TestStringValueFromFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected string
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    types.StringValue("TEST"),
+			expected: "TEST",
+		},
+		"empty string": {
+			input:    types.StringValue(""),
+			expected: "",
+		},
+		"null string": {
+			input:    types.StringNull(),
+			expected: "",
+		},
+		"unknown string": {
+			input:    types.StringUnknown(),
+			expected: "",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.StringValueFromFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkStringValueFromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.StringValue("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringValueFromFramework(ctx, input)
+		if r == "" {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestStringToFramework(t *testing.T) {
 	t.Parallel()
 

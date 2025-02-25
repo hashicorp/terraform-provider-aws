@@ -26,11 +26,8 @@ func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *strin
 // StringValueFromFramework converts a Framework String value to a string.
 // A null String is converted to an empty string.
 func StringValueFromFramework(ctx context.Context, v basetypes.StringValuable) string {
-	var output string
-
-	must(Expand(ctx, v, &output))
-
-	return output
+	val := fwdiag.Must(v.ToStringValue(ctx))
+	return val.ValueString()
 }
 
 // StringSliceValueFromFramework converts a single Framework String value to a string slice.
