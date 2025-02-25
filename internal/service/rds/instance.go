@@ -85,10 +85,6 @@ func resourceInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath(names.AttrPassword), cty.GetAttrPath("password_wo")),
-		},
-
 		Schema: map[string]*schema.Schema{
 			names.AttrAddress: {
 				Type:     schema.TypeString,
@@ -509,6 +505,7 @@ func resourceInstance() *schema.Resource {
 				WriteOnly:     true,
 				Sensitive:     true,
 				ConflictsWith: []string{"manage_master_user_password", names.AttrPassword},
+				RequiredWith:  []string{"password_wo_version"},
 			},
 			"password_wo_version": {
 				Type:         schema.TypeInt,
