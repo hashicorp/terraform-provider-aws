@@ -82,10 +82,11 @@ func StringToFrameworkARN(ctx context.Context, v *string) fwtypes.ARN {
 // A nil string pointer is converted to a null StringValuable.
 func StringToFrameworkValuable[T basetypes.StringValuable](ctx context.Context, v *string) T {
 	var output T
+	typ := output.Type(ctx)
+	styp := typ.(basetypes.StringTypable)
 
-	must(Flatten(ctx, v, &output))
-
-	return output
+	sv := fwdiag.Must(styp.ValueFromString(ctx, types.StringPointerValue(v)))
+	return sv.(T)
 }
 
 func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {

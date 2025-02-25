@@ -332,6 +332,17 @@ func TestStringToFrameworkARN(t *testing.T) {
 	}
 }
 
+func BenchmarkStringToFrameworkARN(b *testing.B) {
+	ctx := context.Background()
+	input := aws.String("arn:aws:iam::123456789012:user/David")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringToFrameworkARN(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestEmptyStringAsNull(t *testing.T) {
 	t.Parallel()
 
