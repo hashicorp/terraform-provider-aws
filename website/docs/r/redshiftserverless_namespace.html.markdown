@@ -10,6 +10,8 @@ description: |-
 
 Creates a new Amazon Redshift Serverless Namespace.
 
+-> **Note:** Write-Only attribute `admin_password_wo` is available to use in place of `admin_password`. Write-Only attributes are supported in HashiCorp Terraform 1.11.0 and later.
+
 ## Example Usage
 
 ```terraform
