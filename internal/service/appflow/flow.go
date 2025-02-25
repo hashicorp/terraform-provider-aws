@@ -987,7 +987,7 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max_page_size": {
+															"max_parallelism": {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntBetween(1, 10),
@@ -3601,7 +3601,7 @@ func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSou
 	}
 
 	if v := sapoDataSourceProperties.ParallelismConfig; v != nil {
-		m["pagination_config"] = flattenSAPODataParallelismConfigProperties(v)
+		m["parallelism_config"] = flattenSAPODataParallelismConfigProperties(v)
 	}
 
 	return m
