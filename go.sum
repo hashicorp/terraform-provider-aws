@@ -225,8 +225,8 @@ github.com/aws/aws-sdk-go-v2/service/efs v1.34.12 h1:hOC1GjuyZ6rDFbqy81dPR9mQn8R
 github.com/aws/aws-sdk-go-v2/service/efs v1.34.12/go.mod h1:q7ZhoArJh+cy9hJk690UevJptbCqsIOUhhEBMP8aE5o=
 github.com/aws/aws-sdk-go-v2/service/eks v1.58.1 h1:w/GEycBxTO4psb9Mw8g3b9/dktLE5GeYP1uj3nZ+85M=
 github.com/aws/aws-sdk-go-v2/service/eks v1.58.1/go.mod h1:iBFJ86tzXjNjl3J+gJ8Y9Xz/S9JRAE3bTchQcjoMxYU=
-github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.13 h1:jUKlOrtcqvWeAzHsBYKVmX4OieFHqSSnT0AxiRk6Uu0=
-github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.13/go.mod h1:IpBQulkSHiRNyLXiyYmUxv9lva9yYKvwtDUqOB9bEJc=
+github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.14 h1:ihDVHK8MNRJj1r7ZpgVn2hv2t2Xndi+Ua+w9Bq5cNA0=
+github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.14/go.mod h1:IpBQulkSHiRNyLXiyYmUxv9lva9yYKvwtDUqOB9bEJc=
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.17 h1:7V5zDW6NgWgqHTjAiUijI75J7PaB1sxutN6m+Mie/Ng=
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.17/go.mod h1:qKtWAhIHC1TDBDGIjLM4TUWk28U3QvqKln00pAPVDjA=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.18 h1:Q59TDNnobz8VliHLFT4wSXSBxv/vBgcANThiHsJRYvA=
@@ -249,8 +249,8 @@ github.com/aws/aws-sdk-go-v2/service/evidently v1.23.16 h1:XnSA17jrSHzBjgShDaxlt
 github.com/aws/aws-sdk-go-v2/service/evidently v1.23.16/go.mod h1:8Dl0EcLFC7i2B6tN81eyZGnvboemTADmVSixqrcWLKU=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.28.16 h1:DgHv70ENRYKGViPJlQH8ybNge686reykEh/kKKiQ/54=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.28.16/go.mod h1:tdix8bNddoEjsfHL4PGkf6O5jFZ+TQZvP2ij8KHqHBU=
-github.com/aws/aws-sdk-go-v2/service/firehose v1.36.5 h1:HQ62G/XpxRhLiUKtPbX8gX+RMo2kzHDibIK0C+hmWBM=
-github.com/aws/aws-sdk-go-v2/service/firehose v1.36.5/go.mod h1:F92t0aKXhFnxpkl6Jme444UA7za9p2k22Jex2Z0oND8=
+github.com/aws/aws-sdk-go-v2/service/firehose v1.36.6 h1:LDsA1WNUMKmWVahRz2ryEwCsZb8cgbzkYoyQZ579BEA=
+github.com/aws/aws-sdk-go-v2/service/firehose v1.36.6/go.mod h1:F92t0aKXhFnxpkl6Jme444UA7za9p2k22Jex2Z0oND8=
 github.com/aws/aws-sdk-go-v2/service/fis v1.32.1 h1:jap7xmxX8bMfQejs7xL6GZCg/KaPei6mUcmKQLZcqp0=
 github.com/aws/aws-sdk-go-v2/service/fis v1.32.1/go.mod h1:5gGtYq3mgOI795EDK6ctmsQ8pEIp14KQZ36MNVghcsA=
 github.com/aws/aws-sdk-go-v2/service/fms v1.39.7 h1:WsMt1DE+DstbhrlyYuWKdsgiHh21HV0OS7bP8bCjTn0=
@@ -531,8 +531,8 @@ github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.10 h1:Adn4dLjZyLRSKin
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.10/go.mod h1:tzVbbR1VYG1yJnI9Le59Yoh6cFmlx020454kEMDogvU=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.17 h1:jSvEYJL4iu1iw7b7n6SKO4GB71GjMldZskNqNi8x1sM=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.17/go.mod h1:zHaQMoULEaXIgsOt2XJK7IgNysnRt8wKckOo06aFzLU=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.43.2 h1:4vz710+ufGyzhEB3l/pgSr46frJwdZa05Hp9PEf+uwo=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.43.2/go.mod h1:Tx8W5YzDX9rQOVbRuAQA/YZgqM+SXgry5rqN69f3nJI=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.43.3 h1:UgfnnIFLBJzF/aaWEWVV7jLO2+BqS2AgE0sqFkr8ep4=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.43.3/go.mod h1:Tx8W5YzDX9rQOVbRuAQA/YZgqM+SXgry5rqN69f3nJI=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.56.4 h1:NINAiipRKTgKvxKE6zaRaz1eW6n2QMQhdWaNcvQWztQ=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.56.4/go.mod h1:h9PTQSrllWcMGsAUApyBi5/ziNeOWtYjKvQb3sGowxA=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.21.3 h1:XJi/xAiRL68PqjomKg/SYgGk8A+pJIBaJxsWBhnsG0E=
