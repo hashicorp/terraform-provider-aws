@@ -9,16 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // Int64FromFramework converts a Framework Int64 value to an int64 pointer.
 // A null Int64 is converted to a nil int64 pointer.
 func Int64FromFramework(ctx context.Context, v basetypes.Int64Valuable) *int64 {
-	var output *int64
-
-	must(Expand(ctx, v, &output))
-
-	return output
+	if v.IsUnknown() {
+		return nil
+	}
+	val := fwdiag.Must(v.ToInt64Value(ctx))
+	return val.ValueInt64Pointer()
 }
 
 func Int64ValueFromFramework(ctx context.Context, v basetypes.Int64Valuable) int64 {

@@ -52,6 +52,17 @@ func TestInt64FromFramework(t *testing.T) {
 	}
 }
 
+func BenchmarkInt64FromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.Int64Value(42)
+	for n := 0; n < b.N; n++ {
+		r := flex.Int64FromFramework(ctx, input)
+		if r == nil {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestInt64ToFramework(t *testing.T) {
 	t.Parallel()
 
