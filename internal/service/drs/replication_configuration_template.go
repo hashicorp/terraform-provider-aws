@@ -303,10 +303,6 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 	}
 }
 
-func (r *replicationConfigurationTemplateResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, input *drs.DescribeReplicationConfigurationTemplatesInput) (*awstypes.ReplicationConfigurationTemplate, error) {
 	output, err := findReplicationConfigurationTemplates(ctx, conn, input)
 

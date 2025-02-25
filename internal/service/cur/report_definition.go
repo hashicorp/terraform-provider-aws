@@ -262,9 +262,10 @@ func resourceReportDefinitionDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CURClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition: %s", d.Id())
-	_, err := conn.DeleteReportDefinition(ctx, &cur.DeleteReportDefinitionInput{
+	input := cur.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReportDefinition(ctx, &input)
 
 	if errs.IsA[*types.ValidationException](err) {
 		return diags

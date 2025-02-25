@@ -61,13 +61,13 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateCarrierGatewayInput{
+	input := ec2.CreateCarrierGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCarrierGateway),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	output, err := conn.CreateCarrierGateway(ctx, input)
+	output, err := conn.CreateCarrierGateway(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Carrier Gateway: %s", err)
@@ -128,9 +128,10 @@ func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())
-	_, err := conn.DeleteCarrierGateway(ctx, &ec2.DeleteCarrierGatewayInput{
+	input := ec2.DeleteCarrierGatewayInput{
 		CarrierGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCarrierGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
 		return diags

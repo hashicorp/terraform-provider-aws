@@ -209,9 +209,10 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain: %s", d.Id())
-	_, err = conn.DeleteTransitGatewayMulticastDomain(ctx, &ec2.DeleteTransitGatewayMulticastDomainInput{
+	input := ec2.DeleteTransitGatewayMulticastDomainInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteTransitGatewayMulticastDomain(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return diags

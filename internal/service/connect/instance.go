@@ -238,9 +238,10 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Instance: %s", d.Id())
-	_, err := conn.DeleteInstance(ctx, &connect.DeleteInstanceInput{
+	input := connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

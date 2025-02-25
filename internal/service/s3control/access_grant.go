@@ -309,10 +309,6 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *accessGrantResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {
 	input := &s3control.GetAccessGrantInput{
 		AccessGrantId: aws.String(grantID),

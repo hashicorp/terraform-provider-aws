@@ -197,10 +197,11 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Security Profile: %s", d.Id())
-	_, err = conn.DeleteSecurityProfile(ctx, &connect.DeleteSecurityProfileInput{
+	input := connect.DeleteSecurityProfileInput{
 		InstanceId:        aws.String(instanceID),
 		SecurityProfileId: aws.String(securityProfileID),
-	})
+	}
+	_, err = conn.DeleteSecurityProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

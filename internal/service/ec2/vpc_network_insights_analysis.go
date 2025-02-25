@@ -1492,9 +1492,10 @@ func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Analysis: %s", d.Id())
-	_, err := conn.DeleteNetworkInsightsAnalysis(ctx, &ec2.DeleteNetworkInsightsAnalysisInput{
+	input := ec2.DeleteNetworkInsightsAnalysisInput{
 		NetworkInsightsAnalysisId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNetworkInsightsAnalysis(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
 		return diags

@@ -167,10 +167,6 @@ func (r *domainNameAccessAssociationResource) Delete(ctx context.Context, reques
 	}
 }
 
-func (r *domainNameAccessAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDomainNameAccessAssociationByARN(ctx context.Context, conn *apigateway.Client, arn string) (*awstypes.DomainNameAccessAssociation, error) {
 	input := apigateway.GetDomainNameAccessAssociationsInput{
 		ResourceOwner: awstypes.ResourceOwnerSelf,

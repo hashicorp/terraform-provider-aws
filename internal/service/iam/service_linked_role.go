@@ -107,8 +107,9 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateServiceLinkedRole(ctx, input)
-
+	output, err := tfresource.RetryGWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (*iam.CreateServiceLinkedRoleOutput, error) {
+		return conn.CreateServiceLinkedRole(ctx, input)
+	}, "AccessDenied")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
 	}

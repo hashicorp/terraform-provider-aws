@@ -669,7 +669,7 @@ func (r *resourceScheduledQuery) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -747,10 +747,6 @@ func (r *resourceScheduledQuery) Delete(ctx context.Context, req resource.Delete
 
 func (r *resourceScheduledQuery) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-}
-
-func (r *resourceScheduledQuery) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client, id string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {

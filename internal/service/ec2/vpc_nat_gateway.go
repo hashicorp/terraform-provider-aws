@@ -341,9 +341,10 @@ func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
-	_, err := conn.DeleteNatGateway(ctx, &ec2.DeleteNatGatewayInput{
+	input := ec2.DeleteNatGatewayInput{
 		NatGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNatGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNatGatewayNotFound) {
 		return diags

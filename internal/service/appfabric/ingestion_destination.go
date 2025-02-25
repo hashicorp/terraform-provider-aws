@@ -350,11 +350,12 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteIngestionDestination(ctx, &appfabric.DeleteIngestionDestinationInput{
+	input := appfabric.DeleteIngestionDestinationInput{
 		AppBundleIdentifier:            data.AppBundleARN.ValueStringPointer(),
 		IngestionDestinationIdentifier: data.ARN.ValueStringPointer(),
 		IngestionIdentifier:            data.IngestionARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteIngestionDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -380,10 +381,6 @@ func (r *ingestionDestinationResource) ConfigValidators(context.Context) []resou
 			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName(names.AttrDestination).AtListIndex(0).AtName(names.AttrS3Bucket),
 		),
 	}
-}
-
-func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) (*awstypes.IngestionDestination, error) {

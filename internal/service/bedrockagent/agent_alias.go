@@ -250,10 +250,11 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteAgentAlias(ctx, &bedrockagent.DeleteAgentAliasInput{
+	input := bedrockagent.DeleteAgentAliasInput{
 		AgentAliasId: fwflex.StringFromFramework(ctx, data.AgentAliasID),
 		AgentId:      fwflex.StringFromFramework(ctx, data.AgentID),
-	})
+	}
+	_, err := conn.DeleteAgentAlias(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -264,10 +265,6 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 		return
 	}
-}
-
-func (r *agentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) (*awstypes.AgentAlias, error) {

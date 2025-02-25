@@ -172,9 +172,10 @@ func (r *serviceNetworkResourceAssociationResource) Delete(ctx context.Context, 
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	_, err := conn.DeleteServiceNetworkResourceAssociation(ctx, &vpclattice.DeleteServiceNetworkResourceAssociationInput{
+	input := vpclattice.DeleteServiceNetworkResourceAssociationInput{
 		ServiceNetworkResourceAssociationIdentifier: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteServiceNetworkResourceAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -191,10 +192,6 @@ func (r *serviceNetworkResourceAssociationResource) Delete(ctx context.Context, 
 
 		return
 	}
-}
-
-func (r *serviceNetworkResourceAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {

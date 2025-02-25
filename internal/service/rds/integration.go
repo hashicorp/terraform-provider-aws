@@ -227,7 +227,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().RDSClient(ctx)
 
 	_, err := conn.DeleteIntegration(ctx, &rds.DeleteIntegrationInput{
-		IntegrationIdentifier: data.ID.ValueStringPointer(),
+		IntegrationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
@@ -245,10 +245,6 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *integrationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIntegrationByARN(ctx context.Context, conn *rds.Client, arn string) (*awstypes.Integration, error) {

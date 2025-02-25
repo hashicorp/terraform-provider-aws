@@ -210,9 +210,10 @@ func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Device Pool: %s", d.Id())
-	_, err := conn.DeleteDevicePool(ctx, &devicefarm.DeleteDevicePoolInput{
+	input := devicefarm.DeleteDevicePoolInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDevicePool(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

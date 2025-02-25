@@ -77,7 +77,7 @@ const (
 )
 
 var (
-	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")

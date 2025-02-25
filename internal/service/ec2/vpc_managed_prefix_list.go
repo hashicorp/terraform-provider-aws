@@ -248,11 +248,12 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if len(descriptionOnlyRemovals) > 0 {
-				_, err := conn.ModifyManagedPrefixList(ctx, &ec2.ModifyManagedPrefixListInput{
+				input := ec2.ModifyManagedPrefixListInput{
 					CurrentVersion: input.CurrentVersion,
 					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
-				})
+				}
+				_, err := conn.ModifyManagedPrefixList(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
@@ -306,9 +307,10 @@ func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Managed Prefix List: %s", d.Id())
-	_, err := conn.DeleteManagedPrefixList(ctx, &ec2.DeleteManagedPrefixListInput{
+	input := ec2.DeleteManagedPrefixListInput{
 		PrefixListId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteManagedPrefixList(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIDNotFound) {
 		return diags
@@ -326,10 +328,11 @@ func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries int32) error {
-	_, err := conn.ModifyManagedPrefixList(ctx, &ec2.ModifyManagedPrefixListInput{
+	input := ec2.ModifyManagedPrefixListInput{
 		PrefixListId: aws.String(id),
 		MaxEntries:   aws.Int32(maxEntries),
-	})
+	}
+	_, err := conn.ModifyManagedPrefixList(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)

@@ -529,9 +529,10 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
-	output, err := conn.DeleteVpcEndpoints(ctx, &ec2.DeleteVpcEndpointsInput{
+	input := ec2.DeleteVpcEndpointsInput{
 		VpcEndpointIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.DeleteVpcEndpoints(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unsuccessfulItemsError(output.Unsuccessful)
@@ -604,7 +605,7 @@ func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec
 }
 
 func isAmazonS3VPCEndpoint(serviceName string) bool {
-	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName)
+	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9]{1,2})\\.s3", serviceName)
 	return ok
 }
 

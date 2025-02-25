@@ -243,10 +243,11 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Phone Number: %s", d.Id())
-	_, err = conn.ReleasePhoneNumber(ctx, &connect.ReleasePhoneNumberInput{
+	input := connect.ReleasePhoneNumberInput{
 		ClientToken:   aws.String(uuid),
 		PhoneNumberId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.ReleasePhoneNumber(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

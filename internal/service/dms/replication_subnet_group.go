@@ -161,9 +161,10 @@ func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Replication Subnet Group: %s", d.Id())
-	_, err := conn.DeleteReplicationSubnetGroup(ctx, &dms.DeleteReplicationSubnetGroupInput{
+	input := dms.DeleteReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReplicationSubnetGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

@@ -54,7 +54,7 @@ This resource supports the following arguments:
 * `description` - (Optional) A custom description of the filter. The description can contain as many as 512 characters.
 * `action` - (Required) The action to perform on findings that meet the filter criteria (`finding_criteria`). Valid values are: `ARCHIVE`, suppress (automatically archive) the findings; and, `NOOP`, don't perform any action on the findings.
 * `position` - (Optional) The position of the filter in the list of saved filters on the Amazon Macie console. This value also determines the order in which the filter is applied to findings, relative to other filters that are also applied to the findings.
-* `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the filter.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `finding_criteria` object supports the following:
 
@@ -77,6 +77,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The unique identifier (ID) of the macie Findings Filter.
 * `arn` - The Amazon Resource Name (ARN) of the Findings Filter.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -103,4 +104,4 @@ Using `terraform import`, import `aws_macie2_findings_filter` using the id. For 
 % terraform import aws_macie2_findings_filter.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-922eadb42886940b99342f03a6f68d81b396a29ebaa5aa573f2d1fa24f21e6b5 -->
+<!-- cache-key: cdktf-0.20.8 input-2f1b89a866d3a79f4b1e88305d4fa4d87929efc607e9902836dad4cbd497f946 -->

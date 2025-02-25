@@ -281,9 +281,10 @@ func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resourc
 	conn := r.Meta().BackupClient(ctx)
 
 	name := data.RestoreTestingPlanName.ValueString()
-	_, err := conn.DeleteRestoreTestingPlan(ctx, &backup.DeleteRestoreTestingPlanInput{
+	input := backup.DeleteRestoreTestingPlanInput{
 		RestoreTestingPlanName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRestoreTestingPlan(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -294,10 +295,6 @@ func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resourc
 
 		return
 	}
-}
-
-func (r *restoreTestingPlanResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *restoreTestingPlanResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {

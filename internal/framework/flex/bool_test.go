@@ -21,15 +21,19 @@ func TestBoolFromFramework(t *testing.T) {
 		expected *bool
 	}
 	tests := map[string]testCase{
-		"valid bool": {
+		"true": {
 			input:    types.BoolValue(true),
 			expected: aws.Bool(true),
 		},
-		"null bool": {
+		"false": {
+			input:    types.BoolValue(false),
+			expected: aws.Bool(false),
+		},
+		"null": {
 			input:    types.BoolNull(),
 			expected: nil,
 		},
-		"unknown bool": {
+		"unknown": {
 			input:    types.BoolUnknown(),
 			expected: nil,
 		},
@@ -56,15 +60,19 @@ func TestBoolValueFromFramework(t *testing.T) {
 		expected bool
 	}
 	tests := map[string]testCase{
-		"valid bool": {
+		"true": {
 			input:    types.BoolValue(true),
 			expected: true,
 		},
-		"null bool": {
+		"false": {
+			input:    types.BoolValue(false),
+			expected: false,
+		},
+		"null": {
 			input:    types.BoolNull(),
 			expected: false,
 		},
-		"unknown bool": {
+		"unknown": {
 			input:    types.BoolUnknown(),
 			expected: false,
 		},
@@ -91,11 +99,15 @@ func TestBoolToFramework(t *testing.T) {
 		expected types.Bool
 	}
 	tests := map[string]testCase{
-		"valid bool": {
+		"true": {
 			input:    aws.Bool(true),
 			expected: types.BoolValue(true),
 		},
-		"nil bool": {
+		"false": {
+			input:    aws.Bool(false),
+			expected: types.BoolValue(false),
+		},
+		"nil": {
 			input:    nil,
 			expected: types.BoolNull(),
 		},
@@ -122,11 +134,15 @@ func TestBoolToFrameworkLegacy(t *testing.T) {
 		expected types.Bool
 	}
 	tests := map[string]testCase{
-		"valid bool": {
+		"true": {
 			input:    aws.Bool(true),
 			expected: types.BoolValue(true),
 		},
-		"nil bool": {
+		"false": {
+			input:    aws.Bool(false),
+			expected: types.BoolValue(false),
+		},
+		"nil": {
 			input:    nil,
 			expected: types.BoolValue(false),
 		},

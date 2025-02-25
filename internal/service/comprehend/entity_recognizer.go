@@ -397,9 +397,10 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[INFO] Stopping Comprehend Entity Recognizer (%s)", d.Id())
 
-	_, err := conn.StopTrainingEntityRecognizer(ctx, &comprehend.StopTrainingEntityRecognizerInput{
+	input := comprehend.StopTrainingEntityRecognizerInput{
 		EntityRecognizerArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopTrainingEntityRecognizer(ctx, &input)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -433,9 +434,10 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 	var g multierror.Group
 	for _, v := range versions {
 		g.Go(func() error {
-			_, err = conn.DeleteEntityRecognizer(ctx, &comprehend.DeleteEntityRecognizerInput{
+			input := comprehend.DeleteEntityRecognizerInput{
 				EntityRecognizerArn: v.EntityRecognizerArn,
-			})
+			}
+			_, err = conn.DeleteEntityRecognizer(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if !errors.As(err, &nfe) {

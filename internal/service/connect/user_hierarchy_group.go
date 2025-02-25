@@ -209,10 +209,11 @@ func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Deleting Connect User Hierarchy Group: %s", d.Id())
-	_, err = conn.DeleteUserHierarchyGroup(ctx, &connect.DeleteUserHierarchyGroupInput{
+	input := connect.DeleteUserHierarchyGroupInput{
 		HierarchyGroupId: aws.String(userHierarchyGroupID),
 		InstanceId:       aws.String(instanceID),
-	})
+	}
+	_, err = conn.DeleteUserHierarchyGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

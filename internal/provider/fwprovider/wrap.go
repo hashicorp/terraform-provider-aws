@@ -9,8 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // contextFunc augments Context.
@@ -165,9 +169,10 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     resourceInterceptors
-	typeName         string
+	bootstrapContext       contextFunc
+	interceptors           resourceInterceptors
+	typeName               string
+	usesTransparentTagging bool
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -257,8 +262,16 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 }
 
 func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	ctx = w.opts.bootstrapContext(ctx, w.meta)
+
+	if w.opts.usesTransparentTagging {
+		w.setTagsAll(ctx, request, response)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
-		ctx = w.opts.bootstrapContext(ctx, w.meta)
 		v.ModifyPlan(ctx, request, response)
 	}
 }
@@ -297,4 +310,25 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 	}
 
 	return nil
+}
+
+// setTagsAll is a plan modifier that calculates the new value for the `tags_all` attribute.
+func (w *wrappedResource) setTagsAll(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	// If the entire plan is null, the resource is planned for destruction.
+	if request.Plan.Raw.IsNull() {
+		return
+	}
+
+	var planTags tftags.Map
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if planTags.IsWhollyKnown() {
+		allTags := w.meta.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(w.meta.IgnoreTagsConfig(ctx))
+		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
+	} else {
+		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
+	}
 }

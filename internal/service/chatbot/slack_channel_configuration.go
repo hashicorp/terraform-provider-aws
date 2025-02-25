@@ -217,7 +217,7 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -293,10 +293,6 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 		return
 	}
-}
-
-func (r *slackChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *slackChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {

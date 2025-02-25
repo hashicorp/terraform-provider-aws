@@ -502,10 +502,6 @@ func (r *automationRuleResource) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *automationRuleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAutomationRuleByARN(ctx context.Context, conn *securityhub.Client, arn string) (*awstypes.AutomationRulesConfig, error) {
 	input := &securityhub.BatchGetAutomationRulesInput{
 		AutomationRulesArns: []string{arn},

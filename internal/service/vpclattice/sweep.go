@@ -16,10 +16,11 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_vpclattice_resource_configuration", sweepResourceConfigurations)
+	awsv2.Register("aws_vpclattice_resource_configuration", sweepResourceConfigurations, "aws_vpclattice_service_network_resource_association")
 	awsv2.Register("aws_vpclattice_resource_gateway", sweepResourceGateways, "aws_vpclattice_resource_configuration")
 	awsv2.Register("aws_vpclattice_service", sweepServices)
 	awsv2.Register("aws_vpclattice_service_network", sweepServiceNetworks, "aws_vpclattice_service")
+	awsv2.Register("aws_vpclattice_service_network_resource_association", sweepServiceNetworkResourceAssociations)
 	awsv2.Register("aws_vpclattice_target_group", sweepTargetGroups)
 }
 
@@ -115,6 +116,28 @@ func sweepServiceNetworks(ctx context.Context, client *conns.AWSClient) ([]sweep
 			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepServiceNetworkResourceAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	input := &vpclattice.ListServiceNetworkResourceAssociationsInput{}
+	pages := vpclattice.NewListServiceNetworkResourceAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newServiceNetworkResourceAssociationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
 		}
 	}
 

@@ -178,9 +178,10 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 
 	conn := r.Meta().BackupClient(ctx)
 
-	_, err := conn.DeleteBackupVault(ctx, &backup.DeleteBackupVaultInput{
+	input := backup.DeleteBackupVaultInput{
 		BackupVaultName: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteBackupVault(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return
@@ -191,10 +192,6 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 
 		return
 	}
-}
-
-func (r *logicallyAirGappedVaultResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type logicallyAirGappedVaultResourceModel struct {

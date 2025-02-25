@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_detective_graph", name="Graph")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="graph_arn")
 func ResourceGraph() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGraphCreate,
@@ -109,9 +109,10 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Graph: %s", d.Id())
-	_, err := conn.DeleteGraph(ctx, &detective.DeleteGraphInput{
+	input := detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGraph(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

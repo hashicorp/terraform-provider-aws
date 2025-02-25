@@ -342,10 +342,11 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Deleting Connect User: %s", d.Id())
-	_, err = conn.DeleteUser(ctx, &connect.DeleteUserInput{
+	input := connect.DeleteUserInput{
 		InstanceId: aws.String(instanceID),
 		UserId:     aws.String(userID),
-	})
+	}
+	_, err = conn.DeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

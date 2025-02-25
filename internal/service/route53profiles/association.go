@@ -297,10 +297,6 @@ func statusAssociation(ctx context.Context, conn *route53profiles.Client, id str
 	}
 }
 
-func (r *resourceAssociation) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.ProfileAssociation, error) {
 	in := &route53profiles.GetProfileAssociationInput{
 		ProfileAssociationId: aws.String(id),

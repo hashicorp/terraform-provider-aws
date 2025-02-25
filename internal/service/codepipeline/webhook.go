@@ -227,9 +227,10 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	log.Printf("[INFO] Deleting CodePipeline Webhook: %s", d.Id())
-	_, err := conn.DeleteWebhook(ctx, &codepipeline.DeleteWebhookInput{
+	input := codepipeline.DeleteWebhookInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteWebhook(ctx, &input)
 
 	if errs.IsA[*types.WebhookNotFoundException](err) {
 		return diags

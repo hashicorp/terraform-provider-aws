@@ -396,14 +396,19 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "parsing SNS Topic ARN (%s): %s", aws.ToString(trail.SnsTopicARN), err)
 		}
-		d.Set("sns_topic_name", parsedSNSTopicARN.Resource)
+		if parsedSNSTopicARN.Region != aws.ToString(trail.HomeRegion) || parsedSNSTopicARN.AccountID != meta.(*conns.AWSClient).AccountID(ctx) {
+			d.Set("sns_topic_name", trail.SnsTopicARN)
+		} else {
+			d.Set("sns_topic_name", parsedSNSTopicARN.Resource)
+		}
 	} else {
 		d.Set("sns_topic_name", nil)
 	}
 
-	if output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
+	input := cloudtrail.GetTrailStatusInput{
 		Name: aws.String(d.Id()),
-	}); err != nil {
+	}
+	if output, err := conn.GetTrailStatus(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s) status: %s", d.Id(), err)
 	} else {
 		d.Set("enable_logging", output.IsLogging)
@@ -546,9 +551,10 @@ func resourceTrailDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Trail: %s", d.Id())
-	_, err := conn.DeleteTrail(ctx, &cloudtrail.DeleteTrailInput{
+	input := cloudtrail.DeleteTrailInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrail(ctx, &input)
 
 	if errs.IsA[*types.TrailNotFoundException](err) {
 		return diags

@@ -139,9 +139,10 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
-	_, err := conn.DeleteProject(ctx, &devicefarm.DeleteProjectInput{
+	input := devicefarm.DeleteProjectInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProject(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

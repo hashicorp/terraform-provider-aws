@@ -260,7 +260,7 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	instanceID := d.Get("source_instance_id").(string)
 	name := d.Get(names.AttrName).(string)
-	input := &ec2.CreateImageInput{
+	input := ec2.CreateImageInput{
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
@@ -268,7 +268,7 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeImage),
 	}
 
-	output, err := conn.CreateImage(ctx, input)
+	output, err := conn.CreateImage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from EC2 Instance (%s): %s", name, instanceID, err)

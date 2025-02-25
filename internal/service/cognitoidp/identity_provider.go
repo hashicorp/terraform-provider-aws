@@ -199,10 +199,11 @@ func resourceIdentityProviderDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
-	_, err = conn.DeleteIdentityProvider(ctx, &cognitoidentityprovider.DeleteIdentityProviderInput{
+	input := cognitoidentityprovider.DeleteIdentityProviderInput{
 		ProviderName: aws.String(providerName),
 		UserPoolId:   aws.String(userPoolID),
-	})
+	}
+	_, err = conn.DeleteIdentityProvider(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

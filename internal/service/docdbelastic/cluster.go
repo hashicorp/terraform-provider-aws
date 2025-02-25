@@ -278,7 +278,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -368,10 +368,6 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		)
 		return
 	}
-}
-
-func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceClusterData struct {

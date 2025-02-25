@@ -295,9 +295,10 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	input := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
-	})
+	}
+	pitrOut, err := conn.DescribeContinuousBackups(ctx, &input)
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
@@ -402,10 +403,11 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		if d.HasChange("deletion_protection_enabled") {
 			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
 
-			if _, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+			input := dynamodb.UpdateTableInput{
 				TableName:                 aws.String(tableName),
 				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
-			}); err != nil {
+			}
+			if _, err := conn.UpdateTable(ctx, &input); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 			}
 

@@ -52,29 +52,29 @@ This resource supports the following arguments:
 * `direction` - (Required) Direction of DNS queries to or from the Route 53 Resolver endpoint.
 Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
 or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
-* `resolver_endpoint_type` - (Optional) Endpoint IP type. This endpoint type is applied to all IP addresses.
-Valid values are `IPV6`,`IPV4` or `DUALSTACK` (both IPv4 and IPv6).
 * `ip_address` - (Required) Subnets and IP addresses in your VPC that you want DNS queries to pass through on the way from your VPCs
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
-* `security_group_ids` - (Required) ID of one or more security groups that you want to use to control access to this VPC.
 * `name` - (Optional) Friendly name of the Route 53 Resolver endpoint.
-* `protocols` - (Optional) Protocols you want to use for the Route 53 Resolver endpoint. Valid values: `DoH`, `Do53`, `DoH-FIPS`.
-* `resolver_endpoint_type` - (Optional) Route 53 Resolver endpoint IP address type. Valid values: `IPV4`, `IPV6`, `DUALSTACK`.
+* `protocols` - (Optional) Protocols you want to use for the Route 53 Resolver endpoint.
+Valid values are `DoH`, `Do53`, or `DoH-FIPS`.
+* `resolver_endpoint_type` - (Optional) Endpoint IP type. This endpoint type is applied to all IP addresses.
+Valid values are `IPV6`,`IPV4` or `DUALSTACK` (both IPv4 and IPv6).
+* `security_group_ids` - (Required) ID of one or more security groups that you want to use to control access to this VPC.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `ip_address` object supports the following:
 
-* `subnet_id` - (Required) ID of the subnet that contains the IP address.
 * `ip` - (Optional) IPv4 address in the subnet that you want to use for DNS queries.
 * `ipv6` - (Optional) IPv6 address in the subnet that you want to use for DNS queries.
+* `subnet_id` - (Required) ID of the subnet that contains the IP address.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the Route 53 Resolver endpoint.
 * `arn` - ARN of the Route 53 Resolver endpoint.
 * `host_vpc_id` - ID of the VPC that you want to create the resolver endpoint in.
+* `id` - ID of the Route 53 Resolver endpoint.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -110,4 +110,4 @@ Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53
 % terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-21a9090bdec85cf83e935e1d846faf35c18fa843543fd3d15e08587217e41139 -->
+<!-- cache-key: cdktf-0.20.8 input-0df8717d613484edc463bd3fdaf3205301916851c05379d2d41201dcb9437aaa -->

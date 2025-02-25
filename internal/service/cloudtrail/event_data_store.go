@@ -338,9 +338,10 @@ func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: %s", d.Id())
-	_, err := conn.DeleteEventDataStore(ctx, &cloudtrail.DeleteEventDataStoreInput{
+	input := cloudtrail.DeleteEventDataStoreInput{
 		EventDataStore: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventDataStore(ctx, &input)
 
 	if errs.IsA[*types.EventDataStoreNotFoundException](err) {
 		return diags

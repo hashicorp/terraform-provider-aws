@@ -438,10 +438,6 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *resourceRotation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceRotationData struct {
 	ARN        types.String                                    `tfsdk:"arn"`
 	ContactIds fwtypes.ListValueOf[types.String]               `tfsdk:"contact_ids"`

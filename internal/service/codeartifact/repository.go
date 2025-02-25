@@ -277,11 +277,12 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
-	_, err = conn.DeleteRepository(ctx, &codeartifact.DeleteRepositoryInput{
+	input := codeartifact.DeleteRepositoryInput{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(owner),
 		Repository:  aws.String(repositoryName),
-	})
+	}
+	_, err = conn.DeleteRepository(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

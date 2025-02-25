@@ -201,7 +201,7 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return

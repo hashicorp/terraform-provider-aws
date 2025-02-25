@@ -74,7 +74,7 @@ resource "aws_dms_replication_instance" "test" {
   multi_az                     = false
   preferred_maintenance_window = "sun:10:30-sun:14:30"
   publicly_accessible          = true
-  replication_instance_class   = "dms.t2.micro"
+  replication_instance_class   = "dms.t3.micro"
   replication_instance_id      = "test-dms-replication-instance-tf"
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test-dms-replication-subnet-group-tf.id
 

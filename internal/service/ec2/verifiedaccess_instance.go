@@ -178,10 +178,11 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Instance: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessInstance(ctx, &ec2.DeleteVerifiedAccessInstanceInput{
+	input := ec2.DeleteVerifiedAccessInstanceInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessInstanceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessInstance(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
 		return diags

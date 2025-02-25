@@ -338,9 +338,10 @@ func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeGuru Repository Association %s", d.Id())
-	_, err := conn.DisassociateRepository(ctx, &codegurureviewer.DisassociateRepositoryInput{
+	input := codegurureviewer.DisassociateRepositoryInput{
 		AssociationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateRepository(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags

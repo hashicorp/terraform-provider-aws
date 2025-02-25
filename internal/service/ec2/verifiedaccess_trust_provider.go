@@ -257,10 +257,11 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Trust Provider: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &ec2.DeleteVerifiedAccessTrustProviderInput{
+	input := ec2.DeleteVerifiedAccessTrustProviderInput{
 		ClientToken:                   aws.String(id.UniqueId()),
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
 		return diags

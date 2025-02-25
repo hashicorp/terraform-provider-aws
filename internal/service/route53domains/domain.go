@@ -80,7 +80,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
+			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, nil, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -118,7 +118,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
+			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, nil, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -628,8 +628,6 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 }
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		// duration_in_years can only be increased.
 		var oldDurationInYears, newDurationInYears types.Int64

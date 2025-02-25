@@ -204,7 +204,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, diags := fwflex.Calculate(ctx, plan, state)
+	diff, diags := fwflex.Diff(ctx, plan, state)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return

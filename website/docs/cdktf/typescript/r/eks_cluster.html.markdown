@@ -264,22 +264,16 @@ class MyConvertedCode extends TerraformStack {
       accessConfig: {
         authenticationMode: "API",
       },
-      cluster_remote_network_config: [
-        {
-          remote_node_networks: [
-            {
-              cidrs: ["172.16.0.0/18"],
-            },
-          ],
-          remote_pod_networks: [
-            {
-              cidrs: ["172.16.64.0/18"],
-            },
-          ],
-        },
-      ],
       dependsOn: [clusterAmazonEksClusterPolicy],
       name: "example",
+      remoteNetworkConfig: {
+        remoteNodeNetworks: {
+          cidrs: ["172.16.0.0/18"],
+        },
+        remotePodNetworks: {
+          cidrs: ["172.16.64.0/18"],
+        },
+      },
       roleArn: cluster.arn,
       version: "1.31",
       vpcConfig: {
@@ -377,19 +371,19 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `accessConfig` - (Optional) Configuration block for the access config associated with your cluster, see [Amazon EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html).
+* `accessConfig` - (Optional) Configuration block for the access config associated with your cluster, see [Amazon EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html). [Detailed](#access_config) below.
 * `bootstrapSelfManagedAddons` - (Optional) Install default unmanaged add-ons, such as `aws-cni`, `kube-proxy`, and CoreDNS during cluster creation. If `false`, you must manually install desired add-ons. Changing this value will force a new cluster to be created. Defaults to `true`.
-* `computeConfig` - (Optional) Configuration block with compute configuration for EKS Auto Mode. Detailed below.
+* `computeConfig` - (Optional) Configuration block with compute configuration for EKS Auto Mode. [Detailed](#compute_config) below.
 * `enabledClusterLogTypes` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
-* `encryptionConfig` - (Optional) Configuration block with encryption configuration for the cluster. Detailed below.
-* `kubernetesNetworkConfig` - (Optional) Configuration block with kubernetes network configuration for the cluster. Detailed below. If removed, Terraform will only perform drift detection if a configuration value is provided.
+* `encryptionConfig` - (Optional) Configuration block with encryption configuration for the cluster. [Detailed](#encryption_config) below.
+* `kubernetesNetworkConfig` - (Optional) Configuration block with kubernetes network configuration for the cluster. [Detailed](#kubernetes_network_config) below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpostConfig` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
-* `remoteNetworkConfig` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. Detailed below.
-* `storageConfig` - (Optional) Configuration block with storage configuration for EKS Auto Mode. Detailed below.
+* `remoteNetworkConfig` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. [Detailed](#remote_network_config) below.
+* `storageConfig` - (Optional) Configuration block with storage configuration for EKS Auto Mode. [Detailed](#storage_config) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `upgradePolicy` - (Optional) Configuration block for the support policy to use for the cluster.  See [upgrade_policy](#upgrade_policy) for details.
 * `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
-* `zonalShiftConfig` - (Optional) Configuration block with zonal shift configuration for the cluster. Detailed below.
+* `zonalShiftConfig` - (Optional) Configuration block with zonal shift configuration for the cluster. [Detailed](#zonal_shift_config) below.
 
 ### access_config
 
@@ -440,11 +434,13 @@ The `remotePodNetworks` configuration block supports the following arguments:
 
 ### vpc_config Arguments
 
+* `clusterSecurityGroupId` - (Computed) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
 * `endpointPrivateAccess` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpointPublicAccess` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `publicAccessCidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.
 * `securityGroupIds` – (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
 * `subnetIds` – (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
+* `vpcId` - (Computed) ID of the VPC associated with your cluster.
 
 ### kubernetes_network_config
 
@@ -458,6 +454,8 @@ The `kubernetesNetworkConfig` configuration block supports the following argumen
     * Doesn't overlap with any CIDR block assigned to the VPC that you selected for VPC.
 
     * Between /24 and /12.
+
+* `serviceIpv6Cidr` - (Computed) The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specify `ipv6` for `ipFamily` when you create the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `ipFamily` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
 
 #### elastic_load_balancing
@@ -487,6 +485,18 @@ The `controlPlanePlacement` configuration block supports the following arguments
 
 * `outpostArns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
+### storage_config
+
+The `storageConfig` configuration block supports the following arguments:
+
+* `blockStorage` - (Optional) Configuration block with block storage configuration for the cluster. [Detailed](#block_storage) below.
+
+### block_storage
+
+The `blockStorage` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Indicates if the block storage capability is enabled on your EKS Auto Mode cluster. If the block storage capability is enabled, EKS Auto Mode will create and delete block storage volumes in your Amazon Web Services account.
+
 ### upgrade_policy
 
 The `upgradePolicy` configuration block supports the following arguments:
@@ -510,11 +520,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `id` - Name of the cluster.
 * `identity` - Attribute block containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. Detailed below.
-* `kubernetesNetworkConfig` - Attribute block containing Kubernetes network configuration for the cluster. Detailed below.
 * `platformVersion` - Platform version for the cluster.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpcConfig` - Configuration block _argument_ that also includes attributes for the VPC associated with your cluster. Detailed below.
 
 ### certificate_authority
 
@@ -524,18 +532,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `oidc` - Nested block containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
 
-### kubernetes_network_config
-
-* `serviceIpv6Cidr` - The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specified `ipv6` for `ipFamily` when you created the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
-
 ### oidc
 
 * `issuer` - Issuer URL for the OpenID Connect identity provider.
-
-### vpc_config Attributes
-
-* `clusterSecurityGroupId` - Cluster security group that was created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
-* `vpcId` - ID of the VPC associated with your cluster.
 
 ## Timeouts
 
@@ -574,4 +573,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d4f53e9bffe45ddd7beb260ac3075ec3ed80f854ac7f7fb0051ebe15118b2a45 -->
+<!-- cache-key: cdktf-0.20.8 input-2d24990bd2ea1c0eb7e155f17072c56c6730c8900950a6c003e033a6e8faafd3 -->

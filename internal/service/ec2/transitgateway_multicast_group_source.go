@@ -137,11 +137,12 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 	id := transitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Group Source: %s", id)
-	_, err := conn.DeregisterTransitGatewayMulticastGroupSources(ctx, &ec2.DeregisterTransitGatewayMulticastGroupSourcesInput{
+	input := ec2.DeregisterTransitGatewayMulticastGroupSourcesInput{
 		GroupIpAddress:                  aws.String(groupIPAddress),
 		NetworkInterfaceIds:             []string{eniID},
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
-	})
+	}
+	_, err := conn.DeregisterTransitGatewayMulticastGroupSources(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return nil

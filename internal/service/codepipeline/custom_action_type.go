@@ -303,11 +303,12 @@ func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting CodePipeline Custom Action Type: %s", d.Id())
-	_, err = conn.DeleteCustomActionType(ctx, &codepipeline.DeleteCustomActionTypeInput{
+	input := codepipeline.DeleteCustomActionTypeInput{
 		Category: category,
 		Provider: aws.String(provider),
 		Version:  aws.String(version),
-	})
+	}
+	_, err = conn.DeleteCustomActionType(ctx, &input)
 
 	if errs.IsA[*types.ActionNotFoundException](err) {
 		return diags

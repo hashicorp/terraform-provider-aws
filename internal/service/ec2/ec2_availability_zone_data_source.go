@@ -88,7 +88,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAvailabilityZonesInput{}
+	input := ec2.DescribeAvailabilityZonesInput{}
 
 	if v, ok := d.GetOk("all_availability_zones"); ok {
 		input.AllAvailabilityZones = aws.Bool(v.(bool))
@@ -117,7 +117,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.Filters = nil
 	}
 
-	az, err := findAvailabilityZone(ctx, conn, input)
+	az, err := findAvailabilityZone(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Availability Zone", err))

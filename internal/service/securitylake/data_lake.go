@@ -358,10 +358,6 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
 	region, err := regionFromARNString(arn)
 	if err != nil {

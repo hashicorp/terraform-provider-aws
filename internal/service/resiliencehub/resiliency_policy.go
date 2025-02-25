@@ -317,7 +317,7 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -421,10 +421,6 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 
 func (r *resourceResiliencyPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-}
-
-func (r *resourceResiliencyPolicy) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 const (

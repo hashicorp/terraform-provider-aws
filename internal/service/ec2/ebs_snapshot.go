@@ -115,7 +115,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	volumeID := d.Get("volume_id").(string)
-	input := &ec2.CreateSnapshotInput{
+	input := ec2.CreateSnapshotInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSnapshot),
 		VolumeId:          aws.String(volumeID),
 	}
@@ -130,7 +130,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
 		func() (interface{}, error) {
-			return conn.CreateSnapshot(ctx, input)
+			return conn.CreateSnapshot(ctx, &input)
 		},
 		errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
 
@@ -154,10 +154,11 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+		input := ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
-		})
+		}
+		_, err = conn.ModifySnapshotTier(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
@@ -216,10 +217,11 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("storage_tier") {
 		if tier := d.Get("storage_tier").(string); tier == string(awstypes.TargetStorageTierArchive) {
-			_, err := conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+			input := ec2.ModifySnapshotTierInput{
 				SnapshotId:  aws.String(d.Id()),
 				StorageTier: awstypes.TargetStorageTier(tier),
-			})
+			}
+			_, err := conn.ModifySnapshotTier(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
@@ -229,7 +231,7 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) Storage Tier archive: %s", d.Id(), err)
 			}
 		} else {
-			input := &ec2.RestoreSnapshotTierInput{
+			input := ec2.RestoreSnapshotTierInput{
 				SnapshotId: aws.String(d.Id()),
 			}
 
@@ -242,7 +244,7 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			//Skipping waiter as restoring a snapshot takes 24-72 hours so state will reamin (https://aws.amazon.com/blogs/aws/new-amazon-ebs-snapshots-archive/)
-			_, err := conn.RestoreSnapshotTier(ctx, input)
+			_, err := conn.RestoreSnapshotTier(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "restoring EBS Snapshot (%s): %s", d.Id(), err)
