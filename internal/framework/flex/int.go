@@ -72,11 +72,15 @@ func Int32ToFrameworkInt64Legacy(_ context.Context, v *int32) types.Int64 {
 // Int32FromFrameworkInt64 coverts a Framework Int64 value to an int32 pointer.
 // A null Int64 is converted to a nil int32 pointer.
 func Int32FromFrameworkInt64(ctx context.Context, v basetypes.Int64Valuable) *int32 {
-	var output *int32
-
-	must(Expand(ctx, v, &output))
-
-	return output
+	if v.IsUnknown() {
+		return nil
+	}
+	if v.IsNull() {
+		return nil
+	}
+	val := fwdiag.Must(v.ToInt64Value(ctx))
+	i := int32(val.ValueInt64())
+	return &i
 }
 
 // Int32FromFramework coverts a Framework Int32 value to an int32 pointer.
