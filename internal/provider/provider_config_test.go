@@ -150,7 +150,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 			maps.Copy(config, tc.Config)
 
 			if tc.SharedConfigurationFile != "" {
-				file, err := os.CreateTemp("", "aws-sdk-go-base-shared-configuration-file")
+				file, err := os.CreateTemp(t.TempDir(), "aws-sdk-go-base-shared-configuration-file")
 
 				if err != nil {
 					t.Fatalf("unexpected error creating temporary shared configuration file: %s", err)

@@ -55,7 +55,8 @@ func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+		input := ec2.GetEbsDefaultKmsKeyIdInput{}
+		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -87,7 +88,8 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+		input := ec2.GetEbsDefaultKmsKeyIdInput{}
+		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
 		if err != nil {
 			return err
 		}

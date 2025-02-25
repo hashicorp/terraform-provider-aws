@@ -5,20 +5,8 @@ rules:
     paths:
       exclude:
         - "internal/service/controltower"
-        - "internal/service/networkmanager"
-        - "internal/service/networkmonitor"
         - "internal/service/organizations"
-        - "internal/service/pinpoint"
         - "internal/service/redshift"
-        - "internal/service/rekognition"
-        - "internal/service/resourcegroups"
-        - "internal/service/route53resolver"
-        - "internal/service/s3"
-        - "internal/service/servicediscovery"
-        - "internal/service/ses"
-        - "internal/service/signer"
-        - "internal/service/transcribe"
-        - "internal/service/transfer"
     patterns:
       - pattern: |
           resource.TestCheckResourceAttrSet($NAME, $ATTR)

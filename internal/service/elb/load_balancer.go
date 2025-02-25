@@ -816,7 +816,7 @@ func validHeathCheckTarget(v interface{}, k string) (ws []string, errors []error
 	matches := regexache.MustCompile(`\A(\w+):(\d+)(.+)?\z`).FindStringSubmatch(value)
 
 	// Check if the value contains a valid target.
-	if matches == nil || len(matches) < 1 {
+	if len(matches) < 1 {
 		errors = append(errors, fmt.Errorf(
 			"%q contains an invalid Health Check: %s",
 			k, value))

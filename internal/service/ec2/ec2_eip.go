@@ -158,7 +158,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.AllocateAddressInput{
+	input := ec2.AllocateAddressInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeElasticIp),
 	}
 
@@ -190,7 +190,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.PublicIpv4Pool = aws.String(v.(string))
 	}
 
-	output, err := conn.AllocateAddress(ctx, input)
+	output, err := conn.AllocateAddress(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP: %s", err)
@@ -329,7 +329,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	input := &ec2.ReleaseAddressInput{
+	input := ec2.ReleaseAddressInput{
 		AllocationId: aws.String(d.Id()),
 	}
 
@@ -338,7 +338,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[INFO] Deleting EC2 EIP: %s", d.Id())
-	_, err := conn.ReleaseAddress(ctx, input)
+	_, err := conn.ReleaseAddress(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 		return diags
@@ -374,7 +374,7 @@ func (id eipID) IsVPC() bool {
 }
 
 func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceID, networkInterfaceID, privateIPAddress string) error {
-	input := &ec2.AssociateAddressInput{
+	input := ec2.AssociateAddressInput{
 		AllocationId: aws.String(allocationID),
 	}
 
@@ -390,7 +390,7 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 		input.PrivateIpAddress = aws.String(privateIPAddress)
 	}
 
-	output, err := conn.AssociateAddress(ctx, input)
+	output, err := conn.AssociateAddress(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("associating EC2 EIP (%s): %w", allocationID, err)
@@ -426,11 +426,11 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 		return nil
 	}
 
-	input := &ec2.DisassociateAddressInput{
+	input := ec2.DisassociateAddressInput{
 		AssociationId: aws.String(associationID),
 	}
 
-	_, err := conn.DisassociateAddress(ctx, input)
+	_, err := conn.DisassociateAddress(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return nil
@@ -448,11 +448,11 @@ func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string
 }
 
 func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]types.IpamPoolAllocation, error) {
-	input := &ec2.GetIpamPoolAllocationsInput{
+	input := ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(ipamPoolID),
 	}
 
-	output, err := findIPAMPoolAllocations(ctx, conn, input)
+	output, err := findIPAMPoolAllocations(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

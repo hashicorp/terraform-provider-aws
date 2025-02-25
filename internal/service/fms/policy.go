@@ -45,178 +45,272 @@ func resourcePolicy() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delete_all_policy_resources": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"delete_unused_fm_managed_resources": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"exclude_resource_tags": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"exclude_map": {
-				Type:             schema.TypeList,
-				MaxItems:         1,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			networkACLEntrySetNestedBlock := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCIDRBlock: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"egress": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"icmp_type_code": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"code": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"ipv6_cidr_block": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"port_range": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"from": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"to": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+									},
+								},
+							},
+							names.AttrProtocol: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"rule_action": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NetworkAclRuleAction](),
 							},
 						},
-						"orgunit": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"delete_all_policy_resources": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"delete_unused_fm_managed_resources": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"exclude_resource_tags": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"exclude_map": {
+					Type:             schema.TypeList,
+					MaxItems:         1,
+					Optional:         true,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"orgunit": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
 						},
 					},
 				},
-			},
-			"include_map": {
-				Type:             schema.TypeList,
-				MaxItems:         1,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"include_map": {
+					Type:             schema.TypeList,
+					MaxItems:         1,
+					Optional:         true,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						"orgunit": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"orgunit": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"policy_update_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"remediation_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrResourceTags: tftags.TagsSchema(),
-			names.AttrResourceType: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
-				ConflictsWith: []string{"resource_type_list"},
-			},
-			"resource_set_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			"resource_type_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
+				"policy_update_token": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ConflictsWith: []string{names.AttrResourceType},
-			},
-			"security_service_policy_data": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"managed_service_data": {
-							Type:                  schema.TypeString,
-							Optional:              true,
-							ValidateFunc:          validation.StringIsJSON,
-							DiffSuppressFunc:      suppressEquivalentManagedServiceDataJSON,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v interface{}) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
+				"remediation_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrResourceTags: tftags.TagsSchema(),
+				names.AttrResourceType: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
+					ConflictsWith: []string{"resource_type_list"},
+				},
+				"resource_set_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"resource_type_list": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
+					},
+					ConflictsWith: []string{names.AttrResourceType},
+				},
+				"security_service_policy_data": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"managed_service_data": {
+								Type:                  schema.TypeString,
+								Optional:              true,
+								ValidateFunc:          validation.StringIsJSON,
+								DiffSuppressFunc:      suppressEquivalentManagedServiceDataJSON,
+								DiffSuppressOnRefresh: true,
+								StateFunc: func(v interface{}) string {
+									json, _ := structure.NormalizeJsonString(v)
+									return json
+								},
 							},
-						},
-						"policy_option": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"network_firewall_policy": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"firewall_deployment_model": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.FirewallDeploymentModel](),
+							"policy_option": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"network_acl_common_policy": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"network_acl_entry_set": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"last_entry":  networkACLEntrySetNestedBlock(),
+																"first_entry": networkACLEntrySetNestedBlock(),
+																"force_remediate_for_first_entries": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																},
+																"force_remediate_for_last_entries": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																},
+															},
+														},
+													},
 												},
 											},
 										},
-									},
-									"third_party_firewall_policy": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"firewall_deployment_model": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.FirewallDeploymentModel](),
+										"network_firewall_policy": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"firewall_deployment_model": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.FirewallDeploymentModel](),
+													},
+												},
+											},
+										},
+										"third_party_firewall_policy": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"firewall_deployment_model": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.FirewallDeploymentModel](),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -424,18 +518,141 @@ func expandPolicyOption(tfMap map[string]interface{}) *awstypes.PolicyOption {
 
 	apiObject := &awstypes.PolicyOption{}
 
+	if v, ok := tfMap["network_acl_common_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkAclCommonPolicy = expandNetworkACLCommonPolicy(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["network_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkFirewallPolicy = expandPolicyOptionNetworkFirewall(v[0].(map[string]interface{}))
+		apiObject.NetworkFirewallPolicy = expandNetworkFirewallPolicy(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["third_party_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ThirdPartyFirewallPolicy = expandPolicyOptionThirdPartyFirewall(v[0].(map[string]interface{}))
+		apiObject.ThirdPartyFirewallPolicy = expandThirdPartyFirewallPolicy(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandPolicyOptionNetworkFirewall(tfMap map[string]interface{}) *awstypes.NetworkFirewallPolicy {
+func expandNetworkACLCommonPolicy(tfMap map[string]interface{}) *awstypes.NetworkAclCommonPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NetworkAclCommonPolicy{}
+
+	if v, ok := tfMap["network_acl_entry_set"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkAclEntrySet = expandNetworkACLEntrySet(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandNetworkACLEntrySet(tfMap map[string]interface{}) *awstypes.NetworkAclEntrySet {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NetworkAclEntrySet{}
+
+	if v, ok := tfMap["first_entry"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.FirstEntries = expandNetworkACLEntries(v.List())
+	}
+
+	if v, ok := tfMap["force_remediate_for_first_entries"].(bool); ok {
+		apiObject.ForceRemediateForFirstEntries = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["force_remediate_for_last_entries"].(bool); ok {
+		apiObject.ForceRemediateForLastEntries = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["last_entry"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LastEntries = expandNetworkACLEntries(v.List())
+	}
+
+	return apiObject
+}
+
+func expandNetworkACLEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := []awstypes.NetworkAclEntry{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, expandNetworkACLEntry(tfMap))
+	}
+
+	return apiObjects
+}
+
+func expandNetworkACLEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntry {
+	apiObject := awstypes.NetworkAclEntry{}
+
+	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
+		apiObject.CidrBlock = aws.String(v)
+	}
+
+	if v, ok := tfMap["egress"].(bool); ok {
+		apiObject.Egress = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["icmp_type_code"].([]interface{}); ok && len(v) > 0 {
+		apiObject.IcmpTypeCode = expandNetworkACLIcmpTypeCode(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["ipv6_cidr_block"].(string); ok && v != "" {
+		apiObject.Ipv6CidrBlock = aws.String(v)
+	}
+
+	if v, ok := tfMap["port_range"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PortRange = expandNetworkACLPortRange(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		apiObject.Protocol = aws.String(v)
+	}
+
+	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
+		apiObject.RuleAction = awstypes.NetworkAclRuleAction(v)
+	}
+
+	return apiObject
+}
+
+func expandNetworkACLIcmpTypeCode(tfMap map[string]interface{}) *awstypes.NetworkAclIcmpTypeCode {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NetworkAclIcmpTypeCode{}
+
+	apiObject.Code = aws.Int32(int32(tfMap["code"].(int)))
+	apiObject.Type = aws.Int32(int32(tfMap[names.AttrType].(int)))
+
+	return apiObject
+}
+
+func expandNetworkACLPortRange(tfMap map[string]interface{}) *awstypes.NetworkAclPortRange {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NetworkAclPortRange{}
+
+	apiObject.From = aws.Int32(int32(tfMap["from"].(int)))
+	apiObject.To = aws.Int32(int32(tfMap["to"].(int)))
+
+	return apiObject
+}
+
+func expandNetworkFirewallPolicy(tfMap map[string]interface{}) *awstypes.NetworkFirewallPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -449,7 +666,7 @@ func expandPolicyOptionNetworkFirewall(tfMap map[string]interface{}) *awstypes.N
 	return apiObject
 }
 
-func expandPolicyOptionThirdPartyFirewall(tfMap map[string]interface{}) *awstypes.ThirdPartyFirewallPolicy {
+func expandThirdPartyFirewallPolicy(tfMap map[string]interface{}) *awstypes.ThirdPartyFirewallPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -503,48 +720,140 @@ func flattenPolicyMap(apiObject map[string][]string) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenPolicyOption(fmsPolicyOption *awstypes.PolicyOption) []interface{} {
-	if fmsPolicyOption == nil {
+func flattenPolicyOption(apiObject *awstypes.PolicyOption) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := fmsPolicyOption.NetworkFirewallPolicy; v != nil {
-		tfMap["network_firewall_policy"] = flattenPolicyOptionNetworkFirewall(fmsPolicyOption.NetworkFirewallPolicy)
+	if v := apiObject.NetworkAclCommonPolicy; v != nil {
+		tfMap["network_acl_common_policy"] = flattenNetworkACLCommonPolicy(apiObject.NetworkAclCommonPolicy)
 	}
 
-	if v := fmsPolicyOption.ThirdPartyFirewallPolicy; v != nil {
-		tfMap["third_party_firewall_policy"] = flattenPolicyOptionThirdPartyFirewall(fmsPolicyOption.ThirdPartyFirewallPolicy)
+	if v := apiObject.NetworkFirewallPolicy; v != nil {
+		tfMap["network_firewall_policy"] = flattenNetworkFirewallPolicy(apiObject.NetworkFirewallPolicy)
+	}
+
+	if v := apiObject.ThirdPartyFirewallPolicy; v != nil {
+		tfMap["third_party_firewall_policy"] = flattenThirdPartyFirewallPolicy(apiObject.ThirdPartyFirewallPolicy)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenPolicyOptionNetworkFirewall(fmsNetworkFirewallPolicy *awstypes.NetworkFirewallPolicy) []interface{} {
-	if fmsNetworkFirewallPolicy == nil {
+func flattenNetworkACLCommonPolicy(apiObject *awstypes.NetworkAclCommonPolicy) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := fmsNetworkFirewallPolicy.FirewallDeploymentModel; v != "" {
-		tfMap["firewall_deployment_model"] = string(v)
+	if v := apiObject.NetworkAclEntrySet; v != nil {
+		tfMap["network_acl_entry_set"] = flattenNetworkACLEntrySet(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenPolicyOptionThirdPartyFirewall(fmsThirdPartyFirewallPolicy *awstypes.ThirdPartyFirewallPolicy) []interface{} {
-	if fmsThirdPartyFirewallPolicy == nil {
+func flattenNetworkACLEntrySet(apiObject *awstypes.NetworkAclEntrySet) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := fmsThirdPartyFirewallPolicy.FirewallDeploymentModel; v != "" {
-		tfMap["firewall_deployment_model"] = string(v)
+	if v := apiObject.FirstEntries; v != nil {
+		tfMap["first_entry"] = flattenNetworkACLEntries(v)
 	}
+
+	if v := apiObject.ForceRemediateForFirstEntries; v != nil {
+		tfMap["force_remediate_for_first_entries"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.ForceRemediateForLastEntries; v != nil {
+		tfMap["force_remediate_for_last_entries"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LastEntries; v != nil {
+		tfMap["last_entry"] = flattenNetworkACLEntries(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNetworkACLEntries(apiObjects []awstypes.NetworkAclEntry) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, networkAclEntry := range apiObjects {
+		tfList = append(tfList, flattenNetworkACLEntry(networkAclEntry))
+	}
+
+	return tfList
+}
+
+func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CidrBlock; v != nil {
+		tfMap[names.AttrCIDRBlock] = aws.ToString(v)
+	}
+
+	if v := apiObject.Egress; v != nil {
+		tfMap["egress"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.IcmpTypeCode; v != nil {
+		tfMap["icmp_type_code"] = []interface{}{map[string]interface{}{
+			"code":         aws.ToInt32(v.Code),
+			names.AttrType: aws.ToInt32(v.Type),
+		}}
+	}
+
+	if v := apiObject.Ipv6CidrBlock; v != nil {
+		tfMap["ipv6_cidr_block"] = v
+	}
+
+	if v := apiObject.PortRange; v != nil {
+		tfMap["port_range"] = []interface{}{map[string]interface{}{
+			"from": aws.ToInt32(v.From),
+			"to":   aws.ToInt32(v.To),
+		}}
+	}
+
+	if v := apiObject.Protocol; v != nil {
+		tfMap[names.AttrProtocol] = aws.ToString(v)
+	}
+
+	tfMap["rule_action"] = apiObject.RuleAction
+
+	return tfMap
+}
+
+func flattenNetworkFirewallPolicy(apiObject *awstypes.NetworkFirewallPolicy) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["firewall_deployment_model"] = apiObject.FirewallDeploymentModel
+
+	return []interface{}{tfMap}
+}
+
+func flattenThirdPartyFirewallPolicy(apiObject *awstypes.ThirdPartyFirewallPolicy) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["firewall_deployment_model"] = apiObject.FirewallDeploymentModel
 
 	return []interface{}{tfMap}
 }

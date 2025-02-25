@@ -269,10 +269,11 @@ func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Quick Connect: %s", d.Id())
-	_, err = conn.DeleteQuickConnect(ctx, &connect.DeleteQuickConnectInput{
+	input := connect.DeleteQuickConnectInput{
 		InstanceId:     aws.String(instanceID),
 		QuickConnectId: aws.String(quickConnectID),
-	})
+	}
+	_, err = conn.DeleteQuickConnect(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

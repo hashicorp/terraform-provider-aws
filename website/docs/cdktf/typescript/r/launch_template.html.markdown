@@ -459,6 +459,13 @@ Each `networkInterfaces` block supports the following:
 * `ipv4Addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4AddressCount`
 * `securityGroups` - (Optional) A list of security group IDs to associate.
 * `subnetId` - (Optional) The VPC Subnet ID to associate.
+* `connectionTrackingSpecification` - (Optional) The Connection Tracking Configuration for the network interface. See [Amazon EC2 security group connection tracking](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html#connection-tracking-timeouts)
+
+The `connectionTrackingSpecification` block supports the following:
+
+* `tcpEstablishedTimeout` - (Optional) Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Default: 432000 seconds. Recommended: Less than 432000 seconds.
+* `udpStreamTimeout` - (Optional) Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
+* `udpTimeout` - (Optional) Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
 
 ### Placement
 
@@ -529,4 +536,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d5f5cf3f475aed18197e671b1adb2db9c3270710a8c989074f6c12451f7f2c38 -->
+<!-- cache-key: cdktf-0.20.8 input-bc323ed55a9b13afc2231f18df8836ed01c688248ea06a5796ddeb3aa9d6813f -->

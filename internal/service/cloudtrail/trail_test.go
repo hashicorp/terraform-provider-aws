@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -332,7 +333,7 @@ func testAccTrail_kmsKey(t *testing.T) {
 	})
 }
 
-func testAccTrail_snsTopicName(t *testing.T) {
+func testAccTrail_snsTopicNameBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trail types.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -345,7 +346,7 @@ func testAccTrail_snsTopicName(t *testing.T) {
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudTrailConfig_snsTopicName(rName, rName),
+				Config: testAccCloudTrailConfig_snsTopicNameBasic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrSNSTopicARN, "sns", regexache.MustCompile(rName)),
@@ -358,11 +359,45 @@ func testAccTrail_snsTopicName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudTrailConfig_snsTopicName(rName, rName+"-2"),
+				Config: testAccCloudTrailConfig_snsTopicNameBasic(rName, rName+"-2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrSNSTopicARN, "sns", regexache.MustCompile(rName+"-2")),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", rName+"-2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTrail_snsTopicNameAlternateRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	var trail types.Trail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+	snsTopicResourceName := "aws_sns_topic.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudTrailConfig_snsTopicNameAlternateRegion(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_name", snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -843,9 +878,10 @@ func testAccCheckLoggingEnabled(ctx context.Context, n string, want bool) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailClient(ctx)
 
-		output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
+		input := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
-		})
+		}
+		output, err := conn.GetTrailStatus(ctx, &input)
 
 		if err != nil {
 			return err
@@ -1216,7 +1252,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudTrailConfig_snsTopicName(rName, snsTopicName string) string {
+func testAccCloudTrailConfig_snsTopicNameBasic(rName, snsTopicName string) string {
 	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1264,6 +1300,41 @@ resource "aws_cloudtrail" "test" {
 }
 
 `, rName, snsTopicName))
+}
+
+func testAccCloudTrailConfig_snsTopicNameAlternateRegion(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2),
+		testAccCloudTrailConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  provider = "awsalternate"
+  name     = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowPublishToTopic"
+      Effect = "Allow"
+      Principal = {
+        Service = "cloudtrail.amazonaws.com"
+      }
+      Action   = "sns:Publish"
+      Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.id
+  sns_topic_name = aws_sns_topic.test.arn
+}
+
+`, rName))
 }
 
 func testAccCloudTrailConfig_globalServiceEvents(rName string) string {

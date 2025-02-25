@@ -128,10 +128,11 @@ func resourceDomainServiceAccessPolicyDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain Service Access Policy: %s", d.Id())
-	_, err := conn.UpdateServiceAccessPolicies(ctx, &cloudsearch.UpdateServiceAccessPoliciesInput{
+	input := cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(""),
 		DomainName:     aws.String(d.Id()),
-	})
+	}
+	_, err := conn.UpdateServiceAccessPolicies(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -154,9 +154,10 @@ func (r *retentionConfigurationResource) Delete(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	name := data.ID.ValueString()
-	_, err := conn.DeleteRetentionConfiguration(ctx, &configservice.DeleteRetentionConfigurationInput{
+	input := configservice.DeleteRetentionConfigurationInput{
 		RetentionConfigurationName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRetentionConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchRetentionConfigurationException](err) {
 		return

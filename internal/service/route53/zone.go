@@ -353,6 +353,10 @@ func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, h
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("deleting Route53 Hosted Zone (%s): %w", hostedZoneID, err)
+	}
+
 	if output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone (%s) synchronize: %w", hostedZoneID, err)

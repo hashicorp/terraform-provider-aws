@@ -197,9 +197,10 @@ func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost Explorer Anomaly Monitor: %s", d.Id())
-	_, err := conn.DeleteAnomalyMonitor(ctx, &costexplorer.DeleteAnomalyMonitorInput{
+	input := costexplorer.DeleteAnomalyMonitorInput{
 		MonitorArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAnomalyMonitor(ctx, &input)
 
 	if err != nil && errs.IsA[*awstypes.UnknownMonitorException](err) {
 		return diags
