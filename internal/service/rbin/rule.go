@@ -64,7 +64,6 @@ func ResourceRule() *schema.Resource {
 			names.AttrResourceTags: {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -75,7 +74,7 @@ func ResourceRule() *schema.Resource {
 						},
 						"resource_tag_value": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
@@ -95,7 +94,7 @@ func ResourceRule() *schema.Resource {
 						},
 						"resource_tag_value": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
@@ -277,6 +276,11 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChanges(names.AttrResourceTags) {
 		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
+		if in.ResourceTags == nil {
+			in.ResourceTags = []types.ResourceTag{}
+			in.ResourceType = types.ResourceType(d.Get(names.AttrResourceType).(string))
+			in.RetentionPeriod = expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{}))
+		}
 		update = true
 	}
 	if d.HasChanges(names.AttrExcludeResourceTags) {
