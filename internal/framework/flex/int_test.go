@@ -230,3 +230,42 @@ func TestInt32FromFramework(t *testing.T) {
 		})
 	}
 }
+
+func TestInt32FromFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.Int32
+		expected *int32
+	}
+	tests := map[string]testCase{
+		"valid int32": {
+			input:    types.Int32Value(42),
+			expected: aws.Int32(42),
+		},
+		"zero int32": {
+			input:    types.Int32Value(0),
+			expected: nil,
+		},
+		"null int32": {
+			input:    types.Int32Null(),
+			expected: nil,
+		},
+		"unknown int32": {
+			input:    types.Int32Unknown(),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.Int32FromFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}

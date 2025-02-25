@@ -29,6 +29,19 @@ func Int64ValueFromFramework(ctx context.Context, v basetypes.Int64Valuable) int
 	return output
 }
 
+func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	i := v.ValueInt64()
+	if i == 0 {
+		return nil
+	}
+
+	return aws.Int64(i)
+}
+
 // Int64ToFramework converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a null Int64.
 func Int64ToFramework(ctx context.Context, v *int64) types.Int64 {
@@ -86,6 +99,19 @@ func Int32FromFrameworkInt32(ctx context.Context, v basetypes.Int32Valuable) *in
 	must(Expand(ctx, v, &output))
 
 	return output
+}
+
+func Int32FromFrameworkLegacy(_ context.Context, v types.Int32) *int32 {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	i := v.ValueInt32()
+	if i == 0 {
+		return nil
+	}
+
+	return aws.Int32(i)
 }
 
 // Int32ValueFromFrameworkInt64 coverts a Framework Int64 value to an int32 value.
