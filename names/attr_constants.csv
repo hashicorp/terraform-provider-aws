@@ -68,6 +68,7 @@ endpoints,Endpoints
 engine,Engine
 engine_version,EngineVersion
 environment,Environment
+exclude_resource_tags,ExcludeResourceTags
 execution_role_arn,ExecutionRoleARN
 expected_bucket_owner,ExpectedBucketOwner
 expression,Expression
