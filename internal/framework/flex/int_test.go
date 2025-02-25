@@ -251,6 +251,48 @@ func BenchmarkInt32ToFrameworkInt64(b *testing.B) {
 	}
 }
 
+func TestInt32ValueToFrameworkInt64(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    int32
+		expected types.Int64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    42,
+			expected: types.Int64Value(42),
+		},
+		"zero int64": {
+			input:    0,
+			expected: types.Int64Value(0),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.Int32ValueToFrameworkInt64(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkInt32ValueToFrameworkInt64(b *testing.B) {
+	ctx := context.Background()
+	input := int32(42)
+	for n := 0; n < b.N; n++ {
+		r := flex.Int32ValueToFrameworkInt64(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestInt32ToFrameworkInt64Legacy(t *testing.T) {
 	t.Parallel()
 

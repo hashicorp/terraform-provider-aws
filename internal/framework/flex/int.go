@@ -60,11 +60,7 @@ func Int32ToFrameworkInt64(ctx context.Context, v *int32) types.Int64 {
 }
 
 func Int32ValueToFrameworkInt64(ctx context.Context, v int32) types.Int64 {
-	var output types.Int64
-
-	must(Flatten(ctx, v, &output))
-
-	return output
+	return types.Int64Value(int64(v))
 }
 
 // Int32ToFrameworkInt64Legacy converts an int32 pointer to a Framework Int64 value.
