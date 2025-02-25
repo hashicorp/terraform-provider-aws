@@ -75,7 +75,6 @@ const (
 	AttrEngine                     = "engine"
 	AttrEngineVersion              = "engine_version"
 	AttrEnvironment                = "environment"
-	AttrExcludeResourceTags        = "exclude_resource_tags"
 	AttrExecutionRoleARN           = "execution_role_arn"
 	AttrExpectedBucketOwner        = "expected_bucket_owner"
 	AttrExpression                 = "expression"

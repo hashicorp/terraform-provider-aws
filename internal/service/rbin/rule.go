@@ -66,7 +66,7 @@ func ResourceRule() *schema.Resource {
 				Optional: true,
 				MaxItems: 50,
 				ConflictsWith: []string{
-					names.AttrExcludeResourceTags,
+					"exclude_resource_tags",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -83,7 +83,7 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
-			names.AttrExcludeResourceTags: {
+			"exclude_resource_tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 5,
@@ -199,7 +199,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && v.(*schema.Set).Len() > 0 {
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
-	if v, ok := d.GetOk(names.AttrExcludeResourceTags); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("exclude_resource_tags"); ok && v.(*schema.Set).Len() > 0 {
 		in.ExcludeResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 
@@ -253,7 +253,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(out.ResourceTags)); err != nil {
 		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
-	if err := d.Set(names.AttrExcludeResourceTags, flattenResourceTags(out.ExcludeResourceTags)); err != nil {
+	if err := d.Set("exclude_resource_tags", flattenResourceTags(out.ExcludeResourceTags)); err != nil {
 		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
@@ -286,8 +286,8 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		update = true
 	}
-	if d.HasChanges(names.AttrExcludeResourceTags) {
-		in.ExcludeResourceTags = expandResourceTags(d.Get(names.AttrExcludeResourceTags).(*schema.Set).List())
+	if d.HasChanges("exclude_resource_tags") {
+		in.ExcludeResourceTags = expandResourceTags(d.Get("exclude_resource_tags").(*schema.Set).List())
 		if in.ExcludeResourceTags == nil {
 			in.ExcludeResourceTags = []types.ResourceTag{}
 		}
