@@ -105,7 +105,7 @@ func BenchmarkFloat64ToFrameworkLegacy(b *testing.B) {
 	}
 }
 
-func TestFloat32ToFramework(t *testing.T) {
+func TestFloat32ToFrameworkFloat64(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -131,12 +131,23 @@ func TestFloat32ToFramework(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.Float32ToFramework(context.Background(), test.input)
+			got := flex.Float32ToFrameworkFloat64(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
+	}
+}
+
+func BenchmarkFloat32ToFrameworkFloat64(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Float32(42.1)
+	for n := 0; n < b.N; n++ {
+		r := flex.Float32ToFrameworkFloat64(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
 	}
 }
 
