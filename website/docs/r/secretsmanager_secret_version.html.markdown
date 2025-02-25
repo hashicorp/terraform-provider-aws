@@ -12,6 +12,8 @@ Provides a resource to manage AWS Secrets Manager secret version including its s
 
 ~> **NOTE:** If the `AWSCURRENT` staging label is present on this version during resource deletion, that label cannot be removed and will be skipped to prevent errors when fully deleting the secret. That label will leave this secret version active even after the resource is deleted from Terraform unless the secret itself is deleted. Move the `AWSCURRENT` staging label before or after deleting this resource from Terraform to fully trigger version deprecation if necessary.
 
+-> **Note:** Write-Only attribute `secret_string_wo` is available to use in place of `secret_string`. Write-Only attributes are supported in HashiCorp Terraform 1.11.0 and later.
+
 ## Example Usage
 
 ### Simple String Value
