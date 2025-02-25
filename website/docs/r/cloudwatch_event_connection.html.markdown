@@ -145,6 +145,7 @@ This resource supports the following arguments:
 
 * `api_key` - (Optional) Parameters used for API_KEY authorization. An API key to include in the header for each authentication request. A maximum of 1 are allowed. Conflicts with `basic` and `oauth`. Documented below.
 * `basic` - (Optional) Parameters used for BASIC authorization. A maximum of 1 are allowed. Conflicts with `api_key` and `oauth`. Documented below.
+* `connectivity_parameters` - (Optional) Parameters used for `oauth` with private API. Documented below.
 * `invocation_http_parameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 * `oauth` - (Optional) Parameters used for OAUTH_CLIENT_CREDENTIALS authorization. A maximum of 1 are allowed. Conflicts with `basic` and `api_key`. Documented below.
 
@@ -187,6 +188,10 @@ This resource supports the following arguments:
 `invocation_connectivity_parameters` supports the following:
 
 * `resource_parameters` - (Required) The parameters for EventBridge to use when invoking the resource endpoint. Documented below.
+
+`connectivity_parameters` supports the following:
+
+* `resource_parameters` - (Required) The parameters for EventBridge to use when invoking the authentication endpoint. Documented below.
 
 `resource_parameters` supports the following:
 
