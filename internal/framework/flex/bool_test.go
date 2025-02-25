@@ -102,6 +102,17 @@ func TestBoolValueFromFramework(t *testing.T) {
 	}
 }
 
+func BenchmarkBoolValueFromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.BoolValue(true)
+	for n := 0; n < b.N; n++ {
+		r := flex.BoolValueFromFramework(ctx, input)
+		if !r {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestBoolToFramework(t *testing.T) {
 	t.Parallel()
 

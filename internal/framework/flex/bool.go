@@ -23,11 +23,8 @@ func BoolFromFramework(ctx context.Context, v basetypes.BoolValuable) *bool {
 }
 
 func BoolValueFromFramework(ctx context.Context, v basetypes.BoolValuable) bool {
-	var output bool
-
-	must(Expand(ctx, v, &output))
-
-	return output
+	val := fwdiag.Must(v.ToBoolValue(ctx))
+	return val.ValueBool()
 }
 
 // BoolToFramework converts a bool pointer to a Framework Bool value.
