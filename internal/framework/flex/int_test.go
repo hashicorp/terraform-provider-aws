@@ -122,7 +122,7 @@ func TestInt64ToFrameworkLegacy(t *testing.T) {
 	}
 }
 
-func TestInt32ToFramework(t *testing.T) {
+func TestInt32ToFrameworkInt64(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -148,7 +148,7 @@ func TestInt32ToFramework(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.Int32ToFramework(context.Background(), test.input)
+			got := flex.Int32ToFrameworkInt64(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -157,7 +157,7 @@ func TestInt32ToFramework(t *testing.T) {
 	}
 }
 
-func TestInt32ToFrameworkLegacy(t *testing.T) {
+func TestInt32ToFrameworkInt64Legacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -183,7 +183,7 @@ func TestInt32ToFrameworkLegacy(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.Int32ToFrameworkLegacy(context.Background(), test.input)
+			got := flex.Int32ToFrameworkInt64Legacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -192,7 +192,7 @@ func TestInt32ToFrameworkLegacy(t *testing.T) {
 	}
 }
 
-func TestInt32FromFramework(t *testing.T) {
+func TestInt32FromFrameworkInt64(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -222,7 +222,7 @@ func TestInt32FromFramework(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.Int32FromFramework(context.Background(), test.input)
+			got := flex.Int32FromFrameworkInt64(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

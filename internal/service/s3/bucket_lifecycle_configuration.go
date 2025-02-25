@@ -918,7 +918,7 @@ func (m lifecycleExpirationModel) Expand(ctx context.Context) (result any, diags
 	// For legacy-mode reasons, `days` may be zero, but should be treated as `nil`
 	days := fwflex.ZeroInt32AsNull(m.Days)
 
-	r.Days = fwflex.Int32FromFrameworkInt32(ctx, days)
+	r.Days = fwflex.Int32FromFramework(ctx, days)
 
 	if m.ExpiredObjectDeleteMarker.IsUnknown() || m.ExpiredObjectDeleteMarker.IsNull() {
 		if (m.Date.IsUnknown() || m.Date.IsNull()) && (days.IsUnknown() || days.IsNull()) {
@@ -972,7 +972,7 @@ func (m transitionModel) Expand(ctx context.Context) (result any, diags diag.Dia
 			r.Days = aws.Int32(0)
 		}
 	} else {
-		r.Days = fwflex.Int32FromFrameworkInt32(ctx, m.Days)
+		r.Days = fwflex.Int32FromFramework(ctx, m.Days)
 	}
 
 	r.StorageClass = m.StorageClass.ValueEnum()

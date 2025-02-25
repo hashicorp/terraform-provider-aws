@@ -66,7 +66,7 @@ func (r *retentionConfigurationResource) Create(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	input := &configservice.PutRetentionConfigurationInput{
-		RetentionPeriodInDays: fwflex.Int32FromFramework(ctx, data.RetentionPeriodInDays),
+		RetentionPeriodInDays: fwflex.Int32FromFrameworkInt64(ctx, data.RetentionPeriodInDays),
 	}
 
 	output, err := conn.PutRetentionConfiguration(ctx, input)
@@ -115,7 +115,7 @@ func (r *retentionConfigurationResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	data.RetentionPeriodInDays = fwflex.Int32ToFramework(ctx, retentionConfiguration.RetentionPeriodInDays)
+	data.RetentionPeriodInDays = fwflex.Int32ToFrameworkInt64(ctx, retentionConfiguration.RetentionPeriodInDays)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -130,7 +130,7 @@ func (r *retentionConfigurationResource) Update(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	input := &configservice.PutRetentionConfigurationInput{
-		RetentionPeriodInDays: fwflex.Int32FromFramework(ctx, new.RetentionPeriodInDays),
+		RetentionPeriodInDays: fwflex.Int32FromFrameworkInt64(ctx, new.RetentionPeriodInDays),
 	}
 
 	_, err := conn.PutRetentionConfiguration(ctx, input)

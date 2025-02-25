@@ -394,7 +394,7 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 					return
 				}
 
-				input.DesiredCapacity = fwflex.Int32FromFramework(ctx, highAvailabilityConfigData.DesiredCapacity)
+				input.DesiredCapacity = fwflex.Int32FromFrameworkInt64(ctx, highAvailabilityConfigData.DesiredCapacity)
 			}
 			if !new.InstanceType.Equal(old.InstanceType) {
 				input.InstanceType = fwflex.StringFromFramework(ctx, new.InstanceType)
