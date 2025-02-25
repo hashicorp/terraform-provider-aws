@@ -117,7 +117,6 @@ func resourceNATGateway() *schema.Resource {
 
 func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateNatGatewayInput{
@@ -170,10 +169,9 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	ng, err := findNATGatewayByID(ctx, conn, d.Id())
+	natGateway, err := findNATGatewayByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 NAT Gateway (%s) not found, removing from state", d.Id())
@@ -187,47 +185,46 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	var secondaryAllocationIDs, secondaryPrivateIPAddresses []string
 
-	for _, address := range ng.NatGatewayAddresses {
+	for _, natGatewayAddress := range natGateway.NatGatewayAddresses {
 		// Length check guarantees the attributes are always set (#30865).
-		if isPrimary := aws.ToBool(address.IsPrimary); isPrimary || len(ng.NatGatewayAddresses) == 1 {
-			d.Set("allocation_id", address.AllocationId)
-			d.Set(names.AttrAssociationID, address.AssociationId)
-			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
-			d.Set("private_ip", address.PrivateIp)
-			d.Set("public_ip", address.PublicIp)
+		if isPrimary := aws.ToBool(natGatewayAddress.IsPrimary); isPrimary || len(natGateway.NatGatewayAddresses) == 1 {
+			d.Set("allocation_id", natGatewayAddress.AllocationId)
+			d.Set(names.AttrAssociationID, natGatewayAddress.AssociationId)
+			d.Set(names.AttrNetworkInterfaceID, natGatewayAddress.NetworkInterfaceId)
+			d.Set("private_ip", natGatewayAddress.PrivateIp)
+			d.Set("public_ip", natGatewayAddress.PublicIp)
 		} else if !isPrimary {
-			if allocationID := aws.ToString(address.AllocationId); allocationID != "" {
+			if allocationID := aws.ToString(natGatewayAddress.AllocationId); allocationID != "" {
 				secondaryAllocationIDs = append(secondaryAllocationIDs, allocationID)
 			}
-			if privateIP := aws.ToString(address.PrivateIp); privateIP != "" {
+			if privateIP := aws.ToString(natGatewayAddress.PrivateIp); privateIP != "" {
 				secondaryPrivateIPAddresses = append(secondaryPrivateIPAddresses, privateIP)
 			}
 		}
 	}
 
-	d.Set("connectivity_type", ng.ConnectivityType)
+	d.Set("connectivity_type", natGateway.ConnectivityType)
 	d.Set("secondary_allocation_ids", secondaryAllocationIDs)
 	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
-	d.Set(names.AttrSubnetID, ng.SubnetId)
+	d.Set(names.AttrSubnetID, natGateway.SubnetId)
 
-	setTagsOut(ctx, ng.Tags)
+	setTagsOut(ctx, natGateway.Tags)
 
 	return diags
 }
 
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	switch d.Get("connectivity_type").(string) {
-	case string(awstypes.ConnectivityTypePrivate):
+	switch awstypes.ConnectivityType(d.Get("connectivity_type").(string)) {
+	case awstypes.ConnectivityTypePrivate:
 		if d.HasChanges("secondary_private_ip_addresses") {
-			oRaw, nRaw := d.GetChange("secondary_private_ip_addresses")
-			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
+			o, n := d.GetChange("secondary_private_ip_addresses")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-			if add := n.Difference(o); add.Len() > 0 {
+			if add := ns.Difference(os); add.Len() > 0 {
 				input := &ec2.AssignPrivateNatGatewayAddressInput{
 					NatGatewayId:       aws.String(d.Id()),
 					PrivateIpAddresses: flex.ExpandStringValueSet(add),
@@ -246,7 +243,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 			}
 
-			if del := o.Difference(n); del.Len() > 0 {
+			if del := os.Difference(ns); del.Len() > 0 {
 				input := &ec2.UnassignPrivateNatGatewayAddressInput{
 					NatGatewayId:       aws.String(d.Id()),
 					PrivateIpAddresses: flex.ExpandStringValueSet(del),
@@ -265,23 +262,22 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 			}
 		}
-
-	case string(awstypes.ConnectivityTypePublic):
+	case awstypes.ConnectivityTypePublic:
 		if d.HasChanges("secondary_allocation_ids") {
-			oRaw, nRaw := d.GetChange("secondary_allocation_ids")
-			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
+			o, n := d.GetChange("secondary_allocation_ids")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-			if add := n.Difference(o); add.Len() > 0 {
+			if add := ns.Difference(os); add.Len() > 0 {
 				input := &ec2.AssociateNatGatewayAddressInput{
 					AllocationIds: flex.ExpandStringValueSet(add),
 					NatGatewayId:  aws.String(d.Id()),
 				}
 
 				if d.HasChanges("secondary_private_ip_addresses") {
-					oRaw, nRaw := d.GetChange("secondary_private_ip_addresses")
-					o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
+					o, n := d.GetChange("secondary_private_ip_addresses")
+					os, ns := o.(*schema.Set), n.(*schema.Set)
 
-					if add := n.Difference(o); add.Len() > 0 {
+					if add := ns.Difference(os); add.Len() > 0 {
 						input.PrivateIpAddresses = flex.ExpandStringValueSet(add)
 					}
 				}
@@ -299,7 +295,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 			}
 
-			if del := o.Difference(n); del.Len() > 0 {
+			if del := os.Difference(ns); del.Len() > 0 {
 				natGateway, err := findNATGatewayByID(ctx, conn, d.Id())
 
 				if err != nil {
@@ -310,8 +306,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				var associationIDs []string
 
 				for _, natGatewayAddress := range natGateway.NatGatewayAddresses {
-					allocationID := aws.ToString(natGatewayAddress.AllocationId)
-					if slices.Contains(allocationIDs, allocationID) {
+					if allocationID := aws.ToString(natGatewayAddress.AllocationId); slices.Contains(allocationIDs, allocationID) {
 						associationIDs = append(associationIDs, aws.ToString(natGatewayAddress.AssociationId))
 					}
 				}
@@ -341,7 +336,6 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
@@ -366,28 +360,30 @@ func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	switch connectivityType := diff.Get("connectivity_type").(string); connectivityType {
-	case string(awstypes.ConnectivityTypePrivate):
+	switch connectivityType := awstypes.ConnectivityType(diff.Get("connectivity_type").(string)); connectivityType {
+	case awstypes.ConnectivityTypePrivate:
 		if _, ok := diff.GetOk("allocation_id"); ok {
 			return fmt.Errorf(`allocation_id is not supported with connectivity_type = "%s"`, connectivityType)
 		}
+
 		if v, ok := diff.GetOk("secondary_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
 			return fmt.Errorf(`secondary_allocation_ids is not supported with connectivity_type = "%s"`, connectivityType)
 		}
+
 		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
 			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
 				if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
-					return fmt.Errorf("setting secondary_private_ip_address_count to force new: %s", err)
+					return fmt.Errorf("setting secondary_private_ip_address_count to ForceNew: %s", err)
 				}
 			}
 		}
+
 		if diff.Id() != "" && diff.HasChange("secondary_private_ip_addresses") {
 			if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
 				return fmt.Errorf("setting secondary_private_ip_address_count to computed: %s", err)
 			}
 		}
-
-	case string(awstypes.ConnectivityTypePublic):
+	case awstypes.ConnectivityTypePublic:
 		if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
 			return fmt.Errorf(`secondary_private_ip_address_count is not supported with connectivity_type = "%s"`, connectivityType)
 		}
