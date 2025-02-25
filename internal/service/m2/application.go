@@ -330,10 +330,6 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *applicationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) { //nolint:unparam
 	input := &m2.StartApplicationInput{
 		ApplicationId: aws.String(id),

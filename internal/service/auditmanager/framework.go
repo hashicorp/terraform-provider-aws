@@ -296,8 +296,6 @@ func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyP
 			}
 		}
 	}
-
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Framework, error) {

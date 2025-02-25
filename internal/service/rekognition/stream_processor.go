@@ -715,10 +715,6 @@ func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
-func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},

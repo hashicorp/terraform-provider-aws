@@ -386,10 +386,6 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *jobQueueResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *jobQueueResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(

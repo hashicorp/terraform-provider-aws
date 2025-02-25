@@ -314,10 +314,6 @@ func (r *resourceConfigurationManager) ImportState(ctx context.Context, req reso
 	resource.ImportStatePassthroughID(ctx, path.Root("manager_arn"), req, resp)
 }
 
-func (r *resourceConfigurationManager) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitConfigurationManagerCreated(ctx context.Context, conn *ssmquicksetup.Client, id string, timeout time.Duration) (*ssmquicksetup.GetConfigurationManagerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInitializing, awstypes.StatusDeploying),

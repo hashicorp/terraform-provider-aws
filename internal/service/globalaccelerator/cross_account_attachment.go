@@ -271,10 +271,6 @@ func (r *crossAccountAttachmentResource) Delete(ctx context.Context, request res
 	}
 }
 
-func (r *crossAccountAttachmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.Attachment, error) {
 	input := &globalaccelerator.DescribeCrossAccountAttachmentInput{
 		AttachmentArn: aws.String(arn),

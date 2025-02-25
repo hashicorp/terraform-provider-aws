@@ -547,10 +547,6 @@ func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.Import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
 }
 
-func (r *resourceGuardrail) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),

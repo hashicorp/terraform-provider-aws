@@ -315,10 +315,6 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetApplicationOutput, error) {
 	input := &qbusiness.GetApplicationInput{
 		ApplicationId: aws.String(id),

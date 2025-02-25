@@ -299,10 +299,6 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 	}
 }
 
-func (r *teamsChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *teamsChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("team_id"), request, response)
 }

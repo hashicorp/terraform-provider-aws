@@ -204,10 +204,6 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func (r *ingestionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, arn string) (*awstypes.Ingestion, error) {
 	input := &appfabric.GetIngestionInput{
 		AppBundleIdentifier: aws.String(appBundleARN),

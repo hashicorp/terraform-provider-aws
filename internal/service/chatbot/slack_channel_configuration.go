@@ -295,10 +295,6 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 	}
 }
 
-func (r *slackChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *slackChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("chat_configuration_arn"), request, response)
 }

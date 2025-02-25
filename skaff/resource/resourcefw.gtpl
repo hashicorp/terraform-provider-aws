@@ -565,12 +565,6 @@ func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-{{ if .IncludeTags -}}
-func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-{{- end }}
-
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not

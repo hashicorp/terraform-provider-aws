@@ -256,10 +256,6 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 	}
 }
 
-func (r *instanceConnectEndpointResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Ec2InstanceConnectEndpoint.html.
 type instanceConnectEndpointResourceModel struct {
 	InstanceConnectEndpointArn types.String   `tfsdk:"arn"`

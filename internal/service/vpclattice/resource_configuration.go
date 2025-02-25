@@ -395,10 +395,6 @@ func (r *resourceConfigurationResource) Delete(ctx context.Context, request reso
 	}
 }
 
-func (r *resourceConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceConfigurationOutput, error) {
 	input := vpclattice.GetResourceConfigurationInput{
 		ResourceConfigurationIdentifier: aws.String(id),

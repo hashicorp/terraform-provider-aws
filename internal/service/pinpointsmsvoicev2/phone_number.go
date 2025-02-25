@@ -336,10 +336,6 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *phoneNumberResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type phoneNumberResourceModel struct {
 	DeletionProtectionEnabled types.Bool                                                        `tfsdk:"deletion_protection_enabled"`
 	ISOCountryCode            types.String                                                      `tfsdk:"iso_country_code"`

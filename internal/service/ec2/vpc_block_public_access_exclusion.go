@@ -252,10 +252,6 @@ func (r *vpcBlockPublicAccessExclusionResource) Delete(ctx context.Context, requ
 	}
 }
 
-func (r *vpcBlockPublicAccessExclusionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *vpcBlockPublicAccessExclusionResource) ConfigValidators(context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(

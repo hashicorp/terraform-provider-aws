@@ -383,10 +383,6 @@ func (r *ingestionDestinationResource) ConfigValidators(context.Context) []resou
 	}
 }
 
-func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) (*awstypes.IngestionDestination, error) {
 	input := &appfabric.GetIngestionDestinationInput{
 		AppBundleIdentifier:            aws.String(appBundleARN),

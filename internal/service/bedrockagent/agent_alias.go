@@ -267,10 +267,6 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (r *agentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) (*awstypes.AgentAlias, error) {
 	input := &bedrockagent.GetAgentAliasInput{
 		AgentAliasId: aws.String(agentAliasID),

@@ -689,10 +689,6 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
-func (r *knowledgeBaseResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusCreating),

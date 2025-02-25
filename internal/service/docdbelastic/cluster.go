@@ -370,10 +370,6 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceClusterData struct {
 	AdminUserName              types.String                      `tfsdk:"admin_user_name"`
 	AdminUserPassword          types.String                      `tfsdk:"admin_user_password"`

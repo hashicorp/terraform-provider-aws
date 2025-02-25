@@ -395,8 +395,6 @@ func (r *securityGroupRuleResource) ModifyPlan(ctx context.Context, request reso
 			response.RequiresReplace = []path.Path{path.Root(old), path.Root(new)}
 		}
 	}
-
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource.ConfigValidator {

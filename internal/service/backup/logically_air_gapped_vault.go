@@ -194,10 +194,6 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 	}
 }
 
-func (r *logicallyAirGappedVaultResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type logicallyAirGappedVaultResourceModel struct {
 	BackupVaultARN   types.String   `tfsdk:"arn"`
 	BackupVaultName  types.String   `tfsdk:"name"`

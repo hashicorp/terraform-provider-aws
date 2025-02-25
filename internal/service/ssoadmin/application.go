@@ -372,10 +372,6 @@ func (r *resourceApplication) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func (r *resourceApplication) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationOutput, error) {
 	in := &ssoadmin.DescribeApplicationInput{
 		ApplicationArn: aws.String(id),

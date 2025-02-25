@@ -451,10 +451,6 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *environmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetEnvironmentOutput, error) {
 	input := &m2.GetEnvironmentInput{
 		EnvironmentId: aws.String(id),

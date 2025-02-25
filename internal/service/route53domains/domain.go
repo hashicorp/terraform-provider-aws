@@ -628,8 +628,6 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 }
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		// duration_in_years can only be increased.
 		var oldDurationInYears, newDurationInYears types.Int64

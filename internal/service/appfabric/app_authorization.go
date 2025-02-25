@@ -402,10 +402,6 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
 	in := &appfabric.GetAppAuthorizationInput{
 		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),

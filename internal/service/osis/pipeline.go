@@ -364,10 +364,6 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *pipelineResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {
 	input := &osis.GetPipelineInput{
 		PipelineName: aws.String(name),

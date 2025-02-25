@@ -749,10 +749,6 @@ func (r *resourceScheduledQuery) ImportState(ctx context.Context, req resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
-func (r *resourceScheduledQuery) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client, id string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},

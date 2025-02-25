@@ -472,10 +472,6 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *customModelResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetCustomModelOutput, error) {
 	input := &bedrock.GetCustomModelInput{
 		ModelIdentifier: aws.String(id),

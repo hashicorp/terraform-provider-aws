@@ -227,10 +227,6 @@ func (r *resourceContributorInsightRule) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root("rule_name"), req, resp)
 }
 
-func (r *resourceContributorInsightRule) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findContributorInsightRuleByName(ctx context.Context, conn *cloudwatch.Client, name string) (*awstypes.InsightRule, error) {
 	input := &cloudwatch.DescribeInsightRulesInput{}
 

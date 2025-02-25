@@ -306,10 +306,6 @@ func (r *probeResource) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *probeResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) (*networkmonitor.GetProbeOutput, error) {
 	input := &networkmonitor.GetProbeInput{
 		MonitorName: aws.String(monitorName),

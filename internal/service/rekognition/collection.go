@@ -206,10 +206,6 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
 	in := &rekognition.DescribeCollectionInput{
 		CollectionId: aws.String(id),

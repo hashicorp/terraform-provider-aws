@@ -276,10 +276,6 @@ func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *resourceGatewayResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceGatewayOutput, error) {
 	input := vpclattice.GetResourceGatewayInput{
 		ResourceGatewayIdentifier: aws.String(id),

@@ -296,10 +296,6 @@ func (r *shardGroupResource) ImportState(ctx context.Context, request resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root("db_shard_group_identifier"), request, response)
 }
 
-func (r *shardGroupResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDBShardGroupByID(ctx context.Context, conn *rds.Client, id string) (*awstypes.DBShardGroup, error) {
 	input := rds.DescribeDBShardGroupsInput{
 		DBShardGroupIdentifier: aws.String(id),
