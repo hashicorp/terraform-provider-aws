@@ -40,10 +40,6 @@ type keyResource struct {
 	framework.WithImportByID
 }
 
-func (*keyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfrontkeyvaluestore_key"
-}
-
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -247,11 +243,12 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 		return
 	}
 
-	_, err = conn.DeleteKey(ctx, &cloudfrontkeyvaluestore.DeleteKeyInput{
+	input := cloudfrontkeyvaluestore.DeleteKeyInput{
 		IfMatch: etag,
 		Key:     fwflex.StringFromFramework(ctx, data.Key),
 		KvsARN:  fwflex.StringFromFramework(ctx, data.KvsARN),
-	})
+	}
+	_, err = conn.DeleteKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

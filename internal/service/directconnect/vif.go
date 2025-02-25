@@ -60,9 +60,10 @@ func virtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Virtual Interface: %s", d.Id())
-	_, err := conn.DeleteVirtualInterface(ctx, &directconnect.DeleteVirtualInterfaceInput{
+	input := directconnect.DeleteVirtualInterfaceInput{
 		VirtualInterfaceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVirtualInterface(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 		return diags

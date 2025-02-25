@@ -53,10 +53,6 @@ type resourceGatewayResource struct {
 	framework.WithTimeouts
 }
 
-func (*resourceGatewayResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_resource_gateway"
-}
-
 func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -278,10 +274,6 @@ func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.D
 
 		return
 	}
-}
-
-func (r *resourceGatewayResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceGatewayOutput, error) {

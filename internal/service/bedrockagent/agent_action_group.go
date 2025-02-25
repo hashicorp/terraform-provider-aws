@@ -51,10 +51,6 @@ type agentActionGroupResource struct {
 	framework.WithTimeouts
 }
 
-func (*agentActionGroupResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_action_group"
-}
-
 func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

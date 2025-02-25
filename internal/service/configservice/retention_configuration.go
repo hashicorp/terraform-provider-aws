@@ -36,10 +36,6 @@ type retentionConfigurationResource struct {
 	framework.WithImportByID
 }
 
-func (r *retentionConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_config_retention_configuration"
-}
-
 func (r *retentionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -158,9 +154,10 @@ func (r *retentionConfigurationResource) Delete(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	name := data.ID.ValueString()
-	_, err := conn.DeleteRetentionConfiguration(ctx, &configservice.DeleteRetentionConfigurationInput{
+	input := configservice.DeleteRetentionConfigurationInput{
 		RetentionConfigurationName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRetentionConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchRetentionConfigurationException](err) {
 		return

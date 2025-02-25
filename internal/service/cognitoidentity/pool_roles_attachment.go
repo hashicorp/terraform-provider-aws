@@ -147,9 +147,10 @@ func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
-	ip, err := conn.GetIdentityPoolRoles(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+	input := cognitoidentity.GetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
+	}
+	ip, err := conn.GetIdentityPoolRoles(ctx, &input)
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id())
 		d.SetId("")
@@ -222,11 +223,12 @@ func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
-	_, err := conn.SetIdentityPoolRoles(ctx, &cognitoidentity.SetIdentityPoolRolesInput{
+	input := cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
 		Roles:          expandIdentityPoolRoles(make(map[string]interface{})),
 		RoleMappings:   expandIdentityPoolRoleMappingsAttachment([]interface{}{}),
-	})
+	}
+	_, err := conn.SetIdentityPoolRoles(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito identity pool roles association: %s", err)

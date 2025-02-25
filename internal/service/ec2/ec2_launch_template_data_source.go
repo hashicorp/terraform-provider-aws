@@ -813,7 +813,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeLaunchTemplatesInput{}
+	input := ec2.DescribeLaunchTemplatesInput{}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
 		input.LaunchTemplateIds = []string{v.(string)}
@@ -835,7 +835,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	lt, err := findLaunchTemplate(ctx, conn, input)
+	lt, err := findLaunchTemplate(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Launch Template", err))

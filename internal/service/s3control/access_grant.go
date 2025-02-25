@@ -45,10 +45,6 @@ type accessGrantResource struct {
 	framework.WithImportByID
 }
 
-func (r *accessGrantResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grant"
-}
-
 func (r *accessGrantResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -311,10 +307,6 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *accessGrantResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {

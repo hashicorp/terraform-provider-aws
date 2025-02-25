@@ -46,10 +46,6 @@ type probeResource struct {
 	framework.WithImportByID
 }
 
-func (*probeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmonitor_probe"
-}
-
 func (r *probeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -308,10 +304,6 @@ func (r *probeResource) Delete(ctx context.Context, request resource.DeleteReque
 
 		return
 	}
-}
-
-func (r *probeResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) (*networkmonitor.GetProbeOutput, error) {

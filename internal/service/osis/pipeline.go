@@ -55,10 +55,6 @@ type pipelineResource struct {
 	framework.WithTimeouts
 }
 
-func (r *pipelineResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_osis_pipeline"
-}
-
 func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -366,10 +362,6 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 
 		return
 	}
-}
-
-func (r *pipelineResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {

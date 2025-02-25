@@ -217,9 +217,10 @@ func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Resource Discovery: %s", d.Id())
-	_, err := conn.DeleteIpamResourceDiscovery(ctx, &ec2.DeleteIpamResourceDiscoveryInput{
+	input := ec2.DeleteIpamResourceDiscoveryInput{
 		IpamResourceDiscoveryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIpamResourceDiscovery(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 		return diags

@@ -55,10 +55,6 @@ type resourceExportTask struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceExportTask) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_rds_export_task"
-}
-
 func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

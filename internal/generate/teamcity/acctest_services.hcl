@@ -56,6 +56,10 @@ service "cloudhsmv2" {
   vpc_lock = true
 }
 
+service "cloudtrail" {
+  parallelism = 5
+}
+
 service "comprehend" {
   parallelism = 10
 }

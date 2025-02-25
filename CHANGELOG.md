@@ -1,9 +1,68 @@
-## 5.88.0 (Unreleased)
+## 5.89.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_macie2_organization_configuration` ([#41475](https://github.com/hashicorp/terraform-provider-aws/issues/41475))
+* **New Resource:** `aws_neptunegraph_graph` ([#41216](https://github.com/hashicorp/terraform-provider-aws/issues/41216))
+* **New Resource:** `aws_rds_shard_group` ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
+* **New Resource:** `aws_xray_resource_policy` ([#41517](https://github.com/hashicorp/terraform-provider-aws/issues/41517))
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudwatch_log_data_protection_policy_document: Add `configuration` argument ([#41524](https://github.com/hashicorp/terraform-provider-aws/issues/41524))
+* data-source/aws_rds_cluster: Add `cluster_scalability_type` attribute ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
+* data-source/aws_rds_cluster: Add `database_insights_mode` attribute ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
+* data-source/aws_s3_bucket_object: Add `application/yaml` to the list of `Content-Type`s that return a body ([#41443](https://github.com/hashicorp/terraform-provider-aws/issues/41443))
+* data-source/aws_s3_object: Add `application/yaml` to the list of `Content-Type`s that return a body ([#41443](https://github.com/hashicorp/terraform-provider-aws/issues/41443))
+* resource/aws_autoscaling_policy: Add `target_tracking_configuration.customized_metric_specification.period` argument to support [high-resolution metrics](https://docs.aws.amazon.com/autoscaling/ec2/userguide/policy-creating-high-resolution-metrics.html) ([#41385](https://github.com/hashicorp/terraform-provider-aws/issues/41385))
+* resource/aws_launch_template: Add `network_interfaces.ena_srd_specification` configuration block ([#41367](https://github.com/hashicorp/terraform-provider-aws/issues/41367))
+* resource/aws_lb: Add `enable_zonal_shift` support for Application Load Balancers ([#41335](https://github.com/hashicorp/terraform-provider-aws/issues/41335))
+* resource/aws_macie2_classification_job: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
+* resource/aws_macie2_custom_data_identifier: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
+* resource/aws_macie2_findings_filter: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
+* resource/aws_macie2_member: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
+* resource/aws_rds_cluster: Add `cluster_scalability_type` argument ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
+* resource/aws_rds_cluster: Add `database_insights_mode` argument ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
+* resource/aws_rds_cluster: Support `""` as a valid value for `engine_mode` ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
+* resource/aws_rds_instance: Support `iam-db-auth-error` as a valid value for `enabled_cloudwatch_logs_exports` ([#41408](https://github.com/hashicorp/terraform-provider-aws/issues/41408))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_log_delivery: Fix Provider produced inconsistent result error on `s3_delivery_configuration.suffix_path` ([#41497](https://github.com/hashicorp/terraform-provider-aws/issues/41497))
+* resource/aws_ec2_fleet: Add `spot_options.max_total_price`, `spot_options.min_target_capacity`, `spot_options.single_instance_type`, and `spot_options.single_availability_zone` arguments ([#41272](https://github.com/hashicorp/terraform-provider-aws/issues/41272))
+* resource/aws_lb_listener: Ensure that `routing_http_response_server_enabled`, `routing_http_response_strict_transport_security_header_value`, `routing_http_response_access_control_allow_origin_header_value`, `routing_http_response_access_control_allow_methods_header_value`, `routing_http_response_access_control_allow_headers_header_value`, `routing_http_response_access_control_allow_credentials_header_value`, `routing_http_response_access_control_expose_headers_header_value`, `routing_http_response_access_control_max_age_header_value`, `routing_http_response_content_security_policy_header_value`, `routing_http_response_x_content_type_options_header_value`, `routing_http_response_x_frame_options_header_value`, `routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name`, `routing_http_request_x_amzn_mtls_clientcert_issuer_header_name`, `routing_http_request_x_amzn_mtls_clientcert_subject_header_name`, `routing_http_request_x_amzn_mtls_clientcert_validity_header_name`, `routing_http_request_x_amzn_mtls_clientcert_leaf_header_name`, `routing_http_request_x_amzn_mtls_clientcert_header_name`, `routing_http_request_x_amzn_tls_version_header_name`, and `routing_http_request_x_amzn_tls_cipher_suite_header_name` are updated if `tcp_idle_timeout_seconds` does not change ([#41299](https://github.com/hashicorp/terraform-provider-aws/issues/41299))
+* resource/aws_macie2_classification_job: Ensure that only `status` and `tags` can be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
+* resource/aws_servicequotas_service_quota: Does not leave stuck resource in state when service quota not supported in current region. ([#41509](https://github.com/hashicorp/terraform-provider-aws/issues/41509))
+
+## 5.88.0 (February 20, 2025)
+
+NOTES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: A warning diagnostic has been added for configurations where `rule.expiration.expired_object_delete_marker` is set with either `rule.expiration.date` or `rule.expiration.days`. While historically the provider allowed this invalid configuration, the migration of this resource to the Terraform Plugin Framework in `v5.86.0` resulted in this misconfiguration surfacing as a hard `inconsistent result after apply` error. This diagnostic aims to direct users how to resolve the issue at plan time. See [this issue comment](https://github.com/hashicorp/terraform-provider-aws/issues/41277#issuecomment-2654728812) for additional context. ([#41462](https://github.com/hashicorp/terraform-provider-aws/issues/41462))
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudwatch_contributor_managed_insight_rules` ([#41472](https://github.com/hashicorp/terraform-provider-aws/issues/41472))
+* **New Resource:** `aws_cloudwatch_contributor_managed_insight_rule` ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
+* **New Resource:** `aws_qbusiness_application` ([#35249](https://github.com/hashicorp/terraform-provider-aws/issues/35249))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrock_model_invocation_logging_configuration: Add `video_data_delivery_enabled` argument ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
 * resource/aws_db_instance: Add `password_wo` write-only attribute ([#41366](https://github.com/hashicorp/terraform-provider-aws/issues/41366))
+* resource/aws_docdb_cluster: Add `master_password_wo` write-only attribute ([#41413](https://github.com/hashicorp/terraform-provider-aws/issues/41413))
+* resource/aws_glue_partition: Add `storage_descriptor.additional_locations` argument ([#41434](https://github.com/hashicorp/terraform-provider-aws/issues/41434))
+* resource/aws_redshift_cluster: Add `master_password_wo` write-only attribute ([#41411](https://github.com/hashicorp/terraform-provider-aws/issues/41411))
+* resource/aws_redshiftserverless_namespace: Add `admin_user_password_wo` write-only attribute ([#41412](https://github.com/hashicorp/terraform-provider-aws/issues/41412))
 * resource/aws_secretsmanager_secret_version: Add `secret_string_wo` write-only attribute ([#41371](https://github.com/hashicorp/terraform-provider-aws/issues/41371))
+
+BUG FIXES:
+
+* data-source/aws_codebuild_fleet: Prevents panic when `scaling_configuration` is not empty. ([#41377](https://github.com/hashicorp/terraform-provider-aws/issues/41377))
+* resource/aws_amplify_domain_association: Prevents unexpected state error when creating with multiple `sub_domain` ([#36961](https://github.com/hashicorp/terraform-provider-aws/issues/36961))
+* resource/aws_bedrock_model_invocation_logging_configuration: Set `embedding_data_delivery_enabled`, `image_data_delivery_enabled`, and `text_data_delivery_enabled` arguments as optional with default value of `true` ([#41317](https://github.com/hashicorp/terraform-provider-aws/issues/41317))
+* resource/aws_cloudwatch_contributor_insight_rule: Fix enable/disable rule state ([#41449](https://github.com/hashicorp/terraform-provider-aws/issues/41449))
+* resource/aws_dynamodb_table: Fixes long delay in creation of replicas ([#41451](https://github.com/hashicorp/terraform-provider-aws/issues/41451))
 
 ## 5.87.0 (February 13, 2025)
 

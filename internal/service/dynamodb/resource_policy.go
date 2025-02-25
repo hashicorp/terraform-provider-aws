@@ -39,10 +39,6 @@ type resourcePolicyResource struct {
 	framework.WithImportByID
 }
 
-func (*resourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_dynamodb_resource_policy"
-}
-
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -191,9 +187,10 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	_, err := conn.DeleteResourcePolicy(ctx, &dynamodb.DeleteResourcePolicyInput{
+	input := dynamodb.DeleteResourcePolicyInput{
 		ResourceArn: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

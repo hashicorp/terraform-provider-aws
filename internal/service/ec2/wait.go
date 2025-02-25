@@ -1678,12 +1678,12 @@ func waitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.Client, id str
 		if output.ActivityStatus == awstypes.ActivityStatusError {
 			var errs []error
 
-			input := &ec2.DescribeSpotFleetRequestHistoryInput{
+			input := ec2.DescribeSpotFleetRequestHistoryInput{
 				SpotFleetRequestId: aws.String(id),
 				StartTime:          aws.Time(time.UnixMilli(0)),
 			}
 
-			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, input); err == nil {
+			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, &input); err == nil {
 				for _, v := range output {
 					if eventType := v.EventType; eventType == awstypes.EventTypeError || eventType == awstypes.EventTypeInformation {
 						errs = append(errs, errors.New(aws.ToString(v.EventInformation.EventDescription)))

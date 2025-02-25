@@ -48,10 +48,6 @@ type ingestionResource struct {
 	framework.WithImportByID
 }
 
-func (*ingestionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion"
-}
-
 func (r *ingestionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -206,10 +202,6 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 
 		return
 	}
-}
-
-func (r *ingestionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, arn string) (*awstypes.Ingestion, error) {

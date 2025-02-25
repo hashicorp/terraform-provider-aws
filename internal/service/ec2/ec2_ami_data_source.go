@@ -237,25 +237,25 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeImagesInput{
+	describeImagesInput := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
+		describeImagesInput.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterList(v.(*schema.Set))
+		describeImagesInput.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.Owners = flex.ExpandStringValueList(v.([]interface{}))
+		describeImagesInput.Owners = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	diags = checkMostRecentAndMissingFilters(diags, input, d.Get(names.AttrMostRecent).(bool))
+	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool))
 
-	images, err := findImages(ctx, conn, input)
+	images, err := findImages(ctx, conn, &describeImagesInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
@@ -342,9 +342,10 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	instanceData, err := conn.GetInstanceUefiData(ctx, &ec2.GetInstanceUefiDataInput{
+	getInstanceUEFIDataInput := ec2.GetInstanceUefiDataInput{
 		InstanceId: aws.String(d.Id()),
-	})
+	}
+	instanceData, err := conn.GetInstanceUefiData(ctx, &getInstanceUEFIDataInput)
 	if err == nil {
 		d.Set("uefi_data", instanceData.UefiData)
 	}

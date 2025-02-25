@@ -63,10 +63,6 @@ type resourceDBInstance struct {
 	framework.WithImportByID
 }
 
-func (r *resourceDBInstance) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_timestreaminfluxdb_db_instance"
-}
-
 func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -531,10 +527,6 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 		return
 	}
-}
-
-func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
