@@ -23,11 +23,8 @@ func Int64FromFramework(ctx context.Context, v basetypes.Int64Valuable) *int64 {
 }
 
 func Int64ValueFromFramework(ctx context.Context, v basetypes.Int64Valuable) int64 {
-	var output int64
-
-	must(Expand(ctx, v, &output))
-
-	return output
+	val := fwdiag.Must(v.ToInt64Value(ctx))
+	return val.ValueInt64()
 }
 
 func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
