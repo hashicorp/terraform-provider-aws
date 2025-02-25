@@ -15,6 +15,8 @@ Provides a Redshift Cluster Resource.
 
 ~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `default_iam_role_arn` argument and the [`aws_redshift_cluster_iam_roles`](redshift_cluster_iam_roles.html) resource's `default_iam_role_arn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
 
+-> **Note:** Write-Only attribute `master_password_wo` is available to use in place of `master_password`. Write-Only attributes are supported in HashiCorp Terraform 1.11.0 and later.
+
 ## Example Usage
 
 ### Basic Usage
