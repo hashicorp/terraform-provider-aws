@@ -200,7 +200,7 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 	}
 	// Account for field name mismatches between the Create
 	// and Describe data structures
-	plan.NumShards = flex.Int32ToFramework(ctx, statusOut.NumberOfShards)
+	plan.NumShards = flex.Int32ToFrameworkInt64(ctx, statusOut.NumberOfShards)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -236,7 +236,7 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 	state.MultiRegionClusterNameSuffix = flex.StringToFramework(ctx, &suffix)
-	state.NumShards = flex.Int32ToFramework(ctx, out.NumberOfShards)
+	state.NumShards = flex.Int32ToFrameworkInt64(ctx, out.NumberOfShards)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {

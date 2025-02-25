@@ -186,7 +186,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	data.CurrentVersion = fwflex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
+	data.CurrentVersion = fwflex.Int32ToFrameworkInt64(ctx, app.LatestVersion.ApplicationVersion)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -237,7 +237,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	// Additional fields.
-	data.CurrentVersion = fwflex.Int32ToFramework(ctx, outputGAV.ApplicationVersion)
+	data.CurrentVersion = fwflex.Int32ToFrameworkInt64(ctx, outputGAV.ApplicationVersion)
 	data.Definition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &definitionModel{
 		Content:    fwflex.StringToFramework(ctx, outputGAV.DefinitionContent),
 		S3Location: types.StringNull(),
@@ -262,7 +262,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 	if !new.Definition.Equal(old.Definition) || !new.Description.Equal(old.Description) {
 		input := &m2.UpdateApplicationInput{
 			ApplicationId:             fwflex.StringFromFramework(ctx, new.ID),
-			CurrentApplicationVersion: fwflex.Int32FromFramework(ctx, old.CurrentVersion),
+			CurrentApplicationVersion: fwflex.Int32FromFrameworkInt64(ctx, old.CurrentVersion),
 		}
 
 		if !new.Definition.Equal(old.Definition) {

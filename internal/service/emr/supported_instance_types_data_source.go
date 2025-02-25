@@ -156,10 +156,10 @@ func flattenSupportedInstanceTypes(ctx context.Context, apiObjects []awstypes.Su
 			"instance_family_id":       flex.StringToFramework(ctx, apiObject.InstanceFamilyId),
 			"is_64_bits_only":          flex.BoolToFramework(ctx, apiObject.Is64BitsOnly),
 			"memory_gb":                flex.Float32ToFramework(ctx, apiObject.MemoryGB),
-			"number_of_disks":          flex.Int32ToFramework(ctx, apiObject.NumberOfDisks),
-			"storage_gb":               flex.Int32ToFramework(ctx, apiObject.StorageGB),
+			"number_of_disks":          flex.Int32ToFrameworkInt64(ctx, apiObject.NumberOfDisks),
+			"storage_gb":               flex.Int32ToFrameworkInt64(ctx, apiObject.StorageGB),
 			names.AttrType:             flex.StringToFramework(ctx, apiObject.Type),
-			"vcpu":                     flex.Int32ToFramework(ctx, apiObject.VCPU),
+			"vcpu":                     flex.Int32ToFrameworkInt64(ctx, apiObject.VCPU),
 		}
 		objVal, d := types.ObjectValue(supportedInstanceTypeAttrTypes, obj)
 		diags.Append(d...)

@@ -552,7 +552,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		renewForYears := fwflex.Int32ValueFromFramework(ctx, new.DurationInYears) - fwflex.Int32ValueFromFramework(ctx, old.DurationInYears)
+		renewForYears := fwflex.Int32ValueFromFrameworkInt64(ctx, new.DurationInYears) - fwflex.Int32ValueFromFrameworkInt64(ctx, old.DurationInYears)
 
 		if err := renewDomain(ctx, conn, domainName, currentExpirationDate, renewForYears, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())

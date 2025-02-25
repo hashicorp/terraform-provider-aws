@@ -86,8 +86,8 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	rc := &dsRecurrenceData{}
-	rc.RecurrenceMultiplier = fwflex.Int32ToFramework(ctx, output.Recurrence.RecurrenceMultiplier)
-	rc.NumberOfOnCalls = fwflex.Int32ToFramework(ctx, output.Recurrence.NumberOfOnCalls)
+	rc.RecurrenceMultiplier = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.RecurrenceMultiplier)
+	rc.NumberOfOnCalls = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.NumberOfOnCalls)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.DailySettings, &rc.DailySettings)...)
 	if response.Diagnostics.HasError() {
@@ -179,12 +179,12 @@ func flattenShiftCoveragesDataSource(ctx context.Context, object map[string][]aw
 		for _, v := range value {
 			ct := dsCoverageTimesData{
 				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.End.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.End.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.Start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)
