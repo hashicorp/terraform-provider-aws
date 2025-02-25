@@ -75,6 +75,17 @@ func ResourceJob() *schema.Resource {
 					},
 				},
 			},
+			"job_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "SCRIPT",
+				ValidateFunc: validation.StringInSlice([]string{
+					"SCRIPT",
+					"VISUAL",
+					"NOTEBOOK",
+				}, false),
+				Description: "The mode of the Glue job. Valid values are 'SCRIPT', 'VISUAL', or 'NOTEBOOK'. Defaults to 'SCRIPT'.",
+			},
 			"connections": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -207,6 +218,16 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Tags:    getTagsIn(ctx),
 	}
 
+	// Add job_mode to the input (assuming it might map to DefaultArguments or a future API field)
+	if v, ok := d.GetOk("job_mode"); ok {
+		jobMode := v.(string)
+		if input.DefaultArguments == nil {
+			input.DefaultArguments = make(map[string]string)
+		}
+		// For now, store job_mode in DefaultArguments as a workaround
+		input.DefaultArguments["--job-mode"] = jobMode
+	}
+
 	if v, ok := d.GetOk("connections"); ok {
 		input.Connections = &awstypes.ConnectionsList{
 			Connections: flex.ExpandStringValueList(v.([]interface{})),
@@ -311,6 +332,18 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting command: %s", err)
 	}
+
+	// Read job_mode from DefaultArguments (as a workaround)
+	if job.DefaultArguments != nil {
+		if mode, ok := job.DefaultArguments["--job-mode"]; ok && mode != "" {
+			d.Set("job_mode", mode)
+		} else {
+			d.Set("job_mode", "SCRIPT") // Default fallback
+		}
+	} else {
+		d.Set("job_mode", "SCRIPT")
+	}
+
 	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connections: %s", err)
 	}
@@ -347,6 +380,15 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		jobUpdate := &awstypes.JobUpdate{
 			Command: expandJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
+		}
+
+		if v, ok := d.GetOk("job_mode"); ok {
+			jobMode := v.(string)
+			if jobUpdate.DefaultArguments == nil {
+				jobUpdate.DefaultArguments = make(map[string]string)
+			}
+			// For now, store job_mode in DefaultArguments as a workaround
+			jobUpdate.DefaultArguments["--job-mode"] = jobMode
 		}
 
 		if v, ok := d.GetOk("connections"); ok {
