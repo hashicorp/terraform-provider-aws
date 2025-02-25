@@ -46,9 +46,6 @@ func resourceParameter() *schema.Resource {
 			},
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath(names.AttrValue), cty.GetAttrPath("value_wo")),
-		},
 		Schema: map[string]*schema.Schema{
 			"allowed_pattern": {
 				Type:         schema.TypeString,
