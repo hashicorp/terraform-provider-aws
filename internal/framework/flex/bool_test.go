@@ -193,3 +193,14 @@ func TestBoolToFrameworkLegacy(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkBoolToFrameworkLegacy(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Bool(true)
+	for n := 0; n < b.N; n++ {
+		r := flex.BoolToFrameworkLegacy(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
