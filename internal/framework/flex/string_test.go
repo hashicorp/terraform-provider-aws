@@ -197,6 +197,17 @@ func TestStringValueToFramework(t *testing.T) {
 	}
 }
 
+func BenchmarkStringValueToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := "TEST"
+	for n := 0; n < b.N; n++ {
+		r := flex.StringValueToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestStringToFrameworkLegacy(t *testing.T) {
 	t.Parallel()
 

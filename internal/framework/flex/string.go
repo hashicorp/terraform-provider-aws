@@ -52,12 +52,7 @@ func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
 	if v == "" {
 		return types.StringNull()
 	}
-
-	var output types.String
-
-	must(Flatten(ctx, v, &output))
-
-	return output
+	return types.StringValue(string(v))
 }
 
 // StringValueToFrameworkLegacy converts a string value to a Framework String value.
