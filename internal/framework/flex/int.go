@@ -111,7 +111,7 @@ func Int32FromFrameworkLegacy(_ context.Context, v types.Int32) *int32 {
 		return nil
 	}
 
-	return aws.Int32(int32(i))
+	return aws.Int32(i)
 }
 
 // Int32ValueFromFrameworkInt64 coverts a Framework Int64 value to an int32 value.
