@@ -354,7 +354,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 			opts := wrappedDataSourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
 
 					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
@@ -435,7 +435,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
@@ -493,7 +493,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 				interceptors := ephemeralResourceInterceptors{}
 				opts := wrappedEphemeralResourceOptions{
 					// bootstrapContext is run on all wrapped methods before any interceptors.
-					bootstrapContext: func(ctx context.Context, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+					bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 						var diags diag.Diagnostics
 
 						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
