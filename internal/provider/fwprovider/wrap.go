@@ -107,6 +107,18 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 	return nil
 }
 
+func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasource.ValidateConfigRequest, response *datasource.ValidateConfigResponse) {
+	if v, ok := w.inner.(datasource.DataSourceWithValidateConfig); ok {
+		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		v.ValidateConfig(ctx, request, response)
+	}
+}
+
 type wrappedEphemeralResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
