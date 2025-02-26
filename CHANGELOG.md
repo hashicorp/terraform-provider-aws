@@ -17,6 +17,8 @@ ENHANCEMENTS:
 * data-source/aws_s3_object: Add `checksum_crc64nvme` attribute ([#41015](https://github.com/hashicorp/terraform-provider-aws/issues/41015))
 * release/aws_dx_lag: Add `400Gbps` as a supported `connections_bandwidth` value ([#41547](https://github.com/hashicorp/terraform-provider-aws/issues/41547))
 * resource/aws_autoscaling_policy: Add `target_tracking_configuration.customized_metric_specification.period` argument to support [high-resolution metrics](https://docs.aws.amazon.com/autoscaling/ec2/userguide/policy-creating-high-resolution-metrics.html) ([#41385](https://github.com/hashicorp/terraform-provider-aws/issues/41385))
+* resource/aws_db_instance: Add `RequiredWith` validation `password_wo` and `password_wo_version`. Remove `PreferWriteOnlyAttribute` validation ([#41562](https://github.com/hashicorp/terraform-provider-aws/issues/41562))
+* resource/aws_docdb_cluster: Add `RequiredWith` validation `master_password_wo` and `master_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation ([#41562](https://github.com/hashicorp/terraform-provider-aws/issues/41562))
 * resource/aws_dx_connection: Add `25Gbps` and `400Gbps` as supported `bandwidth` values ([#41547](https://github.com/hashicorp/terraform-provider-aws/issues/41547))
 * resource/aws_dx_hosted_connection: Add `25Gbps` as a supported `bandwidth` value ([#41547](https://github.com/hashicorp/terraform-provider-aws/issues/41547))
 * resource/aws_launch_template: Add `network_interfaces.ena_srd_specification` configuration block ([#41367](https://github.com/hashicorp/terraform-provider-aws/issues/41367))
@@ -26,12 +28,17 @@ ENHANCEMENTS:
 * resource/aws_macie2_findings_filter: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
 * resource/aws_macie2_member: Allow `tags` to be updated in-place ([#41266](https://github.com/hashicorp/terraform-provider-aws/issues/41266))
 * resource/aws_nat_gateway: Make it possible to move from `secondary_private_ip_address_count` to `secondary_private_ip_addresses` for private NAT Gateways ([#41403](https://github.com/hashicorp/terraform-provider-aws/issues/41403))
+* resource/aws_rds_cluster: Add `RequiredWith` validation `master_password_wo` and `master_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation ([#41562](https://github.com/hashicorp/terraform-provider-aws/issues/41562))
 * resource/aws_rds_cluster: Add `cluster_scalability_type` argument ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
 * resource/aws_rds_cluster: Add `database_insights_mode` argument ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
 * resource/aws_rds_cluster: Support `""` as a valid value for `engine_mode` ([#41254](https://github.com/hashicorp/terraform-provider-aws/issues/41254))
 * resource/aws_rds_instance: Support `iam-db-auth-error` as a valid value for `enabled_cloudwatch_logs_exports` ([#41408](https://github.com/hashicorp/terraform-provider-aws/issues/41408))
+* resource/aws_redshift_cluster: Add `RequiredWith` validation `master_password_wo` and `master_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation ([#41562](https://github.com/hashicorp/terraform-provider-aws/issues/41562))
+* resource/aws_redshiftseverless_namespace: Add `RequiredWith` validation `admin_user_password_wo` and `admin_user_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation ([#41562](https://github.com/hashicorp/terraform-provider-aws/issues/41562))
 * resource/aws_s3_object: Add `checksum_crc64nvme` attribute ([#41015](https://github.com/hashicorp/terraform-provider-aws/issues/41015))
 * resource/aws_s3_object_copy: Add `checksum_crc64nvme` attribute ([#41015](https://github.com/hashicorp/terraform-provider-aws/issues/41015))
+* resource/aws_secretsmanager_secret_version: Add `RequiredWith` validation `secret_string_wo` and `secret_string_wo_version`. Remove `PreferWriteOnlyAttribute` validation ([#41562](https://github.com/hashicorp/terraform-provider-aws/issues/41562))
+* resource/aws_ssm_parameter: Remove `PreferWriteOnlyAttribute` validation ([#41562](https://github.com/hashicorp/terraform-provider-aws/issues/41562))
 
 BUG FIXES:
 
