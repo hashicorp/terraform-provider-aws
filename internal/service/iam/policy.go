@@ -287,6 +287,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			// Ensuring Thread Sleeps for n seconds before Setting version as default version
 			// The value is passed through a variable. Default value is 3secs
 			time.Sleep(time.Duration(delayAfterPolicyCreation) * time.Second)
+
 			policyInput := &iam.SetDefaultPolicyVersionInput{
 				PolicyArn: aws.String(d.Id()),
 				VersionId: policyVersionOutput.PolicyVersion.VersionId,
