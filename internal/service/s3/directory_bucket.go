@@ -23,10 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/s3/models"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/s3/modifiers"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -71,15 +69,12 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			"data_redundancy": schema.StringAttribute{
-				CustomType:    dataRedundancyType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: modifiers.ApplyDataRedundancyPlanModifier(),
-				Validators: []validator.String{
-					stringvalidator.OneOf(
-						string(awstypes.DataRedundancySingleAvailabilityZone),
-						string(awstypes.DataRedundancySingleLocalZone),
-					),
+				CustomType: dataRedundancyType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					directoryBucketDataRedundancyPlanModifier{},
 				},
 			},
 			names.AttrForceDestroy: schema.BoolAttribute{
@@ -100,7 +95,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrLocation: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[models.LocationInfoModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrName: schema.StringAttribute{
@@ -116,12 +111,6 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 							Default:    locationTypeType.AttributeDefault(awstypes.LocationTypeAvailabilityZone),
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
-							},
-							Validators: []validator.String{
-								stringvalidator.OneOf(
-									string(awstypes.LocationTypeAvailabilityZone),
-									string(awstypes.LocationTypeLocalZone),
-								),
 							},
 						},
 					},
@@ -148,42 +137,18 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	var locationType awstypes.LocationType
-	if locationInfoData.Type.IsNull() || locationInfoData.Type.ValueEnum() == "" {
-		locationType = awstypes.LocationTypeAvailabilityZone
-	} else {
-		locationType = locationInfoData.Type.ValueEnum()
-	}
-
-	var dataRedundancy awstypes.DataRedundancy
-	if locationType == awstypes.LocationTypeLocalZone {
-		dataRedundancy = awstypes.DataRedundancySingleLocalZone
-	} else {
-		dataRedundancy = awstypes.DataRedundancySingleAvailabilityZone
-	}
-
-	// Should pass the DR value from terraform to S3, if the DR value mismatches with ZoneType
-	// S3 Bucket creation should be throwing an error
-	if ((locationType == awstypes.LocationTypeLocalZone) ||
-		(locationType == awstypes.LocationTypeAvailabilityZone)) &&
-		((data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleAvailabilityZone) ||
-			(data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleLocalZone)) {
-		dataRedundancy = data.DataRedundancy.ValueEnum()
-	}
-
-	data.DataRedundancy = fwtypes.StringEnumValue(dataRedundancy)
 	conn := r.Meta().S3ExpressClient(ctx)
 
 	input := &s3.CreateBucketInput{
-		Bucket: flex.StringFromFramework(ctx, data.Bucket),
+		Bucket: fwflex.StringFromFramework(ctx, data.Bucket),
 		CreateBucketConfiguration: &awstypes.CreateBucketConfiguration{
 			Bucket: &awstypes.BucketInfo{
-				DataRedundancy: dataRedundancy,
+				DataRedundancy: data.DataRedundancy.ValueEnum(),
 				Type:           awstypes.BucketType(data.Type.ValueString()),
 			},
 			Location: &awstypes.LocationInfo{
-				Name: flex.StringFromFramework(ctx, locationInfoData.Name),
-				Type: locationType,
+				Name: fwflex.StringFromFramework(ctx, locationInfoData.Name),
+				Type: locationInfoData.Type.ValueEnum(),
 			},
 		},
 	}
@@ -198,7 +163,7 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 
 	// Set values for unknowns.
 	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
-	data.setID()
+	data.ID = data.Bucket
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -210,15 +175,10 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	err := findBucket(ctx, conn, data.Bucket.ValueString())
+	data.Bucket = data.ID
+	output, err := findBucket(ctx, conn, data.Bucket.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -233,44 +193,13 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	locationInfoData, _ := data.Location.ToPtr(ctx)
-
-	var locationType = awstypes.LocationTypeAvailabilityZone
-	var dataRedundancy = awstypes.DataRedundancySingleAvailabilityZone
-	if locationInfoData != nil {
-
-		if locationInfoData.Type.IsNull() || locationInfoData.Type.ValueEnum() == "" {
-			locationType = awstypes.LocationTypeAvailabilityZone
-		} else {
-			locationType = locationInfoData.Type.ValueEnum()
-		}
-
-		if locationType == awstypes.LocationTypeLocalZone {
-			dataRedundancy = awstypes.DataRedundancySingleLocalZone
-		} else {
-			dataRedundancy = awstypes.DataRedundancySingleAvailabilityZone
-		}
-
-		if ((locationType == awstypes.LocationTypeLocalZone) ||
-			(locationType == awstypes.LocationTypeAvailabilityZone)) &&
-			(!data.DataRedundancy.IsNull() && (data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleAvailabilityZone) ||
-				(data.DataRedundancy.ValueEnum() == awstypes.DataRedundancySingleLocalZone)) {
-			dataRedundancy = data.DataRedundancy.ValueEnum()
-		}
-
-	}
-
 	// Set attributes for import.
 	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
-
-	// No API to return bucket type, location etc.
-	data.DataRedundancy = fwtypes.StringEnumValue(dataRedundancy)
-	if matches := directoryBucketNameRegex.FindStringSubmatch(data.ID.ValueString()); len(matches) == 3 {
-		data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &models.LocationInfoModel{
-			Name: flex.StringValueToFramework(ctx, matches[2]),
-			Type: fwtypes.StringEnumValue(locationType),
-		})
-	}
+	data.DataRedundancy = fwtypes.StringEnumValue(defaultDirectoryBucketDataRedundancy(output.BucketLocationType))
+	data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
+		Name: fwflex.StringToFramework(ctx, output.BucketLocationName),
+		Type: fwtypes.StringEnumValue(output.BucketLocationType),
+	})
 	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -286,7 +215,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().S3ExpressClient(ctx)
 
 	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-		Bucket: flex.StringFromFramework(ctx, data.ID),
+		Bucket: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
@@ -301,7 +230,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 			}
 
 			_, err = conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-				Bucket: flex.StringFromFramework(ctx, data.ID),
+				Bucket: fwflex.StringFromFramework(ctx, data.ID),
 			})
 		}
 	}
@@ -323,20 +252,57 @@ func (r *directoryBucketResource) arn(ctx context.Context, bucket string) string
 }
 
 type directoryBucketResourceModel struct {
-	ARN            types.String                                              `tfsdk:"arn"`
-	Bucket         types.String                                              `tfsdk:"bucket"`
-	DataRedundancy fwtypes.StringEnum[awstypes.DataRedundancy]               `tfsdk:"data_redundancy"`
-	ForceDestroy   types.Bool                                                `tfsdk:"force_destroy"`
-	Location       fwtypes.ListNestedObjectValueOf[models.LocationInfoModel] `tfsdk:"location"`
-	ID             types.String                                              `tfsdk:"id"`
-	Type           fwtypes.StringEnum[awstypes.BucketType]                   `tfsdk:"type"`
+	ARN            types.String                                       `tfsdk:"arn"`
+	Bucket         types.String                                       `tfsdk:"bucket"`
+	DataRedundancy fwtypes.StringEnum[awstypes.DataRedundancy]        `tfsdk:"data_redundancy"`
+	ForceDestroy   types.Bool                                         `tfsdk:"force_destroy"`
+	Location       fwtypes.ListNestedObjectValueOf[locationInfoModel] `tfsdk:"location"`
+	ID             types.String                                       `tfsdk:"id"`
+	Type           fwtypes.StringEnum[awstypes.BucketType]            `tfsdk:"type"`
 }
 
-func (data *directoryBucketResourceModel) InitFromID() error {
-	data.Bucket = data.ID
-	return nil
+type locationInfoModel struct {
+	Name types.String                              `tfsdk:"name"`
+	Type fwtypes.StringEnum[awstypes.LocationType] `tfsdk:"type"`
 }
 
-func (data *directoryBucketResourceModel) setID() {
-	data.ID = data.Bucket
+func defaultDirectoryBucketDataRedundancy(locationType awstypes.LocationType) awstypes.DataRedundancy {
+	switch locationType {
+	case awstypes.LocationTypeLocalZone:
+		return awstypes.DataRedundancySingleLocalZone
+	default:
+		return awstypes.DataRedundancySingleAvailabilityZone
+	}
+}
+
+type directoryBucketDataRedundancyPlanModifier struct{}
+
+func (d directoryBucketDataRedundancyPlanModifier) Description(ctx context.Context) string {
+	return "Sets default value for data_redundancy based on location type value"
+}
+
+func (d directoryBucketDataRedundancyPlanModifier) MarkdownDescription(ctx context.Context) string {
+	return d.Description(ctx)
+}
+
+func (d directoryBucketDataRedundancyPlanModifier) PlanModifyString(ctx context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
+	// Do nothing if there is a known planned value.
+	if !request.PlanValue.IsUnknown() {
+		return
+	}
+
+	var data directoryBucketResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	locationInfo, diags := data.Location.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Set the default value for data_redundancy based on the location type.
+	response.PlanValue = fwflex.StringValueToFramework(ctx, defaultDirectoryBucketDataRedundancy(locationInfo.Type.ValueEnum()))
 }
