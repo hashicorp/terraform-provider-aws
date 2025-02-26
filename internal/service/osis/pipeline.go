@@ -37,7 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Pipeline")
+// @FrameworkResource("aws_osis_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="pipeline_arn")
 func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResource{}
@@ -53,10 +53,6 @@ type pipelineResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *pipelineResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_osis_pipeline"
 }
 
 func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -366,10 +362,6 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 
 		return
 	}
-}
-
-func (r *pipelineResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {

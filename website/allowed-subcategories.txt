@@ -27,6 +27,7 @@ Backup
 Batch
 Bedrock
 Bedrock Agents
+Billing
 CE (Cost Explorer)
 Chatbot
 Chime
@@ -110,6 +111,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
 End User Messaging SMS

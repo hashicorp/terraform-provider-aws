@@ -12,6 +12,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
+func validIdentityProviderName(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	count := utf8.RuneCountInString(value)
+	if count < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 UTF-8 character", k))
+	}
+
+	if count > 32 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 32 UTF-8 characters", k))
+	}
+	if !regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`, k))
+	}
+	return
+}
+
 func validResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -19,7 +35,7 @@ func validResourceServerScopeName(v interface{}, k string) (ws []string, errors 
 		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
 	}
 	if len(value) > 256 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 character", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
 	}
 	if !regexache.MustCompile(`[\x21\x23-\x2E\x30-\x5B\x5D-\x7E]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(`%q must satisfy regular expression pattern: [\x21\x23-\x2E\x30-\x5B\x5D-\x7E]+`, k))
@@ -29,12 +45,13 @@ func validResourceServerScopeName(v interface{}, k string) (ws []string, errors 
 
 func validUserGroupName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
-	if len(value) < 1 {
-		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	count := utf8.RuneCountInString(value)
+	if count < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 UTF-8 character", k))
 	}
 
-	if len(value) > 128 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 128 character", k))
+	if count > 128 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 128 UTF-8 characters", k))
 	}
 
 	if !regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
@@ -134,7 +151,7 @@ func validUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) 
 	}
 
 	if len(value) > 20 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 20 character", k))
+		es = append(es, fmt.Errorf("%q cannot be longer than 20 characters", k))
 	}
 
 	if !regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
@@ -263,7 +280,7 @@ func validUserPoolTemplateSMSMessage(v interface{}, k string) (ws []string, es [
 }
 
 var userPoolClientIdentityProviderValidator = []validator.String{
-	stringvalidator.LengthBetween(1, 32),
+	stringvalidator.UTF8LengthBetween(1, 32),
 	stringValidatorpLpMpSpNpP,
 }
 
@@ -273,7 +290,7 @@ var userPoolClientNameValidator = []validator.String{
 }
 
 var userPoolClientURLValidator = []validator.String{
-	stringvalidator.LengthBetween(1, 1024),
+	stringvalidator.UTF8LengthBetween(1, 1024),
 	stringValidatorpLpMpSpNpP,
 }
 

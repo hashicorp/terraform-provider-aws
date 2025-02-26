@@ -42,10 +42,6 @@ type resourceAttributeGroupAssociation struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceAttributeGroupAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicecatalogappregistry_attribute_group_association"
-}
-
 func (r *resourceAttributeGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

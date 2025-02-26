@@ -39,8 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Subscriber")
+// @FrameworkResource("aws_securitylake_subscriber", name="Subscriber")
 // @Tags(identifierAttribute="arn")
 func newSubscriberResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriberResource{}
@@ -59,10 +58,6 @@ const (
 type subscriberResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *subscriberResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_subscriber"
 }
 
 func (r *subscriberResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -409,10 +404,6 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 
 func (r *subscriberResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, resp)
-}
-
-func (r *subscriberResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, resp)
 }
 
 func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id string) (*awstypes.SubscriberResource, error) {

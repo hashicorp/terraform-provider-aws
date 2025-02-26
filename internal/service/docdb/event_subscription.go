@@ -97,8 +97,6 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -226,10 +224,11 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(remove) > 0 {
 			for _, v := range remove {
-				_, err := conn.RemoveSourceIdentifierFromSubscription(ctx, &docdb.RemoveSourceIdentifierFromSubscriptionInput{
+				input := docdb.RemoveSourceIdentifierFromSubscriptionInput{
 					SourceIdentifier: aws.String(v),
 					SubscriptionName: aws.String(d.Id()),
-				})
+				}
+				_, err := conn.RemoveSourceIdentifierFromSubscription(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "removing DocumentDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
@@ -239,10 +238,11 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(add) > 0 {
 			for _, v := range add {
-				_, err := conn.AddSourceIdentifierToSubscription(ctx, &docdb.AddSourceIdentifierToSubscriptionInput{
+				input := docdb.AddSourceIdentifierToSubscriptionInput{
 					SourceIdentifier: aws.String(v),
 					SubscriptionName: aws.String(d.Id()),
-				})
+				}
+				_, err := conn.AddSourceIdentifierToSubscription(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "adding DocumentDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
@@ -260,9 +260,10 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Event Subscription: %s", d.Id())
-	_, err := conn.DeleteEventSubscription(ctx, &docdb.DeleteEventSubscriptionInput{
+	input := docdb.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventSubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
 		return diags

@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Key")
+// @FrameworkResource("aws_cloudfrontkeyvaluestore_key", name="Key")
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -38,10 +38,6 @@ func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 type keyResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*keyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfrontkeyvaluestore_key"
 }
 
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -247,11 +243,12 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 		return
 	}
 
-	_, err = conn.DeleteKey(ctx, &cloudfrontkeyvaluestore.DeleteKeyInput{
+	input := cloudfrontkeyvaluestore.DeleteKeyInput{
 		IfMatch: etag,
 		Key:     fwflex.StringFromFramework(ctx, data.Key),
 		KvsARN:  fwflex.StringFromFramework(ctx, data.KvsARN),
-	})
+	}
+	_, err = conn.DeleteKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

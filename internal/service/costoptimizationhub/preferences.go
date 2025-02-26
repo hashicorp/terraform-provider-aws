@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Preferences")
+// @FrameworkResource("aws_costoptimizationhub_preferences", name="Preferences")
 func newResourcePreferences(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePreferences{}
 
@@ -45,10 +45,6 @@ type resourcePreferences struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *resourcePreferences) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_costoptimizationhub_preferences"
 }
 
 func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

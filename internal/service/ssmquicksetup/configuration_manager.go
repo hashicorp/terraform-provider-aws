@@ -53,10 +53,6 @@ type resourceConfigurationManager struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceConfigurationManager) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssmquicksetup_configuration_manager"
-}
-
 func (r *resourceConfigurationManager) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -316,10 +312,6 @@ func (r *resourceConfigurationManager) Delete(ctx context.Context, req resource.
 
 func (r *resourceConfigurationManager) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("manager_arn"), req, resp)
-}
-
-func (r *resourceConfigurationManager) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitConfigurationManagerCreated(ctx context.Context, conn *ssmquicksetup.Client, id string, timeout time.Duration) (*ssmquicksetup.GetConfigurationManagerOutput, error) {

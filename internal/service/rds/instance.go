@@ -416,7 +416,7 @@ func resourceInstance() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrPassword},
+				ConflictsWith: []string{names.AttrPassword, "password_wo"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -497,7 +497,20 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				ConflictsWith: []string{"manage_master_user_password", "password_wo"},
+			},
+			"password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password", names.AttrPassword},
+				RequiredWith:  []string{"password_wo_version"},
+			},
+			"password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -687,7 +700,6 @@ func resourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
@@ -768,6 +780,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				))
 			}
 		}
+	}
+
+	// get write-only value from configuration
+	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
 	}
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
@@ -1001,6 +1020,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
+
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -1112,6 +1136,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1357,6 +1385,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(v.(bool))
 			requiresModifyDbInstance = true
@@ -1583,6 +1616,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -1777,6 +1815,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
 		}
 
 		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
@@ -2407,7 +2449,8 @@ func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *r
 	return outputRaw.(*rds.CreateDBInstanceReadReplicaOutput), nil
 }
 
-func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.ResourceData) bool {
+func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.ResourceData) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	needsModify := false
 
 	if d.HasChanges(names.AttrAllocatedStorage, names.AttrIOPS) {
@@ -2582,6 +2625,18 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		}
 	}
 
+	if d.HasChange("password_wo_version") {
+		passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+	}
+
 	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
 		needsModify = true
 		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
@@ -2646,7 +2701,7 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		}
 	}
 
-	return needsModify
+	return needsModify, diags
 }
 
 func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {

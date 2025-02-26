@@ -233,9 +233,10 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFormation Type: %s", d.Id())
-	_, err := conn.DeregisterType(ctx, &cloudformation.DeregisterTypeInput{
+	input := cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterType(ctx, &input)
 
 	// Must deregister type if removing final LIVE version. This error can also occur
 	// when the type is already DEPRECATED.

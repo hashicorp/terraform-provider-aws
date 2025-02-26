@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,6 +38,11 @@ func resourceQueue() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"concurrent_jobs": {
+				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrDescription: {
@@ -90,8 +94,6 @@ func resourceQueue() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -105,6 +107,10 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		PricingPlan: types.PricingPlan(d.Get("pricing_plan").(string)),
 		Status:      types.QueueStatus(d.Get(names.AttrStatus).(string)),
 		Tags:        getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("concurrent_jobs"); ok {
+		input.ConcurrentJobs = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -143,6 +149,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, queue.Arn)
+	d.Set("concurrent_jobs", queue.ConcurrentJobs)
 	d.Set(names.AttrDescription, queue.Description)
 	d.Set(names.AttrName, queue.Name)
 	d.Set("pricing_plan", queue.PricingPlan)
@@ -166,6 +173,10 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
 			Status: types.QueueStatus(d.Get(names.AttrStatus).(string)),
+		}
+
+		if v, ok := d.GetOk("concurrent_jobs"); ok {
+			input.ConcurrentJobs = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {

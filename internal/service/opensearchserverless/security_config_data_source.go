@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Config")
+// @FrameworkDataSource("aws_opensearchserverless_security_config", name="Security Config")
 func newDataSourceSecurityConfig(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSecurityConfig{}, nil
 }
@@ -28,10 +28,6 @@ const (
 
 type dataSourceSecurityConfig struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceSecurityConfig) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_security_config"
 }
 
 func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

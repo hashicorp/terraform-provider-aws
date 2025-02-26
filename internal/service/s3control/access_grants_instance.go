@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grants Instance")
+// @FrameworkResource("aws_s3control_access_grants_instance", name="Access Grants Instance")
 // @Tags
 func newAccessGrantsInstanceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsInstanceResource{}
@@ -39,10 +39,6 @@ func newAccessGrantsInstanceResource(context.Context) (resource.ResourceWithConf
 type accessGrantsInstanceResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *accessGrantsInstanceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_instance"
 }
 
 func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -252,10 +248,6 @@ func (r *accessGrantsInstanceResource) Delete(ctx context.Context, request resou
 
 		return
 	}
-}
-
-func (r *accessGrantsInstanceResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func associateAccessGrantsInstanceIdentityCenterInstance(ctx context.Context, conn *s3control.Client, accountID, identityCenterARN string) error {

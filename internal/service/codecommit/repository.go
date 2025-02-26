@@ -77,8 +77,6 @@ func resourceRepository() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -211,9 +209,10 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeCommit Repository: %s", d.Id())
-	_, err := conn.DeleteRepository(ctx, &codecommit.DeleteRepositoryInput{
+	input := codecommit.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRepository(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeCommit Repository (%s): %s", d.Id(), err)

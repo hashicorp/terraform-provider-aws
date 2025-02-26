@@ -702,8 +702,6 @@ func resourceBucket() *schema.Resource {
 				Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

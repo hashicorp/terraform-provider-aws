@@ -122,8 +122,6 @@ func resourcePool() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -172,9 +170,10 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-	ip, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+	input := cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
+	}
+	ip, err := conn.DescribeIdentityPool(ctx, &input)
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id())
 		d.SetId("")
@@ -250,9 +249,10 @@ func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
-	_, err := conn.DeleteIdentityPool(ctx, &cognitoidentity.DeleteIdentityPoolInput{
+	input := cognitoidentity.DeleteIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIdentityPool(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

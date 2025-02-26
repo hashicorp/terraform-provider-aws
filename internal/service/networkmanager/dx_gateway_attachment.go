@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Direct Connect Gateway Attachment")
+// @FrameworkResource("aws_networkmanager_dx_gateway_attachment", name="Direct Connect Gateway Attachment")
 // @Tags(identifierAttribute="arn")
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
@@ -48,10 +48,6 @@ type directConnectGatewayAttachmentResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*directConnectGatewayAttachmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmanager_dx_gateway_attachment"
 }
 
 func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -314,10 +310,6 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 
 		return
 	}
-}
-
-func (r *directConnectGatewayAttachmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.DirectConnectGatewayAttachment, error) {

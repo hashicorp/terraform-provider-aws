@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="DRT Role ARN Association")
+// @FrameworkResource("aws_shield_drt_access_role_arn_association", name="DRT Role ARN Association")
 func newDRTAccessRoleARNAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDRTAccessRoleARNAssociation{}
 
@@ -39,10 +39,6 @@ type resourceDRTAccessRoleARNAssociation struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceDRTAccessRoleARNAssociation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_drt_access_role_arn_association"
 }
 
 func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

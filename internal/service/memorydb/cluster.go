@@ -51,8 +51,6 @@ func resourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				"acl_name": {
@@ -294,7 +292,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &memorydb.CreateClusterInput{
+	input := memorydb.CreateClusterInput{
 		ACLName:                 aws.String(d.Get("acl_name").(string)),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
@@ -369,7 +367,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SubnetGroupName = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateCluster(ctx, input)
+	_, err := conn.CreateCluster(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Cluster (%s): %s", name, err)
@@ -468,7 +466,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		waitParameterGroupInSync := false
 		waitSecurityGroupsActive := false
 
-		input := &memorydb.UpdateClusterInput{
+		input := memorydb.UpdateClusterInput{
 			ClusterName: aws.String(d.Id()),
 		}
 
@@ -546,7 +544,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		_, err := conn.UpdateCluster(ctx, input)
+		_, err := conn.UpdateCluster(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MemoryDB Cluster (%s): %s", d.Id(), err)
@@ -576,8 +574,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	input := &memorydb.DeleteClusterInput{
-		ClusterName: aws.String(d.Id()),
+	input := memorydb.DeleteClusterInput{
+		ClusterName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v := d.Get("multi_region_cluster_name"); v != nil && len(v.(string)) > 0 {
@@ -588,31 +586,31 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		input.FinalSnapshotName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Id())
-	_, err := conn.DeleteCluster(ctx, input)
+	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Get(names.AttrName).(string))
+	_, err := conn.DeleteCluster(ctx, &input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Cluster (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) delete: %s", d.Id(), err)
+	if _, err := waitClusterDeleted(ctx, conn, d.Get(names.AttrName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) delete: %s", d.Get(names.AttrName).(string), err)
 	}
 
 	return diags
 }
 
 func findClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Cluster, error) {
-	input := &memorydb.DescribeClustersInput{
+	input := memorydb.DescribeClustersInput{
 		ClusterName:      aws.String(name),
 		ShowShardDetails: aws.Bool(true),
 	}
 
-	return findCluster(ctx, conn, input)
+	return findCluster(ctx, conn, &input)
 }
 
 func findCluster(ctx context.Context, conn *memorydb.Client, input *memorydb.DescribeClustersInput) (*awstypes.Cluster, error) {
@@ -724,10 +722,12 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name strin
 
 func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusDeleting},
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, name),
-		Timeout: timeout,
+		Pending:      []string{clusterStatusDeleting},
+		Target:       []string{},
+		Refresh:      statusCluster(ctx, conn, name),
+		Timeout:      timeout,
+		Delay:        5 * time.Minute,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

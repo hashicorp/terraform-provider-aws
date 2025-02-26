@@ -1283,11 +1283,12 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.DescribePrefixLists(ctx, &ec2.DescribePrefixListsInput{
+		input := ec2.DescribePrefixListsInput{
 			Filters: tfec2.NewAttributeFilterList(map[string]string{
 				"prefix-list-name": aws.ToString(vpce.ServiceName),
 			}),
-		})
+		}
+		resp, err := conn.DescribePrefixLists(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -1299,9 +1300,10 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 		plId := aws.ToString(resp.PrefixLists[0].PrefixListId)
 
 		err = retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
-			resp, err := conn.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{
+			input := ec2.DescribeRouteTablesInput{
 				RouteTableIds: []string{aws.ToString(routeTable.RouteTableId)},
-			})
+			}
+			resp, err := conn.DescribeRouteTables(ctx, &input)
 			if err != nil {
 				return retry.NonRetryableError(err)
 			}

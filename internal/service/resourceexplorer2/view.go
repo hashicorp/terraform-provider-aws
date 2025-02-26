@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="View")
+// @FrameworkResource("aws_resourceexplorer2_view", name="View")
 // @Tags(identifierAttribute="id")
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
@@ -45,10 +45,6 @@ func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 type viewResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*viewResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_resourceexplorer2_view"
 }
 
 func (r *viewResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -315,10 +311,6 @@ func (r *viewResource) Delete(ctx context.Context, request resource.DeleteReques
 
 		return
 	}
-}
-
-func (r *viewResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_View.html.

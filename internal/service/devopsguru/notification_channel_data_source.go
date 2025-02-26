@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Notification Channel")
+// @FrameworkDataSource("aws_devopsguru_notification_channel", name="Notification Channel")
 func newDataSourceNotificationChannel(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceNotificationChannel{}, nil
 }
@@ -27,10 +27,6 @@ const (
 
 type dataSourceNotificationChannel struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceNotificationChannel) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_devopsguru_notification_channel"
 }
 
 func (d *dataSourceNotificationChannel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Knowledge Base Association")
+// @FrameworkResource("aws_bedrockagent_agent_knowledge_base_association", name="Agent Knowledge Base Association")
 func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentKnowledgeBaseAssociationResource{}
 
@@ -45,10 +45,6 @@ type agentKnowledgeBaseAssociationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*agentKnowledgeBaseAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_knowledge_base_association"
 }
 
 func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -221,11 +217,12 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &bedrockagent.DisassociateAgentKnowledgeBaseInput{
+	input := bedrockagent.DisassociateAgentKnowledgeBaseInput{
 		AgentId:         fwflex.StringFromFramework(ctx, data.AgentID),
 		AgentVersion:    fwflex.StringFromFramework(ctx, data.AgentVersion),
 		KnowledgeBaseId: fwflex.StringFromFramework(ctx, data.KnowledgeBaseID),
-	})
+	}
+	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

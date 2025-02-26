@@ -7,8 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -151,10 +149,7 @@ type tagSpecFinder func(context.Context, conns.ServicePackage, string) *types.Se
 
 func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec *types.ServicePackageResourceTags) {
 	for _, r := range sp.FrameworkResources(ctx) {
-		factory, _ := r.Factory(ctx)
-		var metadata resource.MetadataResponse
-		factory.Metadata(ctx, resource.MetadataRequest{}, &metadata)
-		if metadata.TypeName == typeName {
+		if r.TypeName == typeName {
 			tagsSpec = r.Tags
 			break
 		}
@@ -172,10 +167,7 @@ func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName 
 
 func findDataSourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec *types.ServicePackageResourceTags) {
 	for _, r := range sp.FrameworkDataSources(ctx) {
-		factory, _ := r.Factory(ctx)
-		var metadata datasource.MetadataResponse
-		factory.Metadata(ctx, datasource.MetadataRequest{}, &metadata)
-		if metadata.TypeName == typeName {
+		if r.TypeName == typeName {
 			tagsSpec = r.Tags
 			break
 		}

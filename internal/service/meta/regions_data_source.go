@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Regions")
+// @FrameworkDataSource("aws_regions", name="Regions")
 func newRegionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &regionsDataSource{}
 
@@ -28,10 +28,6 @@ func newRegionsDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 
 type regionsDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*regionsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_regions"
 }
 
 func (d *regionsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

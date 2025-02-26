@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Standards Control Associations")
+// @FrameworkDataSource("aws_securityhub_standards_control_associations", name="Standards Control Associations")
 func newStandardsControlAssociationsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &standardsControlAssociationsDataSource{}
 
@@ -29,10 +29,6 @@ func newStandardsControlAssociationsDataSource(context.Context) (datasource.Data
 
 type standardsControlAssociationsDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*standardsControlAssociationsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_securityhub_standards_control_associations"
 }
 
 func (d *standardsControlAssociationsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

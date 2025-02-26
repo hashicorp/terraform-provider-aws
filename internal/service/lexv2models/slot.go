@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Slot")
+// @FrameworkResource("aws_lexv2models_slot", name="Slot")
 func newResourceSlot(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSlot{}
 
@@ -56,10 +56,6 @@ type resourceSlot struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceSlot) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_slot"
 }
 
 func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

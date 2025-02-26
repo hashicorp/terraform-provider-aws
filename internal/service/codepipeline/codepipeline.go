@@ -455,8 +455,6 @@ func resourcePipeline() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -567,9 +565,10 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	log.Printf("[INFO] Deleting CodePipeline Pipeline: %s", d.Id())
-	_, err := conn.DeletePipeline(ctx, &codepipeline.DeletePipelineInput{
+	input := codepipeline.DeletePipelineInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeletePipeline(ctx, &input)
 
 	if errs.IsA[*types.PipelineNotFoundException](err) {
 		return diags

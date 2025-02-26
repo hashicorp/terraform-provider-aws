@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grants Instance Resource Policy")
+// @FrameworkResource("aws_s3control_access_grants_instance_resource_policy", name="Access Grants Instance Resource Policy")
 func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsInstanceResourcePolicyResource{}
 
@@ -37,10 +37,6 @@ func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.Re
 type accessGrantsInstanceResourcePolicyResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *accessGrantsInstanceResourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_instance_resource_policy"
 }
 
 func (r *accessGrantsInstanceResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

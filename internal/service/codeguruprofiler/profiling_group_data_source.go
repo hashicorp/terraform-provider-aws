@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Profiling Group")
+// @FrameworkDataSource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
 func newDataSourceProfilingGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProfilingGroup{}, nil
 }
@@ -31,10 +31,6 @@ const (
 
 type dataSourceProfilingGroup struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceProfilingGroup) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
 }
 
 func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

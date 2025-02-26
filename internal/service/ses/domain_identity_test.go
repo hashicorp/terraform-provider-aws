@@ -6,7 +6,6 @@ package ses_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -33,9 +32,12 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig_basic(domain),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, resourceName),
-					testAccCheckDomainIdentityARN(ctx, resourceName, domain),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ses", "identity/{domain}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrSet(resourceName, "verification_token"),
 				),
 			},
 		},
@@ -55,7 +57,7 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig_basic(domain),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), resourceName),
 				),
@@ -123,19 +125,6 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 		_, err := tfses.FindIdentityVerificationAttributesByIdentity(ctx, conn, rs.Primary.ID)
 
 		return err
-	}
-}
-
-func testAccCheckDomainIdentityARN(ctx context.Context, n string, domain string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		expected := acctest.Provider.Meta().(*conns.AWSClient).RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", strings.TrimSuffix(domain, ".")))
-
-		if rs.Primary.Attributes[names.AttrARN] != expected {
-			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes[names.AttrARN])
-		}
-
-		return nil
 	}
 }
 

@@ -163,31 +163,9 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
     }
     ```
 
-Add a plan modifier (Terraform Plugin Framework) or a `CustomizeDiff` function (Terraform Plugin SDK V2) to ensure tagging diffs are handled appropriately.
-These functions handle the combination of tags set on the resource and default tags, and must be set for tagging to function properly.
-
-=== "Terraform Plugin Framework (Preferred)"
-    ```go
-    func (r *resourceExample) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-        r.SetTagsAll(ctx, req, resp)
-    }
-    ```
-
-=== "Terraform Plugin SDK V2"
-    ```go
-    func ResourceExample() *schema.Resource {
-      return &schema.Resource{
-        /* ... other configuration ... */
-        CustomizeDiff: verify.SetTagsDiff,
-      }
-    }
-    ```
-
-If the resource already implements `ModifyPlan`, simply include the `SetTagsAll` function at the end of the method body.
-
 ### Transparent Tagging
 
-Most services can use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
+All service that support tagging use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -293,7 +271,7 @@ In the resource `Update` operation, only non-`tags` updates need to be done as t
 
 === "Terraform Plugin SDK V2"
     ```go
-    if d.HasChangesExcept("tags", "tags_all") {
+    if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
       ...
     }
     ```

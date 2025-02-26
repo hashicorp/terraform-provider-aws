@@ -118,20 +118,19 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` - (Optional) The name of the Server Certificate. Do not include the
-  path in this value. If omitted, Terraform will assign a random, unique name.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified
-  prefix. Conflicts with `name`.
-* `certificate_body` – (Required) The contents of the public key certificate in
+* `certificate_body` – (Required, Forces new resource) The contents of the public key certificate in
   PEM-encoded format.
-* `certificate_chain` – (Optional) The contents of the certificate chain.
+* `certificate_chain` – (Optional, Forces new resource) The contents of the certificate chain.
   This is typically a concatenation of the PEM-encoded public key certificates
   of the chain.
-* `private_key` – (Required) The contents of the private key in PEM-encoded format.
+* `name` - (Optional) The name of the Server Certificate. Do not include the path in this value. If omitted, Terraform will assign a random, unique name.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified
+  prefix. Conflicts with `name`.
 * `path` - (Optional) The IAM path for the server certificate.  If it is not
     included, it defaults to a slash (/). If this certificate is for use with
     AWS CloudFront, the path must be in format `/cloudfront/your_path_here`.
     See [IAM Identifiers][1] for more details on IAM Paths.
+* `private_key` – (Required, Forces new resource) The contents of the private key in PEM-encoded format.
 * `tags` - (Optional) Map of resource tags for the server certificate. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ~> **NOTE:** AWS performs behind-the-scenes modifications to some certificate files if they do not adhere to a specific format. These modifications will result in terraform forever believing that it needs to update the resources since the local and AWS file contents will not match after theses modifications occur. In order to prevent this from happening you must ensure that all your PEM-encoded files use UNIX line-breaks and that `certificate_body` contains only one certificate. All other certificates should go in `certificate_chain`. It is common for some Certificate Authorities to issue certificate files that have DOS line-breaks and that are actually multiple certificates concatenated together in order to form a full certificate chain.
@@ -143,7 +142,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) specifying the server certificate.
 * `expiration` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) on which the certificate is set to expire.
 * `id` - The unique Server Certificate name
-* `name` - The name of the Server Certificate
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `upload_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) when the server certificate was uploaded.
 
@@ -182,4 +180,4 @@ Using `terraform import`, import IAM Server Certificates using the `name`. For e
 [2]: https://docs.aws.amazon.com/IAM/latest/UserGuide/ManagingServerCerts.html
 [lifecycle]: /docs/configuration/resources.html
 
-<!-- cache-key: cdktf-0.20.8 input-4da40ac47bbecae1dc7119c5c21df54a3fe61f01a579c2b2e3dbb84f86bfb04a -->
+<!-- cache-key: cdktf-0.20.8 input-db43cf00394bdd0953c69b65c7bdcfda64ceba70f2bf1d2b4a73cd25c33c99a3 -->

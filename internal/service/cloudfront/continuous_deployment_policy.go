@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Continuous Deployment Policy")
+// @FrameworkResource("aws_cloudfront_continuous_deployment_policy", name="Continuous Deployment Policy")
 func newContinuousDeploymentPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &continuousDeploymentPolicyResource{}, nil
 }
@@ -34,10 +34,6 @@ func newContinuousDeploymentPolicyResource(context.Context) (resource.ResourceWi
 type continuousDeploymentPolicyResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*continuousDeploymentPolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_continuous_deployment_policy"
 }
 
 func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

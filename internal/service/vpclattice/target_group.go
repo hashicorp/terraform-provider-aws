@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_vpclattice_target_group", name="Target Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
@@ -203,8 +204,6 @@ func ResourceTargetGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -316,9 +315,10 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VpcLattice TargetGroup: %s", d.Id())
-	_, err := conn.DeleteTargetGroup(ctx, &vpclattice.DeleteTargetGroupInput{
+	input := vpclattice.DeleteTargetGroupInput{
 		TargetGroupIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTargetGroup(ctx, &input)
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException

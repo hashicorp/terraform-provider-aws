@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Trusted Token Issuer")
+// @FrameworkResource("aws_ssoadmin_trusted_token_issuer", name="Trusted Token Issuer")
 // @Tags
 func newResourceTrustedTokenIssuer(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTrustedTokenIssuer{}, nil
@@ -48,10 +48,6 @@ const (
 
 type resourceTrustedTokenIssuer struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceTrustedTokenIssuer) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_trusted_token_issuer"
 }
 
 func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -332,10 +328,6 @@ func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.De
 
 func (r *resourceTrustedTokenIssuer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceTrustedTokenIssuer) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeTrustedTokenIssuerOutput, error) {

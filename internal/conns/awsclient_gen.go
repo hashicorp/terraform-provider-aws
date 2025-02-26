@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	"github.com/aws/aws-sdk-go-v2/service/chime"
@@ -156,6 +157,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
+	"github.com/aws/aws-sdk-go-v2/service/mediapackagevod"
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/aws/aws-sdk-go-v2/service/mgn"
@@ -366,6 +368,10 @@ func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock.Client {
 
 func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client {
 	return errs.Must(client[*bedrockagent.Client](ctx, c, names.BedrockAgent, make(map[string]any)))
+}
+
+func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
+	return errs.Must(client[*billing.Client](ctx, c, names.Billing, make(map[string]any)))
 }
 
 func (c *AWSClient) BudgetsClient(ctx context.Context) *budgets.Client {
@@ -870,6 +876,10 @@ func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage.Client
 
 func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2.Client {
 	return errs.Must(client[*mediapackagev2.Client](ctx, c, names.MediaPackageV2, make(map[string]any)))
+}
+
+func (c *AWSClient) MediaPackageVODClient(ctx context.Context) *mediapackagevod.Client {
+	return errs.Must(client[*mediapackagevod.Client](ctx, c, names.MediaPackageVOD, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore.Client {

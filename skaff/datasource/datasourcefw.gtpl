@@ -81,9 +81,6 @@ type dataSource{{ .DataSource }} struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSource{{ .DataSource }}) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the arguments and attributes in snake

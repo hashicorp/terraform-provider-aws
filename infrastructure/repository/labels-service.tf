@@ -36,6 +36,7 @@ variable "service_labels" {
     "bcmdataexports",
     "bedrock",
     "bedrockagent",
+    "billing",
     "billingconductor",
     "braket",
     "budgets",

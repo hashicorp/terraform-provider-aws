@@ -467,8 +467,6 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return resourceSchema
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

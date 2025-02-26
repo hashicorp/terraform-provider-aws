@@ -18,18 +18,26 @@ Use the [`aws_cognito_user_pool_client`](cognito_user_pool_client.html) resource
 
 ## Example Usage
 
+### Using Name Prefix
+
 ```terraform
 resource "aws_cognito_managed_user_pool_client" "example" {
-  name_prefix  = "AmazonOpenSearchService-example"
+  # Generated client name example: AmazonOpenSearchService-example-abcde-us-east-1-2ni6nt4id5tg25yde3pztiqkd4
+  name_prefix  = "AmazonOpenSearchService-example-"
   user_pool_id = aws_cognito_user_pool.example.id
 
   depends_on = [
-    aws_opensearch_domain.example,
+    aws_opensearch_domain.example
   ]
 }
 
 resource "aws_cognito_user_pool" "example" {
   name = "example"
+}
+
+resource "aws_cognito_user_pool_domain" "example" {
+  domain       = "example"
+  user_pool_id = aws_cognito_user_pool.example.id
 }
 
 resource "aws_cognito_identity_pool" "example" {
@@ -57,7 +65,7 @@ resource "aws_opensearch_domain" "example" {
 
   depends_on = [
     aws_cognito_user_pool_domain.example,
-    aws_iam_role_policy_attachment.example,
+    aws_iam_role_policy_attachment.example
   ]
 }
 
@@ -76,7 +84,7 @@ data "aws_iam_policy_document" "example" {
     principals {
       type = "Service"
       identifiers = [
-        "es.${data.aws_partition.current.dns_suffix}",
+        "es.${data.aws_partition.current.dns_suffix}"
       ]
     }
   }
@@ -85,9 +93,25 @@ data "aws_iam_policy_document" "example" {
 resource "aws_iam_role_policy_attachment" "example" {
   role       = aws_iam_role.example.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
+
+  depends_on = [
+    aws_opensearch_domain.example
+  ]
 }
 
 data "aws_partition" "current" {}
+```
+
+### Using Name Pattern
+
+```terraform
+resource "aws_cognito_managed_user_pool_client" "example" {
+  # Generated client name example: AmazonOpenSearchService-example-abcde-us-east-1-2ni6nt4id5tg25yde3pztiqkd4
+  name_pattern = "^AmazonOpenSearchService-example-(\\w+)$"
+  user_pool_id = aws_cognito_user_pool.example.id
+}
+
+# ... other configuration ...
 ```
 
 ## Argument Reference
@@ -95,8 +119,8 @@ data "aws_partition" "current" {}
 The following arguments are required:
 
 * `user_pool_id` - (Required) User pool that the client belongs to.
-* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the desired User Pool Client. It must only match one User Pool Client.
-* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the desired User Pool Client. It must match only one User Pool Client.
+* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the existing User Pool Client to be managed. It must only match one User Pool Client.
+* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the  existing User Pool Client to be managed. It must match only one User Pool Client.
 
 The following arguments are optional:
 

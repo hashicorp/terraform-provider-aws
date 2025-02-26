@@ -342,7 +342,6 @@ func resourceCluster() *schema.Resource {
 			clusterValidateNumCacheNodes,
 			clusterForceNewOnMemcachedNodeTypeChange,
 			clusterValidateMemcachedSnapshotIdentifier,
-			verify.SetTagsDiff,
 		),
 	}
 }

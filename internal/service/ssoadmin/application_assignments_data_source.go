@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Application Assignments")
+// @FrameworkDataSource("aws_ssoadmin_application_assignments", name="Application Assignments")
 func newDataSourceApplicationAssignments(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplicationAssignments{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type dataSourceApplicationAssignments struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceApplicationAssignments) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_ssoadmin_application_assignments"
 }
 
 func (d *dataSourceApplicationAssignments) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

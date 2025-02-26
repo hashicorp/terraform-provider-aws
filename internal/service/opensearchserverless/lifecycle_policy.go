@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Lifecycle Policy")
+// @FrameworkResource("aws_opensearchserverless_lifecycle_policy", name="Lifecycle Policy")
 func newResourceLifecyclePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLifecyclePolicy{}, nil
 }
@@ -42,10 +42,6 @@ const (
 
 type resourceLifecyclePolicy struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceLifecyclePolicy) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
 }
 
 func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {

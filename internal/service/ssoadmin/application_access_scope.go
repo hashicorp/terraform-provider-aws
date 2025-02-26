@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Access Scope")
+// @FrameworkResource("aws_ssoadmin_application_access_scope", name="Application Access Scope")
 func newResourceApplicationAccessScope(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAccessScope{}, nil
 }
@@ -41,10 +41,6 @@ const (
 
 type resourceApplicationAccessScope struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceApplicationAccessScope) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application_access_scope"
 }
 
 func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

@@ -111,6 +111,7 @@ provider "aws" {
 |BCM Data Exports|`bcmdataexports`|`AWS_ENDPOINT_URL_BCM_DATA_EXPORTS`|`bcm_data_exports`|
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
+|Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
 |Chatbot|`chatbot`|`AWS_ENDPOINT_URL_CHATBOT`|`chatbot`|
@@ -235,6 +236,7 @@ provider "aws" {
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
+|Elemental MediaPackage VOD|`mediapackagevod`|`AWS_ENDPOINT_URL_MEDIAPACKAGE_VOD`|`mediapackage_vod`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|

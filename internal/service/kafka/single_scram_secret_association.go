@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Single SCRAM Secret Association")
+// @FrameworkResource("aws_msk_single_scram_secret_association", name="Single SCRAM Secret Association")
 func newSingleSCRAMSecretAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &singleSCRAMSecretAssociationResource{}
 
@@ -36,10 +36,6 @@ type singleSCRAMSecretAssociationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*singleSCRAMSecretAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_msk_single_scram_secret_association"
 }
 
 func (r *singleSCRAMSecretAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

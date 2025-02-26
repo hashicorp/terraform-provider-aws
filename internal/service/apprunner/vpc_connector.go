@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,8 +72,6 @@ func resourceVPCConnector() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -144,9 +141,10 @@ func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Runner VPC Connector: %s", d.Id())
-	_, err := conn.DeleteVpcConnector(ctx, &apprunner.DeleteVpcConnectorInput{
+	input := apprunner.DeleteVpcConnectorInput{
 		VpcConnectorArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcConnector(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

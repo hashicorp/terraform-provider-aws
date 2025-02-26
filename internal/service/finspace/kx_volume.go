@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -154,7 +153,6 @@ func ResourceKxVolume() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.KxVolumeType](),
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

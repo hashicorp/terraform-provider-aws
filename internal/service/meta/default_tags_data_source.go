@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Default Tags")
+// @FrameworkDataSource("aws_default_tags", name="Default Tags")
 func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &defaultTagsDataSource{}
 
@@ -24,10 +24,6 @@ func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigu
 
 type defaultTagsDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*defaultTagsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_default_tags"
 }
 
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

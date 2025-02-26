@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Snapshot Copy")
+// @FrameworkResource("aws_redshift_snapshot_copy", name="Snapshot Copy")
 func newResourceSnapshotCopy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSnapshotCopy{}, nil
 }
@@ -37,10 +37,6 @@ const (
 
 type resourceSnapshotCopy struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceSnapshotCopy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_snapshot_copy"
 }
 
 func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

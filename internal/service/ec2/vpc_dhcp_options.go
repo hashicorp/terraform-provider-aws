@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -90,8 +89,6 @@ func resourceVPCDHCPOptions() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -200,10 +197,11 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 		vpcID := aws.ToString(v.VpcId)
 
 		log.Printf("[INFO] Disassociating EC2 DHCP Options Set (%s) from VPC (%s)", d.Id(), vpcID)
-		_, err := conn.AssociateDhcpOptions(ctx, &ec2.AssociateDhcpOptionsInput{
+		input := ec2.AssociateDhcpOptionsInput{
 			DhcpOptionsId: aws.String(defaultDHCPOptionsID),
 			VpcId:         aws.String(vpcID),
-		})
+		}
+		_, err := conn.AssociateDhcpOptions(ctx, &input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 			continue

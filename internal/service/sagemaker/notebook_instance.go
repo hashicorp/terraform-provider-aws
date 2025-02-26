@@ -46,7 +46,6 @@ func resourceNotebookInstance() *schema.Resource {
 			customdiff.ForceNewIfChange(names.AttrVolumeSize, func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(int) < old.(int)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

@@ -15,6 +15,13 @@ type DataSourceWithConfigure struct {
 	withMeta
 }
 
+// Metadata should return the full name of the resource, such as
+// examplecloud_thing.
+func (*DataSourceWithConfigure) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	// This method is implemented in the wrappers.
+	panic("not implemented") // lintignore:R009
+}
+
 // Configure enables provider-level data or clients to be set in the
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.

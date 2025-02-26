@@ -103,7 +103,8 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	resp, err := conn.DescribeDirectoryConfigs(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{d.Id()}})
+	input := appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{d.Id()}}
+	resp, err := conn.DescribeDirectoryConfigs(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] AppStream Directory Config (%s) not found, removing from state", d.Id())
@@ -166,9 +167,10 @@ func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream Directory Config: (%s)", d.Id())
-	_, err := conn.DeleteDirectoryConfig(ctx, &appstream.DeleteDirectoryConfigInput{
+	input := appstream.DeleteDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDirectoryConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

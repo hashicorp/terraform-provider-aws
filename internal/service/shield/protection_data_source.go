@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Protection")
+// @FrameworkDataSource("aws_shield_protection", name="Protection")
 func newDataSourceProtection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProtection{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type dataSourceProtection struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceProtection) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_shield_protection"
 }
 
 func (d *dataSourceProtection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

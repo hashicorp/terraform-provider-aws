@@ -33,9 +33,9 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 				Config: testAccMultiRegionClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "memorydb", "multiregioncluster/{multi_region_cluster_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name_suffix"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_cluster_name_suffix", rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.xlarge"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),

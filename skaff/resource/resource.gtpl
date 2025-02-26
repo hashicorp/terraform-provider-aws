@@ -195,9 +195,6 @@ func Resource{{ .Resource }}() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			{{- end }}
 		},
-		{{- if .IncludeTags }}
-		CustomizeDiff: verify.SetTagsDiff,
-		{{- end }}
 	}
 }
 

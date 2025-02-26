@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,8 +82,6 @@ func ResourceVocabulary() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 200),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -198,9 +195,10 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[INFO] Deleting Transcribe Vocabulary %s", d.Id())
 
-	_, err := conn.DeleteVocabulary(ctx, &transcribe.DeleteVocabularyInput{
+	input := transcribe.DeleteVocabularyInput{
 		VocabularyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVocabulary(ctx, &input)
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {

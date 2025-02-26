@@ -61,33 +61,26 @@ func (t *mockService) UpdateTags(context.Context, any, string, any, any) error {
 func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	var interceptors interceptorItems
-
 	sp := &types.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	}
-
-	tags := tagsResourceInterceptor{
-		tags:       sp,
-		updateFunc: tagsUpdateFunc,
-		readFunc:   tagsReadFunc,
-	}
-
+	tags := newTagsResourceInterceptor(sp)
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
 		why:         Update,
 		interceptor: tags,
 	})
 
-	conn := &conns.AWSClient{
-		ServicePackages: map[string]conns.ServicePackage{
-			"Test": &mockService{},
-		},
-	}
-	conns.SetDefaultTagsConfig(conn, expandDefaultTags(context.Background(), map[string]interface{}{
+	conn := &conns.AWSClient{}
+	conn.SetServicePackages(ctx, map[string]conns.ServicePackage{
+		"Test": &mockService{},
+	})
+	conns.SetDefaultTagsConfig(conn, expandDefaultTags(ctx, map[string]interface{}{
 		"tag": "",
 	}))
-	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(context.Background(), map[string]interface{}{
+	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(ctx, map[string]interface{}{
 		"tag2": "tag",
 	}))
 
@@ -100,12 +93,19 @@ func TestTagsResourceInterceptor(t *testing.T) {
 		return ctx
 	}
 
-	ctx := bootstrapContext(context.Background(), conn)
+	ctx = bootstrapContext(ctx, conn)
 	d := &resourceData{}
 
 	for _, v := range interceptors {
 		var diags diag.Diagnostics
-		_, diags = v.interceptor.run(ctx, d, conn, v.when, v.why, diags)
+		opts := interceptorOptions{
+			c:     conn,
+			d:     d,
+			diags: diags,
+			when:  v.when,
+			why:   v.why,
+		}
+		_, diags = v.interceptor.run(ctx, opts)
 		if got, want := len(diags), 1; got != want {
 			t.Errorf("length of diags = %v, want %v", got, want)
 		}

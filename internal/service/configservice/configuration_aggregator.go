@@ -47,7 +47,6 @@ func resourceConfigurationAggregator() *schema.Resource {
 			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -193,9 +192,10 @@ func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ConfigService Configuration Aggregator: %s", d.Id())
-	_, err := conn.DeleteConfigurationAggregator(ctx, &configservice.DeleteConfigurationAggregatorInput{
+	input := configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationAggregator(ctx, &input)
 
 	if errs.IsA[*types.NoSuchConfigurationAggregatorException](err) {
 		return diags

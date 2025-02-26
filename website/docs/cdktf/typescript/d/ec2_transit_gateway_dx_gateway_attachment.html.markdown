@@ -57,8 +57,9 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway Attachment
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier,
+* `tags` - Key-value tags for the EC2 Transit Gateway Attachment.
 
 ## Timeouts
 
@@ -66,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-b7236cdedf33b2a2beaa76c047f8a0d2b5a1cc86432e1675ff18f61961098d3d -->
+<!-- cache-key: cdktf-0.20.8 input-651329743b4fc90c0b396e49ccae03cb6fddec436c118c9d41cb54db6921bc73 -->

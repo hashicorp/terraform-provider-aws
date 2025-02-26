@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Producer Data Shares")
+// @FrameworkDataSource("aws_redshift_producer_data_shares", name="Producer Data Shares")
 func newDataSourceProducerDataShares(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProducerDataShares{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type dataSourceProducerDataShares struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceProducerDataShares) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_redshift_producer_data_shares"
 }
 
 func (d *dataSourceProducerDataShares) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

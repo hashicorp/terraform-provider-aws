@@ -180,8 +180,6 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -354,10 +352,11 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Endpoint: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &ec2.DeleteVerifiedAccessEndpointInput{
+	input := ec2.DeleteVerifiedAccessEndpointInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessEndpointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
 		return diags

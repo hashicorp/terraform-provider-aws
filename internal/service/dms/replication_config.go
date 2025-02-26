@@ -171,8 +171,6 @@ func resourceReplicationConfig() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -334,9 +332,10 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Config: %s", d.Id())
-	_, err := conn.DeleteReplicationConfig(ctx, &dms.DeleteReplicationConfigInput{
+	input := dms.DeleteReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReplicationConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

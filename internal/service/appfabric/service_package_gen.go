@@ -21,33 +21,38 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAppAuthorizationConnectionResource,
-			Name:    "App Authorization Connection",
-		},
-		{
-			Factory: newAppAuthorizationResource,
-			Name:    "App Authorization",
+			Factory:  newAppAuthorizationResource,
+			TypeName: "aws_appfabric_app_authorization",
+			Name:     "App Authorization",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newAppBundleResource,
-			Name:    "App Bundle",
+			Factory:  newAppAuthorizationConnectionResource,
+			TypeName: "aws_appfabric_app_authorization_connection",
+			Name:     "App Authorization Connection",
+		},
+		{
+			Factory:  newAppBundleResource,
+			TypeName: "aws_appfabric_app_bundle",
+			Name:     "App Bundle",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory: newIngestionDestinationResource,
-			Name:    "Ingestion Destination",
+			Factory:  newIngestionResource,
+			TypeName: "aws_appfabric_ingestion",
+			Name:     "Ingestion",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newIngestionResource,
-			Name:    "Ingestion",
+			Factory:  newIngestionDestinationResource,
+			TypeName: "aws_appfabric_ingestion_destination",
+			Name:     "Ingestion Destination",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -70,11 +75,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appfabric.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return appfabric.NewFromConfig(cfg,
+	optFns := []func(*appfabric.Options){
 		appfabric.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return appfabric.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*appfabric.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*appfabric.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *appfabric.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*appfabric.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

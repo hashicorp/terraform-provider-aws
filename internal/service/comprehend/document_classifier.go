@@ -234,7 +234,6 @@ func ResourceDocumentClassifier() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 				tfMap := getDocumentClassifierInputDataConfig(diff)
 				if tfMap == nil {
@@ -369,9 +368,10 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[INFO] Stopping Comprehend Document Classifier (%s)", d.Id())
 
-	_, err := conn.StopTrainingDocumentClassifier(ctx, &comprehend.StopTrainingDocumentClassifierInput{
+	input := comprehend.StopTrainingDocumentClassifierInput{
 		DocumentClassifierArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopTrainingDocumentClassifier(ctx, &input)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -405,9 +405,10 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 	var g multierror.Group
 	for _, v := range versions {
 		g.Go(func() error {
-			_, err = conn.DeleteDocumentClassifier(ctx, &comprehend.DeleteDocumentClassifierInput{
+			input := comprehend.DeleteDocumentClassifierInput{
 				DocumentClassifierArn: v.DocumentClassifierArn,
-			})
+			}
+			_, err = conn.DeleteDocumentClassifier(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if !errors.As(err, &nfe) {

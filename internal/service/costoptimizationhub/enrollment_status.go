@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Enrollment Status")
+// @FrameworkResource("aws_costoptimizationhub_enrollment_status", name="Enrollment Status")
 func newResourceEnrollmentStatus(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnrollmentStatus{}
 
@@ -44,10 +44,6 @@ type resourceEnrollmentStatus struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *resourceEnrollmentStatus) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_costoptimizationhub_enrollment_status"
 }
 
 func (r *resourceEnrollmentStatus) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
