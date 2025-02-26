@@ -6,6 +6,12 @@ permissions:
   pull-requests: write
 
 on:
+  issues:
+    types:
+      - assigned
+      - opened
+      - labeled
+
   pull_request_target:
     types:
       - assigned
@@ -13,11 +19,12 @@ on:
       - opened
       - labeled
 
-  issues:
-    types:
-      - assigned
-      - opened
-      - labeled
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+  schedule:
+    - cron: "0 15 * * 1-5"
 
 env:
   AUTHOR: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
@@ -27,7 +34,7 @@ jobs:
   workboard:
     name: Team Workboard
     runs-on: ubuntu-latest
-    if: github.event.action != 'closed'
+    if: contains(fromJSON('["assigned", "labeled, "opened"]'), github.event.action)
     env:
       CURRENT_LABELS: ${{ github.event.issue.labels.*.name || github.event.pull_request.labels.*.name }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
@@ -90,7 +97,7 @@ jobs:
   slack:
     name: Slack Notfications
     runs-on: ubuntu-latest
-    if: github.event.action != 'assigned'
+    if: github.event.action != 'assigned' # the only situation without any notifications
     env:
       ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
       AUTHOR_URL: ${{ github.event.issue.user.html_url || github.event.pull_request.user.html_url }}
@@ -196,6 +203,41 @@ jobs:
                   "text": {
                     "type": "mrkdwn",
                     "text": ${{ toJSON(format(':merged: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                  }
+                }
+              ]
+            }
+
+      - uses: actions/create-github-app-token@0d564482f06ca65fa9e77e2510873638c82206f2 # v1.11.5
+        if: github.event_name = 'schedule'
+        id: token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Open Maintainer Pull Request Stats
+        if: steps.token.status != 'skipped'
+        uses: breathingdust/github-team-slackbot@3519d5c7bdd556317b6158aeff5ae9c93c960bdd # v18.5.2
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          team_slug: terraform-aws
+          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack_channel: ${{ secrets.SLACK_CHANNEL }}
+
+      - name: Release Tag
+        if: github.event_name = 'push'
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":tag: <https://github.com/${{ github.event.pusher.name }}|${{ github.event.pusher.name }}> pushed tag <https://github.com/hashicorp/terraform-provider-aws/tree/${{ github.event.ref }}|${{ github.event.ref }}>"
                   }
                 }
               ]
