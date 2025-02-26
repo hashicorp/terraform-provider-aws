@@ -682,16 +682,16 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client
 // is good practice to define it separately.
 {{- end }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .Resource }}, error) {
-	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
+	input := {{ .ServiceLower }}.Get{{ .Resource }}Input{
 		Id: aws.String(id),
 	}
 
-	out, err := conn.Get{{ .Resource }}(ctx, in)
+	out, err := conn.Get{{ .Resource }}(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
-				LastRequest: in,
+				LastRequest: &input,
 			}
 		}
 
@@ -699,7 +699,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return out.{{ .Resource }}, nil
