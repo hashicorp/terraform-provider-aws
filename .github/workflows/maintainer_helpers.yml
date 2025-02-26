@@ -95,7 +95,7 @@ jobs:
           view: "engineering-initiative"
 
   slack:
-    name: Slack Notfications
+    name: Slack Feeds
     runs-on: ubuntu-latest
     if: github.event.action != 'assigned' # the only situation without any notifications
     env:
