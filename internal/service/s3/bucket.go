@@ -719,7 +719,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
 	// current account. It also resets the Bucket ACLs.
 	if region == endpoints.UsEast1RegionID {
-		if err := findBucket(ctx, conn, bucket); err == nil {
+		if _, err := findBucket(ctx, conn, bucket); err == nil {
 			return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s): %s", bucket, errors.New(errCodeBucketAlreadyExists))
 		}
 	}
@@ -766,7 +766,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(bucket)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return nil, findBucket(ctx, conn, d.Id())
+		return findBucket(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -784,7 +784,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	err := findBucket(ctx, conn, d.Id())
+	_, err := findBucket(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
@@ -1586,7 +1586,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return nil, findBucket(ctx, conn, d.Id())
+		return findBucket(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -1596,23 +1596,27 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) error {
-	input := &s3.HeadBucketInput{
+func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
+	input := s3.HeadBucketInput{
 		Bucket: aws.String(bucket),
 	}
 
-	_, err := conn.HeadBucket(ctx, input, optFns...)
+	output, err := conn.HeadBucket(ctx, &input, optFns...)
 
 	// For directory buckets that no longer exist it's the CreateSession call invoked by HeadBucket that returns "NoSuchBucket",
 	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
-		return &retry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return err
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
