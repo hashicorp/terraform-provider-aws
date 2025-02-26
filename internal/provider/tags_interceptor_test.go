@@ -127,12 +127,16 @@ func (d *resourceData) GetRawPlan() cty.Value {
 	})
 }
 
-func (d *resourceData) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+func (d *resourceData) GetRawState() cty.Value {
 	return cty.Value{}
 }
 
 func (d *resourceData) Get(key string) any {
 	return nil
+}
+
+func (d *resourceData) GetOk(key string) (any, bool) {
+	return nil, false
 }
 
 func (d *resourceData) Id() string {
@@ -148,5 +152,9 @@ func (d *resourceData) GetChange(key string) (interface{}, interface{}) {
 }
 
 func (d *resourceData) HasChange(key string) bool {
+	return false
+}
+
+func (d *resourceData) HasChanges(keys ...string) bool {
 	return false
 }

@@ -6,22 +6,16 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // schemaResourceData is an interface that implements a subset of schema.ResourceData's public methods.
 type schemaResourceData interface {
-	Get(string) any
-	GetChange(string) (any, any)
-	GetRawConfig() cty.Value
-	GetRawPlan() cty.Value
-	GetRawState() cty.Value
-	HasChange(string) bool
-	Id() string
+	sdkv2.ResourceDiffer
 	Set(string, any) error
 }
 
