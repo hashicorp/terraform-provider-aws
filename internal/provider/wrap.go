@@ -16,8 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Implemented by (schema.ResourceData|schema.ResourceDiff).GetOk().
+type getAttributeFunc func(string) (any, bool)
+
 // contextFunc augments Context.
-type contextFunc func(context.Context, any) (context.Context, diag.Diagnostics)
+type contextFunc func(context.Context, getAttributeFunc, any) (context.Context, diag.Diagnostics)
 
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
@@ -114,7 +117,7 @@ func (w *wrappedResource) state(f schema.StateContextFunc) schema.StateContextFu
 	}
 
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx, diags := w.opts.bootstrapContext(ctx, meta)
+		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
 			return nil, sdkdiag.DiagnosticsError(diags)
 		}
@@ -141,7 +144,7 @@ func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.Custo
 
 func (w *wrappedResource) customizeDiffWithBootstrappedContext(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-		ctx, diags := w.opts.bootstrapContext(ctx, meta)
+		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
 			return sdkdiag.DiagnosticsError(diags)
 		}
@@ -156,7 +159,7 @@ func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 
 	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
-		ctx, diags := w.opts.bootstrapContext(ctx, meta)
+		ctx, diags := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, meta)
 		if diags.HasError() {
 			return nil, sdkdiag.DiagnosticsError(diags)
 		}

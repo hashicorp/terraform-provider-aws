@@ -90,7 +90,7 @@ func TestInterceptedHandler(t *testing.T) {
 		var diags diag.Diagnostics
 		return sdkdiag.AppendErrorf(diags, "read error")
 	}
-	bootstrapContext := func(ctx context.Context, meta any) (context.Context, diag.Diagnostics) {
+	bootstrapContext := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
 		var diags diag.Diagnostics
 		return ctx, diags
 	}

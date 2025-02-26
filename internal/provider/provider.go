@@ -315,7 +315,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, meta any) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
 
 					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
@@ -395,7 +395,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, meta any) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
