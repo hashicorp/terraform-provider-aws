@@ -26,11 +26,10 @@ type schemaResourceData interface {
 }
 
 type interceptorOptions struct {
-	c     *conns.AWSClient
-	d     schemaResourceData
-	diags diag.Diagnostics
-	when  when
-	why   why
+	c    *conns.AWSClient
+	d    schemaResourceData
+	when when
+	why  why
 }
 
 // An interceptor is functionality invoked during the CRUD request lifecycle.
@@ -38,12 +37,12 @@ type interceptorOptions struct {
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
 type interceptor interface {
-	run(context.Context, interceptorOptions) (context.Context, diag.Diagnostics)
+	run(context.Context, interceptorOptions) diag.Diagnostics
 }
 
-type interceptorFunc func(context.Context, interceptorOptions) (context.Context, diag.Diagnostics)
+type interceptorFunc func(context.Context, interceptorOptions) diag.Diagnostics
 
-func (f interceptorFunc) run(ctx context.Context, opts interceptorOptions) (context.Context, diag.Diagnostics) {
+func (f interceptorFunc) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
 	return f(ctx, opts)
 }
 
@@ -102,13 +101,12 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 		for _, v := range forward {
 			if v.when&when != 0 {
 				opts := interceptorOptions{
-					c:     meta.(*conns.AWSClient),
-					d:     d,
-					diags: diags,
-					when:  when,
-					why:   why,
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
 				}
-				ctx, diags = v.interceptor.run(ctx, opts)
+				diags = append(diags, v.interceptor.run(ctx, opts)...)
 
 				// Short circuit if any Before interceptor errors.
 				if diags.HasError() {
@@ -129,13 +127,12 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := interceptorOptions{
-					c:     meta.(*conns.AWSClient),
-					d:     d,
-					diags: diags,
-					when:  when,
-					why:   why,
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
 				}
-				ctx, diags = v.interceptor.run(ctx, opts)
+				diags = append(diags, v.interceptor.run(ctx, opts)...)
 			}
 		}
 
@@ -143,13 +140,12 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := interceptorOptions{
-					c:     meta.(*conns.AWSClient),
-					d:     d,
-					diags: diags,
-					when:  when,
-					why:   why,
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
 				}
-				ctx, diags = v.interceptor.run(ctx, opts)
+				diags = append(diags, v.interceptor.run(ctx, opts)...)
 			}
 		}
 

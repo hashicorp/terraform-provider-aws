@@ -30,16 +30,17 @@ func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackage
 	}
 }
 
-func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOptions) (context.Context, diag.Diagnostics) {
-	c, diags := opts.c, opts.diags
+func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
 
 	if !r.HasServicePackageResourceTags() {
-		return ctx, diags
+		return diags
 	}
 
 	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
-		return ctx, diags
+		return diags
 	}
 
 	switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -65,7 +66,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 						o, n := d.GetChange(names.AttrTagsAll)
 
 						if err := r.UpdateTags(ctx, sp, c, identifier, o, n); err != nil {
-							return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+							return sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 						}
 					}
 					// TODO If the only change was to tags it would be nice to not call the resource's U handler.
@@ -79,7 +80,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 		case Read:
 			// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
 			if d.Id() == "" {
-				return ctx, diags
+				return diags
 			}
 
 			fallthrough
@@ -90,7 +91,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
 				if identifier := r.getIdentifier(d); identifier != "" {
 					if err := r.ListTags(ctx, sp, c, identifier); err != nil {
-						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						return sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
 			}
@@ -100,12 +101,12 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 
 			// The resource's configured tags can now include duplicate tags that have been configured on the provider.
 			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), d, names.AttrTags, nil).Map()); err != nil {
-				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
+				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
 			// Computed tags_all do.
 			if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
-				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
+				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
 			}
 		}
 	case Finally:
@@ -146,11 +147,11 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 				newTags = newTags.IgnoreSystem(sp.ServicePackageName())
 
 				if err := r.UpdateTags(ctx, sp, c, identifier, oldTags, newTags); err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+					return sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 				}
 
 				if err := r.ListTags(ctx, sp, c, identifier); err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+					return sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 				}
 
 				// Remove any provider configured ignore_tags and system tags from those returned from the service API.
@@ -158,18 +159,18 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 
 				// The resource's configured tags can now include duplicate tags that have been configured on the provider.
 				if err := d.Set(names.AttrTags, toAdd.ResolveDuplicates(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), d, names.AttrTags, nil).Map()); err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
+					return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 				}
 
 				// Computed tags_all do.
 				if err := d.Set(names.AttrTagsAll, toAdd.Map()); err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
+					return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
 				}
 			}
 		}
 	}
 
-	return ctx, diags
+	return diags
 }
 
 // tagsResourceInterceptor implements transparent tagging for data sources.
@@ -187,16 +188,17 @@ func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePacka
 	}
 }
 
-func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) (context.Context, diag.Diagnostics) {
-	c, diags := opts.c, opts.diags
+func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
 
 	if !r.HasServicePackageResourceTags() {
-		return ctx, diags
+		return diags
 	}
 
 	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
-		return ctx, diags
+		return diags
 	}
 
 	switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -213,7 +215,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOpti
 		case Read:
 			// TODO: can this occur for a data source?
 			if d.Id() == "" {
-				return ctx, diags
+				return diags
 			}
 
 			// If the R handler didn't set tags, try and read them from the service API.
@@ -223,7 +225,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOpti
 				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
 				if identifier := r.getIdentifier(d); identifier != "" {
 					if err := r.ListTags(ctx, sp, c, identifier); err != nil {
-						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						return sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
 			}
@@ -231,12 +233,12 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOpti
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx))
 			if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
+				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 		}
 	}
 
-	return ctx, diags
+	return diags
 }
 
 type tagsInterceptor struct {
