@@ -8,7 +8,7 @@ but we would discourage any attempts to migrate resources of any complexity, par
 
 ## Migration Tooling
 
-Tooling has been created that will scaff[gitra.sh](..%2F..%2Fgitra.sh)old an existing resource into a Framework resource. This tool is meant to be used as a starting point so additional editing will be needed.
+Tooling has been created that will scaffold an existing resource into a Framework resource. This tool is meant to be used as a starting point so additional editing will be needed.
 
 Build:
 
