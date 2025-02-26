@@ -48,7 +48,7 @@ func dataSourceConnection() *schema.Resource {
 			},
 			names.AttrState: {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
