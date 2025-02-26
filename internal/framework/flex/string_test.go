@@ -53,6 +53,67 @@ func TestStringFromFramework(t *testing.T) {
 	}
 }
 
+func BenchmarkStringFromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.StringValue("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringFromFramework(ctx, input)
+		if r == nil {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
+func TestStringValueFromFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected string
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    types.StringValue("TEST"),
+			expected: "TEST",
+		},
+		"empty string": {
+			input:    types.StringValue(""),
+			expected: "",
+		},
+		"null string": {
+			input:    types.StringNull(),
+			expected: "",
+		},
+		"unknown string": {
+			input:    types.StringUnknown(),
+			expected: "",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.StringValueFromFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkStringValueFromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.StringValue("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringValueFromFramework(ctx, input)
+		if r == "" {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestStringToFramework(t *testing.T) {
 	t.Parallel()
 
@@ -88,38 +149,14 @@ func TestStringToFramework(t *testing.T) {
 	}
 }
 
-func TestStringToFrameworkLegacy(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    *string
-		expected types.String
-	}
-	tests := map[string]testCase{
-		"valid string": {
-			input:    aws.String("TEST"),
-			expected: types.StringValue("TEST"),
-		},
-		"empty string": {
-			input:    aws.String(""),
-			expected: types.StringValue(""),
-		},
-		"nil string": {
-			input:    nil,
-			expected: types.StringValue(""),
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.StringToFrameworkLegacy(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
+func BenchmarkStringToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := aws.String("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
 	}
 }
 
@@ -152,6 +189,52 @@ func TestStringValueToFramework(t *testing.T) {
 			t.Parallel()
 
 			got := flex.StringValueToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkStringValueToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := "TEST"
+	for n := 0; n < b.N; n++ {
+		r := flex.StringValueToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
+func TestStringToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    aws.String("TEST"),
+			expected: types.StringValue("TEST"),
+		},
+		"empty string": {
+			input:    aws.String(""),
+			expected: types.StringValue(""),
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.StringValue(""),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.StringToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -257,6 +340,17 @@ func TestStringToFrameworkARN(t *testing.T) {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
+	}
+}
+
+func BenchmarkStringToFrameworkARN(b *testing.B) {
+	ctx := context.Background()
+	input := aws.String("arn:aws:iam::123456789012:user/David")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringToFrameworkARN(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
 	}
 }
 
