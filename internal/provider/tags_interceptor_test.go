@@ -127,7 +127,7 @@ func (d *resourceData) GetRawPlan() cty.Value {
 	})
 }
 
-func (d *resourceData) GetRawState() cty.Value {
+func (d *resourceData) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
 	return cty.Value{}
 }
 
