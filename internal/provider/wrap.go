@@ -7,15 +7,17 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // contextFunc augments Context.
-type contextFunc func(context.Context, any) context.Context
+type contextFunc func(context.Context, any) (context.Context, diag.Diagnostics)
 
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
@@ -112,7 +114,11 @@ func (w *wrappedResource) state(f schema.StateContextFunc) schema.StateContextFu
 	}
 
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx = w.opts.bootstrapContext(ctx, meta)
+		ctx, diags := w.opts.bootstrapContext(ctx, meta)
+		if diags.HasError() {
+			return nil, sdkdiag.DiagnosticsError(diags)
+		}
+
 		return f(ctx, d, meta)
 	}
 }
@@ -135,7 +141,11 @@ func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.Custo
 
 func (w *wrappedResource) customizeDiffWithBootstrappedContext(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-		ctx = w.opts.bootstrapContext(ctx, meta)
+		ctx, diags := w.opts.bootstrapContext(ctx, meta)
+		if diags.HasError() {
+			return sdkdiag.DiagnosticsError(diags)
+		}
+
 		return f(ctx, d, meta)
 	}
 }
@@ -146,7 +156,11 @@ func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 
 	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
-		ctx = w.opts.bootstrapContext(ctx, meta)
+		ctx, diags := w.opts.bootstrapContext(ctx, meta)
+		if diags.HasError() {
+			return nil, sdkdiag.DiagnosticsError(diags)
+		}
+
 		return f(ctx, rawState, meta)
 	}
 }

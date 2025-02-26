@@ -84,8 +84,9 @@ func TestInterceptedHandler(t *testing.T) {
 		var diags diag.Diagnostics
 		return sdkdiag.AppendErrorf(diags, "read error")
 	}
-	bootstrapContext := func(ctx context.Context, meta any) context.Context {
-		return ctx
+	bootstrapContext := func(ctx context.Context, meta any) (context.Context, diag.Diagnostics) {
+		var diags diag.Diagnostics
+		return ctx, diags
 	}
 
 	diags := interceptedHandler(bootstrapContext, interceptors, read, Read)(context.Background(), nil, 42)
