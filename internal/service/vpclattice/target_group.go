@@ -317,10 +317,13 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VpcLattice TargetGroup: %s", d.Id())
-	input := vpclattice.DeleteTargetGroupInput{
-		TargetGroupIdentifier: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteTargetGroup(ctx, &input)
+
+	// Draining the targets can take a moment, so we need to retry on conflict.
+	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteTargetGroup(ctx, &vpclattice.DeleteTargetGroupInput{
+			TargetGroupIdentifier: aws.String(d.Id()),
+		})
+	})
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
