@@ -20,12 +20,12 @@ resource "aws_dataexchange_event_action" "example" {
 
   action_export_revision_to_s3 {
     revision_destination {
-      bucket = aws_s3_bucket.example.id
-      key_pattern = "\${Revision.CreatedAt}/\${Asset.Name}"
+      bucket      = aws_s3_bucket.example.id
+      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
-    
+
     encryption {
-      type = "aws:kms"
+      type        = "aws:kms"
       kms_key_arn = aws_kms_key.example.arn
     }
   }
@@ -51,7 +51,7 @@ The following blocks are supported:
 ### revision_destination Configuration Block
 
 * `bucket` - (Required) The S3 bucket where the revision will be exported.
-* `key_pattern` - (Optional) Pattern for naming revisions in the S3 bucket. Defaults to "\${Revision.CreatedAt}/\${Asset.Name}".
+* `key_pattern` - (Optional) Pattern for naming revisions in the S3 bucket. Defaults to `${Revision.CreatedAt}/${Asset.Name}`.
 
 ### encryption Configuration Block
 
