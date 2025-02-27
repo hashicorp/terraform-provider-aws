@@ -140,6 +140,9 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.Crea
 	if d.HasChange(names.AttrParameterGroupName) {
 		input.TargetDBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 	}
+	if d.HasChange(names.AttrAllocatedStorage) {
+		input.TargetAllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+	}
 
 	return input
 }
