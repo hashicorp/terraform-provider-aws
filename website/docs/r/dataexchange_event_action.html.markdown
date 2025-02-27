@@ -83,6 +83,7 @@ import {
   id = "example-event-action-id"
 }
 ```
+
 Using `terraform import`, import Data Exchange Event Action using the id. For example:
 
 ```console
