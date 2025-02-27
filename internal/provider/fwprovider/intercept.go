@@ -16,13 +16,12 @@ import (
 
 type interceptorOptions[Request, Response any] struct {
 	c        *conns.AWSClient
-	diags    diag.Diagnostics
 	request  Request
 	response *Response
 	when     when
 }
 
-type interceptorFunc[Request, Response any] func(context.Context, interceptorOptions[Request, Response]) (context.Context, diag.Diagnostics)
+type interceptorFunc[Request, Response any] func(context.Context, interceptorOptions[Request, Response]) diag.Diagnostics
 
 // A data source interceptor is functionality invoked during the data source's CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
@@ -30,7 +29,7 @@ type interceptorFunc[Request, Response any] func(context.Context, interceptorOpt
 // In other cases all interceptors in the chain are run.
 type dataSourceInterceptor interface {
 	// read is invoked for a Read call.
-	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) (context.Context, diag.Diagnostics)
+	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics
 }
 
 type dataSourceInterceptors []dataSourceInterceptor
@@ -44,11 +43,11 @@ func (s dataSourceInterceptors) read() []interceptorFunc[datasource.ReadRequest,
 
 type ephemeralResourceInterceptor interface {
 	// open is invoked for an Open call.
-	open(context.Context, interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) (context.Context, diag.Diagnostics)
+	open(context.Context, interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics
 	// renew is invoked for a Renew call.
-	renew(context.Context, interceptorOptions[ephemeral.RenewRequest, ephemeral.RenewResponse]) (context.Context, diag.Diagnostics)
+	renew(context.Context, interceptorOptions[ephemeral.RenewRequest, ephemeral.RenewResponse]) diag.Diagnostics
 	// close is invoked for a Close call.
-	close(context.Context, interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) (context.Context, diag.Diagnostics)
+	close(context.Context, interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) diag.Diagnostics
 }
 
 type ephemeralResourceInterceptors []ephemeralResourceInterceptor
@@ -80,13 +79,13 @@ func (s ephemeralResourceInterceptors) close() []interceptorFunc[ephemeral.Close
 // In other cases all interceptors in the chain are run.
 type resourceInterceptor interface {
 	// create is invoked for a Create call.
-	create(context.Context, interceptorOptions[resource.CreateRequest, resource.CreateResponse]) (context.Context, diag.Diagnostics)
+	create(context.Context, interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics
 	// read is invoked for a Read call.
-	read(context.Context, interceptorOptions[resource.ReadRequest, resource.ReadResponse]) (context.Context, diag.Diagnostics)
+	read(context.Context, interceptorOptions[resource.ReadRequest, resource.ReadResponse]) diag.Diagnostics
 	// update is invoked for an Update call.
-	update(context.Context, interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) (context.Context, diag.Diagnostics)
+	update(context.Context, interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) diag.Diagnostics
 	// delete is invoked for a Delete call.
-	delete(context.Context, interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) (context.Context, diag.Diagnostics)
+	delete(context.Context, interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics
 }
 
 type resourceInterceptors []resourceInterceptor
@@ -151,12 +150,11 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 		for _, v := range forward {
 			opts := interceptorOptions[Request, Response]{
 				c:        c,
-				diags:    diags,
 				request:  request,
 				response: response,
 				when:     when,
 			}
-			ctx, diags = v(ctx, opts)
+			diags.Append(v(ctx, opts)...)
 
 			// Short circuit if any Before interceptor errors.
 			if diags.HasError() {
@@ -176,24 +174,22 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 		for _, v := range reverse {
 			opts := interceptorOptions[Request, Response]{
 				c:        c,
-				diags:    diags,
 				request:  request,
 				response: response,
 				when:     when,
 			}
-			ctx, diags = v(ctx, opts)
+			diags.Append(v(ctx, opts)...)
 		}
 
 		when = Finally
 		for _, v := range reverse {
 			opts := interceptorOptions[Request, Response]{
 				c:        c,
-				diags:    diags,
 				request:  request,
 				response: response,
 				when:     when,
 			}
-			ctx, diags = v(ctx, opts)
+			diags.Append(v(ctx, opts)...)
 		}
 
 		return diags

@@ -3,6 +3,10 @@
 
 package sdkv2
 
+import (
+	"github.com/hashicorp/go-cty/cty"
+)
+
 // ResourceDiffer exposes the interface for accessing changes in a resource
 // Implementations:
 // * schema.ResourceData
@@ -13,6 +17,9 @@ type ResourceDiffer interface {
 	Get(string) interface{}
 	GetChange(string) (interface{}, interface{})
 	GetOk(string) (interface{}, bool)
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
 	HasChange(string) bool
 	HasChanges(...string) bool
 	Id() string
