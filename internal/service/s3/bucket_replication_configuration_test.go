@@ -2441,7 +2441,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }
 
 func testAccBucketReplicationConfigurationConfig_directoryBucket(rName, storageClass string) string {
-	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
   location {
