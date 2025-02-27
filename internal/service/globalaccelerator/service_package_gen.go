@@ -101,11 +101,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		globalaccelerator.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *globalaccelerator.Options) {
+			if region := config["region"].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         "globalaccelerator",
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *globalaccelerator.Options) {
 			switch partition := config["partition"].(string); partition {
 			case endpoints.AwsPartitionID:
-				if region := endpoints.UsWest2RegionID; cfg.Region != region {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
+				if region := endpoints.UsWest2RegionID; o.Region != region {
+					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
+						"service":         "globalaccelerator",
+						"original_region": o.Region,
 						"override_region": region,
 					})
 					o.Region = region

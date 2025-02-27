@@ -76,11 +76,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		route53recoveryreadiness.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *route53recoveryreadiness.Options) {
+			if region := config["region"].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         "route53recoveryreadiness",
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *route53recoveryreadiness.Options) {
 			switch partition := config["partition"].(string); partition {
 			case endpoints.AwsPartitionID:
-				if region := endpoints.UsWest2RegionID; cfg.Region != region {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
+				if region := endpoints.UsWest2RegionID; o.Region != region {
+					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
+						"service":         "route53recoveryreadiness",
+						"original_region": o.Region,
 						"override_region": region,
 					})
 					o.Region = region

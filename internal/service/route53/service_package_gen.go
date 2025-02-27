@@ -145,27 +145,40 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		route53.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *route53.Options) {
+			if region := config["region"].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         "route53",
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *route53.Options) {
 			switch partition := config["partition"].(string); partition {
 			case endpoints.AwsPartitionID:
-				if region := endpoints.UsEast1RegionID; cfg.Region != region {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
+				if region := endpoints.UsEast1RegionID; o.Region != region {
+					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
+						"service":         "route53",
+						"original_region": o.Region,
 						"override_region": region,
 					})
 					o.Region = region
 				}
 			case endpoints.AwsCnPartitionID:
-				if region := endpoints.CnNorthwest1RegionID; cfg.Region != region {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
+				if region := endpoints.CnNorthwest1RegionID; o.Region != region {
+					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
+						"service":         "route53",
+						"original_region": o.Region,
 						"override_region": region,
 					})
 					o.Region = region
 				}
 			case endpoints.AwsUsGovPartitionID:
-				if region := endpoints.UsGovWest1RegionID; cfg.Region != region {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
+				if region := endpoints.UsGovWest1RegionID; o.Region != region {
+					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
+						"service":         "route53",
+						"original_region": o.Region,
 						"override_region": region,
 					})
 					o.Region = region
