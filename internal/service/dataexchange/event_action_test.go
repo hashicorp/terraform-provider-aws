@@ -168,6 +168,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
@@ -186,7 +187,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 			{
 				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
+					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
@@ -201,6 +202,7 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
@@ -219,7 +221,7 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 			{
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
+					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
@@ -234,6 +236,7 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
@@ -252,7 +255,7 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 			{
 				Config: testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
+					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "aws:kms"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
