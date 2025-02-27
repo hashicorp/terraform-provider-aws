@@ -38,7 +38,6 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
-	region                    string
 	servicePackages           map[string]ServicePackage
 	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3.Client
@@ -104,7 +103,7 @@ func (c *AWSClient) Partition(context.Context) string {
 
 // Region returns the ID of the configured AWS Region.
 func (c *AWSClient) Region(context.Context) string {
-	return c.region
+	return c.awsConfig.Region
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
