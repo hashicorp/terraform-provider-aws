@@ -51,7 +51,7 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -95,7 +95,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -142,7 +142,7 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -176,7 +176,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -210,7 +210,7 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -244,7 +244,7 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
