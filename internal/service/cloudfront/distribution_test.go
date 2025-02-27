@@ -702,7 +702,7 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
-					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
