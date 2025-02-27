@@ -8,12 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -48,7 +47,7 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,7 +91,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -139,7 +138,7 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -173,7 +172,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -206,7 +205,7 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -240,7 +239,7 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	resource.ParallelTest(t, resource.TestCase{
