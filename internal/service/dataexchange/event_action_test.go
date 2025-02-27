@@ -433,7 +433,6 @@ resource "aws_dataexchange_event_action" "test" {
     }
     revision_destination {
       bucket      = aws_s3_bucket.test.bucket
-      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
 
@@ -462,7 +461,6 @@ resource "aws_dataexchange_event_action" "test" {
     }
     revision_destination {
       bucket      = aws_s3_bucket.test.bucket
-      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
 
