@@ -944,7 +944,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 func testAccBucketPolicyConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 

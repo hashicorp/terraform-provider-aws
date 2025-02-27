@@ -904,7 +904,7 @@ resource "aws_s3_bucket_metric" "test" {
 }
 
 func testAccBucketMetricConfig_directoryBucket(bucketName, metricName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

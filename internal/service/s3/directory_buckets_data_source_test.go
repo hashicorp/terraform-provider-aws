@@ -35,7 +35,7 @@ func TestAccS3DirectoryBucketsDataSource_basic(t *testing.T) {
 }
 
 func testAccDirectoryBucketsDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 
