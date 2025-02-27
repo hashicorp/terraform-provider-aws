@@ -219,7 +219,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 	})
 }
 
-func TestAccDataExchangeEventAction_encryption(t *testing.T) {
+func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -271,7 +271,7 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 	})
 }
 
-func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
+func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
