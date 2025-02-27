@@ -75,6 +75,12 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 			}
 		}
 
+		if def.FirelensConfiguration != nil {
+			if def.User == nil {
+				cd[i].User = aws.String("0")
+			}
+		}
+
 		for j, pm := range def.PortMappings {
 			if pm.Protocol == awstypes.TransportProtocolTcp {
 				cd[i].PortMappings[j].Protocol = ""
