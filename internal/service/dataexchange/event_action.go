@@ -116,14 +116,14 @@ func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	apiInput := dataexchange.CreateEventActionInput{}
-	diags := data.Expand(ctx, &apiInput)
+	input := dataexchange.CreateEventActionInput{}
+	diags := data.Expand(ctx, &input)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	out, err := conn.CreateEventAction(ctx, &apiInput)
+	out, err := conn.CreateEventAction(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameEventAction, "", err),
@@ -190,14 +190,14 @@ func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	apiInput := dataexchange.UpdateEventActionInput{}
-	diags := data.Expand(ctx, &apiInput)
+	input := dataexchange.UpdateEventActionInput{}
+	diags := data.Expand(ctx, &input)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	out, err := conn.UpdateEventAction(ctx, &apiInput)
+	out, err := conn.UpdateEventAction(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataExchange, create.ErrActionUpdating, ResNameEventAction, data.ID.String(), err),

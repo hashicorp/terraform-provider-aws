@@ -326,9 +326,9 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 func testAccEventActionPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
 
-	input := &dataexchange.ListEventActionsInput{}
+	input := dataexchange.ListEventActionsInput{}
 
-	_, err := conn.ListEventActions(ctx, input)
+	_, err := conn.ListEventActions(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
