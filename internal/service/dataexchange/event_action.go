@@ -169,7 +169,7 @@ func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	out, err := FindEventActionByID(ctx, conn, state.ID.ValueString())
+	out, err := findEventActionByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -261,7 +261,7 @@ func (r *resourceEventAction) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func FindEventActionByID(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetEventActionOutput, error) {
+func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetEventActionOutput, error) {
 	in := &dataexchange.GetEventActionInput{
 		EventActionId: aws.String(id),
 	}
