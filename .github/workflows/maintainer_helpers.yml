@@ -34,7 +34,7 @@ jobs:
   workboard:
     name: Team Workboard
     runs-on: ubuntu-latest
-    if: contains(fromJSON('["assigned", "labeled, "opened"]'), github.event.action)
+    if: contains(fromJSON('["assigned", "labeled", "opened"]'), github.event.action)
     env:
       CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
