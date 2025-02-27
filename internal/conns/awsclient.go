@@ -29,7 +29,7 @@ import (
 type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
-	clients                   map[string]any
+	clients                   map[string]map[string]any // Region -> service package name -> API client.
 	conns                     map[string]any
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
@@ -342,6 +342,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 // This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
+	region := c.Region(ctx)
 
 	isDefault := len(extra) == 0
 	// Default service client is cached.
@@ -349,12 +350,14 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 		c.lock.Lock()
 		defer c.lock.Unlock() // Runs at function exit, NOT block.
 
-		if raw, ok := c.clients[servicePackageName]; ok {
-			if client, ok := raw.(T); ok {
-				return client, nil
-			} else {
-				var zero T
-				return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
+		if v, ok := c.clients[region]; ok {
+			if raw, ok := v[servicePackageName]; ok {
+				if client, ok := raw.(T); ok {
+					return client, nil
+				} else {
+					var zero T
+					return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
+				}
 			}
 		}
 	}
@@ -384,7 +387,10 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 	// All customization for AWS SDK for Go v2 API clients must be done during construction.
 
 	if isDefault {
-		c.clients[servicePackageName] = client
+		if _, ok := c.clients[region]; !ok {
+			c.clients[region] = make(map[string]any, 0)
+		}
+		c.clients[region][servicePackageName] = client
 	}
 
 	return client, nil

@@ -215,7 +215,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
-	client.clients = make(map[string]any, 0)
+	client.clients = make(map[string]map[string]any, 0)
 	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
