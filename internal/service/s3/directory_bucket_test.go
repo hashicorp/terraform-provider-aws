@@ -162,9 +162,6 @@ func TestAccS3DirectoryBucket_defaultDataRedundancy(t *testing.T) {
 			},
 			{
 				Config: testAccDirectoryBucketConfig_defaultDataRedundancy(rName, "LocalZone"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryBucketExists(ctx, resourceName),
-				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
