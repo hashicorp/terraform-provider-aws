@@ -126,6 +126,11 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -193,6 +198,23 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Asset.Name}/${Revision.CreatedAt.Year}/${Revision.CreatedAt.Month}/${Revision.CreatedAt.Day}"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -227,6 +249,24 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -260,6 +300,24 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "aws:kms"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
