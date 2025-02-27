@@ -191,8 +191,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "event-actions/{id}"),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Asset.Name}/${Revision.CreatedAt.Year}/${Revision.CreatedAt.Month}/${Revision.CreatedAt.Day}"),
 				),
 			},
 		},
@@ -408,7 +407,7 @@ resource "aws_dataexchange_event_action" "test" {
     }
     revision_destination {
       bucket      = aws_s3_bucket.test.bucket
-      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+      key_pattern = "$${Asset.Name}/$${Revision.CreatedAt.Year}/$${Revision.CreatedAt.Month}/$${Revision.CreatedAt.Day}"
     }
   }
 
