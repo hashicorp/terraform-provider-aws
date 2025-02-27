@@ -44,7 +44,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetConnectionsInput{
@@ -73,7 +73,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 		connectionIDs = append(connectionIDs, aws.ToString(v.ConnectionId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, connectionIDs)
 
 	return diags

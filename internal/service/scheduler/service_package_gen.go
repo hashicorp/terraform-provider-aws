@@ -5,8 +5,8 @@ package scheduler
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,6 +31,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceSchedule,
 			TypeName: "aws_scheduler_schedule",
+			Name:     "Schedule",
 		},
 		{
 			Factory:  ResourceScheduleGroup,
@@ -48,13 +49,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*scheduler_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return scheduler_sdkv2.NewFromConfig(cfg,
-		scheduler_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*scheduler.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*scheduler.Options){
+		scheduler.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return scheduler.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*scheduler.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*scheduler.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *scheduler.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*scheduler.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Connector")
+// @FrameworkDataSource("aws_transfer_connector", name="Connector")
 func newDataSourceConnector(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceConnector{}, nil
 }
@@ -32,10 +32,6 @@ const (
 
 type dataSourceConnector struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceConnector) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_transfer_connector"
 }
 
 func (d *dataSourceConnector) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -112,8 +108,8 @@ func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	tags := KeyValueTags(ctx, description.Connector.Tags).IgnoreAWS().IgnoreConfig(d.Meta().IgnoreTagsConfig)
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	tags := KeyValueTags(ctx, description.Connector.Tags).IgnoreAWS().IgnoreConfig(d.Meta().IgnoreTagsConfig(ctx))
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -127,7 +123,7 @@ type dsConnectorData struct {
 	SecurityPolicyName              types.String                                  `tfsdk:"security_policy_name"`
 	ServiceManagedEgressIpAddresses fwtypes.ListValueOf[types.String]             `tfsdk:"service_managed_egress_ip_addresses"`
 	SftpConfig                      fwtypes.ListNestedObjectValueOf[dsSftpConfig] `tfsdk:"sftp_config"`
-	Tags                            types.Map                                     `tfsdk:"tags"`
+	Tags                            tftags.Map                                    `tfsdk:"tags"`
 	Url                             types.String                                  `tfsdk:"url"`
 }
 

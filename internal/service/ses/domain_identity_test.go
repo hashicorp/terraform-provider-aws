@@ -6,23 +6,23 @@ package ses_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESDomainIdentity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
+	resourceName := "aws_ses_domain_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -32,9 +32,12 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig_basic(domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainIdentityExists(ctx, "aws_ses_domain_identity.test"),
-					testAccCheckDomainIdentityARN("aws_ses_domain_identity.test", domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainIdentityExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ses", "identity/{domain}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrSet(resourceName, "verification_token"),
 				),
 			},
 		},
@@ -44,6 +47,7 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 func TestAccSESDomainIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
+	resourceName := "aws_ses_domain_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -53,9 +57,9 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig_basic(domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainIdentityExists(ctx, "aws_ses_domain_identity.test"),
-					testAccCheckDomainIdentityDisappears(ctx, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainIdentityExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,22 +96,17 @@ func testAccCheckDomainIdentityDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			domain := rs.Primary.ID
-			params := &ses.GetIdentityVerificationAttributesInput{
-				Identities: []string{
-					domain,
-				},
+			_, err := tfses.FindIdentityVerificationAttributesByIdentity(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			response, err := conn.GetIdentityVerificationAttributes(ctx, params)
 			if err != nil {
 				return err
 			}
 
-			_, exists := response.VerificationAttributes[domain]
-			if exists {
-				return fmt.Errorf("SES Domain Identity %s still exists. Failing!", domain)
-			}
+			return fmt.Errorf("SES Domain Identity %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -118,68 +117,14 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Domain Identity not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Domain Identity name not set")
-		}
-
-		domain := rs.Primary.ID
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []string{
-				domain,
-			},
-		}
-
-		response, err := conn.GetIdentityVerificationAttributes(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		_, exists := response.VerificationAttributes[domain]
-		if !exists {
-			return fmt.Errorf("SES Domain Identity %s not found in AWS", domain)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckDomainIdentityDisappears(ctx context.Context, identity string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
-
-		input := &ses.DeleteIdentityInput{
-			Identity: aws.String(identity),
-		}
-
-		_, err := conn.DeleteIdentity(ctx, input)
+		_, err := tfses.FindIdentityVerificationAttributesByIdentity(ctx, conn, rs.Primary.ID)
 
 		return err
-	}
-}
-
-func testAccCheckDomainIdentityARN(n string, domain string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-
-		expected := arn.ARN{
-			AccountID: awsClient.AccountID,
-			Partition: awsClient.Partition,
-			Region:    awsClient.Region,
-			Resource:  fmt.Sprintf("identity/%s", strings.TrimSuffix(domain, ".")),
-			Service:   "ses",
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] != expected.String() {
-			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes[names.AttrARN])
-		}
-
-		return nil
 	}
 }
 
@@ -202,7 +147,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccDomainIdentityConfig_basic(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
 `, domain)
 }

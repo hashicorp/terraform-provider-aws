@@ -147,8 +147,44 @@ func resourceModel() *schema.Resource {
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
 												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"inference_specification_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validName,
+						},
+						"multi_model_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"model_cache_setting": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ModelCacheSetting](),
 									},
 								},
 							},
@@ -294,8 +330,45 @@ func resourceModel() *schema.Resource {
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
 												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"inference_specification_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validName,
+						},
+						"multi_model_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"model_cache_setting": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ModelCacheSetting](),
 									},
 								},
 							},
@@ -328,8 +401,6 @@ func resourceModel() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -551,6 +622,14 @@ func expandContainer(m map[string]interface{}) *awstypes.ContainerDefinition {
 		container.ImageConfig = expandModelImageConfig(v.([]interface{}))
 	}
 
+	if v, ok := m["inference_specification_name"]; ok && v.(string) != "" {
+		container.InferenceSpecificationName = aws.String(v.(string))
+	}
+
+	if v, ok := m["multi_model_config"].([]interface{}); ok && len(v) > 0 {
+		container.MultiModelConfig = expandMultiModelConfig(v)
+	}
+
 	return &container
 }
 
@@ -587,6 +666,10 @@ func expandS3ModelDataSource(l []interface{}) *awstypes.S3ModelDataSource {
 	}
 	if v, ok := m["compression_type"]; ok && v.(string) != "" {
 		s3ModelDataSource.CompressionType = awstypes.ModelCompressionType(v.(string))
+	}
+
+	if v, ok := m["model_access_config"].([]interface{}); ok && len(v) > 0 {
+		s3ModelDataSource.ModelAccessConfig = expandModelAccessConfig(v)
 	}
 
 	return &s3ModelDataSource
@@ -634,6 +717,38 @@ func expandContainers(a []interface{}) []awstypes.ContainerDefinition {
 	return containers
 }
 
+func expandModelAccessConfig(l []interface{}) *awstypes.ModelAccessConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	modelAccessConfig := &awstypes.ModelAccessConfig{}
+
+	if v, ok := m["accept_eula"].(bool); ok {
+		modelAccessConfig.AcceptEula = aws.Bool(v)
+	}
+
+	return modelAccessConfig
+}
+
+func expandMultiModelConfig(l []interface{}) *awstypes.MultiModelConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	multiModelConfig := &awstypes.MultiModelConfig{}
+
+	if v, ok := m["model_cache_setting"].(string); ok && v != "" {
+		multiModelConfig.ModelCacheSetting = awstypes.ModelCacheSetting(v)
+	}
+
+	return multiModelConfig
+}
+
 func flattenContainer(container *awstypes.ContainerDefinition) []interface{} {
 	if container == nil {
 		return []interface{}{}
@@ -667,6 +782,14 @@ func flattenContainer(container *awstypes.ContainerDefinition) []interface{} {
 		cfg["image_config"] = flattenImageConfig(container.ImageConfig)
 	}
 
+	if container.InferenceSpecificationName != nil {
+		cfg["inference_specification_name"] = aws.ToString(container.InferenceSpecificationName)
+	}
+
+	if container.MultiModelConfig != nil {
+		cfg["multi_model_config"] = flattenMultiModelConfig(container.MultiModelConfig)
+	}
+
 	return []interface{}{cfg}
 }
 
@@ -698,6 +821,10 @@ func flattenS3ModelDataSource(s3ModelDataSource *awstypes.S3ModelDataSource) []i
 	cfg["s3_data_type"] = s3ModelDataSource.S3DataType
 
 	cfg["compression_type"] = s3ModelDataSource.CompressionType
+
+	if s3ModelDataSource.ModelAccessConfig != nil {
+		cfg["model_access_config"] = flattenModelAccessConfig(s3ModelDataSource.ModelAccessConfig)
+	}
 
 	return []interface{}{cfg}
 }
@@ -738,6 +865,32 @@ func flattenContainers(containers []awstypes.ContainerDefinition) []interface{} 
 		fContainers = append(fContainers, flattenContainer(&container)[0].(map[string]interface{}))
 	}
 	return fContainers
+}
+
+func flattenModelAccessConfig(config *awstypes.ModelAccessConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	cfg["accept_eula"] = aws.ToBool(config.AcceptEula)
+
+	return []interface{}{cfg}
+}
+
+func flattenMultiModelConfig(config *awstypes.MultiModelConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	if config.ModelCacheSetting != "" {
+		cfg["model_cache_setting"] = config.ModelCacheSetting
+	}
+
+	return []interface{}{cfg}
 }
 
 func expandModelInferenceExecutionConfig(l []interface{}) *awstypes.InferenceExecutionConfig {

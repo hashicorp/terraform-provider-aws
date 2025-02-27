@@ -84,11 +84,10 @@ func resourceIPAMResourceDiscovery() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			// user must define authn region within `operating_regions {}`
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() == "" { // Create.
-					currentRegion := meta.(*conns.AWSClient).Region
+					currentRegion := meta.(*conns.AWSClient).Region(ctx)
 
 					for _, v := range diff.Get("operating_regions").(*schema.Set).List() {
 						if v.(map[string]interface{})["region_name"].(string) == currentRegion {
@@ -217,9 +216,10 @@ func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Resource Discovery: %s", d.Id())
-	_, err := conn.DeleteIpamResourceDiscovery(ctx, &ec2.DeleteIpamResourceDiscoveryInput{
+	input := ec2.DeleteIpamResourceDiscoveryInput{
 		IpamResourceDiscoveryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIpamResourceDiscovery(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 		return diags

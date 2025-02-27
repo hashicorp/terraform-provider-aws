@@ -6,8 +6,7 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_component")
-func DataSourceComponent() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_component", name="Component")
+// @Tags
+func dataSourceComponent() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComponentRead,
 
@@ -84,30 +84,18 @@ func DataSourceComponent() *schema.Resource {
 
 func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetComponentInput{}
-
-	if v, ok := d.GetOk(names.AttrARN); ok {
-		input.ComponentBuildVersionArn = aws.String(v.(string))
-	}
-
-	output, err := conn.GetComponentWithContext(ctx, input)
+	arn := d.Get(names.AttrARN).(string)
+	component, err := findComponentByARN(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Component: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Component (%s): %s", arn, err)
 	}
 
-	if output == nil || output.Component == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Component: empty result")
-	}
-
-	component := output.Component
-
-	d.SetId(aws.StringValue(component.Arn))
-
-	d.Set(names.AttrARN, component.Arn)
+	arn = aws.ToString(component.Arn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("change_description", component.ChangeDescription)
 	d.Set("data", component.Data)
 	d.Set("date_created", component.DateCreated)
@@ -117,14 +105,11 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrName, component.Name)
 	d.Set(names.AttrOwner, component.Owner)
 	d.Set("platform", component.Platform)
-	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
-
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
+	d.Set("supported_os_versions", component.SupportedOsVersions)
 	d.Set(names.AttrType, component.Type)
 	d.Set(names.AttrVersion, component.Version)
+
+	setTagsOut(ctx, component.Tags)
 
 	return diags
 }

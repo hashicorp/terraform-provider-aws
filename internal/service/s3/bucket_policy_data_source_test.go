@@ -102,7 +102,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["${data.aws_service_principal.current.name}"]
+      identifiers = [data.aws_service_principal.current.name]
     }
   }
 }

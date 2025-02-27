@@ -14,6 +14,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -326,7 +327,7 @@ func (v *visitor) orderLiterals(scores map[string][]float64) []string {
 	}
 
 	// Sort the keys based on the scores
-	sort.Slice(keys, func(i, j int) bool {
+	sort.Slice(keys, func(i, j int) bool { // nosemgrep:ci.semgrep.stdlib.prefer-slices-sortfunc
 		if scores[keys[i]][0] != scores[keys[j]][0] {
 			return scores[keys[i]][0] > scores[keys[j]][0]
 		}
@@ -382,7 +383,7 @@ func (v *visitor) output() {
 			packageKeys = append(packageKeys, k)
 		}
 
-		sort.Strings(packageKeys)
+		slices.Sort(packageKeys)
 
 		if !opts.IncludePkgs {
 			fmt.Fprintf(out, "%s,%d,%d,%d,%.2f\n", k, v.count, v.testCount, len(v.packages), scores[k][0])

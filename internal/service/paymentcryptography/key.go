@@ -57,10 +57,6 @@ type resourceKey struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceKey) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_paymentcryptography_key"
-}
-
 func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -385,7 +381,7 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 	}
 
 	in := &paymentcryptography.DeleteKeyInput{
-		KeyIdentifier: aws.String(state.ID.ValueString()),
+		KeyIdentifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteKey(ctx, in)
@@ -417,9 +413,6 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 
 func (r *resourceKey) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-func (r *resourceKey) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
@@ -514,8 +507,8 @@ type resourceKeyModel struct {
 	KeyCheckValueAlgorithm fwtypes.StringEnum[awstypes.KeyCheckValueAlgorithm] `tfsdk:"key_check_value_algorithm"`
 	KeyOrigin              fwtypes.StringEnum[awstypes.KeyOrigin]              `tfsdk:"key_origin"`
 	KeyState               fwtypes.StringEnum[awstypes.KeyState]               `tfsdk:"key_state"`
-	Tags                   types.Map                                           `tfsdk:"tags"`
-	TagsAll                types.Map                                           `tfsdk:"tags_all"`
+	Tags                   tftags.Map                                          `tfsdk:"tags"`
+	TagsAll                tftags.Map                                          `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value                                      `tfsdk:"timeouts"`
 }
 

@@ -139,7 +139,7 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 				return sdkdiag.AppendErrorf(diags, "setting Macie classification export configuration s3_destination: %s", err)
 			}
 		}
-		d.SetId(fmt.Sprintf("%s:%s:%s", "macie:classification_export_configuration", meta.(*conns.AWSClient).AccountID, meta.(*conns.AWSClient).Region))
+		d.SetId(fmt.Sprintf("%s:%s:%s", "macie:classification_export_configuration", meta.(*conns.AWSClient).AccountID(ctx), meta.(*conns.AWSClient).Region(ctx)))
 	}
 
 	return diags

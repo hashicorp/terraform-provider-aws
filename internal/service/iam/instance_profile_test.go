@@ -36,10 +36,10 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -201,7 +201,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -215,7 +215,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -224,7 +224,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -233,7 +233,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -247,7 +247,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),

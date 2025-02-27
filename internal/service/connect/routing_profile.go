@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,10 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,8 +42,6 @@ func resourceRoutingProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -316,10 +313,11 @@ func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Routing Profile: %s", d.Id())
-	_, err = conn.DeleteRoutingProfile(ctx, &connect.DeleteRoutingProfileInput{
+	input := connect.DeleteRoutingProfileInput{
 		InstanceId:       aws.String(instanceID),
 		RoutingProfileId: aws.String(routingProfileID),
-	})
+	}
+	_, err = conn.DeleteRoutingProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -361,8 +359,7 @@ func updateRoutingProfileQueueAssociations(ctx context.Context, conn *connect.Cl
 	// the respective queues based on the diff detected
 
 	// disassociate first since Queue and channel type combination cannot be duplicated
-	chunks := tfslices.Chunks(del, routingProfileQueueAssociationChunkSize)
-	for _, chunk := range chunks {
+	for chunk := range slices.Chunk(del, routingProfileQueueAssociationChunkSize) {
 		var queueReferences []awstypes.RoutingProfileQueueReference
 		for _, v := range chunk {
 			if v := v.QueueReference; v != nil {
@@ -385,8 +382,7 @@ func updateRoutingProfileQueueAssociations(ctx context.Context, conn *connect.Cl
 		}
 	}
 
-	chunks = tfslices.Chunks(add, routingProfileQueueAssociationChunkSize)
-	for _, chunk := range chunks {
+	for chunk := range slices.Chunk(add, routingProfileQueueAssociationChunkSize) {
 		input := &connect.AssociateRoutingProfileQueuesInput{
 			InstanceId:       aws.String(instanceID),
 			QueueConfigs:     chunk,

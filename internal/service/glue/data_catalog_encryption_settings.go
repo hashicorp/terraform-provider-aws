@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_data_catalog_encryption_settings")
+// @SDKResource("aws_glue_data_catalog_encryption_settings", name="Data Catalog Encryption Settings")
 func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,
@@ -96,7 +96,7 @@ func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(catalogID),
 	}

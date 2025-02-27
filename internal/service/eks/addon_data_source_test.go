@@ -35,6 +35,7 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_values", dataSourceResourceName, "configuration_values"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedAt, dataSourceResourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", dataSourceResourceName, "modified_at"),
+					resource.TestCheckResourceAttr(resourceName, "pod_identity_associations.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_account_role_arn", dataSourceResourceName, "service_account_role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
 				),

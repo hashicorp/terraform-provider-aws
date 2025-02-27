@@ -278,10 +278,11 @@ func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
-	_, err := conn.DeleteCachePolicy(ctx, &cloudfront.DeleteCachePolicyInput{
+	input := cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteCachePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
 		return diags
@@ -326,7 +327,7 @@ func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}
 
 	apiObject := &awstypes.ParametersInCacheKeyAndForwardedToOrigin{}
 
-	if v, ok := tfMap["cookies_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cookies_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CookiesConfig = expandCachePolicyCookiesConfig(v[0].(map[string]interface{}))
 	}
 
@@ -338,11 +339,11 @@ func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}
 		apiObject.EnableAcceptEncodingGzip = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["headers_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["headers_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.HeadersConfig = expandCachePolicyHeadersConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["query_strings_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["query_strings_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.QueryStringsConfig = expandCachePolicyQueryStringsConfig(v[0].(map[string]interface{}))
 	}
 

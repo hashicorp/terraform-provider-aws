@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_workspaces_directory : Fix `InvalidParameterValuesException: Provided set of IP Group IDs are not valid` errors on Update

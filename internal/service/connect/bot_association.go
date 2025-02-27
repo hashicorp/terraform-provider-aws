@@ -80,7 +80,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LexBot = expandLexBot(v.([]interface{})[0].(map[string]interface{}))
 		if input.LexBot.LexRegion == nil {
-			input.LexBot.LexRegion = aws.String(meta.(*conns.AWSClient).Region)
+			input.LexBot.LexRegion = aws.String(meta.(*conns.AWSClient).Region(ctx))
 		}
 	}
 
@@ -141,13 +141,14 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Bot Association: %s", d.Id())
-	_, err = conn.DisassociateBot(ctx, &connect.DisassociateBotInput{
+	input := connect.DisassociateBotInput{
 		InstanceId: aws.String(instanceID),
 		LexBot: &awstypes.LexBot{
 			Name:      aws.String(name),
 			LexRegion: aws.String(region),
 		},
-	})
+	}
+	_, err = conn.DisassociateBot(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

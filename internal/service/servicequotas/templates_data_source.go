@@ -6,7 +6,6 @@ package servicequotas
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -20,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Templates")
+// @FrameworkDataSource("aws_servicequotas_templates", name="Templates")
 func newDataSourceTemplates(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceTemplates{}, nil
 }
@@ -31,10 +30,6 @@ const (
 
 type dataSourceTemplates struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceTemplates) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_servicequotas_templates"
 }
 
 func (d *dataSourceTemplates) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -90,7 +85,7 @@ func (d *dataSourceTemplates) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	input := servicequotas.ListServiceQuotaIncreaseRequestsInTemplateInput{
-		AwsRegion: aws.String(data.Region.ValueString()),
+		AwsRegion: data.Region.ValueStringPointer(),
 	}
 	out, err := conn.ListServiceQuotaIncreaseRequestsInTemplate(ctx, &input)
 	if err != nil {

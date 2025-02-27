@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_dms_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.EventSubscription")
 func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
@@ -90,8 +91,6 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -145,10 +144,10 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "dms",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("es:%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -194,9 +193,10 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Event Subscription: %s", d.Id())
-	_, err := conn.DeleteEventSubscription(ctx, &dms.DeleteEventSubscriptionInput{
+	input := dms.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventSubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

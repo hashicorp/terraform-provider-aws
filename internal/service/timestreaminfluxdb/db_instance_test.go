@@ -47,7 +47,7 @@ func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 				Config: testAccDBInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-instance/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-instance/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.DeploymentTypeSingleAz)),
@@ -119,7 +119,7 @@ func TestAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) 
 				Config: testAccDBInstanceConfig_logDeliveryConfigurationEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtTrue),
 				),
@@ -135,7 +135,7 @@ func TestAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
 					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtFalse),
 				),
@@ -310,7 +310,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   username               = "admin"
   password               = "testpassword"
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
   db_instance_type       = "db.influx.medium"
   bucket                 = "initial"
@@ -350,7 +350,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   username               = "admin"
   password               = "testpassword"
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
   db_instance_type       = "db.influx.medium"
   publicly_accessible    = false
@@ -396,7 +396,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   username               = "admin"
   password               = "testpassword"
   db_storage_type        = "InfluxIOIncludedT1"
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
   db_instance_type       = "db.influx.medium"
   bucket                 = "initial"
@@ -415,7 +415,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   username               = "admin"
   password               = "testpassword"
   db_storage_type        = "InfluxIOIncludedT1"
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
   db_instance_type       = "db.influx.medium"
   bucket                 = "initial"

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,8 +33,6 @@ func ResourceRegistry() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -89,12 +87,14 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	output, err := FindRegistryByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
-			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading Glue Registry (%s): %s", d.Id(), err)
 	}
 

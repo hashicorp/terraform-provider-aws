@@ -38,7 +38,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_alb", name="Load Balancer")
 // @SDKResource("aws_lb", name="Load Balancer")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.LoadBalancer")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
@@ -55,7 +55,6 @@ func resourceLoadBalancer() *schema.Resource {
 			customizeDiffLoadBalancerALB,
 			customizeDiffLoadBalancerNLB,
 			customizeDiffLoadBalancerGWLB,
-			verify.SetTagsDiff,
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -201,6 +200,12 @@ func resourceLoadBalancer() *schema.Resource {
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
 			},
+			"enable_zonal_shift": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
+			},
 			"enforce_security_group_inbound_rules_on_private_link_traffic": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -336,7 +341,7 @@ func suppressIfLBTypeNot(types ...awstypes.LoadBalancerTypeEnum) schema.SchemaDi
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	name := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
@@ -761,6 +766,11 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 		tfType:                     schema.TypeBool,
 		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
+	"enable_zonal_shift": {
+		apiAttributeKey:            loadBalancerAttributeZonalShiftConfigEnabled,
+		tfType:                     schema.TypeBool,
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork},
+	},
 	"idle_timeout": {
 		apiAttributeKey:            loadBalancerAttributeIdleTimeoutTimeoutSeconds,
 		tfType:                     schema.TypeInt,
@@ -782,10 +792,12 @@ func (m loadBalancerAttributeMap) expand(d *schema.ResourceData, lbType awstypes
 	var apiObjects []awstypes.LoadBalancerAttribute
 
 	for tfAttributeName, attributeInfo := range m {
+		// Skip if an update and the attribute hasn't changed.
 		if update && !d.HasChange(tfAttributeName) {
 			continue
 		}
 
+		// Not all attributes are supported on all LB types.
 		if !slices.Contains(attributeInfo.loadBalancerTypesSupported, lbType) {
 			continue
 		}

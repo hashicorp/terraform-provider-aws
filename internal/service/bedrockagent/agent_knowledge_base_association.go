@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Knowledge Base Association")
+// @FrameworkResource("aws_bedrockagent_agent_knowledge_base_association", name="Agent Knowledge Base Association")
 func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentKnowledgeBaseAssociationResource{}
 
@@ -45,10 +45,6 @@ type agentKnowledgeBaseAssociationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*agentKnowledgeBaseAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_knowledge_base_association"
 }
 
 func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -121,7 +117,12 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 	}
 
 	// Set values for unknowns.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Knowledge Base Association", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
@@ -216,11 +217,12 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &bedrockagent.DisassociateAgentKnowledgeBaseInput{
+	input := bedrockagent.DisassociateAgentKnowledgeBaseInput{
 		AgentId:         fwflex.StringFromFramework(ctx, data.AgentID),
 		AgentVersion:    fwflex.StringFromFramework(ctx, data.AgentVersion),
 		KnowledgeBaseId: fwflex.StringFromFramework(ctx, data.KnowledgeBaseID),
-	})
+	}
+	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -288,6 +290,12 @@ func (m *agentKnowledgeBaseAssociationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentKnowledgeBaseAssociationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AgentID.ValueString(), m.AgentVersion.ValueString(), m.KnowledgeBaseID.ValueString()}, agentKnowledgeBaseAssociationResourceIDPartCount, false)))
+func (m *agentKnowledgeBaseAssociationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AgentID.ValueString(),
+		m.AgentVersion.ValueString(),
+		m.KnowledgeBaseID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentKnowledgeBaseAssociationResourceIDPartCount, false)
 }

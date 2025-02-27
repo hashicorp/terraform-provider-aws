@@ -42,6 +42,13 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"approximate_creation_date_time_precision": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApproximateCreationDateTimePrecision](),
+			},
 			names.AttrStreamARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -63,15 +70,23 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 
 	streamARN := d.Get(names.AttrStreamARN).(string)
 	tableName := d.Get(names.AttrTableName).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{tableName, streamARN}, kinesisStreamingDestinationResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{tableName, streamARN}, kinesisStreamingDestinationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &dynamodb.EnableKinesisStreamingDestinationInput{
 		StreamArn: aws.String(streamARN),
 		TableName: aws.String(tableName),
 	}
 
-	_, err := conn.EnableKinesisStreamingDestination(ctx, input)
+	if v, ok := d.GetOk("approximate_creation_date_time_precision"); ok {
+		input.EnableKinesisStreamingConfiguration = &awstypes.EnableKinesisStreamingConfiguration{
+			ApproximateCreationDateTimePrecision: awstypes.ApproximateCreationDateTimePrecision(v.(string)),
+		}
+	}
 
-	if err != nil {
+	if _, err := conn.EnableKinesisStreamingDestination(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling DynamoDB Kinesis Streaming Destination (%s): %s", id, err)
 	}
 
@@ -106,6 +121,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
 	}
 
+	d.Set("approximate_creation_date_time_precision", output.ApproximateCreationDateTimePrecision)
 	d.Set(names.AttrStreamARN, output.StreamArn)
 	d.Set(names.AttrTableName, tableName)
 
@@ -129,14 +145,15 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting DynamoDB Kinesis Streaming Destination: %s", d.Id())
-	_, err = conn.DisableKinesisStreamingDestination(ctx, &dynamodb.DisableKinesisStreamingDestinationInput{
+	input := dynamodb.DisableKinesisStreamingDestinationInput{
 		TableName: aws.String(tableName),
 		StreamArn: aws.String(streamARN),
-	})
+	}
+	_, err = conn.DisableKinesisStreamingDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -241,6 +258,7 @@ func waitKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.C
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+
 		return output, err
 	}
 
@@ -262,6 +280,7 @@ func waitKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+
 		return output, err
 	}
 

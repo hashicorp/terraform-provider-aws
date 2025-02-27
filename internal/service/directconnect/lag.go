@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,8 +90,6 @@ func resourceLag() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -156,7 +153,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    aws.ToString(lag.Region),
 		Service:   "directconnect",
 		AccountID: aws.ToString(lag.OwnerAccount),
@@ -221,9 +218,10 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Deleting Direct Connect LAG: %s", d.Id())
-	_, err := conn.DeleteLag(ctx, &directconnect.DeleteLagInput{
+	input := directconnect.DeleteLagInput{
 		LagId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLag(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
 		return diags

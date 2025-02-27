@@ -45,8 +45,6 @@ func resourceReplicaKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -121,7 +119,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
-		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
+		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		Tags:          getTagsIn(ctx),
 	}
 

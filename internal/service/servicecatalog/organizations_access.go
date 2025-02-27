@@ -42,7 +42,7 @@ func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite

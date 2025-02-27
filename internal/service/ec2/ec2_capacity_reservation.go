@@ -39,8 +39,6 @@ func resourceCapacityReservation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -133,7 +131,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateCapacityReservationInput{
+	input := ec2.CreateCapacityReservationInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
 		EndDateType:       awstypes.EndDateType(d.Get("end_date_type").(string)),
@@ -173,7 +171,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 		input.Tenancy = awstypes.CapacityReservationTenancy(v.(string))
 	}
 
-	output, err := conn.CreateCapacityReservation(ctx, input)
+	output, err := conn.CreateCapacityReservation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Capacity Reservation: %s", err)
@@ -233,7 +231,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyCapacityReservationInput{
+		input := ec2.ModifyCapacityReservationInput{
 			CapacityReservationId: aws.String(d.Id()),
 			EndDateType:           awstypes.EndDateType(d.Get("end_date_type").(string)),
 			InstanceCount:         aws.Int32(int32(d.Get(names.AttrInstanceCount).(int))),
@@ -245,7 +243,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 			input.EndDate = aws.Time(v)
 		}
 
-		_, err := conn.ModifyCapacityReservation(ctx, input)
+		_, err := conn.ModifyCapacityReservation(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Capacity Reservation (%s): %s", d.Id(), err)
@@ -264,9 +262,10 @@ func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Capacity Reservation: %s", d.Id())
-	_, err := conn.CancelCapacityReservation(ctx, &ec2.CancelCapacityReservationInput{
+	input := ec2.CancelCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.CancelCapacityReservation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound) {
 		return diags

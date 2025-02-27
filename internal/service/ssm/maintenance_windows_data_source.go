@@ -72,7 +72,7 @@ func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, met
 		output = append(output, page.WindowIdentities...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.MaintenanceWindowIdentity) string {
 		return aws.ToString(v.WindowId)
 	}))

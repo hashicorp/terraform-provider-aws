@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_docdb_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterInstance() *schema.Resource {
+func resourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
 		ReadWithoutTimeout:   resourceClusterInstanceRead,
@@ -177,8 +177,6 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -364,9 +362,10 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Instance: %s", d.Id())
-	_, err := conn.DeleteDBInstance(ctx, &docdb.DeleteDBInstanceInput{
+	input := docdb.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
 		return diags

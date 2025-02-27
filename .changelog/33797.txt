@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Added missing `teletext_destination_settings`.
+```

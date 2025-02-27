@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,7 +87,6 @@ func resourceServiceLinkedRole() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -109,8 +107,9 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateServiceLinkedRole(ctx, input)
-
+	output, err := tfresource.RetryGWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (*iam.CreateServiceLinkedRoleOutput, error) {
+		return conn.CreateServiceLinkedRole(ctx, input)
+	}, "AccessDenied")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
 	}
@@ -127,7 +126,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		err = roleUpdateTags(ctx, conn, roleName, nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, continue. Otherwise, error.
-		partition := meta.(*conns.AWSClient).Partition
+		partition := meta.(*conns.AWSClient).Partition(ctx)
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 		}

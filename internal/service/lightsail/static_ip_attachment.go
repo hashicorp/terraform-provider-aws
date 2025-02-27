@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_static_ip_attachment")
+// @SDKResource("aws_lightsail_static_ip_attachment", name="Static IP Attachment")
 func ResourceStaticIPAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStaticIPAttachmentCreate,

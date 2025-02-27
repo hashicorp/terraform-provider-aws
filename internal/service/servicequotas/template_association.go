@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template Association")
+// @FrameworkResource("aws_servicequotas_template_association", name="Template Association")
 func newResourceTemplateAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTemplateAssociation{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type resourceTemplateAssociation struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceTemplateAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicequotas_template_association"
 }
 
 func (r *resourceTemplateAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -58,7 +54,7 @@ func (r *resourceTemplateAssociation) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	plan.ID = types.StringValue(r.Meta().AccountID)
+	plan.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	_, err := conn.AssociateServiceQuotaTemplate(ctx, &servicequotas.AssociateServiceQuotaTemplateInput{})
 	if err != nil {

@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Key")
+// @FrameworkResource("aws_cloudfrontkeyvaluestore_key", name="Key")
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -38,10 +38,6 @@ func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 type keyResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*keyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfrontkeyvaluestore_key"
 }
 
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -119,7 +115,12 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 
 	// Set values for unknowns.
 	data.TotalSizeInBytes = fwflex.Int64ToFramework(ctx, output.TotalSizeInBytes)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront KeyValueStore (%s) Key (%s)", kvsARN, data.Key.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -242,11 +243,12 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 		return
 	}
 
-	_, err = conn.DeleteKey(ctx, &cloudfrontkeyvaluestore.DeleteKeyInput{
+	input := cloudfrontkeyvaluestore.DeleteKeyInput{
 		IfMatch: etag,
 		Key:     fwflex.StringFromFramework(ctx, data.Key),
 		KvsARN:  fwflex.StringFromFramework(ctx, data.KvsARN),
-	})
+	}
+	_, err = conn.DeleteKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -340,6 +342,11 @@ func (data *keyResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *keyResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.KvsARN.ValueString(), data.Key.ValueString()}, keyResourceIDPartCount, false)))
+func (data *keyResourceModel) setID() (string, error) {
+	parts := []string{
+		data.KvsARN.ValueString(),
+		data.Key.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, keyResourceIDPartCount, false)
 }

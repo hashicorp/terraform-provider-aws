@@ -1,0 +1,19 @@
+rules:
+  - id: arn-resourceattrset
+    languages: [go]
+    message: Use one of the `acctest` ARN value checks or TestCheckResourceAttrPair
+    paths:
+      exclude:
+        - "internal/service/controltower"
+        - "internal/service/organizations"
+        - "internal/service/redshift"
+    patterns:
+      - pattern: |
+          resource.TestCheckResourceAttrSet($NAME, $ATTR)
+      - metavariable-pattern:
+          metavariable: $ATTR
+          patterns:
+            - pattern-either:
+                - pattern: names.AttrARN
+                # - pattern-regex: arn
+    severity: ERROR

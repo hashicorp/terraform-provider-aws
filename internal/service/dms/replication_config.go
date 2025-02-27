@@ -31,6 +31,8 @@ import (
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
+// @Testing(importIgnore="start_replication")
 func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
@@ -169,8 +171,6 @@ func resourceReplicationConfig() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -332,9 +332,10 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Config: %s", d.Id())
-	_, err := conn.DeleteReplicationConfig(ctx, &dms.DeleteReplicationConfigInput{
+	input := dms.DeleteReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReplicationConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

@@ -172,7 +172,7 @@ This resource supports the following arguments:
 
 * `definition` - (Required) The [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html) definition of the state machine.
 * `encryptionConfiguration` - (Optional) Defines what encryption configuration is used to encrypt data in the State Machine. For more information see [TBD] in the AWS Step Functions User Guide.
-* `loggingConfiguration` - (Optional) Defines what execution history events are logged and where they are logged. The `loggingConfiguration` parameter is only valid when `type` is set to `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
+* `loggingConfiguration` - (Optional) Defines what execution history events are logged and where they are logged. The `loggingConfiguration` parameter is valid when `type` is set to `STANDARD` or `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html), [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) and [Logging Configuration](https://docs.aws.amazon.com/step-functions/latest/apireference/API_CreateStateMachine.html) in the AWS Step Functions User Guide.
 * `name` - (Optional) The name of the state machine. The name should only contain `0`-`9`, `A`-`Z`, `a`-`z`, `-` and `_`. If omitted, Terraform will assign a random, unique name.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `publish` - (Optional) Set to true to publish a version of the state machine during creation. Default: false.
@@ -248,4 +248,4 @@ Using `terraform import`, import State Machines using the `arn`. For example:
 % terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c33ba286c200d09e68497b21b434d0e9863b7cf000b7073543fd7085a2169560 -->
+<!-- cache-key: cdktf-0.20.8 input-3a927a5a3818486809d11ed4e2289fb8d594b822509fb105363e4056e08a0bce -->

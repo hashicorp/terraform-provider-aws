@@ -4,11 +4,12 @@
 package dax
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -200,8 +201,6 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -428,10 +427,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		n := nraw.(int)
 		if n < o {
 			log.Printf("[INFO] Decreasing nodes in DAX cluster %s from %d to %d", d.Id(), o, n)
-			_, err := conn.DecreaseReplicationFactor(ctx, &dax.DecreaseReplicationFactorInput{
+			input := dax.DecreaseReplicationFactorInput{
 				ClusterName:          aws.String(d.Id()),
 				NewReplicationFactor: int32(nraw.(int)),
-			})
+			}
+			_, err := conn.DecreaseReplicationFactor(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
@@ -439,10 +439,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		if n > o {
 			log.Printf("[INFO] Increasing nodes in DAX cluster %s from %d to %d", d.Id(), o, n)
-			_, err := conn.IncreaseReplicationFactor(ctx, &dax.IncreaseReplicationFactorInput{
+			input := dax.IncreaseReplicationFactorInput{
 				ClusterName:          aws.String(d.Id()),
 				NewReplicationFactor: int32(nraw.(int)),
-			})
+			}
+			_, err := conn.IncreaseReplicationFactor(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
@@ -472,9 +473,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
-	sortedNodes := make([]awstypes.Node, len(c.Nodes))
-	copy(sortedNodes, c.Nodes)
-	sort.Sort(byNodeId(sortedNodes))
+	sortedNodes := slices.SortedFunc(slices.Values(c.Nodes), func(a, b awstypes.Node) int {
+		return cmp.Compare(aws.ToString(a.NodeId), aws.ToString(b.NodeId))
+	})
 
 	nodeData := make([]map[string]interface{}, 0, len(sortedNodes))
 
@@ -488,15 +489,6 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 	}
 
 	return d.Set("nodes", nodeData)
-}
-
-type byNodeId []awstypes.Node
-
-func (b byNodeId) Len() int      { return len(b) }
-func (b byNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-func (b byNodeId) Less(i, j int) bool {
-	return b[i].NodeId != nil && b[j].NodeId != nil &&
-		aws.ToString(b[i].NodeId) < aws.ToString(b[j].NodeId)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -551,9 +543,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func clusterStateRefreshFunc(ctx context.Context, conn *dax.Client, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{
+		input := dax.DescribeClustersInput{
 			ClusterNames: []string{clusterID},
-		})
+		}
+		resp, err := conn.DescribeClusters(ctx, &input)
 
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 			log.Printf("[DEBUG] Detect deletion")

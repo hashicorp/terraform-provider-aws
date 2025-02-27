@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,8 +40,6 @@ func resourceCostCategory() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -72,7 +68,7 @@ func resourceCostCategory() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 50),
 				},
 				names.AttrRule: {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -305,7 +301,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:         aws.String(name),
 		ResourceTags: getTagsIn(ctx),
-		Rules:        expandCostCategoryRules(d.Get(names.AttrRule).(*schema.Set).List()),
+		Rules:        expandCostCategoryRules(d.Get(names.AttrRule).([]interface{})),
 		RuleVersion:  awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 	}
 
@@ -375,7 +371,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
 			CostCategoryArn: aws.String(d.Id()),
 			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
-			Rules:           expandCostCategoryRules(d.Get(names.AttrRule).(*schema.Set).List()),
+			Rules:           expandCostCategoryRules(d.Get(names.AttrRule).([]interface{})),
 			RuleVersion:     awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 		}
 
@@ -403,9 +399,10 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost Explorer Cost Category: %s", d.Id())
-	_, err := conn.DeleteCostCategoryDefinition(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
+	input := costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCostCategoryDefinition(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

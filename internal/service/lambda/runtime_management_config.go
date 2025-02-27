@@ -43,10 +43,6 @@ type resourceRuntimeManagementConfig struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceRuntimeManagementConfig) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lambda_runtime_management_config"
-}
-
 func (r *resourceRuntimeManagementConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -180,11 +176,11 @@ func (r *resourceRuntimeManagementConfig) Delete(ctx context.Context, req resour
 	}
 
 	in := &lambda.PutRuntimeManagementConfigInput{
-		FunctionName:    aws.String(state.FunctionName.ValueString()),
+		FunctionName:    state.FunctionName.ValueStringPointer(),
 		UpdateRuntimeOn: awstypes.UpdateRuntimeOnAuto,
 	}
 	if !state.Qualifier.IsNull() && state.Qualifier.ValueString() != "" {
-		in.Qualifier = aws.String(state.Qualifier.ValueString())
+		in.Qualifier = state.Qualifier.ValueStringPointer()
 	}
 
 	_, err := conn.PutRuntimeManagementConfig(ctx, in)

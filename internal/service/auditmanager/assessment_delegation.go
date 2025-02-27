@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_assessment_delegation", name="Assessment Delegation")
 func newResourceAssessmentDelegation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentDelegation{}, nil
 }
@@ -38,10 +38,6 @@ const (
 
 type resourceAssessmentDelegation struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAssessmentDelegation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment_delegation"
 }
 
 func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -111,15 +107,15 @@ func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.
 	}
 
 	delegationIn := awstypes.CreateDelegationRequest{
-		RoleArn:      aws.String(plan.RoleARN.ValueString()),
+		RoleArn:      plan.RoleARN.ValueStringPointer(),
 		RoleType:     awstypes.RoleType(plan.RoleType.ValueString()),
-		ControlSetId: aws.String(plan.ControlSetID.ValueString()),
+		ControlSetId: plan.ControlSetID.ValueStringPointer(),
 	}
 	if !plan.Comment.IsNull() {
-		delegationIn.Comment = aws.String(plan.Comment.ValueString())
+		delegationIn.Comment = plan.Comment.ValueStringPointer()
 	}
 	in := auditmanager.BatchCreateDelegationByAssessmentInput{
-		AssessmentId:             aws.String(plan.AssessmentID.ValueString()),
+		AssessmentId:             plan.AssessmentID.ValueStringPointer(),
 		CreateDelegationRequests: []awstypes.CreateDelegationRequest{delegationIn},
 	}
 
@@ -224,7 +220,7 @@ func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.
 	}
 
 	_, err := conn.BatchDeleteDelegationByAssessment(ctx, &auditmanager.BatchDeleteDelegationByAssessmentInput{
-		AssessmentId:  aws.String(state.AssessmentID.ValueString()),
+		AssessmentId:  state.AssessmentID.ValueStringPointer(),
 		DelegationIds: []string{state.DelegationID.ValueString()},
 	})
 	if err != nil {

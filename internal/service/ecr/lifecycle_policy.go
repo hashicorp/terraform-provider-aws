@@ -4,9 +4,10 @@
 package ecr
 
 import (
+	"cmp"
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -198,8 +199,8 @@ type lifecyclePolicy struct {
 }
 
 func (lp *lifecyclePolicy) reduce() {
-	sort.Slice(lp.Rules, func(i, j int) bool {
-		return aws.ToInt64(lp.Rules[i].RulePriority) < aws.ToInt64(lp.Rules[j].RulePriority)
+	slices.SortFunc(lp.Rules, func(a, b *lifecyclePolicyRule) int {
+		return cmp.Compare(aws.ToInt64(a.RulePriority), aws.ToInt64(b.RulePriority))
 	})
 
 	for _, rule := range lp.Rules {
@@ -208,16 +209,16 @@ func (lp *lifecyclePolicy) reduce() {
 }
 
 func (lprs *lifecyclePolicyRuleSelection) reduce() {
-	sort.Slice(lprs.TagPatternList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPatternList[i]) < aws.ToString(lprs.TagPatternList[j])
+	slices.SortFunc(lprs.TagPatternList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPatternList) == 0 {
 		lprs.TagPatternList = nil
 	}
 
-	sort.Slice(lprs.TagPrefixList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPrefixList[i]) < aws.ToString(lprs.TagPrefixList[j])
+	slices.SortFunc(lprs.TagPrefixList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPrefixList) == 0 {

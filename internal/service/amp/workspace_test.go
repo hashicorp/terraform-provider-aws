@@ -36,14 +36,17 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "workspace/{id}"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(v.WorkspaceId))(s)
+					},
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -84,7 +87,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 func TestAccAMPWorkspace_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDescription
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,10 +100,10 @@ func TestAccAMPWorkspace_kms(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_kms(rName1),
+				Config: testAccWorkspaceConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 		},
@@ -179,7 +182,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
@@ -192,7 +195,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
@@ -200,14 +203,14 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},

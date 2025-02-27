@@ -68,12 +68,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_chatbot_slack_channel_configuration.example
-  id = "arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal"
+  id = "arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal"
 }
 ```
 
 Using `terraform import`, import Chatbot Slack Channel Configuration using the `chat_configuration_arn`. For example:
 
 ```console
-% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal
+% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal
 ```

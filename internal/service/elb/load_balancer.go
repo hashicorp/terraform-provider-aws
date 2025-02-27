@@ -59,7 +59,6 @@ func resourceLoadBalancer() *schema.Resource {
 
 				return removed.Equal(os)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -341,10 +340,10 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "elasticloadbalancing",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "loadbalancer/" + d.Id(),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -816,7 +815,7 @@ func validHeathCheckTarget(v interface{}, k string) (ws []string, errors []error
 	matches := regexache.MustCompile(`\A(\w+):(\d+)(.+)?\z`).FindStringSubmatch(value)
 
 	// Check if the value contains a valid target.
-	if matches == nil || len(matches) < 1 {
+	if len(matches) < 1 {
 		errors = append(errors, fmt.Errorf(
 			"%q contains an invalid Health Check: %s",
 			k, value))

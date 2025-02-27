@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -161,12 +160,11 @@ func ResourceInstance() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			customdiff.ValidateChange(names.AttrAvailabilityZone, func(ctx context.Context, old, new, meta any) error {
 				// The availability_zone must be in the same region as the provider region
-				if !strings.HasPrefix(new.(string), meta.(*conns.AWSClient).Region) {
-					return fmt.Errorf("availability_zone must be within the same region as provider region: %s", meta.(*conns.AWSClient).Region)
+				if !strings.HasPrefix(new.(string), meta.(*conns.AWSClient).Region(ctx)) {
+					return fmt.Errorf("availability_zone must be within the same region as provider region: %s", meta.(*conns.AWSClient).Region(ctx))
 				}
 				return nil
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }

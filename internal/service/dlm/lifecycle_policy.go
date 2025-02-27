@@ -478,8 +478,6 @@ func resourceLifecyclePolicy() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -580,9 +578,10 @@ func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
-	_, err := conn.DeleteLifecyclePolicy(ctx, &dlm.DeleteLifecyclePolicyInput{
+	input := dlm.DeleteLifecyclePolicyInput{
 		PolicyId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLifecyclePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

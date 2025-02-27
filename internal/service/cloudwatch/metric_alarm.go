@@ -290,7 +290,6 @@ func resourceMetricAlarm() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				_, metricNameOk := diff.GetOk(names.AttrMetricName)
 				_, statisticOk := diff.GetOk("statistic")
@@ -329,7 +328,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.PutMetricAlarm(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		_, err = conn.PutMetricAlarm(ctx, input)
@@ -352,7 +351,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 		}
 
@@ -438,9 +437,10 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
-	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
+	input := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteAlarms(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

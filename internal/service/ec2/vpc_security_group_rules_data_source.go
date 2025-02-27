@@ -30,10 +30,6 @@ type securityGroupRulesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *securityGroupRulesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_rules"
-}
-
 func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -76,7 +72,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.IDs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v awstypes.SecurityGroupRule) string {
 		return aws.ToString(v.SecurityGroupRuleId)
 	}))
@@ -88,5 +84,5 @@ type securityGroupRulesDataSourceModel struct {
 	Filters types.Set    `tfsdk:"filter"`
 	ID      types.String `tfsdk:"id"`
 	IDs     types.List   `tfsdk:"ids"`
-	Tags    types.Map    `tfsdk:"tags"`
+	Tags    tftags.Map   `tfsdk:"tags"`
 }

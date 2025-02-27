@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -114,8 +114,6 @@ func resourceSecurityGroup() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -297,9 +295,9 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	ownerID := aws.ToString(sg.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("security-group/%s", d.Id()),
 	}
@@ -599,7 +597,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -611,7 +609,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -623,7 +621,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -635,7 +633,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))

@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,16 +21,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_docdb_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterParameterGroup() *schema.Resource {
+func resourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
 		ReadWithoutTimeout:   resourceClusterParameterGroupRead,
@@ -98,8 +97,6 @@ func ResourceClusterParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -198,9 +195,10 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Parameter Group: %s", d.Id())
-	_, err := conn.DeleteDBClusterParameterGroup(ctx, &docdb.DeleteDBClusterParameterGroupInput{
+	input := docdb.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBClusterParameterGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
 		return diags
@@ -226,7 +224,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.Clie
 		clusterParameterGroupMaxParamsBulkEdit = 20
 	)
 	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
-	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
+	for chunk := range slices.Chunk(parameters, clusterParameterGroupMaxParamsBulkEdit) {
 		input := &docdb.ModifyDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: aws.String(name),
 			Parameters:                  chunk,
@@ -291,7 +289,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			if !reflect.ValueOf(v).IsZero() {
+			if !itypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -319,7 +317,7 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *doc
 		}
 
 		for _, v := range page.Parameters {
-			if !reflect.ValueOf(v).IsZero() {
+			if !itypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

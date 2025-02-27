@@ -105,7 +105,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		AllowedOperations: flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set)),
 		ClientToken:       aws.String(id.UniqueId()),
 		GrantName:         aws.String(name),
-		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
+		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
 		Principals:        []string{d.Get(names.AttrPrincipal).(string)},
 	}

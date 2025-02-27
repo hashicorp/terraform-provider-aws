@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -32,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Subscriber Notification")
+// @FrameworkResource("aws_securitylake_subscriber_notification", name="Subscriber Notification")
 func newSubscriberNotificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriberNotificationResource{}
 
@@ -45,10 +44,6 @@ const (
 
 type subscriberNotificationResource struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *subscriberNotificationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_securitylake_subscriber_notification"
 }
 
 func (r *subscriberNotificationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -152,7 +147,12 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 	// Set values for unknowns.
 	data.EndpointID = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
 	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -241,7 +241,15 @@ func (r *subscriberNotificationResource) Update(ctx context.Context, request res
 
 		new.EndpointID = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
 		new.SubscriberEndpoint = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
-		new.setID()
+		id, err := new.setID()
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameSubscriberNotification, new.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		new.ID = types.StringValue(id)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -366,8 +374,13 @@ func (data *subscriberNotificationResourceModel) initFromID() error {
 	return nil
 }
 
-func (data *subscriberNotificationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.SubscriberID.ValueString(), "notification"}, subscriberNotificationIdPartCount, false)))
+func (data *subscriberNotificationResourceModel) setID() (string, error) {
+	parts := []string{
+		data.SubscriberID.ValueString(),
+		"notification",
+	}
+
+	return flex.FlattenResourceId(parts, subscriberNotificationIdPartCount, false)
 }
 
 func refreshConfiguration(ctx context.Context, config fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel], subscriber *awstypes.SubscriberResource, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] {

@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +39,11 @@ func resourceAccount() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAccountImportState,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -109,8 +113,6 @@ func resourceAccount() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -173,7 +175,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		status = outputRaw.(*organizations.CreateAccountOutput).CreateAccountStatus
 	}
 
-	output, err := waitAccountCreated(ctx, conn, aws.ToString(status.Id))
+	output, err := waitAccountCreated(ctx, conn, aws.ToString(status.Id), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for AWS Organizations Account (%s) create: %s", d.Get(names.AttrName).(string), err)
@@ -291,7 +293,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if close {
-		if _, err := waitAccountDeleted(ctx, conn, d.Id()); err != nil {
+		if _, err := waitAccountDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for AWS Organizations Account (%s) delete: %s", d.Id(), err)
 		}
 	}
@@ -431,13 +433,13 @@ func statusCreateAccountState(ctx context.Context, conn *organizations.Client, i
 	}
 }
 
-func waitAccountCreated(ctx context.Context, conn *organizations.Client, id string) (*awstypes.CreateAccountStatus, error) {
+func waitAccountCreated(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.CreateAccountStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.CreateAccountStateInProgress),
 		Target:       enum.Slice(awstypes.CreateAccountStateSucceeded),
 		Refresh:      statusCreateAccountState(ctx, conn, id),
 		PollInterval: 10 * time.Second,
-		Timeout:      5 * time.Minute,
+		Timeout:      timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -469,13 +471,13 @@ func statusAccountStatus(ctx context.Context, conn *organizations.Client, id str
 	}
 }
 
-func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id string) (*awstypes.Account, error) {
+func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.Account, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.AccountStatusPendingClosure, awstypes.AccountStatusActive),
 		Target:       []string{},
 		Refresh:      statusAccountStatus(ctx, conn, id),
 		PollInterval: 10 * time.Second,
-		Timeout:      5 * time.Minute,
+		Timeout:      timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

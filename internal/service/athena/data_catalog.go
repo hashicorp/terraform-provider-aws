@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,8 +39,6 @@ func resourceDataCatalog() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -127,10 +124,10 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "athena",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("datacatalog/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -192,10 +189,11 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
-	_, err := conn.DeleteDataCatalog(ctx, &athena.DeleteDataCatalogInput{
+	log.Printf("[DEBUG] Deleting Athena Data Catalog (%s)", d.Id())
+	input := athena.DeleteDataCatalogInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataCatalog(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

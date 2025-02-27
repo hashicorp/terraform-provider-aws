@@ -5,8 +5,8 @@ package auditmanager
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,10 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceControl,
+			Factory:  newDataSourceControl,
+			TypeName: "aws_auditmanager_control",
+			Name:     "Control",
 		},
 		{
-			Factory: newDataSourceFramework,
+			Factory:  newDataSourceFramework,
+			TypeName: "aws_auditmanager_framework",
+			Name:     "Framework",
 		},
 	}
 }
@@ -28,40 +32,53 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAccountRegistration,
+			Factory:  newResourceAccountRegistration,
+			TypeName: "aws_auditmanager_account_registration",
+			Name:     "Account Registration",
 		},
 		{
-			Factory: newResourceAssessment,
-			Name:    "Assessment",
+			Factory:  newResourceAssessment,
+			TypeName: "aws_auditmanager_assessment",
+			Name:     "Assessment",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceAssessmentDelegation,
+			Factory:  newResourceAssessmentDelegation,
+			TypeName: "aws_auditmanager_assessment_delegation",
+			Name:     "Assessment Delegation",
 		},
 		{
-			Factory: newResourceAssessmentReport,
+			Factory:  newResourceAssessmentReport,
+			TypeName: "aws_auditmanager_assessment_report",
+			Name:     "Assessment Report",
 		},
 		{
-			Factory: newResourceControl,
-			Name:    "Control",
+			Factory:  newResourceControl,
+			TypeName: "aws_auditmanager_control",
+			Name:     "Control",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceFramework,
-			Name:    "Framework",
+			Factory:  newResourceFramework,
+			TypeName: "aws_auditmanager_framework",
+			Name:     "Framework",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceFrameworkShare,
+			Factory:  newResourceFrameworkShare,
+			TypeName: "aws_auditmanager_framework_share",
+			Name:     "Framework Share",
 		},
 		{
-			Factory: newResourceOrganizationAdminAccountRegistration,
+			Factory:  newResourceOrganizationAdminAccountRegistration,
+			TypeName: "aws_auditmanager_organization_admin_account_registration",
+			Name:     "Organization Admin Account Registration",
 		},
 	}
 }
@@ -79,13 +96,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*auditmanager_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return auditmanager_sdkv2.NewFromConfig(cfg,
-		auditmanager_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*auditmanager.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*auditmanager.Options){
+		auditmanager.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return auditmanager.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*auditmanager.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*auditmanager.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *auditmanager.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*auditmanager.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

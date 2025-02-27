@@ -30,6 +30,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the gateway.
 * `id` - The ID of the gateway.
 * `owner_account_id` - AWS Account ID of the gateway.
 

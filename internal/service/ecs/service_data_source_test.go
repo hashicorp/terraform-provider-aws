@@ -28,6 +28,7 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 				Config: testAccServiceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_rebalancing", dataSourceName, "availability_zone_rebalancing"),
 					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_type", dataSourceName, "launch_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "scheduling_strategy", dataSourceName, "scheduling_strategy"),

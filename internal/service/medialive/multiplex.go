@@ -23,12 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_medialive_multiplex", name="Multiplex")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexOutput", importIgnore="start_multiplex")
+// @Testing(serialize=true)
 func ResourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,
@@ -100,8 +101,6 @@ func ResourceMultiplex() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -242,7 +241,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 	}
 
 	if out.State == types.MultiplexStateRunning {

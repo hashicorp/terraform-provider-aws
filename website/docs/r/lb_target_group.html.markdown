@@ -161,7 +161,7 @@ This resource supports the following arguments:
     * When the `target_type` is `lambda`, values can be between `200` and `499`. The default is `200`.
 * `path` - (May be required) Destination for the health check request. Required for HTTP/HTTPS ALB and HTTP NLB. Only applies to HTTP/HTTPS.
     * For HTTP and HTTPS health checks, the default is `/`.
-    * For gRPC health checks, the default is `/Amazon Web Services.ALB/healthcheck`.
+    * For gRPC health checks, the default is `/AWS.ALB/healthcheck`.
 * `port` - (Optional) The port the load balancer uses when performing health checks on targets.
   Valid values are either `traffic-port`, to use the same port as the target group, or a valid port number between `1` and `65536`.
   Default is `traffic-port`.

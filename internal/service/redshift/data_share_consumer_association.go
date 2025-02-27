@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Share Consumer Association")
+// @FrameworkResource("aws_redshift_data_share_consumer_association", name="Data Share Consumer Association")
 func newResourceDataShareConsumerAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceDataShareConsumerAssociation{}, nil
 }
@@ -42,10 +42,6 @@ const (
 
 type resourceDataShareConsumerAssociation struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceDataShareConsumerAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_data_share_consumer_association"
 }
 
 func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -140,10 +136,10 @@ func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req r
 	}
 
 	if !plan.AllowWrites.IsNull() {
-		in.AllowWrites = aws.Bool(plan.AllowWrites.ValueBool())
+		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
 	}
 	if !plan.AssociateEntireAccount.IsNull() {
-		in.AssociateEntireAccount = aws.Bool(plan.AssociateEntireAccount.ValueBool())
+		in.AssociateEntireAccount = plan.AssociateEntireAccount.ValueBoolPointer()
 	}
 	if !plan.ConsumerARN.IsNull() {
 		in.ConsumerArn = aws.String(consumerARN)
@@ -236,16 +232,16 @@ func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req r
 	}
 
 	in := &redshift.DisassociateDataShareConsumerInput{
-		DataShareArn: aws.String(state.DataShareARN.ValueString()),
+		DataShareArn: state.DataShareARN.ValueStringPointer(),
 	}
 	if !state.AssociateEntireAccount.IsNull() && state.AssociateEntireAccount.ValueBool() {
 		in.DisassociateEntireAccount = aws.Bool(true)
 	}
 	if !state.ConsumerARN.IsNull() {
-		in.ConsumerArn = aws.String(state.ConsumerARN.ValueString())
+		in.ConsumerArn = state.ConsumerARN.ValueStringPointer()
 	}
 	if !state.ConsumerRegion.IsNull() {
-		in.ConsumerRegion = aws.String(state.ConsumerRegion.ValueString())
+		in.ConsumerRegion = state.ConsumerRegion.ValueStringPointer()
 	}
 
 	_, err := conn.DisassociateDataShareConsumer(ctx, in)

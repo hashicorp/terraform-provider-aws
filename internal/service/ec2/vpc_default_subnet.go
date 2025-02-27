@@ -37,8 +37,6 @@ func resourceDefaultSubnet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
@@ -242,7 +240,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Configure tags.
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := keyValueTags(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 

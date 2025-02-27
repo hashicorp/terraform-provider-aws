@@ -38,8 +38,6 @@ func ResourceJob() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -114,6 +112,10 @@ func ResourceJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"job_run_queuing_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
@@ -229,6 +231,10 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.GlueVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
+		input.JobRunQueuingEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
 	}
@@ -293,10 +299,10 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	jobARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("job/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, jobARN)
@@ -313,6 +319,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
+	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
 	d.Set("maintenance_window", job.MaintenanceWindow)
 	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
@@ -364,6 +371,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if v, ok := d.GetOk("glue_version"); ok {
 			jobUpdate.GlueVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
+			jobUpdate.JobRunQueuingEnabled = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("maintenance_window"); ok {

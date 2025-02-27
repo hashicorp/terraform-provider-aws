@@ -6,7 +6,6 @@ package emr
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -20,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Supported Instance Types")
+// @FrameworkDataSource("aws_emr_supported_instance_types", name="Supported Instance Types")
 func newDataSourceSupportedInstanceTypes(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSupportedInstanceTypes{}, nil
 }
@@ -31,10 +30,6 @@ const (
 
 type dataSourceSupportedInstanceTypes struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceSupportedInstanceTypes) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_emr_supported_instance_types"
 }
 
 func (d *dataSourceSupportedInstanceTypes) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -99,7 +94,7 @@ func (d *dataSourceSupportedInstanceTypes) Read(ctx context.Context, req datasou
 	data.ID = types.StringValue(data.ReleaseLabel.ValueString())
 
 	input := &emr.ListSupportedInstanceTypesInput{
-		ReleaseLabel: aws.String(data.ReleaseLabel.ValueString()),
+		ReleaseLabel: data.ReleaseLabel.ValueStringPointer(),
 	}
 
 	var results []awstypes.SupportedInstanceType
@@ -160,11 +155,11 @@ func flattenSupportedInstanceTypes(ctx context.Context, apiObjects []awstypes.Su
 			"ebs_storage_only":         flex.BoolToFramework(ctx, apiObject.EbsStorageOnly),
 			"instance_family_id":       flex.StringToFramework(ctx, apiObject.InstanceFamilyId),
 			"is_64_bits_only":          flex.BoolToFramework(ctx, apiObject.Is64BitsOnly),
-			"memory_gb":                flex.Float32ToFramework(ctx, apiObject.MemoryGB),
-			"number_of_disks":          flex.Int32ToFramework(ctx, apiObject.NumberOfDisks),
-			"storage_gb":               flex.Int32ToFramework(ctx, apiObject.StorageGB),
+			"memory_gb":                flex.Float32ToFrameworkFloat64(ctx, apiObject.MemoryGB),
+			"number_of_disks":          flex.Int32ToFrameworkInt64(ctx, apiObject.NumberOfDisks),
+			"storage_gb":               flex.Int32ToFrameworkInt64(ctx, apiObject.StorageGB),
 			names.AttrType:             flex.StringToFramework(ctx, apiObject.Type),
-			"vcpu":                     flex.Int32ToFramework(ctx, apiObject.VCPU),
+			"vcpu":                     flex.Int32ToFrameworkInt64(ctx, apiObject.VCPU),
 		}
 		objVal, d := types.ObjectValue(supportedInstanceTypeAttrTypes, obj)
 		diags.Append(d...)

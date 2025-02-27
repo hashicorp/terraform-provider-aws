@@ -40,7 +40,7 @@ func TestAccVPCPeeringConnection_basic(t *testing.T) {
 				Config: testAccVPCPeeringConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -95,7 +95,7 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 				Config: testAccVPCPeeringConnectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -120,7 +120,7 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -138,12 +138,13 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
-		_, err := conn.ModifyVpcPeeringConnectionOptions(ctx, &ec2.ModifyVpcPeeringConnectionOptionsInput{
+		input := ec2.ModifyVpcPeeringConnectionOptionsInput{
 			VpcPeeringConnectionId: v.VpcPeeringConnectionId,
 			AccepterPeeringConnectionOptions: &awstypes.PeeringConnectionOptionsRequest{
 				AllowDnsResolutionFromRemoteVpc: aws.Bool(false),
 			},
-		})
+		}
+		_, err := conn.ModifyVpcPeeringConnectionOptions(ctx, &input)
 
 		return err
 	}
@@ -164,7 +165,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -175,7 +176,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -205,7 +206,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -216,7 +217,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,

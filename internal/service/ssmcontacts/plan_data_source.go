@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmcontacts_plan")
+// @SDKDataSource("aws_ssmcontacts_plan", name="Plan")
 func DataSourcePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlanRead,

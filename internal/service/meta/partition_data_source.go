@@ -10,29 +10,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
-func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourcePartition{}
+// @FrameworkDataSource("aws_partition", name="Partition")
+func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &partitionDataSource{}
 
 	return d, nil
 }
 
-type dataSourcePartition struct {
+type partitionDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
-func (d *dataSourcePartition) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_partition"
-}
-
-// Schema returns the schema for this data source.
-func (d *dataSourcePartition) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *partitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"dns_suffix": schema.StringAttribute{
 				Computed: true,
@@ -51,26 +45,22 @@ func (d *dataSourcePartition) Schema(ctx context.Context, req datasource.SchemaR
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourcePartitionData
-
+func (d *partitionDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data partitionDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix(ctx))
-	data.ID = types.StringValue(d.Meta().Partition)
-	data.Partition = types.StringValue(d.Meta().Partition)
-	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix(ctx))
+	data.DNSSuffix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().DNSSuffix(ctx))
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
+	data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
+	data.ReverseDNSPrefix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().ReverseDNSPrefix(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourcePartitionData struct {
+type partitionDataSourceModel struct {
 	DNSSuffix        types.String `tfsdk:"dns_suffix"`
 	ID               types.String `tfsdk:"id"`
 	Partition        types.String `tfsdk:"partition"`

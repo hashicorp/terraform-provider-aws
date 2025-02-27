@@ -163,8 +163,6 @@ func resourceFlowLog() *schema.Resource {
 				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -282,10 +280,10 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -339,9 +337,10 @@ func resourceLogFlowDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Flow Log: %s", d.Id())
-	output, err := conn.DeleteFlowLogs(ctx, &ec2.DeleteFlowLogsInput{
+	input := ec2.DeleteFlowLogsInput{
 		FlowLogIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.DeleteFlowLogs(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unsuccessfulItemsError(output.Unsuccessful)

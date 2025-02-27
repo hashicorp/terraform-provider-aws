@@ -24,7 +24,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,8 +99,6 @@ func resourceClusterParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -208,7 +205,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		for _, chunk := range tfslices.Chunks(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
+		for chunk := range slices.Chunk(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
 			input := &rds.ModifyDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,
@@ -236,7 +233,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		// Reset parameters that have been removed.
-		for _, chunk := range tfslices.Chunks(maps.Values(toRemove), maxParamModifyChunk) {
+		for chunk := range slices.Chunk(maps.Values(toRemove), maxParamModifyChunk) {
 			input := &rds.ResetDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,

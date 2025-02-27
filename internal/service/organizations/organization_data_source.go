@@ -174,7 +174,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	managementAccountID := aws.ToString(org.MasterAccountId)
 	d.Set("master_account_id", managementAccountID)
 
-	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID
+	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID(ctx)
 	isDelegatedAdministrator := true
 	accounts, err := findAccounts(ctx, conn, &organizations.ListAccountsInput{})
 

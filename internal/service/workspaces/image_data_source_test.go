@@ -70,9 +70,10 @@ func testAccCheckImageExists(ctx context.Context, n string, image *types.Workspa
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
-		resp, err := conn.DescribeWorkspaceImages(ctx, &workspaces.DescribeWorkspaceImagesInput{
+		input := workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []string{rs.Primary.ID},
-		})
+		}
+		resp, err := conn.DescribeWorkspaceImages(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("Failed describe workspaces images: %w", err)
 		}

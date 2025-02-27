@@ -13,10 +13,12 @@ var (
 	ResourceClusterParameterGroup               = resourceClusterParameterGroup
 	ResourceClusterRoleAssociation              = resourceClusterRoleAssociation
 	ResourceClusterSnapshot                     = resourceClusterSnapshot
+	ResourceClusterSnapshotCopy                 = newResourceClusterSnapshotCopy
 	ResourceCustomDBEngineVersion               = resourceCustomDBEngineVersion
 	ResourceEventSubscription                   = resourceEventSubscription
 	ResourceGlobalCluster                       = resourceGlobalCluster
 	ResourceInstance                            = resourceInstance
+	ResourceInstanceState                       = newResourceInstanceState
 	ResourceInstanceAutomatedBackupsReplication = resourceInstanceAutomatedBackupsReplication
 	ResourceInstanceRoleAssociation             = resourceInstanceRoleAssociation
 	ResourceIntegration                         = newIntegrationResource
@@ -27,6 +29,7 @@ var (
 	ResourceProxyEndpoint                       = resourceProxyEndpoint
 	ResourceProxyTarget                         = resourceProxyTarget
 	ResourceReservedInstance                    = resourceReservedInstance
+	ResourceShardGroup                          = newShardGroupResource
 	ResourceSnapshot                            = resourceSnapshot
 	ResourceSnapshotCopy                        = resourceSnapshotCopy
 	ResourceSubnetGroup                         = resourceSubnetGroup
@@ -47,6 +50,7 @@ var (
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
 	FindDBProxyAuthItemByArn                   = findDBProxyAuthItemByArn
+	FindDBShardGroupByID                       = findDBShardGroupByID
 	FindDBSnapshotByID                         = findDBSnapshotByID
 	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
 	FindDefaultCertificate                     = findDefaultCertificate

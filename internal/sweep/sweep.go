@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"time"
 
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -57,7 +57,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 	}
-	meta.ServicePackages = servicePackageMap
+	meta.SetServicePackages(ctx, servicePackageMap)
 
 	conf := &conns.Config{
 		MaxRetries:       5,
@@ -66,24 +66,28 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 	}
 
 	if role := os.Getenv(envvar.AssumeRoleARN); role != "" {
-		conf.AssumeRole.RoleARN = role
+		ar := awsbase.AssumeRole{
+			RoleARN:  role,
+			Duration: time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second,
+		}
 
-		conf.AssumeRole.Duration = time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second
 		if v := os.Getenv(envvar.AssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
 				return nil, fmt.Errorf("environment variable %s: %w", envvar.AssumeRoleDuration, err)
 			}
-			conf.AssumeRole.Duration = time.Duration(d) * time.Second
+			ar.Duration = time.Duration(d) * time.Second
 		}
 
 		if v := os.Getenv(envvar.AssumeRoleExternalID); v != "" {
-			conf.AssumeRole.ExternalID = v
+			ar.ExternalID = v
 		}
 
 		if v := os.Getenv(envvar.AssumeRoleSessionName); v != "" {
-			conf.AssumeRole.SessionName = v
+			ar.SessionName = v
 		}
+
+		conf.AssumeRole = []awsbase.AssumeRole{ar}
 	}
 
 	// configures a default client for the region, using the above env vars
@@ -116,14 +120,6 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 	}
 
 	return g.Wait().ErrorOrNil()
-}
-
-func Partition(region string) string {
-	return names.PartitionForRegion(region)
-}
-
-func PartitionDNSSuffix(region string) string {
-	return names.DNSSuffixForPartition(Partition(region))
 }
 
 type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)

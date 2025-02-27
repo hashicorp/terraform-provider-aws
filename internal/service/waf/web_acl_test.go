@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,13 +37,13 @@ func TestAccWAFWebACL_basic(t *testing.T) {
 				Config: testAccWebACLConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`webacl/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`webacl/.+`)),
 				),
 			},
 			{
@@ -71,24 +72,24 @@ func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 				Config: testAccWebACLConfig_required(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_required(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
@@ -116,7 +117,7 @@ func TestAccWAFWebACL_defaultAction(t *testing.T) {
 				Config: testAccWebACLConfig_defaultAction(rName, "ALLOW"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 				),
 			},
@@ -124,7 +125,7 @@ func TestAccWAFWebACL_defaultAction(t *testing.T) {
 				Config: testAccWebACLConfig_defaultAction(rName, "BLOCK"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "BLOCK"),
 				),
 			},
@@ -154,7 +155,7 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 				Config: testAccWebACLConfig_rulesSingleRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
 				),
 			},
 			// Test adding rule
@@ -162,7 +163,7 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 				Config: testAccWebACLConfig_rulesMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
 				),
 			},
 			// Test removing rule
@@ -170,7 +171,7 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 				Config: testAccWebACLConfig_rulesSingleRuleGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
 				),
 			},
 			// Test import
@@ -193,7 +194,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -203,9 +204,9 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 				Config: testAccWebACLConfig_logging(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", "2"),
 				),
 			},
 			// Test resource import
@@ -220,8 +221,8 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 				Config: testAccWebACLConfig_loggingUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "0"),
 				),
 			},
 			// Test logging configuration removal
@@ -229,7 +230,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 				Config: testAccWebACLConfig_loggingRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
 		},
@@ -276,40 +277,40 @@ func TestAccWAFWebACL_tags(t *testing.T) {
 				Config: testAccWebACLConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{

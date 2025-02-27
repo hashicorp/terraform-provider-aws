@@ -56,7 +56,7 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
+func TestAccElastiCacheUser_passwordAuthMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -75,8 +75,8 @@ func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 				),
@@ -95,7 +95,7 @@ func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_iam_auth_mode(t *testing.T) {
+func TestAccElastiCacheUser_iamAuthMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -167,7 +167,46 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
+func TestAccElastiCacheUser_updateEngine(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigWithEngine(rName, "valkey"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+				),
+			},
+			{
+				Config: testAccUserConfigWithEngine(rName, "redis"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+					"passwords",
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_updatePasswordAuthMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -183,7 +222,7 @@ func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 				Config: testAccUserConfigWithPasswordAuthMode_twoPasswords(rName, "aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
 				),
 			},
 			{
@@ -199,7 +238,7 @@ func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 				Config: testAccUserConfigWithPasswordAuthMode_onePassword(rName, "aaaaaaaaaaaaaaaa"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
 				),
 			},
 			{
@@ -215,7 +254,7 @@ func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 				Config: testAccUserConfigWithPasswordAuthMode_twoPasswords(rName, "cccccccccccccccc", "dddddddddddddddd"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
 				),
 			},
 			{
@@ -251,7 +290,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal"),
 				),
 			},
@@ -263,7 +302,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal2"),
 				),
 			},
@@ -275,7 +314,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -323,7 +362,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 				Config: testAccUserConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -340,7 +379,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 				Config: testAccUserConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 				),
 			},
@@ -381,10 +420,6 @@ func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache User ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
@@ -418,7 +453,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password123456789"]
 }
 `, rName)
@@ -430,7 +465,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type      = "password"
@@ -446,7 +481,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = %[1]q
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type = "iam"
@@ -461,10 +496,22 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~* +@all"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password234567891", "password345678912"]
 }
 `, rName)
+}
+
+func testAccUserConfigWithEngine(rName, engine string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~* +@all"
+  engine        = %[2]q
+  passwords     = ["password123456789"]
+}
+`, rName, engine)
 }
 
 func testAccUserConfigWithPasswordAuthMode_twoPasswords(rName string, password1 string, password2 string) string {
@@ -473,7 +520,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type      = "password"
@@ -489,7 +536,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
 
   authentication_mode {
     type      = "password"
@@ -505,7 +552,7 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password123456789"]
 
   tags = {

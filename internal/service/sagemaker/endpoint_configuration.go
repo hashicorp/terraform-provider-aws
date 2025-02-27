@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -377,6 +379,34 @@ func resourceEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"managed_instance_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(0),
+									},
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+									},
+								},
+							},
+						},
 						"variant_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -521,6 +551,34 @@ func resourceEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"managed_instance_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(0),
+									},
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+									},
+								},
+							},
+						},
 						"variant_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -540,7 +598,72 @@ func resourceEndpointConfiguration() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: validateDataCaptureConfigCustomDiff,
+	}
+}
+
+func validateDataCaptureConfigCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	dataCapturesPath := cty.GetAttrPath("data_capture_config")
+	dataCaptures := configRaw.GetAttr("data_capture_config")
+	if dataCaptures.IsKnown() && !dataCaptures.IsNull() {
+		dataCaptureConfigPlanTimeValidate(dataCapturesPath, dataCaptures, &diags)
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func dataCaptureConfigPlanTimeValidate(path cty.Path, dataCaptures cty.Value, diags *diag.Diagnostics) {
+	it := dataCaptures.ElementIterator()
+	for it.Next() {
+		_, dataCapture := it.Element()
+
+		if !dataCapture.IsKnown() {
+			break
+		}
+		if dataCapture.IsNull() {
+			break
+		}
+
+		captureContentHeaderPath := path.GetAttr("capture_content_type_header")
+		captureContentHeaders := dataCapture.GetAttr("capture_content_type_header")
+
+		captureContentTypeHeaderPlanTimeValidate(captureContentHeaderPath, captureContentHeaders, diags)
+	}
+}
+
+func captureContentTypeHeaderPlanTimeValidate(path cty.Path, captureContentHeaders cty.Value, diags *diag.Diagnostics) {
+	it := captureContentHeaders.ElementIterator()
+	for it.Next() {
+		_, captureContentHeader := it.Element()
+
+		if !captureContentHeader.IsKnown() {
+			break
+		}
+		if captureContentHeader.IsNull() {
+			break
+		}
+
+		csvContentTypes := captureContentHeader.GetAttr("csv_content_types")
+		if csvContentTypes.IsKnown() && !csvContentTypes.IsNull() {
+			break
+		}
+
+		jsonContentTypes := captureContentHeader.GetAttr("json_content_types")
+		if jsonContentTypes.IsKnown() && !jsonContentTypes.IsNull() {
+			break
+		}
+
+		*diags = append(*diags, errs.NewAtLeastOneOfChildrenError(path,
+			cty.GetAttrPath("csv_content_types"),
+			cty.GetAttrPath("json_content_types"),
+		))
 	}
 }
 
@@ -737,6 +860,10 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 			l.EnableSSMAccess = aws.Bool(v)
 		}
 
+		if v, ok := data["managed_instance_scaling"].([]interface{}); ok && len(v) > 0 {
+			l.ManagedInstanceScaling = expandManagedInstanceScaling(v)
+		}
+
 		if v, ok := data["inference_ami_version"].(string); ok && v != "" {
 			l.InferenceAmiVersion = awstypes.ProductionVariantInferenceAmiVersion(v)
 		}
@@ -792,6 +919,10 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]i
 			l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
 		}
 
+		if i.ManagedInstanceScaling != nil {
+			l["managed_instance_scaling"] = flattenManagedInstanceScaling(i.ManagedInstanceScaling)
+		}
+
 		result = append(result, l)
 	}
 	return result
@@ -818,7 +949,7 @@ func expandDataCaptureConfig(configured []interface{}) *awstypes.DataCaptureConf
 		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["capture_content_type_header"].([]interface{}); ok && (len(v) > 0) {
+	if v, ok := m["capture_content_type_header"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		c.CaptureContentTypeHeader = expandCaptureContentTypeHeader(v[0].(map[string]interface{}))
 	}
 
@@ -1056,6 +1187,30 @@ func expandCoreDumpConfig(configured []interface{}) *awstypes.ProductionVariantC
 	return c
 }
 
+func expandManagedInstanceScaling(configured []interface{}) *awstypes.ProductionVariantManagedInstanceScaling {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &awstypes.ProductionVariantManagedInstanceScaling{}
+
+	if v, ok := m[names.AttrStatus].(string); ok {
+		c.Status = awstypes.ManagedInstanceScalingStatus(v)
+	}
+
+	if v, ok := m["min_instance_count"].(int); ok {
+		c.MinInstanceCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["max_instance_count"].(int); ok && v > 0 {
+		c.MaxInstanceCount = aws.Int32(int32(v))
+	}
+
+	return c
+}
+
 func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -1181,6 +1336,28 @@ func flattenCoreDumpConfig(config *awstypes.ProductionVariantCoreDumpConfig) []m
 
 	if config.KmsKeyId != nil {
 		cfg[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenManagedInstanceScaling(config *awstypes.ProductionVariantManagedInstanceScaling) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.Status != "" {
+		cfg[names.AttrStatus] = config.Status
+	}
+
+	if config.MinInstanceCount != nil {
+		cfg["min_instance_count"] = aws.ToInt32(config.MinInstanceCount)
+	}
+
+	if config.MaxInstanceCount != nil {
+		cfg["max_instance_count"] = aws.ToInt32(config.MaxInstanceCount)
 	}
 
 	return []map[string]interface{}{cfg}

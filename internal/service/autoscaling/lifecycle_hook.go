@@ -169,10 +169,11 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Lifecycle Hook: %s", d.Id())
-	_, err := conn.DeleteLifecycleHook(ctx, &autoscaling.DeleteLifecycleHookInput{
+	input := autoscaling.DeleteLifecycleHookInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		LifecycleHookName:    aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLifecycleHook(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No Lifecycle Hook found") {
 		return diags

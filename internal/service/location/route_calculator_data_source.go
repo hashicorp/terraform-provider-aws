@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_route_calculator")
+// @SDKDataSource("aws_location_route_calculator", name="Route Calculator")
 func DataSourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteCalculatorRead,
@@ -75,7 +75,7 @@ func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, out.Description)
 	d.Set("update_time", aws.ToTime(out.UpdateTime).Format(time.RFC3339))
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)

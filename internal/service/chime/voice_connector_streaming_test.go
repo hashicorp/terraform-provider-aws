@@ -42,7 +42,7 @@ func testAccVoiceConnectorStreaming_basic(t *testing.T) {
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "5"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "1"),
 				),
 			},
 			{
@@ -104,11 +104,11 @@ func testAccVoiceConnectorStreaming_update(t *testing.T) {
 				Config: testAccVoiceConnectorStreamingConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_retention", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "data_retention", "2"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "media_insights_configuration.0.disabled", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(resourceName,
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName,
 						"media_insights_configuration.0.configuration_arn",
 						"chime",
 						regexache.MustCompile(fmt.Sprintf(`media-insights-pipeline-configuration/test-config-%s`, name)),

@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Notification Channel")
+// @FrameworkResource("aws_devopsguru_notification_channel", name="Notification Channel")
 func newResourceNotificationChannel(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceNotificationChannel{}, nil
 }
@@ -42,10 +42,6 @@ const (
 
 type resourceNotificationChannel struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceNotificationChannel) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_notification_channel"
 }
 
 func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -192,7 +188,7 @@ func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.D
 	}
 
 	in := &devopsguru.RemoveNotificationChannelInput{
-		Id: aws.String(state.ID.ValueString()),
+		Id: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.RemoveNotificationChannel(ctx, in)

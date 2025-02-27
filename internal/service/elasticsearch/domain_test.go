@@ -45,8 +45,8 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*es\..*/_plugin/kibana/`)),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -118,7 +118,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, names.AttrARN),
@@ -166,8 +166,8 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
@@ -182,8 +182,8 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
@@ -193,7 +193,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
 				),
 			},
 			{
@@ -201,8 +201,8 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain4),
 					testAccCheckDomainNotRecreated(&domain3, &domain4), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
@@ -227,7 +227,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", ""),
 				),
 			},
@@ -352,9 +352,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
-	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -388,12 +386,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: testAccDomainConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(
-						resourceName, "elasticsearch_version", "1.5"),
-				),
+				Config:      testAccDomainConfig_basic(rName),
 				ExpectError: regexache.MustCompile(`Elasticsearch Domain .+ already exists`),
 			},
 		},
@@ -596,12 +589,12 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "6.7"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*es\..*/_plugin/kibana/`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.start_at", autoTuneStartAtTime),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.value", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.value", "2"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.unit", "HOURS"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.cron_expression_for_recurrence", "cron(0 0 ? * 1 *)"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
@@ -751,7 +744,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeIndexSlowLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": string(awstypes.LogTypeIndexSlowLogs),
 					}),
@@ -787,7 +780,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeSearchSlowLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": string(awstypes.LogTypeSearchSlowLogs),
 					}),
@@ -823,7 +816,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeEsApplicationLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": string(awstypes.LogTypeEsApplicationLogs),
 					}),
@@ -859,7 +852,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeAuditLogs)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": string(awstypes.LogTypeAuditLogs),
 					}),
@@ -1305,7 +1298,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -1319,7 +1312,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -1328,7 +1321,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -1454,9 +1447,9 @@ func TestAccElasticsearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 				Config: testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp3"),
 				),
 			},
@@ -1470,9 +1463,9 @@ func TestAccElasticsearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 				Config: testAccDomainConfig_clusterEBSVolumeGP2(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
 				),
 			},
@@ -1501,12 +1494,12 @@ func TestAccElasticsearchDomain_VolumeType_missing(t *testing.T) {
 				Config: testAccDomainConfig_disabledEBSNullVolumeType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_type", "i3.xlarge.elasticsearch"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", ""),
 				),
 			},

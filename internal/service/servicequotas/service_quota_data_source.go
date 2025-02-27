@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicequotas_service_quota")
+// @SDKDataSource("aws_servicequotas_service_quota", name="Service Quota")
 func DataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceQuotaRead,
@@ -193,4 +194,26 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrValue, serviceQuota.Value)
 
 	return diags
+}
+
+func findServiceQuotaDefaultByName(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaName string) (*types.ServiceQuota, error) {
+	input := servicequotas.ListAWSDefaultServiceQuotasInput{
+		ServiceCode: aws.String(serviceCode),
+	}
+
+	paginator := servicequotas.NewListAWSDefaultServiceQuotasPaginator(conn, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, q := range page.Quotas {
+			if aws.ToString(q.QuotaName) == quotaName {
+				return &q, nil
+			}
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
 }

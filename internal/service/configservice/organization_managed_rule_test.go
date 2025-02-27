@@ -37,14 +37,14 @@ func testAccOrganizationManagedRule_basic(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule_identifier", "IAM_PASSWORD_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", ""),
@@ -152,7 +152,7 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
 				),
 			},
 			{
@@ -164,7 +164,7 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
 				),
 			},
 		},
@@ -295,7 +295,7 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_resourceTypesScope1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "1"),
 				),
 			},
 			{
@@ -307,7 +307,7 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_resourceTypesScope2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "2"),
 				),
 			},
 		},

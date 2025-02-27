@@ -26,7 +26,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -234,8 +233,6 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -478,11 +475,12 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 
 func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
+		Pending:      enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
+		Target:       []string{},
+		Refresh:      statusStorageVirtualMachine(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        1 * time.Minute,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

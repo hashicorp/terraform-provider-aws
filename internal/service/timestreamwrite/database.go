@@ -68,8 +68,6 @@ func resourceDatabase() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -147,9 +145,10 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	log.Printf("[INFO] Deleting Timestream Database: %s", d.Id())
-	_, err := conn.DeleteDatabase(ctx, &timestreamwrite.DeleteDatabaseInput{
+	input := timestreamwrite.DeleteDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDatabase(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -30,16 +30,12 @@ func resourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 		CreateWithoutTimeout: resourceWebsiteCertificateAuthorityAssociationCreate,
 		ReadWithoutTimeout:   resourceWebsiteCertificateAuthorityAssociationRead,
 		DeleteWithoutTimeout: resourceWebsiteCertificateAuthorityAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"fleet_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -51,11 +47,18 @@ func resourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
+			"fleet_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"website_ca_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		DeprecationMessage: `The aws_worklink_website_certificate_authority_association resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead`,
 	}
 }
 
@@ -177,10 +180,11 @@ func websiteCertificateAuthorityAssociationStateRefresh(ctx context.Context, con
 	return func() (interface{}, string, error) {
 		emptyResp := &worklink.DescribeWebsiteCertificateAuthorityOutput{}
 
-		resp, err := conn.DescribeWebsiteCertificateAuthority(ctx, &worklink.DescribeWebsiteCertificateAuthorityInput{
+		input := worklink.DescribeWebsiteCertificateAuthorityInput{
 			FleetArn:    aws.String(arn),
 			WebsiteCaId: aws.String(websiteCaID),
-		})
+		}
+		resp, err := conn.DescribeWebsiteCertificateAuthority(ctx, &input)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return emptyResp, "DELETED", nil
 		}

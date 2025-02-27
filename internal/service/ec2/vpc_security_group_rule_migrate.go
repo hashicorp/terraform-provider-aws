@@ -39,13 +39,15 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	}
 
 	perm, err := migrateExpandIPPerm(is.Attributes)
-
 	if err != nil {
 		return nil, fmt.Errorf("making new IP Permission in Security Group migration")
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	newID := securityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes[names.AttrType], perm)
+	newID, err := securityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes[names.AttrType], perm)
+	if err != nil {
+		return nil, err
+	}
 	is.Attributes[names.AttrID] = newID
 	is.ID = newID
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, newID)

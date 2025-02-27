@@ -55,9 +55,6 @@ func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 		return err
 	}
 
-	metadata := resourceMetadata(ctx, resource)
-	ctx = tflog.SetField(ctx, "resource_type", metadata.TypeName)
-
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: sr.meta}, &fwresource.ConfigureResponse{})
 
 	schemaResp := fwresource.SchemaResponse{}
@@ -123,11 +120,4 @@ func deleteResource(ctx context.Context, state tfsdk.State, resource fwresource.
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	return fwdiag.DiagnosticsError(response.Diagnostics)
-}
-
-func resourceMetadata(ctx context.Context, resource fwresource.Resource) fwresource.MetadataResponse {
-	var response fwresource.MetadataResponse
-	resource.Metadata(ctx, fwresource.MetadataRequest{}, &response)
-
-	return response
 }

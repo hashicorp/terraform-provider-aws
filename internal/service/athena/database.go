@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_athena_database")
+// @SDKResource("aws_athena_database", name="Database")
 func resourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
@@ -197,6 +197,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 		ResultConfiguration: expandResultConfiguration(d),
 	}
 
+	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
 	output, err := conn.StartQueryExecution(ctx, input)
 
 	if err != nil {

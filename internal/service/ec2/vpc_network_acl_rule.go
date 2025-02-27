@@ -247,11 +247,12 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Network ACL Rule: %s", d.Id())
-	_, err := conn.DeleteNetworkAclEntry(ctx, &ec2.DeleteNetworkAclEntryInput{
+	input := ec2.DeleteNetworkAclEntryInput{
 		Egress:       aws.Bool(d.Get("egress").(bool)),
 		NetworkAclId: aws.String(d.Get("network_acl_id").(string)),
 		RuleNumber:   aws.Int32(int32(d.Get("rule_number").(int))),
-	})
+	}
+	_, err := conn.DeleteNetworkAclEntry(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound, errCodeInvalidNetworkACLEntryNotFound) {
 		return diags

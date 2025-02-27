@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,16 +65,13 @@ func ResourceVoiceConnector() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			resourceVoiceConnectorDefaultRegion,
-		),
+		CustomizeDiff: resourceVoiceConnectorDefaultRegion,
 	}
 }
 
 func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if v, ok := diff.Get("aws_region").(string); !ok || v == "" {
-		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region); err != nil {
+		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region(ctx)); err != nil {
 			return err
 		}
 	}

@@ -5,8 +5,8 @@ package appstream
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceImage,
-			Name:    "Image",
+			Factory:  newDataSourceImage,
+			TypeName: "aws_appstream_image",
+			Name:     "Image",
 		},
 	}
 }
@@ -36,6 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDirectoryConfig,
 			TypeName: "aws_appstream_directory_config",
+			Name:     "Directory Config",
 		},
 		{
 			Factory:  ResourceFleet,
@@ -48,6 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFleetStackAssociation,
 			TypeName: "aws_appstream_fleet_stack_association",
+			Name:     "Fleet Stack Association",
 		},
 		{
 			Factory:  ResourceImageBuilder,
@@ -68,10 +71,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUser,
 			TypeName: "aws_appstream_user",
+			Name:     "User",
 		},
 		{
 			Factory:  ResourceUserStackAssociation,
 			TypeName: "aws_appstream_user_stack_association",
+			Name:     "User Stack Association",
 		},
 	}
 }
@@ -81,13 +86,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appstream_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return appstream_sdkv2.NewFromConfig(cfg,
-		appstream_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appstream.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*appstream.Options){
+		appstream.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return appstream.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*appstream.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*appstream.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *appstream.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*appstream.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

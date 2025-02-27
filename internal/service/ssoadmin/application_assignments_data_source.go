@@ -6,7 +6,6 @@ package ssoadmin
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -19,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Application Assignments")
+// @FrameworkDataSource("aws_ssoadmin_application_assignments", name="Application Assignments")
 func newDataSourceApplicationAssignments(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplicationAssignments{}, nil
 }
@@ -30,10 +29,6 @@ const (
 
 type dataSourceApplicationAssignments struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceApplicationAssignments) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_ssoadmin_application_assignments"
 }
 
 func (d *dataSourceApplicationAssignments) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -75,7 +70,7 @@ func (d *dataSourceApplicationAssignments) Read(ctx context.Context, req datasou
 	}
 
 	paginator := ssoadmin.NewListApplicationAssignmentsPaginator(conn, &ssoadmin.ListApplicationAssignmentsInput{
-		ApplicationArn: aws.String(data.ApplicationARN.ValueString()),
+		ApplicationArn: data.ApplicationARN.ValueStringPointer(),
 	})
 
 	var out ssoadmin.ListApplicationAssignmentsOutput

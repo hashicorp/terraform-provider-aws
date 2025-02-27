@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -97,8 +96,6 @@ func resourceClusterParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -242,7 +239,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Cl
 		clusterParameterGroupMaxParamsBulkEdit = 20
 	)
 	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
-	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
+	for chunk := range slices.Chunk(parameters, clusterParameterGroupMaxParamsBulkEdit) {
 		input := &neptune.ModifyDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: aws.String(name),
 			Parameters:                  chunk,

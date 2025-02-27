@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssmcontacts_contact", name="Context")
-// @Tags(identifierAttribute="id")
+// @SDKResource("aws_ssmcontacts_contact", name="Contact")
+// @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(serialize=true)
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,
@@ -56,8 +57,6 @@ func ResourceContact() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

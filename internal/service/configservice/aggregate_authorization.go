@@ -55,8 +55,6 @@ func resourceAggregateAuthorization() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -129,10 +127,11 @@ func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Deleting ConfigService Aggregate Authorization: %s", d.Id())
-	_, err = conn.DeleteAggregationAuthorization(ctx, &configservice.DeleteAggregationAuthorizationInput{
+	input := configservice.DeleteAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountID),
 		AuthorizedAwsRegion: aws.String(region),
-	})
+	}
+	_, err = conn.DeleteAggregationAuthorization(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Aggregate Authorization (%s): %s", d.Id(), err)

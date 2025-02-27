@@ -42,8 +42,6 @@ func ResourceDevEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"arguments": {
 				Type:     schema.TypeMap,
@@ -290,10 +288,10 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	endpointARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("devEndpoint/%s", d.Id()),
 	}.String()
 

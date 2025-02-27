@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
-	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,7 +46,7 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 	input := &rds.DescribeDBClustersInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).RDSFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	clusters, err := findDBClusters(ctx, conn, input, tfslices.PredicateTrue[*types.DBCluster]())
@@ -64,7 +63,7 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 		clusterIdentifiers = append(clusterIdentifiers, aws.ToString(cluster.DBClusterIdentifier))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("cluster_arns", clusterARNs)
 	d.Set("cluster_identifiers", clusterIdentifiers)
 

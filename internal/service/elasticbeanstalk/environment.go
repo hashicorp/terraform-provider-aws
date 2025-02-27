@@ -10,7 +10,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -34,7 +33,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,7 +77,7 @@ const (
 )
 
 var (
-	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
@@ -95,8 +93,6 @@ func resourceEnvironment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  EnvironmentMigrateState,
@@ -776,7 +772,7 @@ func hashSettingsValue(v interface{}) int {
 		str.WriteString(value)
 	} else {
 		values := strings.Split(value, ",")
-		sort.Strings(values)
+		slices.Sort(values)
 		str.WriteString(strings.Join(values, ","))
 	}
 
@@ -836,7 +832,7 @@ func flattenConfigurationOptionSettings(ctx context.Context, meta interface{}, a
 				tfMap[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
 			case "Subnets", "ELBSubnets":
 				values := strings.Split(value, ",")
-				sort.Strings(values)
+				slices.Sort(values)
 				tfMap[names.AttrValue] = strings.Join(values, ",")
 			default:
 				tfMap[names.AttrValue] = value
@@ -867,7 +863,7 @@ func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingVa
 		}
 	}
 
-	sort.Strings(legitGroups)
+	slices.Sort(legitGroups)
 
 	return strings.Join(legitGroups, ",")
 }

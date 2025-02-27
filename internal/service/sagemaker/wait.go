@@ -24,16 +24,12 @@ const (
 	modelPackageGroupDeletedTimeout    = 10 * time.Minute
 	imageCreatedTimeout                = 10 * time.Minute
 	imageDeletedTimeout                = 10 * time.Minute
-	endpointDeletedTimeout             = 10 * time.Minute
-	endpointInServiceTimeout           = 10 * time.Minute
 	imageVersionCreatedTimeout         = 10 * time.Minute
 	imageVersionDeletedTimeout         = 10 * time.Minute
 	domainInServiceTimeout             = 20 * time.Minute
 	domainDeletedTimeout               = 20 * time.Minute
 	featureGroupCreatedTimeout         = 20 * time.Minute
 	featureGroupDeletedTimeout         = 10 * time.Minute
-	userProfileInServiceTimeout        = 10 * time.Minute
-	userProfileDeletedTimeout          = 10 * time.Minute
 	appInServiceTimeout                = 10 * time.Minute
 	appDeletedTimeout                  = 10 * time.Minute
 	flowDefinitionActiveTimeout        = 2 * time.Minute
@@ -46,51 +42,11 @@ const (
 	spaceInServiceTimeout              = 10 * time.Minute
 	monitoringScheduleScheduledTimeout = 2 * time.Minute
 	monitoringScheduleStoppedTimeout   = 2 * time.Minute
+	mlflowTrackingServerTimeout        = 30 * time.Minute
+	hubTimeout                         = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
-
-func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
-		Target:  []string{},
-		Refresh: statusEndpoint(ctx, conn, name),
-		Timeout: endpointDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
-		if output.EndpointStatus == awstypes.EndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
-		Target:  enum.Slice(awstypes.EndpointStatusInService),
-		Refresh: statusEndpoint(ctx, conn, name),
-		Timeout: endpointInServiceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
-		if output.EndpointStatus == awstypes.EndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
-		}
-
-		return err
-	}
-
-	return err
-}
 
 func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
 	stateConf := &retry.StateChangeConf{
@@ -223,12 +179,20 @@ func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) 
 		Timeout: imageCreatedTimeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); (status == awstypes.ImageStatusCreateFailed || status == awstypes.ImageStatusUpdateFailed) && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return err
+	}
 
 	return err
 }
 
-func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
+func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusDeleting),
 		Target:  []string{},
@@ -239,10 +203,14 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
-		return output, err
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); status == awstypes.ImageStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
@@ -256,6 +224,10 @@ func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -273,6 +245,10 @@ func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -363,40 +339,19 @@ func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	return nil, err
 }
 
-func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) error {
+func waitFeatureGroupUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.UserProfileStatusPending, awstypes.UserProfileStatusUpdating),
-		Target:  enum.Slice(awstypes.UserProfileStatusInService),
-		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),
-		Timeout: userProfileInServiceTimeout,
+		Pending: enum.Slice(awstypes.LastUpdateStatusValueInProgress),
+		Target:  enum.Slice(awstypes.LastUpdateStatusValueSuccessful),
+		Refresh: statusFeatureGroupUpdate(ctx, conn, name),
+		Timeout: featureGroupDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
-		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.UserProfileStatusFailed || status == awstypes.UserProfileStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
-		}
-
-		return err
-	}
-
-	return err
-}
-
-func waitUserProfileDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.UserProfileStatusDeleting),
-		Target:  []string{},
-		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),
-		Timeout: userProfileDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
-		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.UserProfileStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if v := output.LastUpdateStatus; v != nil && v.Status == awstypes.LastUpdateStatusValueFailed {
+			tfresource.SetLastError(err, errors.New(*v.FailureReason))
 		}
 
 		return output, err
@@ -669,6 +624,120 @@ func waitMonitoringScheduleNotFound(ctx context.Context, conn *sagemaker.Client,
 
 	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
 		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowTrackingServerCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusCreating),
+		Target:  enum.Slice(awstypes.TrackingServerStatusCreated),
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowTrackingServerUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusUpdating),
+		Target:  enum.Slice(awstypes.TrackingServerStatusUpdated),
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowTrackingServerDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusDeleting),
+		Target:  []string{},
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusCreating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusDeleting),
+		Target:  []string{},
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusUpdating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusUpdateFailed && reason != "" {
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 

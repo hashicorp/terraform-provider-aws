@@ -24,7 +24,6 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,7 +87,14 @@ func resourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
+			},
+			names.AttrMode: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ClusterMode](),
 			},
 			"security_group_id": {
 				Type:     schema.TypeString,
@@ -112,8 +118,6 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -125,6 +129,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
 		SubnetIds: flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TagList:   getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrMode); ok && v != "" {
+		input.Mode = types.ClusterMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("source_backup_identifier"); ok {
@@ -173,6 +181,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_id", cluster.ClusterId)
 	d.Set("cluster_state", cluster.State)
 	d.Set("hsm_type", cluster.HsmType)
+	d.Set(names.AttrMode, cluster.Mode)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
 	d.Set(names.AttrSubnetIDs, tfmaps.Values(cluster.SubnetMapping))
@@ -196,9 +205,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 Cluster: %s", d.Id())
-	_, err := conn.DeleteCluster(ctx, &cloudhsmv2.DeleteClusterInput{
+	input := cloudhsmv2.DeleteClusterInput{
 		ClusterId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCluster(ctx, &input)
 
 	if errs.IsA[*types.CloudHsmResourceNotFoundException](err) {
 		return diags

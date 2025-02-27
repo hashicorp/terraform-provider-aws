@@ -63,10 +63,6 @@ type resourceDBInstance struct {
 	framework.WithImportByID
 }
 
-func (r *resourceDBInstance) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_timestreaminfluxdb_db_instance"
-}
-
 func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -456,7 +452,7 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
 		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
 		in := timestreaminfluxdb.UpdateDbInstanceInput{
-			Identifier: aws.String(plan.ID.ValueString()),
+			Identifier: plan.ID.ValueStringPointer(),
 		}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
@@ -507,7 +503,7 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &timestreaminfluxdb.DeleteDbInstanceInput{
-		Identifier: aws.String(state.ID.ValueString()),
+		Identifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteDbInstance(ctx, in)
@@ -531,10 +527,6 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 		return
 	}
-}
-
-func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
@@ -647,8 +639,8 @@ type resourceDBInstanceData struct {
 	Password                      types.String                                                  `tfsdk:"password"`
 	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
 	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
-	Tags                          types.Map                                                     `tfsdk:"tags"`
-	TagsAll                       types.Map                                                     `tfsdk:"tags_all"`
+	Tags                          tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                `tfsdk:"timeouts"`
 	Username                      types.String                                                  `tfsdk:"username"`
 	VPCSecurityGroupIDs           fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_security_group_ids"`

@@ -54,10 +54,6 @@ type resourceProject struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceProject) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_project"
-}
-
 func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -283,7 +279,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 
 	in := &datazone.DeleteProjectInput{
 		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
-		Identifier:       aws.String((*state.ID.ValueStringPointer())),
+		Identifier:       state.ID.ValueStringPointer(),
 	}
 	if !state.SkipDeletionCheck.IsNull() {
 		in.SkipDeletionCheck = state.SkipDeletionCheck.ValueBoolPointer()

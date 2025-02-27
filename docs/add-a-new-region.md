@@ -16,20 +16,18 @@ provider "aws" {
 
 ## Enabling Region Validation
 
-Support for region validation requires that the provider has an updated AWS Go SDK dependency that includes the new region. These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. This also needs to be done in the core Terraform binary itself to enable it for the S3 backend. The provider currently takes a dependency on both v1 AND v2 of the AWS Go SDK, as we start to base new (and migrate) resources on v2. Many of the authentication and provider-level configuration interactions are also located in the aws-go-sdk-base library. As all of these things take direct dependencies and as a result there end up being quite a few places where these dependency updates need to be made.
+Support for region validation requires that the provider has an updated [AWS SDK Go Base](aws-sdk-go-base.md) dependency that includes the new region. This also needs to be done in the core Terraform binary itself to enable it for the S3 backend. Many of the authentication and provider-level configuration interactions are also located in the `aws-go-sdk-base` library. As all of these things take direct dependencies and as a result there end up being quite a few places where these dependency updates need to be made.
 
 ### Update aws-go-sdk-base
 
 [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base)
 
-- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
 - Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)
 
 ### Update Terraform AWS Provider
 
 [provider](https://github.com/hashicorp/terraform-provider-aws)
 
-- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
 - Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)
 - Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base)
 
@@ -37,14 +35,8 @@ Support for region validation requires that the provider has an updated AWS Go S
 
 [core](https://github.com/hashicorp/terraform)
 
-- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
 - Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)
 - Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base)
-
-```shell
-go get github.com/aws/aws-sdk-go@v#.#.#
-go mod tidy
-```
 
 See the [Changelog Process](changelog-process.md) document for example changelog format.
 

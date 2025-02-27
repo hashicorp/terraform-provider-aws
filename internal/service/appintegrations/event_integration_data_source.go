@@ -18,7 +18,8 @@ import (
 
 // @SDKDataSource("aws_appintegrations_event_integration", name="Event Integration")
 // @Tags
-func DataSourceEventIntegration() *schema.Resource {
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEventIntegrationRead,
 
@@ -62,9 +63,10 @@ func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
+	input := appintegrations.GetEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	output, err := conn.GetEventIntegration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading AppIntegrations Event Integration (%s): %s", name, err)

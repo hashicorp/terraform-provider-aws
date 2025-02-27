@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,8 +76,6 @@ func resourceDefaultSecurityGroup() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -117,7 +114,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.ToString(sg.GroupId))
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := keyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 

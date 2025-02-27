@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Share Authorization")
+// @FrameworkResource("aws_redshift_data_share_authorization", name="Data Share Authorization")
 func newResourceDataShareAuthorization(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceDataShareAuthorization{}, nil
 }
@@ -41,10 +41,6 @@ const (
 
 type resourceDataShareAuthorization struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceDataShareAuthorization) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_data_share_authorization"
 }
 
 func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -119,7 +115,7 @@ func (r *resourceDataShareAuthorization) Create(ctx context.Context, req resourc
 	}
 
 	if !plan.AllowWrites.IsNull() {
-		in.AllowWrites = aws.Bool(plan.AllowWrites.ValueBool())
+		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
 	}
 
 	out, err := conn.AuthorizeDataShare(ctx, in)
@@ -198,8 +194,8 @@ func (r *resourceDataShareAuthorization) Delete(ctx context.Context, req resourc
 	}
 
 	in := &redshift.DeauthorizeDataShareInput{
-		DataShareArn:       aws.String(state.DataShareARN.ValueString()),
-		ConsumerIdentifier: aws.String(state.ConsumerIdentifier.ValueString()),
+		DataShareArn:       state.DataShareARN.ValueStringPointer(),
+		ConsumerIdentifier: state.ConsumerIdentifier.ValueStringPointer(),
 	}
 
 	_, err := conn.DeauthorizeDataShare(ctx, in)

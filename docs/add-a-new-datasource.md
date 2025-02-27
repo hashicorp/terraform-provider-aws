@@ -9,8 +9,6 @@ Each data source should be submitted for review in isolation, pull requests cont
 
 If this is the first addition of a data source for a new service, please ensure the Service Client for the new service has been added and merged. See [Adding a new Service](add-a-new-service.md) for details.
 
-Determine which version of the AWS SDK for Go the resource will be built upon. For more information and instructions on how to determine this choice, please read [AWS SDK for Go Versions](aws-go-sdk-versions.md)
-
 ## Steps to Add a Data Source
 
 ### Fork the Provider and Create a Feature Branch
@@ -19,9 +17,9 @@ For a new data source use a branch named `f-{datasource name}` for example: `f-e
 
 ### Create and Name the Data Source
 
-See the [Naming Guide](naming.md#resources-and-data-sources) for details on how to name the new resource and the resource file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
+See the [Naming Guide](naming.md#resources-and-data-sources) for details on how to name the new data source and the data source file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
 
-Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming are done for you and always represent our most current standards.
+Use the [skaff](skaff.md) provider scaffolding tool to generate new data source and test templates using your chosen name. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming are done for you and always represent our most current standards.
 
 ### Fill out the Data Source Schema
 
@@ -35,7 +33,7 @@ These will map the AWS API response to the data source schema. You will also nee
 
 ### Register Data Source to the provider
 
-Data Sources use a self-registration process that adds them to the provider using the `@SDKDataSource()` annotation in the data source's comments. Run `make gen` to register the data source. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Data Sources use a self-registration process that adds them to the provider using the `@FrameworkDataSource()` (Preferred) or `@SDKDataSource()` annotation in the data source's comments. Run `make gen` to register the data source. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 === "Terraform Plugin Framework (Preferred)"
 
@@ -47,17 +45,13 @@ Data Sources use a self-registration process that adds them to the provider usin
         "github.com/hashicorp/terraform-provider-aws/internal/framework"
     )
 
-    // @FrameworkDataSource(name="Example")
+    // @FrameworkDataSource("aws_something_example", name="Example")
     func newResourceExample(_ context.Context) (datasource.ResourceWithConfigure, error) {
     	return &dataSourceExample{}, nil
     }
 
     type dataSourceExample struct {
 	    framework.DataSourceWithConfigure
-    }
-
-    func (r *dataSourceExample) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-    	response.TypeName = "aws_something_example"
     }
     ```
 

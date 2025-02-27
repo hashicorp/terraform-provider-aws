@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Proactive Engagement")
+// @FrameworkResource("aws_shield_proactive_engagement", name="Proactive Engagement")
 func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &proactiveEngagementResource{}, nil
 }
@@ -35,10 +35,6 @@ func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfi
 type proactiveEngagementResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *proactiveEngagementResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_proactive_engagement"
 }
 
 func (r *proactiveEngagementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -109,7 +105,7 @@ func (r *proactiveEngagementResource) Create(ctx context.Context, request resour
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().AccountID)
+	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(updateEmergencyContactSettings(ctx, conn, &data)...)
 	if response.Diagnostics.HasError() {

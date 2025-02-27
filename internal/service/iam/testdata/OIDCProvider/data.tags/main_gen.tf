@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_iam_openid_connect_provider" "test" {
   arn = aws_iam_openid_connect_provider.test.arn
 }

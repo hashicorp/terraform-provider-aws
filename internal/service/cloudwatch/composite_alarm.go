@@ -114,8 +114,6 @@ func resourceCompositeAlarm() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -129,7 +127,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.PutCompositeAlarm(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		_, err = conn.PutCompositeAlarm(ctx, input)
@@ -152,7 +150,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
 		}
 
@@ -221,9 +219,10 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
-	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
+	input := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteAlarms(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

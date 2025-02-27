@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -239,7 +238,7 @@ var (
 )
 
 // @SDKResource("aws_sns_topic", name="Topic")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
@@ -252,10 +251,7 @@ func resourceTopic() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceTopicCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceTopicCustomizeDiff,
 
 		Schema: topicSchema,
 	}
@@ -288,7 +284,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := conn.CreateTopic(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = conn.CreateTopic(ctx, input)
@@ -316,7 +312,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceTopicRead(ctx, d, meta)...)
 		}
 

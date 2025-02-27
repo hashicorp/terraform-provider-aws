@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -96,8 +95,6 @@ func resourceDefaultNetworkACL() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -128,7 +125,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Configure tags.
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := keyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 

@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="DRT Log Bucket Association")
+// @FrameworkResource("aws_shield_drt_access_log_bucket_association", name="DRT Log Bucket Association")
 func newDRTAccessLogBucketAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &drtAccessLogBucketAssociationResource{}
 
@@ -43,10 +43,6 @@ type drtAccessLogBucketAssociationResource struct {
 	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *drtAccessLogBucketAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_drt_access_log_bucket_association"
 }
 
 func (r *drtAccessLogBucketAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

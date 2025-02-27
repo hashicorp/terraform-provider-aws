@@ -201,7 +201,7 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	return append(diags, resourceIndexingConfigurationRead(ctx, d, meta)...)

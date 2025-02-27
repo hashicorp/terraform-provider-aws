@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -185,8 +184,6 @@ func resourceStage() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -270,7 +267,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(outputGS.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set(names.AttrARN, stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
 	d.Set("auto_deploy", outputGS.AutoDeploy)
 	d.Set("client_certificate_id", outputGS.ClientCertificateId)
 	if err := d.Set("default_route_settings", flattenDefaultRouteSettings(outputGS.DefaultRouteSettings)); err != nil {
@@ -278,7 +275,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("deployment_id", outputGS.DeploymentId)
 	d.Set(names.AttrDescription, outputGS.Description)
-	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set("execution_arn", stageInvokeARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
 	d.Set(names.AttrName, stageName)
 	if err := d.Set("route_settings", flattenRouteSettings(outputGS.RouteSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_settings: %s", err)
@@ -398,10 +395,11 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Stage: %s", d.Id())
-	_, err := conn.DeleteStage(ctx, &apigatewayv2.DeleteStageInput{
+	input := apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStage(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -466,6 +464,33 @@ func findStage(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findStages(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetStagesInput) ([]awstypes.Stage, error) {
+	var output []awstypes.Stage
+
+	err := getStagesPages(ctx, conn, input, func(page *apigatewayv2.GetStagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
@@ -588,21 +613,10 @@ func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []interfac
 	return vSettings
 }
 
-func stageARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/apis/%s/stages/%s", apiID, stageName),
-	}.String()
+func stageARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/apis/%s/stages/%s", apiID, stageName))
 }
 
-func stageInvokeARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "execute-api",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  fmt.Sprintf("%s/%s", apiID, stageName),
-	}.String()
+func stageInvokeARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARN(ctx, "execute-api", fmt.Sprintf("%s/%s", apiID, stageName))
 }

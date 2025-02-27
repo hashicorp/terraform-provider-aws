@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -29,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -107,7 +105,7 @@ func resourceJobDefinition() *schema.Resource {
 									"containers": {
 										Type:     schema.TypeList,
 										Required: true,
-										MaxItems: 1,
+										MaxItems: 10,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"args": {
@@ -242,6 +240,122 @@ func resourceJobDefinition() *schema.Resource {
 											},
 										},
 									},
+									"init_containers": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"args": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"command": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"env": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrName: {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															names.AttrValue: {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"image": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_pull_policy": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												names.AttrResources: {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"limits": {
+																Type:     schema.TypeMap,
+																Optional: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+															"requests": {
+																Type:     schema.TypeMap,
+																Optional: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+												"security_context": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"privileged": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"read_only_root_file_system": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"run_as_group": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"run_as_non_root": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"run_as_user": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"volume_mounts": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mount_path": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															names.AttrName: {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"read_only": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"metadata": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -258,6 +372,10 @@ func resourceJobDefinition() *schema.Resource {
 									},
 									"service_account_name": {
 										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"share_process_namespace": {
+										Type:     schema.TypeBool,
 										Optional: true,
 									},
 									"volumes": {
@@ -453,10 +571,7 @@ func resourceJobDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			jobDefinitionCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: jobDefinitionCustomizeDiff,
 	}
 }
 
@@ -670,7 +785,9 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			for _, node := range props.NodeRangeProperties {
-				diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+				if node.Container != nil {
+					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+				}
 			}
 			input.NodeProperties = props
 		}
@@ -782,6 +899,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		jobDefinitionType := awstypes.JobDefinitionType(d.Get(names.AttrType).(string))
 		input := &batch.RegisterJobDefinitionInput{
 			JobDefinitionName: aws.String(name),
+			Tags:              getTagsIn(ctx),
 			Type:              jobDefinitionType,
 		}
 
@@ -874,9 +992,10 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v := d.Get("deregister_on_new_revision"); v == true {
 			log.Printf("[DEBUG] Deleting previous Batch Job Definition: %s", currentARN)
-			_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+			input := batch.DeregisterJobDefinitionInput{
 				JobDefinition: aws.String(currentARN),
-			})
+			}
+			_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
@@ -907,9 +1026,10 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 		arn := aws.ToString(jds[i].JobDefinitionArn)
 
 		log.Printf("[DEBUG] Deregistering Batch Job Definition: %s", arn)
-		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+		input := batch.DeregisterJobDefinitionInput{
 			JobDefinition: aws.String(arn),
-		})
+		}
+		_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deregistering Batch Job Definition (%s): %s", arn, err)
@@ -1185,6 +1305,10 @@ func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProper
 		apiObject.ImagePullSecrets = expandImagePullSecrets(v.([]interface{}))
 	}
 
+	if v, ok := tfMap["init_containers"]; ok {
+		apiObject.InitContainers = expandContainers(v.([]interface{}))
+	}
+
 	if v, ok := tfMap["metadata"].([]interface{}); ok && len(v) > 0 {
 		if v, ok := v[0].(map[string]interface{})["labels"]; ok {
 			apiObject.Metadata = &awstypes.EksMetadata{
@@ -1195,6 +1319,10 @@ func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProper
 
 	if v, ok := tfMap["service_account_name"].(string); ok && v != "" {
 		apiObject.ServiceAccountName = aws.String(v)
+	}
+
+	if v, ok := tfMap["share_process_namespace"]; ok {
+		apiObject.ShareProcessNamespace = aws.Bool(v.(bool))
 	}
 
 	if v, ok := tfMap["volumes"]; ok {
@@ -1431,6 +1559,10 @@ func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []interface{}
 		tfMap["image_pull_secret"] = flattenImagePullSecrets(v)
 	}
 
+	if v := apiObject.InitContainers; v != nil {
+		tfMap["init_containers"] = flattenEKSContainers(v)
+	}
+
 	if v := apiObject.Metadata; v != nil {
 		metadata := make([]map[string]interface{}, 0)
 
@@ -1445,6 +1577,10 @@ func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []interface{}
 
 	if v := apiObject.ServiceAccountName; v != nil {
 		tfMap["service_account_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ShareProcessNamespace; v != nil {
+		tfMap["share_process_namespace"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Volumes; v != nil {

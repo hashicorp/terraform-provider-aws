@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Intent")
+// @FrameworkResource("aws_lexv2models_intent", name="Intent")
 func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIntent{}
 
@@ -55,10 +55,6 @@ type resourceIntent struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceIntent) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_intent"
 }
 
 func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -1091,10 +1087,10 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &lexmodelsv2.DeleteIntentInput{
-		IntentId:   aws.String(state.IntentID.ValueString()),
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
+		IntentId:   state.IntentID.ValueStringPointer(),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteIntent(ctx, in)

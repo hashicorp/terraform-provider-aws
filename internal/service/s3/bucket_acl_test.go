@@ -107,38 +107,38 @@ func TestBucketACLParseResourceID(t *testing.T) {
 		},
 		{
 			TestName:            "valid ID with bucket and bucket owner",
-			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("example", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket that has dot, hyphen, and number and bucket owner",
-			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "my-example.bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket, bucket owner, and acl",
-			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", string(types.BucketCannedACLPrivate)),
+			InputID:             tfs3.BucketACLCreateResourceID("example", acctest.Ct12Digit, string(types.BucketCannedACLPrivate)),
 			ExpectedACL:         string(types.BucketCannedACLPrivate),
 			ExpectedBucket:      "example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket, bucket owner, and acl that has hyphens",
-			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("example", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket that has dot, hyphen, and numbers, bucket owner, and acl that has hyphens",
-			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "my-example.bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1)", //lintignore:AWSAT003
@@ -191,38 +191,38 @@ func TestBucketACLParseResourceID(t *testing.T) {
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1) and bucket owner", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("Example", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "Example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, hyphen, and number and bucket owner", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.4000", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.4000", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "My_Example-Bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1), bucket owner, and acl", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", string(types.BucketCannedACLPrivate)),
+			InputID:             tfs3.BucketACLCreateResourceID("Example", acctest.Ct12Digit, string(types.BucketCannedACLPrivate)),
 			ExpectedACL:         string(types.BucketCannedACLPrivate),
 			ExpectedBucket:      "Example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1), bucket owner, and acl that has hyphens", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("Example", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "Example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, hyphen, and numbers, bucket owner, and acl that has hyphens", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("My_Example-bucket.4000", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-bucket.4000", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "My_Example-bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 	}
 
@@ -271,14 +271,14 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionFullControl),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 				),
 			},
@@ -399,23 +399,23 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 				Config: testAccBucketACLConfig_migrateGrantsChange(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionRead),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "access_control_policy.0.grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeGroup),
 						"permission":     string(types.PermissionReadAcp),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]*regexp.Regexp{
 						"grantee.0.uri": regexache.MustCompile(`http://acs.*/groups/s3/LogDelivery`),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 				),
 			},
@@ -472,20 +472,20 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionFullControl),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionWrite),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "access_control_policy.0.grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "acl", ""),
 				),
@@ -499,23 +499,23 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 				Config: testAccBucketACLConfig_grantsUpdate(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionRead),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "access_control_policy.0.grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeGroup),
 						"permission":     string(types.PermissionReadAcp),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]*regexp.Regexp{
 						"grantee.0.uri": regexache.MustCompile(`http://acs.*/groups/s3/LogDelivery`),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "acl", ""),
 				),
@@ -545,27 +545,27 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionFullControl),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionWrite),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "access_control_policy.0.grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "acl", ""),
 				),
@@ -594,8 +594,8 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 				),
 			},
 			{
@@ -603,14 +603,14 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
-						"grantee.#":      acctest.Ct1,
+						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionFullControl),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 				),
 			},
 			{
@@ -653,6 +653,9 @@ func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestChe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindBucketACL(ctx, conn, bucket, expectedBucketOwner)
 
@@ -863,7 +866,7 @@ resource "aws_s3_directory_bucket" "test" {
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_directory_bucket.test.id
+  bucket = aws_s3_directory_bucket.test.bucket
   acl    = %[1]q
 }
 `, acl))

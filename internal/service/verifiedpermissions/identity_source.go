@@ -43,7 +43,7 @@ const (
 	updateOperation operationTypeCtxValue = "UPDATE"
 )
 
-// @FrameworkResource(name="Identity Source")
+// @FrameworkResource("aws_verifiedpermissions_identity_source", name="Identity Source")
 func newResourceIdentitySource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIdentitySource{}
 
@@ -56,10 +56,6 @@ const (
 
 type resourceIdentitySource struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceIdentitySource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_identity_source"
 }
 
 func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

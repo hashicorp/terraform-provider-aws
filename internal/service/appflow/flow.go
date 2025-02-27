@@ -948,6 +948,11 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
+												"data_transfer_api": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+												},
 											},
 										},
 									},
@@ -961,6 +966,34 @@ func resourceFlow() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+												"pagination_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_page_size": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 10000),
+															},
+														},
+													},
+												},
+												"parallelism_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_page_size": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 10),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -1310,8 +1343,6 @@ func resourceFlow() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -1454,9 +1485,10 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
-	_, err := conn.DeleteFlow(ctx, &appflow.DeleteFlowInput{
+	input := appflow.DeleteFlowInput{
 		FlowName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteFlow(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -2342,6 +2374,38 @@ func expandSalesforceSourceProperties(tfMap map[string]interface{}) *types.Sales
 		a.Object = aws.String(v)
 	}
 
+	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
+		a.DataTransferApi = types.SalesforceDataTransferApi(v)
+	}
+
+	return a
+}
+
+func expandSAPODataPaginationConfigProperties(tfMap map[string]interface{}) *types.SAPODataPaginationConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SAPODataPaginationConfig{}
+
+	if v, ok := tfMap["max_page_size"].(int); ok && v != 0 {
+		a.MaxPageSize = aws.Int32(int32(v))
+	}
+
+	return a
+}
+
+func expandSAPODataParallelismConfigProperties(tfMap map[string]interface{}) *types.SAPODataParallelismConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SAPODataParallelismConfig{}
+
+	if v, ok := tfMap["max_parallelism"].(int); ok && v != 0 {
+		a.MaxParallelism = aws.Int32(int32(v))
+	}
+
 	return a
 }
 
@@ -2354,6 +2418,14 @@ func expandSAPODataSourceProperties(tfMap map[string]interface{}) *types.SAPODat
 
 	if v, ok := tfMap["object_path"].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
+	}
+
+	if v, ok := tfMap["pagination_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.PaginationConfig = expandSAPODataPaginationConfigProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["parallelism_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.ParallelismConfig = expandSAPODataParallelismConfigProperties(v[0].(map[string]interface{}))
 	}
 
 	return a
@@ -3474,12 +3546,41 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 
 	m["enable_dynamic_field_update"] = salesforceSourceProperties.EnableDynamicFieldUpdate
 	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
+	m["data_transfer_api"] = salesforceSourceProperties.DataTransferApi
 
 	if v := salesforceSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
 	}
 
 	return m
+}
+
+func flattenSAPODataPaginationConfigProperties(sapoDataPaginationConfig *types.SAPODataPaginationConfig) []any {
+	if sapoDataPaginationConfig == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := sapoDataPaginationConfig.MaxPageSize; v != nil {
+		m["max_page_size"] = aws.ToInt32(v)
+	}
+
+	return []any{m}
+}
+
+func flattenSAPODataParallelismConfigProperties(sapoDataParallelismConfig *types.SAPODataParallelismConfig) []any {
+	if sapoDataParallelismConfig == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := sapoDataParallelismConfig.MaxParallelism; v != nil {
+		m["max_parallelism"] = aws.ToInt32(v)
+	}
+
+	return []any{m}
 }
 
 func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSourceProperties) map[string]interface{} {
@@ -3491,6 +3592,14 @@ func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSou
 
 	if v := sapoDataSourceProperties.ObjectPath; v != nil {
 		m["object_path"] = aws.ToString(v)
+	}
+
+	if v := sapoDataSourceProperties.PaginationConfig; v != nil {
+		m["pagination_config"] = flattenSAPODataPaginationConfigProperties(v)
+	}
+
+	if v := sapoDataSourceProperties.ParallelismConfig; v != nil {
+		m["pagination_config"] = flattenSAPODataParallelismConfigProperties(v)
 	}
 
 	return m

@@ -22,11 +22,15 @@ data "aws_cloudfront_cache_policy" "example" {
 
 ### AWS-Managed Policies
 
-AWS managed cache policy names are prefixed with `Managed-`:
+AWS managed cache policy names are prefixed with `Managed-`, except for `UseOriginCacheControlHeaders` and `UseOriginCacheControlHeaders-QueryStrings`:
 
 ```terraform
-data "aws_cloudfront_cache_policy" "example" {
+data "aws_cloudfront_cache_policy" "example_1" {
   name = "Managed-CachingOptimized"
+}
+
+data "aws_cloudfront_cache_policy" "example_2" {
+  name = "UseOriginCacheControlHeaders"
 }
 ```
 

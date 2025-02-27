@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,8 +34,6 @@ func resourceDefaultVPC() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVPCImport,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  vpcMigrateState,
@@ -269,7 +266,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Configure tags.
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := keyValueTags(ctx, vpc.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 

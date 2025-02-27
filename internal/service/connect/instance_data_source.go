@@ -17,11 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_instance", name="Instance")
+// @Tags
 func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
@@ -87,6 +89,7 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			// "use_custom_tts_voices_enabled": {
 			// 	Type:     schema.TypeBool,
 			// 	Computed: true,
@@ -146,6 +149,8 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := readInstanceAttributes(ctx, conn, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	setTagsOut(ctx, matchedInstance.Tags)
 
 	return diags
 }

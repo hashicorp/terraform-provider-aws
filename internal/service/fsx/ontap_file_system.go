@@ -249,7 +249,6 @@ func resourceONTAPFileSystem() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			resourceONTAPFileSystemThroughputCapacityPerHAPairCustomizeDiff,
 			resourceONTAPFileSystemHAPairsCustomizeDiff,
 		),

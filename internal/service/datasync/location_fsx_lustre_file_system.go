@@ -93,8 +93,6 @@ func resourceLocationFSxLustreFileSystem() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -169,9 +167,10 @@ func resourceLocationFSxLustreFileSystemDelete(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location FSx for Lustre File System: %s", d.Id())
-	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags

@@ -9,8 +9,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,36 +50,43 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.0", "code"),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.0", names.AttrEmail),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.1", "openid"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.2", "phone"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.3", names.AttrProfile),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.Ct1),
-					resource.TestMatchResourceAttr(resourceName, "callback_urls.0", regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrClientSecret, regexache.MustCompile(`\w+`)),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", acctest.Ct1),
-					resource.TestMatchResourceAttr(resourceName, "logout_urls.0", regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
-					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
-					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.0", "COGNITO"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("code"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_scopes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(oauthScopeEmail),
+						knownvalue.StringExact(oauthScopeOpenID),
+						knownvalue.StringExact(oauthScopePhone),
+						knownvalue.StringExact(oauthScopeProfile),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("callback_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("explicit_auth_flows"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logout_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("read_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("supported_identity_providers"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("COGNITO"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("write_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -203,7 +214,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_accessTokenValidity(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "1"),
 				),
 			},
 			{
@@ -277,7 +288,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_idTokenValidity(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
 			},
 			{
@@ -405,11 +416,16 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnits(rName, "days"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "days"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "days"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "days"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("days"),
+							"id_token":      knownvalue.StringExact("days"),
+							"refresh_token": knownvalue.StringExact("days"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -424,11 +440,16 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnits(rName, "hours"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("hours"),
+							"id_token":      knownvalue.StringExact("hours"),
+							"refresh_token": knownvalue.StringExact("hours"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -443,8 +464,10 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -475,11 +498,16 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_explicitDefaults(
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnits_explicitDefaults(rName, "days"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "days"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("hours"),
+							"id_token":      knownvalue.StringExact("hours"),
+							"refresh_token": knownvalue.StringExact("days"),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -501,11 +529,16 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnits_Unit(rName, "access_token", "days"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "days"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "days"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("days"),
+							"id_token":      knownvalue.StringExact("hours"),
+							"refresh_token": knownvalue.StringExact("days"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -520,11 +553,16 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnits(rName, "hours"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("hours"),
+							"id_token":      knownvalue.StringExact("hours"),
+							"refresh_token": knownvalue.StringExact("hours"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -555,12 +593,17 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnitsTokenValidity(rName, "days"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "days"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "days"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "days"),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("days"),
+							"id_token":      knownvalue.StringExact("days"),
+							"refresh_token": knownvalue.StringExact("days"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -575,12 +618,17 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnitsTokenValidity(rName, "hours"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("hours"),
+							"id_token":      knownvalue.StringExact("hours"),
+							"refresh_token": knownvalue.StringExact("hours"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -612,33 +660,43 @@ func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct3),
-					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
-					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "read_attributes.*", names.AttrEmail),
-					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "write_attributes.*", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "300"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "code"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "implicit"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "5"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "openid"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", names.AttrEmail),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "phone"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "aws.cognito.signin.user.admin"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", names.AttrProfile),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttr(resourceName, "callback_urls.*", "https://www.example.com/callback"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "callback_urls.*", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", "https://www.example.com/redirect"),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "logout_urls.*", "https://www.example.com/login"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", "LEGACY"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("code"),
+						knownvalue.StringExact("implicit"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_scopes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(oauthScopeEmail),
+						knownvalue.StringExact(oauthScopeOpenID),
+						knownvalue.StringExact(oauthScopePhone),
+						knownvalue.StringExact(oauthScopeProfile),
+						knownvalue.StringExact(oauthScopeAWSCognitoSignInUserAdmin),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("callback_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("https://www.example.com/callback"),
+						knownvalue.StringExact("https://www.example.com/redirect"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("explicit_auth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("CUSTOM_AUTH_FLOW_ONLY"),
+						knownvalue.StringExact("USER_PASSWORD_AUTH"),
+						knownvalue.StringExact("ADMIN_NO_SRP_AUTH"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logout_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("https://www.example.com/login"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("read_attributes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(names.AttrEmail),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("write_attributes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(names.AttrEmail),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -673,33 +731,42 @@ func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct3),
-					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
-					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "read_attributes.*", names.AttrEmail),
-					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "write_attributes.*", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "299"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "code"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "implicit"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "5"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "openid"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", names.AttrEmail),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "phone"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "aws.cognito.signin.user.admin"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", names.AttrProfile),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttr(resourceName, "callback_urls.*", "https://www.example.com/callback"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "callback_urls.*", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", "https://www.example.com/redirect"),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "logout_urls.*", "https://www.example.com/login"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", "LEGACY"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("code"),
+						knownvalue.StringExact("implicit"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_scopes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(oauthScopeEmail),
+						knownvalue.StringExact(oauthScopeOpenID),
+						knownvalue.StringExact(oauthScopePhone),
+						knownvalue.StringExact(oauthScopeProfile),
+						knownvalue.StringExact(oauthScopeAWSCognitoSignInUserAdmin),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("callback_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("https://www.example.com/callback"),
+						knownvalue.StringExact("https://www.example.com/redirect"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("explicit_auth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("CUSTOM_AUTH_FLOW_ONLY"),
+						knownvalue.StringExact("USER_PASSWORD_AUTH"),
+						knownvalue.StringExact("ADMIN_NO_SRP_AUTH"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logout_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("https://www.example.com/login"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("read_attributes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(names.AttrEmail),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("write_attributes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(names.AttrEmail),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -735,13 +802,18 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				Config: testAccManagedUserPoolClientConfig_analyticsApplicationID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.role_arn", "aws_iam_role.analytics", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtFalse),
-					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_arn"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrExternalID: knownvalue.StringExact(rName),
+							"user_data_shared":   knownvalue.Bool(false),
+							"application_arn":    knownvalue.Null(),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("analytics_configuration").AtSliceIndex(0).AtMapKey(names.AttrApplicationID), pinpointResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("analytics_configuration").AtSliceIndex(0).AtMapKey(names.AttrRoleARN), "aws_iam_role.analytics", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -756,11 +828,18 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				Config: testAccManagedUserPoolClientConfig_analyticsShareData(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtTrue),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrExternalID: knownvalue.StringExact(rName),
+							"user_data_shared":   knownvalue.Bool(true),
+							"application_arn":    knownvalue.Null(),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("analytics_configuration").AtSliceIndex(0).AtMapKey(names.AttrApplicationID), pinpointResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("analytics_configuration").AtSliceIndex(0).AtMapKey(names.AttrRoleARN), "aws_iam_role.analytics", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -775,8 +854,10 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				Config: testAccManagedUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -814,11 +895,18 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_analyticsARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, names.AttrARN),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtFalse),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrExternalID:    knownvalue.Null(),
+							"user_data_shared":      knownvalue.Bool(false),
+							names.AttrApplicationID: knownvalue.Null(),
+							names.AttrRoleARN:       acctest.GlobalARN("iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("analytics_configuration").AtSliceIndex(0).AtMapKey("application_arn"), pinpointResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -833,13 +921,18 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_analyticsARNShareData(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, names.AttrARN),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtTrue),
-					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.external_id"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrExternalID:    knownvalue.Null(),
+							"user_data_shared":      knownvalue.Bool(true),
+							names.AttrApplicationID: knownvalue.Null(),
+							names.AttrRoleARN:       acctest.GlobalARN("iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("analytics_configuration").AtSliceIndex(0).AtMapKey("application_arn"), pinpointResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -886,7 +979,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_authSessionValidity(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "10"),
 				),
 			},
 			{
@@ -942,15 +1035,26 @@ func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_emptySets(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("code"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_scopes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(oauthScopeEmail),
+						knownvalue.StringExact(oauthScopeOpenID),
+						knownvalue.StringExact(oauthScopePhone),
+						knownvalue.StringExact(oauthScopeProfile),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("callback_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("explicit_auth_flows"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logout_urls"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("read_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("supported_identity_providers"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("write_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -985,15 +1089,30 @@ func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_nulls(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("code"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_scopes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(oauthScopeEmail),
+						knownvalue.StringExact(oauthScopeOpenID),
+						knownvalue.StringExact(oauthScopePhone),
+						knownvalue.StringExact(oauthScopeProfile),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("callback_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("explicit_auth_flows"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logout_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("read_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("supported_identity_providers"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("COGNITO"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("write_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1010,15 +1129,26 @@ func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 				// PlanOnly: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_flows"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("code"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_scopes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(oauthScopeEmail),
+						knownvalue.StringExact(oauthScopeOpenID),
+						knownvalue.StringExact(oauthScopePhone),
+						knownvalue.StringExact(oauthScopeProfile),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("callback_urls"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("explicit_auth_flows"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logout_urls"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("read_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("supported_identity_providers"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("write_attributes"), knownvalue.SetExact([]knownvalue.Check{})),
+				},
 			},
 		},
 	})

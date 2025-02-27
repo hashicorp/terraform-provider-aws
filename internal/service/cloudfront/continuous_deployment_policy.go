@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Continuous Deployment Policy")
+// @FrameworkResource("aws_cloudfront_continuous_deployment_policy", name="Continuous Deployment Policy")
 func newContinuousDeploymentPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &continuousDeploymentPolicyResource{}, nil
 }
@@ -34,10 +34,6 @@ func newContinuousDeploymentPolicyResource(context.Context) (resource.ResourceWi
 type continuousDeploymentPolicyResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*continuousDeploymentPolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_continuous_deployment_policy"
 }
 
 func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -235,9 +231,9 @@ func (r *continuousDeploymentPolicyResource) Update(ctx context.Context, request
 			return
 		}
 
-		input.Id = aws.String(new.ID.ValueString())
+		input.Id = new.ID.ValueStringPointer()
 		// Use state ETag value. The planned value will be unknown.
-		input.IfMatch = aws.String(old.ETag.ValueString())
+		input.IfMatch = old.ETag.ValueStringPointer()
 
 		output, err := conn.UpdateContinuousDeploymentPolicy(ctx, input)
 
@@ -271,7 +267,9 @@ func (r *continuousDeploymentPolicyResource) Delete(ctx context.Context, request
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("deleting CloudFront Continuous Deployment Policy", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Continuous Deployment Policy (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
 	input := &cloudfront.DeleteContinuousDeploymentPolicyInput{
@@ -293,7 +291,9 @@ func (r *continuousDeploymentPolicyResource) Delete(ctx context.Context, request
 		}
 
 		if err != nil {
-			response.Diagnostics.AddError("deleting CloudFront Continuous Deployment Policy", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Continuous Deployment Policy (%s)", data.ID.ValueString()), err.Error())
+
+			return
 		}
 
 		input.IfMatch = aws.String(etag)
@@ -316,7 +316,7 @@ func cdpETag(ctx context.Context, conn *cloudfront.Client, id string) (string, e
 	output, err := findContinuousDeploymentPolicyByID(ctx, conn, id)
 
 	if err != nil {
-		return "", fmt.Errorf("reading CloudFront Continuous Deployment Policy (%s): %w", id, err)
+		return "", err
 	}
 
 	return aws.ToString(output.ETag), nil

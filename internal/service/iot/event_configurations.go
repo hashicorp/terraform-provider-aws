@@ -65,7 +65,7 @@ func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	return append(diags, resourceEventConfigurationsRead(ctx, d, meta)...)

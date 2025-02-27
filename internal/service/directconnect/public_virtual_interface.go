@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,10 +38,7 @@ func resourcePublicVirtualInterface() *schema.Resource {
 			StateContext: resourcePublicVirtualInterfaceImport,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourcePublicVirtualInterfaceCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourcePublicVirtualInterfaceCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
@@ -187,10 +182,10 @@ func resourcePublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceD
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(vif.AmazonSideAsn), 10))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

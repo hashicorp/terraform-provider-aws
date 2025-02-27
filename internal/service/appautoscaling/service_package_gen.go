@@ -5,8 +5,8 @@ package appautoscaling
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,6 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceScheduledAction,
 			TypeName: "aws_appautoscaling_scheduled_action",
+			Name:     "Scheduled Action",
 		},
 		{
 			Factory:  resourceTarget,
@@ -53,13 +54,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*applicationautoscaling_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return applicationautoscaling_sdkv2.NewFromConfig(cfg,
-		applicationautoscaling_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*applicationautoscaling.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*applicationautoscaling.Options){
+		applicationautoscaling.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return applicationautoscaling.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*applicationautoscaling.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*applicationautoscaling.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *applicationautoscaling.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*applicationautoscaling.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

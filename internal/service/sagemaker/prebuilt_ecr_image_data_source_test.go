@@ -29,7 +29,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "kmeans", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "kmeans", "1")),
 				),
 			},
 		},
@@ -75,7 +75,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseClarify(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-clarify-processing", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-clarify-processing", "1")),
 				),
 			},
 		},
@@ -98,7 +98,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDataWrangler(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-data-wrangler-container", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-data-wrangler-container", "1")),
 				),
 			},
 		},
@@ -121,7 +121,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDebugger(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-debugger-rules", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-debugger-rules", "1")),
 				),
 			},
 		},
@@ -144,7 +144,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseInferentiaNeoInferentiaPyTor
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-neo-pytorch", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-neo-pytorch", "1")),
 				),
 			},
 		},
@@ -167,7 +167,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseInferentiaNeoTensorflowInfer
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-neo-tensorflow", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-neo-tensorflow", "1")),
 				),
 			},
 		},
@@ -190,7 +190,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseXGBoostSparkML(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-sparkml-serving", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-sparkml-serving", "1")),
 				),
 			},
 		},
@@ -213,7 +213,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseXGBoostHuggingFaceTEICPU(t *
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "tei-cpu", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "tei-cpu", "1")),
 				),
 			},
 		},
@@ -236,7 +236,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerChai
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-chainer", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-chainer", "1")),
 				),
 			},
 		},
@@ -259,7 +259,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerMXNe
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-mxnet-serving-eia", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-mxnet-serving-eia", "1")),
 				),
 			},
 		},
@@ -282,7 +282,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerTens
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-tensorflow-eia", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-tensorflow-eia", "1")),
 				),
 			},
 		},
@@ -305,7 +305,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDeepLearningHuggingFacePyTor
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "huggingface-pytorch-tgi-inference", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "huggingface-pytorch-tgi-inference", "1")),
 				),
 			},
 		},
@@ -328,7 +328,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDeepLearningNVIDIATritionInf
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-tritonserver", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-tritonserver", "1")),
 				),
 			},
 		},
@@ -351,7 +351,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDeepLearningStabilityAI(t *t
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "stabilityai-pytorch-inference", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "stabilityai-pytorch-inference", "1")),
 				),
 			},
 		},
@@ -374,7 +374,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerBasePython(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-base-python", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-base-python", "1")),
 				),
 			},
 		},
@@ -397,7 +397,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerRL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-rl-ray-container", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-rl-ray-container", "1")),
 				),
 			},
 		},
@@ -420,7 +420,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSpark(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-spark-processing", acctest.Ct1)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-spark-processing", "1")),
 				),
 			},
 		},

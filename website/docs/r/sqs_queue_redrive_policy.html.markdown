@@ -57,12 +57,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sqs_queue_redrive_policy.test
-  id = "https://queue.amazonaws.com/0123456789012/myqueue"
+  id = "https://queue.amazonaws.com/123456789012/myqueue"
 }
 ```
 
 Using `terraform import`, import SQS Queue Redrive Policies using the queue URL. For example:
 
 ```console
-% terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+% terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```

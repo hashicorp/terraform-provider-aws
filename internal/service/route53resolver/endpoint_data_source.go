@@ -141,7 +141,12 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	var ips []*string
 
 	for _, v := range ipAddresses {
-		ips = append(ips, v.Ip)
+		if v.Ip != nil {
+			ips = append(ips, v.Ip)
+		}
+		if v.Ipv6 != nil {
+			ips = append(ips, v.Ipv6)
+		}
 	}
 
 	d.Set(names.AttrIPAddresses, aws.ToStringSlice(ips))

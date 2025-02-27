@@ -45,8 +45,6 @@ func resourceReplicaExternalKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -132,7 +130,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
-		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
+		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		Tags:          getTagsIn(ctx),
 	}
 

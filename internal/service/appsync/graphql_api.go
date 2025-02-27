@@ -131,6 +131,13 @@ func resourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
+			"api_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiType](),
+				ForceNew:         true,
+				Default:          awstypes.GraphQLApiTypeGraphql,
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -216,6 +223,10 @@ func resourceGraphQLAPI() *schema.Resource {
 						},
 					},
 				},
+			},
+			"merged_api_execution_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -309,8 +320,6 @@ func resourceGraphQLAPI() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -326,7 +335,11 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
+	}
+
+	if v, ok := d.GetOk("api_type"); ok {
+		input.ApiType = awstypes.GraphQLApiType(v.(string))
 	}
 
 	if v, ok := d.GetOk("enhanced_metrics_config"); ok {
@@ -345,6 +358,10 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.LogConfig = expandLogConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("merged_api_execution_role_arn"); ok {
+		input.MergedApiExecutionRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("openid_connect_config"); ok {
 		input.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]interface{}))
 	}
@@ -358,7 +375,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
-		input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -405,6 +422,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("additional_authentication_provider", flattenAdditionalAuthenticationProviders(api.AdditionalAuthenticationProviders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting additional_authentication_provider: %s", err)
 	}
+	d.Set("api_type", api.ApiType)
 	d.Set(names.AttrARN, api.Arn)
 	d.Set("authentication_type", api.AuthenticationType)
 	if err := d.Set("enhanced_metrics_config", flattenEnhancedMetricsConfig(api.EnhancedMetricsConfig)); err != nil {
@@ -417,6 +435,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("log_config", flattenLogConfig(api.LogConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
 	}
+	d.Set("merged_api_execution_role_arn", api.MergedApiExecutionRoleArn)
 	d.Set(names.AttrName, api.Name)
 	if err := d.Set("openid_connect_config", flattenOpenIDConnectConfig(api.OpenIDConnectConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting openid_connect_config: %s", err)
@@ -447,7 +466,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("additional_authentication_provider"); ok {
-			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("enhanced_metrics_config"); ok {
@@ -466,6 +485,10 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.LogConfig = expandLogConfig(v.([]interface{}))
 		}
 
+		if v, ok := d.GetOk("merged_api_execution_role_arn"); ok {
+			input.MergedApiExecutionRoleArn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("openid_connect_config"); ok {
 			input.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]interface{}))
 		}
@@ -479,7 +502,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("user_pool_config"); ok {
-			input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("xray_enabled"); ok {
@@ -509,9 +532,10 @@ func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppSync GraphQL API: %s", d.Id())
-	_, err := conn.DeleteGraphqlApi(ctx, &appsync.DeleteGraphqlApiInput{
+	input := appsync.DeleteGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGraphqlApi(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

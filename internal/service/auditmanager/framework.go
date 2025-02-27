@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Framework")
+// @FrameworkResource("aws_auditmanager_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFramework{}, nil
@@ -42,10 +42,6 @@ const (
 
 type resourceFramework struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceFramework) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework"
 }
 
 func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -125,16 +121,16 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	in := auditmanager.CreateAssessmentFrameworkInput{
-		Name:        aws.String(plan.Name.ValueString()),
+		Name:        plan.Name.ValueStringPointer(),
 		ControlSets: csInput,
 		Tags:        getTagsIn(ctx),
 	}
 
 	if !plan.ComplianceType.IsNull() {
-		in.ComplianceType = aws.String(plan.ComplianceType.ValueString())
+		in.ComplianceType = plan.ComplianceType.ValueStringPointer()
 	}
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	out, err := conn.CreateAssessmentFramework(ctx, &in)
@@ -216,15 +212,15 @@ func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateReque
 
 		in := &auditmanager.UpdateAssessmentFrameworkInput{
 			ControlSets: csInput,
-			FrameworkId: aws.String(plan.ID.ValueString()),
-			Name:        aws.String(plan.Name.ValueString()),
+			FrameworkId: plan.ID.ValueStringPointer(),
+			Name:        plan.Name.ValueStringPointer(),
 		}
 
 		if !plan.ComplianceType.IsNull() {
-			in.ComplianceType = aws.String(plan.ComplianceType.ValueString())
+			in.ComplianceType = plan.ComplianceType.ValueStringPointer()
 		}
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 
 		out, err := conn.UpdateAssessmentFramework(ctx, in)
@@ -258,7 +254,7 @@ func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	_, err := conn.DeleteAssessmentFramework(ctx, &auditmanager.DeleteAssessmentFrameworkInput{
-		FrameworkId: aws.String(state.ID.ValueString()),
+		FrameworkId: state.ID.ValueStringPointer(),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -300,8 +296,6 @@ func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyP
 			}
 		}
 	}
-
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Framework, error) {
@@ -348,8 +342,8 @@ type resourceFrameworkData struct {
 	FrameworkType  types.String `tfsdk:"framework_type"`
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
-	Tags           types.Map    `tfsdk:"tags"`
-	TagsAll        types.Map    `tfsdk:"tags_all"`
+	Tags           tftags.Map   `tfsdk:"tags"`
+	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
 
 type frameworkControlSetsData struct {
@@ -395,7 +389,7 @@ func expandFrameworkControlSetsCreate(ctx context.Context, tfList []frameworkCon
 		diags.Append(item.Controls.ElementsAs(ctx, &controls, false)...)
 
 		new := awstypes.CreateAssessmentFrameworkControlSet{
-			Name:     aws.String(item.Name.ValueString()),
+			Name:     item.Name.ValueStringPointer(),
 			Controls: expandFrameworkControlSetsControls(controls),
 		}
 
@@ -414,8 +408,8 @@ func expandFrameworkControlSetsUpdate(ctx context.Context, tfList []frameworkCon
 
 		new := awstypes.UpdateAssessmentFrameworkControlSet{
 			Controls: expandFrameworkControlSetsControls(controls),
-			Id:       aws.String(item.ID.ValueString()),
-			Name:     aws.String(item.Name.ValueString()),
+			Id:       item.ID.ValueStringPointer(),
+			Name:     item.Name.ValueStringPointer(),
 		}
 
 		ucs = append(ucs, new)
@@ -431,7 +425,7 @@ func expandFrameworkControlSetsControls(tfList []frameworkControlSetsControlsDat
 	var controlsInput []awstypes.CreateAssessmentFrameworkControl
 	for _, item := range tfList {
 		new := awstypes.CreateAssessmentFrameworkControl{
-			Id: aws.String(item.ID.ValueString()),
+			Id: item.ID.ValueStringPointer(),
 		}
 		controlsInput = append(controlsInput, new)
 	}

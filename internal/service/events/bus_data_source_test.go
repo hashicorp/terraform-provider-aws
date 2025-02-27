@@ -49,6 +49,7 @@ func TestAccEventsBusDataSource_kmsKeyIdentifier(t *testing.T) {
 			{
 				Config: testAccBusDataSourceConfig_kmsKeyIdentifier(busName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_identifier", resourceName, "kms_key_identifier"),
 				),
 			},
@@ -124,6 +125,7 @@ resource "aws_kms_key_policy" "test" {
 
 resource "aws_cloudwatch_event_bus" "test" {
   name               = %[1]q
+  description        = "Test event bus"
   kms_key_identifier = aws_kms_key.test.arn
 }
 

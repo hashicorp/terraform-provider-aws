@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,7 +70,7 @@ func ResourceExtension() *schema.Resource {
 									},
 									names.AttrRoleARN: {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									names.AttrURI: {
 										Type:     schema.TypeString,
@@ -121,7 +120,6 @@ func ResourceExtension() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -231,9 +229,10 @@ func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	_, err := conn.DeleteExtension(ctx, &appconfig.DeleteExtensionInput{
+	input := appconfig.DeleteExtensionInput{
 		ExtensionIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteExtension(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

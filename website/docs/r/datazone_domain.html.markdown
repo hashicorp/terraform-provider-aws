@@ -76,6 +76,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the Domain.
 * `kms_key_identifier` - (Optional) ARN of the KMS key used to encrypt the Amazon DataZone domain, metadata and reporting data.
 * `single_sign_on` - (Optional) Single sign on options, used to [enable AWS IAM Identity Center](https://docs.aws.amazon.com/datazone/latest/userguide/enable-IAM-identity-center-for-datazone.html) for DataZone.
+* `skip_deletion_check` - (Optional) Whether to skip the deletion check for the Domain.
 
 ## Attribute Reference
 

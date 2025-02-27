@@ -44,11 +44,11 @@ func testAccTransitGatewayRouteTable_basic(t *testing.T, semaphore tfsync.Semaph
 				Config: testAccTransitGatewayRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-route-table/tgw-rtb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-route-table/tgw-rtb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "default_association_route_table", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_propagation_route_table", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -139,7 +139,7 @@ func testAccTransitGatewayRouteTable_tags(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccTransitGatewayRouteTableConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -153,7 +153,7 @@ func testAccTransitGatewayRouteTable_tags(t *testing.T, semaphore tfsync.Semapho
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable2),
 					testAccCheckTransitGatewayRouteTableNotRecreated(&transitGatewayRouteTable1, &transitGatewayRouteTable2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -163,7 +163,7 @@ func testAccTransitGatewayRouteTable_tags(t *testing.T, semaphore tfsync.Semapho
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable3),
 					testAccCheckTransitGatewayRouteTableNotRecreated(&transitGatewayRouteTable2, &transitGatewayRouteTable3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

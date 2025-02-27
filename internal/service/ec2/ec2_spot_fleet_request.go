@@ -868,8 +868,6 @@ func resourceSpotFleetRequest() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -994,14 +992,14 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
-	input := &ec2.RequestSpotFleetInput{
+	input := ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.RequestSpotFleet(ctx, input)
+			return conn.RequestSpotFleet(ctx, &input)
 		},
 		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
 	)
@@ -1123,7 +1121,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifySpotFleetRequestInput{
+		input := ec2.ModifySpotFleetRequestInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
 
@@ -1142,7 +1140,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		log.Printf("[DEBUG] Modifying EC2 Spot Fleet Request: %s", d.Id())
-		if _, err := conn.ModifySpotFleetRequest(ctx, input); err != nil {
+		if _, err := conn.ModifySpotFleetRequest(ctx, &input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Spot Fleet Request (%s): %s", d.Id(), err)
 		}
 
@@ -1165,10 +1163,11 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting EC2 Spot Fleet Request: %s", d.Id())
-	output, err := conn.CancelSpotFleetRequests(ctx, &ec2.CancelSpotFleetRequestsInput{
+	input := ec2.CancelSpotFleetRequestsInput{
 		SpotFleetRequestIds: []string{d.Id()},
 		TerminateInstances:  aws.Bool(terminateInstances),
-	})
+	}
+	output, err := conn.CancelSpotFleetRequests(ctx, &input)
 
 	if err == nil && output != nil {
 		err = cancelSpotFleetRequestsError(output.UnsuccessfulFleetRequests)
@@ -1188,10 +1187,10 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		input := &ec2.DescribeSpotFleetInstancesInput{
+		input := ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
-		output, err := findSpotFleetInstances(ctx, conn, input)
+		output, err := findSpotFleetInstances(ctx, conn, &input)
 
 		if err != nil {
 			return nil, err

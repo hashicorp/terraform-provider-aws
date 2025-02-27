@@ -5,7 +5,9 @@ package sagemaker
 
 import (
 	"context"
+	"errors"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -232,8 +233,6 @@ func resourceEndpoint() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -247,27 +246,26 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	} else {
 		name = id.UniqueId()
 	}
-
-	createOpts := &sagemaker.CreateEndpointInput{
+	input := &sagemaker.CreateEndpointInput{
 		EndpointName:       aws.String(name),
 		EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {
-		createOpts.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
+		input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker Endpoint create config: %#v", *createOpts)
-	_, err := conn.CreateEndpoint(ctx, createOpts)
+	_, err := conn.CreateEndpoint(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", name, err)
+	if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) create: %s", name, err)
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
@@ -289,13 +287,12 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, endpoint.EndpointName)
-	d.Set("endpoint_config_name", endpoint.EndpointConfigName)
 	d.Set(names.AttrARN, endpoint.EndpointArn)
-
 	if err := d.Set("deployment_config", flattenEndpointDeploymentConfig(endpoint.LastDeploymentConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting deployment_config for SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting deployment_config: %s", err)
 	}
+	d.Set("endpoint_config_name", endpoint.EndpointConfigName)
+	d.Set(names.AttrName, endpoint.EndpointName)
 
 	return diags
 }
@@ -305,23 +302,23 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChanges("endpoint_config_name", "deployment_config") {
-		modifyOpts := &sagemaker.UpdateEndpointInput{
+		input := &sagemaker.UpdateEndpointInput{
 			EndpointName:       aws.String(d.Id()),
 			EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 		}
 
 		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {
-			modifyOpts.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
+			input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
 		}
 
-		log.Printf("[INFO] Modifying endpoint_config_name attribute for %s: %#v", d.Id(), modifyOpts)
-		if _, err := conn.UpdateEndpoint(ctx, modifyOpts); err != nil {
+		_, err := conn.UpdateEndpoint(ctx, input)
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Endpoint (%s): %s", d.Id(), err)
 		}
 
-		err := waitEndpointInService(ctx, conn, d.Id())
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", d.Id(), err)
+		if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -332,14 +329,12 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	deleteEndpointOpts := &sagemaker.DeleteEndpointInput{
-		EndpointName: aws.String(d.Id()),
-	}
 	log.Printf("[INFO] Deleting SageMaker Endpoint: %s", d.Id())
+	_, err := conn.DeleteEndpoint(ctx, &sagemaker.DeleteEndpointInput{
+		EndpointName: aws.String(d.Id()),
+	})
 
-	_, err := conn.DeleteEndpoint(ctx, deleteEndpointOpts)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeValidationException) {
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
 		return diags
 	}
 
@@ -348,7 +343,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if _, err := waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -359,6 +354,23 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 		EndpointName: aws.String(name),
 	}
 
+	output, err := findEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.EndpointStatus; status == awstypes.EndpointStatusDeleting {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeEndpointInput) (*sagemaker.DescribeEndpointOutput, error) {
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
@@ -376,11 +388,71 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if output.EndpointStatus == awstypes.EndpointStatusDeleting {
-		return nil, tfresource.NewEmptyResultError(input)
+	return output, nil
+}
+
+func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEndpointByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.EndpointStatus), nil
+	}
+}
+
+func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) { //nolint:unparam
+	const (
+		timeout = 60 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
+		Target:  enum.Slice(awstypes.EndpointStatusInService),
+		Refresh: statusEndpoint(ctx, conn, name),
+		Timeout: timeout,
 	}
 
-	return output, nil
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
+		Target:  []string{},
+		Refresh: statusEndpoint(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandEndpointDeploymentConfig(configured []interface{}) *awstypes.DeploymentConfig {

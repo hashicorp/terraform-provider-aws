@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_glue_script")
+// @SDKDataSource("aws_glue_script", name="Script")
 func DataSourceScript() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceScriptRead,
@@ -128,7 +128,7 @@ func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "script not created")
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("python_script", output.PythonScript)
 	d.Set("scala_code", output.ScalaCode)
 
