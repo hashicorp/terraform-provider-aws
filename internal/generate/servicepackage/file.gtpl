@@ -8,6 +8,7 @@ import (
 {{ if .GenerateClient }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 {{- end }}
 {{- if gt (len .EndpointRegionOverrides) 0 }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -138,14 +139,25 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*{{ .GoV2Package }}.Options){
 		{{ .GoV2Package }}.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *{{ .GoV2Package }}.Options) {
+			if region := config["region"].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         "{{ .GoV2Package }}",
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 {{- if gt (len .EndpointRegionOverrides) 0 }}
 		func(o *{{ .GoV2Package }}.Options) {
 			switch partition := config["partition"].(string); partition {
 	{{- range $k, $v := .EndpointRegionOverrides }}
 			case endpoints.{{ $k | Camel }}PartitionID:
-				if region := endpoints.{{ $v | Camel }}RegionID; cfg.Region != region {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
+				if region := endpoints.{{ $v | Camel }}RegionID; o.Region != region {
+					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
+					    "service":         "{{ $.GoV2Package }}",
+						"original_region": o.Region,
 						"override_region": region,
 					})
 					o.Region = region

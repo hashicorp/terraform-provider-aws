@@ -320,6 +320,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.endpoints[servicePackageName],
 		"partition":        c.Partition(ctx),
+		"region":           c.Region(ctx),
 	}
 	switch servicePackageName {
 	case names.S3:
