@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -67,9 +66,13 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "event-actions/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
 			{
@@ -107,9 +110,8 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
 				),
 			},
 			{
@@ -121,6 +123,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
 				),
 			},
@@ -189,7 +192,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "event-actions/{id}"),
 				),
 			},
 		},
@@ -222,8 +225,8 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
 			},
 		},
@@ -256,8 +259,8 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 				Config: testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					resource.TestCheckResourceAttrPair(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "aws:kms"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
 			},
 		},
