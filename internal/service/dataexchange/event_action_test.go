@@ -13,9 +13,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -48,16 +46,6 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		t.Error(err)
-	}
-	stsConn := sts.NewFromConfig(cfg)
-	input := sts.GetCallerIdentityInput{}
-	identity, err := stsConn.GetCallerIdentity(ctx, &input)
-	if err != nil {
-		t.Error(err)
-	}
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
@@ -76,7 +64,7 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventActionConfig_basic(bucketName, dataSetId, *identity.Account),
+				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
@@ -98,16 +86,6 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		t.Error(err)
-	}
-	stsConn := sts.NewFromConfig(cfg)
-	input := sts.GetCallerIdentityInput{}
-	identity, err := stsConn.GetCallerIdentity(ctx, &input)
-	if err != nil {
-		t.Error(err)
-	}
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
@@ -126,7 +104,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventActionConfig_basic(bucketName, dataSetId, *identity.Account),
+				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
@@ -140,7 +118,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventActionConfig_encryption(bucketName, dataSetId, *identity.Account),
+				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
@@ -156,17 +134,6 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		t.Error(err)
-	}
-	stsConn := sts.NewFromConfig(cfg)
-	input := sts.GetCallerIdentityInput{}
-	identity, err := stsConn.GetCallerIdentity(ctx, &input)
-	if err != nil {
-		t.Error(err)
-	}
-
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
@@ -184,7 +151,7 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventActionConfig_basic(bucketName, dataSetId, *identity.Account),
+				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceEventAction, resourceName),
@@ -200,16 +167,6 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		t.Error(err)
-	}
-	stsConn := sts.NewFromConfig(cfg)
-	input := sts.GetCallerIdentityInput{}
-	identity, err := stsConn.GetCallerIdentity(ctx, &input)
-	if err != nil {
-		t.Error(err)
-	}
 
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
@@ -227,7 +184,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId, *identity.Account),
+				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
@@ -243,16 +200,6 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		t.Error(err)
-	}
-	stsConn := sts.NewFromConfig(cfg)
-	input := sts.GetCallerIdentityInput{}
-	identity, err := stsConn.GetCallerIdentity(ctx, &input)
-	if err != nil {
-		t.Error(err)
-	}
 
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
@@ -270,7 +217,7 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventActionConfig_encryption(bucketName, dataSetId, *identity.Account),
+				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
@@ -287,17 +234,6 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		t.Error(err)
-	}
-	stsConn := sts.NewFromConfig(cfg)
-	input := sts.GetCallerIdentityInput{}
-	identity, err := stsConn.GetCallerIdentity(ctx, &input)
-	if err != nil {
-		t.Error(err)
-	}
-
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
@@ -314,7 +250,7 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventActionConfig_kmsKeyEncryption(bucketName, dataSetId, *identity.Account),
+				Config: testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &dataexchange.GetEventActionOutput{}),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "aws:kms"),
@@ -392,7 +328,7 @@ func testAccCheckEventActionExists(ctx context.Context, n string, v *dataexchang
 	}
 }
 
-func s3BucketConfig(bucketName, accountId string) string {
+func s3BucketConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "%s"
@@ -425,17 +361,19 @@ data "aws_iam_policy_document" "test" {
       variable = "aws:SourceAccount"
 
       values = [
-        "%s"
+        data.aws_caller_identity.current.account_id
       ]
     }
   }
 }
-`, bucketName, accountId)
+
+data "aws_caller_identity" "current" {}
+`, bucketName)
 }
 
-func testAccEventActionConfig_basic(bucketName, dataSetId, accountId string) string {
+func testAccEventActionConfig_basic(bucketName, dataSetId string) string {
 	return acctest.ConfigCompose(
-		s3BucketConfig(bucketName, accountId),
+		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3 {
@@ -453,9 +391,9 @@ resource "aws_dataexchange_event_action" "test" {
 `, dataSetId))
 }
 
-func testAccEventActionConfig_keyPattern(bucketName, dataSetId, accountId string) string {
+func testAccEventActionConfig_keyPattern(bucketName, dataSetId string) string {
 	return acctest.ConfigCompose(
-		s3BucketConfig(bucketName, accountId),
+		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3 {
@@ -478,9 +416,9 @@ resource "aws_dataexchange_event_action" "test" {
 	)
 }
 
-func testAccEventActionConfig_encryption(bucketName, dataSetId, accountId string) string {
+func testAccEventActionConfig_encryption_AES256(bucketName, dataSetId string) string {
 	return acctest.ConfigCompose(
-		s3BucketConfig(bucketName, accountId),
+		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3 {
@@ -503,9 +441,9 @@ resource "aws_dataexchange_event_action" "test" {
 	)
 }
 
-func testAccEventActionConfig_kmsKeyEncryption(bucketName, dataSetId, accountId string) string {
+func testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId string) string {
 	return acctest.ConfigCompose(
-		s3BucketConfig(bucketName, accountId),
+		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
 }
