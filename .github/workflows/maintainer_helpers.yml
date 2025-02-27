@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(fromJSON('["assigned", "labeled, "opened"]'), github.event.action)
     env:
-      CURRENT_LABELS: ${{ github.event.issue.labels.*.name || github.event.pull_request.labels.*.name }}
+      CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
     steps:
       - uses: actions/create-github-app-token@0d564482f06ca65fa9e77e2510873638c82206f2 # v1.11.5
@@ -52,7 +52,7 @@ jobs:
       - name: Community Check
         id: community_check
         if: contains(fromJSON('["opened", "assigned"]'), github.event.action)
-        uses: .github/actions/community_check
+        uses: ./.github/actions/community_check
         with:
           user_login: ${{ github.event.action == 'assigned' && github.event.assignee.login || env.AUTHOR }}
           maintainers: ${{ secrets.MAINTAINERS }}
@@ -60,26 +60,26 @@ jobs:
       - name: Add Maintainer Pull Requests and Assignments
         id: workboard_maintainer
         if: |
-          ((github.event_name == 'pull_request_target' && github.event.action == "opened") || github.event.action == 'assigned')
+          ((github.event_name == 'pull_request_target' && github.event.action == 'opened') || github.event.action == 'assigned')
           && steps.community_check.outputs.maintainer == 'true'
-        uses: .github/actions/team_working_board
+        uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
           item_url: ${{ env.ISSUE_URL }}
-          status: ${{ github.event.action == 'opened' && "Maintainer PR" || "In Progress" }}
+          status: ${{ github.event.action == 'opened' && 'Maintainer PR' || 'In Progress' }}
           view: "working-board"
 
       - name: Label Prioritized Items
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # prevents an additional 'labeled' event
         if: |
-          ((steps.workboard_maintainer.status != 'skipped' && github.actor != 'dependabot[bot]') || contains(fromJSON('["crash", "regression"]'), github.event.label.name))
-          && !contains(env.CURRENT_LABELS, 'prioritized')
+          ((steps.workboard_maintainer.outcome != 'skipped' && github.actor != 'dependabot[bot]') || contains(fromJSON('["crash", "regression"]'), github.event.label.name))
+          && !contains(fromJSON(env.CURRENT_LABELS), 'prioritized')
         run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --add-label prioritized
 
       - name: Add Prioritized Items
         if: contains(fromJSON('["crash", "prioritized", "regression"]'), github.event.label.name)
-        uses: .github/actions/team_working_board
+        uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
           item_url: ${{ env.ISSUE_URL }}
@@ -88,7 +88,7 @@ jobs:
 
       - name: Add Engineering Initiatives
         if: github.event.label.name == 'engineering-initiative'
-        uses: .github/actions/team_working_board
+        uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
           item_url: ${{ env.ISSUE_URL }}
@@ -113,7 +113,7 @@ jobs:
         if: |
           github.event.action == 'opened'
           && github.event_name == 'pull_request_target'
-        uses: .github/actions/community_check
+        uses: ./.github/actions/community_check
         with:
           user_login: ${{ env.AUTHOR }}
           maintainers: ${{ secrets.MAINTAINERS }}
@@ -209,14 +209,14 @@ jobs:
             }
 
       - uses: actions/create-github-app-token@0d564482f06ca65fa9e77e2510873638c82206f2 # v1.11.5
-        if: github.event_name = 'schedule'
+        if: github.event_name == 'schedule'
         id: token
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PEM }}
 
       - name: Open Maintainer Pull Request Stats
-        if: steps.token.status != 'skipped'
+        if: steps.token.outcome != 'skipped'
         uses: breathingdust/github-team-slackbot@3519d5c7bdd556317b6158aeff5ae9c93c960bdd # v18.5.2
         with:
           github_token: ${{ steps.token.outputs.token }}
@@ -225,7 +225,7 @@ jobs:
           slack_channel: ${{ secrets.SLACK_CHANNEL }}
 
       - name: Release Tag
-        if: github.event_name = 'push'
+        if: github.event_name == 'push'
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
