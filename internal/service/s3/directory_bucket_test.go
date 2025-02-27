@@ -137,6 +137,46 @@ func TestAccS3DirectoryBucket_forceDestroyWithUnusualKeyBytes(t *testing.T) {
 	})
 }
 
+func TestAccS3DirectoryBucket_defaultDataRedundancy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryBucketConfig_defaultDataRedundancy(rName, "AvailabilityZone"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryBucketExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), knownvalue.StringExact("SingleAvailabilityZone")),
+					},
+				},
+			},
+			{
+				Config: testAccDirectoryBucketConfig_defaultDataRedundancy(rName, "LocalZone"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryBucketExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), knownvalue.StringExact("SingleLocalZone")),
+					},
+				},
+				ExpectError: regexache.MustCompile(`InvalidRequest: Invalid Data Redundancy value`),
+			},
+		},
+	})
+}
+
 func testAccCheckDirectoryBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
@@ -230,4 +270,17 @@ resource "aws_s3_directory_bucket" "test" {
   force_destroy = true
 }
 `)
+}
+
+func testAccDirectoryBucketConfig_defaultDataRedundancy(rName, locationType string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+    type = %[1]q
+  }
+}
+`, locationType))
 }
