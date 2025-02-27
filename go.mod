@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.30.16
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.14
-	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.11
+	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.16
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.16
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.44.0
@@ -40,21 +40,21 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.13
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.24.16
 	github.com/aws/aws-sdk-go-v2/service/backup v1.40.11
-	github.com/aws/aws-sdk-go-v2/service/batch v1.49.13
+	github.com/aws/aws-sdk-go-v2/service/batch v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.16
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.26.8
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.1.8
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.29.11
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.10
-	github.com/aws/aws-sdk-go-v2/service/chime v1.34.16
+	github.com/aws/aws-sdk-go-v2/service/chime v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.21.11
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.20.9
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.21.9
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.28.17
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.23.13
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.57.1
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.11
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.12
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.16
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.29.8
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.26.15
@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.13
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.16
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.40.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.204.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.205.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.16
@@ -180,7 +180,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.11
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.16
-	github.com/aws/aws-sdk-go-v2/service/oam v1.15.19
+	github.com/aws/aws-sdk-go-v2/service/oam v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.12
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.17
@@ -212,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.16.16
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.48.8
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.28.10
-	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.4.16
+	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.4.17
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.25.17
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.16
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.14
@@ -221,7 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.16
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.1.3
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.177.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.178.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.18
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.28.18
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.19
