@@ -20,7 +20,7 @@ resource "aws_dataexchange_event_action" "example" {
 
   action_export_revision_to_s3 {
     revision_destination {
-      bucket      = aws_s3_bucket.example.id
+      bucket      = aws_s3_bucket.example.bucket
       key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
 
