@@ -334,7 +334,7 @@ func testAccCheckEventActionExists(ctx context.Context, n string, v *dataexchang
 func s3BucketConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "%s"
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -386,7 +386,7 @@ resource "aws_dataexchange_event_action" "test" {
   }
 
   event_revision_published {
-    data_set_id = "%s"
+    data_set_id = %[1]q
   }
 
   depends_on = [aws_s3_bucket_policy.test]
@@ -410,7 +410,7 @@ resource "aws_dataexchange_event_action" "test" {
   }
 
   event_revision_published {
-    data_set_id = "%s"
+    data_set_id = %[1]q
   }
 
   depends_on = [aws_s3_bucket_policy.test]
@@ -435,7 +435,7 @@ resource "aws_dataexchange_event_action" "test" {
   }
 
   event_revision_published {
-    data_set_id = "%s"
+    data_set_id = %[1]q
   }
 
   depends_on = [aws_s3_bucket_policy.test]
@@ -464,7 +464,7 @@ resource "aws_dataexchange_event_action" "test" {
   }
 
   event_revision_published {
-    data_set_id = "%s"
+    data_set_id = %[1]q
   }
 
   depends_on = [aws_s3_bucket_policy.test]
