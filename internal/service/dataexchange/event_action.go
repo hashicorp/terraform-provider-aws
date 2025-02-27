@@ -110,14 +110,14 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var data resourceEventActionModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	var plan resourceEventActionModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := dataexchange.CreateEventActionInput{}
-	diags := data.Expand(ctx, &input)
+	diags := plan.Expand(ctx, &input)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -146,7 +146,7 @@ func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -183,15 +183,15 @@ func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest
 func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var data, state resourceEventActionModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	var plan, state resourceEventActionModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := dataexchange.UpdateEventActionInput{}
-	diags := data.Expand(ctx, &input)
+	diags := plan.Expand(ctx, &input)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -200,14 +200,14 @@ func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateReq
 	out, err := conn.UpdateEventAction(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionUpdating, ResNameEventAction, data.ID.String(), err),
+			create.ProblemStandardMessage(names.DataExchange, create.ErrActionUpdating, ResNameEventAction, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.Id == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionUpdating, ResNameEventAction, data.ID.String(), nil),
+			create.ProblemStandardMessage(names.DataExchange, create.ErrActionUpdating, ResNameEventAction, plan.ID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -217,7 +217,7 @@ func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceEventAction) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
