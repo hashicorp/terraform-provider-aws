@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -55,7 +57,18 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"action_export_revision_to_s3": schema.SingleNestedBlock{
@@ -139,9 +152,7 @@ func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	data.ARN = types.StringPointerValue(out.Arn)
-	data.ID = types.StringPointerValue(out.Id)
-
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -172,7 +183,6 @@ func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	resp.Diagnostics.Append(state.Flatten(ctx, out)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -213,6 +223,7 @@ func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -276,9 +287,11 @@ func FindEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 
 type resourceEventActionModel struct {
 	ARN                      types.String                                         `tfsdk:"arn"`
-	ID                       types.String                                         `tfsdk:"id"`
 	ActionExportRevisionToS3 fwtypes.ObjectValueOf[actionExportRevisionToS3Model] `tfsdk:"action_export_revision_to_s3"`
+	CreatedAt                timetypes.RFC3339                                    `tfsdk:"created_at"`
+	ID                       types.String                                         `tfsdk:"id"`
 	EventRevisionPublished   fwtypes.ObjectValueOf[eventRevisionPublishedModel]   `tfsdk:"event_revision_published"`
+	UpdatedAt                timetypes.RFC3339                                    `tfsdk:"updated_at"`
 }
 
 type actionExportRevisionToS3Model struct {

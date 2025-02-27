@@ -12,9 +12,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -70,8 +73,10 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "event-actions/{id}"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -93,6 +98,9 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 	resourceName := "aws_dataexchange_event_action.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
+
+	createdAtNoChange := statecheck.CompareValue(compare.ValuesSame())
+	updatedAtChange := statecheck.CompareValue(compare.ValuesDiffer())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -125,6 +133,10 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					createdAtNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrCreatedAt)),
+					updatedAtChange.AddStateValue(resourceName, tfjsonpath.New("updated_at")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
