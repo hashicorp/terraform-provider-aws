@@ -80,7 +80,7 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "dataexchange", regexache.MustCompile(`event-actions/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "dataexchange", regexache.MustCompile(`event-actions/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`event-actions/.+`)),
 				),
 			},
 			{

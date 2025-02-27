@@ -64,14 +64,14 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 					"encryption": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[actionS3Encryption](ctx),
 						Attributes: map[string]schema.Attribute{
-							"kms_key_arn": schema.StringAttribute{
+							names.AttrKMSKeyARN: schema.StringAttribute{
 								CustomType: fwtypes.ARNType,
 								Optional:   true,
 								Validators: []validator.String{
 									validators.ARN(),
 								},
 							},
-							"type": schema.StringAttribute{
+							names.AttrType: schema.StringAttribute{
 								Optional:   true,
 								CustomType: fwtypes.StringEnumType[awstypes.ServerSideEncryptionTypes](),
 							},
@@ -80,7 +80,7 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 					"revision_destination": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[actionRevisionDestination](ctx),
 						Attributes: map[string]schema.Attribute{
-							"bucket": schema.StringAttribute{
+							names.AttrBucket: schema.StringAttribute{
 								Required: true,
 							},
 							"key_pattern": schema.StringAttribute{
@@ -246,7 +246,7 @@ func (r *resourceEventAction) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceEventAction) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindEventActionByID(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetEventActionOutput, error) {
