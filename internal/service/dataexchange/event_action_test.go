@@ -400,7 +400,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   policy = data.aws_iam_policy_document.test.json
 }
 
@@ -440,7 +440,7 @@ func testAccEventActionConfig_basic(bucketName, dataSetId, accountId string) str
 resource "aws_dataexchange_event_action" "test" {
   action_export_revision_to_s3 {
     revision_destination {
-      bucket = aws_s3_bucket.test.id
+      bucket = aws_s3_bucket.test.bucket
     }
   }
 
@@ -463,7 +463,7 @@ resource "aws_dataexchange_event_action" "test" {
       type = "AES256"
     }
     revision_destination {
-      bucket      = aws_s3_bucket.test.id
+      bucket      = aws_s3_bucket.test.bucket
       key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
@@ -488,7 +488,7 @@ resource "aws_dataexchange_event_action" "test" {
       type = "AES256"
     }
     revision_destination {
-      bucket      = aws_s3_bucket.test.id
+      bucket      = aws_s3_bucket.test.bucket
       key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
@@ -517,7 +517,7 @@ resource "aws_dataexchange_event_action" "test" {
       kms_key_arn = aws_kms_key.test.arn
     }
     revision_destination {
-      bucket      = aws_s3_bucket.test.id
+      bucket      = aws_s3_bucket.test.bucket
       key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
     }
   }
