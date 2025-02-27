@@ -229,9 +229,10 @@ func (r *resourceEventAction) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	_, err := conn.DeleteEventAction(ctx, &dataexchange.DeleteEventActionInput{
+	input := dataexchange.DeleteEventActionInput{
 		EventActionId: state.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteEventAction(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return

@@ -53,7 +53,8 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
-	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	input := sts.GetCallerIdentityInput{}
+	identity, err := stsConn.GetCallerIdentity(ctx, &input)
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,7 +103,8 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
-	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	input := sts.GetCallerIdentityInput{}
+	identity, err := stsConn.GetCallerIdentity(ctx, &input)
 	if err != nil {
 		t.Error(err)
 	}
@@ -159,7 +161,8 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
-	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	input := sts.GetCallerIdentityInput{}
+	identity, err := stsConn.GetCallerIdentity(ctx, &input)
 	if err != nil {
 		t.Error(err)
 	}
@@ -202,7 +205,8 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
-	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	input := sts.GetCallerIdentityInput{}
+	identity, err := stsConn.GetCallerIdentity(ctx, &input)
 	if err != nil {
 		t.Error(err)
 	}
@@ -244,7 +248,8 @@ func TestAccDataExchangeEventAction_encryption(t *testing.T) {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
-	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	input := sts.GetCallerIdentityInput{}
+	identity, err := stsConn.GetCallerIdentity(ctx, &input)
 	if err != nil {
 		t.Error(err)
 	}
@@ -287,7 +292,8 @@ func TestAccDataExchangeEventAction_kmsKeyEncryption(t *testing.T) {
 		t.Error(err)
 	}
 	stsConn := sts.NewFromConfig(cfg)
-	identity, err := stsConn.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	input := sts.GetCallerIdentityInput{}
+	identity, err := stsConn.GetCallerIdentity(ctx, &input)
 	if err != nil {
 		t.Error(err)
 	}
