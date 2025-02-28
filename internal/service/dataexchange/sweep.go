@@ -4,14 +4,18 @@
 package dataexchange
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -19,6 +23,8 @@ func RegisterSweepers() {
 		Name: "aws_dataexchange_data_set",
 		F:    sweepDataSets,
 	})
+
+	awsv2.Register("aws_dataexchange_event_action", sweepEventActions)
 }
 
 func sweepDataSets(region string) error {
@@ -60,4 +66,27 @@ func sweepDataSets(region string) error {
 	}
 
 	return nil
+}
+
+func sweepEventActions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.DataExchangeClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	input := dataexchange.ListEventActionsInput{}
+	pages := dataexchange.NewListEventActionsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, eventActions := range page.EventActions {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newEventActionResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(eventActions.Id)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
