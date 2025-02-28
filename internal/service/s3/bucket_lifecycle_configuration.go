@@ -304,8 +304,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										},
 									},
 									"noncurrent_days": schema.Int32Attribute{
-										Optional: true,
-										Computed: true, // Because of schema change
+										Required: true,
 										PlanModifiers: []planmodifier.Int32{
 											int32planmodifier.UseStateForUnknown(),
 										},
