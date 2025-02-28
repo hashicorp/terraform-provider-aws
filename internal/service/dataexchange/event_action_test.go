@@ -32,15 +32,15 @@ func testAccPreCheckDataSetID(t *testing.T) {
 	if dataSetId := os.Getenv(testAccDataSetIDEnvVar); dataSetId == "" {
 		t.Skipf("Environment variable %s is required for DataExchange Event Action tests. "+
 			"This requires subscribing to an AWS Data Exchange product (e.g. AWS Data Exchange Heartbeat) "+
-			"and setting the environment variable to the entitled dataset ID", testAccDataSetIDEnvVar)
+			"and setting the environment variable to the entitled data set ID", testAccDataSetIDEnvVar)
 	}
 }
 
 // TestAccDataExchangeEventAction_basic, TestAccDataExchangeEventAction_update, TestAccDataExchangeEventAction_disappears, TestAccDataExchangeEventAction_keyPattern, TestAccDataExchangeEventAction_encryption, TestAccDataExchangeEventAction_kmsKeyEncryption require an entitled AWS Data Exchange dataset.
 // To run this test:
 // 1. Subscribe to an AWS Data Exchange product (e.g. AWS Data Exchange Heartbeat)
-// 2. Set TF_AWS_DATAEXCHANGE_DATA_SET_ID environment variable to the entitled dataset ID
-// 3. Ensure your AWS region is set to where the entitled dataset resides (e.g. us-east-1)
+// 2. Set TF_AWS_DATAEXCHANGE_DATA_SET_ID environment variable to the entitled data set ID
+// 3. Ensure your AWS region is set to where the entitled data set resides (e.g. us-east-1)
 
 func TestAccDataExchangeEventAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
