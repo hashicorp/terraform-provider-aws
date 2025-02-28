@@ -40,20 +40,20 @@ The following arguments are supported:
 
 Depending on the job type, additional arguments are required:
 
-### For EXPORT_ASSETS_TO_S3:
+### For EXPORT_ASSETS_TO_S3
 
 * `s3_asset_destinations` - (Required) List of S3 destinations for the assets. Each destination includes:
-  * `asset_id` - (Required) The ID of the asset to be exported.
-  * `bucket` - (Required) The S3 bucket that is the destination for the asset.
-  * `key` - (Required) The S3 key that is the destination for the asset.
+    * `asset_id` - (Required) The ID of the asset to be exported.
+    * `bucket` - (Required) The S3 bucket that is the destination for the asset.
+    * `key` - (Required) The S3 key that is the destination for the asset.
 * `s3_asset_destination_encryption_type` - (Optional) The type of encryption to use. Valid values: `aws:kms`.
 * `s3_asset_destination_encryption_kms_key_arn` - (Optional) The ARN of the KMS key to use for encryption.
 
-### For IMPORT_ASSETS_FROM_S3:
+### For IMPORT_ASSETS_FROM_S3
 
 * `s3_asset_sources` - (Required) List of S3 sources for the assets. Each source includes:
-  * `bucket` - (Required) The S3 bucket that contains the asset.
-  * `key` - (Required) The S3 key that identifies the asset.
+    * `bucket` - (Required) The S3 bucket that contains the asset.
+    * `key` - (Required) The S3 key that identifies the asset.
 
 [Additional sections for other job types...]
 
