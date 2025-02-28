@@ -121,8 +121,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudformation v1.58.0 h1:noBOPOGpmwqsLeMlR
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.58.0/go.mod h1:penaZKzGmqHGZId4EUCBIW/f9l4Y7hQ5NKd45yoCYuI=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.45.0 h1:WQIfK1Whi1zBc9AvK0AW43tITjAOEcAdX8ydlS9O4LQ=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.45.0/go.mod h1:FIBJ48TS+qJb+Ne4qJ+0NeIhtPTVXItXooTeNeVI4Po=
-github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.16 h1:VxfVyaJ/0XKzjRq79MA56vNfkcRVZ64AoqD7KiPS/yk=
-github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.16/go.mod h1:HD1r3kr68+NEPZw+JbHzrfJ1QlhDCujDjlwI+hJrbWU=
+github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.9.0 h1:/mJspH8vpPXOX9KrVszDcZoovRK5LLolbnbQ8p21OHw=
+github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.9.0/go.mod h1:YbdzdpFpQAgFgj20i0McmLxn2UfpBNt5FYMb7b1LjxM=
 github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.29.8 h1:K1WH+PgeVwsDqOh1vDtUkzx4JgGIqy+8o7RlgFJYbxE=
 github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.29.8/go.mod h1:O0d/B7zrcF1NcmdusTQMbEjY2635P5U5mhx4nvzaDD4=
 github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.26.15 h1:D+Za7wog+ANpieZZHCOAMIEBCVqOc2j7K4WmMOrJW+w=
