@@ -26,7 +26,6 @@ The following arguments are required:
 * `principal` - (Required) Lake Formation principal. Supported principals are IAM users or IAM roles. See [Principal](#principal) for more details.
 * `reosurce` - (Required) Structure for the resource. See [Resource](#resource) for more details.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -37,8 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### Principal
 
-The following arguments are required:
-* `data_lake_principal` - (Required) Identifier for the Lake Formation principal.
+* `data_lake_principal` - Identifier for the Lake Formation principal.
 
 ### Resource
 

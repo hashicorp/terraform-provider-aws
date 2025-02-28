@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
-	"github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +39,7 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormationServiceID)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,6 +57,7 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateIdFunc: testAccOptInImportStateIDFunc(resourceName),
 				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
@@ -87,12 +87,6 @@ func TestAccLakeFormationOptIn_disappears(t *testing.T) {
 				Config: testAccOptInConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, resourceName, &optin),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceOptIn = newResourceOptIn
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceOptIn, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -110,13 +104,11 @@ func testAccCheckOptInDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			// Extract principal from state
 			principalID := rs.Primary.Attributes["principal.0.data_lake_principal_identifier"]
 			if principalID == "" {
 				return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, tflakeformation.ResNameOptIn, rs.Primary.ID, errors.New("principal identifier not found in state"))
 			}
 
-			// Create resource based on what's in state
 			input := &lakeformation.ListLakeFormationOptInsInput{
 				Resource: &awstypes.Resource{},
 				Principal: &awstypes.DataLakePrincipal{
@@ -124,7 +116,6 @@ func testAccCheckOptInDestroy(ctx context.Context) resource.TestCheckFunc {
 				},
 			}
 
-			// Check each possible resource type
 			if v, ok := rs.Primary.Attributes["resource.0.catalog.0.id"]; ok && v != "" {
 				input.Resource = &awstypes.Resource{
 					Catalog: &awstypes.CatalogResource{Id: aws.String(v)},
@@ -214,74 +205,71 @@ func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
-		// Extract principal from state
 		principalID := rs.Primary.Attributes["principal.0.data_lake_principal_identifier"]
 		if principalID == "" {
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("principal identifier not set"))
 		}
 
-		// Create input with resource based on what's in state
 		in := &lakeformation.ListLakeFormationOptInsInput{}
-		var resource *types.Resource
+		var resource *awstypes.Resource
 
-		// Check each possible resource type
 		if v, ok := rs.Primary.Attributes["resource.0.catalog.0.id"]; ok && v != "" {
-			resource = &types.Resource{
-				Catalog: &types.CatalogResource{Id: aws.String(v)},
+			resource = &awstypes.Resource{
+				Catalog: &awstypes.CatalogResource{Id: aws.String(v)},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.database.0.name"]; ok && v != "" {
-			resource = &types.Resource{
-				Database: &types.DatabaseResource{
+			resource = &awstypes.Resource{
+				Database: &awstypes.DatabaseResource{
 					Name: aws.String(v),
 					// CatalogId: aws.String(rs.Primary.Attributes["resource.0.database.0.catalog_id"]),
 				},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.data_cells_filter.0.name"]; ok && v != "" {
-			resource = &types.Resource{
-				DataCellsFilter: &types.DataCellsFilterResource{
+			resource = &awstypes.Resource{
+				DataCellsFilter: &awstypes.DataCellsFilterResource{
 					Name: aws.String(v),
 					// DatabaseName:   aws.String(rs.Primary.Attributes["resource.0.data_cells_filter.0.database_name"]),
 					// TableCatalogId: aws.String(rs.Primary.Attributes["resource.0.data_cells_filter.0.table_catalog_id"]),
 				},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.data_location.0.resource_arn"]; ok && v != "" {
-			resource = &types.Resource{
-				DataLocation: &types.DataLocationResource{
+			resource = &awstypes.Resource{
+				DataLocation: &awstypes.DataLocationResource{
 					ResourceArn: aws.String(v),
 					// CatalogId:   aws.String(rs.Primary.Attributes["resource.0.data_location.0.catalog_id"]),
 				},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.lf_tag.0.key"]; ok && v != "" {
-			resource = &types.Resource{
-				LFTag: &types.LFTagKeyResource{
+			resource = &awstypes.Resource{
+				LFTag: &awstypes.LFTagKeyResource{
 					TagKey: aws.String(v),
 				},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.lf_tag_expression.0.name"]; ok && v != "" {
-			resource = &types.Resource{
-				LFTagExpression: &types.LFTagExpressionResource{
+			resource = &awstypes.Resource{
+				LFTagExpression: &awstypes.LFTagExpressionResource{
 					Name: aws.String(v),
 					// CatalogId: aws.String(rs.Primary.Attributes["resource.0.lf_tag_expression.0.catalog_id"]),
 				},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.lf_tag_policy.0.resource_type"]; ok && v != "" {
-			resource = &types.Resource{
-				LFTagPolicy: &types.LFTagPolicyResource{
-					ResourceType: types.ResourceType(v),
+			resource = &awstypes.Resource{
+				LFTagPolicy: &awstypes.LFTagPolicyResource{
+					ResourceType: awstypes.ResourceType(v),
 					// CatalogId:      aws.String(rs.Primary.Attributes["resource.0.lf_tag_policy.0.catalog_id"]),
 					// ExpressionName: aws.String(rs.Primary.Attributes["resource.0.lf_tag_policy.0.expression_name"]),
 				},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.table.0.name"]; ok && v != "" {
-			resource = &types.Resource{
-				Table: &types.TableResource{
+			resource = &awstypes.Resource{
+				Table: &awstypes.TableResource{
 					// Name:         aws.String(v),
 					DatabaseName: aws.String(rs.Primary.Attributes["resource.0.table.0.database_name"]),
 				},
 			}
 		} else if v, ok := rs.Primary.Attributes["resource.0.table_with_columns.0.name"]; ok && v != "" {
-			resource = &types.Resource{
-				TableWithColumns: &types.TableWithColumnsResource{
+			resource = &awstypes.Resource{
+				TableWithColumns: &awstypes.TableWithColumnsResource{
 					Name:         aws.String(v),
 					DatabaseName: aws.String(rs.Primary.Attributes["resource.0.table_with_columns.0.database_name"]),
 				},
@@ -300,10 +288,21 @@ func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformat
 		}
 
 		*optin = lakeformation.ListLakeFormationOptInsOutput{
-			LakeFormationOptInsInfoList: []types.LakeFormationOptInsInfo{*out},
+			LakeFormationOptInsInfoList: []awstypes.LakeFormationOptInsInfo{*out},
 		}
 
 		return nil
+	}
+}
+
+func testAccOptInImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["principal.0.data_lake_principal_identifier"], nil
 	}
 }
 
@@ -316,13 +315,22 @@ resource "aws_iam_role" "test" {
   path = "/"
 
   assume_role_policy = jsonencode({
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "glue.${data.aws_partition.current.dns_suffix}"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = {
+          Service = "glue.${data.aws_partition.current.dns_suffix}"
+        }
+      },
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = {
+          Service = "lakeformation.amazonaws.com"
+        }
       }
-    }]
+    ]
     Version = "2012-10-17"
   })
 }
@@ -359,9 +367,9 @@ resource "aws_lakeformation_opt_in" "test" {
     data_lake_principal_identifier = aws_iam_role.test.arn
   }
 
-  resource {
+  resource_data {
     database {
-      name = aws_glue_catalog_database.test.name
+      name       = aws_glue_catalog_database.test.name
       catalog_id = data.aws_caller_identity.current.account_id
     }
   }

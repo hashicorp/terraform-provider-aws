@@ -72,16 +72,16 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 		CustomType: fwtypes.NewListNestedObjectTypeOf[DataCellsFilter](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"database_name": schema.StringAttribute{
+				names.AttrDatabaseName: schema.StringAttribute{
 					Optional: true,
 				},
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Optional: true,
 				},
 				"table_catalog_id": schema.StringAttribute{
 					Optional: true,
 				},
-				"table_name": schema.StringAttribute{
+				names.AttrTableName: schema.StringAttribute{
 					Optional: true,
 				},
 			},
@@ -95,7 +95,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 				names.AttrResourceARN: schema.StringAttribute{
 					Required: true,
 				},
-				"catalog_id": schema.StringAttribute{
+				names.AttrCatalogID: schema.StringAttribute{
 					Optional: true,
 					Computed: true,
 				},
@@ -177,12 +177,12 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 		CustomType: fwtypes.NewListNestedObjectTypeOf[LFTagPolicy](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"resource_type": schema.StringAttribute{
+				names.AttrResourceType: schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.ResourceType](),
 				},
 				names.AttrCatalogID: catalogIDSchemaOptionalComputed(),
-				"expression": schema.ListAttribute{
+				names.AttrExpression: schema.ListAttribute{
 					CustomType:  fwtypes.ListOfStringType,
 					ElementType: types.StringType,
 					Optional:    true,
@@ -317,17 +317,17 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"condition": schema.ListNestedBlock{
+			names.AttrCondition: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[Condition](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"expression": schema.StringAttribute{
+						names.AttrExpression: schema.StringAttribute{
 							Computed: true,
 						},
 					},
 				},
 			},
-			"principal": schema.ListNestedBlock{
+			names.AttrPrincipal: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[DataLakePrincipal](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -345,7 +345,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"catalog":            catalogLNB,
-						"database":           databaseLNB,
+						names.AttrDatabase:   databaseLNB,
 						"data_cells_filter":  dataCellsFilterLNB,
 						"data_location":      dataLocationLNB,
 						"lf_tag":             lfTagLNB,
@@ -503,7 +503,7 @@ func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	in.Principal = &awstypes.DataLakePrincipal{
-		DataLakePrincipalIdentifier: aws.String(principalData.DataLakePrincipalIdentifier.ValueString()),
+		DataLakePrincipalIdentifier: principalData.DataLakePrincipalIdentifier.ValueStringPointer(),
 	}
 
 	in.Resource = optin.expandOptInResource(ctx, &resp.Diagnostics)
@@ -529,7 +529,7 @@ func (r *resourceOptIn) ConfigValidators(_ context.Context) []resource.ConfigVal
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("catalog"),
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("data_cells_filter"),
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("data_location"),
-			path.MatchRoot("resource_data").AtListIndex(0).AtName("database"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName(names.AttrDatabase),
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("lf_tag"),
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("lf_tag_expression"),
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("lf_tag_policy"),
@@ -540,7 +540,18 @@ func (r *resourceOptIn) ConfigValidators(_ context.Context) []resource.ConfigVal
 }
 
 func (r *resourceOptIn) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	principalID := req.ID
+
+	var data resourceOptInData
+	principal, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &DataLakePrincipal{
+		DataLakePrincipalIdentifier: types.StringValue(principalID),
+	})
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.Principal = principal
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListLakeFormationOptInsInput, filter tfslices.Predicate[*awstypes.LakeFormationOptInsInfo]) ([]awstypes.LakeFormationOptInsInfo, error) {
@@ -571,7 +582,6 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 }
 
 func findOptInByID(ctx context.Context, conn *lakeformation.Client, id string, resource *awstypes.Resource) (*awstypes.LakeFormationOptInsInfo, error) {
-
 	in := &lakeformation.ListLakeFormationOptInsInput{}
 
 	in.Resource = resource
