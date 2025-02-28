@@ -84,7 +84,10 @@ The following blocks are supported:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the event action.
+* `created_at` - Date and time when the resource was created.
 * `id` - Unique identifier for the event action.
+* `updated_at` - Data and time when the resource was last updated.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Data Exchange Event Action using the `id`. For example:
