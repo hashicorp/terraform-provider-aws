@@ -85,10 +85,10 @@ func (r *resourceJob) Schema(ctx context.Context, req resource.SchemaRequest, re
 								CustomType: fwtypes.NewListNestedObjectTypeOf[s3AssetSourceModel](ctx),
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
-										"bucket": schema.StringAttribute{
+										names.AttrBucket: schema.StringAttribute{
 											Optional: true,
 										},
-										"key": schema.StringAttribute{
+										names.AttrKey: schema.StringAttribute{
 											Optional: true,
 										},
 									},
@@ -111,10 +111,10 @@ func (r *resourceJob) Schema(ctx context.Context, req resource.SchemaRequest, re
 								CustomType: fwtypes.NewListNestedObjectTypeOf[s3AssetDestinationsModel](ctx),
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
-										"bucket": schema.StringAttribute{
+										names.AttrBucket: schema.StringAttribute{
 											Optional: true,
 										},
-										"key": schema.StringAttribute{
+										names.AttrKey: schema.StringAttribute{
 											Optional: true,
 										},
 										"asset_id": schema.StringAttribute{
@@ -126,14 +126,14 @@ func (r *resourceJob) Schema(ctx context.Context, req resource.SchemaRequest, re
 							"encryption": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[s3EncryptionModel](ctx),
 								Attributes: map[string]schema.Attribute{
-									"kms_key_arn": schema.StringAttribute{
+									names.AttrKMSKeyARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
 										Validators: []validator.String{
 											validators.ARN(),
 										},
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Optional:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.ServerSideEncryptionTypes](),
 									},
@@ -400,7 +400,7 @@ func (r *resourceJob) Delete(ctx context.Context, req resource.DeleteRequest, re
 }
 
 func (r *resourceJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func startJobById(ctx context.Context, conn *dataexchange.Client, id string) error {
