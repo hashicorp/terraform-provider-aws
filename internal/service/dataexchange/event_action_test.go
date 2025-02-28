@@ -66,7 +66,7 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
@@ -115,7 +115,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
@@ -128,7 +128,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 			},
 			{
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
@@ -171,7 +171,7 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceEventAction, resourceName),
 				),
@@ -205,7 +205,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Asset.Name}/${Revision.CreatedAt.Year}/${Revision.CreatedAt.Month}/${Revision.CreatedAt.Day}"),
 				),
@@ -217,7 +217,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 			},
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
 				),
@@ -255,7 +255,7 @@ func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
@@ -268,7 +268,7 @@ func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 			},
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
@@ -307,7 +307,7 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckResourceAttrPair(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "aws:kms"),
@@ -320,7 +320,7 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 			},
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
