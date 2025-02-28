@@ -194,10 +194,6 @@ func (r *serviceNetworkResourceAssociationResource) Delete(ctx context.Context, 
 	}
 }
 
-func (r *serviceNetworkResourceAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
 	input := vpclattice.GetServiceNetworkResourceAssociationInput{
 		ServiceNetworkResourceAssociationIdentifier: aws.String(id),

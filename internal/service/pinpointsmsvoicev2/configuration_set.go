@@ -226,10 +226,6 @@ func (r *configurationSetResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func (r *configurationSetResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type configurationSetResourceModel struct {
 	ID                   types.String                             `tfsdk:"id"`
 	ConfigurationSetARN  types.String                             `tfsdk:"arn"`

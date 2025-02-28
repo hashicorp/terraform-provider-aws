@@ -309,10 +309,6 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func (r *vpcOriginResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func vpcOriginETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
 	output, err := findVPCOriginByID(ctx, conn, id)
 

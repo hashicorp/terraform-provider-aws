@@ -111,7 +111,7 @@ func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFramework(ctx, output.NumberOfMemberAccountsOptedIn)
+	data.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFrameworkInt64(ctx, output.NumberOfMemberAccountsOptedIn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -177,7 +177,7 @@ func (r *enrollmentStatusResource) Update(ctx context.Context, request resource.
 		return
 	}
 
-	new.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFramework(ctx, output.NumberOfMemberAccountsOptedIn)
+	new.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFrameworkInt64(ctx, output.NumberOfMemberAccountsOptedIn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }

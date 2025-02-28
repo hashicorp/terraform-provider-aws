@@ -449,10 +449,6 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *lifecyclePolicyResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.LifecyclePolicy, error) {
 	input := &imagebuilder.GetLifecyclePolicyInput{
 		LifecyclePolicyArn: aws.String(arn),

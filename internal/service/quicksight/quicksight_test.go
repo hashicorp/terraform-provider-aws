@@ -29,6 +29,11 @@ func TestAccQuickSight_serial(t *testing.T) {
 			acctest.CtBasic:      testAccAccountSubscription_basic,
 			acctest.CtDisappears: testAccAccountSubscription_disappears,
 		},
+		"RoleMembership": {
+			acctest.CtBasic:      testAccRoleMembership_basic,
+			acctest.CtDisappears: testAccRoleMembership_disappears,
+			"role":               testAccRoleMembership_role,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

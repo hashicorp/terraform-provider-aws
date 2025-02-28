@@ -233,10 +233,6 @@ func (r *deliveryDestinationResource) ImportState(ctx context.Context, request r
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
-func (r *deliveryDestinationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDeliveryDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.DeliveryDestination, error) {
 	input := cloudwatchlogs.GetDeliveryDestinationInput{
 		Name: aws.String(name),

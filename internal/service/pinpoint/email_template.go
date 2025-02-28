@@ -271,10 +271,6 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 	return out, nil
 }
 
-func (r *resourceEmailTemplate) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type emailTemplateData struct {
 	TemplateName  types.String                                   `tfsdk:"template_name"`
 	EmailTemplate fwtypes.ListNestedObjectValueOf[emailTemplate] `tfsdk:"email_template"`

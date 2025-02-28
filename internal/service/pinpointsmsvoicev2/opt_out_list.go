@@ -157,10 +157,6 @@ func (r *optOutListResource) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (r *optOutListResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type optOutListResourceModel struct {
 	ID             types.String `tfsdk:"id"`
 	OptOutListARN  types.String `tfsdk:"arn"`

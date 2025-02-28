@@ -184,10 +184,6 @@ func (r *connectionAliasResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *connectionAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findConnectionAliasByID(ctx context.Context, conn *workspaces.Client, id string) (*awstypes.ConnectionAlias, error) {
 	input := &workspaces.DescribeConnectionAliasesInput{
 		AliasIds: []string{id},

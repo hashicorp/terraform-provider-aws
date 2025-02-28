@@ -242,7 +242,7 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
 	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
+	state.IdleSessionTTLInSeconds = flex.Int32ToFrameworkInt64(ctx, out.IdleSessionTTLInSeconds)
 
 	members, errDiags := flattenMembers(ctx, out.BotMembers)
 	resp.Diagnostics.Append(errDiags...)
@@ -374,10 +374,6 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 		)
 		return
 	}
-}
-
-func (r *resourceBot) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func (r *resourceBot) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -568,7 +564,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	rd.Name = flex.StringToFramework(ctx, out.BotName)
 	rd.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
 	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
+	rd.IdleSessionTTLInSeconds = flex.Int32ToFrameworkInt64(ctx, out.IdleSessionTTLInSeconds)
 
 	datap, d := flattenDataPrivacy(out.DataPrivacy)
 	diags.Append(d...)

@@ -268,10 +268,6 @@ func statusProfile(ctx context.Context, conn *route53profiles.Client, id string)
 	}
 }
 
-func (r *resourceProfile) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findProfileByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.Profile, error) {
 	in := &route53profiles.GetProfileInput{
 		ProfileId: aws.String(id),

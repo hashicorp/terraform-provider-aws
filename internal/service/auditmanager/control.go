@@ -333,8 +333,6 @@ func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPla
 			}
 		}
 	}
-
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Control, error) {

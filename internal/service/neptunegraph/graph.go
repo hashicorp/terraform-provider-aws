@@ -346,10 +346,6 @@ func (r *graphResource) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *graphResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findGraphByID(ctx context.Context, conn *neptunegraph.Client, id string) (*neptunegraph.GetGraphOutput, error) {
 	input := neptunegraph.GetGraphInput{
 		GraphIdentifier: aws.String(id),
