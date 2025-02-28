@@ -57,7 +57,7 @@ Depending on the job type, additional arguments are required:
 
 [Additional sections for other job types...]
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
