@@ -25,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const groupPolicyMaxSize = 5120
+
 // @SDKResource("aws_iam_group_policy", name="Group Policy")
 func resourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -60,7 +62,7 @@ func resourceGroupPolicy() *schema.Resource {
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(groupPolicyMaxSize),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {

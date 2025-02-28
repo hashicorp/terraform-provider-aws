@@ -18,6 +18,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"EFSBasic":           testAccAccess_efs_basic,
 			"S3Basic":            testAccAccess_s3_basic,
 			"S3Policy":           testAccAccess_s3_policy,
+			"PolicySize":         testAccAccess_PolicySize_exceeded,
 		},
 		"Agreement": {
 			acctest.CtBasic:      testAccAgreement_basic,
@@ -78,6 +79,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"ModifyWithOptions":     testAccUser_modifyWithOptions,
 			"Posix":                 testAccUser_posix,
 			"UserNameValidation":    testAccUser_UserName_Validation,
+			"PolicySizeValidation":  testAccUser_PolicySize_exceeded,
 		},
 	}
 

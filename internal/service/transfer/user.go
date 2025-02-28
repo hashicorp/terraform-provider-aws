@@ -29,6 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const policyMaxSize = 2048
+
 // @SDKResource("aws_transfer_user", name="User")
 // @Tags(identifierAttribute="arn")
 func resourceUser() *schema.Resource {
@@ -83,7 +85,7 @@ func resourceUser() *schema.Resource {
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(policyMaxSize),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
