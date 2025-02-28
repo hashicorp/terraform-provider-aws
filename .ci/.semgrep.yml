@@ -670,3 +670,13 @@ rules:
       - pattern-either:
           - pattern: errs.Must(...)
     severity: WARNING
+
+  - id: avoid-SingleNestedBlock
+    languages: [go]
+    message: Avoid use of `SingleNestedBlock` in schema definitions. Use `ListNestedBlock` with a size validator instead.
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern: schema.SingleNestedBlock{ ... }
+    severity: ERROR
