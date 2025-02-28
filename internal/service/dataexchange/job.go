@@ -544,8 +544,8 @@ func (m *resourceJobModel) Flatten(ctx context.Context, v *dataexchange.GetJobOu
 	diags.Append(flex.Flatten(ctx, v.Details, &m.Details)...)
 	m.ID = types.StringPointerValue(v.Id)
 	m.ARN = types.StringPointerValue(v.Arn)
-	m.Type = fwtypes.StringEnumValue[awstypes.Type](v.Type)
-	m.State = fwtypes.StringEnumValue[awstypes.State](v.State)
+	m.Type = fwtypes.StringEnumValue(v.Type)
+	m.State = fwtypes.StringEnumValue(v.State)
 
 	return diags
 }
