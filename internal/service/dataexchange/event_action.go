@@ -6,7 +6,6 @@ package dataexchange
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
@@ -34,13 +33,7 @@ import (
 
 // @FrameworkResource("aws_dataexchange_event_action", name="Event Action")
 func ResourceEventAction(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEventAction{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
-	return r, nil
+	return &resourceEventAction{}, nil
 }
 
 const (
