@@ -150,7 +150,7 @@ resource "aws_api_gateway_rest_api_put" "test" {
 }
 
 func testAccRestAPIPutConfig_multistage(rName string) string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_api_gateway_rest_api" "test" {
   name = "Simple API"
 }
@@ -222,5 +222,5 @@ resource "aws_api_gateway_stage" "testv2" {
   rest_api_id   = aws_api_gateway_rest_api.test.id
   deployment_id = aws_api_gateway_deployment.testv2.id
 }
-`, rName)
+`
 }
