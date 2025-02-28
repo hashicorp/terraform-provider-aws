@@ -142,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/ivs v1.42.11
+	github.com/aws/aws-sdk-go-v2/service/ivs v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.16.16
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.38.17
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.22.7
