@@ -94,6 +94,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TF_ACC` | Enables Go tests containing `resource.Test()` and `resource.ParallelTest()`. |
 | `TF_ACC_ASSUME_ROLE_ARN` | Amazon Resource Name of existing IAM Role to use for limited permissions acceptance testing. |
 | `TF_AWS_BEDROCK_OSS_COLLECTION_NAME` | Name of the OpenSearch Serverless collection to be used with an Amazon Bedrock Knowledge Base. |
+| `TF_AWS_DATAEXCHANGE_DATA_SET_ID` | ID of DataExchange Data Set to use for testing. |
 | `TF_AWS_LICENSE_MANAGER_GRANT_HOME_REGION` | Region where a License Manager license is imported. |
 | `TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN` | ARN for a License Manager license imported into the current account. |
 | `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL` | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit. |
