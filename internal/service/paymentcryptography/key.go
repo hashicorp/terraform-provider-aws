@@ -414,9 +414,6 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 func (r *resourceKey) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
-func (r *resourceKey) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
 
 func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
 	stateConf := &retry.StateChangeConf{

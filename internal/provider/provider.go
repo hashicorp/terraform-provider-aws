@@ -402,8 +402,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 					return ctx
 				},
-				interceptors: interceptors,
-				typeName:     typeName,
+				interceptors:           interceptors,
+				typeName:               typeName,
+				usesTransparentTagging: v.Tags != nil,
 			}
 			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r

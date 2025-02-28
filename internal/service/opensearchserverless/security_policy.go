@@ -173,7 +173,7 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, diags := flex.Calculate(ctx, plan, state)
+	diff, diags := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

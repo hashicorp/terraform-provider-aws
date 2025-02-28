@@ -450,8 +450,6 @@ func resourceDeploymentGroup() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

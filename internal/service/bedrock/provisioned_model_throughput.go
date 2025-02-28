@@ -197,10 +197,6 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 	}
 }
 
-func (r *resourceProvisionedModelThroughput) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetProvisionedModelThroughputOutput, error) {
 	input := &bedrock.GetProvisionedModelThroughputInput{
 		ProvisionedModelId: aws.String(id),

@@ -394,7 +394,7 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 					return
 				}
 
-				input.DesiredCapacity = fwflex.Int32FromFramework(ctx, highAvailabilityConfigData.DesiredCapacity)
+				input.DesiredCapacity = fwflex.Int32FromFrameworkInt64(ctx, highAvailabilityConfigData.DesiredCapacity)
 			}
 			if !new.InstanceType.Equal(old.InstanceType) {
 				input.InstanceType = fwflex.StringFromFramework(ctx, new.InstanceType)
@@ -449,10 +449,6 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *environmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetEnvironmentOutput, error) {

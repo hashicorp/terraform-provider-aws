@@ -250,10 +250,6 @@ func (r *accessGrantsInstanceResource) Delete(ctx context.Context, request resou
 	}
 }
 
-func (r *accessGrantsInstanceResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func associateAccessGrantsInstanceIdentityCenterInstance(ctx context.Context, conn *s3control.Client, accountID, identityCenterARN string) error {
 	input := &s3control.AssociateAccessGrantsIdentityCenterInput{
 		AccountId:         aws.String(accountID),

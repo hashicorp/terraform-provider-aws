@@ -176,8 +176,6 @@ func ResourceImageBuilder() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

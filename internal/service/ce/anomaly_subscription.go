@@ -103,8 +103,6 @@ func resourceAnomalySubscription() *schema.Resource {
 				Elem:     expressionElem(anomalySubscriptionRootElementSchemaLevel),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

@@ -105,8 +105,6 @@ func resourceNotificationRule() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

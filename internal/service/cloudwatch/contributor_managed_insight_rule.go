@@ -322,10 +322,6 @@ func (r *resourceContributorManagedInsightRule) ImportState(ctx context.Context,
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("template_name"), templateName)...)
 }
 
-func (r *resourceContributorManagedInsightRule) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceContributorManagedInsightRuleData struct {
 	ARN          types.String                   `tfsdk:"arn"`
 	ResourceArn  types.String                   `tfsdk:"resource_arn"`

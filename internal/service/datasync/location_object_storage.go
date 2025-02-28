@@ -105,8 +105,6 @@ func resourceLocationObjectStorage() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

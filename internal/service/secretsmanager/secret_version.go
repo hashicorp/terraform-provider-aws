@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -46,10 +45,6 @@ func resourceSecretVersion() *schema.Resource {
 				d.Set("has_secret_string_wo", false)
 				return []*schema.ResourceData{d}, nil
 			},
-		},
-
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("secret_string"), cty.GetAttrPath("secret_string_wo")),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -87,6 +82,7 @@ func resourceSecretVersion() *schema.Resource {
 				WriteOnly:     true,
 				Sensitive:     true,
 				ConflictsWith: []string{"secret_binary", "secret_string"},
+				RequiredWith:  []string{"secret_string_wo_version"},
 			},
 			"secret_string_wo_version": {
 				Type:         schema.TypeInt,

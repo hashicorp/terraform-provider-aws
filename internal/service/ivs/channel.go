@@ -90,8 +90,6 @@ func ResourceChannel() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.ChannelType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

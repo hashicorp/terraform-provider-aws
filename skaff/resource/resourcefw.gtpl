@@ -423,13 +423,15 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Populate a modify input structure and check for changes
+	// TIP: -- 3. Get the difference between the plan and state, if any
 	{{- end }}
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
-		!plan.Type.Equal(state.Type) {
+	diff, d := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
+	if diff.HasChanges() {
 		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
 		if resp.Diagnostics.HasError() {
@@ -563,12 +565,6 @@ func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-{{ if .IncludeTags -}}
-func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-{{- end }}
-
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not
@@ -686,16 +682,16 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client
 // is good practice to define it separately.
 {{- end }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .Resource }}, error) {
-	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
+	input := {{ .ServiceLower }}.Get{{ .Resource }}Input{
 		Id: aws.String(id),
 	}
 
-	out, err := conn.Get{{ .Resource }}(ctx, in)
+	out, err := conn.Get{{ .Resource }}(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
-				LastRequest: in,
+				LastRequest: &input,
 			}
 		}
 
@@ -703,7 +699,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return out.{{ .Resource }}, nil

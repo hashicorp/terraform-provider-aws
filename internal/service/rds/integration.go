@@ -247,10 +247,6 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *integrationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findIntegrationByARN(ctx context.Context, conn *rds.Client, arn string) (*awstypes.Integration, error) {
 	input := &rds.DescribeIntegrationsInput{
 		IntegrationIdentifier: aws.String(arn),

@@ -238,10 +238,6 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *capacityBlockReservationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type capacityBlockReservationReservationModel struct {
 	ARN                     types.String                                                     `tfsdk:"arn"`
 	AvailabilityZone        types.String                                                     `tfsdk:"availability_zone"`

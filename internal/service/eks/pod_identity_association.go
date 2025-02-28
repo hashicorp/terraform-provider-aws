@@ -267,10 +267,6 @@ func (r *podIdentityAssociationResource) ImportState(ctx context.Context, req re
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])...)
 }
 
-func (r *podIdentityAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, associationID, clusterName string) (*awstypes.PodIdentityAssociation, error) {
 	input := &eks.DescribePodIdentityAssociationInput{
 		AssociationId: aws.String(associationID),

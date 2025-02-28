@@ -2869,7 +2869,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 }
 
 func testAccBucketLifecycleConfigurationConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

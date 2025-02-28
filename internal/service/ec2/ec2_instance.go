@@ -850,7 +850,6 @@ func resourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				_, ok := diff.GetOk(names.AttrLaunchTemplate)
 

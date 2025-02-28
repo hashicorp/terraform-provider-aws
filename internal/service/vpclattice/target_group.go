@@ -204,8 +204,6 @@ func resourceTargetGroup() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.TargetGroupType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
