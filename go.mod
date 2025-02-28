@@ -135,7 +135,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.41.0
-	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.16
+	github.com/aws/aws-sdk-go-v2/service/inspector v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.34.10
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.20.14
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.0.9
