@@ -49,10 +49,6 @@ type resourceJob struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceJob) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_dataexchange_job"
-}
-
 func (r *resourceJob) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
