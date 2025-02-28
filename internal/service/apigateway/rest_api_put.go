@@ -50,10 +50,6 @@ type resourceRestAPIPut struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceRestAPIPut) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_api_gateway_rest_api_put"
-}
-
 func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
