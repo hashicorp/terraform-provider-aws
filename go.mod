@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.29.0
-	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.49.17
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.29.18
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.42.17
 	github.com/aws/aws-sdk-go-v2/service/location v1.43.0
