@@ -97,7 +97,7 @@ func resourceParameter() *schema.Resource {
 			"overwrite": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Deprecated: "this attribute has been deprecated",
+				Deprecated: "overwrite is deprecated. This argument will be removed in a future major version.",
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
