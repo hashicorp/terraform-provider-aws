@@ -66,7 +66,7 @@ func resourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrBucket: {
-				Deprecated:   "Use the aws_s3_object resource instead",
+				Deprecated:   "bucket is deprecated. Use the aws_s3_object resource instead.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -123,7 +123,7 @@ func resourceBucketObject() *schema.Resource {
 				Default:  false,
 			},
 			names.AttrKey: {
-				Deprecated:   "Use the aws_s3_object resource instead",
+				Deprecated:   "key is deprecated. Use the aws_s3_object resource instead.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
