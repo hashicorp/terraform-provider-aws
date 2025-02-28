@@ -12,11 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -71,48 +70,85 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"action_export_revision_to_s3": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[actionExportRevisionToS3Model](ctx),
-				Blocks: map[string]schema.Block{
-					"encryption": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[actionS3Encryption](ctx),
-						Attributes: map[string]schema.Attribute{
-							names.AttrKMSKeyARN: schema.StringAttribute{
-								CustomType: fwtypes.ARNType,
-								Optional:   true,
-								Validators: []validator.String{
-									validators.ARN(),
+			names.AttrAction: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[actionModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"export_revision_to_s3": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[autoExportRevisionToS3RequestDetailsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"encryption": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[actionS3Encryption](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrKMSKeyARN: schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Optional:   true,
+													Validators: []validator.String{
+														validators.ARN(),
+													},
+												},
+												names.AttrType: schema.StringAttribute{
+													Optional:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.ServerSideEncryptionTypes](),
+												},
+											},
+										},
+									},
+									"revision_destination": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[autoExportRevisionDestinationEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrBucket: schema.StringAttribute{
+													Required: true,
+												},
+												"key_pattern": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Default:  stringdefault.StaticString("${Revision.CreatedAt}/${Asset.Name}"),
+												},
+											},
+										},
+									},
 								},
-							},
-							names.AttrType: schema.StringAttribute{
-								Optional:   true,
-								CustomType: fwtypes.StringEnumType[awstypes.ServerSideEncryptionTypes](),
-							},
-						},
-					},
-					"revision_destination": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[actionRevisionDestination](ctx),
-						Attributes: map[string]schema.Attribute{
-							names.AttrBucket: schema.StringAttribute{
-								Required: true,
-							},
-							"key_pattern": schema.StringAttribute{
-								Optional: true,
-								Computed: true,
-								Default:  stringdefault.StaticString("${Revision.CreatedAt}/${Asset.Name}"),
 							},
 						},
 					},
 				},
 			},
-			"event_revision_published": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[eventRevisionPublishedModel](ctx),
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+			"event": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[eventModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
-				Attributes: map[string]schema.Attribute{
-					"data_set_id": schema.StringAttribute{
-						Required: true,
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"revision_published": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[revisionPublishedModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"data_set_id": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -130,9 +166,8 @@ func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	input := dataexchange.CreateEventActionInput{}
-	diags := plan.Expand(ctx, &input)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -182,7 +217,7 @@ func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(state.Flatten(ctx, out)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -201,9 +236,8 @@ func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	input := dataexchange.UpdateEventActionInput{}
-	diags := plan.Expand(ctx, &input)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("EventAction"))...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -286,20 +320,24 @@ func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 }
 
 type resourceEventActionModel struct {
-	ARN                      types.String                                         `tfsdk:"arn"`
-	ActionExportRevisionToS3 fwtypes.ObjectValueOf[actionExportRevisionToS3Model] `tfsdk:"action_export_revision_to_s3"`
-	CreatedAt                timetypes.RFC3339                                    `tfsdk:"created_at"`
-	ID                       types.String                                         `tfsdk:"id"`
-	EventRevisionPublished   fwtypes.ObjectValueOf[eventRevisionPublishedModel]   `tfsdk:"event_revision_published"`
-	UpdatedAt                timetypes.RFC3339                                    `tfsdk:"updated_at"`
+	ARN       types.String                                 `tfsdk:"arn"`
+	Action    fwtypes.ListNestedObjectValueOf[actionModel] `tfsdk:"action"`
+	CreatedAt timetypes.RFC3339                            `tfsdk:"created_at"`
+	ID        types.String                                 `tfsdk:"id"`
+	Event     fwtypes.ListNestedObjectValueOf[eventModel]  `tfsdk:"event"`
+	UpdatedAt timetypes.RFC3339                            `tfsdk:"updated_at"`
 }
 
-type actionExportRevisionToS3Model struct {
-	RevisionDestination fwtypes.ObjectValueOf[actionRevisionDestination] `tfsdk:"revision_destination"`
-	Encryption          fwtypes.ObjectValueOf[actionS3Encryption]        `tfsdk:"encryption"`
+type actionModel struct {
+	ExportRevisionToS3 fwtypes.ListNestedObjectValueOf[autoExportRevisionToS3RequestDetailsModel] `tfsdk:"export_revision_to_s3"`
 }
 
-type actionRevisionDestination struct {
+type autoExportRevisionToS3RequestDetailsModel struct {
+	RevisionDestination fwtypes.ListNestedObjectValueOf[autoExportRevisionDestinationEntryModel] `tfsdk:"revision_destination"`
+	Encryption          fwtypes.ListNestedObjectValueOf[actionS3Encryption]                      `tfsdk:"encryption"`
+}
+
+type autoExportRevisionDestinationEntryModel struct {
 	Bucket     types.String `tfsdk:"bucket"`
 	KeyPattern types.String `tfsdk:"key_pattern"`
 }
@@ -309,53 +347,10 @@ type actionS3Encryption struct {
 	KmsKeyArn types.String                                           `tfsdk:"kms_key_arn"`
 }
 
-type eventRevisionPublishedModel struct {
+type eventModel struct {
+	RevisionPublished fwtypes.ListNestedObjectValueOf[revisionPublishedModel] `tfsdk:"revision_published"`
+}
+
+type revisionPublishedModel struct {
 	DataSetId types.String `tfsdk:"data_set_id"`
-}
-
-func (m resourceEventActionModel) Expand(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Use switch variable assignment to eliminate type assertions in cases
-	switch apiInput := v.(type) {
-	case *dataexchange.CreateEventActionInput:
-		var eventApiInput awstypes.RevisionPublished
-		eventModel, _ := m.EventRevisionPublished.ToPtr(ctx)
-		diags.Append(flex.Expand(ctx, eventModel, &eventApiInput)...)
-		apiInput.Event = &awstypes.Event{RevisionPublished: &eventApiInput}
-
-		actionModel, _ := m.ActionExportRevisionToS3.ToPtr(ctx)
-		var actionApiInput awstypes.AutoExportRevisionToS3RequestDetails
-		diags.Append(flex.Expand(ctx, actionModel, &actionApiInput)...)
-		apiInput.Action = &awstypes.Action{ExportRevisionToS3: &actionApiInput}
-
-	case *dataexchange.UpdateEventActionInput:
-		apiInput.EventActionId = m.ID.ValueStringPointer()
-		actionModel, _ := m.ActionExportRevisionToS3.ToPtr(ctx)
-		var actionApiInput awstypes.AutoExportRevisionToS3RequestDetails
-		diags.Append(flex.Expand(ctx, actionModel, &actionApiInput)...)
-		apiInput.Action = &awstypes.Action{ExportRevisionToS3: &actionApiInput}
-	}
-
-	return diags
-}
-
-func (m *resourceEventActionModel) Flatten(ctx context.Context, v *dataexchange.GetEventActionOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	diags.Append(flex.Flatten(ctx, v, m)...)
-
-	if v.Action != nil {
-		var actionModel actionExportRevisionToS3Model
-		diags.Append(flex.Flatten(ctx, v.Action.ExportRevisionToS3, &actionModel)...)
-		m.ActionExportRevisionToS3, _ = fwtypes.NewObjectValueOf(ctx, &actionModel)
-	}
-
-	if v.Event != nil {
-		var eventModel eventRevisionPublishedModel
-		diags.Append(flex.Flatten(ctx, v.Event.RevisionPublished, &eventModel)...)
-		m.EventRevisionPublished, _ = fwtypes.NewObjectValueOf(ctx, &eventModel)
-	}
-
-	return diags
 }

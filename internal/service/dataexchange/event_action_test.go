@@ -68,13 +68,17 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.bucket", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.0.bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.0.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "event-actions/{id}"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, "event_revision_published.data_set_id", dataSetId),
+					resource.TestCheckResourceAttr(resourceName, "event.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event.0.revision_published.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event.0.revision_published.0.data_set_id", dataSetId),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
@@ -117,8 +121,9 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
 				),
 			},
 			{
@@ -130,8 +135,11 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.0.kms_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.0.type", "AES256"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					createdAtNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrCreatedAt)),
@@ -207,7 +215,10 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Asset.Name}/${Revision.CreatedAt.Year}/${Revision.CreatedAt.Month}/${Revision.CreatedAt.Day}"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.0.key_pattern", "${Asset.Name}/${Revision.CreatedAt.Year}/${Revision.CreatedAt.Month}/${Revision.CreatedAt.Day}"),
 				),
 			},
 			{
@@ -219,7 +230,10 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.revision_destination.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.0.key_pattern", "${Revision.CreatedAt}/${Asset.Name}"),
 				),
 			},
 			{
@@ -257,8 +271,11 @@ func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.0.kms_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.0.type", "AES256"),
 				),
 			},
 			{
@@ -270,8 +287,9 @@ func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
 				),
 			},
 			{
@@ -309,8 +327,11 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 				Config: testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckResourceAttrPair(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn", "aws_kms_key.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type", "aws:kms"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.export_revision_to_s3.0.encryption.0.kms_key_arn", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.0.type", "aws:kms"),
 				),
 			},
 			{
@@ -322,8 +343,9 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.kms_key_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "action_export_revision_to_s3.encryption.type"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
 				),
 			},
 			{
@@ -450,14 +472,18 @@ func testAccEventActionConfig_basic(bucketName, dataSetId string) string {
 		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3 {
-    revision_destination {
-      bucket = aws_s3_bucket.test.bucket
+  action {
+    export_revision_to_s3 {
+      revision_destination {
+        bucket = aws_s3_bucket.test.bucket
+      }
     }
   }
 
-  event_revision_published {
-    data_set_id = %[1]q
+  event {
+    revision_published {
+      data_set_id = %[1]q
+    }
   }
 
   depends_on = [aws_s3_bucket_policy.test]
@@ -470,18 +496,22 @@ func testAccEventActionConfig_keyPattern(bucketName, dataSetId string) string {
 		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3 {
-    encryption {
-      type = "AES256"
-    }
-    revision_destination {
-      bucket      = aws_s3_bucket.test.bucket
-      key_pattern = "$${Asset.Name}/$${Revision.CreatedAt.Year}/$${Revision.CreatedAt.Month}/$${Revision.CreatedAt.Day}"
+  action {
+    export_revision_to_s3 {
+      encryption {
+        type = "AES256"
+      }
+      revision_destination {
+        bucket      = aws_s3_bucket.test.bucket
+        key_pattern = "$${Asset.Name}/$${Revision.CreatedAt.Year}/$${Revision.CreatedAt.Month}/$${Revision.CreatedAt.Day}"
+      }
     }
   }
 
-  event_revision_published {
-    data_set_id = %[1]q
+  event {
+    revision_published {
+      data_set_id = %[1]q
+    }
   }
 
   depends_on = [aws_s3_bucket_policy.test]
@@ -495,17 +525,21 @@ func testAccEventActionConfig_encryption_AES256(bucketName, dataSetId string) st
 		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3 {
-    encryption {
-      type = "AES256"
-    }
-    revision_destination {
-      bucket      = aws_s3_bucket.test.bucket
+  action {
+    export_revision_to_s3 {
+      encryption {
+        type = "AES256"
+      }
+      revision_destination {
+        bucket = aws_s3_bucket.test.bucket
+      }
     }
   }
 
-  event_revision_published {
-    data_set_id = %[1]q
+  event {
+    revision_published {
+      data_set_id = %[1]q
+    }
   }
 
   depends_on = [aws_s3_bucket_policy.test]
@@ -522,18 +556,22 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_dataexchange_event_action" "test" {
-  action_export_revision_to_s3 {
-    encryption {
-      type        = "aws:kms"
-      kms_key_arn = aws_kms_key.test.arn
-    }
-    revision_destination {
-      bucket      = aws_s3_bucket.test.bucket
+  action {
+    export_revision_to_s3 {
+      encryption {
+        type        = "aws:kms"
+        kms_key_arn = aws_kms_key.test.arn
+      }
+      revision_destination {
+        bucket = aws_s3_bucket.test.bucket
+      }
     }
   }
 
-  event_revision_published {
-    data_set_id = %[1]q
+  event {
+    revision_published {
+      data_set_id = %[1]q
+    }
   }
 
   depends_on = [aws_s3_bucket_policy.test]
