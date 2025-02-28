@@ -1,4 +1,14 @@
 ## 5.90.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_dataexchange_event_action` ([#40552](https://github.com/hashicorp/terraform-provider-aws/issues/40552))
+
+BUG FIXES:
+
+* resource/aws_ecs_service: Fix removal of all `vpc_lattice_configurations` blocks ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
+* resource/aws_vpclattice_target_group: Retry `ConflictException` errors on delete ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
+
 ## 5.89.0 (February 27, 2025)
 
 FEATURES:
