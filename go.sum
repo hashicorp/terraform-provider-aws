@@ -383,8 +383,8 @@ github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.8.0 h1:sEq8HTBGbL4Qpbn14S
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.8.0/go.mod h1:pC3ZHIWCZGExYbsbC+ODkIQ8iLUNJ1F9XaQbiEVjhF8=
 github.com/aws/aws-sdk-go-v2/service/oam v1.17.0 h1:W+HUlXFqPzep2KIuH9sTa491QJAkFsBgxSJvNgr9rqk=
 github.com/aws/aws-sdk-go-v2/service/oam v1.17.0/go.mod h1:LBtiDaQEt3JcbaEW6eY5S5b28i0yF66RYqwUnGVOGns=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.12 h1:/rRmB51BJz0kNe18PAKR/4M19zHhUPzJyRE3yfPX1ko=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.12/go.mod h1:CIjwOr8Lxd8ISFEwwDJcmaIADGHKP3gQ0R5F5DDXEFU=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.46.0 h1:eR65kYpNlKpGkkvg+A83hc0hpk2CHappaz1JAUCcxVs=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.46.0/go.mod h1:51rUy2+lDiOQVlekScV044he709HMMhCdUDHqSBojgg=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.18.1 h1:dREIt+ZiKIxB+4QEla3Eu475NFcvG7gWFEHn6JHqdag=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.18.1/go.mod h1:fc0L37txKDnpxko8VZDTjsq9A37kqQClpXVqw1fVdTg=
 github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.17 h1:9w+MrWWKjoxafOJwfDPOcKL6rYe6gWGUQbsGLPbSoFs=
