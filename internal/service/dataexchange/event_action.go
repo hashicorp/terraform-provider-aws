@@ -316,11 +316,11 @@ func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 }
 
 type resourceEventActionModel struct {
-	ARN       types.String                                 `tfsdk:"arn"`
 	Action    fwtypes.ListNestedObjectValueOf[actionModel] `tfsdk:"action"`
+	ARN       types.String                                 `tfsdk:"arn"`
 	CreatedAt timetypes.RFC3339                            `tfsdk:"created_at"`
-	ID        types.String                                 `tfsdk:"id"`
 	Event     fwtypes.ListNestedObjectValueOf[eventModel]  `tfsdk:"event"`
+	ID        types.String                                 `tfsdk:"id"`
 	UpdatedAt timetypes.RFC3339                            `tfsdk:"updated_at"`
 }
 
@@ -329,8 +329,8 @@ type actionModel struct {
 }
 
 type autoExportRevisionToS3RequestDetailsModel struct {
-	RevisionDestination fwtypes.ListNestedObjectValueOf[autoExportRevisionDestinationEntryModel] `tfsdk:"revision_destination"`
 	Encryption          fwtypes.ListNestedObjectValueOf[actionS3Encryption]                      `tfsdk:"encryption"`
+	RevisionDestination fwtypes.ListNestedObjectValueOf[autoExportRevisionDestinationEntryModel] `tfsdk:"revision_destination"`
 }
 
 type autoExportRevisionDestinationEntryModel struct {
@@ -339,8 +339,8 @@ type autoExportRevisionDestinationEntryModel struct {
 }
 
 type actionS3Encryption struct {
-	Type      fwtypes.StringEnum[awstypes.ServerSideEncryptionTypes] `tfsdk:"type"`
 	KmsKeyArn types.String                                           `tfsdk:"kms_key_arn"`
+	Type      fwtypes.StringEnum[awstypes.ServerSideEncryptionTypes] `tfsdk:"type"`
 }
 
 type eventModel struct {
