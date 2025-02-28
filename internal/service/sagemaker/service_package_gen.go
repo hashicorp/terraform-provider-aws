@@ -9,22 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
+	return []*itypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
+	return []*itypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
+	return []*itypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourcePrebuiltECRImage,
 			TypeName: "aws_sagemaker_prebuilt_ecr_image",
@@ -33,13 +33,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
+	return []*itypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceApp,
 			TypeName: "aws_sagemaker_app",
 			Name:     "App",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -47,7 +47,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceAppImageConfig,
 			TypeName: "aws_sagemaker_app_image_config",
 			Name:     "App Image Config",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -55,7 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceCodeRepository,
 			TypeName: "aws_sagemaker_code_repository",
 			Name:     "Code Repository",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -63,7 +63,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDataQualityJobDefinition,
 			TypeName: "aws_sagemaker_data_quality_job_definition",
 			Name:     "Data Quality Job Definition",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -76,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDeviceFleet,
 			TypeName: "aws_sagemaker_device_fleet",
 			Name:     "Device Fleet",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -84,7 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDomain,
 			TypeName: "aws_sagemaker_domain",
 			Name:     "Domain",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -92,7 +92,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceEndpoint,
 			TypeName: "aws_sagemaker_endpoint",
 			Name:     "Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -100,7 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceEndpointConfiguration,
 			TypeName: "aws_sagemaker_endpoint_configuration",
 			Name:     "Endpoint Configuration",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -108,7 +108,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceFeatureGroup,
 			TypeName: "aws_sagemaker_feature_group",
 			Name:     "Feature Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -116,7 +116,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceFlowDefinition,
 			TypeName: "aws_sagemaker_flow_definition",
 			Name:     "Flow Definition",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -124,7 +124,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceHub,
 			TypeName: "aws_sagemaker_hub",
 			Name:     "Hub",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -132,7 +132,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceHumanTaskUI,
 			TypeName: "aws_sagemaker_human_task_ui",
 			Name:     "Human Task UI",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -140,7 +140,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceImage,
 			TypeName: "aws_sagemaker_image",
 			Name:     "Image",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -153,7 +153,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceMlflowTrackingServer,
 			TypeName: "aws_sagemaker_mlflow_tracking_server",
 			Name:     "Mlflow Tracking Server",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -161,7 +161,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceModel,
 			TypeName: "aws_sagemaker_model",
 			Name:     "Model",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -169,7 +169,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceModelPackageGroup,
 			TypeName: "aws_sagemaker_model_package_group",
 			Name:     "Model Package Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -182,7 +182,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceMonitoringSchedule,
 			TypeName: "aws_sagemaker_monitoring_schedule",
 			Name:     "Monitoring Schedule",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -190,7 +190,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceNotebookInstance,
 			TypeName: "aws_sagemaker_notebook_instance",
 			Name:     "Notebook Instance",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -203,7 +203,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourcePipeline,
 			TypeName: "aws_sagemaker_pipeline",
 			Name:     "Pipeline",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -211,7 +211,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceProject,
 			TypeName: "aws_sagemaker_project",
 			Name:     "Project",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -224,7 +224,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceSpace,
 			TypeName: "aws_sagemaker_space",
 			Name:     "Space",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -232,7 +232,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceStudioLifecycleConfig,
 			TypeName: "aws_sagemaker_studio_lifecycle_config",
 			Name:     "Studio Lifecycle Config",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -240,7 +240,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceUserProfile,
 			TypeName: "aws_sagemaker_user_profile",
 			Name:     "User Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -253,7 +253,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceWorkteam,
 			TypeName: "aws_sagemaker_workteam",
 			Name:     "Workteam",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},

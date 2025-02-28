@@ -9,31 +9,31 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
+	return []*itypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
+	return []*itypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newConnectionAliasResource,
 			TypeName: "aws_workspaces_connection_alias",
 			Name:     "Connection Alias",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
+	return []*itypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceBundle,
 			TypeName: "aws_workspaces_bundle",
@@ -43,7 +43,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceDirectory,
 			TypeName: "aws_workspaces_directory",
 			Name:     "Directory",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -56,20 +56,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceWorkspace,
 			TypeName: "aws_workspaces_workspace",
 			Name:     "Workspace",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
+	return []*itypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceDirectory,
 			TypeName: "aws_workspaces_directory",
 			Name:     "Directory",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -77,7 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceIPGroup,
 			TypeName: "aws_workspaces_ip_group",
 			Name:     "IP Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -85,7 +85,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceWorkspace,
 			TypeName: "aws_workspaces_workspace",
 			Name:     "Workspace",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},

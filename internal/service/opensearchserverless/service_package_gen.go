@@ -9,14 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
+	return []*itypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newDataSourceAccessPolicy,
 			TypeName: "aws_opensearchserverless_access_policy",
@@ -26,7 +26,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory:  newDataSourceCollection,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -43,8 +43,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
+	return []*itypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newResourceAccessPolicy,
 			TypeName: "aws_opensearchserverless_access_policy",
@@ -54,7 +54,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newResourceCollection,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -81,8 +81,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
+	return []*itypes.ServicePackageSDKDataSource{
 		{
 			Factory:  DataSourceSecurityPolicy,
 			TypeName: "aws_opensearchserverless_security_policy",
@@ -96,8 +96,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
+	return []*itypes.ServicePackageSDKResource{}
 }
 
 func (p *servicePackage) ServicePackageName() string {

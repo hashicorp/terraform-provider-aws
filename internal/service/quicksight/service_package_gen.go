@@ -9,18 +9,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
+	return []*itypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
+	return []*itypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newFolderMembershipResource,
 			TypeName: "aws_quicksight_folder_membership",
@@ -40,7 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newNamespaceResource,
 			TypeName: "aws_quicksight_namespace",
 			Name:     "Namespace",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -58,20 +58,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newVPCConnectionResource,
 			TypeName: "aws_quicksight_vpc_connection",
 			Name:     "VPC Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
+	return []*itypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceAnalysis,
 			TypeName: "aws_quicksight_analysis",
 			Name:     "Analysis",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -98,8 +98,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
+	return []*itypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAccountSubscription,
 			TypeName: "aws_quicksight_account_subscription",
@@ -109,7 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceAnalysis,
 			TypeName: "aws_quicksight_analysis",
 			Name:     "Analysis",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -117,7 +117,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDashboard,
 			TypeName: "aws_quicksight_dashboard",
 			Name:     "Dashboard",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -125,7 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -133,7 +133,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDataSource,
 			TypeName: "aws_quicksight_data_source",
 			Name:     "Data Source",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -141,7 +141,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceFolder,
 			TypeName: "aws_quicksight_folder",
 			Name:     "Folder",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -159,7 +159,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceTemplate,
 			TypeName: "aws_quicksight_template",
 			Name:     "Template",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -167,7 +167,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceTheme,
 			TypeName: "aws_quicksight_theme",
 			Name:     "Theme",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},

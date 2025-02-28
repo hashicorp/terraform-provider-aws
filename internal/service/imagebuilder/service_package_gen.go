@@ -9,36 +9,36 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
+	return []*itypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
+	return []*itypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newLifecyclePolicyResource,
 			TypeName: "aws_imagebuilder_lifecycle_policy",
 			Name:     "Lifecycle Policy",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
+	return []*itypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceComponent,
 			TypeName: "aws_imagebuilder_component",
 			Name:     "Component",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     &itypes.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceComponents,
@@ -49,7 +49,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceContainerRecipe,
 			TypeName: "aws_imagebuilder_container_recipe",
 			Name:     "Container Recipe",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     &itypes.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceContainerRecipes,
@@ -60,7 +60,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceDistributionConfiguration,
 			TypeName: "aws_imagebuilder_distribution_configuration",
 			Name:     "Distribution Configuration",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     &itypes.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceDistributionConfigurations,
@@ -71,13 +71,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceImage,
 			TypeName: "aws_imagebuilder_image",
 			Name:     "Image",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     &itypes.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceImagePipeline,
 			TypeName: "aws_imagebuilder_image_pipeline",
 			Name:     "Image Pipeline",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     &itypes.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceImagePipelines,
@@ -88,7 +88,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceImageRecipe,
 			TypeName: "aws_imagebuilder_image_recipe",
 			Name:     "Image Recipe",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     &itypes.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceImageRecipes,
@@ -99,7 +99,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceInfrastructureConfiguration,
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
 			Name:     "Infrastructure Configuration",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     &itypes.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceInfrastructureConfigurations,
@@ -109,13 +109,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
+	return []*itypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceComponent,
 			TypeName: "aws_imagebuilder_component",
 			Name:     "Component",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -123,7 +123,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceContainerRecipe,
 			TypeName: "aws_imagebuilder_container_recipe",
 			Name:     "Container Recipe",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -131,7 +131,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDistributionConfiguration,
 			TypeName: "aws_imagebuilder_distribution_configuration",
 			Name:     "Distribution Configuration",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -139,7 +139,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceImage,
 			TypeName: "aws_imagebuilder_image",
 			Name:     "Image",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -147,7 +147,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceImagePipeline,
 			TypeName: "aws_imagebuilder_image_pipeline",
 			Name:     "Image Pipeline",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -155,7 +155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceImageRecipe,
 			TypeName: "aws_imagebuilder_image_recipe",
 			Name:     "Image Recipe",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -163,7 +163,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceInfrastructureConfiguration,
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
 			Name:     "Infrastructure Configuration",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
@@ -171,7 +171,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceWorkflow,
 			TypeName: "aws_imagebuilder_workflow",
 			Name:     "Workflow",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
