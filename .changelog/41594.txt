@@ -1,4 +1,7 @@
 ```release-note:bug
-resource/aws_ecs_service: VPC Lattice configurations can be removed.
-resource/aws_vpclattice_target_group: Request to remove can be issued while the targets are still draining.
+resource/aws_ecs_service: Fix removal of all `vpc_lattice_configurations` blocks
+```
+
+```release-note:bug
+resource/aws_vpclattice_target_group: Retry `ConflictException` errors on delete
 ```
