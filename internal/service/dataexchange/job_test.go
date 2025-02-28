@@ -221,27 +221,27 @@ resource "aws_dataexchange_revision" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket        = "%s"
   force_destroy = true
 }
 
 resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key = "test"
+  bucket  = aws_s3_bucket.test.id
+  key     = "test"
   content = "test"
 }
 
 resource "aws_dataexchange_job" "test" {
-  type  = "IMPORT_ASSETS_FROM_S3"
+  type              = "IMPORT_ASSETS_FROM_S3"
   start_on_creation = %t
 
   details {
-      import_assets_from_s3 {
+    import_assets_from_s3 {
       data_set_id = aws_dataexchange_data_set.test.id
       revision_id = aws_dataexchange_revision.test.revision_id
       asset_sources {
         bucket = aws_s3_bucket.test.id
-        key = "test"
+        key    = "test"
       }
     }
   }
@@ -252,20 +252,20 @@ resource "aws_dataexchange_job" "test" {
 func testAccJobConfig_exportAssetsToS3Basic(bucketName string, data testAsset) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket        = "%s"
   force_destroy = true
 }
 
 resource "aws_dataexchange_job" "test" {
-  type  = "EXPORT_ASSETS_TO_S3"
+  type = "EXPORT_ASSETS_TO_S3"
 
   details {
     export_assets_to_s3 {
       data_set_id = "%s"
       revision_id = "%s"
       asset_destinations {
-        bucket = aws_s3_bucket.test.id
-        key = "test"
+        bucket   = aws_s3_bucket.test.id
+        key      = "test"
         asset_id = "%s"
       }
     }
@@ -287,14 +287,14 @@ resource "aws_dataexchange_revision" "test" {
 }
 
 resource "aws_dataexchange_job" "test" {
-  type  = "IMPORT_ASSET_FROM_SIGNED_URL"
+  type = "IMPORT_ASSET_FROM_SIGNED_URL"
 
   details {
     import_asset_from_signed_url {
       data_set_id = aws_dataexchange_data_set.test.id
       revision_id = aws_dataexchange_revision.test.revision_id
-      asset_name = "test"
-      md5_hash = "NTdmMmNkNmVkNzZlY2IyNTUK"
+      asset_name  = "test"
+      md5_hash    = "NTdmMmNkNmVkNzZlY2IyNTUK"
     }
   }
 }
@@ -304,13 +304,13 @@ resource "aws_dataexchange_job" "test" {
 func testAccJobConfig_exportAssetToSignedUrl(data testAsset) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_job" "test" {
-  type  = "EXPORT_ASSET_TO_SIGNED_URL"
-  
+  type = "EXPORT_ASSET_TO_SIGNED_URL"
+
   details {
     export_asset_to_signed_url {
       data_set_id = "%s"
       revision_id = "%s"
-      asset_id = "%s"
+      asset_id    = "%s"
     }
   }
 }
