@@ -55,9 +55,9 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
@@ -202,109 +202,109 @@ func testAccCheckOptInDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformation.ListLakeFormationOptInsOutput) resource.TestCheckFunc {
-    return func(s *terraform.State) error {
-        rs, ok := s.RootModule().Resources[name]
-        if !ok {
-            return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("not found"))
-        }
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("not found"))
+		}
 
-        if rs.Primary.ID == "" {
-            return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("not set"))
-        }
+		if rs.Primary.ID == "" {
+			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("not set"))
+		}
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
-        // Extract principal from state
-        principalID := rs.Primary.Attributes["principal.0.data_lake_principal_identifier"]
-        if principalID == "" {
-            return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("principal identifier not set"))
-        }
+		// Extract principal from state
+		principalID := rs.Primary.Attributes["principal.0.data_lake_principal_identifier"]
+		if principalID == "" {
+			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("principal identifier not set"))
+		}
 
-        // Create input with resource based on what's in state
-        in := &lakeformation.ListLakeFormationOptInsInput{}
-        var resource *types.Resource
+		// Create input with resource based on what's in state
+		in := &lakeformation.ListLakeFormationOptInsInput{}
+		var resource *types.Resource
 
-        // Check each possible resource type
-        if v, ok := rs.Primary.Attributes["resource.0.catalog.0.id"]; ok && v != "" {
-            resource = &types.Resource{
-                Catalog: &types.CatalogResource{Id: aws.String(v)},
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.database.0.name"]; ok && v != "" {
-            resource = &types.Resource{
-                Database: &types.DatabaseResource{
-                    Name:      aws.String(v),
-                    // CatalogId: aws.String(rs.Primary.Attributes["resource.0.database.0.catalog_id"]),
-                },
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.data_cells_filter.0.name"]; ok && v != "" {
-            resource = &types.Resource{
-                DataCellsFilter: &types.DataCellsFilterResource{
-                    Name:           aws.String(v),
-                    // DatabaseName:   aws.String(rs.Primary.Attributes["resource.0.data_cells_filter.0.database_name"]),
-                    // TableCatalogId: aws.String(rs.Primary.Attributes["resource.0.data_cells_filter.0.table_catalog_id"]),
-                },
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.data_location.0.resource_arn"]; ok && v != "" {
-            resource = &types.Resource{
-                DataLocation: &types.DataLocationResource{
-                    ResourceArn: aws.String(v),
-                    // CatalogId:   aws.String(rs.Primary.Attributes["resource.0.data_location.0.catalog_id"]),
-                },
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.lf_tag.0.key"]; ok && v != "" {
-            resource = &types.Resource{
-                LFTag: &types.LFTagKeyResource{
+		// Check each possible resource type
+		if v, ok := rs.Primary.Attributes["resource.0.catalog.0.id"]; ok && v != "" {
+			resource = &types.Resource{
+				Catalog: &types.CatalogResource{Id: aws.String(v)},
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.database.0.name"]; ok && v != "" {
+			resource = &types.Resource{
+				Database: &types.DatabaseResource{
+					Name: aws.String(v),
+					// CatalogId: aws.String(rs.Primary.Attributes["resource.0.database.0.catalog_id"]),
+				},
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.data_cells_filter.0.name"]; ok && v != "" {
+			resource = &types.Resource{
+				DataCellsFilter: &types.DataCellsFilterResource{
+					Name: aws.String(v),
+					// DatabaseName:   aws.String(rs.Primary.Attributes["resource.0.data_cells_filter.0.database_name"]),
+					// TableCatalogId: aws.String(rs.Primary.Attributes["resource.0.data_cells_filter.0.table_catalog_id"]),
+				},
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.data_location.0.resource_arn"]; ok && v != "" {
+			resource = &types.Resource{
+				DataLocation: &types.DataLocationResource{
+					ResourceArn: aws.String(v),
+					// CatalogId:   aws.String(rs.Primary.Attributes["resource.0.data_location.0.catalog_id"]),
+				},
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.lf_tag.0.key"]; ok && v != "" {
+			resource = &types.Resource{
+				LFTag: &types.LFTagKeyResource{
 					TagKey: aws.String(v),
 				},
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.lf_tag_expression.0.name"]; ok && v != "" {
-            resource = &types.Resource{
-                LFTagExpression: &types.LFTagExpressionResource{
-                    Name:      aws.String(v),
-                    // CatalogId: aws.String(rs.Primary.Attributes["resource.0.lf_tag_expression.0.catalog_id"]),
-                },
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.lf_tag_policy.0.resource_type"]; ok && v != "" {
-            resource = &types.Resource{
-                LFTagPolicy: &types.LFTagPolicyResource{
-                    ResourceType:   types.ResourceType(v),
-                    // CatalogId:      aws.String(rs.Primary.Attributes["resource.0.lf_tag_policy.0.catalog_id"]),
-                    // ExpressionName: aws.String(rs.Primary.Attributes["resource.0.lf_tag_policy.0.expression_name"]),
-                },
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.table.0.name"]; ok && v != "" {
-            resource = &types.Resource{
-                Table: &types.TableResource{
-                    // Name:         aws.String(v),
-                    DatabaseName: aws.String(rs.Primary.Attributes["resource.0.table.0.database_name"]),
-                },
-            }
-        } else if v, ok := rs.Primary.Attributes["resource.0.table_with_columns.0.name"]; ok && v != "" {
-            resource = &types.Resource{
-                TableWithColumns: &types.TableWithColumnsResource{
-                    Name:         aws.String(v),
-                    DatabaseName: aws.String(rs.Primary.Attributes["resource.0.table_with_columns.0.database_name"]),
-                },
-            }
-        }
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.lf_tag_expression.0.name"]; ok && v != "" {
+			resource = &types.Resource{
+				LFTagExpression: &types.LFTagExpressionResource{
+					Name: aws.String(v),
+					// CatalogId: aws.String(rs.Primary.Attributes["resource.0.lf_tag_expression.0.catalog_id"]),
+				},
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.lf_tag_policy.0.resource_type"]; ok && v != "" {
+			resource = &types.Resource{
+				LFTagPolicy: &types.LFTagPolicyResource{
+					ResourceType: types.ResourceType(v),
+					// CatalogId:      aws.String(rs.Primary.Attributes["resource.0.lf_tag_policy.0.catalog_id"]),
+					// ExpressionName: aws.String(rs.Primary.Attributes["resource.0.lf_tag_policy.0.expression_name"]),
+				},
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.table.0.name"]; ok && v != "" {
+			resource = &types.Resource{
+				Table: &types.TableResource{
+					// Name:         aws.String(v),
+					DatabaseName: aws.String(rs.Primary.Attributes["resource.0.table.0.database_name"]),
+				},
+			}
+		} else if v, ok := rs.Primary.Attributes["resource.0.table_with_columns.0.name"]; ok && v != "" {
+			resource = &types.Resource{
+				TableWithColumns: &types.TableWithColumnsResource{
+					Name:         aws.String(v),
+					DatabaseName: aws.String(rs.Primary.Attributes["resource.0.table_with_columns.0.database_name"]),
+				},
+			}
+		}
 
-        if resource == nil {
-            return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("no valid resource found in state"))
-        }
+		if resource == nil {
+			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("no valid resource found in state"))
+		}
 
-        in.Resource = resource
+		in.Resource = resource
 
-        out, err := tflakeformation.FindOptInByID(ctx, conn, principalID, resource)
-        if err != nil {
-            return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, principalID, err)
-        }
+		out, err := tflakeformation.FindOptInByID(ctx, conn, principalID, resource)
+		if err != nil {
+			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, principalID, err)
+		}
 
-        *optin = lakeformation.ListLakeFormationOptInsOutput{
-            LakeFormationOptInsInfoList: []types.LakeFormationOptInsInfo{*out},
-        }
+		*optin = lakeformation.ListLakeFormationOptInsOutput{
+			LakeFormationOptInsInfoList: []types.LakeFormationOptInsInfo{*out},
+		}
 
-        return nil
-    }
+		return nil
+	}
 }
 
 func testAccOptInConfig_basic(rName string) string {

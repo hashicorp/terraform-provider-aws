@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -60,14 +61,263 @@ type resourceOptIn struct {
 }
 
 func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	catalogLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[Catalog](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrID: schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	dataCellsFilterLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DataCellsFilter](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"database_name": schema.StringAttribute{
+					Optional: true,
+				},
+				"name": schema.StringAttribute{
+					Optional: true,
+				},
+				"table_catalog_id": schema.StringAttribute{
+					Optional: true,
+				},
+				"table_name": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	dataLocationLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DataLocation](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrResourceARN: schema.StringAttribute{
+					Required: true,
+				},
+				"catalog_id": schema.StringAttribute{
+					Optional: true,
+					Computed: true,
+				},
+			},
+		},
+	}
+
+	databaseLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[Database](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrCatalogID: catalogIDSchemaOptional(),
+				names.AttrName: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+
+	lfTagLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[LFTag](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrCatalogID: catalogIDSchemaOptionalComputed(),
+				names.AttrKey: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrValue: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 255),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+
+	lftagExpressionLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[LFTagExpression](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrCatalogID: catalogIDSchemaOptional(),
+				names.AttrName: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+
+	lfTagPolicyLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[LFTagPolicy](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"resource_type": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.ResourceType](),
+				},
+				names.AttrCatalogID: catalogIDSchemaOptionalComputed(),
+				"expression": schema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+				},
+				"expression_name": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	tableLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[Table](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrCatalogID: catalogIDSchemaOptional(),
+				names.AttrDatabaseName: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrName: schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.AtLeastOneOf(
+							path.MatchRelative().AtParent().AtName(names.AttrName),
+							path.MatchRelative().AtParent().AtName("wildcard"),
+						),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"wildcard": schema.BoolAttribute{
+					Optional: true,
+					Validators: []validator.Bool{
+						boolvalidator.AtLeastOneOf(
+							path.MatchRelative().AtParent().AtName(names.AttrName),
+							path.MatchRelative().AtParent().AtName("wildcard"),
+						),
+					},
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+
+	tableWCLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[TableWithColumns](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrCatalogID: catalogIDSchemaOptional(),
+				"column_names": schema.SetAttribute{
+					CustomType: fwtypes.SetOfStringType,
+					Optional:   true,
+					Validators: []validator.Set{
+						setvalidator.AtLeastOneOf(
+							path.MatchRelative().AtParent().AtName("column_names"),
+							path.MatchRelative().AtParent().AtName("column_wildcard"),
+						),
+					},
+					PlanModifiers: []planmodifier.Set{
+						setplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrDatabaseName: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrName: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+						stringplanmodifier.UseStateForUnknown(),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"column_wildcard": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[columnWildcardData](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.AtLeastOneOf(
+							path.MatchRelative().AtParent().AtName("column_names"),
+							path.MatchRelative().AtParent().AtName("column_wildcard"),
+						),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"excluded_column_names": schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+								PlanModifiers: []planmodifier.Set{
+									setplanmodifier.RequiresReplace(),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"last_updated_by": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Computed: true,
 			},
 			"last_modified": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -94,252 +344,22 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
-			"catalog": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[Catalog](ctx),
+			"resource_data": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ResourceData](ctx),
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"catalog_id": schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"data_cells_filter": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[DataCellsFilter](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"database_name": schema.StringAttribute{
-							Optional: true,
-						},
-						"name": schema.StringAttribute{
-							Optional: true,
-						},
-						"table_catalog_id": schema.StringAttribute{
-							Optional: true,
-						},
-						"table_name": schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"data_location": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[DataLocation](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrResourceARN: schema.StringAttribute{
-							Required: true,
-						},
-						"catalog_id": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrDatabase: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[Database](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrCatalogID: catalogIDSchemaOptional(),
-						names.AttrName: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-				},
-			},
-			"lf_tag": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[LFTag](ctx),
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrCatalogID: catalogIDSchemaOptionalComputed(),
-						names.AttrKey: schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 128),
-							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						names.AttrValue: schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 255),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
-							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-				},
-			},
-			"lf_tag_expression": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrCatalogID: catalogIDSchemaOptional(),
-						names.AttrName: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-				},
-			},
-			"lf_tag_policy": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[LFTagPolicy](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"resource_type": schema.StringAttribute{
-							Required:   true,
-							CustomType: fwtypes.StringEnumType[awstypes.ResourceType](),
-						},
-						names.AttrCatalogID: catalogIDSchemaOptionalComputed(),
-						names.AttrExpression: schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-							Optional:    true,
-						},
-						"expression_name": schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"table": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[table](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrCatalogID: catalogIDSchemaOptional(),
-						names.AttrDatabaseName: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						names.AttrName: schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName(names.AttrName),
-									path.MatchRelative().AtParent().AtName("wildcard"),
-								),
-							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						"wildcard": schema.BoolAttribute{
-							Optional: true,
-							Validators: []validator.Bool{
-								boolvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName(names.AttrName),
-									path.MatchRelative().AtParent().AtName("wildcard"),
-								),
-							},
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-				},
-			},
-			"table_with_columns": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[tableWithColumns](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrCatalogID: catalogIDSchemaOptional(),
-						"column_names": schema.SetAttribute{
-							CustomType: fwtypes.SetOfStringType,
-							Optional:   true,
-							Validators: []validator.Set{
-								setvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("column_names"),
-									path.MatchRelative().AtParent().AtName("column_wildcard"),
-								),
-							},
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.RequiresReplace(),
-							},
-						},
-						names.AttrDatabaseName: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						names.AttrName: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
 					Blocks: map[string]schema.Block{
-						"column_wildcard": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[columnWildcardData](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("column_names"),
-									path.MatchRelative().AtParent().AtName("column_wildcard"),
-								),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"excluded_column_names": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-										PlanModifiers: []planmodifier.Set{
-											setplanmodifier.RequiresReplace(),
-										},
-									},
-								},
-							},
-						},
+						"catalog":            catalogLNB,
+						"database":           databaseLNB,
+						"data_cells_filter":  dataCellsFilterLNB,
+						"data_location":      dataLocationLNB,
+						"lf_tag":             lfTagLNB,
+						"lf_tag_expression":  lftagExpressionLNB,
+						"lf_tag_policy":      lfTagPolicyLNB,
+						"table":              tableLNB,
+						"table_with_columns": tableWCLNB,
 					},
 				},
 			},
-
-			// "timeouts": timeouts.Block(ctx, timeouts.Opts{
-			// 	Create: true,
-			// 	Update: true,
-			// 	Delete: true,
-			// }),
 		},
 	}
 }
@@ -353,6 +373,18 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	// r := newOptInResourcer(resourceData, &diags)
+	// if diags.HasError() {
+	// 	resp.Diagnostics.Append(diags...)
+	// 	return
+	// }
+
+	// resource := r.expandOptInResource(ctx, &diags)
+	// if diags.HasError() {
+	// 	resp.Diagnostics.Append(diags...)
+	// 	return
+	// }
+
 	in := lakeformation.CreateLakeFormationOptInInput{}
 
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
@@ -360,10 +392,16 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	principal, diags := plan.Principal.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	output, err := conn.CreateLakeFormationOptIn(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameOptIn, plan.Principal.String(), err),
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameOptIn, principal.DataLakePrincipalIdentifier.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -371,11 +409,23 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 
 	if output == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameOptIn, plan.Principal.String(), nil),
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameOptIn, principal.DataLakePrincipalIdentifier.ValueString(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
+
+	lstrsc, err := conn.ListLakeFormationOptIns(ctx, &lakeformation.ListLakeFormationOptInsInput{})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionSetting, ResNameOptIn, principal.DataLakePrincipalIdentifier.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	plan.LastModified = fwflex.TimeToFramework(ctx, lstrsc.LakeFormationOptInsInfoList[0].LastModified)
+	plan.LastUpdatedBy = fwflex.StringValueToFramework(ctx, *lstrsc.LakeFormationOptInsInfoList[0].LastUpdatedBy)
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -430,6 +480,15 @@ func (r *resourceOptIn) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	if out.LastModified != nil {
+		state.LastModified = timetypes.NewRFC3339TimePointerValue(out.LastModified)
+	}
+
+	if out.LastUpdatedBy != nil {
+		// state.LastUpdatedBy = types.StringValue(*out.LastUpdatedBy)
+		state.LastUpdatedBy = fwflex.StringToFramework(ctx, out.LastUpdatedBy)
+	}
+
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -461,6 +520,9 @@ func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
+	in.Principal = &awstypes.DataLakePrincipal{
+		DataLakePrincipalIdentifier: aws.String(principalData.DataLakePrincipalIdentifier.ValueString()),
+	}
 
 	in.Resource = optin.expandOptInResource(ctx, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -496,6 +558,22 @@ func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, 
 	// 	)
 	// 	return
 	// }
+}
+
+func (r *resourceOptIn) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("catalog"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("data_cells_filter"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("data_location"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("database"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("lf_tag"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("lf_tag_expression"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("lf_tag_policy"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("table"),
+			path.MatchRoot("resource_data").AtListIndex(0).AtName("table_with_columns"),
+		),
+	}
 }
 
 func (r *resourceOptIn) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -964,7 +1042,7 @@ func (d *tbResource) findOptIn(ctx context.Context, input *lakeformation.ListLak
 			if aws.ToString(v.Resource.Table.Name) == tb.Name.ValueString() &&
 				aws.ToString(v.Resource.Table.DatabaseName) == tb.DatabaseName.ValueString() {
 				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					Table: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &table{
+					Table: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &Table{
 						Name: fwflex.StringToFramework(ctx, v.Resource.Table.Name),
 					}),
 				})
@@ -978,7 +1056,7 @@ func (d *tbResource) findOptIn(ctx context.Context, input *lakeformation.ListLak
 // //////////////////////////////////////////////////////////////////////////////////////////////
 func (d *tbcResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
-	tbcptr, err := d.data.Table.ToPtr(ctx)
+	tbcptr, err := d.data.TableWithColumns.ToPtr(ctx)
 	diags.Append(err...)
 	if diags.HasError() {
 		return nil
@@ -1006,7 +1084,7 @@ func (d *tbcResource) findOptIn(ctx context.Context, input *lakeformation.ListLa
 			if aws.ToString(v.Resource.TableWithColumns.Name) == tbc.Name.ValueString() &&
 				aws.ToString(v.Resource.TableWithColumns.DatabaseName) == tbc.DatabaseName.ValueString() {
 				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					TableWithColumns: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tableWithColumns{
+					TableWithColumns: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TableWithColumns{
 						Name: fwflex.StringToFramework(ctx, v.Resource.TableWithColumns.Name),
 					}),
 				})
@@ -1021,10 +1099,10 @@ func (d *tbcResource) findOptIn(ctx context.Context, input *lakeformation.ListLa
 
 type resourceOptInData struct {
 	Principal     fwtypes.ListNestedObjectValueOf[DataLakePrincipal] `tfsdk:"principal"`
-	Resource      fwtypes.ListNestedObjectValueOf[ResourceData]      `tfsdk:"resource"`
+	Resource      fwtypes.ListNestedObjectValueOf[ResourceData]      `tfsdk:"resource_data"`
 	Condition     fwtypes.ListNestedObjectValueOf[Condition]         `tfsdk:"condition"`
-	LastUpdatedBy timetypes.RFC3339                                  `tfsdk:"last_updated_by"`
-	LastModified  types.String                                       `tfsdk:"last_modified"`
+	LastUpdatedBy types.String                                       `tfsdk:"last_updated_by"`
+	LastModified  timetypes.RFC3339                                  `tfsdk:"last_modified"`
 }
 
 type DataLakePrincipal struct {
@@ -1039,8 +1117,8 @@ type ResourceData struct {
 	LFTag            fwtypes.ListNestedObjectValueOf[LFTag]            `tfsdk:"lf_tag"`
 	LFTagExpression  fwtypes.ListNestedObjectValueOf[LFTagExpression]  `tfsdk:"lf_tag_expression"`
 	LFTagPolicy      fwtypes.ListNestedObjectValueOf[LFTagPolicy]      `tfsdk:"lf_tag_policy"`
-	Table            fwtypes.ListNestedObjectValueOf[table]            `tfsdk:"table"`
-	TableWithColumns fwtypes.ListNestedObjectValueOf[tableWithColumns] `tfsdk:"table_with_columns"`
+	Table            fwtypes.ListNestedObjectValueOf[Table]            `tfsdk:"table"`
+	TableWithColumns fwtypes.ListNestedObjectValueOf[TableWithColumns] `tfsdk:"table_with_columns"`
 }
 
 type Catalog struct {
@@ -1073,4 +1151,19 @@ type LFTagPolicy struct {
 	CatalogID      types.String                              `tfsdk:"catalog_id"`
 	Expression     fwtypes.ListValueOf[types.String]         `tfsdk:"expression"`
 	ExpressionName types.String                              `tfsdk:"expression_name"`
+}
+
+type Table struct {
+	CatalogID    types.String `tfsdk:"catalog_id"`
+	DatabaseName types.String `tfsdk:"database_name"`
+	Name         types.String `tfsdk:"name"`
+	Wildcard     types.Bool   `tfsdk:"wildcard"`
+}
+
+type TableWithColumns struct {
+	CatalogID      types.String                                        `tfsdk:"catalog_id"`
+	ColumnNames    fwtypes.SetValueOf[types.String]                    `tfsdk:"column_names"`
+	ColumnWildcard fwtypes.ListNestedObjectValueOf[columnWildcardData] `tfsdk:"column_wildcard"`
+	DatabaseName   types.String                                        `tfsdk:"database_name"`
+	Name           types.String                                        `tfsdk:"name"`
 }
