@@ -1,5 +1,5 @@
 ---
-subcategory: "DataExchange"
+subcategory: "Data Exchange"
 layout: "aws"
 page_title: "AWS: aws_dataexchange_job"
 description: |-
