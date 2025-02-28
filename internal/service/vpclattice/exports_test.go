@@ -27,6 +27,7 @@ var (
 	FindServiceNetworkServiceAssociationByID  = findServiceNetworkServiceAssociationByID
 	FindServiceNetworkVPCAssociationByID      = findServiceNetworkVPCAssociationByID
 	FindTargetByThreePartKey                  = findTargetByThreePartKey
+	FindTargetGroupByID                       = findTargetGroupByID
 
 	IDFromIDOrARN                               = idFromIDOrARN
 	SuppressEquivalentCloudWatchLogsLogGroupARN = suppressEquivalentCloudWatchLogsLogGroupARN
