@@ -8,7 +8,8 @@ description: |-
 
 # Resource: aws_dataexchange_job
 
-Provides a resource to manage AWS DataExchange Jobs. Jobs are asynchronous import or export operations used to create or copy assets.
+Provides a resource to manage AWS Data Exchange Jobs.
+Jobs are asynchronous import or export operations used to create or copy assets.
 
 ## Example Usage
 
@@ -59,7 +60,7 @@ Depending on the job type, additional arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the job.
 * `arn` - The ARN of the job.
@@ -69,8 +70,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DataExchange Jobs can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Data Exchange Job using the `id`. For example:
 
-```shell
-$ terraform import aws_dataexchange_job.example job-12345678
+```terraform
+import {
+  to = aws_dataexchange_job.example
+  id = "job-12345678"
+}
+```
+
+Using `terraform import`, import Data Exchange Job using the `id`. For example:
+
+```console
+% terraform import aws_dataexchange_job.example job-12345678
 ```
