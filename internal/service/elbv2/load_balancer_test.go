@@ -423,6 +423,36 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 	})
 }
 
+func TestAccELBV2LoadBalancer_enablePrefixipv6SourceNat(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pre, post awstypes.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "enable_prefix_ipv6_source_nat", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					resource.TestCheckResourceAttr(resourceName, "enable_prefix_ipv6_source_nat", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
@@ -2368,6 +2398,61 @@ resource "aws_lb" "test2" {
   enable_deletion_protection = false
 }
 `, rName))
+}
+
+func testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName string, enablePrefixIpv6SourceNat bool) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  ip_address_type               = "dualstack"
+  load_balancer_type            = "network"
+  enable_prefix_ipv6_source_nat = %[2]t
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_egress_only_internet_gateway.test, aws_internet_gateway.test]
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, enablePrefixIpv6SourceNat))
 }
 
 func testAccLoadBalancerConfig_ipAddressType(rName, ipAddressType string) string {
