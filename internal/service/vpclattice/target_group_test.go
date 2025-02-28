@@ -54,7 +54,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
