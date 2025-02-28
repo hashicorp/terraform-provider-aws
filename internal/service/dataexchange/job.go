@@ -42,11 +42,6 @@ func ResourceJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 
 const (
 	ResNameJob = "Job"
-
-	TypeImportAssetsFromS3       SupportedJobType = "IMPORT_ASSETS_FROM_S3"
-	TypeImportAssetFromSignedUrl SupportedJobType = "IMPORT_ASSET_FROM_SIGNED_URL"
-	TypeExportAssetsToS3         SupportedJobType = "EXPORT_ASSETS_TO_S3"
-	TypeExportAssetToSignedUrl   SupportedJobType = "EXPORT_ASSET_TO_SIGNED_URL"
 )
 
 type resourceJob struct {
@@ -557,13 +552,4 @@ func (m *resourceJobModel) Flatten(ctx context.Context, v *dataexchange.GetJobOu
 	m.State = fwtypes.StringEnumValue[awstypes.State](v.State)
 
 	return diags
-}
-
-func (SupportedJobType) Values() []SupportedJobType {
-	return []SupportedJobType{
-		TypeImportAssetsFromS3,
-		TypeExportAssetsToS3,
-		TypeImportAssetFromSignedUrl,
-		TypeExportAssetToSignedUrl,
-	}
 }
