@@ -402,10 +402,17 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
+					var overrideRegion string
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if v.RegionOverride && getAttribute != nil {
+						if v, ok := getAttribute(names.AttrRegion); ok {
+							overrideRegion = v.(string)
+						}
+					}
+
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if v, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 						ctx = v.RegisterLogger(ctx)

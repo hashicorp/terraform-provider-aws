@@ -444,10 +444,18 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
+					var overrideRegion string
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if v.RegionOverride && getAttribute != nil {
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						if diags.HasError() {
+							return ctx, diags
+						}
+					}
+
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)

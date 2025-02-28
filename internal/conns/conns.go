@@ -90,8 +90,9 @@ func NewEphemeralResourceContext(ctx context.Context, servicePackageName, resour
 	return context.WithValue(ctx, contextKey, &v)
 }
 
-func NewResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+func NewResourceContext(ctx context.Context, servicePackageName, resourceName, overrideRegion string) context.Context {
 	v := InContext{
+		overrideRegion:     overrideRegion,
 		resourceName:       resourceName,
 		servicePackageName: servicePackageName,
 	}
