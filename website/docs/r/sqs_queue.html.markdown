@@ -12,6 +12,8 @@ Amazon SQS (Simple Queue Service) is a fully managed message queuing service tha
 
 !> AWS will hang indefinitely, leading to a `timeout while waiting` error, when creating or updating an `aws_sqs_queue` with an associated [`aws_sqs_queue_policy`](/docs/providers/aws/r/sqs_queue_policy.html) if `Version = "2012-10-17"` is not explicitly set in the policy.
 
+!> AWS will hang indefinitely and trigger a `timeout while waiting` error when creating or updating an `aws_sqs_queue` if `kms_data_key_reuse_period_seconds` is set to a non-default value, `sqs_managed_sse_enabled` is `false` (explicitly or by default), and `kms_master_key_id` is not set.
+
 ## Example Usage
 
 ```terraform
