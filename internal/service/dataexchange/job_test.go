@@ -104,7 +104,7 @@ func TestAccDataExchangeJob_exportAssetsToS3Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataExchangeJob_exportAssetsToSignedUrl(t *testing.T) {
+func TestAccDataExchangeJob_exportAssetsToSignedURL(t *testing.T) {
 	ctx := acctest.Context(t)
 	data, err := helperAccJobCreateDefaultAsset(ctx, awstypes.AssetTypeS3Snapshot)
 	if err != nil {
@@ -118,7 +118,7 @@ func TestAccDataExchangeJob_exportAssetsToSignedUrl(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_exportAssetToSignedUrl(*data),
+				Config: testAccJobConfig_exportAssetToSignedURL(*data),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &dataexchange.GetJobOutput{}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
@@ -138,7 +138,7 @@ func TestAccDataExchangeJob_assetFromSignedURL(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_importAssetFromSignedUrl(),
+				Config: testAccJobConfig_importAssetFromSignedURL(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &dataexchange.GetJobOutput{}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
@@ -276,7 +276,7 @@ resource "aws_dataexchange_job" "test" {
 `, bucketName, data.dataSetId, data.revisionId, data.assetId)
 }
 
-func testAccJobConfig_importAssetFromSignedUrl() string {
+func testAccJobConfig_importAssetFromSignedURL() string {
 	return `
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_SNAPSHOT"
@@ -303,7 +303,7 @@ resource "aws_dataexchange_job" "test" {
 `
 }
 
-func testAccJobConfig_exportAssetToSignedUrl(data testAsset) string {
+func testAccJobConfig_exportAssetToSignedURL(data testAsset) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_job" "test" {
   type = "EXPORT_ASSET_TO_SIGNED_URL"
