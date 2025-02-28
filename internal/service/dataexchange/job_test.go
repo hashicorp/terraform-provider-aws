@@ -41,7 +41,7 @@ func TestAccDataExchangeJob_assetsFromS3Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_importAssetsFromS3(bucketName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					testAccCheckJobStarted(ctx, resourceName, false),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
@@ -64,14 +64,14 @@ func TestAccDataExchangeJob_assetsFromS3PostponeStart(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_importAssetsFromS3(bucketName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					testAccCheckJobStarted(ctx, resourceName, false),
 				),
 			},
 			{
 				Config: testAccJobConfig_importAssetsFromS3(bucketName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobStarted(ctx, resourceName, true),
 				),
 			},
@@ -95,7 +95,7 @@ func TestAccDataExchangeJob_exportAssetsToS3Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_exportAssetsToS3Basic(bucketName, *data),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &dataexchange.GetJobOutput{}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
 				),
@@ -119,7 +119,7 @@ func TestAccDataExchangeJob_exportAssetsToSignedURL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_exportAssetToSignedURL(*data),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &dataexchange.GetJobOutput{}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
 				),
@@ -139,7 +139,7 @@ func TestAccDataExchangeJob_assetFromSignedURL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_importAssetFromSignedURL(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &dataexchange.GetJobOutput{}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
 				),
