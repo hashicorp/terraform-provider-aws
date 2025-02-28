@@ -341,8 +341,8 @@ github.com/aws/aws-sdk-go-v2/service/licensemanager v1.30.0 h1:pyjLRmkHvZW4QFZ1A
 github.com/aws/aws-sdk-go-v2/service/licensemanager v1.30.0/go.mod h1:FEnHotPAuDu2NbRcGHQj3vUS0cAFjbexAurh5WrfwI8=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.43.0 h1:OVg+5XKV/BaXNFZVymgLOSg6aTNItAmrBPZfC4rKPHo=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.43.0/go.mod h1:Qy22QnQSdHbZwMZrarsWZBIuK51isPlkD+Z4sztxX0o=
-github.com/aws/aws-sdk-go-v2/service/location v1.43.0 h1:cWcvn2SSHVXmcCc4BWAdTImKmDDpClJnQi1IzpcbhDs=
-github.com/aws/aws-sdk-go-v2/service/location v1.43.0/go.mod h1:ZZKqPuE1qjmjnbh7F4O2SmJ2CGNJwAqJ2tOucWDGMeU=
+github.com/aws/aws-sdk-go-v2/service/location v1.44.0 h1:ACnCvLpywZopkoilbb6N8ybf+A7WRQzvYpPEn3DUpgs=
+github.com/aws/aws-sdk-go-v2/service/location v1.44.0/go.mod h1:rNKfTUDgY+kA1Gc6+0ls9Xxb5FK9d+AJt/+f6r78qKs=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.16 h1:JyekkUn42tQRUTWEsouGXqazPoDLXOqS0rPtvive6JY=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.16/go.mod h1:8mrz9JW+v9sw+BJu/3+jX9iRvJQzxoSqG77Mb3asNko=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.19.9 h1:FsnKyeCQEX0Vsu8VpvtVitRflxWxMLd8kURLMj8YsZo=
