@@ -17,7 +17,7 @@ resource "aws_dataexchange_job" "example" {
   type        = "IMPORT_ASSETS_FROM_S3"
   data_set_id = aws_dataexchange_data_set.example.id
   revision_id = aws_dataexchange_revision.example.id
-  
+
   s3_asset_sources = [
     {
       bucket = "source-bucket"
@@ -73,3 +73,4 @@ DataExchange Jobs can be imported using the `id`, e.g.,
 
 ```shell
 $ terraform import aws_dataexchange_job.example job-12345678
+```
