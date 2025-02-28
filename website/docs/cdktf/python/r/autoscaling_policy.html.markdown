@@ -87,6 +87,7 @@ class MyConvertedCode(TerraformStack):
                                 metric_name="ApproximateNumberOfMessagesVisible",
                                 namespace="AWS/SQS"
                             ),
+                            period=10,
                             stat="Sum"
                         ),
                         return_data=False
@@ -103,6 +104,7 @@ class MyConvertedCode(TerraformStack):
                                 metric_name="GroupInServiceInstances",
                                 namespace="AWS/AutoScaling"
                             ),
+                            period=10,
                             stat="Average"
                         ),
                         return_data=False
@@ -365,6 +367,7 @@ This configuration block supports the following arguments:
 This configuration block supports the following arguments:
 
 * `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `period` - (Optional) The period of the metric in seconds.
 * `stat` - (Required) Statistic of the metrics to return.
 * `unit` - (Optional) Unit of the metrics to return.
 
@@ -511,4 +514,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1a935d98d5c3d9f4a9bef71565e80bce00a31cc1048dff1b2128dc3d558f054b -->
+<!-- cache-key: cdktf-0.20.8 input-027b7d7ad2a66f740d9c397907005fa718426ea2d16eef1cfa7731da9baafd65 -->

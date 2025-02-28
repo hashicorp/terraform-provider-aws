@@ -51,10 +51,6 @@ type resourceMembership struct {
 	framework.WithImportByID
 }
 
-func (r *resourceMembership) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cleanrooms_membership"
-}
-
 func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -288,7 +284,7 @@ func (r *resourceMembership) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -335,9 +331,11 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 		names.AttrID: data.ID.ValueString(),
 	})
 
-	_, err := conn.DeleteMembership(ctx, &cleanrooms.DeleteMembershipInput{
+	input := cleanrooms.DeleteMembershipInput{
 		MembershipIdentifier: data.ID.ValueStringPointer(),
-	})
+	}
+
+	_, err := conn.DeleteMembership(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -355,10 +353,6 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceMembership) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceMembershipData struct {

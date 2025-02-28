@@ -163,10 +163,11 @@ func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 HSM: %s", d.Id())
-	_, err := conn.DeleteHsm(ctx, &cloudhsmv2.DeleteHsmInput{
+	input := cloudhsmv2.DeleteHsmInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 		HsmId:     aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteHsm(ctx, &input)
 
 	if errs.IsA[*types.CloudHsmResourceNotFoundException](err) {
 		return diags

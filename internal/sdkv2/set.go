@@ -4,6 +4,8 @@
 package sdkv2
 
 import (
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -42,4 +44,22 @@ func SimpleSchemaSetFunc(keys ...string) schema.SchemaSetFunc {
 
 		return create.StringHashcode(str.String())
 	}
+}
+
+// HashStringValueMap returns a non-negative hash value for a map[string]string.
+func HashStringValueMap(m map[string]string) int {
+	if len(m) == 0 {
+		return 0
+	}
+
+	var str strings.Builder
+
+	for _, k := range slices.Sorted(maps.Keys(m)) {
+		str.WriteString(k)
+		str.WriteRune('=')
+		str.WriteString(m[k])
+		str.WriteRune(',')
+	}
+
+	return create.StringHashcode(str.String())
 }

@@ -41,8 +41,6 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -462,9 +460,10 @@ func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Endpoint: %s", d.Id())
-	_, err := conn.DeleteClientVpnEndpoint(ctx, &ec2.DeleteClientVpnEndpointInput{
+	input := ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteClientVpnEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return diags

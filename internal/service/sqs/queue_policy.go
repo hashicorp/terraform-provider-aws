@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sqs_queue_policy")
+// @SDKResource("aws_sqs_queue_policy", name="Queue Policy")
 func resourceQueuePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNamePolicy,

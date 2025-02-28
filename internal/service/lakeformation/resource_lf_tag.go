@@ -42,7 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource LF Tag")
+// @FrameworkResource("aws_lakeformation_resource_lf_tag", name="Resource LF Tag")
 func newResourceResourceLFTag(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceResourceLFTag{}
 	r.SetDefaultCreateTimeout(20 * time.Minute)
@@ -59,10 +59,6 @@ type resourceResourceLFTag struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithNoUpdate
-}
-
-func (r *resourceResourceLFTag) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lakeformation_resource_lf_tag"
 }
 
 func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

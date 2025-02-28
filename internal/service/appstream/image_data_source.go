@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Image")
+// @FrameworkDataSource("aws_appstream_image", name="Image")
 func newDataSourceImage(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceImage{}, nil
 }
@@ -36,10 +36,6 @@ const (
 
 type dataSourceImage struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceImage) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_appstream_image"
 }
 
 func (d *dataSourceImage) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

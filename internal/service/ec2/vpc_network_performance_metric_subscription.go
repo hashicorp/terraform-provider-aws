@@ -128,12 +128,13 @@ func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 AWS Network Performance Metric Subscriptione: %s", d.Id())
-	_, err = conn.DisableAwsNetworkPerformanceMetricSubscription(ctx, &ec2.DisableAwsNetworkPerformanceMetricSubscriptionInput{
+	input := ec2.DisableAwsNetworkPerformanceMetricSubscriptionInput{
 		Destination: aws.String(destination),
 		Metric:      types.MetricType(metric),
 		Source:      aws.String(source),
 		Statistic:   types.StatisticType(statistic),
-	})
+	}
+	_, err = conn.DisableAwsNetworkPerformanceMetricSubscription(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)

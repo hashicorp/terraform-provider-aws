@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,6 +70,10 @@ func dataSourceVPCEndpointService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
+			names.AttrRegion: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"service": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -83,6 +88,11 @@ func dataSourceVPCEndpointService() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"service"},
+			},
+			"service_regions": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 			"service_type": {
 				Type:             schema.TypeString,
@@ -127,6 +137,10 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 
 	if serviceName != "" {
 		input.ServiceNames = []string{serviceName}
+	}
+
+	if v, ok := d.GetOk("service_regions"); ok {
+		input.ServiceRegions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
@@ -174,6 +188,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	sd := serviceDetails[0]
 	serviceID := aws.ToString(sd.ServiceId)
 	serviceName = aws.ToString(sd.ServiceName)
+	serviceRegion := aws.ToString(sd.ServiceRegion)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(serviceName)))
 
@@ -181,7 +196,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Region:    serviceRegion,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceID),
 	}.String()
@@ -192,6 +207,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set(names.AttrOwner, sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
+	d.Set(names.AttrRegion, serviceRegion)
 
 	privateDnsNames := make([]string, len(sd.PrivateDnsNames))
 	for i, privateDnsDetail := range sd.PrivateDnsNames {

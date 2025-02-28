@@ -855,7 +855,7 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 
 	repo := d.Get(names.AttrRepositoryName).(string)
 
-	id := ""
+	var id string
 	switch repo {
 	case repositoryBlazingText,
 		repositoryImageClassification,

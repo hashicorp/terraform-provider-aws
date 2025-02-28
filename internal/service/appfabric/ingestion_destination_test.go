@@ -43,8 +43,8 @@ func testAccIngestionDestination_basic(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttrSet(resourceName, "app_bundle_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "app_bundle_arn", "aws_appfabric_app_bundle.test", names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need TFC Org for testing
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
@@ -52,7 +52,7 @@ func testAccIngestionDestination_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix"),
-					resource.TestCheckResourceAttrSet(resourceName, "ingestion_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ingestion_arn", "aws_appfabric_ingestion.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.0.format", names.AttrJSON),

@@ -219,7 +219,6 @@ func resourceFleet() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -323,12 +322,8 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrName, fleet.Name)
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
 
-	if fleet.ScalingConfiguration != nil {
-		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
-		}
-	} else {
-		d.Set("scaling_configuration", nil)
+	if err := d.Set("scaling_configuration", flattenScalingConfiguration(fleet.ScalingConfiguration)); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 	}
 
 	if fleet.Status != nil {
@@ -392,6 +387,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("scaling_configuration") {
 		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.ScalingConfiguration = &types.ScalingConfigurationInput{}
 		}
 	}
 
@@ -426,9 +423,10 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Fleet: %s", d.Id())
-	_, err := conn.DeleteFleet(ctx, &codebuild.DeleteFleetInput{
+	input := codebuild.DeleteFleetInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFleet(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -689,7 +687,7 @@ func flattenComputeConfiguration(apiObject *types.ComputeConfiguration) map[stri
 	return tfMap
 }
 
-func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) map[string]interface{} {
+func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -712,7 +710,11 @@ func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) ma
 		tfMap["target_tracking_scaling_configs"] = flattenTargetTrackingScalingConfigs(v)
 	}
 
-	return tfMap
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenTargetTrackingScalingConfigs(apiObjects []types.TargetTrackingScalingConfiguration) []interface{} {

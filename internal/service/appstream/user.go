@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appstream_user")
+// @SDKResource("aws_appstream_user", name="User")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -215,10 +215,11 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DeleteUser(ctx, &appstream.DeleteUserInput{
+	input := appstream.DeleteUserInput{
 		AuthenticationType: awstypes.AuthenticationType(authType),
 		UserName:           aws.String(userName),
-	})
+	}
+	_, err = conn.DeleteUser(ctx, &input)
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {

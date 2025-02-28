@@ -6,6 +6,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"iter"
 	"maps"
 	"net/http"
 	"os"
@@ -26,8 +27,6 @@ import (
 )
 
 type AWSClient struct {
-	ServicePackages map[string]ServicePackage
-
 	accountID                 string
 	awsConfig                 *aws.Config
 	clients                   map[string]any
@@ -40,11 +39,28 @@ type AWSClient struct {
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
 	region                    string
+	servicePackages           map[string]ServicePackage
 	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
+}
+
+func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[string]ServicePackage) {
+	c.servicePackages = maps.Clone(servicePackages)
+}
+
+func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackage {
+	sp, ok := c.servicePackages[name]
+	if !ok {
+		return nil
+	}
+	return sp
+}
+
+func (c *AWSClient) ServicePackages(context.Context) iter.Seq2[string, ServicePackage] {
+	return maps.All(c.servicePackages)
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
@@ -344,8 +360,8 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 		}
 	}
 
-	sp, ok := c.ServicePackages[servicePackageName]
-	if !ok {
+	sp := c.ServicePackage(ctx, servicePackageName)
+	if sp == nil {
 		var zero T
 		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
 	}

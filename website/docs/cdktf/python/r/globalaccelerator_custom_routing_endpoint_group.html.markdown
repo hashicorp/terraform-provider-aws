@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
                 endpoint_id=Token.as_string(aws_subnet_example.id)
             )
             ],
-            listener_arn=Token.as_string(aws_globalaccelerator_custom_routing_listener_example.id)
+            listener_arn=Token.as_string(aws_globalaccelerator_custom_routing_listener_example.arn)
         )
 ```
 
@@ -100,4 +100,4 @@ Using `terraform import`, import Global Accelerator custom routing endpoint grou
 % terraform import aws_globalaccelerator_custom_routing_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1cdf76aa1d7720de7b94c9800ff5e5f2715b300edfc472a4a81ea499fa6efa64 -->
+<!-- cache-key: cdktf-0.20.8 input-28ce95de83be8065a28d60402f41212a510b8bb7ecc34edb2b8cc92538380bb7 -->

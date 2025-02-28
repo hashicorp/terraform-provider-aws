@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKResource("aws_shield_protection_health_check_association")
+// @SDKResource("aws_shield_protection_health_check_association", name="Protection Health Check Association")
 func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: ResourceProtectionHealthCheckAssociationCreate,

@@ -25,6 +25,7 @@ _optionally_ (see below) content of an object stored inside S3 bucket.
 * `application/xml`
 * `application/atom+xml`
 * `application/x-sql`
+* `application/yaml`
 
 This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
@@ -133,4 +134,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.20.8 input-0a61609c9f3ced2163bb0a99add36b83b3ecdc1cdaaf3d66886b0b16cdf8c6cd -->
+<!-- cache-key: cdktf-0.20.8 input-b70861b0b48ec1a4b093bceba4b7c0a75c68281bd67d8a291cd6aff116de1297 -->

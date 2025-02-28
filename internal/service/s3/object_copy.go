@@ -40,6 +40,13 @@ func resourceObjectCopy() *schema.Resource {
 		UpdateWithoutTimeout: resourceObjectCopyUpdate,
 		DeleteWithoutTimeout: resourceObjectCopyDelete,
 
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			if ignoreProviderDefaultTags(ctx, d) {
+				return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
+			}
+			return nil
+		},
+
 		Schema: map[string]*schema.Schema{
 			"acl": {
 				Type:             schema.TypeString,
@@ -78,6 +85,10 @@ func resourceObjectCopy() *schema.Resource {
 				Computed: true,
 			},
 			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc64nvme": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -263,6 +274,30 @@ func resourceObjectCopy() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+			"override_provider": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_tags": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrTags: {
+										Type:             schema.TypeMap,
+										Optional:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										ValidateDiagFunc: verify.MapSizeBetween(0, 0),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"request_charged": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -324,8 +359,6 @@ func resourceObjectCopy() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -372,6 +405,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
 	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_crc64nvme", output.ChecksumCRC64NVME)
 	d.Set("checksum_sha1", output.ChecksumSHA1)
 	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
@@ -649,8 +683,13 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	tags := tftags.New(ctx, getContextTags(ctx))
-	tags = defaultTagsConfig.MergeTags(tags)
+	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
+	if ignoreProviderDefaultTags(ctx, d) {
+		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
+	} else {
+		tags = defaultTagsConfig.MergeTags(tftags.New(ctx, tags))
+	}
+
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
 		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())

@@ -21,12 +21,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceDataCellsFilter,
-			Name:    "Data Cells Filter",
+			Factory:  newResourceDataCellsFilter,
+			TypeName: "aws_lakeformation_data_cells_filter",
+			Name:     "Data Cells Filter",
 		},
 		{
-			Factory: newResourceResourceLFTag,
-			Name:    "Resource LF Tag",
+			Factory:  newResourceResourceLFTag,
+			TypeName: "aws_lakeformation_resource_lf_tag",
+			Name:     "Resource LF Tag",
 		},
 	}
 }
@@ -36,14 +38,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceDataLakeSettings,
 			TypeName: "aws_lakeformation_data_lake_settings",
+			Name:     "Data Lake Settings",
 		},
 		{
 			Factory:  DataSourcePermissions,
 			TypeName: "aws_lakeformation_permissions",
+			Name:     "Permissions",
 		},
 		{
 			Factory:  DataSourceResource,
 			TypeName: "aws_lakeformation_resource",
+			Name:     "Resource",
 		},
 	}
 }
@@ -53,14 +58,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataLakeSettings,
 			TypeName: "aws_lakeformation_data_lake_settings",
+			Name:     "Data Lake Settings",
 		},
 		{
 			Factory:  ResourceLFTag,
 			TypeName: "aws_lakeformation_lf_tag",
+			Name:     "LF Tag",
 		},
 		{
 			Factory:  ResourcePermissions,
 			TypeName: "aws_lakeformation_permissions",
+			Name:     "Permissions",
 		},
 		{
 			Factory:  ResourceResource,
@@ -70,6 +78,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResourceLFTags,
 			TypeName: "aws_lakeformation_resource_lf_tags",
+			Name:     "Resource LF Tags",
 		},
 	}
 }
@@ -81,11 +90,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*lakeformation.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return lakeformation.NewFromConfig(cfg,
+	optFns := []func(*lakeformation.Options){
 		lakeformation.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return lakeformation.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*lakeformation.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*lakeformation.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *lakeformation.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*lakeformation.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -357,9 +357,10 @@ func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
+			input := vpclattice.GetTargetGroupInput{
 				TargetGroupIdentifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetTargetGroup(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if errors.As(err, &nfe) {
@@ -387,9 +388,10 @@ func testAccCheckTargetGroupExists(ctx context.Context, name string, targetGroup
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
+		input := vpclattice.GetTargetGroupInput{
 			TargetGroupIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetTargetGroup(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, rs.Primary.ID, err)

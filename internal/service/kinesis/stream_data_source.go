@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kinesis_stream")
+// @SDKDataSource("aws_kinesis_stream", name="Stream")
 func DataSourceStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamRead,

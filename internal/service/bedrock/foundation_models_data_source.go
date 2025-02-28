@@ -29,10 +29,6 @@ type foundationModelsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *foundationModelsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_foundation_models"
-}
-
 func (d *foundationModelsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

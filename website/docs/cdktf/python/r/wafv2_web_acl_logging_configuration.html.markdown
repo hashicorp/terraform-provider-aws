@@ -199,7 +199,7 @@ The `condition` block supports the following arguments:
 
 The `action_condition` block supports the following argument:
 
-* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, and `COUNT`.
+* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, `COUNT`, `CAPTCHA`, `CHALLENGE` and `EXCLUDED_AS_COUNT`.
 
 ### Label Name Condition
 
@@ -257,4 +257,4 @@ Using `terraform import`, import WAFv2 Web ACL Logging Configurations using the 
 % terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-85d1da7d18f672f0f803c69c5c81c64a375e97f797b4b4d93dafd654b70f24b0 -->
+<!-- cache-key: cdktf-0.20.8 input-77202e72b4847e387989a5959c4c52f53cf2808fd468712b7f94ab48b8195a39 -->

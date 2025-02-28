@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template")
+// @FrameworkResource("aws_servicequotas_template", name="Template")
 func newResourceTemplate(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTemplate{}, nil
 }
@@ -39,10 +39,6 @@ const (
 
 type resourceTemplate struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceTemplate) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicequotas_template"
 }
 
 func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

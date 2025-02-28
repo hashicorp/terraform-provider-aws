@@ -5,31 +5,39 @@ package logs
 
 // Exports for use in tests only.
 var (
-	ResourceAccountPolicy        = resourceAccountPolicy
-	ResourceAnomalyDetector      = newAnomalyDetectorResource
-	ResourceDataProtectionPolicy = resourceDataProtectionPolicy
-	ResourceDestination          = resourceDestination
-	ResourceDestinationPolicy    = resourceDestinationPolicy
-	ResourceGroup                = resourceGroup
-	ResourceIndexPolicy          = newIndexPolicyResource
-	ResourceMetricFilter         = resourceMetricFilter
-	ResourceQueryDefinition      = resourceQueryDefinition
-	ResourceResourcePolicy       = resourceResourcePolicy
-	ResourceStream               = resourceStream
-	ResourceSubscriptionFilter   = resourceSubscriptionFilter
+	ResourceAccountPolicy             = resourceAccountPolicy
+	ResourceAnomalyDetector           = newAnomalyDetectorResource
+	ResourceDataProtectionPolicy      = resourceDataProtectionPolicy
+	ResourceDelivery                  = newDeliveryResource
+	ResourceDeliveryDestination       = newDeliveryDestinationResource
+	ResourceDeliveryDestinationPolicy = newDeliveryDestinationPolicyResource
+	ResourceDeliverySource            = newDeliverySourceResource
+	ResourceDestination               = resourceDestination
+	ResourceDestinationPolicy         = resourceDestinationPolicy
+	ResourceGroup                     = resourceGroup
+	ResourceIndexPolicy               = newIndexPolicyResource
+	ResourceMetricFilter              = resourceMetricFilter
+	ResourceQueryDefinition           = resourceQueryDefinition
+	ResourceResourcePolicy            = resourceResourcePolicy
+	ResourceStream                    = resourceStream
+	ResourceSubscriptionFilter        = resourceSubscriptionFilter
 
-	FindAccountPolicyByTwoPartKey          = findAccountPolicyByTwoPartKey
-	FindDataProtectionPolicyByLogGroupName = findDataProtectionPolicyByLogGroupName
-	FindDestinationByName                  = findDestinationByName
-	FindDestinationPolicyByName            = findDestinationPolicyByName
-	FindIndexPolicyByLogGroupName          = findIndexPolicyByLogGroupName
-	FindLogAnomalyDetectorByARN            = findLogAnomalyDetectorByARN
-	FindLogGroupByName                     = findLogGroupByName
-	FindLogStreamByTwoPartKey              = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
-	FindMetricFilterByTwoPartKey           = findMetricFilterByTwoPartKey
-	FindQueryDefinitionByTwoPartKey        = findQueryDefinitionByTwoPartKey
-	FindResourcePolicyByName               = findResourcePolicyByName
-	FindSubscriptionFilterByTwoPartKey     = findSubscriptionFilterByTwoPartKey
+	FindAccountPolicyByTwoPartKey                          = findAccountPolicyByTwoPartKey
+	FindDataProtectionPolicyByLogGroupName                 = findDataProtectionPolicyByLogGroupName
+	FindDeliveryByID                                       = findDeliveryByID
+	FindDeliveryDestinationByName                          = findDeliveryDestinationByName
+	FindDeliveryDestinationPolicyByDeliveryDestinationName = findDeliveryDestinationPolicyByDeliveryDestinationName
+	FindDeliverySourceByName                               = findDeliverySourceByName
+	FindDestinationByName                                  = findDestinationByName
+	FindDestinationPolicyByName                            = findDestinationPolicyByName
+	FindIndexPolicyByLogGroupName                          = findIndexPolicyByLogGroupName
+	FindLogAnomalyDetectorByARN                            = findLogAnomalyDetectorByARN
+	FindLogGroupByName                                     = findLogGroupByName
+	FindLogStreamByTwoPartKey                              = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
+	FindMetricFilterByTwoPartKey                           = findMetricFilterByTwoPartKey
+	FindQueryDefinitionByTwoPartKey                        = findQueryDefinitionByTwoPartKey
+	FindResourcePolicyByName                               = findResourcePolicyByName
+	FindSubscriptionFilterByTwoPartKey                     = findSubscriptionFilterByTwoPartKey
 
 	TrimLogGroupARNWildcardSuffix          = trimLogGroupARNWildcardSuffix
 	ValidLogGroupName                      = validLogGroupName

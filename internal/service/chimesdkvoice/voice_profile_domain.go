@@ -89,8 +89,6 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -185,9 +183,10 @@ func resourceVoiceProfileDomainDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[INFO] Deleting ChimeSDKVoice VoiceProfileDomain %s", d.Id())
 
-	_, err := conn.DeleteVoiceProfileDomain(ctx, &chimesdkvoice.DeleteVoiceProfileDomainInput{
+	input := chimesdkvoice.DeleteVoiceProfileDomainInput{
 		VoiceProfileDomainId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVoiceProfileDomain(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

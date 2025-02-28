@@ -290,6 +290,11 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccFleetConfig_scalingConfiguration2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
@@ -299,6 +304,13 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.metric_type", "FLEET_UTILIZATION_RATE"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.target_value", "90.5"),
+				),
+			},
+			{
+				Config: testAccFleetConfig_scalingConfiguration3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
 				),
 			},
 		},
@@ -505,6 +517,18 @@ resource "aws_codebuild_fleet" "test" {
       target_value = 90.5
     }
   }
+}
+`, rName)
+}
+
+func testAccFleetConfig_scalingConfiguration3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "ARM_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
 }
 `, rName)
 }

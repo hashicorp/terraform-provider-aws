@@ -254,6 +254,7 @@ The following arguments are optional:
 * `desired_state` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichment_parameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt pipe data. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN. If not set, EventBridge uses an AWS owned key to encrypt pipe data.
 * `log_configuration` - (Optional) Logging configuration settings for the pipe. Detailed below.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -658,4 +659,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1dc037f0f5d2d7b250197accf6c0f7783efa70c8165657f2fd106a1f7d1b38c4 -->
+<!-- cache-key: cdktf-0.20.8 input-508746ac2e852cd65a975b5618fe77d6968d6a6681ce899385596158ca3e441c -->

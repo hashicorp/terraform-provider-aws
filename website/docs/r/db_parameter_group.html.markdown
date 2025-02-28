@@ -49,10 +49,13 @@ in-use parameter group. This includes common situations like changing the group 
 bumping the `family` version during a major version upgrade. This configuration will prevent destruction
 of the deposed parameter group while still in use by the database during upgrade.
 
+Note: Using `create_before_destroy` requires that the new parameter group is created with a different
+name than the existing one. This can be achieved by setting `name_prefix` instead of `name`, for example.
+
 ```terraform
 resource "aws_db_parameter_group" "example" {
-  name   = "my-pg"
-  family = "postgres13"
+  name_prefix = "my-pg"
+  family      = "postgres13"
 
   parameter {
     name  = "log_connections"

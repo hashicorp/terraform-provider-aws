@@ -35,10 +35,12 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are optional:
 
-* `id` - (Required) ID of the collection. Either `id` or `name` must be provided.
-* `name` - (Required) Name of the collection. Either `name` or `id` must be provided.
+~> Exactly one of `id` or `name` is required.
+
+* `id` - (Optional) ID of the collection.
+* `name` - (Optional) Name of the collection.
 
 ## Attribute Reference
 
@@ -57,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.
 
-<!-- cache-key: cdktf-0.20.8 input-773c4f4c82e5aba517ec43bce8ca59c03354cd73fbc2f9496ce75f162ef2ac0f -->
+<!-- cache-key: cdktf-0.20.8 input-64fa066128463133f1cbde30233429d61ddf5ffdc08d0e4899ef2b762694b7a0 -->

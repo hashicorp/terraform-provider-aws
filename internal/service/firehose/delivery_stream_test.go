@@ -40,7 +40,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "extended_s3"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -81,6 +81,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_mode", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1245,7 +1246,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_snowflakeBasic(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -1314,7 +1315,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_snowflakeUpdate(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -1390,7 +1391,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_snowflakeUpdateSecretsManager(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -2249,7 +2250,7 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_openSearchServerlessBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "opensearchserverless"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -2309,7 +2310,7 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_openSearchServerlessUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "opensearchserverless"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),

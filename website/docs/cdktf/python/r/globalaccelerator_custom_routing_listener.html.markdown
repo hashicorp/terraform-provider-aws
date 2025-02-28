@@ -39,7 +39,7 @@ class MyConvertedCode(TerraformStack):
         )
         aws_globalaccelerator_custom_routing_listener_example =
         GlobalacceleratorCustomRoutingListener(self, "example_1",
-            accelerator_arn=example.id,
+            accelerator_arn=example.arn,
             port_range=[GlobalacceleratorCustomRoutingListenerPortRange(
                 from_port=80,
                 to_port=80
@@ -101,4 +101,4 @@ Using `terraform import`, import Global Accelerator custom routing listeners usi
 % terraform import aws_globalaccelerator_custom_routing_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7d9b14c85b89fb6ec7d4fa26f1cd657180812dab00b0742e6d404be95e64a568 -->
+<!-- cache-key: cdktf-0.20.8 input-d80932bf47bc8e0da4ef64a54e9e16176460211b78c1ea1521d5f7ad41459102 -->

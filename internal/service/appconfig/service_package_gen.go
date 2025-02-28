@@ -21,8 +21,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceEnvironment,
-			Name:    "Environment",
+			Factory:  newResourceEnvironment,
+			TypeName: "aws_appconfig_environment",
+			Name:     "Environment",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -106,10 +107,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceExtensionAssociation,
 			TypeName: "aws_appconfig_extension_association",
+			Name:     "Extension Association",
 		},
 		{
 			Factory:  ResourceHostedConfigurationVersion,
 			TypeName: "aws_appconfig_hosted_configuration_version",
+			Name:     "Hosted Configuration Version",
 		},
 	}
 }
@@ -121,11 +124,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appconfig.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return appconfig.NewFromConfig(cfg,
+	optFns := []func(*appconfig.Options){
 		appconfig.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return appconfig.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*appconfig.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*appconfig.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *appconfig.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*appconfig.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

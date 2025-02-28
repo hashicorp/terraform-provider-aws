@@ -27,7 +27,7 @@ import (
 // This value is defined by AWS API
 const lfTagsValuesMaxBatchSize = 50
 
-// @SDKResource("aws_lakeformation_lf_tag")
+// @SDKResource("aws_lakeformation_lf_tag", name="LF Tag")
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLFTagCreate,

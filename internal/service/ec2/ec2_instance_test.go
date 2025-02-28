@@ -5973,7 +5973,7 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		_, err := conn.CreateTags(ctx, &ec2.CreateTagsInput{
+		input := ec2.CreateTagsInput{
 			Resources: []string{aws.ToString(instance.InstanceId)},
 			Tags: []awstypes.Tag{
 				{
@@ -5981,7 +5981,8 @@ func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCh
 					Value: aws.String("Happens"),
 				},
 			},
-		})
+		}
+		_, err := conn.CreateTags(ctx, &input)
 		return err
 	}
 }
@@ -6001,9 +6002,10 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 func defaultVPC(ctx context.Context, t *testing.T) string {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.DescribeAccountAttributes(ctx, &ec2.DescribeAccountAttributesInput{
+	input := ec2.DescribeAccountAttributesInput{
 		AttributeNames: flex.ExpandStringyValueList[awstypes.AccountAttributeName]([]any{string(awstypes.AccountAttributeNameDefaultVpc)}),
-	})
+	}
+	output, err := conn.DescribeAccountAttributes(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		return ""
@@ -6030,7 +6032,7 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeSubnetsInput{
+	input := ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
@@ -6038,7 +6040,7 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 		),
 	}
 
-	subnets, err := tfec2.FindSubnets(ctx, conn, input)
+	subnets, err := tfec2.FindSubnets(ctx, conn, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		return 0
