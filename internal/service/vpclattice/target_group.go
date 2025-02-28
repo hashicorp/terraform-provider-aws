@@ -30,7 +30,7 @@ import (
 // @SDKResource("aws_vpclattice_target_group", name="Target Group")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func ResourceTargetGroup() *schema.Resource {
+func resourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
 		ReadWithoutTimeout:   resourceTargetGroupRead,
@@ -195,14 +195,14 @@ func ResourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.TargetGroupType](),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

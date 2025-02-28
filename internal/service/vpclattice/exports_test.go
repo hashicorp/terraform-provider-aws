@@ -14,6 +14,7 @@ var (
 	ResourceServiceNetworkResourceAssociation = newServiceNetworkResourceAssociationResource
 	ResourceServiceNetworkServiceAssociation  = resourceServiceNetworkServiceAssociation
 	ResourceServiceNetworkVPCAssociation      = resourceServiceNetworkVPCAssociation
+	ResourceTargetGroup                       = resourceTargetGroup
 	ResourceTargetGroupAttachment             = resourceTargetGroupAttachment
 
 	FindAccessLogSubscriptionByID             = findAccessLogSubscriptionByID
