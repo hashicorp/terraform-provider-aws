@@ -188,7 +188,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 									},
 									"noncurrent_days": {
 										Type:         schema.TypeInt,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
 								},
