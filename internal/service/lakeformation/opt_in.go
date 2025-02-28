@@ -43,10 +43,6 @@ import (
 func newResourceOptIn(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceOptIn{}
 
-	// r.SetDefaultCreateTimeout(30 * time.Minute)
-	// r.SetDefaultUpdateTimeout(30 * time.Minute)
-	// r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -373,18 +369,6 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	// r := newOptInResourcer(resourceData, &diags)
-	// if diags.HasError() {
-	// 	resp.Diagnostics.Append(diags...)
-	// 	return
-	// }
-
-	// resource := r.expandOptInResource(ctx, &diags)
-	// if diags.HasError() {
-	// 	resp.Diagnostics.Append(diags...)
-	// 	return
-	// }
-
 	in := lakeformation.CreateLakeFormationOptInInput{}
 
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
@@ -432,7 +416,6 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -485,7 +468,6 @@ func (r *resourceOptIn) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	if out.LastUpdatedBy != nil {
-		// state.LastUpdatedBy = types.StringValue(*out.LastUpdatedBy)
 		state.LastUpdatedBy = fwflex.StringToFramework(ctx, out.LastUpdatedBy)
 	}
 
@@ -529,15 +511,6 @@ func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	// out, err := findOptInByID(ctx, conn, principalData.DataLakePrincipalIdentifier.ValueString(), in.Resource)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.LakeFormation, create.ErrActionSetting, ResNameOptIn, principalData.DataLakePrincipalIdentifier.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
-
 	if _, err := conn.DeleteLakeFormationOptIn(ctx, in); err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return
@@ -548,16 +521,6 @@ func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, 
 		)
 		return
 	}
-
-	// deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	// _, err = waitOptInDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.LakeFormation, create.ErrActionWaitingForDeletion, ResNameOptIn, state.ID.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
 }
 
 func (r *resourceOptIn) ConfigValidators(_ context.Context) []resource.ConfigValidator {
