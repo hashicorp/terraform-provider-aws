@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- end }}
@@ -23,8 +23,8 @@ import (
 type servicePackage struct {}
 
 {{- if .EphemeralResources }}
-func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
-	return []*types.ServicePackageEphemeralResource {
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
+	return []*itypes.ServicePackageEphemeralResource {
 {{- range $key, $value := .EphemeralResources }}
 		{
 			Factory:  {{ $value.FactoryName }},
@@ -36,15 +36,15 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.Servic
 }
 {{- end }}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource {
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
+	return []*itypes.ServicePackageFrameworkDataSource {
 {{- range $key, $value := .FrameworkDataSources }}
 		{
 			Factory: {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:    "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: &itypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
@@ -58,15 +58,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource {
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
+	return []*itypes.ServicePackageFrameworkResource {
 {{- range $key, $value := .FrameworkResources }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: &itypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
@@ -80,15 +80,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource {
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
+	return []*itypes.ServicePackageSDKDataSource {
 {{- range $key, $value := .SDKDataSources }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: &itypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
@@ -102,15 +102,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource {
+func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
+	return []*itypes.ServicePackageSDKResource {
 {{- range $key, $value := .SDKResources }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: &itypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
