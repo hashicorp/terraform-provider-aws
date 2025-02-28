@@ -502,10 +502,18 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 				interceptors := ephemeralResourceInterceptors{}
 				opts := wrappedEphemeralResourceOptions{
 					// bootstrapContext is run on all wrapped methods before any interceptors.
-					bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+					bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 						var diags diag.Diagnostics
+						var overrideRegion string
 
-						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+						if v.RegionOverride && getAttribute != nil {
+							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+							if diags.HasError() {
+								return ctx, diags
+							}
+						}
+
+						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 						if c != nil {
 							ctx = c.RegisterLogger(ctx)
 							ctx = flex.RegisterLogger(ctx)

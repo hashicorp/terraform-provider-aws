@@ -79,9 +79,10 @@ func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName,
 	return context.WithValue(ctx, contextKey, &v)
 }
 
-func NewEphemeralResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+func NewEphemeralResourceContext(ctx context.Context, servicePackageName, resourceName, overrideRegion string) context.Context {
 	v := InContext{
 		isEphemeralResource: true,
+		overrideRegion:      overrideRegion,
 		resourceName:        resourceName,
 		servicePackageName:  servicePackageName,
 	}
