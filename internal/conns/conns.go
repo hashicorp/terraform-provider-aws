@@ -68,9 +68,10 @@ func (c *InContext) ServicePackageName() string {
 	return c.servicePackageName
 }
 
-func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName, overrideRegion string) context.Context {
 	v := InContext{
 		isDataSource:       true,
+		overrideRegion:     overrideRegion,
 		resourceName:       resourceName,
 		servicePackageName: servicePackageName,
 	}
