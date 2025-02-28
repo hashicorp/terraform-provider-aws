@@ -34,7 +34,7 @@ func TestAccDataExchangeJob_assetsFromS3Basic(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	var job dataexchange.GetJobOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,7 +57,7 @@ func TestAccDataExchangeJob_assetsFromS3PostponeStart(t *testing.T) {
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 	var job dataexchange.GetJobOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -88,7 +88,7 @@ func TestAccDataExchangeJob_exportAssetsToS3Basic(t *testing.T) {
 	resourceName := "aws_dataexchange_job.test"
 	bucketName := strconv.Itoa(int(time.Now().UnixNano()))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -112,7 +112,7 @@ func TestAccDataExchangeJob_exportAssetsToSignedUrl(t *testing.T) {
 	}
 	resourceName := "aws_dataexchange_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -132,7 +132,7 @@ func TestAccDataExchangeJob_assetFromSignedURL(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dataexchange_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
