@@ -1587,7 +1587,8 @@ func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23884
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23884.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/38551.
 func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1600,7 +1601,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1"),
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1", 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1615,6 +1616,38 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 							names.AttrFilter: checkFilter_And(
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"object_size_greater_than": knownvalue.Int64Exact(300),
+									"object_size_less_than":    knownvalue.Int64Exact(0),
+									names.AttrPrefix:           knownvalue.StringExact("prefix1"),
+									names.AttrTags:             knownvalue.Null(),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(90),
+							names.AttrFilter: checkFilter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(0),
 									"object_size_less_than":    knownvalue.Int64Exact(0),
 									names.AttrPrefix:           knownvalue.StringExact("prefix1"),
 									names.AttrTags:             knownvalue.Null(),
@@ -2771,7 +2804,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, date, sizeGreaterThan, sizeLessThan)
 }
 
-func testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, prefix string) string {
+func testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, prefix string, objectSizeGT int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -2789,14 +2822,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     filter {
       and {
-        object_size_greater_than = 300
+        object_size_greater_than = %[3]d
         prefix                   = %[2]q
       }
     }
 
     status = "Enabled"
   }
-}`, rName, prefix)
+}`, rName, prefix, objectSizeGT)
 }
 
 func testAccBucketLifecycleConfigurationConfig_filterPrefix(rName, prefix string) string {
