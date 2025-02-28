@@ -347,8 +347,8 @@ github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.32.0 h1:B2aEipKvWa5B0heed
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.32.0/go.mod h1:rLyaX4/cWcBQVnPhw8vbBsvTQ9Zf5QEXyNJfvN6aNGc=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.20.0 h1:fXmekSiOyKnf5HDWbzMgLNjjO5mBcAD5/qCIEV/3jBY=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.20.0/go.mod h1:I5ZhRbxMlWV+HVO6ZtyEfXP2NMTqp9OvYB5Hs0shDsA=
-github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.10 h1:sM+jxOfOFVd7x+HIX4fL4lUkKslDw4LK3qI5NrKN7NU=
-github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.10/go.mod h1:3gOpqe0nBhNPWd5aVcoM2RasZIPXKWBWRmFKNA4MOvM=
+github.com/aws/aws-sdk-go-v2/service/macie2 v1.45.0 h1:dXmxFCjBN5SzMLm6aUmRbccoLAnVoCOBZl42carvPtk=
+github.com/aws/aws-sdk-go-v2/service/macie2 v1.45.0/go.mod h1:unKjikT3mzu065/bTZ5l9DkgXtLex9H/gmT0urCpSJM=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.9 h1:FEFA+3/2Th6LXY8egSOJwivQOCuAi+0dOGyIpsLgtOM=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.37.9/go.mod h1:Y5UhmUfL2aTyHsaIMC73mGUygZ5WKJskyjbI2SSTKs8=
 github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.67.1 h1:eeGzDp8AM110ZWs5Tb6vbbAOMgeYN8EMgFtsBN0iE+c=
