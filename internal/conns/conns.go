@@ -38,6 +38,7 @@ var (
 type InContext struct {
 	isDataSource        bool   // Data source?
 	isEphemeralResource bool   // Ephemeral resource?
+	overrideRegion      string // Any currently in effect per-resource Region override.
 	resourceName        string // Friendly resource name, e.g. "Subnet"
 	servicePackageName  string // Canonical name defined as a constant in names package
 }
@@ -50,6 +51,11 @@ func (c *InContext) IsDataSource() bool {
 // IsDataSource returns true if the resource is an ephemeral resource.
 func (c *InContext) IsEphemeralResource() bool {
 	return c.isEphemeralResource
+}
+
+// OverrideRegion returns any currently in effect per-resource Region override.
+func (c *InContext) OverrideRegion() string {
+	return c.overrideRegion
 }
 
 // ResourceName returns the friendly resource name, e.g. "Subnet".

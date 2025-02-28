@@ -101,8 +101,16 @@ func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
 }
 
-// Region returns the ID of the configured AWS Region.
-func (c *AWSClient) Region(context.Context) string {
+// Region returns the ID of the effective AWS Region.
+// If the currently in-process operation has defined a per-resource Region override,
+// that value is returned, otherwise the configured Region is returned.
+func (c *AWSClient) Region(ctx context.Context) string {
+	if inContext, ok := FromContext(ctx); ok {
+		if v := inContext.OverrideRegion(); v != "" {
+			return v
+		}
+	}
+
 	return c.awsConfig.Region
 }
 
