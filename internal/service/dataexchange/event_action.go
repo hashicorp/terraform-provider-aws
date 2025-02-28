@@ -296,16 +296,16 @@ func (r *resourceEventAction) ImportState(ctx context.Context, req resource.Impo
 }
 
 func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetEventActionOutput, error) {
-	in := &dataexchange.GetEventActionInput{
+	input := dataexchange.GetEventActionInput{
 		EventActionId: aws.String(id),
 	}
 
-	out, err := conn.GetEventAction(ctx, in)
+	out, err := conn.GetEventAction(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
-				LastRequest: in,
+				LastRequest: input,
 			}
 		}
 
@@ -313,7 +313,7 @@ func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return out, nil

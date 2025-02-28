@@ -361,7 +361,6 @@ func testAccEventActionPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
 
 	input := dataexchange.ListEventActionsInput{}
-
 	_, err := conn.ListEventActions(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
