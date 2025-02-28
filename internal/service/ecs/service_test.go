@@ -206,7 +206,7 @@ func TestAccECSService_LatticeConfigurations(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_vpcLatticeConfiguration_basic(rName),
+				Config: testAccServiceConfig_vpcLatticeConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					testAccCheckServiceExists(ctx, serviceName, &service),
@@ -220,7 +220,7 @@ func TestAccECSService_LatticeConfigurations(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccService_vpcLatticeConfiguration_removed(rName),
+				Config: testAccServiceConfig_vpcLatticeConfiguration_removed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, serviceName, &service),
 					resource.TestCheckResourceAttr(serviceName, "vpc_lattice_configuration.#", "0"),
@@ -4654,7 +4654,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccService_vpcLatticeConfiguration_foundation(rName string) string {
+func testAccServiceConfig_baseVPCLattice(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
@@ -4681,6 +4681,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
   tags = {
     Name = %[1]q
   }
@@ -4757,6 +4758,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
+
   tags = {
     Name = %[1]q
   }
@@ -4764,6 +4766,7 @@ resource "aws_vpclattice_service" "test" {
 
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
+
   tags = {
     Name = %[1]q
   }
@@ -4818,7 +4821,6 @@ resource "aws_vpclattice_listener" "test" {
         weight                  = 20
       }
     }
-
   }
 }
 
@@ -4976,13 +4978,13 @@ DEFINITION
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
-	`, rName)
+`, rName)
 }
 
-func testAccService_vpcLatticeConfiguration_basic(rName string) string {
+func testAccServiceConfig_vpcLatticeConfiguration_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		testAccService_vpcLatticeConfiguration_foundation(rName),
+		testAccServiceConfig_baseVPCLattice(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name                   = %[1]q
@@ -5011,10 +5013,10 @@ resource "aws_ecs_service" "test" {
 `, rName))
 }
 
-func testAccService_vpcLatticeConfiguration_removed(rName string) string {
+func testAccServiceConfig_vpcLatticeConfiguration_removed(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		testAccService_vpcLatticeConfiguration_foundation(rName),
+		testAccServiceConfig_baseVPCLattice(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name                   = %[1]q
