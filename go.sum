@@ -503,8 +503,8 @@ github.com/aws/aws-sdk-go-v2/service/ssm v1.57.0 h1:bfCv9klbdln2a9VBWDa190Ecbime
 github.com/aws/aws-sdk-go-v2/service/ssm v1.57.0/go.mod h1:PUWUl5MDiYNQkUHN9Pyd9kgtA/YhbxnSnHP+yQqzrM8=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.27.0 h1:NZCtkGFaP1lJONj526VULDxOvMb/IUFygOcZFKYH/qQ=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.27.0/go.mod h1:HLM/MYuBpcE2Q/rFUNzSFFvlIR/OvZtTjE4dZCriPtM=
-github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.34.17 h1:xqnEI7qn/Wu66Jbj0BW7GpUadyTmESYD+spJz9MD5iU=
-github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.34.17/go.mod h1:0UOhmbhjk6crN2yD8yk8TpwbfrhxmbdaB4cz13wdxlI=
+github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.35.0 h1:OTixWBpad/pDlNL7lIt3tm8msfLF+FYuO5dd7L/wHwM=
+github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.35.0/go.mod h1:8dFzbC8uCHTgNAJjEnD7Y8jDvWaZXUsxKcsDKEcUcZg=
 github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.3.10 h1:3e9ZvkZB5NsDellLxPuaCJSeA5Hg7SeHY+Godotzizc=
 github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.3.10/go.mod h1:UKtH07HzEWvg7zZ6R2JixYlmGYa/3i2niz7Lz2zJoeM=
 github.com/aws/aws-sdk-go-v2/service/ssmsap v1.19.9 h1:S5YWt0Jcb4e7m3ttSjje2Em6EXRWorOTomS1p+3m8Io=
