@@ -189,7 +189,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.10.0
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.2.17
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.16
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.18.11
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.18.15

@@ -399,8 +399,8 @@ github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.17.0 h1:UV66kT51yApb
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.17.0/go.mod h1:8zOlk0HdXBDsSP3z7YqFZOM0R55j6RjE3eFuq8rbFwQ=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.10.0 h1:C6dDchWSkIVXqNDDh6X4OSS6xAok+JN5Dj3/qiSvux8=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.10.0/go.mod h1:fXaLd5P4qm9mKFHEDWsNiiK5OmLJVfkLYIjrFbZCPtA=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.2.17 h1:wJ6saDhgjnMo5T5Wc9+8iUWPKNyjkucyPJ1+lX7liDg=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.2.17/go.mod h1:BeR/gAMaRE8+7sBSSYQWwB/E7My5+qmsIUPB8b30k0A=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.3.0 h1:4waQipeFUCdeIaBlH/ET9n5p8gbZI9LuIwYHGH6jaXQ=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.3.0/go.mod h1:CX99CnPyFWfXFOQYf5NhHOzdJjCxhPo39DoChDi32jE=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.16 h1:2m5g963dcR0i6iqrgp38r6W6ndpb3djLtFGoOVRxWqQ=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.16/go.mod h1:vRiQppX2FxQBsAHZ1/EryT83jcqZNoVHGdGlKXeijW0=
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.18.11 h1:huWb24EtpNI5iUaa2a5dPHkFp14m6QxnKyJm+r4ti4M=
