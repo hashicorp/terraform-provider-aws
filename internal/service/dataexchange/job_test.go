@@ -160,9 +160,10 @@ func testAccCheckJobExists(ctx context.Context, n string, v *dataexchange.GetJob
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
-		output, err := conn.GetJob(ctx, &dataexchange.GetJobInput{
+		input := dataexchange.GetJobInput{
 			JobId: aws.String(rs.Primary.ID),
-		})
+		}
+		output, err := conn.GetJob(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -188,9 +189,10 @@ func testAccCheckJobStarted(ctx context.Context, n string, started bool) resourc
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
-		output, err := conn.GetJob(ctx, &dataexchange.GetJobInput{
+		input := dataexchange.GetJobInput{
 			JobId: aws.String(rs.Primary.ID),
-		})
+		}
+		output, err := conn.GetJob(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -330,27 +332,28 @@ func helperAccJobCreateDefaultAsset(ctx context.Context, assetType awstypes.Asse
 	}
 
 	conn := dataexchange.NewFromConfig(cfg)
+
 	// Create DataSet
-	dsOut, err := conn.CreateDataSet(ctx, &dataexchange.CreateDataSetInput{
+	createDataSetInput := dataexchange.CreateDataSetInput{
 		Name:        aws.String("test"),
 		Description: aws.String("test"),
 		AssetType:   assetType,
-	})
-
+	}
+	dsOut, err := conn.CreateDataSet(ctx, &createDataSetInput)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create Revision
-	rOut, err := conn.CreateRevision(ctx, &dataexchange.CreateRevisionInput{
+	createRevisionInput := dataexchange.CreateRevisionInput{
 		DataSetId: dsOut.Id,
-	})
-
+	}
+	rOut, err := conn.CreateRevision(ctx, &createRevisionInput)
 	if err != nil {
 		return nil, err
 	}
 
-	jOut, err := conn.CreateJob(ctx, &dataexchange.CreateJobInput{
+	createJobInput := dataexchange.CreateJobInput{
 		Type: awstypes.TypeImportAssetFromSignedUrl,
 		Details: &awstypes.RequestDetails{
 			ImportAssetFromSignedUrl: &awstypes.ImportAssetFromSignedUrlRequestDetails{
@@ -360,8 +363,8 @@ func helperAccJobCreateDefaultAsset(ctx context.Context, assetType awstypes.Asse
 				Md5Hash:    aws.String("CY9rzUYh03PK3k6DJie09g=="),
 			},
 		},
-	})
-
+	}
+	jOut, err := conn.CreateJob(ctx, &createJobInput)
 	if err != nil {
 		return nil, err
 	}
@@ -399,9 +402,10 @@ func helperAccJobCreateDefaultAsset(ctx context.Context, assetType awstypes.Asse
 	}
 
 	// Start job
-	_, err = conn.StartJob(ctx, &dataexchange.StartJobInput{
+	startJobInput := dataexchange.StartJobInput{
 		JobId: jOut.Id,
-	})
+	}
+	_, err = conn.StartJob(ctx, &startJobInput)
 	if err != nil {
 		return nil, err
 	}
@@ -412,10 +416,11 @@ func helperAccJobCreateDefaultAsset(ctx context.Context, assetType awstypes.Asse
 	}
 	for len(lOut.Assets) == 0 {
 		time.Sleep(time.Second)
-		lOut, err = conn.ListRevisionAssets(ctx, &dataexchange.ListRevisionAssetsInput{
+		input := dataexchange.ListRevisionAssetsInput{
 			RevisionId: rOut.Id,
 			DataSetId:  dsOut.Id,
-		})
+		}
+		lOut, err = conn.ListRevisionAssets(ctx, &input)
 		if err != nil {
 			return nil, err
 		}
