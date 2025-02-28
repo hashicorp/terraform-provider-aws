@@ -14,19 +14,23 @@ Terraform resource for managing an AWS Data Exchange Event Action.
 
 ```terraform
 resource "aws_dataexchange_event_action" "example" {
-  event_revision_published {
-    data_set_id = aws_dataexchange_data_set.example.id
+  event {
+    revision_published {
+      data_set_id = aws_dataexchange_data_set.example.id
+    }
   }
 
-  action_export_revision_to_s3 {
-    revision_destination {
-      bucket      = aws_s3_bucket.example.bucket
-      key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
-    }
+  action {
+    export_revision_to_s3 {
+      revision_destination {
+        bucket      = aws_s3_bucket.example.bucket
+        key_pattern = "$${Revision.CreatedAt}/$${Asset.Name}"
+      }
 
-    encryption {
-      type        = "aws:kms"
-      kms_key_arn = aws_kms_key.example.arn
+      encryption {
+        type        = "aws:kms"
+        kms_key_arn = aws_kms_key.example.arn
+      }
     }
   }
 }
@@ -36,27 +40,44 @@ resource "aws_dataexchange_event_action" "example" {
 
 The following blocks are supported:
 
-* `event_revision_published` - (Required) Configuration block for the revision published event that triggers the action. Cannot be updated without recreation of the resource.
-* `action_export_revision_to_s3` - (Required) Configuration block for the export revision to S3 action.
+* `action` - (Required) Describes the action to take.
+  Described in [`action` Configuration Block](#action-configuration-block) below.
+* `event` - (Required) Describes the event that triggers the `action`.
+  Described in [`event` Configuration Block](#event-configuration-block) below.
 
-### event_revision_published Configuration Block
+### action Configuration Block
 
-* `data_set_id` - (Required) The ID of the data set to monitor for revision publications.
+* `export_revision_to_s3` - (Required) Configuration for an Export Revision to S3 action.
+  Described in [`export_revision_to_s3` Configuration Block](#export_revision_to_s3-configuration-block)
 
-### action_export_revision_to_s3 Configuration Block
+### export_revision_to_s3 Configuration Block
 
-* `revision_destination` - (Required) Configuration block for the S3 destination of the exported revision.
-* `encryption` - (Optional) Configuration block for server-side encryption of the exported revision.
+* `encryption` - (Optional) Configures server-side encryption of the exported revision.
+  Described in [`encryption` Configuration Block](#encryption-configuration-block) below.
+* `revision_destination` - (Required) Configures the S3 destination of the exported revision.
+  Described in [`revision_destination` Configuration Block](#revision_destination-configuration-block) below.
+
+### encryption Configuration Block
+
+* `type` - (Optional) Type of server-side encryption.
+  Valid values are `aws:kms` or `aws:s3`.
+* `kms_key_arn` - (Optional) ARN of the KMS key used for encryption.
 
 ### revision_destination Configuration Block
 
 * `bucket` - (Required) The S3 bucket where the revision will be exported.
-* `key_pattern` - (Optional) Pattern for naming revisions in the S3 bucket. Defaults to `${Revision.CreatedAt}/${Asset.Name}`.
+* `key_pattern` - (Optional) Pattern for naming revisions in the S3 bucket.
+  Defaults to `${Revision.CreatedAt}/${Asset.Name}`.
 
-### encryption Configuration Block
+### event Configuration Block
 
-* `type` - (Optional) Type of server-side encryption. Valid values are `aws:kms` or `aws:s3`.
-* `kms_key_arn` - (Optional) ARN of the KMS key used for encryption.
+* `revision_published` - (Required) Configuration for a Revision Published event.
+  Described in [`revision_published` Configuration Block](#revision_published-configuration-block) below.
+
+### revision_published Configuration Block
+
+* `data_set_id` - (Required) The ID of the data set to monitor for revision publications.
+  Changing this value will recreate the resource.
 
 ## Attribute Reference
 
