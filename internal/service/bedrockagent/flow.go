@@ -2,50 +2,21 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/bedrockagent/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"time"
+    "regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -57,21 +28,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagent_flow", name="Flow")
 func newResourceFlow(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceFlow{}
-	
+
 	// TIP: ==== CONFIGURABLE TIMEOUTS ====
 	// Users can configure timeout lengths but you need to use the times they
 	// provide. Access the timeout they configure (or the defaults) using,
@@ -139,65 +101,32 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK. 
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "FlowId"
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as 
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK 
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+                Validators: []validator.String{
+                    stringvalidator.All(
+                        stringvalidator.LengthBetween(1, 50),
+                        stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "the name should only contain 0-9, A-Z, a-z, and _"),
+                    ),
+                },
 			},
-			"type": schema.StringAttribute{
+            "execution_role_arn": schema.StringAttribute{
+                CustomType: fwtypes.ARNType,
 				Required: true,
+			},
+            "customer_encryption_key_arn": schema.StringAttribute{
+                CustomType: fwtypes.ARNType,
+				Optional: true,
+			},
+            "definition": schema.StringAttribute{
+				Optional: true,
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in 
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects 
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields, 
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
-				},
-			},
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -208,23 +137,9 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 }
 
 func (r *resourceFlow) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes. 
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BedrockAgentClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan resourceFlowModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -235,11 +150,10 @@ func (r *resourceFlow) Create(ctx context.Context, req resource.CreateRequest, r
 	// TIP: -- 3. Populate a Create input structure
 	var input bedrockagent.CreateFlowInput
 	// TIP: Using a field name prefix allows mapping fields such as `ID` to `FlowId`
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Flow"))...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
 
 	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.CreateFlow(ctx, &input)
@@ -252,7 +166,7 @@ func (r *resourceFlow) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
-	if out == nil || out.Flow == nil {
+	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNameFlow, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
@@ -276,33 +190,22 @@ func (r *resourceFlow) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
-	
+
 	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceFlow) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BedrockAgentClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceFlowModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
 	out, err := findFlowByID(ctx, conn, state.ID.ValueString())
@@ -318,41 +221,21 @@ func (r *resourceFlow) Read(ctx context.Context, req resource.ReadRequest, resp 
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Set the arguments and attributes
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BedrockAgentClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan, state resourceFlowModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -360,7 +243,7 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Get the difference between the plan and state, if any
 	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
@@ -370,11 +253,11 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	if diff.HasChanges() {
 		var input bedrockagent.UpdateFlowInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		
+
 		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateFlow(ctx, &input)
 		if err != nil {
@@ -384,14 +267,14 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 			)
 			return
 		}
-		if out == nil || out.Flow == nil {
+		if out == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameFlow, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
-		
+
 		// TIP: Using the output from the update function, re-set any computed attributes
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 		if resp.Diagnostics.HasError() {
@@ -415,36 +298,20 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 }
 
 func (r *resourceFlow) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BedrockAgentClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceFlowModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a delete input structure
 	input := bedrockagent.DeleteFlowInput{
-		FlowId: state.ID.ValueStringPointer(),
+		FlowIdentifier: state.ID.ValueStringPointer(),
 	}
-	
+
 	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteFlow(ctx, &input)
 	// TIP: On rare occassions, the API returns a not found error after deleting a
@@ -460,7 +327,7 @@ func (r *resourceFlow) Delete(ctx context.Context, req resource.DeleteRequest, r
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitFlowDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
@@ -509,7 +376,7 @@ const (
 // exported (i.e., capitalized).
 //
 // You will need to adjust the parameters and names to fit the service.
-func waitFlowCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Flow, error) {
+func waitFlowCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -520,7 +387,7 @@ func waitFlowCreated(ctx context.Context, conn *bedrockagent.Client, id string, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagent.Flow); ok {
+	if out, ok := outputRaw.(*bedrockagent.GetFlowOutput); ok {
 		return out, err
 	}
 
@@ -531,7 +398,7 @@ func waitFlowCreated(ctx context.Context, conn *bedrockagent.Client, id string, 
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
-func waitFlowUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Flow, error) {
+func waitFlowUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -542,7 +409,7 @@ func waitFlowUpdated(ctx context.Context, conn *bedrockagent.Client, id string, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagent.Flow); ok {
+	if out, ok := outputRaw.(*bedrockagent.GetFlowOutput); ok {
 		return out, err
 	}
 
@@ -551,7 +418,7 @@ func waitFlowUpdated(ctx context.Context, conn *bedrockagent.Client, id string, 
 
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
-func waitFlowDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Flow, error) {
+func waitFlowDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusDeleting, statusNormal},
 		Target:                    []string{},
@@ -560,7 +427,7 @@ func waitFlowDeleted(ctx context.Context, conn *bedrockagent.Client, id string, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagent.Flow); ok {
+	if out, ok := outputRaw.(*bedrockagent.GetFlowOutput); ok {
 		return out, err
 	}
 
@@ -575,7 +442,7 @@ func waitFlowDeleted(ctx context.Context, conn *bedrockagent.Client, id string, 
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
 func statusFlow(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findFlowByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -585,7 +452,7 @@ func statusFlow(ctx context.Context, conn *bedrockagent.Client, id string) retry
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, string(out.Status), nil
 	}
 }
 
@@ -594,9 +461,9 @@ func statusFlow(ctx context.Context, conn *bedrockagent.Client, id string) retry
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Flow, error) {
+func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetFlowOutput, error) {
 	in := &bedrockagent.GetFlowInput{
-		Id: aws.String(id),
+		FlowIdentifier: aws.String(id),
 	}
 
 	out, err := conn.GetFlow(ctx, in)
@@ -611,11 +478,11 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*a
 		return nil, err
 	}
 
-	if out == nil || out.Flow == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.Flow, nil
+	return out, nil
 }
 
 // TIP: ==== DATA STRUCTURES ====
@@ -631,13 +498,14 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*a
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceFlowModel struct {
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
+	ARN                      types.String   `tfsdk:"arn"`
+	ID                       types.String   `tfsdk:"id"`
+	Name                     types.String   `tfsdk:"name"`
+	ExecutionRoleARN         types.String   `tfsdk:"execution_role_arn"`
+	CustomerEncryptionKeyARN types.String   `tfsdk:"customer_encryption_key_arn"`
+	Definition               types.String   `tfsdk:"definition"`
+	Description              types.String   `tfsdk:"description"`
+	Timeouts                 timeouts.Value `tfsdk:"timeouts"`
 }
 
 type complexArgumentModel struct {

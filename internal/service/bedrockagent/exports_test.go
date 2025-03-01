@@ -11,6 +11,7 @@ var (
 	ResourceAgentCollaborator             = newAgentCollaboratorResource
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
 	ResourceDataSource                    = newDataSourceResource
+	ResourceFlow                          = newResourceFlow
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
 
 	FindAgentByID                                  = findAgentByID
@@ -19,5 +20,6 @@ var (
 	FindAgentCollaboratorByThreePartKey            = findAgentCollaboratorByThreePartKey
 	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartKey
 	FindDataSourceByTwoPartKey                     = findDataSourceByTwoPartKey
+	FindFlowByID                                   = findFlowByID
 	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
 )
