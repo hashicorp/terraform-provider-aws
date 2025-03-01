@@ -582,9 +582,12 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 }
 
 func findOptInByID(ctx context.Context, conn *lakeformation.Client, id string, resource *awstypes.Resource) (*awstypes.LakeFormationOptInsInfo, error) {
-	in := &lakeformation.ListLakeFormationOptInsInput{}
-
-	in.Resource = resource
+	in := &lakeformation.ListLakeFormationOptInsInput{
+		Principal: &awstypes.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(id),
+		},
+		Resource: resource,
+	}
 
 	return findOptIn(ctx, conn, in, tfslices.Predicate[*awstypes.LakeFormationOptInsInfo](func(v *awstypes.LakeFormationOptInsInfo) bool {
 		return aws.ToString(v.Principal.DataLakePrincipalIdentifier) == id
@@ -604,7 +607,6 @@ func findOptIn(ctx context.Context, conn *lakeformation.Client, input *lakeforma
 type optInResourcer interface {
 	expandOptInResource(context.Context, *diag.Diagnostics) *awstypes.Resource
 	findOptIn(context.Context, *lakeformation.ListLakeFormationOptInsOutput, *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData]
-	// findOptInByAttr(context.Context, *lakeformation.Client, string, string) (*awstypes.LakeFormationOptInsInfo, error)
 }
 
 type catalogResource struct {
@@ -670,7 +672,6 @@ func newOptInResourcer(data *ResourceData, diags *diag.Diagnostics) optInResourc
 	}
 }
 
-// //////////////////////// CATALOG //////////////////////////
 func (d *catalogResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	catalogptr, err := d.data.Catalog.ToPtr(ctx)
@@ -711,10 +712,6 @@ func (d *catalogResource) findOptIn(ctx context.Context, input *lakeformation.Li
 
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
-
-////////////////////////////////////////////////////////////
-
-////////////////////////// DATABASE //////////////////////////
 
 func (d *dbResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
@@ -759,9 +756,6 @@ func (d *dbResource) findOptIn(ctx context.Context, input *lakeformation.ListLak
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
-//////////////////////////////////////////////////////////////
-
-// //////////////////DATA_CELLS_FILTER//////////////////////////
 func (d *dcfResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	dcfptr, err := d.data.DataCellsFilter.ToPtr(ctx)
@@ -808,9 +802,6 @@ func (d *dcfResource) findOptIn(ctx context.Context, input *lakeformation.ListLa
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
-/////////////////////////////////////////////////////////////////////////////
-
-// /////////////////////DATA_LOCATION////////////////////////////
 func (d *dlResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	dlptr, err := d.data.DataLocation.ToPtr(ctx)
@@ -853,9 +844,6 @@ func (d *dlResource) findOptIn(ctx context.Context, input *lakeformation.ListLak
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-// //////////////////////// LFTAG ////////////////////////////////////////////////////
 func (d *lftagResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	lftagptr, err := d.data.LFTag.ToPtr(ctx)
@@ -897,7 +885,6 @@ func (d *lftagResource) findOptIn(ctx context.Context, input *lakeformation.List
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
-// ///////////////////////LFTAG EXPRESSION//////////////////////
 func (d *lfteResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	lfteptr, err := d.data.LFTagExpression.ToPtr(ctx)
@@ -940,7 +927,6 @@ func (d *lfteResource) findOptIn(ctx context.Context, input *lakeformation.ListL
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
-// /////////////////////LFTAG POLICY ////////////////////////////////////
 func (d *lftpResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	lftptr, err := d.data.LFTagPolicy.ToPtr(ctx)
@@ -984,7 +970,6 @@ func (d *lftpResource) findOptIn(ctx context.Context, input *lakeformation.ListL
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
-// ///////////////////////TABLE////////////////////////////////
 func (d *tbResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	tableptr, err := d.data.Table.ToPtr(ctx)
@@ -1026,7 +1011,6 @@ func (d *tbResource) findOptIn(ctx context.Context, input *lakeformation.ListLak
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
-// //////////////////////////////////////////////////////////////////////////////////////////////
 func (d *tbcResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	tbcptr, err := d.data.TableWithColumns.ToPtr(ctx)
@@ -1067,8 +1051,6 @@ func (d *tbcResource) findOptIn(ctx context.Context, input *lakeformation.ListLa
 	}
 	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////
 
 type resourceOptInData struct {
 	Principal     fwtypes.ListNestedObjectValueOf[DataLakePrincipal] `tfsdk:"principal"`
