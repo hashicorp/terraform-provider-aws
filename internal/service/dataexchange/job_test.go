@@ -47,6 +47,12 @@ func TestAccDataExchangeJob_assetsFromS3Basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`jobs/.+`)),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_on_creation"},
+			},
 		},
 	})
 }

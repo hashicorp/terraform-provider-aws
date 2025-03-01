@@ -290,7 +290,7 @@ func (r *resourceJob) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	resp.Diagnostics.Append(state.Flatten(ctx, out)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -536,16 +536,5 @@ func (m resourceJobModel) Expand(ctx context.Context, v *dataexchange.CreateJobI
 	v.Details = &awstypes.RequestDetails{}
 	diags.Append(flex.Expand(ctx, m.Details, &v.Details)...)
 	v.Type = awstypes.Type(m.Type.ValueString())
-	return diags
-}
-
-func (m *resourceJobModel) Flatten(ctx context.Context, v *dataexchange.GetJobOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-	diags.Append(flex.Flatten(ctx, v.Details, &m.Details)...)
-	m.ID = types.StringPointerValue(v.Id)
-	m.ARN = types.StringPointerValue(v.Arn)
-	m.Type = fwtypes.StringEnumValue(v.Type)
-	m.State = fwtypes.StringEnumValue(v.State)
-
 	return diags
 }
