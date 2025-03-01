@@ -1279,6 +1279,32 @@ func resourceDomain() *schema.Resource {
 											ValidateDiagFunc: enum.Validate[awstypes.MlTools](),
 										},
 									},
+									"hidden_sagemaker_image_version_aliases": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 5,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"sagemaker_image_name": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.SageMakerImageName](),
+												},
+												"version_aliases": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													MaxItems: 20,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 128),
+															validation.StringMatch(regexache.MustCompile(`^(0|[1-9]\d*)\.(0|[1-9]\d*)$`), ""),
+														),
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -2502,6 +2528,10 @@ func expandStudioWebPortalSettings(l []interface{}) *awstypes.StudioWebPortalSet
 		config.HiddenMlTools = flex.ExpandStringyValueSet[awstypes.MlTools](v)
 	}
 
+	if v, ok := m["hidden_sagemaker_image_version_aliases"].([]interface{}); ok && len(v) > 0 {
+		config.HiddenSageMakerImageVersionAliases = expandHiddenImageVersionAliases(v)
+	}
+
 	return config
 }
 
@@ -3341,5 +3371,43 @@ func flattenStudioWebPortalSettings(config *awstypes.StudioWebPortalSettings) []
 		m["hidden_ml_tools"] = flex.FlattenStringyValueSet[awstypes.MlTools](config.HiddenMlTools)
 	}
 
+	if config.HiddenSageMakerImageVersionAliases != nil {
+		m["hidden_sagemaker_image_version_aliases"] = flattenHiddenImageVersionAliases(config.HiddenSageMakerImageVersionAliases)
+	}
+
 	return []map[string]interface{}{m}
+}
+
+func expandHiddenImageVersionAliases(tfList []interface{}) []awstypes.HiddenSageMakerImage {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.HiddenSageMakerImage, 0, len(tfList))
+	for _, raw := range tfList {
+		data := raw.(map[string]interface{})
+		sagemakerImage := awstypes.HiddenSageMakerImage{
+			SageMakerImageName: awstypes.SageMakerImageName(data["sagemaker_image_name"].(string)),
+		}
+		if v, ok := data["version_aliases"].(*schema.Set); ok && v.Len() > 0 {
+			sagemakerImage.VersionAliases = flex.ExpandStringValueSet(v)
+		}
+
+		apiObjects = append(apiObjects, sagemakerImage)
+	}
+	return apiObjects
+}
+
+func flattenHiddenImageVersionAliases(config []awstypes.HiddenSageMakerImage) []map[string]interface{} {
+	versionAliases := make([]map[string]interface{}, 0, len(config))
+
+	for _, raw := range config {
+		versionAlias := make(map[string]interface{})
+
+		versionAlias["sagemaker_image_name"] = raw.SageMakerImageName
+		versionAlias["version_aliases"] = flex.FlattenStringyValueSet[string](raw.VersionAliases)
+		versionAliases = append(versionAliases, versionAlias)
+	}
+
+	return versionAliases
 }
