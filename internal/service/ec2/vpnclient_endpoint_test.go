@@ -1189,14 +1189,14 @@ func testAccClientVPNEndpointConfig_simpleAttributesUpdated(t *testing.T, rName 
 		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test2"),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  client_cidr_block      = "10.0.0.0/16"
-  description            = "Description2"
+  client_cidr_block             = "10.0.0.0/16"
+  description                   = "Description2"
   disconnect_on_session_timeout = false
-  server_certificate_arn = aws_acm_certificate.test2.arn
-  split_tunnel           = false
-  session_timeout_hours  = 10
-  transport_protocol     = "tcp"
-  vpn_port               = 443
+  server_certificate_arn        = aws_acm_certificate.test2.arn
+  split_tunnel                  = false
+  session_timeout_hours         = 10
+  transport_protocol            = "tcp"
+  vpn_port                      = 443
 
   authentication_options {
     type                       = "certificate-authentication"
