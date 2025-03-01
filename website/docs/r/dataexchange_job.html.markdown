@@ -75,12 +75,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_dataexchange_job.example
-  id = "job-12345678"
+  id = "abc123def789"
 }
 ```
 
 Using `terraform import`, import Data Exchange Job using the `id`. For example:
 
 ```console
-% terraform import aws_dataexchange_job.example job-12345678
+% terraform import aws_dataexchange_job.example abc123def789
 ```
