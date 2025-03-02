@@ -751,11 +751,43 @@ func resourceOriginEndpointCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags: getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("authorization"); ok {
-		in.Authorization = v.(*types.Authorization)
+		in.Authorization = expandAuthorization(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cmaf_package"); ok && len(v.(*schema.Set).List()) > 0 {
 		in.CmafPackage = expandCmafPackage(v.(*schema.Set).List()[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		in.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("hls_package"); ok {
+		in.HlsPackage = expandHlsPackage(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("mss_package"); ok {
+		in.MssPackage = expandMssPackage(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("manifest_name"); ok {
+		in.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("origination"); ok {
+		in.Origination = types.Origination(v.(string))
+	}
+
+	if v, ok := d.GetOk("start_over_window_seconds"); ok {
+		in.StartoverWindowSeconds = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("time_delay_seconds"); ok {
+		in.TimeDelaySeconds = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("whitelist"); ok {
+		in.Whitelist = v.([]string)
 	}
 
 	// TIP: -- 3. Call the AWS create function
@@ -775,7 +807,7 @@ func resourceOriginEndpointCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(out.Id))
 
 	// TIP: -- 5. Use a waiter to wait for create to complete
-	if _, err := waitOriginEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitOriginEndpointCreated(ctx, conn, *out.ChannelId, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionWaitingForCreation, ResNameOriginEndpoint, d.Id(), err)
 	}
 
@@ -801,7 +833,8 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 
 	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := findOriginEndpointByID(ctx, conn, d.Id())
+	channelID := d.Get("channel_id").(string)
+	out, err := findOriginEndpointsByChannelID(ctx, conn, channelID)
 
 	// TIP: -- 3. Set ID to empty where resource is not new and not found
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -828,7 +861,7 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
 	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set("name", out.ManifestName)
 
 	// TIP: Setting a complex type.
 	// For more information, see:
@@ -912,7 +945,7 @@ func resourceOriginEndpointUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// TIP: -- 4. Use a waiter to wait for update to complete
-	if _, err := waitOriginEndpointUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitOriginEndpointUpdated(ctx, conn, aws.ToString(out.ChannelId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionWaitingForUpdate, ResNameOriginEndpoint, d.Id(), err)
 	}
 
@@ -991,11 +1024,11 @@ const (
 // exported (i.e., capitalized).
 //
 // You will need to adjust the parameters and names to fit the service.
-func waitOriginEndpointCreated(ctx context.Context, conn *mediapackage.Client, id string, timeout time.Duration) (*mediapackage.OriginEndpoint, error) {
+func waitOriginEndpointCreated(ctx context.Context, conn *mediapackage.Client, channelID string, timeout time.Duration) (*mediapackage.OriginEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusOriginEndpoint(ctx, conn, id),
+		Refresh:                   statusOriginEndpoint(ctx, conn, channelID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -1013,11 +1046,11 @@ func waitOriginEndpointCreated(ctx context.Context, conn *mediapackage.Client, i
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
-func waitOriginEndpointUpdated(ctx context.Context, conn *mediapackage.Client, id string, timeout time.Duration) (*mediapackage.OriginEndpoint, error) {
+func waitOriginEndpointUpdated(ctx context.Context, conn *mediapackage.Client, channelID string, timeout time.Duration) (*mediapackage.OriginEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
-		Refresh:                   statusOriginEndpoint(ctx, conn, id),
+		Refresh:                   statusOriginEndpoint(ctx, conn, channelID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -1056,9 +1089,9 @@ func waitOriginEndpointDeleted(ctx context.Context, conn *mediapackage.Client, i
 //
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
-func statusOriginEndpoint(ctx context.Context, conn *mediapackage.Client, id string) retry.StateRefreshFunc {
+func statusOriginEndpoint(ctx context.Context, conn *mediapackage.Client, channelID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findOriginEndpointByID(ctx, conn, id)
+		out, err := findOriginEndpointsByChannelID(ctx, conn, channelID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -1076,27 +1109,21 @@ func statusOriginEndpoint(ctx context.Context, conn *mediapackage.Client, id str
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findOriginEndpointByID(ctx context.Context, conn *mediapackage.Client, id string) (*mediapackage.OriginEndpoint, error) {
+func findOriginEndpointsByChannelID(ctx context.Context, conn *mediapackage.Client, channelID string) ([]types.OriginEndpoint, error) {
 	in := &mediapackage.ListOriginEndpointsInput{
-		Id: aws.String(id),
+		ChannelId: aws.String(channelID),
 	}
-
-	out, err := conn.GetOriginEndpoint(ctx, in)
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	out, err := conn.ListOriginEndpoints(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	if len(out.OriginEndpoints) == 0 {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.OriginEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.OriginEndpoint, nil
+	return out.OriginEndpoints, nil
 }
 
 // TIP: ==== FLEX ====
@@ -1150,166 +1177,313 @@ func flattenComplexArguments(apiObjects []*mediapackage.ComplexArgument) []inter
 	return l
 }
 
-// TIP: Remember, as mentioned above, expanders take a Terraform data structure
-// and return something that you can send to the AWS API. In other words,
-// expanders translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-func expandComplexArgument(tfMap map[string]interface{}) *mediapackage.ComplexArgument {
+func expandAuthorization(tfMap map[string]interface{}) *types.Authorization {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &mediapackage.ComplexArgument{}
+	a := &types.Authorization{}
 
-	if v, ok := tfMap["sub_field_one"].(string); ok && v != "" {
-		a.SubFieldOne = aws.String(v)
+	if v, ok := tfMap["cdn_identifier_secret"].(string); ok && v != "" {
+		a.CdnIdentifierSecret = aws.String(v)
 	}
 
-	if v, ok := tfMap["sub_field_two"].(string); ok && v != "" {
-		a.SubFieldTwo = aws.String(v)
+	if v, ok := tfMap["secrets_role_arn"].(string); ok && v != "" {
+		a.SecretsRoleArn = aws.String(v)
 	}
 
 	return a
 }
 
+func expandHlsPackage(tfMap map[string]interface{}) *types.HlsPackage {
+	if tfMap == nil {
+		return nil
+	}
+
+	h := &types.HlsPackage{}
+
+	if v, ok := tfMap["ad_markers"].(string); ok && v != "" {
+		h.AdMarkers = types.AdMarkers(v)
+	}
+
+	if v, ok := tfMap["ad_triggers"].([]interface{}); ok && len(v) > 0 {
+		h.AdTriggers = expandAdTriggers(v)
+	}
+
+	if v, ok := tfMap["ads_on_delivery_restrictions"].(string); ok && v != "" {
+		h.AdsOnDeliveryRestrictions = types.AdsOnDeliveryRestrictions(v)
+	}
+
+	if v, ok := tfMap["encryption"].(map[string]interface{}); ok && len(v) > 0 {
+		h.Encryption = expandHlsEncryption(v)
+	}
+
+	if v, ok := tfMap["include_dvb_subtitles"].(bool); ok {
+		h.IncludeDvbSubtitles = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_iframe_only_stream"].(bool); ok {
+		h.IncludeIframeOnlyStream = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["playlist_type"].(string); ok && v != "" {
+		h.PlaylistType = types.PlaylistType(v)
+	}
+
+	if v, ok := tfMap["playlist_window_seconds"].(int); ok {
+		h.PlaylistWindowSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["program_date_time_interval_seconds"].(int); ok {
+		h.ProgramDateTimeIntervalSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["segment_duration_seconds"].(int); ok {
+		h.SegmentDurationSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["stream_selection"].(map[string]interface{}); ok && len(v) > 0 {
+		h.StreamSelection = expandStreamSelection(v)
+	}
+
+	if v, ok := tfMap["use_audio_rendition_group"].(bool); ok {
+		h.UseAudioRenditionGroup = aws.Bool(v)
+	}
+
+	return h
+}
+
+func expandAdTriggers(tfList []interface{}) []types.AdTriggersElement {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var as []types.AdTriggersElement
+
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		var a types.AdTriggersElement
+
+		if v, ok := m["ad_trigger"].(string); ok && v != "" {
+			a = types.AdTriggersElement(v)
+		}
+
+		as = append(as, a)
+	}
+
+	return as
+}
+
+func expandHlsEncryption(tfMap map[string]interface{}) *types.HlsEncryption {
+	if tfMap == nil {
+		return nil
+	}
+
+	h := &types.HlsEncryption{}
+
+	if v, ok := tfMap["speke_key_provider"].(map[string]interface{}); ok && v != nil {
+		h.SpekeKeyProvider = expandSpekeKeyProvider(v)
+	}
+
+	if v, ok := tfMap["constant_initialization_vector"].(string); ok && v != "" {
+		h.ConstantInitializationVector = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_method"].(string); ok && v != "" {
+		h.EncryptionMethod = types.EncryptionMethod(v)
+	}
+
+	if v, ok := tfMap["key_rotation_interval_seconds"].(int); ok {
+		h.KeyRotationIntervalSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["repeat_ext_x_key"].(bool); ok {
+		h.RepeatExtXKey = aws.Bool(v)
+	}
+
+	return h
+}
+
+func expandSpekeKeyProvider(tfMap map[string]interface{}) *types.SpekeKeyProvider {
+	s := &types.SpekeKeyProvider{
+		ResourceId: aws.String(tfMap["resource_id"].(string)),
+		RoleArn:    aws.String(tfMap["role_arn"].(string)),
+		Url:        aws.String(tfMap["url"].(string)),
+		SystemIds:  tfMap["system_ids"].([]string),
+	}
+
+	if v, ok := tfMap["certificate_arn"].(string); ok && v != "" {
+		s.CertificateArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_contract_configuration"]; ok && len(v.(map[string]interface{})) > 0 {
+		contractSettings := v.(map[string]interface{})
+		contractConfig := &types.EncryptionContractConfiguration{
+			PresetSpeke20Audio: types.PresetSpeke20Audio(contractSettings["preset_speke20_audio"].(string)),
+			PresetSpeke20Video: types.PresetSpeke20Video(contractSettings["preset_speke20_video"].(string)),
+		}
+		s.EncryptionContractConfiguration = contractConfig
+	}
+
+	return s
+}
+
+func expandStreamSelection(tfMap map[string]interface{}) *types.StreamSelection {
+	s := &types.StreamSelection{}
+
+	if v, ok := tfMap["max_video_bits_per_second"].(int); ok {
+		s.MaxVideoBitsPerSecond = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["min_video_bits_per_second"].(int); ok {
+		s.MinVideoBitsPerSecond = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["stream_order"].(string); ok {
+		s.StreamOrder = types.StreamOrder(v)
+	}
+
+	return s
+}
+
+func expandMssPackage(tfMap map[string]interface{}) *types.MssPackage {
+	m := &types.MssPackage{}
+
+	if v, ok := tfMap["encryption"]; ok && len(v.(map[string]interface{})) > 0 {
+		m.Encryption = expandMssEncryption(v.(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["manifest_window_seconds"].(int); ok {
+		m.ManifestWindowSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["segment_duration_seconds"].(int); ok {
+		m.SegmentDurationSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["stream_selection"]; ok && len(v.(map[string]interface{})) > 0 {
+		m.StreamSelection = expandStreamSelection(v.(map[string]interface{}))
+	}
+
+	return m
+}
+
+func expandMssEncryption(mssEncryptionSettings map[string]interface{}) *types.MssEncryption {
+	m := &types.MssEncryption{}
+
+	if v, ok := mssEncryptionSettings["speke_key_provider"]; ok && len(v.(map[string]interface{})) > 0 {
+		m.SpekeKeyProvider = expandSpekeKeyProvider(v.(map[string]interface{}))
+	}
+
+	return m
+}
+
 func expandCmafPackage(cmafPackageSettings map[string]interface{}) *types.CmafPackageCreateOrUpdateParameters {
-	cmafPackage := &types.CmafPackageCreateOrUpdateParameters{}
+	c := &types.CmafPackageCreateOrUpdateParameters{}
 
-	if v, ok := cmafPackageSettings["encryption"]; ok && len(v.(*schema.Set).List()) > 0 {
-		encryptionSettings := v.(*schema.Set).List()[0].(map[string]interface{})
-		encryption := &types.CmafEncryption{}
-
-		if v, ok := encryptionSettings["speke_key_provider"]; ok && len(v.(*schema.Set).List()) > 0 {
-			spekeSettings := v.(*schema.Set).List()[0].(map[string]interface{})
-			spekeKeyProvider := &types.SpekeKeyProvider{
-				ResourceId: aws.String(spekeSettings["resource_id"].(string)),
-				RoleArn:    aws.String(spekeSettings["role_arn"].(string)),
-				Url:        aws.String(spekeSettings["url"].(string)),
-			}
-
-			if v, ok := spekeSettings["system_ids"]; ok {
-				systemIds := make([]string, 0)
-				for _, id := range v.([]interface{}) {
-					systemIds = append(systemIds, id.(string))
-				}
-				spekeKeyProvider.SystemIds = systemIds
-			}
-
-			if v, ok := spekeSettings["certificate_arn"].(string); ok && v != "" {
-				spekeKeyProvider.CertificateArn = aws.String(v)
-			}
-
-			if v, ok := spekeSettings["encryption_contract_configuration"]; ok && len(v.(*schema.Set).List()) > 0 {
-				contractSettings := v.(*schema.Set).List()[0].(map[string]interface{})
-				contractConfig := &types.EncryptionContractConfiguration{
-					PresetSpeke20Audio: types.PresetSpeke20Audio(contractSettings["preset_speke20_audio"].(string)),
-					PresetSpeke20Video: types.PresetSpeke20Video(contractSettings["preset_speke20_video"].(string)),
-				}
-				spekeKeyProvider.EncryptionContractConfiguration = contractConfig
-			}
-
-			encryption.SpekeKeyProvider = spekeKeyProvider
-		}
-
-		if v, ok := encryptionSettings["constant_initialization_vector"].(string); ok && v != "" {
-			encryption.ConstantInitializationVector = aws.String(v)
-		}
-
-		if v, ok := encryptionSettings["encryption_method"].(string); ok && v != "" {
-			encryption.EncryptionMethod = types.CmafEncryptionMethod(v)
-		}
-
-		if v, ok := encryptionSettings["key_rotation_interval_seconds"].(int); ok && v > 0 {
-			encryption.KeyRotationIntervalSeconds = aws.Int32(int32(v))
-		}
-
-		cmafPackage.Encryption = encryption
+	if v, ok := cmafPackageSettings["encryption"]; ok && len(v.(map[string]interface{})) > 0 {
+		c.Encryption = expandCmafEncryption(v.(map[string]interface{}))
 	}
 
 	if v, ok := cmafPackageSettings["hls_manifests"]; ok {
-		hlsManifestsList := v.([]interface{})
-		if len(hlsManifestsList) > 0 {
-			hlsManifests := make([]types.HlsManifestCreateOrUpdateParameters, 0, len(hlsManifestsList))
-			
-			for _, m := range hlsManifestsList {
-				manifest := m.(map[string]interface{})
-				hlsManifest := types.HlsManifestCreateOrUpdateParameters{
-					Id: aws.String(manifest["id"].(string)),
-				}
-
-				if v, ok := manifest["ad_markers"].(string); ok && v != "" {
-					hlsManifest.AdMarkers = types.AdMarkers(v)
-				}
-
-				if v, ok := manifest["ad_triggers"]; ok {
-					adTriggers := make([]types.AdTriggersElement, 0)
-					for _, trigger := range v.([]interface{}) {
-						adTriggers = append(adTriggers, types.AdTriggersElement(trigger.(string)))
-					}
-					hlsManifest.AdTriggers = adTriggers
-				}
-
-				if v, ok := manifest["ads_on_delivery_restrictions"].(string); ok && v != "" {
-					hlsManifest.AdsOnDeliveryRestrictions = types.AdsOnDeliveryRestrictions(v)
-				}
-
-				if v, ok := manifest["include_iframe_only_stream"].(bool); ok {
-					hlsManifest.IncludeIframeOnlyStream = aws.Bool(v)
-				}
-
-				if v, ok := manifest["manifest_name"].(string); ok && v != "" {
-					hlsManifest.ManifestName = aws.String(v)
-				}
-
-				if v, ok := manifest["playlist_type"].(string); ok && v != "" {
-					hlsManifest.PlaylistType = types.PlaylistType(v)
-				}
-
-				if v, ok := manifest["playlist_window_seconds"].(int); ok && v > 0 {
-					hlsManifest.PlaylistWindowSeconds = aws.Int32(int32(v))
-				}
-
-				if v, ok := manifest["program_date_time_interval_seconds"].(int); ok && v > 0 {
-					hlsManifest.ProgramDateTimeIntervalSeconds = aws.Int32(int32(v))
-				}
-
-				hlsManifests = append(hlsManifests, hlsManifest)
-			}
-			
-			cmafPackage.HlsManifests = hlsManifests
-		}
+		c.HlsManifests = expandHlsManifests(v.([]interface{}))
 	}
 
 	if v, ok := cmafPackageSettings["segment_duration_seconds"].(int); ok && v > 0 {
-		cmafPackage.SegmentDurationSeconds = aws.Int32(int32(v))
+		c.SegmentDurationSeconds = aws.Int32(int32(v))
 	}
 
 	if v, ok := cmafPackageSettings["segment_prefix"].(string); ok && v != "" {
-		cmafPackage.SegmentPrefix = aws.String(v)
+		c.SegmentPrefix = aws.String(v)
 	}
 
-	if v, ok := cmafPackageSettings["stream_selection"]; ok && len(v.(*schema.Set).List()) > 0 {
-		streamSettings := v.(*schema.Set).List()[0].(map[string]interface{})
-		streamSelection := &types.StreamSelection{}
-
-		if v, ok := streamSettings["max_video_bits_per_second"].(int); ok && v > 0 {
-			streamSelection.MaxVideoBitsPerSecond = aws.Int32(int32(v))
-		}
-
-		if v, ok := streamSettings["min_video_bits_per_second"].(int); ok && v > 0 {
-			streamSelection.MinVideoBitsPerSecond = aws.Int32(int32(v))
-		}
-
-		if v, ok := streamSettings["stream_order"].(string); ok && v != "" {
-			streamSelection.StreamOrder = types.StreamOrder(v)
-		}
-
-		cmafPackage.StreamSelection = streamSelection
+	if v, ok := cmafPackageSettings["stream_selection"]; ok && len(v.(map[string]interface{})) > 0 {
+		c.StreamSelection = expandStreamSelection(v.(map[string]interface{}))
 	}
 
-	return cmafPackage
+	return c
+}
+
+func expandCmafEncryption(tfMap map[string]interface{}) *types.CmafEncryption {
+	if tfMap == nil {
+		return nil
+	}
+
+	e := &types.CmafEncryption{}
+
+	if v, ok := tfMap["speke_key_provider"].(map[string]interface{}); ok && len(v) > 0 {
+		e.SpekeKeyProvider = expandSpekeKeyProvider(v)
+	}
+
+	if v, ok := tfMap["constant_initialization_vector"].(string); ok && v != "" {
+		e.ConstantInitializationVector = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_method"].(string); ok && v != "" {
+		e.EncryptionMethod = types.CmafEncryptionMethod(v)
+	}
+
+	if v, ok := tfMap["key_rotation_interval_seconds"].(int); ok && v > 0 {
+		e.KeyRotationIntervalSeconds = aws.Int32(int32(v))
+	}
+
+	return e
+}
+
+func expandHlsManifests(tfList []interface{}) []types.HlsManifestCreateOrUpdateParameters {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var l []types.HlsManifestCreateOrUpdateParameters
+
+	for _, tfManifest := range tfList {
+		manifest := tfManifest.(map[string]interface{})
+		m := types.HlsManifestCreateOrUpdateParameters{
+			Id: aws.String(manifest["id"].(string)),
+		}
+
+		if v, ok := manifest["ad_markers"].(string); ok && v != "" {
+			m.AdMarkers = types.AdMarkers(v)
+		}
+
+		if v, ok := manifest["ad_triggers"].([]interface{}); ok && len(v) > 0 {
+			m.AdTriggers = expandAdTriggers(v)
+		}
+
+		if v, ok := manifest["ads_on_delivery_restrictions"].(string); ok && v != "" {
+			m.AdsOnDeliveryRestrictions = types.AdsOnDeliveryRestrictions(v)
+		}
+
+		if v, ok := manifest["include_iframe_only_stream"].(bool); ok {
+			m.IncludeIframeOnlyStream = aws.Bool(v)
+		}
+
+		if v, ok := manifest["manifest_name"].(string); ok && v != "" {
+			m.ManifestName = aws.String(v)
+		}
+
+		if v, ok := manifest["playlist_type"].(string); ok && v != "" {
+			m.PlaylistType = types.PlaylistType(v)
+		}
+
+		if v, ok := manifest["playlist_window_seconds"].(int); ok && v > 0 {
+			m.PlaylistWindowSeconds = aws.Int32(int32(v))
+		}
+
+		if v, ok := manifest["program_date_time_interval_seconds"].(int); ok && v > 0 {
+			m.ProgramDateTimeIntervalSeconds = aws.Int32(int32(v))
+		}
+
+		l = append(l, m)
+	}
+
+	return l
 }
 
 func flattenCmafPackage(apiObject *types.CmafPackage) []interface{} {
