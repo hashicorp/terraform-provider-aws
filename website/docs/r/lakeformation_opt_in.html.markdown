@@ -24,7 +24,7 @@ resource "aws_lakeformation_opt_in" "example" {
 The following arguments are required:
 
 * `principal` - (Required) Lake Formation principal. Supported principals are IAM users or IAM roles. See [Principal](#principal) for more details.
-* `reosurce` - (Required) Structure for the resource. See [Resource](#resource) for more details.
+* `resource_data` - (Required) Structure for the resource. See [Resource](#resource) for more details.
 
 ## Attribute Reference
 
