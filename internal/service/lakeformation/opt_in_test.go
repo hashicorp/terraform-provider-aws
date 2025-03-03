@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -32,7 +31,6 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 	}
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_opt_in.test"
 	databaseName := "aws_glue_catalog_database.test"
 
@@ -46,7 +44,7 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOptInDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptInConfig_basic(rName),
+				Config: testingOptIn_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, resourceName, &optin),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
@@ -58,7 +56,6 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccOptInImportStateIDFunc(resourceName),
-				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -71,7 +68,6 @@ func TestAccLakeFormationOptIn_disappears(t *testing.T) {
 	}
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_opt_in.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,7 +80,7 @@ func TestAccLakeFormationOptIn_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOptInDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptInConfig_basic(rName),
+				Config: testingOptIn_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, resourceName, &optin),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceOptIn, resourceName),
@@ -306,26 +302,28 @@ func testAccOptInImportStateIDFunc(resourceName string) resource.ImportStateIdFu
 	}
 }
 
-func testAccOptInConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+const testingOptIn_basic = `
+
 data "aws_partition" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "testinglocal"
   path = "/"
 
   assume_role_policy = jsonencode({
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
         Principal = {
           Service = "glue.${data.aws_partition.current.dns_suffix}"
         }
       },
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
         Principal = {
           Service = "lakeformation.amazonaws.com"
         }
@@ -335,31 +333,57 @@ resource "aws_iam_role" "test" {
   })
 }
 
-resource "aws_glue_catalog_database" "test" {
-  name = %[1]q
+resource "aws_iam_policy" "lakeformation_admin_permissions" {
+  name        = "LakeFormationAdminPermissions"
+  description = "Admin permissions for managing Lake Formation and Glue Catalog"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "lakeformation:GrantPermissions",
+          "lakeformation:RevokePermissions",
+          "lakeformation:GetDataLakeSettings",
+          "lakeformation:ListPermissions",
+          "lakeformation:PutDataLakeSettings",
+          "lakeformation:ListLakeFormationOptIns",
+          "lakeformation:UpdateTable",
+          "lakeformation:CreateDatabase",
+          "lakeformation:DeleteDatabase",
+          "lakeformation:CreateTable",
+          "lakeformation:DeleteTable"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "glue:CreateDatabase",
+          "glue:UpdateTable",
+          "glue:DeleteTable",
+          "glue:CreateTable",
+          "glue:DeleteDatabase"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }
 
-data "aws_caller_identity" "current" {}
+resource "aws_iam_policy_attachment" "lakeformation_admin_attachment" {
+  name       = "lakeformation-attach-policy"
+  policy_arn = aws_iam_policy.lakeformation_admin_permissions.arn
+  roles      = [aws_iam_role.test.name]
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = "testinglocal"
+}
 
 data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
-resource "aws_lakeformation_permissions" "test" {
-  permissions                   = ["ALTER", "CREATE_TABLE", "DROP"]
-  permissions_with_grant_option = ["CREATE_TABLE"]
-  principal                     = aws_iam_role.test.arn
-
-  database {
-    name = aws_glue_catalog_database.test.name
-  }
-
-  # for consistency, ensure that admins are setup before testing
-  depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
 resource "aws_lakeformation_opt_in" "test" {
@@ -373,5 +397,5 @@ resource "aws_lakeformation_opt_in" "test" {
       catalog_id = data.aws_caller_identity.current.account_id
     }
   }
-}`, rName)
 }
+  `
