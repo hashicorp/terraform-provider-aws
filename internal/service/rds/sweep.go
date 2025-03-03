@@ -25,15 +25,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_rds_cluster_parameter_group", sweepClusterParameterGroups, "aws_rds_cluster")
 	awsv2.Register("aws_db_cluster_snapshot", sweepClusterSnapshots, "aws_rds_cluster")
-
-	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
-		Name: "aws_rds_cluster",
-		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_db_instance",
-			"aws_rds_shard_group",
-		},
-	})
+	awsv2.Register("aws_rds_cluster", sweepClusters, "aws_db_instance", "aws_rds_shard_group")
 
 	resource.AddTestSweepers("aws_db_event_subscription", &resource.Sweeper{
 		Name: "aws_db_event_subscription",
@@ -165,27 +157,17 @@ func sweepClusterSnapshots(ctx context.Context, client *conns.AWSClient) ([]swee
 	return sweepResources, nil
 }
 
-func sweepClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := &rds.DescribeDBClustersInput{}
+	var input rds.DescribeDBClustersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeDBClustersPaginator(conn, input)
+	pages := rds.NewDescribeDBClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS Clusters (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DBClusters {
@@ -217,13 +199,7 @@ func sweepClusters(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Clusters (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepEventSubscriptions(region string) error {
