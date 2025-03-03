@@ -24,14 +24,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_rds_cluster_parameter_group", sweepClusterParameterGroups, "aws_rds_cluster")
-
-	resource.AddTestSweepers("aws_db_cluster_snapshot", &resource.Sweeper{
-		Name: "aws_db_cluster_snapshot",
-		F:    sweepClusterSnapshots,
-		Dependencies: []string{
-			"aws_rds_cluster",
-		},
-	})
+	awsv2.Register("aws_db_cluster_snapshot", sweepClusterSnapshots, "aws_rds_cluster")
 
 	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
 		Name: "aws_rds_cluster",
@@ -141,14 +134,9 @@ func sweepClusterParameterGroups(ctx context.Context, client *conns.AWSClient) (
 	return sweepResources, nil
 }
 
-func sweepClusterSnapshots(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepClusterSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := &rds.DescribeDBClusterSnapshotsInput{
+	input := rds.DescribeDBClusterSnapshotsInput{
 		// "InvalidDBClusterSnapshotStateFault: Only manual snapshots may be deleted."
 		Filters: []types.Filter{{
 			Name:   aws.String("snapshot-type"),
@@ -157,17 +145,12 @@ func sweepClusterSnapshots(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeDBClusterSnapshotsPaginator(conn, input)
+	pages := rds.NewDescribeDBClusterSnapshotsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Cluster Snapshot sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS DB Cluster Snapshots (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DBClusterSnapshots {
@@ -179,13 +162,7 @@ func sweepClusterSnapshots(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS DB Cluster Snapshots (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepClusters(region string) error {
