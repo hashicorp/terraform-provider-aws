@@ -319,7 +319,7 @@ resource "aws_iam_role" "test" {
           Service = [
             "glue.${data.aws_partition.current.dns_suffix}",
             "lakeformation.amazonaws.com",
-			"s3.amazonaws.com"
+            "s3.amazonaws.com"
           ]
         }
       }
@@ -333,7 +333,7 @@ resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.id
 
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
@@ -366,7 +366,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   ]
   depends_on = [aws_iam_role_policy.test]
 
-    lifecycle {
+  lifecycle {
     ignore_changes = [admins]
   }
 }
