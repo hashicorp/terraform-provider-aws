@@ -51,10 +51,10 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, resourceName, &optin),
 					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal.0.data_lake_principal_identifier", roleName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal.0.data_lake_principal_identifier", roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "resource_data.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_data.0.database.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_data.0.database.0.name", databaseName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_data.0.database.0.name", databaseName, names.AttrName),
 				),
 			},
 		},

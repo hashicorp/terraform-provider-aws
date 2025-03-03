@@ -6,8 +6,6 @@ package lakeformation
 import (
 	"context"
 	"errors"
-	"fmt"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -390,13 +388,16 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Insufficient Lake Formation permission(s) on Catalog") {
-				time.Sleep(5 * time.Second)
 				return retry.RetryableError(err)
 			}
-			return retry.NonRetryableError(fmt.Errorf("creating Lake Formation opt-in: %w", err))
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
