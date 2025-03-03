@@ -446,11 +446,7 @@ func (s instanceAutomatedBackupSweeper) Delete(ctx context.Context, optFns ...tf
 		DBInstanceAutomatedBackupsArn: aws.String(s.backupARN),
 	})
 
-	if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) {
-		err = nil
-	}
-
-	if errs.IsA[*types.InvalidDBInstanceAutomatedBackupStateFault](err) {
+	if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) || errs.IsA[*types.InvalidDBInstanceAutomatedBackupStateFault](err) {
 		err = nil
 	}
 
