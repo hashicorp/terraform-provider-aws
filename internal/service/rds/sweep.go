@@ -30,14 +30,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_rds_global_cluster", sweepGlobalClusters)
 	awsv2.Register("aws_db_instance", sweepInstances, "aws_rds_global_cluster")
 	awsv2.Register("aws_db_option_group", sweepOptionGroups, "aws_rds_cluster", "aws_db_snapshot")
-
-	resource.AddTestSweepers("aws_db_parameter_group", &resource.Sweeper{
-		Name: "aws_db_parameter_group",
-		F:    sweepParameterGroups,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
+	awsv2.Register("aws_db_parameter_group", sweepParameterGroups, "aws_db_instance")
 
 	resource.AddTestSweepers("aws_db_proxy", &resource.Sweeper{
 		Name: "aws_db_proxy",
@@ -307,27 +300,17 @@ func sweepOptionGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	return sweepResources, nil
 }
 
-func sweepParameterGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	input := &rds.DescribeDBParameterGroupsInput{}
+func sweepParameterGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBParameterGroupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeDBParameterGroupsPaginator(conn, input)
+	pages := rds.NewDescribeDBParameterGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Parameter Group sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS DB Parameter Groups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DBParameterGroups {
@@ -346,13 +329,7 @@ func sweepParameterGroups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS DB Parameter Groups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepProxies(region string) error {
