@@ -25,11 +25,6 @@ import (
 
 func TestAccLakeFormationOptIn_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
 	resourceName := "aws_lakeformation_opt_in.test"
@@ -63,9 +58,6 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 
 func TestAccLakeFormationOptIn_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
 	resourceName := "aws_lakeformation_opt_in.test"
@@ -102,84 +94,97 @@ func testAccCheckOptInDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			principalID := rs.Primary.Attributes["principal.0.data_lake_principal_identifier"]
-
-			in := &lakeformation.ListLakeFormationOptInsInput{
+			in := lakeformation.ListLakeFormationOptInsInput{
 				Principal: &awstypes.DataLakePrincipal{
-					DataLakePrincipalIdentifier: &principalID,
+					DataLakePrincipalIdentifier: aws.String(principalID),
 				},
 				Resource: &awstypes.Resource{},
 			}
 
-			if v, ok := rs.Primary.Attributes["resource_data.0.catalog.0.id"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					Catalog: &awstypes.CatalogResource{Id: aws.String(v)},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.database.0.name"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					Database: &awstypes.DatabaseResource{
-						Name: aws.String(v),
-					},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.data_cells_filter.0.name"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					DataCellsFilter: &awstypes.DataCellsFilterResource{
-						Name: aws.String(v),
-					},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.data_location.0.resource_arn"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					DataLocation: &awstypes.DataLocationResource{
-						ResourceArn: aws.String(v),
-					},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.lf_tag.0.key"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					LFTag: &awstypes.LFTagKeyResource{
-						TagKey: aws.String(v),
-					},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.name"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					LFTagExpression: &awstypes.LFTagExpressionResource{
-						Name: aws.String(v),
-					},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.resource_type"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					LFTagPolicy: &awstypes.LFTagPolicyResource{
-						ResourceType: awstypes.ResourceType(v),
-					},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.table.0.name"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					Table: &awstypes.TableResource{
-						Name: aws.String(v),
-					},
-				}
-			} else if v, ok := rs.Primary.Attributes["resource_data.0.table_with_columns.0.name"]; ok && v != "" {
-				in.Resource = &awstypes.Resource{
-					TableWithColumns: &awstypes.TableWithColumnsResource{
-						Name: aws.String(v),
-					},
+			type resourceConstructor func(*terraform.ResourceState) *awstypes.Resource
+
+			resourceConstructors := map[string]resourceConstructor{
+				"resource_data.0.catalog.0.id": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{Catalog: &awstypes.CatalogResource{Id: aws.String(rs.Primary.Attributes["resource_data.0.catalog.0.id"])}}
+				},
+				"resource_data.0.database.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{
+						Database: &awstypes.DatabaseResource{
+							Name:      aws.String(rs.Primary.Attributes["resource_data.0.database.0.name"]),
+							CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.database.0.catalog_id"]),
+						},
+					}
+				},
+				"resource_data.0.data_cells_filter.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{
+						DataCellsFilter: &awstypes.DataCellsFilterResource{
+							Name:           aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.name"]),
+							DatabaseName:   aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.database_name"]),
+							TableCatalogId: aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.table_catalog_id"]),
+						},
+					}
+				},
+				"resource_data.0.data_location.0.resource_arn": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{
+						DataLocation: &awstypes.DataLocationResource{
+							ResourceArn: aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.resource_arn"]),
+							CatalogId:   aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.catalog_id"]),
+						},
+					}
+				},
+				"resource_data.0.lf_tag.0.key": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{LFTag: &awstypes.LFTagKeyResource{TagKey: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag.0.key"])}}
+				},
+				"resource_data.0.lf_tag_expression.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{
+						LFTagExpression: &awstypes.LFTagExpressionResource{
+							Name:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.name"]),
+							CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.catalog_id"]),
+						},
+					}
+				},
+				"resource_data.0.lf_tag_policy.0.resource_type": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{
+						LFTagPolicy: &awstypes.LFTagPolicyResource{
+							ResourceType:   awstypes.ResourceType(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.resource_type"]),
+							CatalogId:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.catalog_id"]),
+							ExpressionName: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.expression_name"]),
+						},
+					}
+				},
+				"resource_data.0.table.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
+							DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
+						},
+					}
+				},
+				"resource_data.0.table_with_columns.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+					return &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							Name:         aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.name"]),
+							DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.database_name"]),
+						},
+					}
+				},
+			}
+
+			for path, constructor := range resourceConstructors {
+				if v, ok := rs.Primary.Attributes[path]; ok && v != "" {
+					in.Resource = constructor(rs)
+					break
 				}
 			}
 
-			_, err := conn.ListLakeFormationOptIns(ctx, in)
-
-			if errs.IsA[*awstypes.EntityNotFoundException](err) {
-				continue
-			}
-
-			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "not found") {
-				continue
-			}
-
-			// If the lake formation admin has been revoked, there will be access denied instead of entity not found
-			if errs.IsA[*awstypes.AccessDeniedException](err) {
-				continue
-			}
-
+			_, err := tflakeformation.FindOptInByID(ctx, conn, principalID, in.Resource)
 			if err != nil {
+				if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Insufficient Lake Formation permission(s) on Catalog") {
+					return nil
+				}
+				if errs.IsAErrorMessageContains[*awstypes.EntityNotFoundException](err, "") {
+					return nil
+				}
 				return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, tflakeformation.ResNameOptIn, rs.Primary.ID, err)
 			}
 			return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, tflakeformation.ResNameOptIn, rs.Primary.ID, errors.New("not destroyed"))
@@ -202,91 +207,95 @@ func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
-		principalID := rs.Primary.Attributes["principal.0.data_lake_principal_identifier"]
-		if principalID == "" {
-			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("principal identifier not set"))
-		}
-
+		principalID := rs.Primary.ID
 		in := &lakeformation.ListLakeFormationOptInsInput{}
-		var resource *awstypes.Resource
 
-		if v, ok := rs.Primary.Attributes["resource_data.0.catalog.0.id"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				Catalog: &awstypes.CatalogResource{Id: aws.String(v)},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.database.0.name"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				Database: &awstypes.DatabaseResource{
-					Name:      aws.String(v),
-					CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.database.0.catalog_id"]),
-				},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.data_cells_filter.0.name"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				DataCellsFilter: &awstypes.DataCellsFilterResource{
-					Name:           aws.String(v),
-					DatabaseName:   aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.database_name"]),
-					TableCatalogId: aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.table_catalog_id"]),
-				},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.data_location.0.resource_arn"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				DataLocation: &awstypes.DataLocationResource{
-					ResourceArn: aws.String(v),
-					CatalogId:   aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.catalog_id"]),
-				},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.lf_tag.0.key"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				LFTag: &awstypes.LFTagKeyResource{
-					TagKey: aws.String(v),
-				},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.name"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				LFTagExpression: &awstypes.LFTagExpressionResource{
-					Name:      aws.String(v),
-					CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.catalog_id"]),
-				},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.resource_type"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				LFTagPolicy: &awstypes.LFTagPolicyResource{
-					ResourceType:   awstypes.ResourceType(v),
-					CatalogId:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.catalog_id"]),
-					ExpressionName: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.expression_name"]),
-				},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.table.0.name"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				Table: &awstypes.TableResource{
-					Name:         aws.String(v),
-					DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
-				},
-			}
-		} else if v, ok := rs.Primary.Attributes["resource_data.0.table_with_columns.0.name"]; ok && v != "" {
-			resource = &awstypes.Resource{
-				TableWithColumns: &awstypes.TableWithColumnsResource{
-					Name:         aws.String(v),
-					DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.database_name"]),
-				},
+		type resourceConstructor func(*terraform.ResourceState) *awstypes.Resource
+
+		resourceConstructors := map[string]resourceConstructor{
+			"resource_data.0.catalog.0.id": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{Catalog: &awstypes.CatalogResource{Id: aws.String(rs.Primary.Attributes["resource_data.0.catalog.0.id"])}}
+			},
+			"resource_data.0.database.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{
+					Database: &awstypes.DatabaseResource{
+						Name:      aws.String(rs.Primary.Attributes["resource_data.0.database.0.name"]),
+						CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.database.0.catalog_id"]),
+					},
+				}
+			},
+			"resource_data.0.data_cells_filter.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{
+					DataCellsFilter: &awstypes.DataCellsFilterResource{
+						Name:           aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.name"]),
+						DatabaseName:   aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.database_name"]),
+						TableCatalogId: aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.table_catalog_id"]),
+					},
+				}
+			},
+			"resource_data.0.data_location.0.resource_arn": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{
+					DataLocation: &awstypes.DataLocationResource{
+						ResourceArn: aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.resource_arn"]),
+						CatalogId:   aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.catalog_id"]),
+					},
+				}
+			},
+			"resource_data.0.lf_tag.0.key": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{LFTag: &awstypes.LFTagKeyResource{TagKey: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag.0.key"])}}
+			},
+			"resource_data.0.lf_tag_expression.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{
+					LFTagExpression: &awstypes.LFTagExpressionResource{
+						Name:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.name"]),
+						CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.catalog_id"]),
+					},
+				}
+			},
+			"resource_data.0.lf_tag_policy.0.resource_type": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{
+					LFTagPolicy: &awstypes.LFTagPolicyResource{
+						ResourceType:   awstypes.ResourceType(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.resource_type"]),
+						CatalogId:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.catalog_id"]),
+						ExpressionName: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.expression_name"]),
+					},
+				}
+			},
+			"resource_data.0.table.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{
+					Table: &awstypes.TableResource{
+						Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
+						DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
+					},
+				}
+			},
+			"resource_data.0.table_with_columns.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+				return &awstypes.Resource{
+					TableWithColumns: &awstypes.TableWithColumnsResource{
+						Name:         aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.name"]),
+						DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.database_name"]),
+					},
+				}
+			},
+		}
+
+		for path, constructor := range resourceConstructors {
+			if v, ok := rs.Primary.Attributes[path]; ok && v != "" {
+				in.Resource = constructor(rs)
+				break
 			}
 		}
 
-		if resource == nil {
+		if in.Resource == nil {
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("no valid resource found in state"))
 		}
 
-		in.Resource = resource
-
-		out, err := tflakeformation.FindOptInByID(ctx, conn, principalID, resource)
+		out, err := conn.ListLakeFormationOptIns(ctx, in)
 		if err != nil {
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, principalID, err)
 		}
 
-		*optin = lakeformation.ListLakeFormationOptInsOutput{
-			LakeFormationOptInsInfoList: []awstypes.LakeFormationOptInsInfo{*out},
-		}
+		*optin = *out
 
 		return nil
 	}
