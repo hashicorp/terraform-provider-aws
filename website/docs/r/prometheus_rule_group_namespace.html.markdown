@@ -40,6 +40,8 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
+This resource exports the following attributes in addition to the arguments above:
+
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
