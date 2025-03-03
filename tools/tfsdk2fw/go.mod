@@ -13,7 +13,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
-	github.com/ProtonMail/go-crypto v1.1.5 // indirect
+	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/YakDriver/go-version v0.1.0 // indirect
 	github.com/YakDriver/regexache v0.24.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
