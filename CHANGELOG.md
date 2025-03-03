@@ -10,6 +10,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_ec2_client_vpn_endpoint: Add `disconnect_on_session_timeout` attribute ([#41621](https://github.com/hashicorp/terraform-provider-aws/issues/41621))
 * resource/aws_s3_bucket_lifecycle_configuration: `rule.noncurrent_version_expiration.noncurrent_days` and `rule.noncurrent_version_transition.noncurrent_days` are Required. Technically this is a breaking change, but failure to configure this attribute would have led to `InvalidArgument` or `MalformedXML` errors ([#40796](https://github.com/hashicorp/terraform-provider-aws/issues/40796))
 
 BUG FIXES:
