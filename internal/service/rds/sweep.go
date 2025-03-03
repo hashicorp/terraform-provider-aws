@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -38,6 +39,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_db_subnet_group", sweepSubnetGroups, "aws_rds_cluster")
 	awsv2.Register("aws_db_instance_automated_backups_replication", sweepInstanceAutomatedBackups, "aws_db_instance")
 	awsv2.Register("aws_rds_shard_group", sweepShardGroups)
+	awsv2.Register("aws_rds_blue_green_deployment", sweepBlueGreenDeployments, "aws_db_instance") // Pseudo resource.
 }
 
 func sweepClusterParameterGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -478,4 +480,57 @@ func sweepShardGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	}
 
 	return sweepResources, nil
+}
+
+func sweepBlueGreenDeployments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeBlueGreenDeploymentsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeBlueGreenDeploymentsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.BlueGreenDeployments {
+			sweepResources = append(sweepResources, newBlueGreenDeploymentSweeper(ctx, aws.ToString(v.BlueGreenDeploymentIdentifier), client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+type blueGreenDeploymentSweeper struct {
+	conn *rds.Client
+	id   string
+}
+
+func newBlueGreenDeploymentSweeper(ctx context.Context, id string, client *conns.AWSClient) sweep.Sweepable {
+	return &blueGreenDeploymentSweeper{
+		conn: client.RDSClient(ctx),
+		id:   id,
+	}
+}
+
+func (s blueGreenDeploymentSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	input := rds.DeleteBlueGreenDeploymentInput{
+		BlueGreenDeploymentIdentifier: aws.String(s.id),
+	}
+	_, err := s.conn.DeleteBlueGreenDeployment(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("deleting RDS Blue/Green Deployment (%s): %w", s.id, err)
+	}
+
+	const (
+		timeout = 10 * time.Minute
+	)
+	if _, err := waitBlueGreenDeploymentDeleted(ctx, s.conn, s.id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Blue/Green Deployment (%s) delete: %w", s.id, err)
+	}
+
+	return nil
 }
