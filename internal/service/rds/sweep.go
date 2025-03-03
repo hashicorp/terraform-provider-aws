@@ -450,6 +450,10 @@ func (s instanceAutomatedBackupSweeper) Delete(ctx context.Context, optFns ...tf
 		err = nil
 	}
 
+	if errs.IsA[*types.InvalidDBInstanceAutomatedBackupStateFault](err) {
+		err = nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("deleting RDS Instance Automated Backup (%s): %w", s.backupARN, err)
 	}
