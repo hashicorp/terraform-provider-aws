@@ -4,6 +4,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -12,9 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,6 +44,7 @@ func RegisterSweepers() {
 		F:    sweepClusters,
 		Dependencies: []string{
 			"aws_db_instance",
+			"aws_rds_shard_group",
 		},
 	})
 
@@ -107,6 +111,8 @@ func RegisterSweepers() {
 			"aws_db_instance",
 		},
 	})
+
+	awsv2.Register("aws_rds_shard_group", sweepShardGroups)
 }
 
 func sweepClusterParameterGroups(region string) error {
@@ -694,4 +700,29 @@ func sweepInstanceAutomatedBackups(region string) error {
 	}
 
 	return nil
+}
+
+func sweepShardGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBShardGroupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := describeDBShardGroupsPages(ctx, conn, &input, func(page *rds.DescribeDBShardGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBShardGroups {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newShardGroupResource, client,
+				framework.NewAttribute("db_shard_group_identifier", aws.ToString(v.DBShardGroupIdentifier))))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return sweepResources, nil
 }
