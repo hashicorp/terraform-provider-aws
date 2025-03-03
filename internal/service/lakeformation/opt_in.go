@@ -6,6 +6,8 @@ package lakeformation
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -382,7 +384,20 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	output, err := conn.CreateLakeFormationOptIn(ctx, &in)
+	var output *lakeformation.CreateLakeFormationOptInOutput
+	err := retry.RetryContext(ctx, 2*IAMPropagationTimeout, func() *retry.RetryError {
+		var err error
+		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
+		if err != nil {
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Insufficient Lake Formation permission(s) on Catalog") {
+				time.Sleep(5 * time.Second)
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(fmt.Errorf("creating Lake Formation opt-in: %w", err))
+		}
+		return nil
+	})
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameOptIn, principal.DataLakePrincipalIdentifier.ValueString(), err),
@@ -491,6 +506,14 @@ func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
+	if optinResource == nil {
+		resp.Diagnostics.AddWarning(
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionDeleting, ResNameOptIn, "unknown", errors.New("resource data is nil")),
+			"resource data is nil",
+		)
+		return
+	}
+
 	optin := newOptInResourcer(optinResource, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -537,21 +560,6 @@ func (r *resourceOptIn) ConfigValidators(_ context.Context) []resource.ConfigVal
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("table_with_columns"),
 		),
 	}
-}
-
-func (r *resourceOptIn) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	principalID := req.ID
-
-	var data resourceOptInData
-	principal, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &DataLakePrincipal{
-		DataLakePrincipalIdentifier: types.StringValue(principalID),
-	})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.Principal = principal
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListLakeFormationOptInsInput, filter tfslices.Predicate[*awstypes.LakeFormationOptInsInfo]) ([]awstypes.LakeFormationOptInsInfo, error) {
