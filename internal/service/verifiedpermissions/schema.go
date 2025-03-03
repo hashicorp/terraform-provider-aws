@@ -58,7 +58,7 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"definition": schema.SingleNestedBlock{
+			"definition": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
