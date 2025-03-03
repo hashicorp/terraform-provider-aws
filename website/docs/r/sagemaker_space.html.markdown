@@ -62,7 +62,6 @@ The `space_sharing_settings` block supports the following argument:
 The `code_editor_app_settings` block supports the following argument:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
 * `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `custom_file_system` Block
@@ -76,7 +75,7 @@ The `custom_file_system` block supports the following argument:
 The `jupyter_lab_app_settings` block supports the following arguments:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application. See [`code_repository` Block](#code_repository-block) below.
 * `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `jupyter_server_app_settings` Block

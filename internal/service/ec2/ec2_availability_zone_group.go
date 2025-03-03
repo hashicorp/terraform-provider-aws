@@ -103,12 +103,12 @@ func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.Resource
 }
 
 func modifyAvailabilityZoneOptInStatus(ctx context.Context, conn *ec2.Client, groupName, optInStatus string) error {
-	input := &ec2.ModifyAvailabilityZoneGroupInput{
+	input := ec2.ModifyAvailabilityZoneGroupInput{
 		GroupName:   aws.String(groupName),
 		OptInStatus: awstypes.ModifyAvailabilityZoneOptInStatus(optInStatus),
 	}
 
-	if _, err := conn.ModifyAvailabilityZoneGroup(ctx, input); err != nil {
+	if _, err := conn.ModifyAvailabilityZoneGroup(ctx, &input); err != nil {
 		return err
 	}
 

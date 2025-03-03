@@ -9,26 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kafka.Client, error) {
+func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]any) []func(*kafka.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return kafka.NewFromConfig(cfg,
-		kafka.WithEndpointResolverV2(newEndpointResolverV2()),
-		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	return []func(*kafka.Options){
 		func(o *kafka.Options) {
 			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-				if errs.IsAErrorMessageContains[*types.TooManyRequestsException](err, "Too Many Requests") {
+				if errs.IsAErrorMessageContains[*awstypes.TooManyRequestsException](err, "Too Many Requests") {
 					return aws.TrueTernary
 				}
 				return aws.UnknownTernary // Delegate to configured Retryer.
 			}))
 		},
-	), nil
+	}
 }

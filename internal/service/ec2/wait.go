@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -1292,7 +1293,7 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 
 func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NatGatewayAddressStatusUnassigning),
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusUnassigning),
 		Target:  []string{},
 		Refresh: statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
 		Timeout: timeout,
@@ -1677,12 +1678,12 @@ func waitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.Client, id str
 		if output.ActivityStatus == awstypes.ActivityStatusError {
 			var errs []error
 
-			input := &ec2.DescribeSpotFleetRequestHistoryInput{
+			input := ec2.DescribeSpotFleetRequestHistoryInput{
 				SpotFleetRequestId: aws.String(id),
 				StartTime:          aws.Time(time.UnixMilli(0)),
 			}
 
-			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, input); err == nil {
+			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, &input); err == nil {
 				for _, v := range output {
 					if eventType := v.EventType; eventType == awstypes.EventTypeError || eventType == awstypes.EventTypeInformation {
 						errs = append(errs, errors.New(aws.ToString(v.EventInformation.EventDescription)))
@@ -2771,7 +2772,7 @@ func waitVPCEndpointAccepted(ctx context.Context, conn *ec2.Client, vpcEndpointI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		if state, lastError := output.State, output.LastError; state == awstypes.StateFailed && lastError != nil {
+		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 
@@ -2794,7 +2795,7 @@ func waitVPCEndpointAvailable(ctx context.Context, conn *ec2.Client, vpcEndpoint
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		if state, lastError := output.State, output.LastError; state == awstypes.StateFailed && lastError != nil {
+		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 
@@ -3190,6 +3191,91 @@ func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateComplete),
+		Refresh:                   statusVPCBlockPublicAccessOptions(ctx, conn),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessOptions); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateComplete),
+		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete),
+		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.VpcBlockPublicAccessExclusionStateDeleteInProgress,
+			// There might API inconsistencies where even after invoking delete, the Describe might come back with a CreateComplete or UpdateComplete status (the status before delete was invoked).
+			// To account for that, we are also adding those two statuses as valid statues to retry.
+			awstypes.VpcBlockPublicAccessExclusionStateCreateComplete,
+			awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete,
+		),
+		Target:  []string{},
+		Refresh: statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
 		return output, err
 	}
 

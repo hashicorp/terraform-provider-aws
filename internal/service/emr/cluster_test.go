@@ -42,7 +42,7 @@ func TestAccEMRCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-4.6.0"),
 					resource.TestCheckResourceAttr(resourceName, "applications.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applications.*", "Spark"),
@@ -1389,7 +1389,7 @@ func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "log_encryption_kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "log_encryption_kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{

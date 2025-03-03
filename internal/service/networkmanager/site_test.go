@@ -33,7 +33,7 @@ func TestAccNetworkManagerSite_basic(t *testing.T) {
 				Config: testAccSiteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "networkmanager", "site/{global_network_id}/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

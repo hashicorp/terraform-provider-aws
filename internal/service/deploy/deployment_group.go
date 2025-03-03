@@ -450,8 +450,6 @@ func resourceDeploymentGroup() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -576,8 +574,8 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -749,10 +747,11 @@ func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeDeploy Deployment Group: %s", d.Id())
-	_, err := conn.DeleteDeploymentGroup(ctx, &codedeploy.DeleteDeploymentGroupInput{
+	input := codedeploy.DeleteDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
-	})
+	}
+	_, err := conn.DeleteDeploymentGroup(ctx, &input)
 
 	if errs.IsA[*types.DeploymentGroupDoesNotExistException](err) {
 		return diags

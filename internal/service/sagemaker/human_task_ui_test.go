@@ -36,7 +36,7 @@ func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
 					resource.TestCheckResourceAttr(resourceName, "human_task_ui_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("human-task-ui/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("human-task-ui/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "ui_template.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),

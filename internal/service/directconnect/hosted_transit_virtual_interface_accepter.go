@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,8 +59,6 @@ func resourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -84,9 +81,9 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d 
 	d.SetId(vifID)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -156,9 +153,9 @@ func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d 
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

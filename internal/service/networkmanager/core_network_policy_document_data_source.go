@@ -271,7 +271,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 												"use_edge": {
 													Type:       schema.TypeString,
 													Optional:   true,
-													Deprecated: "Use use_edge_location",
+													Deprecated: "use_edge is deprecated. Use use_edge_location instead.",
 												},
 											},
 										},

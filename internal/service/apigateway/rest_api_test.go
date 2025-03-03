@@ -37,7 +37,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+$`)),
@@ -47,10 +47,13 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "EDGE"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`[0-9a-z]+`)),
+					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`^[0-9a-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -78,7 +81,7 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), resourceName),
 				),
@@ -102,11 +105,12 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "REGIONAL"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
 				),
 			},
 			{
@@ -118,11 +122,12 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
 				),
 			},
 			// Test updating endpoint type
@@ -133,12 +138,13 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
 					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
-					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
+					createInput := apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
 						EndpointConfiguration: &types.EndpointConfiguration{
 							Types: []types.EndpointType{types.EndpointTypeEdge},
 						},
-					})
+					}
+					output, err := conn.CreateRestApi(ctx, &createInput)
 					if err != nil {
 						if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Endpoint Configuration type EDGE is not supported in this region") {
 							t.Skip("Region does not support EDGE endpoint type")
@@ -147,19 +153,21 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					}
 
 					// Be kind and rewind. :)
-					_, err = conn.DeleteRestApi(ctx, &apigateway.DeleteRestApiInput{
+					deleteInput := apigateway.DeleteRestApiInput{
 						RestApiId: output.Id,
-					})
+					}
+					_, err = conn.DeleteRestApi(ctx, &deleteInput)
 					if err != nil {
 						t.Fatal(err)
 					}
 				},
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "EDGE"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "EDGE"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
 				),
 			},
 		},
@@ -183,12 +191,13 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
 					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
-					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
+					createInput := apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &types.EndpointConfiguration{
 							Types: []types.EndpointType{types.EndpointTypePrivate},
 						},
-					})
+					}
+					output, err := conn.CreateRestApi(ctx, &createInput)
 					if err != nil {
 						if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Endpoint Configuration type PRIVATE is not supported in this region") {
 							t.Skip("Region does not support PRIVATE endpoint type")
@@ -197,15 +206,16 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					}
 
 					// Be kind and rewind. :)
-					_, err = conn.DeleteRestApi(ctx, &apigateway.DeleteRestApiInput{
+					deleteInput := apigateway.DeleteRestApiInput{
 						RestApiId: output.Id,
-					})
+					}
+					_, err = conn.DeleteRestApi(ctx, &deleteInput)
 					if err != nil {
 						t.Fatal(err)
 					}
 				},
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "PRIVATE"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
@@ -235,7 +245,7 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_keySource(rName, "AUTHORIZER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "AUTHORIZER"),
 				),
 			},
@@ -247,13 +257,13 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_keySource(rName, "HEADER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 				),
 			},
@@ -349,7 +359,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet-stream"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet-stream"),
@@ -363,7 +373,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
@@ -466,7 +476,7 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 			// The body is expected to only set a title (name) and one route
 			{
 				Config: testAccRestAPIConfig_body(rName, "/test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test"}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -483,7 +493,7 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_body(rName, "/update"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/update"}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -618,7 +628,7 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
@@ -630,13 +640,13 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
@@ -734,7 +744,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
@@ -751,7 +761,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIds2(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
@@ -763,7 +773,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
@@ -989,7 +999,7 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
 				),
@@ -1002,14 +1012,14 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "-1"), // -1 removes existing values
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", ""),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "5242880"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "5242880"),
 				),
@@ -1198,7 +1208,7 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_parameters1(rName, "basepath", "prepend"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/foo", "/foo/bar", "/foo/bar/baz", "/foo/bar/baz/test"}),
 				),
@@ -1211,7 +1221,7 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_parameters1(rName, "basepath", "ignore"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test"}),
 				),
@@ -1235,7 +1245,7 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policy(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
 				),
 			},
@@ -1247,7 +1257,7 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_updatePolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedUpdatePolicyText),
 				),
 			},
@@ -1269,7 +1279,7 @@ func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policyOrder(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
 				),
 			},
@@ -1362,9 +1372,10 @@ func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.GetRestApiO
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		resp, err := conn.GetResources(ctx, &apigateway.GetResourcesInput{
+		input := apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
-		})
+		}
+		resp, err := conn.GetResources(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -1393,9 +1404,10 @@ func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.Get
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		resp, err := conn.GetRestApi(ctx, &apigateway.GetRestApiInput{
+		input := apigateway.GetRestApiInput{
 			RestApiId: conf.Id,
-		})
+		}
+		resp, err := conn.GetRestApi(ctx, &input)
 		if err != nil {
 			return err
 		}

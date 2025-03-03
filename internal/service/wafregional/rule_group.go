@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -90,15 +89,13 @@ func resourceRuleGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -169,8 +166,8 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf-regional",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "rulegroup/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -183,7 +180,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
@@ -199,7 +196,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if oldRules := d.Get("activated_rule").(*schema.Set).List(); len(oldRules) > 0 {
 		noRules := []interface{}{}

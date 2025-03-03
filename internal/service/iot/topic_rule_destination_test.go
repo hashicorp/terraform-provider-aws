@@ -34,7 +34,7 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(`ruledestination/vpc/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`ruledestination/vpc/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.role_arn"),

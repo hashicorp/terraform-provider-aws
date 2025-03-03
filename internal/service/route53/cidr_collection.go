@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_route53_cidr_collection", name="CIDR Collection")
 func newCIDRCollectionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cidrCollectionResource{}
 
@@ -41,10 +41,6 @@ type cidrCollectionResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*cidrCollectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53_cidr_collection"
 }
 
 func (r *cidrCollectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

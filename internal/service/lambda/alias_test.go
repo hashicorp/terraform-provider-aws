@@ -44,7 +44,7 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 					testAccCheckAliasInvokeARN(resourceName, &conf),
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
 					testAccCheckAliasInvokeARN(resourceName, &conf),
 				),
 			},
@@ -148,7 +148,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -162,7 +162,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePartUpdate),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePartUpdate),
 				),
 			},
 		},
@@ -192,7 +192,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -207,7 +207,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingExistsConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -216,7 +216,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 		},

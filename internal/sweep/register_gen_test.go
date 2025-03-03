@@ -26,8 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -111,13 +113,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
@@ -134,11 +139,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
@@ -192,8 +199,10 @@ func registerSweepers() {
 	backup.RegisterSweepers()
 	batch.RegisterSweepers()
 	bcmdataexports.RegisterSweepers()
+	bedrockagent.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
+	cleanrooms.RegisterSweepers()
 	cloud9.RegisterSweepers()
 	cloudformation.RegisterSweepers()
 	cloudfront.RegisterSweepers()
@@ -277,13 +286,16 @@ func registerSweepers() {
 	mq.RegisterSweepers()
 	mwaa.RegisterSweepers()
 	neptune.RegisterSweepers()
+	neptunegraph.RegisterSweepers()
 	networkfirewall.RegisterSweepers()
 	networkmanager.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
+	organizations.RegisterSweepers()
 	pinpoint.RegisterSweepers()
 	pinpointsmsvoicev2.RegisterSweepers()
 	pipes.RegisterSweepers()
+	qbusiness.RegisterSweepers()
 	qldb.RegisterSweepers()
 	quicksight.RegisterSweepers()
 	ram.RegisterSweepers()
@@ -300,11 +312,13 @@ func registerSweepers() {
 	rum.RegisterSweepers()
 	s3.RegisterSweepers()
 	s3control.RegisterSweepers()
+	s3tables.RegisterSweepers()
 	sagemaker.RegisterSweepers()
 	scheduler.RegisterSweepers()
 	schemas.RegisterSweepers()
 	secretsmanager.RegisterSweepers()
 	servicecatalog.RegisterSweepers()
+	servicecatalogappregistry.RegisterSweepers()
 	servicediscovery.RegisterSweepers()
 	ses.RegisterSweepers()
 	sesv2.RegisterSweepers()

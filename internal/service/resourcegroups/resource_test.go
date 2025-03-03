@@ -24,6 +24,8 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 	var r types.ListGroupResourcesItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
+	groupResourceName := "aws_resourcegroups_group.test"
+	hostResourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -36,8 +38,52 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Host"),
-					resource.TestCheckResourceAttrSet(resourceName, "group_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttrPair(resourceName, "group_arn", groupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, hostResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Verify the change to the id attribute formatting introduced in v5.82.0
+// do not errors in existing configurations
+func TestAccResourceGroupsResource_v5_82_0_upgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r types.ListGroupResourcesItem
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resourcegroups_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
+		CheckDestroy: testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.81.0",
+					},
+				},
+				Config: testAccResourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &r),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccResourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &r),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
 		},

@@ -19,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnet")
-// @Tags(identifierAttribute="id")
-// @Testing(generator=false)
+// @SDKDataSource("aws_subnet", name="Subnet")
+// @Tags
+// @Testing(tagsIdentifierAttribute="id", generator=false)
 func dataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetRead,
@@ -237,6 +237,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrVPCID, subnet.VpcId)
+	setTagsOut(ctx, subnet.Tags)
 
 	return diags
 }

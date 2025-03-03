@@ -43,18 +43,18 @@ func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	state := d.Get(names.AttrState).(string)
-	input := &ec2.EnableSnapshotBlockPublicAccessInput{
+	input := ec2.EnableSnapshotBlockPublicAccessInput{
 		State: types.SnapshotBlockPublicAccessState(state),
 	}
 
-	_, err := conn.EnableSnapshotBlockPublicAccess(ctx, input)
+	_, err := conn.EnableSnapshotBlockPublicAccess(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling EBS Snapshot Block Public Access (%s): %s", state, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	return append(diags, resourceEBSSnapshotBlockPublicAccessRead(ctx, d, meta)...)
@@ -64,8 +64,8 @@ func resourceEBSSnapshotBlockPublicAccessRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.GetSnapshotBlockPublicAccessStateInput{}
-	output, err := conn.GetSnapshotBlockPublicAccessState(ctx, input)
+	input := ec2.GetSnapshotBlockPublicAccessStateInput{}
+	output, err := conn.GetSnapshotBlockPublicAccessState(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshot Block Public Access: %s", err)
@@ -81,7 +81,8 @@ func resourceEBSSnapshotBlockPublicAccessDelete(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// Removing the resource disables blocking of EBS snapshot sharing.
-	_, err := conn.DisableSnapshotBlockPublicAccess(ctx, &ec2.DisableSnapshotBlockPublicAccessInput{})
+	input := ec2.DisableSnapshotBlockPublicAccessInput{}
+	_, err := conn.DisableSnapshotBlockPublicAccess(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EBS Snapshot Block Public Access: %s", err)

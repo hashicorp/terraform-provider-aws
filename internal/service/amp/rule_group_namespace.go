@@ -62,13 +62,13 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 
 	workspaceID := d.Get("workspace_id").(string)
 	name := d.Get(names.AttrName).(string)
-	input := &amp.CreateRuleGroupsNamespaceInput{
+	input := amp.CreateRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
 		Name:        aws.String(name),
 		WorkspaceId: aws.String(workspaceID),
 	}
 
-	output, err := conn.CreateRuleGroupsNamespace(ctx, input)
+	output, err := conn.CreateRuleGroupsNamespace(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Prometheus Rule Group Namespace (%s) for Workspace (%s): %s", name, workspaceID, err)
@@ -114,13 +114,13 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	input := &amp.PutRuleGroupsNamespaceInput{
+	input := amp.PutRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
 		Name:        aws.String(d.Get(names.AttrName).(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	}
 
-	_, err := conn.PutRuleGroupsNamespace(ctx, input)
+	_, err := conn.PutRuleGroupsNamespace(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
@@ -138,10 +138,11 @@ func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Rule Group Namespace: (%s)", d.Id())
-	_, err := conn.DeleteRuleGroupsNamespace(ctx, &amp.DeleteRuleGroupsNamespaceInput{
+	input := amp.DeleteRuleGroupsNamespaceInput{
 		Name:        aws.String(d.Get(names.AttrName).(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
-	})
+	}
+	_, err := conn.DeleteRuleGroupsNamespace(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -181,12 +182,12 @@ func findRuleGroupNamespaceByARN(ctx context.Context, conn *amp.Client, arn stri
 		return nil, err
 	}
 
-	input := &amp.DescribeRuleGroupsNamespaceInput{
+	input := amp.DescribeRuleGroupsNamespaceInput{
 		Name:        aws.String(name),
 		WorkspaceId: aws.String(workspaceID),
 	}
 
-	output, err := conn.DescribeRuleGroupsNamespace(ctx, input)
+	output, err := conn.DescribeRuleGroupsNamespace(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

@@ -42,7 +42,7 @@ func TestAccCloudFormationStackInstances_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackInstancesExists(ctx, resourceName, &stackInstances1),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
-					acctest.CheckResourceAttrAccountID(resourceName, "accounts.0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "accounts.0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
@@ -51,7 +51,7 @@ func TestAccCloudFormationStackInstances_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "regions.0", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stacks", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "1"),
-					acctest.CheckResourceAttrAccountID(resourceName, "stack_instance_summaries.0.account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "stack_instance_summaries.0.account_id"),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.0.drift_status", "NOT_CHECKED"),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_instance_summaries.0.stack_id"),
@@ -142,7 +142,7 @@ func TestAccCloudFormationStackInstances_Multi_increaseRegions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackInstancesExists(ctx, resourceName, &stackInstances1),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
-					acctest.CheckResourceAttrAccountID(resourceName, "accounts.0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "accounts.0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),

@@ -37,7 +37,7 @@ func TestAccGlueJob_basic(t *testing.T) {
 				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
@@ -99,7 +99,7 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 				Config: testAccJobConfig_requiredStreaming(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "gluestreaming"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),

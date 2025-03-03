@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_acm_certificate_validation")
+// @SDKResource("aws_acm_certificate_validation", name="Certificate Validation")
 func resourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateValidationCreate,
@@ -149,11 +149,11 @@ func findCertificateValidationByARN(ctx context.Context, conn *acm.Client, arn s
 func statusCertificate(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call findCertificateByARN as it maps useful status codes to NotFoundError.
-		input := &acm.DescribeCertificateInput{
+		input := acm.DescribeCertificateInput{
 			CertificateArn: aws.String(arn),
 		}
 
-		output, err := findCertificate(ctx, conn, input)
+		output, err := findCertificate(ctx, conn, &input)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -48,6 +48,10 @@ func resourceListener() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"client_affinity": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -134,6 +138,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
+	d.Set(names.AttrARN, listener.ListenerArn)
 	d.Set("client_affinity", listener.ClientAffinity)
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)

@@ -43,7 +43,7 @@ func testAccResourceLFTags_basic(t *testing.T) {
 						names.AttrKey:   rName,
 						names.AttrValue: "copse",
 					}),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},

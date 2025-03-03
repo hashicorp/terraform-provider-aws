@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -135,11 +136,11 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get(names.AttrARN).(string)
-	input := &acmpca.DescribeCertificateAuthorityInput{
+	input := acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	certificateAuthority, err := findCertificateAuthority(ctx, conn, input)
+	certificateAuthority, err := findCertificateAuthority(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
@@ -158,9 +159,10 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrType, certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
-	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
+	getCACertInput := acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &getCACertInput)
 
 	// Returned when in PENDING_CERTIFICATE status
 	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
@@ -175,13 +177,20 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
-	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
+	// Attempt to get the CSR (if permitted).
+	getCACSRInput := acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &getCACSRInput)
 
-	// Returned when in PENDING_CERTIFICATE status
-	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-	if err != nil && !errs.IsA[*types.InvalidStateException](err) {
+	switch {
+	case tfawserr.ErrCodeEquals(err, "AccessDeniedException"):
+		// Handle permission issues gracefully for Resource Access Manager shared CAs.
+		// arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority does not include acm-pca:GetCertificateAuthorityCsr.
+	case errs.IsA[*types.InvalidStateException](err):
+		// Returned when in PENDING_CERTIFICATE status
+		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
 	}
 

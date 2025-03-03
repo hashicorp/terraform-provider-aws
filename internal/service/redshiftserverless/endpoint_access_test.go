@@ -34,7 +34,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
@@ -51,7 +51,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 				Config: testAccEndpointAccessConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),

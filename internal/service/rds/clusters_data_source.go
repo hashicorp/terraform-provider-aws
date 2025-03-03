@@ -63,7 +63,7 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 		clusterIdentifiers = append(clusterIdentifiers, aws.ToString(cluster.DBClusterIdentifier))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("cluster_arns", clusterARNs)
 	d.Set("cluster_identifiers", clusterIdentifiers)
 

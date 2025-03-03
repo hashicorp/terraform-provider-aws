@@ -54,10 +54,6 @@ type vpcConnectionResource struct {
 	framework.WithImportByID
 }
 
-func (r *vpcConnectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_quicksight_vpc_connection"
-}
-
 const (
 	resNameVPCConnection = "VPC Connection"
 )
@@ -163,7 +159,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, vpcConnectionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.VPCConnectionID)
 	in := &quicksight.CreateVPCConnectionInput{
@@ -381,10 +377,6 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 		)
 		return
 	}
-}
-
-func (r *vpcConnectionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) (*awstypes.VPCConnection, error) {

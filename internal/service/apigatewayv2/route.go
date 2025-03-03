@@ -304,10 +304,11 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Route: %s", d.Id())
-	_, err := conn.DeleteRoute(ctx, &apigatewayv2.DeleteRouteInput{
+	input := apigatewayv2.DeleteRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRoute(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -372,6 +373,33 @@ func findRoute(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findRoutes(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetRoutesInput) ([]awstypes.Route, error) {
+	var output []awstypes.Route
+
+	err := getRoutesPages(ctx, conn, input, func(page *apigatewayv2.GetRoutesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil

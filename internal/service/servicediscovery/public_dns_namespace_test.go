@@ -38,7 +38,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 				Config: testAccPublicDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`namespace/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`namespace/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

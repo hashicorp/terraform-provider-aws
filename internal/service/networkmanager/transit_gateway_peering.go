@@ -39,8 +39,6 @@ func resourceTransitGatewayPeering() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
@@ -142,7 +140,7 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "networkmanager",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("peering/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

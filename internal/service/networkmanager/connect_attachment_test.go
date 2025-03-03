@@ -36,12 +36,12 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -73,12 +73,12 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_basic_NoDependsOn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -134,12 +134,12 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_protocolNoEncap(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "NO_ENCAP"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -206,10 +206,6 @@ func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awsty
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager Connect Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)

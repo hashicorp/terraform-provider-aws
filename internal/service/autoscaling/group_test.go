@@ -34,6 +34,7 @@ func init() {
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"gp3 is invalid",
+		"The Launch Configuration creation operation is not available in your account",
 	)
 }
 
@@ -73,9 +74,11 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
@@ -104,7 +107,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "predicted_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", acctest.CtFalse),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "tags.#"), // "tags" removed at v5.0.0.
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
@@ -301,9 +304,11 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 				Config: testAccGroupConfig_simple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
@@ -328,7 +333,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", acctest.CtFalse),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
 					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
@@ -352,7 +357,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 				Config: testAccGroupConfig_simpleUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
@@ -379,7 +384,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", acctest.CtTrue),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
 					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
@@ -917,6 +922,39 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 				),
 			},
 			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_availabilityZoneDistribution(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_availabilityZoneDistribution(rName, "balanced-best-effort"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_availabilityZoneDistribution(rName, "balanced-only"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-only"),
+				),
+			},
 		},
 	})
 }
@@ -1910,6 +1948,36 @@ func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 				),
 			},
 			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
+// TestAccAutoScalingGroup_launchTemplateIAMInstanceProfile is an eventually consistent test that fails
+// without the update retry, or waiters in the IAM instance profile and launch template resources.
+func TestAccAutoScalingGroup_launchTemplateIAMInstanceProfile(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_launchTemplateIAMInstanceProfile(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+				),
+			},
+			{
+				Config: testAccGroupConfig_launchTemplateIAMInstanceProfile(rName, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+				),
+			},
 		},
 	})
 }
@@ -3199,7 +3267,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
-					`cpu_manufacturers = ["amazon-web-services"]
+					`cpu_manufacturers = ["amazon-web-services", "amd"]
                      memory_mib {
                        min = 500
                      }
@@ -3213,8 +3281,9 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_requirements.0.cpu_manufacturers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_requirements.0.cpu_manufacturers.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_requirements.0.cpu_manufacturers.*", "amazon-web-services"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_requirements.0.cpu_manufacturers.*", "amd"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -4211,9 +4280,10 @@ func testAccCheckALBTargetGroupHealthy(ctx context.Context, v *elasticloadbalanc
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		output, err := conn.DescribeTargetHealth(ctx, &elasticloadbalancingv2.DescribeTargetHealthInput{
+		input := elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: v.TargetGroupArn,
-		})
+		}
+		output, err := conn.DescribeTargetHealth(ctx, &input)
 
 		if err != nil {
 			return err
@@ -4906,6 +4976,22 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGroupConfig_availabilityZoneDistribution(rName, capacityDistributionStrategy string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  availability_zone_distribution {
+    capacity_distribution_strategy = %[2]q
+  }
+}
+`, rName, capacityDistributionStrategy))
 }
 
 func testAccGroupConfig_enabledMetrics(rName string) string {
@@ -6471,4 +6557,83 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGroupConfig_launchTemplateIAMInstanceProfile(rName, instanceProfileName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
+  description = "Policy for EC2 instances"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:GetObject"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %[2]q
+  role = aws_iam_role.test.name
+}
+
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = %[3]q
+
+  iam_instance_profile {
+    arn = aws_iam_instance_profile.test.arn
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 2
+  max_size           = 5
+  min_size           = 1
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
+  }
+}
+`, rName, instanceProfileName, "t3.micro"))
 }

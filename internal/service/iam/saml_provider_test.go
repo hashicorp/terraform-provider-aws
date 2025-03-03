@@ -35,7 +35,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 				Config: testAccSAMLProviderConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("saml-provider/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("saml-provider/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 					resource.TestCheckResourceAttrSet(resourceName, "valid_until"),

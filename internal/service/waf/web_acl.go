@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -157,8 +156,6 @@ func resourceWebACL() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -189,7 +186,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "waf",
-			AccountID: meta.(*conns.AWSClient).AccountID,
+			AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 			Resource:  "webacl/" + d.Id(),
 		}.String()
 		input := &waf.PutLoggingConfigurationInput{

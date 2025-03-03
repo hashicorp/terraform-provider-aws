@@ -320,8 +320,6 @@ func resourceGraphQLAPI() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -337,7 +335,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if v, ok := d.GetOk("api_type"); ok {
@@ -377,7 +375,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
-		input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -468,7 +466,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("additional_authentication_provider"); ok {
-			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("enhanced_metrics_config"); ok {
@@ -504,7 +502,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("user_pool_config"); ok {
-			input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("xray_enabled"); ok {
@@ -534,9 +532,10 @@ func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppSync GraphQL API: %s", d.Id())
-	_, err := conn.DeleteGraphqlApi(ctx, &appsync.DeleteGraphqlApiInput{
+	input := appsync.DeleteGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGraphqlApi(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

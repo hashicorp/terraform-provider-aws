@@ -154,11 +154,15 @@ func TestAccS3BucketOwnershipControls_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketOwnershipControlsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_ownership_controls" {
 				continue
+			}
+
+			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindOwnershipControls(ctx, conn, rs.Primary.ID)
@@ -186,6 +190,9 @@ func testAccCheckBucketOwnershipControlsExists(ctx context.Context, n string) re
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err := tfs3.FindOwnershipControls(ctx, conn, rs.Primary.ID)
 
@@ -210,7 +217,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 }
 
 func testAccBucketOwnershipControlsConfig_directoryBucket(rName, objectOwnership string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

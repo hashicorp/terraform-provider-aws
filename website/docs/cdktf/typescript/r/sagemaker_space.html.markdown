@@ -77,8 +77,7 @@ The `spaceSharingSettings` block supports the following argument:
 
 The `codeEditorAppSettings` block supports the following argument:
 
-* `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `codeRepository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`codeRepository` Block](#code_repository-block) below.
+* `appLifecycleManagement` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`appLifecycleManagement` Block](#app_lifecycle_management-block) below.
 * `defaultResourceSpec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`defaultResourceSpec` Block](#default_resource_spec-block) below.
 
 ### `customFileSystem` Block
@@ -91,8 +90,8 @@ The `customFileSystem` block supports the following argument:
 
 The `jupyterLabAppSettings` block supports the following arguments:
 
-* `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `codeRepository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`codeRepository` Block](#code_repository-block) below.
+* `appLifecycleManagement` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`appLifecycleManagement` Block](#app_lifecycle_management-block) below.
+* `codeRepository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application. See [`codeRepository` Block](#code_repository-block) below.
 * `defaultResourceSpec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`defaultResourceSpec` Block](#default_resource_spec-block) below.
 
 ### `jupyterServerAppSettings` Block
@@ -153,17 +152,17 @@ The `ebsStorageSettings` block supports the following argument:
 
 * `ebsVolumeSizeInGb` - (Required) The size of an EBS storage volume for a space.
 
-### `app_lifecycle_management` Block
+### `appLifecycleManagement` Block
 
-The `app_lifecycle_management` block supports the following argument:
+The `appLifecycleManagement` block supports the following argument:
 
-* `idle_settings` - (Optional) Settings related to idle shutdown of Studio applications. See [`idle_settings` Block](#idle_settings-block) below.
+* `idleSettings` - (Optional) Settings related to idle shutdown of Studio applications. See [`idleSettings` Block](#idle_settings-block) below.
 
-### `idle_settings` Block
+### `idleSettings` Block
 
-The `idle_settings` block supports the following argument:
+The `idleSettings` block supports the following argument:
 
-* `idle_timeout_in_minutes` - (Optional) The time that SageMaker waits after the application becomes idle before shutting it down. Valid values are between `60` and `525600`.
+* `idleTimeoutInMinutes` - (Optional) The time that SageMaker waits after the application becomes idle before shutting it down. Valid values are between `60` and `525600`.
 
 ## Attribute Reference
 
@@ -207,4 +206,4 @@ Using `terraform import`, import SageMaker Spaces using the `id`. For example:
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-219a68b5e1c4c029f71fce75220da01f457cf6d17319405079eb1c8f95c0d707 -->
+<!-- cache-key: cdktf-0.20.8 input-04b54f82c93faa2e6b5da09042075faf01aa4e508f66ed59b6b7c1671ebb45ea -->

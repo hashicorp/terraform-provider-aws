@@ -40,7 +40,7 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexache.MustCompile(`snapshot:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "db_snapshot_arn", "rds", regexache.MustCompile(`snapshot:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),

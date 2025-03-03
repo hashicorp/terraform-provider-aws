@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -33,7 +34,7 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +48,7 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`devicepool:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`devicepool:.+`)),
 				),
 			},
 			{
@@ -60,7 +61,7 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`devicepool:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`devicepool:.+`)),
 				),
 			},
 		},
@@ -79,7 +80,7 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,7 +132,7 @@ func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -162,7 +163,7 @@ func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

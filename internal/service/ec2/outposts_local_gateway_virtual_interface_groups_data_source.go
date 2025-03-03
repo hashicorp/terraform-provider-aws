@@ -74,7 +74,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 		interfaceIDs = append(interfaceIDs, v.LocalGatewayVirtualInterfaceIds...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, groupIDs)
 	d.Set("local_gateway_virtual_interface_ids", interfaceIDs)
 

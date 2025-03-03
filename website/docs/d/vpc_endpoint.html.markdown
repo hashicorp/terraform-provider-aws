@@ -63,6 +63,7 @@ In addition to all arguments above except `filter`, the following attributes are
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `security_group_ids` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
+* `service_region` - The AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
 * `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
 

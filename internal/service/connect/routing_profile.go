@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,8 +42,6 @@ func resourceRoutingProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -316,10 +313,11 @@ func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Routing Profile: %s", d.Id())
-	_, err = conn.DeleteRoutingProfile(ctx, &connect.DeleteRoutingProfileInput{
+	input := connect.DeleteRoutingProfileInput{
 		InstanceId:       aws.String(instanceID),
 		RoutingProfileId: aws.String(routingProfileID),
-	})
+	}
+	_, err = conn.DeleteRoutingProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

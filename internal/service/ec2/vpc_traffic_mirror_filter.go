@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceTrafficMirrorFilter() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -125,8 +122,8 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "traffic-mirror-filter/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -172,9 +169,10 @@ func resourceTrafficMirrorFilterDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Filter: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorFilter(ctx, &ec2.DeleteTrafficMirrorFilterInput{
+	input := ec2.DeleteTrafficMirrorFilterInput{
 		TrafficMirrorFilterId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorFilter(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterIdNotFound) {
 		return diags

@@ -45,10 +45,11 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
 			},
 		},
 	})
@@ -202,10 +203,11 @@ func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_distribution(rName, "ByLogStream"),

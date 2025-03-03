@@ -35,7 +35,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),

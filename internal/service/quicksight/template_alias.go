@@ -40,10 +40,6 @@ type templateAliasResource struct {
 	framework.WithImportByID
 }
 
-func (r *templateAliasResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_quicksight_template_alias"
-}
-
 func (r *templateAliasResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -86,7 +82,7 @@ func (r *templateAliasResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, templateID, aliasName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.TemplateID), flex.StringValueFromFramework(ctx, plan.AliasName)
 	in := &quicksight.CreateTemplateAliasInput{

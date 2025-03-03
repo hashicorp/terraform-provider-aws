@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecrpublic_authorization_token")
+// @SDKDataSource("aws_ecrpublic_authorization_token", name="Authorization Token")
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
@@ -73,7 +73,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("authorization_token", authorizationToken)
 	d.Set("expires_at", expiresAt)
 	d.Set(names.AttrUserName, userName)

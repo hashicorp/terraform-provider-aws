@@ -58,6 +58,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) A detailed description of the Amazon EMR Studio.
+* `encryptionKeyArn` - (Optional) The AWS KMS key identifier (ARN) used to encrypt Amazon EMR Studio workspace and notebook files when backed up to Amazon S3.
 * `idpAuthUrl` - (Optional) The authentication endpoint of your identity provider (IdP). Specify this value when you use IAM authentication and want to let federated users log in to a Studio with the Studio URL and credentials from your IdP. Amazon EMR Studio redirects users to this endpoint to enter credentials.
 * `idpRelayStateParameterName` - (Optional) The name that your identity provider (IdP) uses for its RelayState parameter. For example, RelayState or TargetSource. Specify this value when you use IAM authentication and want to let federated users log in to a Studio using the Studio URL. The RelayState parameter differs by IdP.
 * `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -98,4 +99,4 @@ Using `terraform import`, import EMR studios using the `id`. For example:
 % terraform import aws_emr_studio.studio es-123456ABCDEF
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-61bdc9504022130875c4d8d0fd748ffd340f18084eaa62d5583c0c5041452faf -->
+<!-- cache-key: cdktf-0.20.8 input-a3c3d0ca2fa982cde4d409658b9278f3adafb98039de09db8213dc4516b5d364 -->

@@ -465,7 +465,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Friendly description of the WebACL.
 * `name` - (Required, Forces new resource) Friendly name of the WebACL.
 * `rule` - (Optional) Rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [`rule`](#rule-block) below for details.
-* `rule_json` (Optional) Raw JSON string to allow more than three nested statements. Conflicts with `rule` attribute. This is for advanced use cases where more than 3 levels of nested statements are required. **There is no drift detection at this time**. If you use this attribute instead of `rule`, you will be foregoing drift detection. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateWebACL.html) for the JSON structure.
+* `rule_json` (Optional) Raw JSON string to allow more than three nested statements. Conflicts with `rule` attribute. This is for advanced use cases where more than 3 levels of nested statements are required. **There is no drift detection at this time**. If you use this attribute instead of `rule`, you will be foregoing drift detection. Additionally, importing an existing web ACL into a configuration with `rule_json` set will result in a one time in-place update as the remote rule configuration is initially written to the `rule` attribute. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateWebACL.html) for the JSON structure.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `token_domains` - (Optional) Specifies the domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
@@ -820,7 +820,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `address_fields` Block
 
-* `identifier` - (Required) The name of a single primary address field.
+* `identifiers` - (Required) The names of the address fields.
 
 ### `email_field` Block
 
@@ -832,7 +832,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `phone_number_fields` Block
 
-* `identifier` - (Required) The name of a single primary phone number field.
+* `identifiers` - (Required) The names of the phone number fields.
 
 ### `username_field` Block
 

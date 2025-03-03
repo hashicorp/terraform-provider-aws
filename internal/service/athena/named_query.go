@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_athena_named_query")
+// @SDKResource("aws_athena_named_query", name="Named Query")
 func resourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamedQueryCreate,
@@ -122,9 +122,10 @@ func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	log.Printf("[INFO] Deleting Athena Named Query: %s", d.Id())
-	_, err := conn.DeleteNamedQuery(ctx, &athena.DeleteNamedQueryInput{
+	input := athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNamedQuery(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Named Query (%s): %s", d.Id(), err)

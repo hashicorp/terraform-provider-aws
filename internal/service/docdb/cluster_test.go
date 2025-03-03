@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -52,7 +54,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
@@ -790,8 +792,8 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 			{
 				Config: testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -819,7 +821,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
@@ -925,6 +927,37 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 	})
 }
 
+func TestAccDocDBCluster_passwordWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.DocDBServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_passwordWriteOnly(rName, "avoid-plaintext-passwords", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+			},
+			{
+				Config: testAccClusterConfig_passwordWriteOnly(rName, "avoid-plaintext-updated", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
@@ -986,9 +1019,10 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
+			input := docdb.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
-			})
+			}
+			_, err := conn.DeleteDBClusterSnapshot(ctx, &input)
 
 			if err != nil {
 				return err
@@ -1498,4 +1532,28 @@ resource "aws_docdb_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, storageType))
+}
+
+func testAccClusterConfig_passwordWriteOnly(rName, password string, passworVersion int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  availability_zones = [
+    data.aws_availability_zones.available.names[0],
+    data.aws_availability_zones.available.names[1],
+    data.aws_availability_zones.available.names[2]
+  ]
+
+  master_password_wo         = %[2]q
+  master_password_wo_version = %[3]d
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+
+  enabled_cloudwatch_logs_exports = [
+    "audit",
+    "profiler",
+  ]
+}
+`, rName, password, passworVersion))
 }

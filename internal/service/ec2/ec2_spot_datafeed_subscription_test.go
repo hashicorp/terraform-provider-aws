@@ -142,7 +142,8 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.T
 func testAccPreCheckSpotDatafeedSubscription(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeSpotDatafeedSubscription(ctx, &ec2.DescribeSpotDatafeedSubscriptionInput{})
+	input := ec2.DescribeSpotDatafeedSubscriptionInput{}
+	_, err := conn.DescribeSpotDatafeedSubscription(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

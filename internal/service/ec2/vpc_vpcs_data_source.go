@@ -71,7 +71,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		vpcIDs = append(vpcIDs, aws.ToString(v.VpcId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, vpcIDs)
 
 	return diags

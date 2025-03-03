@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceKeyPair() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  keyPairMigrateState,
@@ -103,13 +100,13 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
-	input := &ec2.ImportKeyPairInput{
+	input := ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
 		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeKeyPair),
 	}
 
-	output, err := conn.ImportKeyPair(ctx, input)
+	output, err := conn.ImportKeyPair(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "importing EC2 Key Pair (%s): %s", keyName, err)
@@ -139,8 +136,8 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "key-pair/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -169,9 +166,10 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Key Pair: %s", d.Id())
-	_, err := conn.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
+	input := ec2.DeleteKeyPairInput{
 		KeyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteKeyPair(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Key Pair (%s): %s", d.Id(), err)

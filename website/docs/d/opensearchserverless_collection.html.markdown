@@ -22,10 +22,12 @@ data "aws_opensearchserverless_collection" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are optional:
 
-* `id` - (Required) ID of the collection. Either `id` or `name` must be provided.
-* `name` - (Required) Name of the collection. Either `name` or `id` must be provided.
+~> Exactly one of `id` or `name` is required.
+
+* `id` - (Optional) ID of the collection.
+* `name` - (Optional) Name of the collection.
 
 ## Attribute Reference
 

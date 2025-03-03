@@ -37,8 +37,8 @@ func TestAccAppConfigExtensionAssociation_basic(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "extension_arn", "appconfig", regexache.MustCompile(`extension/*`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrResourceARN, "appconfig", regexache.MustCompile(`application/*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "extension_arn", "appconfig", regexache.MustCompile(`extension/*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrResourceARN, "appconfig", regexache.MustCompile(`application/*`)),
 				),
 			},
 			{

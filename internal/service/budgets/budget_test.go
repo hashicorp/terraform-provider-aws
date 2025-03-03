@@ -65,8 +65,8 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 				Config: testAccBudgetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBudgetExists(ctx, resourceName, &budget),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{

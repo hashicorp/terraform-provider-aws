@@ -34,10 +34,6 @@ type defaultAutoScalingConfigurationVersionResource struct {
 	framework.WithImportByID
 }
 
-func (r *defaultAutoScalingConfigurationVersionResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_default_auto_scaling_configuration_version"
-}
-
 func (r *defaultAutoScalingConfigurationVersionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -66,7 +62,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Create(ctx context.Cont
 	}
 
 	// Set values for unknowns.
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

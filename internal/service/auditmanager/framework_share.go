@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_framework_share", name="Framework Share")
 func newResourceFrameworkShare(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFrameworkShare{}, nil
 }
@@ -36,10 +36,6 @@ const (
 
 type resourceFrameworkShare struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework_share"
 }
 
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

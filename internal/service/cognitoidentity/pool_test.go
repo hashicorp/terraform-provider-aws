@@ -41,7 +41,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", ""),
 				),
@@ -447,9 +447,10 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		result, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+		input := cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
-		})
+		}
+		result, err := conn.DescribeIdentityPool(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -473,9 +474,10 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+			input := cognitoidentity.DescribeIdentityPoolInput{
 				IdentityPoolId: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.DescribeIdentityPool(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

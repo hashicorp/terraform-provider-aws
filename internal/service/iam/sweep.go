@@ -729,6 +729,12 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 			d := r.Data(nil)
 			d.SetId(serialNum)
 
+			if user := device.User; user != nil {
+				if userName := aws.ToString(user.UserName); userName != "" {
+					d.Set(names.AttrUserName, userName)
+				}
+			}
+
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}

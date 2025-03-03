@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -394,7 +396,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									names.AttrStatus: {
 										Type:             schema.TypeString,
@@ -566,7 +568,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									names.AttrStatus: {
 										Type:             schema.TypeString,
@@ -596,7 +598,72 @@ func resourceEndpointConfiguration() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: validateDataCaptureConfigCustomDiff,
+	}
+}
+
+func validateDataCaptureConfigCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	dataCapturesPath := cty.GetAttrPath("data_capture_config")
+	dataCaptures := configRaw.GetAttr("data_capture_config")
+	if dataCaptures.IsKnown() && !dataCaptures.IsNull() {
+		dataCaptureConfigPlanTimeValidate(dataCapturesPath, dataCaptures, &diags)
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func dataCaptureConfigPlanTimeValidate(path cty.Path, dataCaptures cty.Value, diags *diag.Diagnostics) {
+	it := dataCaptures.ElementIterator()
+	for it.Next() {
+		_, dataCapture := it.Element()
+
+		if !dataCapture.IsKnown() {
+			break
+		}
+		if dataCapture.IsNull() {
+			break
+		}
+
+		captureContentHeaderPath := path.GetAttr("capture_content_type_header")
+		captureContentHeaders := dataCapture.GetAttr("capture_content_type_header")
+
+		captureContentTypeHeaderPlanTimeValidate(captureContentHeaderPath, captureContentHeaders, diags)
+	}
+}
+
+func captureContentTypeHeaderPlanTimeValidate(path cty.Path, captureContentHeaders cty.Value, diags *diag.Diagnostics) {
+	it := captureContentHeaders.ElementIterator()
+	for it.Next() {
+		_, captureContentHeader := it.Element()
+
+		if !captureContentHeader.IsKnown() {
+			break
+		}
+		if captureContentHeader.IsNull() {
+			break
+		}
+
+		csvContentTypes := captureContentHeader.GetAttr("csv_content_types")
+		if csvContentTypes.IsKnown() && !csvContentTypes.IsNull() {
+			break
+		}
+
+		jsonContentTypes := captureContentHeader.GetAttr("json_content_types")
+		if jsonContentTypes.IsKnown() && !jsonContentTypes.IsNull() {
+			break
+		}
+
+		*diags = append(*diags, errs.NewAtLeastOneOfChildrenError(path,
+			cty.GetAttrPath("csv_content_types"),
+			cty.GetAttrPath("json_content_types"),
+		))
 	}
 }
 
@@ -882,7 +949,7 @@ func expandDataCaptureConfig(configured []interface{}) *awstypes.DataCaptureConf
 		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["capture_content_type_header"].([]interface{}); ok && (len(v) > 0) {
+	if v, ok := m["capture_content_type_header"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		c.CaptureContentTypeHeader = expandCaptureContentTypeHeader(v[0].(map[string]interface{}))
 	}
 
@@ -1133,7 +1200,7 @@ func expandManagedInstanceScaling(configured []interface{}) *awstypes.Production
 		c.Status = awstypes.ManagedInstanceScalingStatus(v)
 	}
 
-	if v, ok := m["min_instance_count"].(int); ok && v > 0 {
+	if v, ok := m["min_instance_count"].(int); ok {
 		c.MinInstanceCount = aws.Int32(int32(v))
 	}
 

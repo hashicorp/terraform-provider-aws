@@ -280,7 +280,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	d.Set(names.AttrAccountID, accountID)
 

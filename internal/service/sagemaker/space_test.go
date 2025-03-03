@@ -42,7 +42,7 @@ func testAccSpace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`space/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`space/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_uid"),
 				),

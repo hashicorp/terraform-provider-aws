@@ -35,7 +35,7 @@ func testAccAccessGrantsLocation_basic(t *testing.T) {
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", "s3://"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),

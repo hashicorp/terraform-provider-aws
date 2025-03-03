@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -65,10 +64,7 @@ func resourceVPC() *schema.Resource {
 			StateContext: resourceVPCImport,
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceVPCCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceVPCCustomizeDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  vpcMigrateState,
@@ -290,7 +286,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()

@@ -36,7 +36,7 @@ func testAccInsight_basic(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
@@ -303,7 +303,7 @@ func testAccInsight_Name(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -311,7 +311,7 @@ func testAccInsight_Name(t *testing.T) {
 				Config: testAccInsightConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
@@ -495,9 +495,9 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 // testAccCheckInsightARN checks the computed ARN value
 // and accounts for differences in SecurityHub on GovCloud where the partition portion
 // of the ARN is still "aws" while other services utilize the "aws-us-gov" partition
-func testAccCheckInsightARN(resourceName string) resource.TestCheckFunc {
+func testAccCheckInsightARN(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(), acctest.AccountID())
+		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(ctx), acctest.AccountID(ctx))
 		//lintignore:AWSAT001
 		return resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(expectedArn))(s)
 	}

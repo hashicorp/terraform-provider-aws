@@ -244,7 +244,7 @@ func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
 			{
 				Config: testAccIPAMPoolCIDRAllocationConfig_differentRegion(cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx, resourceName, &allocation, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx, resourceName, &allocation, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^ipam-pool-alloc-[0-9a-f]+_ipam-pool(-[0-9a-f]+)$`)),
 					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexache.MustCompile(`^ipam-pool-alloc-[0-9a-f]+$`)),

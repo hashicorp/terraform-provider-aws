@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_budgets_budget_action")
+// @SDKResource("aws_budgets_budget_action", name="Budget Action")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
 func ResourceBudgetAction() *schema.Resource {
@@ -227,7 +227,6 @@ func ResourceBudgetAction() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -237,7 +236,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	input := &budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
@@ -303,7 +302,7 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
 	d.Set(names.AttrARN, arn.String())

@@ -51,7 +51,7 @@ func testAccServer_basic(t *testing.T) {
 				Config: testAccServerConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
@@ -91,7 +91,7 @@ func testAccServer_basic(t *testing.T) {
 				Config: testAccServerConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "S3"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),

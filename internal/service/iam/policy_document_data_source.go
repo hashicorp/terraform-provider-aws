@@ -73,7 +73,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "override_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"override_policy_documents": {
 					Type:     schema.TypeList,
@@ -92,7 +93,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "source_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"source_policy_documents": {
 					Type:     schema.TypeList,
@@ -143,6 +145,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 							"principals":        principalsSchema(),
 							names.AttrResources: setOfStringSchema(),
 							"sid": {
+								// Because policy documents are widely used outside IAM, we don't enforce
+								// IAM validation rules requiring alphanumeric and no spaces.
 								Type:     schema.TypeString,
 								Optional: true,
 							},

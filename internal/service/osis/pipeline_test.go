@@ -47,7 +47,7 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_units", "1"),
 					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

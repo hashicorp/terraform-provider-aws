@@ -50,7 +50,7 @@ func TestAccKendraThesaurus_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", names.AttrKey),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "thesaurus_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/thesaurus/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/thesaurus/.+$`)),
 				),
 			},
 			{

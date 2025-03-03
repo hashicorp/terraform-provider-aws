@@ -39,7 +39,7 @@ func TestAccWAFRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rule/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`rule/.+`)),
 				),
 			},
 			{

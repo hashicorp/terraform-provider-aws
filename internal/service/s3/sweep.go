@@ -56,7 +56,7 @@ func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClie
 	var sweepables []sweep.Sweepable
 
 	input := s3.ListBucketsInput{
-		BucketRegion: aws.String(client.Region),
+		BucketRegion: aws.String(client.Region(ctx)),
 	}
 	pages := s3.NewListBucketsPaginator(conn, &input)
 	for pages.HasMorePages() {
@@ -167,7 +167,7 @@ func sweepBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	r := resourceBucket()
 
 	input := s3.ListBucketsInput{
-		BucketRegion: aws.String(client.Region),
+		BucketRegion: aws.String(client.Region(ctx)),
 	}
 	pages := s3.NewListBucketsPaginator(conn, &input)
 	for pages.HasMorePages() {

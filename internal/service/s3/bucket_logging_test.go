@@ -373,7 +373,7 @@ func TestAccS3BucketLogging_withExpectedBucketOwner(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
@@ -465,9 +465,9 @@ func TestAccS3BucketLogging_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_logging" {
 				continue
 			}
@@ -475,6 +475,10 @@ func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFun
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
@@ -507,6 +511,9 @@ func testAccCheckBucketLoggingExists(ctx context.Context, n string) resource.Tes
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 
@@ -698,7 +705,7 @@ resource "aws_s3_bucket_logging" "test" {
 }
 
 func testAccBucketLoggingConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
   location {

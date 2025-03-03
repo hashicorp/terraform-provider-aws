@@ -29,7 +29,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
@@ -58,7 +58,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{

@@ -37,7 +37,7 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "READER"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_identifier", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_neptune_cluster.test", names.AttrClusterIdentifier),

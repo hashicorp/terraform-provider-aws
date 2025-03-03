@@ -30,7 +30,7 @@ class MyConvertedCode extends TerraformStack {
     const test = new ElasticacheUser(this, "test", {
       accessString:
         "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember",
-      engine: "REDIS",
+      engine: "redis",
       passwords: ["password123456789"],
       userId: "testUserId",
       userName: "default",
@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "test_1",
       {
-        engine: "REDIS",
+        engine: "redis",
         userGroupId: "userGroupId",
         userIds: [test.userId],
       }
@@ -55,7 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `engine` - (Required) The current supported value is `REDIS`.
+* `engine` - (Required) The current supported value are `redis`, `valkey` (case insensitive).
 * `userGroupId` - (Required) The ID of the user group.
 
 The following arguments are optional:
@@ -103,4 +103,4 @@ Using `terraform import`, import ElastiCache user groups using the `userGroupId`
 % terraform import aws_elasticache_user_group.my_user_group userGoupId1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-273ead1e6f40d517ea4aa4538fa2dae8368c51b3c1f92a67ddcf5ffa9c8dd66f -->
+<!-- cache-key: cdktf-0.20.8 input-a24c1a302970cf710e877180e969a2d2cc30854a6da9abef41441b4ebc76d1b2 -->

@@ -37,7 +37,7 @@ func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -151,7 +151,7 @@ func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 				Config: testAccApplicationConfig_code(rName, "SELECT 1;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 1;\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -171,7 +171,7 @@ func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 				Config: testAccApplicationConfig_code(rName, "SELECT 2;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 2;\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -214,7 +214,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -234,7 +234,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, names.AttrARN),
@@ -279,7 +279,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testi
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, names.AttrARN),
@@ -301,7 +301,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testi
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -346,7 +346,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testi
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole1ResourceName, names.AttrARN),
@@ -368,7 +368,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testi
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, names.AttrARN),
@@ -413,7 +413,7 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -433,7 +433,7 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -502,7 +502,7 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -546,7 +546,7 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 				Config: testAccApplicationConfig_inputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -617,7 +617,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -661,7 +661,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -732,7 +732,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -779,7 +779,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -849,7 +849,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -896,7 +896,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 				Config: testAccApplicationConfig_inputProcessing(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -971,7 +971,7 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 				Config: testAccApplicationConfig_multiple(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, names.AttrARN),
@@ -1030,7 +1030,7 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 				Config: testAccApplicationConfig_multipleUpdated(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1142,7 +1142,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 				Config: testAccApplicationConfig_output(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1172,7 +1172,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 				Config: testAccApplicationConfig_outputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1217,7 +1217,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1255,7 +1255,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1275,7 +1275,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 				Config: testAccApplicationConfig_referenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1336,7 +1336,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 				Config: testAccApplicationConfig_referenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1374,7 +1374,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1418,7 +1418,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 				Config: testAccApplicationConfig_referenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1456,7 +1456,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 				Config: testAccApplicationConfig_referenceDataSourceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1520,7 +1520,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) 
 				Config: testAccApplicationConfig_start(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1588,7 +1588,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 				Config: testAccApplicationConfig_start(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1638,7 +1638,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 				Config: testAccApplicationConfig_start(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1682,7 +1682,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 				Config: testAccApplicationConfig_start(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1749,7 +1749,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 				Config: testAccApplicationConfig_multiple(rName, acctest.CtTrue, "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, names.AttrARN),
@@ -1809,7 +1809,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 				Config: testAccApplicationConfig_multipleUpdated(rName, acctest.CtTrue, "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),

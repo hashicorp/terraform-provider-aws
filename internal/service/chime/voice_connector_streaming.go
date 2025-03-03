@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_chime_voice_connector_streaming")
+// @SDKResource("aws_chime_voice_connector_streaming", name="Voice Connector Streaming")
 func ResourceVoiceConnectorStreaming() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorStreamingCreate,

@@ -41,6 +41,14 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
+	// Example (GovCloud): HttpConnectionTimeoutException: Failed to connect to ...
+	if tfawserr.ErrMessageContains(err, "HttpConnectionTimeoutException", "Failed to connect to") {
+		return true
+	}
+	// Example (GovCloud): InvalidAction: DescribeDBProxies is not available in this region
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not available") {
+		return true
+	}
 	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported") {
 		return true
@@ -78,8 +86,16 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
+	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
+		return true
+	}
 	// For example from us-west-2 Route53 zone
 	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
+		return true
+	}
+	// Example (evidently):  NoLongerSupportedException: AWS Evidently has been discontinued.
+	if tfawserr.ErrCodeEquals(err, "NoLongerSupportedException") {
 		return true
 	}
 	// Example (shield): ResourceNotFoundException: The subscription does not exist
