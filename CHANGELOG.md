@@ -1,8 +1,16 @@
 ## 5.90.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: `rule.noncurrent_version_expiration.noncurrent_days` and `rule.noncurrent_version_transition.noncurrent_days` are Required ([#40796](https://github.com/hashicorp/terraform-provider-aws/issues/40796))
+
 FEATURES:
 
 * **New Resource:** `aws_dataexchange_event_action` ([#40552](https://github.com/hashicorp/terraform-provider-aws/issues/40552))
+
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket_lifecycle_configuration: `rule.noncurrent_version_expiration.noncurrent_days` and `rule.noncurrent_version_transition.noncurrent_days` are Required. Technically this is a breaking change, but failure to configure this attribute would have led to `InvalidArgument` or `MalformedXML` errors ([#40796](https://github.com/hashicorp/terraform-provider-aws/issues/40796))
 
 BUG FIXES:
 
