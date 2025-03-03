@@ -438,7 +438,7 @@ func (s instanceAutomatedBackupSweeper) Delete(ctx context.Context, timeout time
 
 	// Since there is no resource for automated backups themselves, they are swept here.
 	tflog.Info(ctx, "Deleting RDS Instance Automated Backup", map[string]any{
-		"skip_reason": s.backupARN,
+		"backup ARN": s.backupARN,
 	})
 
 	_, err := s.conn.DeleteDBInstanceAutomatedBackup(ctx, &rds.DeleteDBInstanceAutomatedBackupInput{
