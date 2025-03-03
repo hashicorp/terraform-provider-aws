@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	github.com/YakDriver/tfproviderdocs v0.17.0
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.64.5
+	github.com/golangci/golangci-lint v1.64.6
 	github.com/hashicorp/copywrite v0.21.0
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
 	github.com/katbyte/terrafmt v0.5.5
@@ -16,7 +16,7 @@ require (
 )
 
 require (
-	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
+	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect
 	4d63.com/gochecknoglobals v0.2.2 // indirect
 	cel.dev/expr v0.21.2 // indirect
 	cloud.google.com/go v0.118.3 // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c // indirect
 	github.com/Crocmagnon/fatcontext v0.7.1 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
-	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.3.0 // indirect
+	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.3.1 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.26.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.50.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.50.0 // indirect
@@ -204,7 +204,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kisielk/errcheck v1.9.0 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
-	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
+	github.com/kkHAIKE/contextcheck v1.1.6 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/knadh/koanf v1.5.0 // indirect
 	github.com/kulti/thelper v0.6.3 // indirect
@@ -268,7 +268,7 @@ require (
 	github.com/raeperd/recvcheck v0.2.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	github.com/rogpeppe/go-internal v1.13.2-0.20241226121412-a5dc8ff20d0a // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/ryancurrah/gomodguard v1.3.5 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.5.1 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
