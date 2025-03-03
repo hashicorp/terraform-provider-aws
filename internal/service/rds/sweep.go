@@ -26,11 +26,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_rds_cluster_parameter_group", sweepClusterParameterGroups, "aws_rds_cluster")
 	awsv2.Register("aws_db_cluster_snapshot", sweepClusterSnapshots, "aws_rds_cluster")
 	awsv2.Register("aws_rds_cluster", sweepClusters, "aws_db_instance", "aws_rds_shard_group")
-
-	resource.AddTestSweepers("aws_db_event_subscription", &resource.Sweeper{
-		Name: "aws_db_event_subscription",
-		F:    sweepEventSubscriptions,
-	})
+	awsv2.Register("aws_db_event_subscription", sweepEventSubscriptions)
 
 	resource.AddTestSweepers("aws_rds_global_cluster", &resource.Sweeper{
 		Name: "aws_rds_global_cluster",
@@ -202,27 +198,17 @@ func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	return sweepResources, nil
 }
 
-func sweepEventSubscriptions(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepEventSubscriptions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := &rds.DescribeEventSubscriptionsInput{}
+	var input rds.DescribeEventSubscriptionsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeEventSubscriptionsPaginator(conn, input)
+	pages := rds.NewDescribeEventSubscriptionsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS Event Subscription sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS Event Subscriptions (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.EventSubscriptionsList {
@@ -234,13 +220,7 @@ func sweepEventSubscriptions(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Event Subscriptions (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepGlobalClusters(region string) error {
