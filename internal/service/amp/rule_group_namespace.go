@@ -21,11 +21,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_prometheus_rule_group_namespace", name="Rule Group Namespace")
+// @Tags(identifierAttribute="arn")
 func resourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,
@@ -52,6 +54,8 @@ func resourceRuleGroupNamespace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -66,6 +70,7 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 		Data:        []byte(d.Get("data").(string)),
 		Name:        aws.String(name),
 		WorkspaceId: aws.String(workspaceID),
+		Tags:        getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateRuleGroupsNamespace(ctx, &input)
@@ -107,6 +112,8 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("workspace_id", workspaceID)
 
+	setTagsOut(ctx, rgn.Tags)
+
 	return diags
 }
 
@@ -114,20 +121,22 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	input := amp.PutRuleGroupsNamespaceInput{
-		Data:        []byte(d.Get("data").(string)),
-		Name:        aws.String(d.Get(names.AttrName).(string)),
-		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := amp.PutRuleGroupsNamespaceInput{
+			Data:        []byte(d.Get("data").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
+			WorkspaceId: aws.String(d.Get("workspace_id").(string)),
+		}
 
-	_, err := conn.PutRuleGroupsNamespace(ctx, &input)
+		_, err := conn.PutRuleGroupsNamespace(ctx, &input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
+		}
 
-	if _, err := waitRuleGroupNamespaceUpdated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Rule Group Namespace (%s) update: %s", d.Id(), err)
+		if _, err := waitRuleGroupNamespaceUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Rule Group Namespace (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceRuleGroupNamespaceRead(ctx, d, meta)...)
