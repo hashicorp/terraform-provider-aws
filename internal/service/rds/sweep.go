@@ -27,11 +27,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_db_cluster_snapshot", sweepClusterSnapshots, "aws_rds_cluster")
 	awsv2.Register("aws_rds_cluster", sweepClusters, "aws_db_instance", "aws_rds_shard_group")
 	awsv2.Register("aws_db_event_subscription", sweepEventSubscriptions)
-
-	resource.AddTestSweepers("aws_rds_global_cluster", &resource.Sweeper{
-		Name: "aws_rds_global_cluster",
-		F:    sweepGlobalClusters,
-	})
+	awsv2.Register("aws_rds_global_cluster", sweepGlobalClusters)
 
 	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
 		Name: "aws_db_instance",
@@ -223,27 +219,17 @@ func sweepEventSubscriptions(ctx context.Context, client *conns.AWSClient) ([]sw
 	return sweepResources, nil
 }
 
-func sweepGlobalClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepGlobalClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := &rds.DescribeGlobalClustersInput{}
+	var input rds.DescribeGlobalClustersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeGlobalClustersPaginator(conn, input)
+	pages := rds.NewDescribeGlobalClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS Global Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS Global Clusters (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.GlobalClusters {
@@ -257,13 +243,7 @@ func sweepGlobalClusters(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Global Clusters (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepInstances(region string) error {
