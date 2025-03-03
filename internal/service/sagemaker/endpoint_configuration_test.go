@@ -190,6 +190,37 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_routing(t *testing
 	})
 }
 
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_emptyModel(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_emptyModel(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", ""),
+				),
+			},
+			{
+				ResourceName:              resourceName,
+				ImportState:               true,
+				ImportStateVerify:         true,
+				PreventPostDestroyRefresh: true,
+				// AWS does not return executionRoleArn in the DescribeEndpointConfig API response
+				ImportStateVerifyIgnore: []string{"execution_role_arn"},
+			},
+		},
+	})
+}
+
 func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1638,6 +1669,26 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
     routing_config {
       routing_strategy = "RANDOM"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_emptyModel(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  execution_role_arn = aws_iam_role.test.arn
+  production_variants {
+    variant_name           = "variant-1"
+    initial_instance_count = 1
+    instance_type          = "ml.g5.12xlarge"
+	
+	routing_config {
+      routing_strategy = "LEAST_OUTSTANDING_REQUESTS"
     }
   }
 }
