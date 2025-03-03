@@ -31,11 +31,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_db_instance", sweepInstances, "aws_rds_global_cluster")
 	awsv2.Register("aws_db_option_group", sweepOptionGroups, "aws_rds_cluster", "aws_db_snapshot")
 	awsv2.Register("aws_db_parameter_group", sweepParameterGroups, "aws_db_instance")
-
-	resource.AddTestSweepers("aws_db_proxy", &resource.Sweeper{
-		Name: "aws_db_proxy",
-		F:    sweepProxies,
-	})
+	awsv2.Register("aws_db_proxy", sweepProxies)
 
 	resource.AddTestSweepers("aws_db_snapshot", &resource.Sweeper{
 		Name: "aws_db_snapshot",
@@ -332,27 +328,17 @@ func sweepParameterGroups(ctx context.Context, client *conns.AWSClient) ([]sweep
 	return sweepResources, nil
 }
 
-func sweepProxies(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
+func sweepProxies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := &rds.DescribeDBProxiesInput{}
+	var input rds.DescribeDBProxiesInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeDBProxiesPaginator(conn, input)
+	pages := rds.NewDescribeDBProxiesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Proxy sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS DB Proxies (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DBProxies {
@@ -364,13 +350,7 @@ func sweepProxies(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS DB Proxies (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepSnapshots(region string) error {
