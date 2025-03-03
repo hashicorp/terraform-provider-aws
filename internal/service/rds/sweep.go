@@ -8,16 +8,19 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,15 +37,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_db_proxy", sweepProxies)
 	awsv2.Register("aws_db_snapshot", sweepSnapshots, "aws_db_instance")
 	awsv2.Register("aws_db_subnet_group", sweepSubnetGroups, "aws_rds_cluster")
-
-	resource.AddTestSweepers("aws_db_instance_automated_backups_replication", &resource.Sweeper{
-		Name: "aws_db_instance_automated_backups_replication",
-		F:    sweepInstanceAutomatedBackups,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
-
+	awsv2.Register("aws_db_instance_automated_backups_replication", sweepInstanceAutomatedBackups, "aws_db_instance")
 	awsv2.Register("aws_rds_shard_group", sweepShardGroups)
 }
 
@@ -396,62 +391,66 @@ func sweepSubnetGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	return sweepResources, nil
 }
 
-func sweepInstanceAutomatedBackups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepInstanceAutomatedBackups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := &rds.DescribeDBInstanceAutomatedBackupsInput{}
+	var input rds.DescribeDBInstanceAutomatedBackupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var backupARNs []string
 
-	pages := rds.NewDescribeDBInstanceAutomatedBackupsPaginator(conn, input)
+	pages := rds.NewDescribeDBInstanceAutomatedBackupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS Instance Automated Backup sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS Instance Automated Backups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DBInstanceAutomatedBackups {
-			arn := aws.ToString(v.DBInstanceAutomatedBackupsArn)
 			r := resourceInstanceAutomatedBackupsReplication()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.DBInstanceAutomatedBackupsArn))
 			d.Set("source_db_instance_arn", v.DBInstanceArn)
-			backupARNs = append(backupARNs, arn)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, newInstanceAutomatedBackupSweeper(ctx, r, d, client))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	return sweepResources, nil
+}
 
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Instance Automated Backups (%s): %w", region, err)
+type instanceAutomatedBackupSweeper struct {
+	conn      *rds.Client
+	sweepable sweep.Sweepable
+	backupARN string
+}
+
+func newInstanceAutomatedBackupSweeper(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, client *conns.AWSClient) sweep.Sweepable {
+	return &instanceAutomatedBackupSweeper{
+		conn:      client.RDSClient(ctx),
+		sweepable: sdk.NewSweepResource(resource, d, client),
+		backupARN: d.Id(),
+	}
+}
+
+func (s instanceAutomatedBackupSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	if err := s.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+		return err
 	}
 
 	// Since there is no resource for automated backups themselves, they are swept here.
-	for _, v := range backupARNs {
-		log.Printf("[DEBUG] Deleting RDS Instance Automated Backup: %s", v)
-		_, err = conn.DeleteDBInstanceAutomatedBackup(ctx, &rds.DeleteDBInstanceAutomatedBackupInput{
-			DBInstanceAutomatedBackupsArn: aws.String(v),
-		})
+	tflog.Info(ctx, "Deleting RDS Instance Automated Backup", map[string]any{
+		"skip_reason": s.backupARN,
+	})
 
-		if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) {
-			continue
-		}
+	_, err := s.conn.DeleteDBInstanceAutomatedBackup(ctx, &rds.DeleteDBInstanceAutomatedBackupInput{
+		DBInstanceAutomatedBackupsArn: aws.String(s.backupARN),
+	})
 
-		if err != nil {
-			log.Printf("[WARN] Deleting RDS Instance Automated Backup (%s): %s", v, err)
-		}
+	if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) {
+		err = nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting RDS Instance Automated Backup (%s): %w", s.backupARN, err)
 	}
 
 	return nil
