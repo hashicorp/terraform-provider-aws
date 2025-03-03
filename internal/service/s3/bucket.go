@@ -74,7 +74,7 @@ func resourceBucket() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				Deprecated:       "Use the aws_s3_bucket_accelerate_configuration resource instead",
+				Deprecated:       "acceleration_status is deprecated. Use the aws_s3_bucket_accelerate_configuration resource instead.",
 				ValidateDiagFunc: enum.Validate[types.BucketAccelerateStatus](),
 			},
 			"acl": {
@@ -83,7 +83,7 @@ func resourceBucket() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"grant"},
 				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
-				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
+				Deprecated:    "acl is deprecated. Use the aws_s3_bucket_acl resource instead.",
 			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -122,7 +122,7 @@ func resourceBucket() *schema.Resource {
 				Type:       schema.TypeList,
 				Optional:   true,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
+				Deprecated: "cors_rule is deprecated. Use the aws_s3_bucket_cors_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_headers": {
@@ -162,7 +162,7 @@ func resourceBucket() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"acl"},
-				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
+				Deprecated:    "grant is deprecated. Use the aws_s3_bucket_acl resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrID: {
@@ -202,7 +202,7 @@ func resourceBucket() *schema.Resource {
 				Type:       schema.TypeList,
 				Optional:   true,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_lifecycle_configuration resource instead",
+				Deprecated: "lifecycle_rule is deprecated. Use the aws_s3_bucket_lifecycle_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"abort_incomplete_multipart_upload_days": {
@@ -310,7 +310,7 @@ func resourceBucket() *schema.Resource {
 				Optional:   true,
 				Computed:   true,
 				MaxItems:   1,
-				Deprecated: "Use the aws_s3_bucket_logging resource instead",
+				Deprecated: "logging is deprecated. Use the aws_s3_bucket_logging resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_bucket": {
@@ -329,7 +329,7 @@ func resourceBucket() *schema.Resource {
 				Optional:   true,
 				Computed:   true,
 				MaxItems:   1,
-				Deprecated: "Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead",
+				Deprecated: "object_lock_configuration is deprecated. Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"object_lock_enabled": {
@@ -338,12 +338,12 @@ func resourceBucket() *schema.Resource {
 							ForceNew:         true,
 							ConflictsWith:    []string{"object_lock_enabled"},
 							ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
-							Deprecated:       "Use the top-level parameter object_lock_enabled instead",
+							Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
 						},
 						names.AttrRule: {
 							Type:       schema.TypeList,
 							Optional:   true,
-							Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
+							Deprecated: "rule is deprecated. Use the aws_s3_bucket_object_lock_configuration resource instead.",
 							MaxItems:   1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -389,7 +389,7 @@ func resourceBucket() *schema.Resource {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
-				Deprecated:            "Use the aws_s3_bucket_policy resource instead",
+				Deprecated:            "policy is deprecated. Use the aws_s3_bucket_policy resource instead.",
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
@@ -407,7 +407,7 @@ func resourceBucket() *schema.Resource {
 				Optional:   true,
 				Computed:   true,
 				MaxItems:   1,
-				Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+				Deprecated: "replication_configuration is deprecated. Use the aws_s3_bucket_replication_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrRole: {
@@ -579,7 +579,7 @@ func resourceBucket() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				Deprecated:       "Use the aws_s3_bucket_request_payment_configuration resource instead",
+				Deprecated:       "request_payer is deprecated. Use the aws_s3_bucket_request_payment_configuration resource instead.",
 				ValidateDiagFunc: enum.Validate[types.Payer](),
 			},
 			"server_side_encryption_configuration": {
@@ -587,7 +587,7 @@ func resourceBucket() *schema.Resource {
 				MaxItems:   1,
 				Optional:   true,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
+				Deprecated: "server_side_encryption_configuration is deprecated. Use the aws_s3_bucket_server_side_encryption_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrRule: {
@@ -631,7 +631,7 @@ func resourceBucket() *schema.Resource {
 				Optional:   true,
 				Computed:   true,
 				MaxItems:   1,
-				Deprecated: "Use the aws_s3_bucket_versioning resource instead",
+				Deprecated: "versioning is deprecated. Use the aws_s3_bucket_versioning resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrEnabled: {
@@ -652,7 +652,7 @@ func resourceBucket() *schema.Resource {
 				Optional:   true,
 				Computed:   true,
 				MaxItems:   1,
-				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
+				Deprecated: "website is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"error_document": {
@@ -694,12 +694,12 @@ func resourceBucket() *schema.Resource {
 			"website_domain": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_website_configuration resource",
+				Deprecated: "website_domain is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
 			},
 			"website_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_website_configuration resource",
+				Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
 			},
 		},
 	}

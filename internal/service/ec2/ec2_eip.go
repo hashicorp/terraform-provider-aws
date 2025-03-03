@@ -144,7 +144,7 @@ func resourceEIP() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				Computed:      true,
-				Deprecated:    "use domain attribute instead",
+				Deprecated:    "vpc is deprecated. Use domain instead.",
 				ConflictsWith: []string{names.AttrDomain},
 			},
 		},

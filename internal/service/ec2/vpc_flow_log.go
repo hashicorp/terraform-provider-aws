@@ -121,7 +121,7 @@ func resourceFlowLog() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"log_destination"},
-				Deprecated:    "use 'log_destination' argument instead",
+				Deprecated:    "log_group_name is deprecated. Use log_destination instead.",
 			},
 			"max_aggregation_interval": {
 				Type:         schema.TypeInt,

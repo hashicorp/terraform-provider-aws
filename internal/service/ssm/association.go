@@ -88,7 +88,7 @@ func resourceAssociation() *schema.Resource {
 				Type:       schema.TypeString,
 				ForceNew:   true,
 				Optional:   true,
-				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
+				Deprecated: "instance_id is deprecated. Use targets instead.",
 			},
 			"max_concurrency": {
 				Type:         schema.TypeString,
