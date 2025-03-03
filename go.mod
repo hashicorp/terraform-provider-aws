@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.26.0
@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/eks v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.29.0
@@ -165,7 +165,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.68.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.21.0
@@ -194,7 +194,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.47.0
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.84.0
@@ -239,7 +239,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signer v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.57.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.4.0
