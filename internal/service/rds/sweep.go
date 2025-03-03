@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -431,8 +430,8 @@ func newInstanceAutomatedBackupSweeper(ctx context.Context, resource *schema.Res
 	}
 }
 
-func (s instanceAutomatedBackupSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	if err := s.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+func (s instanceAutomatedBackupSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := s.sweepable.Delete(ctx, optFns...); err != nil {
 		return err
 	}
 
