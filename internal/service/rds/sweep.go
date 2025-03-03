@@ -23,13 +23,7 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_rds_cluster_parameter_group", &resource.Sweeper{
-		Name: "aws_rds_cluster_parameter_group",
-		F:    sweepClusterParameterGroups,
-		Dependencies: []string{
-			"aws_rds_cluster",
-		},
-	})
+	awsv2.Register("aws_rds_cluster_parameter_group", sweepClusterParameterGroups, "aws_rds_cluster")
 
 	resource.AddTestSweepers("aws_db_cluster_snapshot", &resource.Sweeper{
 		Name: "aws_db_cluster_snapshot",
@@ -115,27 +109,17 @@ func RegisterSweepers() {
 	awsv2.Register("aws_rds_shard_group", sweepShardGroups)
 }
 
-func sweepClusterParameterGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepClusterParameterGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := &rds.DescribeDBClusterParameterGroupsInput{}
+	var input rds.DescribeDBClusterParameterGroupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeDBClusterParameterGroupsPaginator(conn, input)
+	pages := rds.NewDescribeDBClusterParameterGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS Cluster Parameter Group sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS Cluster Parameter Groups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
@@ -154,13 +138,7 @@ func sweepClusterParameterGroups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Cluster Parameter Groups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepClusterSnapshots(region string) error {
