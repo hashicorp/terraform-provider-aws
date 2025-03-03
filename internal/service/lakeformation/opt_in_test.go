@@ -372,7 +372,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_glue_catalog_database" "test" {
-  name = %[1]q
+  name       = %[1]q
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
