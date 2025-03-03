@@ -29,15 +29,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_db_event_subscription", sweepEventSubscriptions)
 	awsv2.Register("aws_rds_global_cluster", sweepGlobalClusters)
 	awsv2.Register("aws_db_instance", sweepInstances, "aws_rds_global_cluster")
-
-	resource.AddTestSweepers("aws_db_option_group", &resource.Sweeper{
-		Name: "aws_db_option_group",
-		F:    sweepOptionGroups,
-		Dependencies: []string{
-			"aws_rds_cluster",
-			"aws_db_snapshot",
-		},
-	})
+	awsv2.Register("aws_db_option_group", sweepOptionGroups, "aws_rds_cluster", "aws_db_snapshot")
 
 	resource.AddTestSweepers("aws_db_parameter_group", &resource.Sweeper{
 		Name: "aws_db_parameter_group",
@@ -283,27 +275,17 @@ func sweepInstances(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 	return sweepResources, nil
 }
 
-func sweepOptionGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	input := &rds.DescribeOptionGroupsInput{}
+func sweepOptionGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
+	var input rds.DescribeOptionGroupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := rds.NewDescribeOptionGroupsPaginator(conn, input)
+	pages := rds.NewDescribeOptionGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS Option Group sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing RDS Option Groups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.OptionGroupsList {
@@ -322,13 +304,7 @@ func sweepOptionGroups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Option Groups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepParameterGroups(region string) error {
