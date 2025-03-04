@@ -335,6 +335,41 @@ resource "aws_kendra_data_source" "example" {
 }
 ```
 
+#### With WEBCRAWLERV2 Template
+
+```terraform
+resource "aws_kendra_data_source" "example" {
+  index_id = aws_kendra_index.example.id
+  name     = "example"
+  type     = "TEMPLATE"
+  role_arn = aws_iam_role.example.arn
+
+  configuration {
+    template_configuration {
+      template  = jsonencode({
+        connectionConfiguration = {
+          repositoryEndpointMetadata = {
+            seedUrlConnections = [
+              {
+                seedUrl = "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+              },
+            ]
+          }
+        }
+        additionalProperties = {
+          inclusionURLIndexPatterns = [
+            "https:\\/\\/registry[.]terraform[.]io\\/providers\\/hashicorp\\/aws\\/latest\\/docs\\/resources\\/kendra_index",
+          ]
+        }
+        version = "1.0.0"
+        syncMode = "FULL_CRAWL"
+        type = "WEBCRAWLERV2"
+      })
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -359,6 +394,7 @@ The `configuration` configuration block supports the following arguments:
 
 * `s3_configuration` - (Required if `type` is set to `S3`) A block that provides the configuration information to connect to an Amazon S3 bucket as your data source. [Detailed below](#s3_configuration-block).
 * `web_crawler_configuration` - (Required if `type` is set to `WEBCRAWLER`) A block that provides the configuration information required for Amazon Kendra Web Crawler. [Detailed below](#web_crawler_configuration-block).
+* `template_configuration` - (Required if `type` is set to `TEMPLATE`) A block that provides the configuration information required for Amazon Kendra Web Crawler. [Detailed below](#template_configuration-block).
 
 ### s3_configuration Block
 
@@ -396,6 +432,12 @@ The `web_crawler_configuration` configuration block supports the following argum
 * `url_exclusion_patterns` - (Optional) A list of regular expression patterns to exclude certain URLs to crawl. URLs that match the patterns are excluded from the index. URLs that don't match the patterns are included in the index. If a URL matches both an inclusion and exclusion pattern, the exclusion pattern takes precedence and the URL file isn't included in the index. Array Members: Minimum number of `0` items. Maximum number of `100` items. Length Constraints: Minimum length of `1`. Maximum length of `150`.
 * `url_inclusion_patterns` - (Optional) A list of regular expression patterns to include certain URLs to crawl. URLs that match the patterns are included in the index. URLs that don't match the patterns are excluded from the index. If a URL matches both an inclusion and exclusion pattern, the exclusion pattern takes precedence and the URL file isn't included in the index. Array Members: Minimum number of `0` items. Maximum number of `100` items. Length Constraints: Minimum length of `1`. Maximum length of `150`.
 * `urls` - (Required) A block that specifies the seed or starting point URLs of the websites or the sitemap URLs of the websites you want to crawl. You can include website subdomains. You can list up to `100` seed URLs and up to `3` sitemap URLs. You can only crawl websites that use the secure communication protocol, Hypertext Transfer Protocol Secure (HTTPS). If you receive an error when crawling a website, it could be that the website is blocked from crawling. When selecting websites to index, you must adhere to the [Amazon Acceptable Use Policy](https://aws.amazon.com/aup/) and all other Amazon terms. Remember that you must only use Amazon Kendra Web Crawler to index your own webpages, or webpages that you have authorization to index. [Detailed below](#urls-block).
+
+### template_configuration Block
+
+The `template_configuration` configuration block supports the following arguments:
+
+* `template` - (Required) A JSON string that follows one of the [Data source template schemas](https://docs.aws.amazon.com/kendra/latest/dg/ds-schemas.html)
 
 ### authentication_configuration Block
 
