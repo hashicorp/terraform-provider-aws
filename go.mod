@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.0
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.52.0
@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.41.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.206.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.207.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.54.0
@@ -195,9 +195,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.34.0
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.22.0
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.26.0
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.84.0
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.84.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.94.0
@@ -216,12 +216,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/rum v1.22.0
+	github.com/aws/aws-sdk-go-v2/service/rum v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.2.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.179.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.180.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.0
@@ -254,7 +254,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.44.0
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.14.0
