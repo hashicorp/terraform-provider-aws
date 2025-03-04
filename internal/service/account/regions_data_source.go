@@ -1,0 +1,115 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package account
+
+import (
+	"context"
+	"unsafe"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/account/types"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkDataSource("aws_account_regions", name="Regions")
+func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceRegions{}, nil
+}
+
+const (
+	DSNameRegions = "Regions Data Source"
+)
+
+type dataSourceRegions struct {
+	framework.DataSourceWithConfigure
+}
+
+func (d *dataSourceRegions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	resp.TypeName = "aws_account_regions"
+}
+
+func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"account_id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"region_opt_status_contains": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+			},
+			"regions": framework.DataSourceComputedListOfObjectAttribute[regionsModel](ctx),
+		},
+	}
+}
+
+func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	conn := d.Meta().AccountClient(ctx)
+
+	var err error
+
+	var data dataSourceRegionsModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	accountID := flex.StringValueFromFramework(ctx, data.AccountID)
+	regionOptsString := flex.ExpandFrameworkStringValueList(ctx, data.RegionOptStatusContains)
+
+	regionOpts := *(*[]awstypes.RegionOptStatus)(unsafe.Pointer(&regionOptsString))
+
+	input := &account.ListRegionsInput{
+		AccountId:               aws.String(accountID),
+		RegionOptStatusContains: regionOpts,
+	}
+
+	var output *account.ListRegionsOutput
+	for {
+		output, err = conn.ListRegions(ctx, input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Account, create.ErrActionReading, DSNameRegions, data.AccountID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		if aws.ToString(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("Regions"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+type dataSourceRegionsModel struct {
+	AccountID               types.String                                  `tfsdk:"account_id"`
+	RegionOptStatusContains fwtypes.ListOfString                          `tfsdk:"region_opt_status_contains"`
+	Regions                 fwtypes.ListNestedObjectValueOf[regionsModel] `tfsdk:"regions"`
+}
+
+type regionsModel struct {
+	RegionName      types.String                                 `tfsdk:"region_name"`
+	RegionOptStatus fwtypes.StringEnum[awstypes.RegionOptStatus] `tfsdk:"region_opt_status"`
+}
