@@ -7,7 +7,7 @@ package redshiftserverless
 var (
 	ResourceCustomDomainAssociation = newCustomDomainAssociationResource
 	ResourceEndpointAccess          = resourceEndpointAccess
-	ResourceNamespace               = resourceNamespace
+	ResourceNamespace               = newResourceNamespace
 	ResourceResourcePolicy          = resourceResourcePolicy
 	ResourceSnapshot                = resourceSnapshot
 	ResourceUsageLimit              = resourceUsageLimit
