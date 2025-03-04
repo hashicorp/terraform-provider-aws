@@ -13,7 +13,7 @@ resource "aws_prometheus_rule_group_namespace" "test" {
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
-  data         = <<EOF
+  data = <<EOF
 groups:
   - name: test
     rules:

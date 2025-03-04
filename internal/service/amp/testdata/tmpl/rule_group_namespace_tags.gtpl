@@ -5,7 +5,7 @@ resource "aws_prometheus_rule_group_namespace" "test" {
   name         = var.rName
   workspace_id = aws_prometheus_workspace.test.id
 {{- template "tags" . }}
-  data         = <<EOF
+  data = <<EOF
 groups:
   - name: test
     rules:
