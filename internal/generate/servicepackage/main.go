@@ -14,6 +14,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -202,31 +203,43 @@ func (v *visitor) processFile(file *ast.File) {
 func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
-	// Look first for tagging annotations.
-	d := ResourceDatum{}
+	// Look first for per-resource annotations such as tagging and Region override.
+	d := ResourceDatum{
+		RegionOverrideEnabled: false, // TODO Default to true.
+	}
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
-		if m := annotation.FindStringSubmatch(line); len(m) > 0 && m[1] == "Tags" {
-			args := common.ParseArgs(m[3])
+		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
+			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			case "RegionOverride":
+				if attr, ok := args.Keyword["enabled"]; ok {
+					if enabled, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid RegionOverride/enabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideEnabled = enabled
+					}
+				}
+			case "Tags":
+				d.TransparentTagging = true
 
-			d.TransparentTagging = true
+				if attr, ok := args.Keyword["identifierAttribute"]; ok {
+					if d.TagsIdentifierAttribute != "" {
+						v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					}
 
-			if attr, ok := args.Keyword["identifierAttribute"]; ok {
-				if d.TagsIdentifierAttribute != "" {
-					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
 				}
 
-				d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
-			}
-
-			if attr, ok := args.Keyword["resourceType"]; ok {
-				d.TagsResourceType = attr
+				if attr, ok := args.Keyword["resourceType"]; ok {
+					d.TagsResourceType = attr
+				}
 			}
 		}
 	}
 
+	// Then build the resource maps, looking for duplicates.
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
@@ -355,7 +368,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Tags":
+			case "RegionOverride", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.
