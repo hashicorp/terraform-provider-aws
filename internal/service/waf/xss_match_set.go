@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -240,7 +241,7 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []awstypes.XssMatchSetUpdat
 		tuple := od.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newT, tuple); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
+			newT = slices.Delete(newT, idx, idx+1)
 			continue
 		}
 

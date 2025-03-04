@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -34,6 +35,10 @@ func resourceSQLInjectionMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -111,6 +116,7 @@ func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading WAF SqlInjectionMatchSet (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, sqlInjectionMatchSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, sqlInjectionMatchSet.Name)
 	if err := d.Set("sql_injection_match_tuples", flattenSQLInjectionMatchTuples(sqlInjectionMatchSet.SqlInjectionMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sql_injection_match_tuples: %s", err)
@@ -228,7 +234,7 @@ func diffSQLInjectionMatchTuples(oldT, newT []interface{}) []awstypes.SqlInjecti
 		tuple := od.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newT, tuple); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
+			newT = slices.Delete(newT, idx, idx+1)
 			continue
 		}
 
@@ -253,4 +259,9 @@ func diffSQLInjectionMatchTuples(oldT, newT []interface{}) []awstypes.SqlInjecti
 		})
 	}
 	return updates
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func sqlInjectionMatchSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "sqlinjectionset/"+id)
 }
