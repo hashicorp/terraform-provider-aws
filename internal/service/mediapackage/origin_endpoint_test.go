@@ -141,8 +141,6 @@ func TestOriginEndpointExampleUnitTest(t *testing.T) {
 // Acceptance test access AWS and cost money to run.
 func TestAccMediaPackageOriginEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -154,7 +152,7 @@ func TestAccMediaPackageOriginEndpoint_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaPackageEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.MediaPackageOriginEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
@@ -162,19 +160,18 @@ func TestAccMediaPackageOriginEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginEndpointConfig_basic(rName),
+				Config: testAccOriginEndpointConfig_basic(rName, "1.0.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, &originendpoint),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					testAccCheckOriginEndpointExists(ctx, resourceName, &originEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "origin_endpoint_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMediaPackage"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mediapackage.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "efs"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
+					resource.TestCheckResourceAttr(resourceName, "user.0.username", "Test"),
+					resource.TestCheckResourceAttr(resourceName, "user.0.password", "TestTest1234"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackage", regexache.MustCompile(`originendpoint:.+$`)),
 				),
 			},
