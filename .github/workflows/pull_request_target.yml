@@ -3,12 +3,10 @@ name: Process pull_request_target Events
 on:
   pull_request_target:
     types:
-      - assigned
       - closed
       - edited
-      - labeled
       - opened
-      - ready_for_review
+
 env:
   ISSUE_URL: ${{ github.event.pull_request.html_url }}
 
@@ -66,15 +64,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --add-label needs-triage
 
-      - name: Add prioritized to New Maintainer Contributions
-        if: |
-          github.event.action == 'opened'
-          && steps.author.outputs.maintainer == 'true'
-          && !contains(github.event.pull_request.labels.*.name, 'prioritized')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr edit "$ISSUE_URL" --add-label prioritized
-
       - name: Credit Core Contributor Contributions
         if: |
           steps.author.outputs.core_contributor == 'true'
@@ -93,21 +82,6 @@ jobs:
         run: |
           gh pr edit "$ISSUE_URL" --add-label partner
 
-      - name: "Community Check: Assignee"
-        id: assignee
-        if: github.event.action == 'assigned'
-        uses: ./.github/actions/community_check
-        with:
-          user_login: ${{ github.event.assignee.login }}
-          maintainers: ${{ secrets.MAINTAINERS }}
-
-      - name: Add prioritized When Assigned to a Maintainer
-        if: steps.assignee.outputs.maintainer == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr edit "$ISSUE_URL" --add-label prioritized
-
       - name: Remove Triage Labels on Closure
         if: |
           github.event.action == 'closed'
@@ -115,68 +89,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --remove-label needs-triage,waiting-response
-
-  project:
-    name: Maintainer Work Board
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate GitHub App Token
-        id: token
-        uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1.11.6
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PEM }}
-
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          sparse-checkout: .github/actions/
-
-      - name: Community Check
-        id: community_check
-        if: contains(fromJSON('["opened", "assigned"]'), github.event.action)
-        uses: ./.github/actions/community_check
-        with:
-          user_login: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}
-          maintainers: ${{ secrets.MAINTAINERS }}
-
-      - name: Maintainer Pull Requests
-        if: |
-          github.event.action == 'opened'
-          && steps.community_check.outputs.maintainer == 'true'
-        uses: ./.github/actions/team_working_board
-        with:
-          github_token: ${{ steps.token.outputs.token }}
-          item_url: ${{ github.event.pull_request.html_url }}
-          status: "Maintainer PR"
-          view: "working-board"
-
-      - name: Assigned to Maintainers
-        if: |
-          github.event.action == 'assigned'
-          && steps.community_check.outputs.maintainer == 'true'
-        uses: ./.github/actions/team_working_board
-        with:
-          github_token: ${{ steps.token.outputs.token }}
-          item_url: ${{ github.event.pull_request.html_url }}
-          status: "In Progress"
-          view: "working-board"
-
-      - name: Labeled Prioritized
-        if: github.event.label.name == 'prioritized'
-        uses: ./.github/actions/team_working_board
-        with:
-          github_token: ${{ steps.token.outputs.token }}
-          item_url: ${{ github.event.pull_request.html_url }}
-          view: "working-board"
-
-      - name: Labeled Engineering Initiative
-        if: github.event.label.name == 'engineering-initiative'
-        uses: ./.github/actions/team_working_board
-        with:
-          github_token: ${{ steps.token.outputs.token }}
-          item_url: ${{ github.event.pull_request.html_url }}
-          view: "engineering-initiative"
 
   add_to_milestone:
     name: Add Merged Pull Requests and Related Issues to Milestone
