@@ -640,9 +640,8 @@ func lifecycleRulesEqual(rules1, rules2 []awstypes.LifecycleRule) bool {
 	}
 
 	for _, rule1 := range rules1 {
-		// We consider 2 LifecycleRules equal if their IDs and Statuses are equal.
 		if !slices.ContainsFunc(rules2, func(rule2 awstypes.LifecycleRule) bool {
-			return aws.ToString(rule1.ID) == aws.ToString(rule2.ID) && rule1.Status == rule2.Status
+			return reflect.DeepEqual(rule1, rule2)
 		}) {
 			return false
 		}
