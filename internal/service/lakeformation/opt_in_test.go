@@ -101,81 +101,7 @@ func testAccCheckOptInDestroy(ctx context.Context) resource.TestCheckFunc {
 				Resource: &awstypes.Resource{},
 			}
 
-			type resourceConstructor func(*terraform.ResourceState) *awstypes.Resource
-
-			resourceConstructors := map[string]resourceConstructor{
-				"resource_data.0.catalog.0.id": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{Catalog: &awstypes.CatalogResource{Id: aws.String(rs.Primary.Attributes["resource_data.0.catalog.0.id"])}}
-				},
-				"resource_data.0.database.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{
-						Database: &awstypes.DatabaseResource{
-							Name:      aws.String(rs.Primary.Attributes["resource_data.0.database.0.name"]),
-							CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.database.0.catalog_id"]),
-						},
-					}
-				},
-				"resource_data.0.data_cells_filter.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{
-						DataCellsFilter: &awstypes.DataCellsFilterResource{
-							Name:           aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.name"]),
-							DatabaseName:   aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.database_name"]),
-							TableCatalogId: aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.table_catalog_id"]),
-						},
-					}
-				},
-				"resource_data.0.data_location.0.resource_arn": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{
-						DataLocation: &awstypes.DataLocationResource{
-							ResourceArn: aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.resource_arn"]),
-							CatalogId:   aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.catalog_id"]),
-						},
-					}
-				},
-				"resource_data.0.lf_tag.0.key": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{LFTag: &awstypes.LFTagKeyResource{TagKey: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag.0.key"])}}
-				},
-				"resource_data.0.lf_tag_expression.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{
-						LFTagExpression: &awstypes.LFTagExpressionResource{
-							Name:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.name"]),
-							CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.catalog_id"]),
-						},
-					}
-				},
-				"resource_data.0.lf_tag_policy.0.resource_type": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{
-						LFTagPolicy: &awstypes.LFTagPolicyResource{
-							ResourceType:   awstypes.ResourceType(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.resource_type"]),
-							CatalogId:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.catalog_id"]),
-							ExpressionName: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.expression_name"]),
-						},
-					}
-				},
-				"resource_data.0.table.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{
-						Table: &awstypes.TableResource{
-							Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
-							DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
-						},
-					}
-				},
-				"resource_data.0.table_with_columns.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-					return &awstypes.Resource{
-						TableWithColumns: &awstypes.TableWithColumnsResource{
-							Name:         aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.name"]),
-							DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.database_name"]),
-						},
-					}
-				},
-			}
-
-			for path, constructor := range resourceConstructors {
-				if v, ok := rs.Primary.Attributes[path]; ok && v != "" {
-					in.Resource = constructor(rs)
-					break
-				}
-			}
+			in.Resource = constructOptInResource(rs)
 
 			_, err := tflakeformation.FindOptInByID(ctx, conn, principalID, in.Resource)
 			if err != nil {
@@ -210,81 +136,7 @@ func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformat
 		principalID := rs.Primary.ID
 		in := &lakeformation.ListLakeFormationOptInsInput{}
 
-		type resourceConstructor func(*terraform.ResourceState) *awstypes.Resource
-
-		resourceConstructors := map[string]resourceConstructor{
-			"resource_data.0.catalog.0.id": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{Catalog: &awstypes.CatalogResource{Id: aws.String(rs.Primary.Attributes["resource_data.0.catalog.0.id"])}}
-			},
-			"resource_data.0.database.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{
-					Database: &awstypes.DatabaseResource{
-						Name:      aws.String(rs.Primary.Attributes["resource_data.0.database.0.name"]),
-						CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.database.0.catalog_id"]),
-					},
-				}
-			},
-			"resource_data.0.data_cells_filter.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{
-					DataCellsFilter: &awstypes.DataCellsFilterResource{
-						Name:           aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.name"]),
-						DatabaseName:   aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.database_name"]),
-						TableCatalogId: aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.table_catalog_id"]),
-					},
-				}
-			},
-			"resource_data.0.data_location.0.resource_arn": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{
-					DataLocation: &awstypes.DataLocationResource{
-						ResourceArn: aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.resource_arn"]),
-						CatalogId:   aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.catalog_id"]),
-					},
-				}
-			},
-			"resource_data.0.lf_tag.0.key": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{LFTag: &awstypes.LFTagKeyResource{TagKey: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag.0.key"])}}
-			},
-			"resource_data.0.lf_tag_expression.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{
-					LFTagExpression: &awstypes.LFTagExpressionResource{
-						Name:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.name"]),
-						CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.catalog_id"]),
-					},
-				}
-			},
-			"resource_data.0.lf_tag_policy.0.resource_type": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{
-					LFTagPolicy: &awstypes.LFTagPolicyResource{
-						ResourceType:   awstypes.ResourceType(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.resource_type"]),
-						CatalogId:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.catalog_id"]),
-						ExpressionName: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.expression_name"]),
-					},
-				}
-			},
-			"resource_data.0.table.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{
-					Table: &awstypes.TableResource{
-						Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
-						DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
-					},
-				}
-			},
-			"resource_data.0.table_with_columns.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-				return &awstypes.Resource{
-					TableWithColumns: &awstypes.TableWithColumnsResource{
-						Name:         aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.name"]),
-						DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.database_name"]),
-					},
-				}
-			},
-		}
-
-		for path, constructor := range resourceConstructors {
-			if v, ok := rs.Primary.Attributes[path]; ok && v != "" {
-				in.Resource = constructor(rs)
-				break
-			}
-		}
+		in.Resource = constructOptInResource(rs)
 
 		if in.Resource == nil {
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("no valid resource found in state"))
@@ -299,6 +151,87 @@ func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformat
 
 		return nil
 	}
+}
+
+func constructOptInResource(rs *terraform.ResourceState) *awstypes.Resource {
+	type resourceConstructor func(*terraform.ResourceState) *awstypes.Resource
+
+	resourceConstructors := map[string]resourceConstructor{
+		"resource_data.0.catalog.0.id": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{Catalog: &awstypes.CatalogResource{Id: aws.String(rs.Primary.Attributes["resource_data.0.catalog.0.id"])}}
+		},
+		"resource_data.0.database.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				Database: &awstypes.DatabaseResource{
+					Name:      aws.String(rs.Primary.Attributes["resource_data.0.database.0.name"]),
+					CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.database.0.catalog_id"]),
+				},
+			}
+		},
+		"resource_data.0.data_cells_filter.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				DataCellsFilter: &awstypes.DataCellsFilterResource{
+					Name:           aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.name"]),
+					DatabaseName:   aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.database_name"]),
+					TableCatalogId: aws.String(rs.Primary.Attributes["resource_data.0.data_cells_filter.0.table_catalog_id"]),
+				},
+			}
+		},
+		"resource_data.0.data_location.0.resource_arn": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				DataLocation: &awstypes.DataLocationResource{
+					ResourceArn: aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.resource_arn"]),
+					CatalogId:   aws.String(rs.Primary.Attributes["resource_data.0.data_location.0.catalog_id"]),
+				},
+			}
+		},
+		"resource_data.0.lf_tag.0.key": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{LFTag: &awstypes.LFTagKeyResource{TagKey: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag.0.key"])}}
+		},
+		"resource_data.0.lf_tag_expression.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				LFTagExpression: &awstypes.LFTagExpressionResource{
+					Name:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.name"]),
+					CatalogId: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_expression.0.catalog_id"]),
+				},
+			}
+		},
+		"resource_data.0.lf_tag_policy.0.resource_type": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				LFTagPolicy: &awstypes.LFTagPolicyResource{
+					ResourceType:   awstypes.ResourceType(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.resource_type"]),
+					CatalogId:      aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.catalog_id"]),
+					ExpressionName: aws.String(rs.Primary.Attributes["resource_data.0.lf_tag_policy.0.expression_name"]),
+				},
+			}
+		},
+		"resource_data.0.table.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				Table: &awstypes.TableResource{
+					Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
+					DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
+				},
+			}
+		},
+		"resource_data.0.table_with_columns.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				TableWithColumns: &awstypes.TableWithColumnsResource{
+					Name:         aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.name"]),
+					DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table_with_columns.0.database_name"]),
+				},
+			}
+		},
+	}
+
+	var resource *awstypes.Resource
+	for path, constructor := range resourceConstructors {
+		if v, ok := rs.Primary.Attributes[path]; ok && v != "" {
+			resource = constructor(rs)
+			break
+		}
+	}
+
+	return resource
 }
 
 func testAccOptInConfig_basic(rName string) string {
