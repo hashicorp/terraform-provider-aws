@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -162,13 +162,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("activated_rule", flattenActivatedRules(activatedRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting activated_rule: %s", err)
 	}
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "rulegroup/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, ruleGroupARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrMetricName, ruleGroup.MetricName)
 	d.Set(names.AttrName, ruleGroup.Name)
 
@@ -272,7 +266,7 @@ func diffRuleGroupActivatedRules(oldRules, newRules []interface{}) []awstypes.Ru
 		rule := op.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newRules, rule); contains {
-			newRules = append(newRules[:idx], newRules[idx+1:]...)
+			newRules = slices.Delete(newRules, idx, idx+1)
 			continue
 		}
 
@@ -327,4 +321,9 @@ func expandActivatedRule(rule map[string]interface{}) *awstypes.ActivatedRule {
 		}
 	}
 	return r
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func ruleGroupARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "rulegroup/"+id)
 }
