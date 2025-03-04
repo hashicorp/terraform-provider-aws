@@ -7,6 +7,7 @@ BREAKING CHANGES:
 FEATURES:
 
 * **New Resource:** `aws_dataexchange_event_action` ([#40552](https://github.com/hashicorp/terraform-provider-aws/issues/40552))
+* **New Resource:** `aws_lakeformation_opt_in` ([#41611](https://github.com/hashicorp/terraform-provider-aws/issues/41611))
 
 ENHANCEMENTS:
 
@@ -17,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* ephemeral/aws_secrets_manager_random_password: Change `exclude_characters` from `Bool` to `String` ([#41546](https://github.com/hashicorp/terraform-provider-aws/issues/41546))
 * resource/aws_ecs_service: Fix removal of all `vpc_lattice_configurations` blocks ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
 * resource/aws_sagemaker_mlflow_tracking_server: Increased the timeout from 30 to 45 minutes ([#41463](https://github.com/hashicorp/terraform-provider-aws/issues/41463))
 * resource/aws_vpclattice_target_group: Retry `ConflictException` errors on delete ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
