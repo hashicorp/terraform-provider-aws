@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -232,7 +233,7 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 		descriptor := od.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newD, descriptor); contains {
-			newD = append(newD[:idx], newD[idx+1:]...)
+			newD = slices.Delete(newD, idx, idx+1)
 			continue
 		}
 

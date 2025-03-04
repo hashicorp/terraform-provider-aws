@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -219,7 +220,7 @@ func diffGeoMatchSetConstraints(oldT, newT []interface{}) []awstypes.GeoMatchSet
 		constraint := od.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newT, constraint); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
+			newT = slices.Delete(newT, idx, idx+1)
 			continue
 		}
 
