@@ -48,14 +48,14 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 			{
 				Config: testAccRuleGroupNamespaceConfig_basic(anotherRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName &rgn),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &rgn),
 					resource.TestCheckResourceAttr(resourceName, "data", anotherRuleGroupNamespace()),
 				),
 			},
 			{
 				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName &rgn),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &rgn),
 					resource.TestCheckResourceAttr(resourceName, "data", defaultRuleGroupNamespace()),
 				),
 			},
