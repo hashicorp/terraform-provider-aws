@@ -29,6 +29,8 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data instate](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `passwordWo` is available to use in place of `password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 > **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
 ## RDS Instance Class Types
@@ -706,4 +708,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c9a73848d36bd6157a41a2fb0deeceaae062b69c18bf84a1aa374ce2e7fbb950 -->
+<!-- cache-key: cdktf-0.20.8 input-8c72ee77c4819ae2d1e6c4175088084e6cf691e8c48e81f6e2b079d9907fcce5 -->

@@ -58,10 +58,6 @@ func resourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("master_password"), cty.GetAttrPath("master_password_wo")),
-		},
-
 		Schema: map[string]*schema.Schema{
 			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
@@ -201,6 +197,7 @@ func resourceCluster() *schema.Resource {
 				Optional:      true,
 				WriteOnly:     true,
 				ConflictsWith: []string{"master_password"},
+				RequiredWith:  []string{"master_password_wo_version"},
 			},
 			"master_password_wo_version": {
 				Type:         schema.TypeInt,
@@ -324,8 +321,6 @@ func resourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

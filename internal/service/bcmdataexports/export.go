@@ -377,10 +377,6 @@ func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *resourceExport) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},

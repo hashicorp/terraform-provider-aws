@@ -305,10 +305,6 @@ func (r *hostResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *hostResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *hostResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)

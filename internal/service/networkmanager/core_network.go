@@ -54,8 +54,6 @@ func resourceCoreNetwork() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
@@ -82,7 +80,7 @@ func resourceCoreNetwork() *schema.Resource {
 				ConflictsWith: []string{"base_policy_region", "base_policy_regions"},
 			},
 			"base_policy_region": {
-				Deprecated: "Use the base_policy_regions argument instead. " +
+				Deprecated: "base_policy_region is deprecated. Use base_policy_regions instead. " +
 					"This argument will be removed in the next major version of the provider.",
 				Type:          schema.TypeString,
 				Optional:      true,

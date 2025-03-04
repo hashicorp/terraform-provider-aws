@@ -234,10 +234,6 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *indexResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_Index.html.
 type indexResourceModel struct {
 	ARN      types.String                           `tfsdk:"arn"`

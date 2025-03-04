@@ -30,7 +30,6 @@ type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
 	clients                   map[string]any
-	conns                     map[string]any
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client

@@ -458,7 +458,6 @@ func resourceRuleGroup() *schema.Resource {
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				return forceNewIfNotRuleOrderDefault("rule_group.0.stateful_rule_options.0.rule_order", d)
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }

@@ -101,7 +101,6 @@ func resourceDomain() *schema.Resource {
 			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta interface{}) bool {
 				return (old.(string) == string(awstypes.IPAddressTypeDualstack)) && old.(string) != new.(string)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -489,7 +488,7 @@ func resourceDomain() *schema.Resource {
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "use 'dashboard_endpoint' attribute instead",
+				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,

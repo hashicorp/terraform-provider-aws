@@ -156,7 +156,7 @@ func (r *resourceChannelGroup) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -233,10 +233,6 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 
 func (r *resourceChannelGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-}
-
-func (r *resourceChannelGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceChannelGroupData struct {

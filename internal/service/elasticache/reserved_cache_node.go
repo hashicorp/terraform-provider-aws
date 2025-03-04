@@ -209,10 +209,6 @@ func (r *resourceReservedCacheNode) ImportState(ctx context.Context, request res
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
-func (r *resourceReservedCacheNode) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
 	return []flex.AutoFlexOptionsFunc{
 		flex.WithFieldNamePrefix("ReservedCacheNode"),

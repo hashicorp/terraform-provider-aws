@@ -166,7 +166,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return

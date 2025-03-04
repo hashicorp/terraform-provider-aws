@@ -312,10 +312,6 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	}
 }
 
-func (r *directConnectGatewayAttachmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.DirectConnectGatewayAttachment, error) {
 	input := &networkmanager.GetDirectConnectGatewayAttachmentInput{
 		AttachmentId: aws.String(id),

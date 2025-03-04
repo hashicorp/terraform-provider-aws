@@ -41,8 +41,6 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -161,6 +159,11 @@ func resourceClientVPNEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"disconnect_on_session_timeout": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -265,6 +268,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("disconnect_on_session_timeout"); ok {
+		input.DisconnectOnSessionTimeout = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("dns_servers"); ok && len(v.([]interface{})) > 0 {
 		input.DnsServers = flex.ExpandStringValueList(v.([]interface{}))
 	}
@@ -346,6 +353,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("connection_log_options", nil)
 	}
 	d.Set(names.AttrDescription, ep.Description)
+	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
 	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
 	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
@@ -399,6 +407,10 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("disconnect_on_session_timeout") {
+			input.DisconnectOnSessionTimeout = aws.Bool(d.Get("disconnect_on_session_timeout").(bool))
 		}
 
 		if d.HasChange("dns_servers") {

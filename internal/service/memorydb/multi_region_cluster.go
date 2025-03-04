@@ -200,7 +200,7 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 	}
 	// Account for field name mismatches between the Create
 	// and Describe data structures
-	plan.NumShards = flex.Int32ToFramework(ctx, statusOut.NumberOfShards)
+	plan.NumShards = flex.Int32ToFrameworkInt64(ctx, statusOut.NumberOfShards)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -236,7 +236,7 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 	state.MultiRegionClusterNameSuffix = flex.StringToFramework(ctx, &suffix)
-	state.NumShards = flex.Int32ToFramework(ctx, out.NumberOfShards)
+	state.NumShards = flex.Int32ToFrameworkInt64(ctx, out.NumberOfShards)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -417,10 +417,6 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 
 func (r *multiRegionClusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("multi_region_cluster_name"), request, response)
-}
-
-func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 type multiRegionClusterResourceModel struct {

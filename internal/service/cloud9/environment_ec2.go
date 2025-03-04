@@ -109,8 +109,6 @@ func resourceEnvironmentEC2() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

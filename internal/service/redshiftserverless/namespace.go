@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -43,10 +42,6 @@ func resourceNamespace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("admin_user_password"), cty.GetAttrPath("admin_user_password_wo")),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"admin_password_secret_arn": {
 				Type:     schema.TypeString,
@@ -69,6 +64,7 @@ func resourceNamespace() *schema.Resource {
 				Optional:      true,
 				WriteOnly:     true,
 				ConflictsWith: []string{"admin_user_password", "manage_admin_password"},
+				RequiredWith:  []string{"admin_user_password_wo_version"},
 			},
 			"admin_user_password_wo_version": {
 				Type:         schema.TypeInt,
@@ -136,8 +132,6 @@ func resourceNamespace() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

@@ -461,10 +461,6 @@ func (r *tlsInspectionConfigurationResource) ConfigValidators(context.Context) [
 	}
 }
 
-func (r *tlsInspectionConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	input := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),

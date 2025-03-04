@@ -390,10 +390,6 @@ func (r *scraperResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *scraperResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 type scraperResourceModel struct {
 	Alias               types.String                                             `tfsdk:"alias"`
 	ARN                 types.String                                             `tfsdk:"arn"`

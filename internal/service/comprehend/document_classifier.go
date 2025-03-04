@@ -234,7 +234,6 @@ func ResourceDocumentClassifier() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 				tfMap := getDocumentClassifierInputDataConfig(diff)
 				if tfMap == nil {

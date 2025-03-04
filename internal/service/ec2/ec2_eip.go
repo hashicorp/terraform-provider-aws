@@ -24,7 +24,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,8 +40,6 @@ func resourceEIP() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read:   schema.DefaultTimeout(15 * time.Minute),
@@ -147,7 +144,7 @@ func resourceEIP() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				Computed:      true,
-				Deprecated:    "use domain attribute instead",
+				Deprecated:    "vpc is deprecated. Use domain instead.",
 				ConflictsWith: []string{names.AttrDomain},
 			},
 		},

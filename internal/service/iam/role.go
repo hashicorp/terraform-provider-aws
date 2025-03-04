@@ -91,7 +91,7 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Deprecated: "The inline_policy argument is deprecated. " +
+				Deprecated: "inline_policy is deprecated. " +
 					"Use the aws_iam_role_policy resource instead. If Terraform should " +
 					"exclusively manage all inline policy associations (the current " +
 					"behavior of this argument), use the aws_iam_role_policies_exclusive " +
@@ -131,7 +131,7 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Deprecated: "The managed_policy_arns argument is deprecated. " +
+				Deprecated: "managed_policy_arns is deprecated. " +
 					"Use the aws_iam_role_policy_attachment resource instead. If Terraform should " +
 					"exclusively manage all managed policy attachments (the current " +
 					"behavior of this argument), use the aws_iam_role_policy_attachments_exclusive " +
@@ -182,8 +182,6 @@ func resourceRole() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

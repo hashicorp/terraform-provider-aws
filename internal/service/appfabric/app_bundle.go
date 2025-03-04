@@ -159,10 +159,6 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func (r *appBundleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) (*awstypes.AppBundle, error) {
 	input := &appfabric.GetAppBundleInput{
 		AppBundleIdentifier: aws.String(arn),

@@ -320,8 +320,6 @@ func resourceGraphQLAPI() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

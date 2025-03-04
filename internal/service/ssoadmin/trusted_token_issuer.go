@@ -330,10 +330,6 @@ func (r *resourceTrustedTokenIssuer) ImportState(ctx context.Context, req resour
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func (r *resourceTrustedTokenIssuer) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeTrustedTokenIssuerOutput, error) {
 	in := &ssoadmin.DescribeTrustedTokenIssuerInput{
 		TrustedTokenIssuerArn: aws.String(arn),
