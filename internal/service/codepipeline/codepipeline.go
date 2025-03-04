@@ -40,6 +40,72 @@ const (
 // @SDKResource("aws_codepipeline", name="Pipeline")
 // @Tags(identifierAttribute="arn")
 func resourcePipeline() *schema.Resource {
+	conditionsSchema := map[string]*schema.Schema{
+		"conditions": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"result": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"rules": {
+						Type:     schema.TypeList,
+						Required: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"name": {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+								"rule_type_id": {
+									Type:     schema.TypeList,
+									Required: true,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"category": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+											"owner": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+											"provider": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+											"version": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+										},
+									},
+								},
+								"configuration": {
+									Type:     schema.TypeMap,
+									Required: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+								},
+								"input_artifacts": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+								},
+								"region": {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
 		ReadWithoutTimeout:   resourcePipelineRead,
@@ -219,71 +285,7 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"conditions": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"result": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"rules": {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"name": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"rule_type_id": {
-																Type:     schema.TypeList,
-																Required: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"category": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"owner": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"provider": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"version": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-															"configuration": {
-																Type:     schema.TypeMap,
-																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"input_artifacts": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"region": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
+								Schema: conditionsSchema,
 							},
 						},
 						names.AttrName: {
