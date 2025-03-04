@@ -28,11 +28,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newAppAuthorizationConnectionResource,
-			TypeName: "aws_appfabric_app_authorization_connection",
-			Name:     "App Authorization Connection",
+			Factory:                 newAppAuthorizationConnectionResource,
+			TypeName:                "aws_appfabric_app_authorization_connection",
+			Name:                    "App Authorization Connection",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newAppBundleResource,
@@ -41,6 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newIngestionResource,
@@ -49,6 +52,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newIngestionDestinationResource,
@@ -57,6 +61,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

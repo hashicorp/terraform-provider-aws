@@ -18,19 +18,22 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newUserGroupDataSource,
-			TypeName: "aws_cognito_user_group",
-			Name:     "User Group",
+			Factory:                 newUserGroupDataSource,
+			TypeName:                "aws_cognito_user_group",
+			Name:                    "User Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newUserGroupsDataSource,
-			TypeName: "aws_cognito_user_groups",
-			Name:     "User Groups",
+			Factory:                 newUserGroupsDataSource,
+			TypeName:                "aws_cognito_user_groups",
+			Name:                    "User Groups",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newUserPoolDataSource,
-			TypeName: "aws_cognito_user_pool",
-			Name:     "User Pool",
+			Factory:                 newUserPoolDataSource,
+			TypeName:                "aws_cognito_user_pool",
+			Name:                    "User Pool",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -38,14 +41,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newManagedUserPoolClientResource,
-			TypeName: "aws_cognito_managed_user_pool_client",
-			Name:     "Managed User Pool Client",
+			Factory:                 newManagedUserPoolClientResource,
+			TypeName:                "aws_cognito_managed_user_pool_client",
+			Name:                    "Managed User Pool Client",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newUserPoolClientResource,
-			TypeName: "aws_cognito_user_pool_client",
-			Name:     "User Pool Client",
+			Factory:                 newUserPoolClientResource,
+			TypeName:                "aws_cognito_user_pool_client",
+			Name:                    "User Pool Client",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -53,24 +58,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceUserPoolClient,
-			TypeName: "aws_cognito_user_pool_client",
-			Name:     "User Pool Client",
+			Factory:                 dataSourceUserPoolClient,
+			TypeName:                "aws_cognito_user_pool_client",
+			Name:                    "User Pool Client",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceUserPoolClients,
-			TypeName: "aws_cognito_user_pool_clients",
-			Name:     "User Pool Clients",
+			Factory:                 dataSourceUserPoolClients,
+			TypeName:                "aws_cognito_user_pool_clients",
+			Name:                    "User Pool Clients",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceUserPoolSigningCertificate,
-			TypeName: "aws_cognito_user_pool_signing_certificate",
-			Name:     "User Pool Signing Certificate",
+			Factory:                 dataSourceUserPoolSigningCertificate,
+			TypeName:                "aws_cognito_user_pool_signing_certificate",
+			Name:                    "User Pool Signing Certificate",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceUserPools,
-			TypeName: "aws_cognito_user_pools",
-			Name:     "User Pools",
+			Factory:                 dataSourceUserPools,
+			TypeName:                "aws_cognito_user_pools",
+			Name:                    "User Pools",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -78,34 +87,40 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceIdentityProvider,
-			TypeName: "aws_cognito_identity_provider",
-			Name:     "Identity Provider",
+			Factory:                 resourceIdentityProvider,
+			TypeName:                "aws_cognito_identity_provider",
+			Name:                    "Identity Provider",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceResourceServer,
-			TypeName: "aws_cognito_resource_server",
-			Name:     "Resource Server",
+			Factory:                 resourceResourceServer,
+			TypeName:                "aws_cognito_resource_server",
+			Name:                    "Resource Server",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRiskConfiguration,
-			TypeName: "aws_cognito_risk_configuration",
-			Name:     "Risk Configuration",
+			Factory:                 resourceRiskConfiguration,
+			TypeName:                "aws_cognito_risk_configuration",
+			Name:                    "Risk Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUser,
-			TypeName: "aws_cognito_user",
-			Name:     "User",
+			Factory:                 resourceUser,
+			TypeName:                "aws_cognito_user",
+			Name:                    "User",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUserGroup,
-			TypeName: "aws_cognito_user_group",
-			Name:     "User Group",
+			Factory:                 resourceUserGroup,
+			TypeName:                "aws_cognito_user_group",
+			Name:                    "User Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUserInGroup,
-			TypeName: "aws_cognito_user_in_group",
-			Name:     "Group User",
+			Factory:                 resourceUserInGroup,
+			TypeName:                "aws_cognito_user_in_group",
+			Name:                    "Group User",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceUserPool,
@@ -114,16 +129,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUserPoolDomain,
-			TypeName: "aws_cognito_user_pool_domain",
-			Name:     "User Pool Domain",
+			Factory:                 resourceUserPoolDomain,
+			TypeName:                "aws_cognito_user_pool_domain",
+			Name:                    "User Pool Domain",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUserPoolUICustomization,
-			TypeName: "aws_cognito_user_pool_ui_customization",
-			Name:     "User Pool UI Customization",
+			Factory:                 resourceUserPoolUICustomization,
+			TypeName:                "aws_cognito_user_pool_ui_customization",
+			Name:                    "User Pool UI Customization",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

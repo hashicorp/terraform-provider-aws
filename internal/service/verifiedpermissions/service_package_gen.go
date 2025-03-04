@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourcePolicyStore,
-			TypeName: "aws_verifiedpermissions_policy_store",
-			Name:     "Policy Store",
+			Factory:                 newDataSourcePolicyStore,
+			TypeName:                "aws_verifiedpermissions_policy_store",
+			Name:                    "Policy Store",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -28,29 +29,34 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceIdentitySource,
-			TypeName: "aws_verifiedpermissions_identity_source",
-			Name:     "Identity Source",
+			Factory:                 newResourceIdentitySource,
+			TypeName:                "aws_verifiedpermissions_identity_source",
+			Name:                    "Identity Source",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourcePolicy,
-			TypeName: "aws_verifiedpermissions_policy",
-			Name:     "Policy",
+			Factory:                 newResourcePolicy,
+			TypeName:                "aws_verifiedpermissions_policy",
+			Name:                    "Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourcePolicyStore,
-			TypeName: "aws_verifiedpermissions_policy_store",
-			Name:     "Policy Store",
+			Factory:                 newResourcePolicyStore,
+			TypeName:                "aws_verifiedpermissions_policy_store",
+			Name:                    "Policy Store",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourcePolicyTemplate,
-			TypeName: "aws_verifiedpermissions_policy_template",
-			Name:     "Policy Template",
+			Factory:                 newResourcePolicyTemplate,
+			TypeName:                "aws_verifiedpermissions_policy_template",
+			Name:                    "Policy Template",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceSchema,
-			TypeName: "aws_verifiedpermissions_schema",
-			Name:     "Schema",
+			Factory:                 newResourceSchema,
+			TypeName:                "aws_verifiedpermissions_schema",
+			Name:                    "Schema",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

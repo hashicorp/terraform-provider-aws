@@ -28,6 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "manager_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

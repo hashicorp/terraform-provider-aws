@@ -36,6 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceLaunch,
@@ -44,6 +45,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceProject,
@@ -52,6 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceSegment,
@@ -60,6 +63,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

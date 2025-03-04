@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceResource,
-			TypeName: "aws_cloudcontrolapi_resource",
-			Name:     "Resource",
+			Factory:                 dataSourceResource,
+			TypeName:                "aws_cloudcontrolapi_resource",
+			Name:                    "Resource",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,9 +37,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceResource,
-			TypeName: "aws_cloudcontrolapi_resource",
-			Name:     "Resource",
+			Factory:                 resourceResource,
+			TypeName:                "aws_cloudcontrolapi_resource",
+			Name:                    "Resource",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

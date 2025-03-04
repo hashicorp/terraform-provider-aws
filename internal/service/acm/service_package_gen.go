@@ -32,6 +32,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -45,11 +46,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCertificateValidation,
-			TypeName: "aws_acm_certificate_validation",
-			Name:     "Certificate Validation",
+			Factory:                 resourceCertificateValidation,
+			TypeName:                "aws_acm_certificate_validation",
+			Name:                    "Certificate Validation",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDevEnvironment,
-			TypeName: "aws_codecatalyst_dev_environment",
-			Name:     "Dev Environment",
+			Factory:                 DataSourceDevEnvironment,
+			TypeName:                "aws_codecatalyst_dev_environment",
+			Name:                    "Dev Environment",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,19 +37,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDevEnvironment,
-			TypeName: "aws_codecatalyst_dev_environment",
-			Name:     "DevEnvironment",
+			Factory:                 ResourceDevEnvironment,
+			TypeName:                "aws_codecatalyst_dev_environment",
+			Name:                    "DevEnvironment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceProject,
-			TypeName: "aws_codecatalyst_project",
-			Name:     "Project",
+			Factory:                 ResourceProject,
+			TypeName:                "aws_codecatalyst_project",
+			Name:                    "Project",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceSourceRepository,
-			TypeName: "aws_codecatalyst_source_repository",
-			Name:     "Source Repository",
+			Factory:                 ResourceSourceRepository,
+			TypeName:                "aws_codecatalyst_source_repository",
+			Name:                    "Source Repository",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

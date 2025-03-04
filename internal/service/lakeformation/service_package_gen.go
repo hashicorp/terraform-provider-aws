@@ -22,14 +22,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceDataCellsFilter,
-			TypeName: "aws_lakeformation_data_cells_filter",
-			Name:     "Data Cells Filter",
+			Factory:                 newResourceDataCellsFilter,
+			TypeName:                "aws_lakeformation_data_cells_filter",
+			Name:                    "Data Cells Filter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceResourceLFTag,
-			TypeName: "aws_lakeformation_resource_lf_tag",
-			Name:     "Resource LF Tag",
+			Factory:                 newResourceResourceLFTag,
+			TypeName:                "aws_lakeformation_resource_lf_tag",
+			Name:                    "Resource LF Tag",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -37,19 +39,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDataLakeSettings,
-			TypeName: "aws_lakeformation_data_lake_settings",
-			Name:     "Data Lake Settings",
+			Factory:                 DataSourceDataLakeSettings,
+			TypeName:                "aws_lakeformation_data_lake_settings",
+			Name:                    "Data Lake Settings",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourcePermissions,
-			TypeName: "aws_lakeformation_permissions",
-			Name:     "Permissions",
+			Factory:                 DataSourcePermissions,
+			TypeName:                "aws_lakeformation_permissions",
+			Name:                    "Permissions",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceResource,
-			TypeName: "aws_lakeformation_resource",
-			Name:     "Resource",
+			Factory:                 DataSourceResource,
+			TypeName:                "aws_lakeformation_resource",
+			Name:                    "Resource",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -57,29 +62,34 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDataLakeSettings,
-			TypeName: "aws_lakeformation_data_lake_settings",
-			Name:     "Data Lake Settings",
+			Factory:                 ResourceDataLakeSettings,
+			TypeName:                "aws_lakeformation_data_lake_settings",
+			Name:                    "Data Lake Settings",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceLFTag,
-			TypeName: "aws_lakeformation_lf_tag",
-			Name:     "LF Tag",
+			Factory:                 ResourceLFTag,
+			TypeName:                "aws_lakeformation_lf_tag",
+			Name:                    "LF Tag",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePermissions,
-			TypeName: "aws_lakeformation_permissions",
-			Name:     "Permissions",
+			Factory:                 ResourcePermissions,
+			TypeName:                "aws_lakeformation_permissions",
+			Name:                    "Permissions",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceResource,
-			TypeName: "aws_lakeformation_resource",
-			Name:     "Resource",
+			Factory:                 ResourceResource,
+			TypeName:                "aws_lakeformation_resource",
+			Name:                    "Resource",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceResourceLFTags,
-			TypeName: "aws_lakeformation_resource_lf_tags",
-			Name:     "Resource LF Tags",
+			Factory:                 ResourceResourceLFTags,
+			TypeName:                "aws_lakeformation_resource_lf_tags",
+			Name:                    "Resource LF Tags",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

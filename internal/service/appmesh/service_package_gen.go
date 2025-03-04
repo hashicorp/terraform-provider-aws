@@ -26,46 +26,53 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceGatewayRoute,
-			TypeName: "aws_appmesh_gateway_route",
-			Name:     "Gateway Route",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceGatewayRoute,
+			TypeName:                "aws_appmesh_gateway_route",
+			Name:                    "Gateway Route",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceMesh,
-			TypeName: "aws_appmesh_mesh",
-			Name:     "Service Mesh",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceMesh,
+			TypeName:                "aws_appmesh_mesh",
+			Name:                    "Service Mesh",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRoute,
-			TypeName: "aws_appmesh_route",
-			Name:     "Route",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceRoute,
+			TypeName:                "aws_appmesh_route",
+			Name:                    "Route",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceVirtualGateway,
-			TypeName: "aws_appmesh_virtual_gateway",
-			Name:     "Virtual Gateway",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceVirtualGateway,
+			TypeName:                "aws_appmesh_virtual_gateway",
+			Name:                    "Virtual Gateway",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceVirtualNode,
-			TypeName: "aws_appmesh_virtual_node",
-			Name:     "Virtual Node",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceVirtualNode,
+			TypeName:                "aws_appmesh_virtual_node",
+			Name:                    "Virtual Node",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceVirtualRouter,
-			TypeName: "aws_appmesh_virtual_router",
-			Name:     "Virtual Router",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceVirtualRouter,
+			TypeName:                "aws_appmesh_virtual_router",
+			Name:                    "Virtual Router",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceVirtualService,
-			TypeName: "aws_appmesh_virtual_service",
-			Name:     "Virtual Service",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceVirtualService,
+			TypeName:                "aws_appmesh_virtual_service",
+			Name:                    "Virtual Service",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -79,6 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceMesh,
@@ -87,6 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceRoute,
@@ -95,6 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceVirtualGateway,
@@ -103,6 +113,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceVirtualNode,
@@ -111,6 +122,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceVirtualRouter,
@@ -119,6 +131,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceVirtualService,
@@ -127,6 +140,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

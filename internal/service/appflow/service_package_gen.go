@@ -30,9 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceConnectorProfile,
-			TypeName: "aws_appflow_connector_profile",
-			Name:     "Connector Profile",
+			Factory:                 resourceConnectorProfile,
+			TypeName:                "aws_appflow_connector_profile",
+			Name:                    "Connector Profile",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFlow,
@@ -41,6 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newGroupsDataSource,
-			TypeName: "aws_identitystore_groups",
-			Name:     "Groups",
+			Factory:                 newGroupsDataSource,
+			TypeName:                "aws_identitystore_groups",
+			Name:                    "Groups",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -32,14 +33,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceGroup,
-			TypeName: "aws_identitystore_group",
-			Name:     "Group",
+			Factory:                 dataSourceGroup,
+			TypeName:                "aws_identitystore_group",
+			Name:                    "Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceUser,
-			TypeName: "aws_identitystore_user",
-			Name:     "User",
+			Factory:                 dataSourceUser,
+			TypeName:                "aws_identitystore_user",
+			Name:                    "User",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,19 +50,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceGroup,
-			TypeName: "aws_identitystore_group",
-			Name:     "Group",
+			Factory:                 resourceGroup,
+			TypeName:                "aws_identitystore_group",
+			Name:                    "Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceGroupMembership,
-			TypeName: "aws_identitystore_group_membership",
-			Name:     "Group Membership",
+			Factory:                 resourceGroupMembership,
+			TypeName:                "aws_identitystore_group_membership",
+			Name:                    "Group Membership",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUser,
-			TypeName: "aws_identitystore_user",
-			Name:     "User",
+			Factory:                 resourceUser,
+			TypeName:                "aws_identitystore_user",
+			Name:                    "User",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

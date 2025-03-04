@@ -26,24 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLink,
-			TypeName: "aws_oam_link",
-			Name:     "Link",
+			Factory:                 DataSourceLink,
+			TypeName:                "aws_oam_link",
+			Name:                    "Link",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceLinks,
-			TypeName: "aws_oam_links",
-			Name:     "Links",
+			Factory:                 DataSourceLinks,
+			TypeName:                "aws_oam_links",
+			Name:                    "Links",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceSink,
-			TypeName: "aws_oam_sink",
-			Name:     "Sink",
+			Factory:                 DataSourceSink,
+			TypeName:                "aws_oam_sink",
+			Name:                    "Sink",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceSinks,
-			TypeName: "aws_oam_sinks",
-			Name:     "Sinks",
+			Factory:                 DataSourceSinks,
+			TypeName:                "aws_oam_sinks",
+			Name:                    "Sinks",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -57,6 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceSink,
@@ -65,11 +70,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceSinkPolicy,
-			TypeName: "aws_oam_sink_policy",
-			Name:     "Sink Policy",
+			Factory:                 ResourceSinkPolicy,
+			TypeName:                "aws_oam_sink_policy",
+			Name:                    "Sink Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

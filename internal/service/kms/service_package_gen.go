@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
 	return []*itypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralSecrets,
-			TypeName: "aws_kms_secrets",
-			Name:     "Secrets",
+			Factory:                 newEphemeralSecrets,
+			TypeName:                "aws_kms_secrets",
+			Name:                    "Secrets",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,39 +37,46 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAlias,
-			TypeName: "aws_kms_alias",
-			Name:     "Alias",
+			Factory:                 dataSourceAlias,
+			TypeName:                "aws_kms_alias",
+			Name:                    "Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceCiphertext,
-			TypeName: "aws_kms_ciphertext",
-			Name:     "Ciphertext",
+			Factory:                 dataSourceCiphertext,
+			TypeName:                "aws_kms_ciphertext",
+			Name:                    "Ciphertext",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceCustomKeyStore,
-			TypeName: "aws_kms_custom_key_store",
-			Name:     "Custom Key Store",
+			Factory:                 dataSourceCustomKeyStore,
+			TypeName:                "aws_kms_custom_key_store",
+			Name:                    "Custom Key Store",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceKey,
-			TypeName: "aws_kms_key",
-			Name:     "Key",
+			Factory:                 dataSourceKey,
+			TypeName:                "aws_kms_key",
+			Name:                    "Key",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourcePublicKey,
-			TypeName: "aws_kms_public_key",
-			Name:     "Public Key",
+			Factory:                 dataSourcePublicKey,
+			TypeName:                "aws_kms_public_key",
+			Name:                    "Public Key",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSecret,
-			TypeName: "aws_kms_secret",
-			Name:     "Secret",
+			Factory:                 dataSourceSecret,
+			TypeName:                "aws_kms_secret",
+			Name:                    "Secret",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSecrets,
-			TypeName: "aws_kms_secrets",
-			Name:     "Secrets",
+			Factory:                 dataSourceSecrets,
+			TypeName:                "aws_kms_secrets",
+			Name:                    "Secrets",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -76,19 +84,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceAlias,
-			TypeName: "aws_kms_alias",
-			Name:     "Alias",
+			Factory:                 resourceAlias,
+			TypeName:                "aws_kms_alias",
+			Name:                    "Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCiphertext,
-			TypeName: "aws_kms_ciphertext",
-			Name:     "Ciphertext",
+			Factory:                 resourceCiphertext,
+			TypeName:                "aws_kms_ciphertext",
+			Name:                    "Ciphertext",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCustomKeyStore,
-			TypeName: "aws_kms_custom_key_store",
-			Name:     "Custom Key Store",
+			Factory:                 resourceCustomKeyStore,
+			TypeName:                "aws_kms_custom_key_store",
+			Name:                    "Custom Key Store",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceExternalKey,
@@ -97,11 +108,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceGrant,
-			TypeName: "aws_kms_grant",
-			Name:     "Grant",
+			Factory:                 resourceGrant,
+			TypeName:                "aws_kms_grant",
+			Name:                    "Grant",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceKey,
@@ -110,11 +123,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceKeyPolicy,
-			TypeName: "aws_kms_key_policy",
-			Name:     "Key Policy",
+			Factory:                 resourceKeyPolicy,
+			TypeName:                "aws_kms_key_policy",
+			Name:                    "Key Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceReplicaExternalKey,
@@ -123,6 +138,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceReplicaKey,
@@ -131,6 +147,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

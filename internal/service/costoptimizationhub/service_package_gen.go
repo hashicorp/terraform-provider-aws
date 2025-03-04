@@ -23,14 +23,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceEnrollmentStatus,
-			TypeName: "aws_costoptimizationhub_enrollment_status",
-			Name:     "Enrollment Status",
+			Factory:                 newResourceEnrollmentStatus,
+			TypeName:                "aws_costoptimizationhub_enrollment_status",
+			Name:                    "Enrollment Status",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourcePreferences,
-			TypeName: "aws_costoptimizationhub_preferences",
-			Name:     "Preferences",
+			Factory:                 newResourcePreferences,
+			TypeName:                "aws_costoptimizationhub_preferences",
+			Name:                    "Preferences",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

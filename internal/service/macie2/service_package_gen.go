@@ -22,9 +22,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newOrganizationConfigurationResource,
-			TypeName: "aws_macie2_organization_configuration",
-			Name:     "Organization Configuration",
+			Factory:                 newOrganizationConfigurationResource,
+			TypeName:                "aws_macie2_organization_configuration",
+			Name:                    "Organization Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,14 +37,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceAccount,
-			TypeName: "aws_macie2_account",
-			Name:     "Account",
+			Factory:                 resourceAccount,
+			TypeName:                "aws_macie2_account",
+			Name:                    "Account",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceClassificationExportConfiguration,
-			TypeName: "aws_macie2_classification_export_configuration",
-			Name:     "Classification Export Configuration",
+			Factory:                 resourceClassificationExportConfiguration,
+			TypeName:                "aws_macie2_classification_export_configuration",
+			Name:                    "Classification Export Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceClassificationJob,
@@ -52,6 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCustomDataIdentifier,
@@ -60,6 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFindingsFilter,
@@ -68,11 +73,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInvitationAccepter,
-			TypeName: "aws_macie2_invitation_accepter",
-			Name:     "Invitation Accepter",
+			Factory:                 resourceInvitationAccepter,
+			TypeName:                "aws_macie2_invitation_accepter",
+			Name:                    "Invitation Accepter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceMember,
@@ -81,11 +88,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceOrganizationAdminAccount,
-			TypeName: "aws_macie2_organization_admin_account",
-			Name:     "Organization Admin Account",
+			Factory:                 resourceOrganizationAdminAccount,
+			TypeName:                "aws_macie2_organization_admin_account",
+			Name:                    "Organization Admin Account",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -36,6 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceRegistry,
@@ -44,11 +45,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRegistryPolicy,
-			TypeName: "aws_schemas_registry_policy",
-			Name:     "Registry Policy",
+			Factory:                 resourceRegistryPolicy,
+			TypeName:                "aws_schemas_registry_policy",
+			Name:                    "Registry Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceSchema,
@@ -57,6 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceConnection,
-			TypeName: "aws_codestarconnections_connection",
-			Name:     "Connection",
+			Factory:                 dataSourceConnection,
+			TypeName:                "aws_codestarconnections_connection",
+			Name:                    "Connection",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,11 +43,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceHost,
-			TypeName: "aws_codestarconnections_host",
-			Name:     "Host",
+			Factory:                 resourceHost,
+			TypeName:                "aws_codestarconnections_host",
+			Name:                    "Host",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

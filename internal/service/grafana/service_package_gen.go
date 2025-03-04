@@ -22,14 +22,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newWorkspaceServiceAccountResource,
-			TypeName: "aws_grafana_workspace_service_account",
-			Name:     "Workspace Service Account",
+			Factory:                 newWorkspaceServiceAccountResource,
+			TypeName:                "aws_grafana_workspace_service_account",
+			Name:                    "Workspace Service Account",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newWorkspaceServiceAccountTokenResource,
-			TypeName: "aws_grafana_workspace_service_account_token",
-			Name:     "Workspace Service Account Token",
+			Factory:                 newWorkspaceServiceAccountTokenResource,
+			TypeName:                "aws_grafana_workspace_service_account_token",
+			Name:                    "Workspace Service Account Token",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -37,10 +39,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceWorkspace,
-			TypeName: "aws_grafana_workspace",
-			Name:     "Workspace",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceWorkspace,
+			TypeName:                "aws_grafana_workspace",
+			Name:                    "Workspace",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -48,14 +51,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceLicenseAssociation,
-			TypeName: "aws_grafana_license_association",
-			Name:     "License Association",
+			Factory:                 resourceLicenseAssociation,
+			TypeName:                "aws_grafana_license_association",
+			Name:                    "License Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRoleAssociation,
-			TypeName: "aws_grafana_role_association",
-			Name:     "Workspace Role Association",
+			Factory:                 resourceRoleAssociation,
+			TypeName:                "aws_grafana_role_association",
+			Name:                    "Workspace Role Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceWorkspace,
@@ -64,16 +69,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceWorkspaceAPIKey,
-			TypeName: "aws_grafana_workspace_api_key",
-			Name:     "Workspace API Key",
+			Factory:                 resourceWorkspaceAPIKey,
+			TypeName:                "aws_grafana_workspace_api_key",
+			Name:                    "Workspace API Key",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceWorkspaceSAMLConfiguration,
-			TypeName: "aws_grafana_workspace_saml_configuration",
-			Name:     "Grafana Workspace SAML Configuration",
+			Factory:                 resourceWorkspaceSAMLConfiguration,
+			TypeName:                "aws_grafana_workspace_saml_configuration",
+			Name:                    "Grafana Workspace SAML Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

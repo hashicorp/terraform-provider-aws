@@ -22,9 +22,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourcePolicyResource,
-			TypeName: "aws_kinesis_resource_policy",
-			Name:     "Resource Policy",
+			Factory:                 newResourcePolicyResource,
+			TypeName:                "aws_kinesis_resource_policy",
+			Name:                    "Resource Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -32,14 +33,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceStream,
-			TypeName: "aws_kinesis_stream",
-			Name:     "Stream",
+			Factory:                 DataSourceStream,
+			TypeName:                "aws_kinesis_stream",
+			Name:                    "Stream",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceStreamConsumer,
-			TypeName: "aws_kinesis_stream_consumer",
-			Name:     "Stream Consumer",
+			Factory:                 dataSourceStreamConsumer,
+			TypeName:                "aws_kinesis_stream_consumer",
+			Name:                    "Stream Consumer",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -53,11 +56,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceStreamConsumer,
-			TypeName: "aws_kinesis_stream_consumer",
-			Name:     "Stream Consumer",
+			Factory:                 resourceStreamConsumer,
+			TypeName:                "aws_kinesis_stream_consumer",
+			Name:                    "Stream Consumer",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

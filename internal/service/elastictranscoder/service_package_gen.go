@@ -30,14 +30,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourcePipeline,
-			TypeName: "aws_elastictranscoder_pipeline",
-			Name:     "Pipeline",
+			Factory:                 ResourcePipeline,
+			TypeName:                "aws_elastictranscoder_pipeline",
+			Name:                    "Pipeline",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePreset,
-			TypeName: "aws_elastictranscoder_preset",
-			Name:     "Preset",
+			Factory:                 ResourcePreset,
+			TypeName:                "aws_elastictranscoder_preset",
+			Name:                    "Preset",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

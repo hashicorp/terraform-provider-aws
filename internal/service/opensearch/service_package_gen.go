@@ -22,9 +22,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAuthorizeVPCEndpointAccess,
-			TypeName: "aws_opensearch_authorize_vpc_endpoint_access",
-			Name:     "Authorize VPC Endpoint Access",
+			Factory:                 newResourceAuthorizeVPCEndpointAccess,
+			TypeName:                "aws_opensearch_authorize_vpc_endpoint_access",
+			Name:                    "Authorize VPC Endpoint Access",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -32,9 +33,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceDomain,
-			TypeName: "aws_opensearch_domain",
-			Name:     "Domain",
+			Factory:                 dataSourceDomain,
+			TypeName:                "aws_opensearch_domain",
+			Name:                    "Domain",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -48,41 +50,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDomainPolicy,
-			TypeName: "aws_opensearch_domain_policy",
-			Name:     "Domain Policy",
+			Factory:                 resourceDomainPolicy,
+			TypeName:                "aws_opensearch_domain_policy",
+			Name:                    "Domain Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDomainSAMLOptions,
-			TypeName: "aws_opensearch_domain_saml_options",
-			Name:     "Domain SAML Options",
+			Factory:                 resourceDomainSAMLOptions,
+			TypeName:                "aws_opensearch_domain_saml_options",
+			Name:                    "Domain SAML Options",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInboundConnectionAccepter,
-			TypeName: "aws_opensearch_inbound_connection_accepter",
-			Name:     "Inbound Connection Accepter",
+			Factory:                 resourceInboundConnectionAccepter,
+			TypeName:                "aws_opensearch_inbound_connection_accepter",
+			Name:                    "Inbound Connection Accepter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceOutboundConnection,
-			TypeName: "aws_opensearch_outbound_connection",
-			Name:     "Outbound Connection",
+			Factory:                 resourceOutboundConnection,
+			TypeName:                "aws_opensearch_outbound_connection",
+			Name:                    "Outbound Connection",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePackage,
-			TypeName: "aws_opensearch_package",
-			Name:     "Package",
+			Factory:                 resourcePackage,
+			TypeName:                "aws_opensearch_package",
+			Name:                    "Package",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePackageAssociation,
-			TypeName: "aws_opensearch_package_association",
-			Name:     "Package Association",
+			Factory:                 resourcePackageAssociation,
+			TypeName:                "aws_opensearch_package_association",
+			Name:                    "Package Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceVPCEndpoint,
-			TypeName: "aws_opensearch_vpc_endpoint",
-			Name:     "VPC Endpoint",
+			Factory:                 resourceVPCEndpoint,
+			TypeName:                "aws_opensearch_vpc_endpoint",
+			Name:                    "VPC Endpoint",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceFindingIds,
-			TypeName: "aws_guardduty_finding_ids",
-			Name:     "Finding Ids",
+			Factory:                 newDataSourceFindingIds,
+			TypeName:                "aws_guardduty_finding_ids",
+			Name:                    "Finding Ids",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -34,11 +35,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newMemberDetectorFeatureResource,
-			TypeName: "aws_guardduty_member_detector_feature",
-			Name:     "Member Detector Feature",
+			Factory:                 newMemberDetectorFeatureResource,
+			TypeName:                "aws_guardduty_member_detector_feature",
+			Name:                    "Member Detector Feature",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -46,9 +49,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDetector,
-			TypeName: "aws_guardduty_detector",
-			Name:     "Detector",
+			Factory:                 DataSourceDetector,
+			TypeName:                "aws_guardduty_detector",
+			Name:                    "Detector",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -62,11 +66,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceDetectorFeature,
-			TypeName: "aws_guardduty_detector_feature",
-			Name:     "Detector Feature",
+			Factory:                 ResourceDetectorFeature,
+			TypeName:                "aws_guardduty_detector_feature",
+			Name:                    "Detector Feature",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceFilter,
@@ -75,11 +81,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInviteAccepter,
-			TypeName: "aws_guardduty_invite_accepter",
-			Name:     "Invite Accepter",
+			Factory:                 resourceInviteAccepter,
+			TypeName:                "aws_guardduty_invite_accepter",
+			Name:                    "Invite Accepter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceIPSet,
@@ -88,31 +96,37 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceMember,
-			TypeName: "aws_guardduty_member",
-			Name:     "Member",
+			Factory:                 ResourceMember,
+			TypeName:                "aws_guardduty_member",
+			Name:                    "Member",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceOrganizationAdminAccount,
-			TypeName: "aws_guardduty_organization_admin_account",
-			Name:     "Organization Admin Account",
+			Factory:                 ResourceOrganizationAdminAccount,
+			TypeName:                "aws_guardduty_organization_admin_account",
+			Name:                    "Organization Admin Account",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
-			TypeName: "aws_guardduty_organization_configuration",
-			Name:     "Organization Configuration",
+			Factory:                 ResourceOrganizationConfiguration,
+			TypeName:                "aws_guardduty_organization_configuration",
+			Name:                    "Organization Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceOrganizationConfigurationFeature,
-			TypeName: "aws_guardduty_organization_configuration_feature",
-			Name:     "Organization Configuration Feature",
+			Factory:                 ResourceOrganizationConfigurationFeature,
+			TypeName:                "aws_guardduty_organization_configuration_feature",
+			Name:                    "Organization Configuration Feature",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePublishingDestination,
-			TypeName: "aws_guardduty_publishing_destination",
-			Name:     "Publishing Destination",
+			Factory:                 ResourcePublishingDestination,
+			TypeName:                "aws_guardduty_publishing_destination",
+			Name:                    "Publishing Destination",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceThreatIntelSet,
@@ -121,6 +135,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceStreamKey,
-			TypeName: "aws_ivs_stream_key",
-			Name:     "Stream Key",
+			Factory:                 DataSourceStreamKey,
+			TypeName:                "aws_ivs_stream_key",
+			Name:                    "Stream Key",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,6 +43,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourcePlaybackKeyPair,
@@ -50,6 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceRecordingConfiguration,
@@ -58,6 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

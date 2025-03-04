@@ -19,9 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newDomainResource,
-			TypeName: "aws_simpledb_domain",
-			Name:     "Domain",
+			Factory:                 newDomainResource,
+			TypeName:                "aws_simpledb_domain",
+			Name:                    "Domain",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

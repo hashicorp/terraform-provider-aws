@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceFleet,
-			TypeName: "aws_codebuild_fleet",
-			Name:     "Fleet",
+			Factory:                 dataSourceFleet,
+			TypeName:                "aws_codebuild_fleet",
+			Name:                    "Fleet",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,33 +43,39 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceProject,
-			TypeName: "aws_codebuild_project",
-			Name:     "Project",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 resourceProject,
+			TypeName:                "aws_codebuild_project",
+			Name:                    "Project",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceReportGroup,
-			TypeName: "aws_codebuild_report_group",
-			Name:     "Report Group",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 resourceReportGroup,
+			TypeName:                "aws_codebuild_report_group",
+			Name:                    "Report Group",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceResourcePolicy,
-			TypeName: "aws_codebuild_resource_policy",
-			Name:     "Resource Policy",
+			Factory:                 resourceResourcePolicy,
+			TypeName:                "aws_codebuild_resource_policy",
+			Name:                    "Resource Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSourceCredential,
-			TypeName: "aws_codebuild_source_credential",
-			Name:     "Source Credential",
+			Factory:                 resourceSourceCredential,
+			TypeName:                "aws_codebuild_source_credential",
+			Name:                    "Source Credential",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceWebhook,
-			TypeName: "aws_codebuild_webhook",
-			Name:     "Webhook",
+			Factory:                 resourceWebhook,
+			TypeName:                "aws_codebuild_webhook",
+			Name:                    "Webhook",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -36,16 +36,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceParameterGroup,
-			TypeName: "aws_dax_parameter_group",
-			Name:     "Parameter Group",
+			Factory:                 ResourceParameterGroup,
+			TypeName:                "aws_dax_parameter_group",
+			Name:                    "Parameter Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceSubnetGroup,
-			TypeName: "aws_dax_subnet_group",
-			Name:     "Subnet Group",
+			Factory:                 ResourceSubnetGroup,
+			TypeName:                "aws_dax_subnet_group",
+			Name:                    "Subnet Group",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -22,14 +22,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newEnrollmentStatusResource,
-			TypeName: "aws_computeoptimizer_enrollment_status",
-			Name:     "Enrollment Status",
+			Factory:                 newEnrollmentStatusResource,
+			TypeName:                "aws_computeoptimizer_enrollment_status",
+			Name:                    "Enrollment Status",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newRecommendationPreferencesResource,
-			TypeName: "aws_computeoptimizer_recommendation_preferences",
-			Name:     "Recommendation Preferences",
+			Factory:                 newRecommendationPreferencesResource,
+			TypeName:                "aws_computeoptimizer_recommendation_preferences",
+			Name:                    "Recommendation Preferences",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

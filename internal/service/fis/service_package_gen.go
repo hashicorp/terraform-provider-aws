@@ -30,10 +30,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceExperimentTemplate,
-			TypeName: "aws_fis_experiment_template",
-			Name:     "Experiment Template",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 resourceExperimentTemplate,
+			TypeName:                "aws_fis_experiment_template",
+			Name:                    "Experiment Template",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

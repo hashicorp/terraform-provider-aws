@@ -36,11 +36,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceProfile,
-			TypeName: "aws_customerprofiles_profile",
-			Name:     "Profile",
+			Factory:                 ResourceProfile,
+			TypeName:                "aws_customerprofiles_profile",
+			Name:                    "Profile",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

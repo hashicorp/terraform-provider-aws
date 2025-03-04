@@ -18,14 +18,16 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceDatabase,
-			TypeName: "aws_timestreamwrite_database",
-			Name:     "Database",
+			Factory:                 newDataSourceDatabase,
+			TypeName:                "aws_timestreamwrite_database",
+			Name:                    "Database",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDataSourceTable,
-			TypeName: "aws_timestreamwrite_table",
-			Name:     "Table",
+			Factory:                 newDataSourceTable,
+			TypeName:                "aws_timestreamwrite_table",
+			Name:                    "Table",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceTable,
@@ -55,6 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

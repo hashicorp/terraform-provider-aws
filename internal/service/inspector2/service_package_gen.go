@@ -30,24 +30,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceDelegatedAdminAccount,
-			TypeName: "aws_inspector2_delegated_admin_account",
-			Name:     "Delegated Admin Account",
+			Factory:                 resourceDelegatedAdminAccount,
+			TypeName:                "aws_inspector2_delegated_admin_account",
+			Name:                    "Delegated Admin Account",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceEnabler,
-			TypeName: "aws_inspector2_enabler",
-			Name:     "Enabler",
+			Factory:                 ResourceEnabler,
+			TypeName:                "aws_inspector2_enabler",
+			Name:                    "Enabler",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceMemberAssociation,
-			TypeName: "aws_inspector2_member_association",
-			Name:     "Member Association",
+			Factory:                 resourceMemberAssociation,
+			TypeName:                "aws_inspector2_member_association",
+			Name:                    "Member Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceOrganizationConfiguration,
-			TypeName: "aws_inspector2_organization_configuration",
-			Name:     "Organization Configuration",
+			Factory:                 resourceOrganizationConfiguration,
+			TypeName:                "aws_inspector2_organization_configuration",
+			Name:                    "Organization Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

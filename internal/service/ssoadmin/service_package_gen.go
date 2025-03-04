@@ -18,29 +18,34 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceApplication,
-			TypeName: "aws_ssoadmin_application",
-			Name:     "Application",
+			Factory:                 newDataSourceApplication,
+			TypeName:                "aws_ssoadmin_application",
+			Name:                    "Application",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDataSourceApplicationAssignments,
-			TypeName: "aws_ssoadmin_application_assignments",
-			Name:     "Application Assignments",
+			Factory:                 newDataSourceApplicationAssignments,
+			TypeName:                "aws_ssoadmin_application_assignments",
+			Name:                    "Application Assignments",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDataSourceApplicationProviders,
-			TypeName: "aws_ssoadmin_application_providers",
-			Name:     "Application Providers",
+			Factory:                 newDataSourceApplicationProviders,
+			TypeName:                "aws_ssoadmin_application_providers",
+			Name:                    "Application Providers",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newPermissionSetsDataSource,
-			TypeName: "aws_ssoadmin_permission_sets",
-			Name:     "Permission Sets",
+			Factory:                 newPermissionSetsDataSource,
+			TypeName:                "aws_ssoadmin_permission_sets",
+			Name:                    "Permission Sets",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDataSourcePrincipalApplicationAssignments,
-			TypeName: "aws_ssoadmin_principal_application_assignments",
-			Name:     "Principal Application Assignments",
+			Factory:                 newDataSourcePrincipalApplicationAssignments,
+			TypeName:                "aws_ssoadmin_principal_application_assignments",
+			Name:                    "Principal Application Assignments",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -48,31 +53,36 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceApplication,
-			TypeName: "aws_ssoadmin_application",
-			Name:     "Application",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 newResourceApplication,
+			TypeName:                "aws_ssoadmin_application",
+			Name:                    "Application",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceApplicationAccessScope,
-			TypeName: "aws_ssoadmin_application_access_scope",
-			Name:     "Application Access Scope",
+			Factory:                 newResourceApplicationAccessScope,
+			TypeName:                "aws_ssoadmin_application_access_scope",
+			Name:                    "Application Access Scope",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceApplicationAssignment,
-			TypeName: "aws_ssoadmin_application_assignment",
-			Name:     "Application Assignment",
+			Factory:                 newResourceApplicationAssignment,
+			TypeName:                "aws_ssoadmin_application_assignment",
+			Name:                    "Application Assignment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceApplicationAssignmentConfiguration,
-			TypeName: "aws_ssoadmin_application_assignment_configuration",
-			Name:     "Application Assignment Configuration",
+			Factory:                 newResourceApplicationAssignmentConfiguration,
+			TypeName:                "aws_ssoadmin_application_assignment_configuration",
+			Name:                    "Application Assignment Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceTrustedTokenIssuer,
-			TypeName: "aws_ssoadmin_trusted_token_issuer",
-			Name:     "Trusted Token Issuer",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 newResourceTrustedTokenIssuer,
+			TypeName:                "aws_ssoadmin_trusted_token_issuer",
+			Name:                    "Trusted Token Issuer",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -80,14 +90,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceInstances,
-			TypeName: "aws_ssoadmin_instances",
-			Name:     "Instances",
+			Factory:                 DataSourceInstances,
+			TypeName:                "aws_ssoadmin_instances",
+			Name:                    "Instances",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourcePermissionSet,
-			TypeName: "aws_ssoadmin_permission_set",
-			Name:     "Permission Set",
+			Factory:                 DataSourcePermissionSet,
+			TypeName:                "aws_ssoadmin_permission_set",
+			Name:                    "Permission Set",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -95,40 +107,47 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccountAssignment,
-			TypeName: "aws_ssoadmin_account_assignment",
-			Name:     "Account Assignment",
+			Factory:                 ResourceAccountAssignment,
+			TypeName:                "aws_ssoadmin_account_assignment",
+			Name:                    "Account Assignment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceCustomerManagedPolicyAttachment,
-			TypeName: "aws_ssoadmin_customer_managed_policy_attachment",
-			Name:     "Customer Managed Policy Attachment",
+			Factory:                 ResourceCustomerManagedPolicyAttachment,
+			TypeName:                "aws_ssoadmin_customer_managed_policy_attachment",
+			Name:                    "Customer Managed Policy Attachment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceAccessControlAttributes,
-			TypeName: "aws_ssoadmin_instance_access_control_attributes",
-			Name:     "Instance Access Control Attributes",
+			Factory:                 ResourceAccessControlAttributes,
+			TypeName:                "aws_ssoadmin_instance_access_control_attributes",
+			Name:                    "Instance Access Control Attributes",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceManagedPolicyAttachment,
-			TypeName: "aws_ssoadmin_managed_policy_attachment",
-			Name:     "Managed Policy Attachment",
+			Factory:                 ResourceManagedPolicyAttachment,
+			TypeName:                "aws_ssoadmin_managed_policy_attachment",
+			Name:                    "Managed Policy Attachment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePermissionSet,
-			TypeName: "aws_ssoadmin_permission_set",
-			Name:     "Permission Set",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 ResourcePermissionSet,
+			TypeName:                "aws_ssoadmin_permission_set",
+			Name:                    "Permission Set",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePermissionSetInlinePolicy,
-			TypeName: "aws_ssoadmin_permission_set_inline_policy",
-			Name:     "Permission Set Inline Policy",
+			Factory:                 ResourcePermissionSetInlinePolicy,
+			TypeName:                "aws_ssoadmin_permission_set_inline_policy",
+			Name:                    "Permission Set Inline Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePermissionsBoundaryAttachment,
-			TypeName: "aws_ssoadmin_permissions_boundary_attachment",
-			Name:     "Permissions Boundary Attachment",
+			Factory:                 ResourcePermissionsBoundaryAttachment,
+			TypeName:                "aws_ssoadmin_permissions_boundary_attachment",
+			Name:                    "Permissions Boundary Attachment",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

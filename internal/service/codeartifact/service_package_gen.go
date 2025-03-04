@@ -26,14 +26,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAuthorizationToken,
-			TypeName: "aws_codeartifact_authorization_token",
-			Name:     "Authoiration Token",
+			Factory:                 dataSourceAuthorizationToken,
+			TypeName:                "aws_codeartifact_authorization_token",
+			Name:                    "Authoiration Token",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRepositoryEndpoint,
-			TypeName: "aws_codeartifact_repository_endpoint",
-			Name:     "Repository Endpoint",
+			Factory:                 dataSourceRepositoryEndpoint,
+			TypeName:                "aws_codeartifact_repository_endpoint",
+			Name:                    "Repository Endpoint",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,11 +49,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDomainPermissionsPolicy,
-			TypeName: "aws_codeartifact_domain_permissions_policy",
-			Name:     "Domain Permissions Policy",
+			Factory:                 resourceDomainPermissionsPolicy,
+			TypeName:                "aws_codeartifact_domain_permissions_policy",
+			Name:                    "Domain Permissions Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceRepository,
@@ -60,11 +64,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRepositoryPermissionsPolicy,
-			TypeName: "aws_codeartifact_repository_permissions_policy",
-			Name:     "Repository Permissions Policy",
+			Factory:                 resourceRepositoryPermissionsPolicy,
+			TypeName:                "aws_codeartifact_repository_permissions_policy",
+			Name:                    "Repository Permissions Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

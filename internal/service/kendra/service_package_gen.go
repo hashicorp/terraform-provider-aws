@@ -26,29 +26,34 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceExperience,
-			TypeName: "aws_kendra_experience",
-			Name:     "Experience",
+			Factory:                 DataSourceExperience,
+			TypeName:                "aws_kendra_experience",
+			Name:                    "Experience",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceFaq,
-			TypeName: "aws_kendra_faq",
-			Name:     "FAQ",
+			Factory:                 DataSourceFaq,
+			TypeName:                "aws_kendra_faq",
+			Name:                    "FAQ",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceIndex,
-			TypeName: "aws_kendra_index",
-			Name:     "Index",
+			Factory:                 DataSourceIndex,
+			TypeName:                "aws_kendra_index",
+			Name:                    "Index",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceQuerySuggestionsBlockList,
-			TypeName: "aws_kendra_query_suggestions_block_list",
-			Name:     "Query Suggestions Block List",
+			Factory:                 DataSourceQuerySuggestionsBlockList,
+			TypeName:                "aws_kendra_query_suggestions_block_list",
+			Name:                    "Query Suggestions Block List",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceThesaurus,
-			TypeName: "aws_kendra_thesaurus",
-			Name:     "Thesaurus",
+			Factory:                 DataSourceThesaurus,
+			TypeName:                "aws_kendra_thesaurus",
+			Name:                    "Thesaurus",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -62,11 +67,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceExperience,
-			TypeName: "aws_kendra_experience",
-			Name:     "Experience",
+			Factory:                 ResourceExperience,
+			TypeName:                "aws_kendra_experience",
+			Name:                    "Experience",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceFaq,
@@ -75,6 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceIndex,
@@ -83,6 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceQuerySuggestionsBlockList,
@@ -91,6 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceThesaurus,
@@ -99,6 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

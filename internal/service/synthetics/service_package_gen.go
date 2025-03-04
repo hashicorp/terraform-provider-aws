@@ -18,14 +18,16 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceRuntimeVersion,
-			TypeName: "aws_synthetics_runtime_version",
-			Name:     "Runtime Version",
+			Factory:                 newDataSourceRuntimeVersion,
+			TypeName:                "aws_synthetics_runtime_version",
+			Name:                    "Runtime Version",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDataSourceRuntimeVersions,
-			TypeName: "aws_synthetics_runtime_versions",
-			Name:     "Runtime Versions",
+			Factory:                 newDataSourceRuntimeVersions,
+			TypeName:                "aws_synthetics_runtime_versions",
+			Name:                    "Runtime Versions",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceGroup,
@@ -55,11 +58,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceGroupAssociation,
-			TypeName: "aws_synthetics_group_association",
-			Name:     "Group Association",
+			Factory:                 ResourceGroupAssociation,
+			TypeName:                "aws_synthetics_group_association",
+			Name:                    "Group Association",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

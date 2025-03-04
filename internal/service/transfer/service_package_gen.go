@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceConnector,
-			TypeName: "aws_transfer_connector",
-			Name:     "Connector",
+			Factory:                 newDataSourceConnector,
+			TypeName:                "aws_transfer_connector",
+			Name:                    "Connector",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -38,6 +39,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -45,9 +47,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceAccess,
-			TypeName: "aws_transfer_access",
-			Name:     "Access",
+			Factory:                 resourceAccess,
+			TypeName:                "aws_transfer_access",
+			Name:                    "Access",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceAgreement,
@@ -56,6 +59,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCertificate,
@@ -64,6 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceConnector,
@@ -72,6 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceProfile,
@@ -80,6 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceServer,
@@ -88,16 +95,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSSHKey,
-			TypeName: "aws_transfer_ssh_key",
-			Name:     "SSH Key",
+			Factory:                 resourceSSHKey,
+			TypeName:                "aws_transfer_ssh_key",
+			Name:                    "SSH Key",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceTag,
-			TypeName: "aws_transfer_tag",
-			Name:     "Transfer Resource Tag",
+			Factory:                 resourceTag,
+			TypeName:                "aws_transfer_tag",
+			Name:                    "Transfer Resource Tag",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceUser,
@@ -106,6 +116,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceWorkflow,
@@ -114,6 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

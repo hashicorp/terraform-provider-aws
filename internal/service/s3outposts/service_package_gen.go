@@ -30,9 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceEndpoint,
-			TypeName: "aws_s3outposts_endpoint",
-			Name:     "Endpoint",
+			Factory:                 resourceEndpoint,
+			TypeName:                "aws_s3outposts_endpoint",
+			Name:                    "Endpoint",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

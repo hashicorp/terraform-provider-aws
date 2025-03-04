@@ -30,9 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceApplication,
-			TypeName: "aws_opsworks_application",
-			Name:     "Application",
+			Factory:                 resourceApplication,
+			TypeName:                "aws_opsworks_application",
+			Name:                    "Application",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCustomLayer,
@@ -41,6 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceECSClusterLayer,
@@ -49,6 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceGangliaLayer,
@@ -57,6 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceHAProxyLayer,
@@ -65,11 +69,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInstance,
-			TypeName: "aws_opsworks_instance",
-			Name:     "Instance",
+			Factory:                 resourceInstance,
+			TypeName:                "aws_opsworks_instance",
+			Name:                    "Instance",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceJavaAppLayer,
@@ -78,6 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceMemcachedLayer,
@@ -86,6 +93,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceMySQLLayer,
@@ -94,6 +102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceNodejsAppLayer,
@@ -102,11 +111,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePermission,
-			TypeName: "aws_opsworks_permission",
-			Name:     "Permission",
+			Factory:                 resourcePermission,
+			TypeName:                "aws_opsworks_permission",
+			Name:                    "Permission",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourcePHPAppLayer,
@@ -115,6 +126,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceRailsAppLayer,
@@ -123,17 +135,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRDSDBInstance,
-			TypeName: "aws_opsworks_rds_db_instance",
-			Name:     "RDS DB Instance",
+			Factory:                 resourceRDSDBInstance,
+			TypeName:                "aws_opsworks_rds_db_instance",
+			Name:                    "RDS DB Instance",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceStack,
-			TypeName: "aws_opsworks_stack",
-			Name:     "Stack",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 resourceStack,
+			TypeName:                "aws_opsworks_stack",
+			Name:                    "Stack",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceStaticWebLayer,
@@ -142,11 +157,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUserProfile,
-			TypeName: "aws_opsworks_user_profile",
-			Name:     "Profile",
+			Factory:                 resourceUserProfile,
+			TypeName:                "aws_opsworks_user_profile",
+			Name:                    "Profile",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

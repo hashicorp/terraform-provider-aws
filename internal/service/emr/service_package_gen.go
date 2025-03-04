@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSupportedInstanceTypes,
-			TypeName: "aws_emr_supported_instance_types",
-			Name:     "Supported Instance Types",
+			Factory:                 newDataSourceSupportedInstanceTypes,
+			TypeName:                "aws_emr_supported_instance_types",
+			Name:                    "Supported Instance Types",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -32,9 +33,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceReleaseLabels,
-			TypeName: "aws_emr_release_labels",
-			Name:     "Release Labels",
+			Factory:                 dataSourceReleaseLabels,
+			TypeName:                "aws_emr_release_labels",
+			Name:                    "Release Labels",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,9 +44,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceBlockPublicAccessConfiguration,
-			TypeName: "aws_emr_block_public_access_configuration",
-			Name:     "Block Public Access Configuration",
+			Factory:                 resourceBlockPublicAccessConfiguration,
+			TypeName:                "aws_emr_block_public_access_configuration",
+			Name:                    "Block Public Access Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCluster,
@@ -53,26 +56,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInstanceFleet,
-			TypeName: "aws_emr_instance_fleet",
-			Name:     "Instance Fleet",
+			Factory:                 resourceInstanceFleet,
+			TypeName:                "aws_emr_instance_fleet",
+			Name:                    "Instance Fleet",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInstanceGroup,
-			TypeName: "aws_emr_instance_group",
-			Name:     "Instance Group",
+			Factory:                 resourceInstanceGroup,
+			TypeName:                "aws_emr_instance_group",
+			Name:                    "Instance Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceManagedScalingPolicy,
-			TypeName: "aws_emr_managed_scaling_policy",
-			Name:     "Managed Scaling Policy",
+			Factory:                 resourceManagedScalingPolicy,
+			TypeName:                "aws_emr_managed_scaling_policy",
+			Name:                    "Managed Scaling Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSecurityConfiguration,
-			TypeName: "aws_emr_security_configuration",
-			Name:     "Security Configuration",
+			Factory:                 resourceSecurityConfiguration,
+			TypeName:                "aws_emr_security_configuration",
+			Name:                    "Security Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceStudio,
@@ -81,11 +89,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceStudioSessionMapping,
-			TypeName: "aws_emr_studio_session_mapping",
-			Name:     "Studio Session Mapping",
+			Factory:                 resourceStudioSessionMapping,
+			TypeName:                "aws_emr_studio_session_mapping",
+			Name:                    "Studio Session Mapping",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

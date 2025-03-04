@@ -22,9 +22,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newOrganizationDelegatedAdminAccountResource,
-			TypeName: "aws_cloudtrail_organization_delegated_admin_account",
-			Name:     "Organization Delegated Admin Account",
+			Factory:                 newOrganizationDelegatedAdminAccountResource,
+			TypeName:                "aws_cloudtrail_organization_delegated_admin_account",
+			Name:                    "Organization Delegated Admin Account",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -32,9 +33,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceServiceAccount,
-			TypeName: "aws_cloudtrail_service_account",
-			Name:     "Service Account",
+			Factory:                 dataSourceServiceAccount,
+			TypeName:                "aws_cloudtrail_service_account",
+			Name:                    "Service Account",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -48,6 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceEventDataStore,
@@ -56,6 +59,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

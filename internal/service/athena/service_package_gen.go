@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceNamedQuery,
-			TypeName: "aws_athena_named_query",
-			Name:     "Named Query",
+			Factory:                 dataSourceNamedQuery,
+			TypeName:                "aws_athena_named_query",
+			Name:                    "Named Query",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,21 +43,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDatabase,
-			TypeName: "aws_athena_database",
-			Name:     "Database",
+			Factory:                 resourceDatabase,
+			TypeName:                "aws_athena_database",
+			Name:                    "Database",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceNamedQuery,
-			TypeName: "aws_athena_named_query",
-			Name:     "Named Query",
+			Factory:                 resourceNamedQuery,
+			TypeName:                "aws_athena_named_query",
+			Name:                    "Named Query",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePreparedStatement,
-			TypeName: "aws_athena_prepared_statement",
-			Name:     "Prepared Statement",
+			Factory:                 resourcePreparedStatement,
+			TypeName:                "aws_athena_prepared_statement",
+			Name:                    "Prepared Statement",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceWorkGroup,
@@ -65,6 +70,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

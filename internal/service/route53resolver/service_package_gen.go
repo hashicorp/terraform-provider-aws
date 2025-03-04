@@ -26,49 +26,58 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceEndpoint,
-			TypeName: "aws_route53_resolver_endpoint",
-			Name:     "Endpoint",
+			Factory:                 dataSourceEndpoint,
+			TypeName:                "aws_route53_resolver_endpoint",
+			Name:                    "Endpoint",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFirewallConfig,
-			TypeName: "aws_route53_resolver_firewall_config",
-			Name:     "Firewall Config",
+			Factory:                 dataSourceFirewallConfig,
+			TypeName:                "aws_route53_resolver_firewall_config",
+			Name:                    "Firewall Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFirewallDomainList,
-			TypeName: "aws_route53_resolver_firewall_domain_list",
-			Name:     "Firewall Domain List",
+			Factory:                 dataSourceFirewallDomainList,
+			TypeName:                "aws_route53_resolver_firewall_domain_list",
+			Name:                    "Firewall Domain List",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFirewallRuleGroup,
-			TypeName: "aws_route53_resolver_firewall_rule_group",
-			Name:     "Firewall Rule Group",
+			Factory:                 dataSourceFirewallRuleGroup,
+			TypeName:                "aws_route53_resolver_firewall_rule_group",
+			Name:                    "Firewall Rule Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFirewallRuleGroupAssociation,
-			TypeName: "aws_route53_resolver_firewall_rule_group_association",
-			Name:     "Firewall Rule Group Association",
+			Factory:                 dataSourceFirewallRuleGroupAssociation,
+			TypeName:                "aws_route53_resolver_firewall_rule_group_association",
+			Name:                    "Firewall Rule Group Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceResolverFirewallRules,
-			TypeName: "aws_route53_resolver_firewall_rules",
-			Name:     "Firewall Rules",
+			Factory:                 dataSourceResolverFirewallRules,
+			TypeName:                "aws_route53_resolver_firewall_rules",
+			Name:                    "Firewall Rules",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceQueryLogConfig,
-			TypeName: "aws_route53_resolver_query_log_config",
-			Name:     "Query Log Config",
+			Factory:                 dataSourceQueryLogConfig,
+			TypeName:                "aws_route53_resolver_query_log_config",
+			Name:                    "Query Log Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRule,
-			TypeName: "aws_route53_resolver_rule",
-			Name:     "Rule",
+			Factory:                 dataSourceRule,
+			TypeName:                "aws_route53_resolver_rule",
+			Name:                    "Rule",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRules,
-			TypeName: "aws_route53_resolver_rules",
-			Name:     "Rules",
+			Factory:                 dataSourceRules,
+			TypeName:                "aws_route53_resolver_rules",
+			Name:                    "Rules",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -76,14 +85,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceConfig,
-			TypeName: "aws_route53_resolver_config",
-			Name:     "Config",
+			Factory:                 resourceConfig,
+			TypeName:                "aws_route53_resolver_config",
+			Name:                    "Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDNSSECConfig,
-			TypeName: "aws_route53_resolver_dnssec_config",
-			Name:     "DNSSEC Config",
+			Factory:                 resourceDNSSECConfig,
+			TypeName:                "aws_route53_resolver_dnssec_config",
+			Name:                    "DNSSEC Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceEndpoint,
@@ -92,11 +103,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceFirewallConfig,
-			TypeName: "aws_route53_resolver_firewall_config",
-			Name:     "Firewall Config",
+			Factory:                 resourceFirewallConfig,
+			TypeName:                "aws_route53_resolver_firewall_config",
+			Name:                    "Firewall Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFirewallDomainList,
@@ -105,11 +118,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceFirewallRule,
-			TypeName: "aws_route53_resolver_firewall_rule",
-			Name:     "Firewall Rule",
+			Factory:                 resourceFirewallRule,
+			TypeName:                "aws_route53_resolver_firewall_rule",
+			Name:                    "Firewall Rule",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFirewallRuleGroup,
@@ -118,6 +133,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFirewallRuleGroupAssociation,
@@ -126,6 +142,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceQueryLogConfig,
@@ -134,11 +151,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceQueryLogConfigAssociation,
-			TypeName: "aws_route53_resolver_query_log_config_association",
-			Name:     "Query Log Config Association",
+			Factory:                 resourceQueryLogConfigAssociation,
+			TypeName:                "aws_route53_resolver_query_log_config_association",
+			Name:                    "Query Log Config Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceRule,
@@ -147,11 +166,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRuleAssociation,
-			TypeName: "aws_route53_resolver_rule_association",
-			Name:     "Rule Association",
+			Factory:                 resourceRuleAssociation,
+			TypeName:                "aws_route53_resolver_rule_association",
+			Name:                    "Rule Association",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

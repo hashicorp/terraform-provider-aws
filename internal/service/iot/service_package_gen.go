@@ -28,6 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -35,14 +36,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceEndpoint,
-			TypeName: "aws_iot_endpoint",
-			Name:     "Endpoint",
+			Factory:                 dataSourceEndpoint,
+			TypeName:                "aws_iot_endpoint",
+			Name:                    "Endpoint",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRegistrationCode,
-			TypeName: "aws_iot_registration_code",
-			Name:     "Registration Code",
+			Factory:                 dataSourceRegistrationCode,
+			TypeName:                "aws_iot_registration_code",
+			Name:                    "Registration Code",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -56,6 +59,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCACertificate,
@@ -64,11 +68,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCertificate,
-			TypeName: "aws_iot_certificate",
-			Name:     "Certificate",
+			Factory:                 resourceCertificate,
+			TypeName:                "aws_iot_certificate",
+			Name:                    "Certificate",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceDomainConfiguration,
@@ -77,21 +83,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceEventConfigurations,
-			TypeName: "aws_iot_event_configurations",
-			Name:     "Event Configurations",
+			Factory:                 resourceEventConfigurations,
+			TypeName:                "aws_iot_event_configurations",
+			Name:                    "Event Configurations",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceIndexingConfiguration,
-			TypeName: "aws_iot_indexing_configuration",
-			Name:     "Indexing Configuration",
+			Factory:                 resourceIndexingConfiguration,
+			TypeName:                "aws_iot_indexing_configuration",
+			Name:                    "Indexing Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceLoggingOptions,
-			TypeName: "aws_iot_logging_options",
-			Name:     "Logging Options",
+			Factory:                 resourceLoggingOptions,
+			TypeName:                "aws_iot_logging_options",
+			Name:                    "Logging Options",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourcePolicy,
@@ -100,11 +110,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePolicyAttachment,
-			TypeName: "aws_iot_policy_attachment",
-			Name:     "Policy Attachment",
+			Factory:                 resourcePolicyAttachment,
+			TypeName:                "aws_iot_policy_attachment",
+			Name:                    "Policy Attachment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceProvisioningTemplate,
@@ -113,6 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceRoleAlias,
@@ -121,11 +134,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceThing,
-			TypeName: "aws_iot_thing",
-			Name:     "Thing",
+			Factory:                 resourceThing,
+			TypeName:                "aws_iot_thing",
+			Name:                    "Thing",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceThingGroup,
@@ -134,16 +149,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceThingGroupMembership,
-			TypeName: "aws_iot_thing_group_membership",
-			Name:     "Thing Group Membership",
+			Factory:                 resourceThingGroupMembership,
+			TypeName:                "aws_iot_thing_group_membership",
+			Name:                    "Thing Group Membership",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceThingPrincipalAttachment,
-			TypeName: "aws_iot_thing_principal_attachment",
-			Name:     "Thing Principal Attachment",
+			Factory:                 resourceThingPrincipalAttachment,
+			TypeName:                "aws_iot_thing_principal_attachment",
+			Name:                    "Thing Principal Attachment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceThingType,
@@ -152,6 +170,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceTopicRule,
@@ -160,11 +179,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceTopicRuleDestination,
-			TypeName: "aws_iot_topic_rule_destination",
-			Name:     "Topic Rule Destination",
+			Factory:                 resourceTopicRuleDestination,
+			TypeName:                "aws_iot_topic_rule_destination",
+			Name:                    "Topic Rule Destination",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

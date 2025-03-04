@@ -32,6 +32,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrCertificateARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceEndpoint,
@@ -40,6 +41,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "endpoint_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceReplicationInstance,
@@ -48,6 +50,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "replication_instance_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceReplicationSubnetGroup,
@@ -56,6 +59,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "replication_subnet_group_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceReplicationTask,
@@ -64,6 +68,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "replication_task_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -77,6 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrCertificateARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceEndpoint,
@@ -85,6 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "endpoint_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceEventSubscription,
@@ -93,6 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceReplicationConfig,
@@ -101,6 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceReplicationInstance,
@@ -109,6 +118,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "replication_instance_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceReplicationSubnetGroup,
@@ -117,6 +127,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "replication_subnet_group_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceReplicationTask,
@@ -125,6 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "replication_task_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceS3Endpoint,
@@ -133,6 +145,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "endpoint_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

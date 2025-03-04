@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceCluster,
-			TypeName: "aws_cloudhsm_v2_cluster",
-			Name:     "Cluster",
+			Factory:                 dataSourceCluster,
+			TypeName:                "aws_cloudhsm_v2_cluster",
+			Name:                    "Cluster",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,11 +43,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceHSM,
-			TypeName: "aws_cloudhsm_v2_hsm",
-			Name:     "HSM",
+			Factory:                 resourceHSM,
+			TypeName:                "aws_cloudhsm_v2_hsm",
+			Name:                    "HSM",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

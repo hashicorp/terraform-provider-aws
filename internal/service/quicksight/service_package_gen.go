@@ -22,19 +22,22 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newFolderMembershipResource,
-			TypeName: "aws_quicksight_folder_membership",
-			Name:     "Folder Membership",
+			Factory:                 newFolderMembershipResource,
+			TypeName:                "aws_quicksight_folder_membership",
+			Name:                    "Folder Membership",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newIAMPolicyAssignmentResource,
-			TypeName: "aws_quicksight_iam_policy_assignment",
-			Name:     "IAM Policy Assignment",
+			Factory:                 newIAMPolicyAssignmentResource,
+			TypeName:                "aws_quicksight_iam_policy_assignment",
+			Name:                    "IAM Policy Assignment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newIngestionResource,
-			TypeName: "aws_quicksight_ingestion",
-			Name:     "Ingestion",
+			Factory:                 newIngestionResource,
+			TypeName:                "aws_quicksight_ingestion",
+			Name:                    "Ingestion",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newNamespaceResource,
@@ -43,16 +46,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newRefreshScheduleResource,
-			TypeName: "aws_quicksight_refresh_schedule",
-			Name:     "Refresh Schedule",
+			Factory:                 newRefreshScheduleResource,
+			TypeName:                "aws_quicksight_refresh_schedule",
+			Name:                    "Refresh Schedule",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newTemplateAliasResource,
-			TypeName: "aws_quicksight_template_alias",
-			Name:     "Template Alias",
+			Factory:                 newTemplateAliasResource,
+			TypeName:                "aws_quicksight_template_alias",
+			Name:                    "Template Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newVPCConnectionResource,
@@ -61,6 +67,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -74,26 +81,31 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceDataSet,
-			TypeName: "aws_quicksight_data_set",
-			Name:     "Data Set",
+			Factory:                 dataSourceDataSet,
+			TypeName:                "aws_quicksight_data_set",
+			Name:                    "Data Set",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceGroup,
-			TypeName: "aws_quicksight_group",
-			Name:     "Group",
+			Factory:                 dataSourceGroup,
+			TypeName:                "aws_quicksight_group",
+			Name:                    "Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceTheme,
-			TypeName: "aws_quicksight_theme",
-			Name:     "Theme",
+			Factory:                 dataSourceTheme,
+			TypeName:                "aws_quicksight_theme",
+			Name:                    "Theme",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceUser,
-			TypeName: "aws_quicksight_user",
-			Name:     "User",
+			Factory:                 dataSourceUser,
+			TypeName:                "aws_quicksight_user",
+			Name:                    "User",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -101,9 +113,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceAccountSubscription,
-			TypeName: "aws_quicksight_account_subscription",
-			Name:     "Account Subscription",
+			Factory:                 resourceAccountSubscription,
+			TypeName:                "aws_quicksight_account_subscription",
+			Name:                    "Account Subscription",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceAnalysis,
@@ -112,6 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceDashboard,
@@ -120,6 +134,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceDataSet,
@@ -128,6 +143,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceDataSource,
@@ -136,6 +152,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFolder,
@@ -144,16 +161,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceGroup,
-			TypeName: "aws_quicksight_group",
-			Name:     "Group",
+			Factory:                 resourceGroup,
+			TypeName:                "aws_quicksight_group",
+			Name:                    "Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceGroupMembership,
-			TypeName: "aws_quicksight_group_membership",
-			Name:     "Group Membership",
+			Factory:                 resourceGroupMembership,
+			TypeName:                "aws_quicksight_group_membership",
+			Name:                    "Group Membership",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceTemplate,
@@ -162,6 +182,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceTheme,
@@ -170,11 +191,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUser,
-			TypeName: "aws_quicksight_user",
-			Name:     "User",
+			Factory:                 resourceUser,
+			TypeName:                "aws_quicksight_user",
+			Name:                    "User",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

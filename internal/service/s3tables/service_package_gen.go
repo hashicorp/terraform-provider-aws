@@ -22,29 +22,34 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceNamespace,
-			TypeName: "aws_s3tables_namespace",
-			Name:     "Namespace",
+			Factory:                 newResourceNamespace,
+			TypeName:                "aws_s3tables_namespace",
+			Name:                    "Namespace",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceTable,
-			TypeName: "aws_s3tables_table",
-			Name:     "Table",
+			Factory:                 newResourceTable,
+			TypeName:                "aws_s3tables_table",
+			Name:                    "Table",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceTableBucket,
-			TypeName: "aws_s3tables_table_bucket",
-			Name:     "Table Bucket",
+			Factory:                 newResourceTableBucket,
+			TypeName:                "aws_s3tables_table_bucket",
+			Name:                    "Table Bucket",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceTableBucketPolicy,
-			TypeName: "aws_s3tables_table_bucket_policy",
-			Name:     "Table Bucket Policy",
+			Factory:                 newResourceTableBucketPolicy,
+			TypeName:                "aws_s3tables_table_bucket_policy",
+			Name:                    "Table Bucket Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceTablePolicy,
-			TypeName: "aws_s3tables_table_policy",
-			Name:     "Table Policy",
+			Factory:                 newResourceTablePolicy,
+			TypeName:                "aws_s3tables_table_policy",
+			Name:                    "Table Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

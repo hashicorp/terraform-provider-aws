@@ -23,9 +23,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newDelegationSignerRecordResource,
-			TypeName: "aws_route53domains_delegation_signer_record",
-			Name:     "Delegation Signer Record",
+			Factory:                 newDelegationSignerRecordResource,
+			TypeName:                "aws_route53domains_delegation_signer_record",
+			Name:                    "Delegation Signer Record",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newDomainResource,
@@ -34,6 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrDomainName,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -51,6 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

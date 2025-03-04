@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceDeliveryStream,
-			TypeName: "aws_kinesis_firehose_delivery_stream",
-			Name:     "Delivery Stream",
+			Factory:                 dataSourceDeliveryStream,
+			TypeName:                "aws_kinesis_firehose_delivery_stream",
+			Name:                    "Delivery Stream",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,6 +43,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

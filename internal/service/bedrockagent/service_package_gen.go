@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceAgentVersions,
-			TypeName: "aws_bedrockagent_agent_versions",
-			Name:     "Agent Versions",
+			Factory:                 newDataSourceAgentVersions,
+			TypeName:                "aws_bedrockagent_agent_versions",
+			Name:                    "Agent Versions",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -34,11 +35,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newAgentActionGroupResource,
-			TypeName: "aws_bedrockagent_agent_action_group",
-			Name:     "Agent Action Group",
+			Factory:                 newAgentActionGroupResource,
+			TypeName:                "aws_bedrockagent_agent_action_group",
+			Name:                    "Agent Action Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newAgentAliasResource,
@@ -47,21 +50,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_alias_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newAgentCollaboratorResource,
-			TypeName: "aws_bedrockagent_agent_collaborator",
-			Name:     "Agent Collaborator",
+			Factory:                 newAgentCollaboratorResource,
+			TypeName:                "aws_bedrockagent_agent_collaborator",
+			Name:                    "Agent Collaborator",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newAgentKnowledgeBaseAssociationResource,
-			TypeName: "aws_bedrockagent_agent_knowledge_base_association",
-			Name:     "Agent Knowledge Base Association",
+			Factory:                 newAgentKnowledgeBaseAssociationResource,
+			TypeName:                "aws_bedrockagent_agent_knowledge_base_association",
+			Name:                    "Agent Knowledge Base Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDataSourceResource,
-			TypeName: "aws_bedrockagent_data_source",
-			Name:     "Data Source",
+			Factory:                 newDataSourceResource,
+			TypeName:                "aws_bedrockagent_data_source",
+			Name:                    "Data Source",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newKnowledgeBaseResource,
@@ -70,6 +77,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceRulesPackages,
-			TypeName: "aws_inspector_rules_packages",
-			Name:     "Rules Packages",
+			Factory:                 DataSourceRulesPackages,
+			TypeName:                "aws_inspector_rules_packages",
+			Name:                    "Rules Packages",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,9 +37,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAssessmentTarget,
-			TypeName: "aws_inspector_assessment_target",
-			Name:     "Assessment Target",
+			Factory:                 ResourceAssessmentTarget,
+			TypeName:                "aws_inspector_assessment_target",
+			Name:                    "Assessment Target",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceAssessmentTemplate,
@@ -47,11 +49,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceResourceGroup,
-			TypeName: "aws_inspector_resource_group",
-			Name:     "Resource Group",
+			Factory:                 ResourceResourceGroup,
+			TypeName:                "aws_inspector_resource_group",
+			Name:                    "Resource Group",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

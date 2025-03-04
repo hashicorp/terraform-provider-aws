@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceImage,
-			TypeName: "aws_appstream_image",
-			Name:     "Image",
+			Factory:                 newDataSourceImage,
+			TypeName:                "aws_appstream_image",
+			Name:                    "Image",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,9 +37,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDirectoryConfig,
-			TypeName: "aws_appstream_directory_config",
-			Name:     "Directory Config",
+			Factory:                 ResourceDirectoryConfig,
+			TypeName:                "aws_appstream_directory_config",
+			Name:                    "Directory Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceFleet,
@@ -47,11 +49,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceFleetStackAssociation,
-			TypeName: "aws_appstream_fleet_stack_association",
-			Name:     "Fleet Stack Association",
+			Factory:                 ResourceFleetStackAssociation,
+			TypeName:                "aws_appstream_fleet_stack_association",
+			Name:                    "Fleet Stack Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceImageBuilder,
@@ -60,6 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceStack,
@@ -68,16 +73,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceUser,
-			TypeName: "aws_appstream_user",
-			Name:     "User",
+			Factory:                 ResourceUser,
+			TypeName:                "aws_appstream_user",
+			Name:                    "User",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceUserStackAssociation,
-			TypeName: "aws_appstream_user_stack_association",
-			Name:     "User Stack Association",
+			Factory:                 ResourceUserStackAssociation,
+			TypeName:                "aws_appstream_user_stack_association",
+			Name:                    "User Stack Association",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -30,14 +30,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceDomain,
-			TypeName: "aws_cloudsearch_domain",
-			Name:     "Domain",
+			Factory:                 resourceDomain,
+			TypeName:                "aws_cloudsearch_domain",
+			Name:                    "Domain",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDomainServiceAccessPolicy,
-			TypeName: "aws_cloudsearch_domain_service_access_policy",
-			Name:     "Domain Service Access Policy",
+			Factory:                 resourceDomainServiceAccessPolicy,
+			TypeName:                "aws_cloudsearch_domain_service_access_policy",
+			Name:                    "Domain Service Access Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

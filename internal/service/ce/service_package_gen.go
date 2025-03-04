@@ -26,14 +26,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceCostCategory,
-			TypeName: "aws_ce_cost_category",
-			Name:     "Cost Category",
+			Factory:                 dataSourceCostCategory,
+			TypeName:                "aws_ce_cost_category",
+			Name:                    "Cost Category",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceTags,
-			TypeName: "aws_ce_tags",
-			Name:     "Tags",
+			Factory:                 dataSourceTags,
+			TypeName:                "aws_ce_tags",
+			Name:                    "Tags",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceAnomalySubscription,
@@ -55,11 +58,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCostAllocationTag,
-			TypeName: "aws_ce_cost_allocation_tag",
-			Name:     "Cost Allocation Tag",
+			Factory:                 resourceCostAllocationTag,
+			TypeName:                "aws_ce_cost_allocation_tag",
+			Name:                    "Cost Allocation Tag",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCostCategory,
@@ -68,6 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

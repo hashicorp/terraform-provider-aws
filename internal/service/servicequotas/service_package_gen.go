@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceTemplates,
-			TypeName: "aws_servicequotas_templates",
-			Name:     "Templates",
+			Factory:                 newDataSourceTemplates,
+			TypeName:                "aws_servicequotas_templates",
+			Name:                    "Templates",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -28,14 +29,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceTemplate,
-			TypeName: "aws_servicequotas_template",
-			Name:     "Template",
+			Factory:                 newResourceTemplate,
+			TypeName:                "aws_servicequotas_template",
+			Name:                    "Template",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceTemplateAssociation,
-			TypeName: "aws_servicequotas_template_association",
-			Name:     "Template Association",
+			Factory:                 newResourceTemplateAssociation,
+			TypeName:                "aws_servicequotas_template_association",
+			Name:                    "Template Association",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -43,14 +46,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceService,
-			TypeName: "aws_servicequotas_service",
-			Name:     "Service",
+			Factory:                 DataSourceService,
+			TypeName:                "aws_servicequotas_service",
+			Name:                    "Service",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceServiceQuota,
-			TypeName: "aws_servicequotas_service_quota",
-			Name:     "Service Quota",
+			Factory:                 DataSourceServiceQuota,
+			TypeName:                "aws_servicequotas_service_quota",
+			Name:                    "Service Quota",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -58,9 +63,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceServiceQuota,
-			TypeName: "aws_servicequotas_service_quota",
-			Name:     "Service Quota",
+			Factory:                 ResourceServiceQuota,
+			TypeName:                "aws_servicequotas_service_quota",
+			Name:                    "Service Quota",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

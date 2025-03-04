@@ -28,6 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newDeliveryResource,
@@ -36,6 +37,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newDeliveryDestinationResource,
@@ -44,11 +46,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDeliveryDestinationPolicyResource,
-			TypeName: "aws_cloudwatch_log_delivery_destination_policy",
-			Name:     "Delivery Destination Policy",
+			Factory:                 newDeliveryDestinationPolicyResource,
+			TypeName:                "aws_cloudwatch_log_delivery_destination_policy",
+			Name:                    "Delivery Destination Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newDeliverySourceResource,
@@ -57,11 +61,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newIndexPolicyResource,
-			TypeName: "aws_cloudwatch_log_index_policy",
-			Name:     "Index Policy",
+			Factory:                 newIndexPolicyResource,
+			TypeName:                "aws_cloudwatch_log_index_policy",
+			Name:                    "Index Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -69,9 +75,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceDataProtectionPolicyDocument,
-			TypeName: "aws_cloudwatch_log_data_protection_policy_document",
-			Name:     "Data Protection Policy Document",
+			Factory:                 dataSourceDataProtectionPolicyDocument,
+			TypeName:                "aws_cloudwatch_log_data_protection_policy_document",
+			Name:                    "Data Protection Policy Document",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceGroup,
@@ -80,11 +87,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceGroups,
-			TypeName: "aws_cloudwatch_log_groups",
-			Name:     "Log Groups",
+			Factory:                 dataSourceGroups,
+			TypeName:                "aws_cloudwatch_log_groups",
+			Name:                    "Log Groups",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -92,14 +101,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceAccountPolicy,
-			TypeName: "aws_cloudwatch_log_account_policy",
-			Name:     "Account Policy",
+			Factory:                 resourceAccountPolicy,
+			TypeName:                "aws_cloudwatch_log_account_policy",
+			Name:                    "Account Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDataProtectionPolicy,
-			TypeName: "aws_cloudwatch_log_data_protection_policy",
-			Name:     "Data Protection Policy",
+			Factory:                 resourceDataProtectionPolicy,
+			TypeName:                "aws_cloudwatch_log_data_protection_policy",
+			Name:                    "Data Protection Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceDestination,
@@ -108,11 +119,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDestinationPolicy,
-			TypeName: "aws_cloudwatch_log_destination_policy",
-			Name:     "Destination Policy",
+			Factory:                 resourceDestinationPolicy,
+			TypeName:                "aws_cloudwatch_log_destination_policy",
+			Name:                    "Destination Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceGroup,
@@ -121,31 +134,37 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceMetricFilter,
-			TypeName: "aws_cloudwatch_log_metric_filter",
-			Name:     "Metric Filter",
+			Factory:                 resourceMetricFilter,
+			TypeName:                "aws_cloudwatch_log_metric_filter",
+			Name:                    "Metric Filter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceResourcePolicy,
-			TypeName: "aws_cloudwatch_log_resource_policy",
-			Name:     "Resource Policy",
+			Factory:                 resourceResourcePolicy,
+			TypeName:                "aws_cloudwatch_log_resource_policy",
+			Name:                    "Resource Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceStream,
-			TypeName: "aws_cloudwatch_log_stream",
-			Name:     "Log Stream",
+			Factory:                 resourceStream,
+			TypeName:                "aws_cloudwatch_log_stream",
+			Name:                    "Log Stream",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSubscriptionFilter,
-			TypeName: "aws_cloudwatch_log_subscription_filter",
-			Name:     "Subscription Filter",
+			Factory:                 resourceSubscriptionFilter,
+			TypeName:                "aws_cloudwatch_log_subscription_filter",
+			Name:                    "Subscription Filter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceQueryDefinition,
-			TypeName: "aws_cloudwatch_query_definition",
-			Name:     "Query Definition",
+			Factory:                 resourceQueryDefinition,
+			TypeName:                "aws_cloudwatch_query_definition",
+			Name:                    "Query Definition",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

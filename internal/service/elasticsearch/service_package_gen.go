@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceDomain,
-			TypeName: "aws_elasticsearch_domain",
-			Name:     "Domain",
+			Factory:                 dataSourceDomain,
+			TypeName:                "aws_elasticsearch_domain",
+			Name:                    "Domain",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,21 +43,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDomainPolicy,
-			TypeName: "aws_elasticsearch_domain_policy",
-			Name:     "Domain Policy",
+			Factory:                 resourceDomainPolicy,
+			TypeName:                "aws_elasticsearch_domain_policy",
+			Name:                    "Domain Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDomainSAMLOptions,
-			TypeName: "aws_elasticsearch_domain_saml_options",
-			Name:     "Domain SAML Options",
+			Factory:                 resourceDomainSAMLOptions,
+			TypeName:                "aws_elasticsearch_domain_saml_options",
+			Name:                    "Domain SAML Options",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceVPCEndpoint,
-			TypeName: "aws_elasticsearch_vpc_endpoint",
-			Name:     "VPC Endpoint",
+			Factory:                 resourceVPCEndpoint,
+			TypeName:                "aws_elasticsearch_vpc_endpoint",
+			Name:                    "VPC Endpoint",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

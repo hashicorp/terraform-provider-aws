@@ -26,29 +26,34 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceConnection,
-			TypeName: "aws_dx_connection",
-			Name:     "Connection",
+			Factory:                 dataSourceConnection,
+			TypeName:                "aws_dx_connection",
+			Name:                    "Connection",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceGateway,
-			TypeName: "aws_dx_gateway",
-			Name:     "Gateway",
+			Factory:                 dataSourceGateway,
+			TypeName:                "aws_dx_gateway",
+			Name:                    "Gateway",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceLocation,
-			TypeName: "aws_dx_location",
-			Name:     "Location",
+			Factory:                 dataSourceLocation,
+			TypeName:                "aws_dx_location",
+			Name:                    "Location",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceLocations,
-			TypeName: "aws_dx_locations",
-			Name:     "Locations",
+			Factory:                 dataSourceLocations,
+			TypeName:                "aws_dx_locations",
+			Name:                    "Locations",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRouterConfiguration,
-			TypeName: "aws_dx_router_configuration",
-			Name:     "Router Configuration",
+			Factory:                 dataSourceRouterConfiguration,
+			TypeName:                "aws_dx_router_configuration",
+			Name:                    "Router Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -56,9 +61,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceBGPPeer,
-			TypeName: "aws_dx_bgp_peer",
-			Name:     "BGP Peer",
+			Factory:                 resourceBGPPeer,
+			TypeName:                "aws_dx_bgp_peer",
+			Name:                    "BGP Peer",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceConnection,
@@ -67,41 +73,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceConnectionAssociation,
-			TypeName: "aws_dx_connection_association",
-			Name:     "Connection LAG Association",
+			Factory:                 resourceConnectionAssociation,
+			TypeName:                "aws_dx_connection_association",
+			Name:                    "Connection LAG Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceConnectionConfirmation,
-			TypeName: "aws_dx_connection_confirmation",
-			Name:     "Connection Confirmation",
+			Factory:                 resourceConnectionConfirmation,
+			TypeName:                "aws_dx_connection_confirmation",
+			Name:                    "Connection Confirmation",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceGateway,
-			TypeName: "aws_dx_gateway",
-			Name:     "Gateway",
+			Factory:                 resourceGateway,
+			TypeName:                "aws_dx_gateway",
+			Name:                    "Gateway",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceGatewayAssociation,
-			TypeName: "aws_dx_gateway_association",
-			Name:     "Gateway Association",
+			Factory:                 resourceGatewayAssociation,
+			TypeName:                "aws_dx_gateway_association",
+			Name:                    "Gateway Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceGatewayAssociationProposal,
-			TypeName: "aws_dx_gateway_association_proposal",
-			Name:     "Gateway Association Proposal",
+			Factory:                 resourceGatewayAssociationProposal,
+			TypeName:                "aws_dx_gateway_association_proposal",
+			Name:                    "Gateway Association Proposal",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceHostedConnection,
-			TypeName: "aws_dx_hosted_connection",
-			Name:     "Hosted Connection",
+			Factory:                 resourceHostedConnection,
+			TypeName:                "aws_dx_hosted_connection",
+			Name:                    "Hosted Connection",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceHostedPrivateVirtualInterface,
-			TypeName: "aws_dx_hosted_private_virtual_interface",
-			Name:     "Hosted Private Virtual Interface",
+			Factory:                 resourceHostedPrivateVirtualInterface,
+			TypeName:                "aws_dx_hosted_private_virtual_interface",
+			Name:                    "Hosted Private Virtual Interface",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceHostedPrivateVirtualInterfaceAccepter,
@@ -110,11 +124,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceHostedPublicVirtualInterface,
-			TypeName: "aws_dx_hosted_public_virtual_interface",
-			Name:     "Hosted Public Virtual Interface",
+			Factory:                 resourceHostedPublicVirtualInterface,
+			TypeName:                "aws_dx_hosted_public_virtual_interface",
+			Name:                    "Hosted Public Virtual Interface",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceHostedPublicVirtualInterfaceAccepter,
@@ -123,11 +139,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceHostedTransitVirtualInterface,
-			TypeName: "aws_dx_hosted_transit_virtual_interface",
-			Name:     "Hosted Transit Virtual Interface",
+			Factory:                 resourceHostedTransitVirtualInterface,
+			TypeName:                "aws_dx_hosted_transit_virtual_interface",
+			Name:                    "Hosted Transit Virtual Interface",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceHostedTransitVirtualInterfaceAccepter,
@@ -136,6 +154,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceLag,
@@ -144,11 +163,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceMacSecKeyAssociation,
-			TypeName: "aws_dx_macsec_key_association",
-			Name:     "MACSec Key Association",
+			Factory:                 resourceMacSecKeyAssociation,
+			TypeName:                "aws_dx_macsec_key_association",
+			Name:                    "MACSec Key Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourcePrivateVirtualInterface,
@@ -157,6 +178,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourcePublicVirtualInterface,
@@ -165,6 +187,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceTransitVirtualInterface,
@@ -173,6 +196,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

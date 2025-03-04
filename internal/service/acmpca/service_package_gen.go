@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceCertificate,
-			TypeName: "aws_acmpca_certificate",
-			Name:     "Certificate",
+			Factory:                 dataSourceCertificate,
+			TypeName:                "aws_acmpca_certificate",
+			Name:                    "Certificate",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceCertificateAuthority,
@@ -37,6 +38,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -44,9 +46,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceCertificate,
-			TypeName: "aws_acmpca_certificate",
-			Name:     "Certificate",
+			Factory:                 resourceCertificate,
+			TypeName:                "aws_acmpca_certificate",
+			Name:                    "Certificate",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCertificateAuthority,
@@ -55,21 +58,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCertificateAuthorityCertificate,
-			TypeName: "aws_acmpca_certificate_authority_certificate",
-			Name:     "Certificate Authority Certificate",
+			Factory:                 resourceCertificateAuthorityCertificate,
+			TypeName:                "aws_acmpca_certificate_authority_certificate",
+			Name:                    "Certificate Authority Certificate",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePermission,
-			TypeName: "aws_acmpca_permission",
-			Name:     "Permission",
+			Factory:                 resourcePermission,
+			TypeName:                "aws_acmpca_permission",
+			Name:                    "Permission",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePolicy,
-			TypeName: "aws_acmpca_policy",
-			Name:     "Policy",
+			Factory:                 resourcePolicy,
+			TypeName:                "aws_acmpca_policy",
+			Name:                    "Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

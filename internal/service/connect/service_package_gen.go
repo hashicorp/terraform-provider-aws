@@ -26,95 +26,111 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceBotAssociation,
-			TypeName: "aws_connect_bot_association",
-			Name:     "Bot Association",
+			Factory:                 dataSourceBotAssociation,
+			TypeName:                "aws_connect_bot_association",
+			Name:                    "Bot Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceContactFlow,
-			TypeName: "aws_connect_contact_flow",
-			Name:     "Contact Flow",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceContactFlow,
+			TypeName:                "aws_connect_contact_flow",
+			Name:                    "Contact Flow",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceContactFlowModule,
-			TypeName: "aws_connect_contact_flow_module",
-			Name:     "Contact Flow Module",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceContactFlowModule,
+			TypeName:                "aws_connect_contact_flow_module",
+			Name:                    "Contact Flow Module",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceHoursOfOperation,
-			TypeName: "aws_connect_hours_of_operation",
-			Name:     "Hours Of Operation",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceHoursOfOperation,
+			TypeName:                "aws_connect_hours_of_operation",
+			Name:                    "Hours Of Operation",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceInstance,
-			TypeName: "aws_connect_instance",
-			Name:     "Instance",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceInstance,
+			TypeName:                "aws_connect_instance",
+			Name:                    "Instance",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceInstanceStorageConfig,
-			TypeName: "aws_connect_instance_storage_config",
-			Name:     "Instance Storage Config",
+			Factory:                 dataSourceInstanceStorageConfig,
+			TypeName:                "aws_connect_instance_storage_config",
+			Name:                    "Instance Storage Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceLambdaFunctionAssociation,
-			TypeName: "aws_connect_lambda_function_association",
-			Name:     "Lambda Function Association",
+			Factory:                 dataSourceLambdaFunctionAssociation,
+			TypeName:                "aws_connect_lambda_function_association",
+			Name:                    "Lambda Function Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourcePrompt,
-			TypeName: "aws_connect_prompt",
-			Name:     "Prompt",
+			Factory:                 dataSourcePrompt,
+			TypeName:                "aws_connect_prompt",
+			Name:                    "Prompt",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceQueue,
-			TypeName: "aws_connect_queue",
-			Name:     "Queue",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceQueue,
+			TypeName:                "aws_connect_queue",
+			Name:                    "Queue",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceQuickConnect,
-			TypeName: "aws_connect_quick_connect",
-			Name:     "Quick Connect",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceQuickConnect,
+			TypeName:                "aws_connect_quick_connect",
+			Name:                    "Quick Connect",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRoutingProfile,
-			TypeName: "aws_connect_routing_profile",
-			Name:     "Routing Profile",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceRoutingProfile,
+			TypeName:                "aws_connect_routing_profile",
+			Name:                    "Routing Profile",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSecurityProfile,
-			TypeName: "aws_connect_security_profile",
-			Name:     "Security Profile",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceSecurityProfile,
+			TypeName:                "aws_connect_security_profile",
+			Name:                    "Security Profile",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceUser,
-			TypeName: "aws_connect_user",
-			Name:     "User",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 DataSourceUser,
+			TypeName:                "aws_connect_user",
+			Name:                    "User",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceUserHierarchyGroup,
-			TypeName: "aws_connect_user_hierarchy_group",
-			Name:     "User Hierarchy Group",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceUserHierarchyGroup,
+			TypeName:                "aws_connect_user_hierarchy_group",
+			Name:                    "User Hierarchy Group",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceUserHierarchyStructure,
-			TypeName: "aws_connect_user_hierarchy_structure",
-			Name:     "User Hierarchy Structure",
+			Factory:                 dataSourceUserHierarchyStructure,
+			TypeName:                "aws_connect_user_hierarchy_structure",
+			Name:                    "User Hierarchy Structure",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceVocabulary,
-			TypeName: "aws_connect_vocabulary",
-			Name:     "Vocabulary",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceVocabulary,
+			TypeName:                "aws_connect_vocabulary",
+			Name:                    "Vocabulary",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -122,9 +138,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceBotAssociation,
-			TypeName: "aws_connect_bot_association",
-			Name:     "Bot Association",
+			Factory:                 resourceBotAssociation,
+			TypeName:                "aws_connect_bot_association",
+			Name:                    "Bot Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceContactFlow,
@@ -133,6 +150,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceContactFlowModule,
@@ -141,6 +159,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceHoursOfOperation,
@@ -149,6 +168,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceInstance,
@@ -157,16 +177,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInstanceStorageConfig,
-			TypeName: "aws_connect_instance_storage_config",
-			Name:     "Instance Storage Config",
+			Factory:                 resourceInstanceStorageConfig,
+			TypeName:                "aws_connect_instance_storage_config",
+			Name:                    "Instance Storage Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceLambdaFunctionAssociation,
-			TypeName: "aws_connect_lambda_function_association",
-			Name:     "Lambda Function Association",
+			Factory:                 resourceLambdaFunctionAssociation,
+			TypeName:                "aws_connect_lambda_function_association",
+			Name:                    "Lambda Function Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourcePhoneNumber,
@@ -175,6 +198,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceQueue,
@@ -183,6 +207,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceQuickConnect,
@@ -191,6 +216,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceRoutingProfile,
@@ -199,6 +225,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceSecurityProfile,
@@ -207,6 +234,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceUser,
@@ -215,6 +243,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceUserHierarchyGroup,
@@ -223,11 +252,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceUserHierarchyStructure,
-			TypeName: "aws_connect_user_hierarchy_structure",
-			Name:     "User Hierarchy Structure",
+			Factory:                 resourceUserHierarchyStructure,
+			TypeName:                "aws_connect_user_hierarchy_structure",
+			Name:                    "User Hierarchy Structure",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceVocabulary,
@@ -236,6 +267,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

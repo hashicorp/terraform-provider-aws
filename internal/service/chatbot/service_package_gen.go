@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSlackWorkspace,
-			TypeName: "aws_chatbot_slack_workspace",
-			Name:     "Slack Workspace",
+			Factory:                 newDataSourceSlackWorkspace,
+			TypeName:                "aws_chatbot_slack_workspace",
+			Name:                    "Slack Workspace",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -34,6 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "chat_configuration_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newTeamsChannelConfigurationResource,
@@ -42,6 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "chat_configuration_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

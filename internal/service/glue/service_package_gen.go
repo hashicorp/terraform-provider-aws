@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceRegistry,
-			TypeName: "aws_glue_registry",
-			Name:     "Registry",
+			Factory:                 newDataSourceRegistry,
+			TypeName:                "aws_glue_registry",
+			Name:                    "Registry",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -28,9 +29,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceCatalogTableOptimizer,
-			TypeName: "aws_glue_catalog_table_optimizer",
-			Name:     "Catalog Table Optimizer",
+			Factory:                 newResourceCatalogTableOptimizer,
+			TypeName:                "aws_glue_catalog_table_optimizer",
+			Name:                    "Catalog Table Optimizer",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -38,24 +40,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCatalogTable,
-			TypeName: "aws_glue_catalog_table",
-			Name:     "Catalog Table",
+			Factory:                 DataSourceCatalogTable,
+			TypeName:                "aws_glue_catalog_table",
+			Name:                    "Catalog Table",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceConnection,
-			TypeName: "aws_glue_connection",
-			Name:     "Connection",
+			Factory:                 DataSourceConnection,
+			TypeName:                "aws_glue_connection",
+			Name:                    "Connection",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceDataCatalogEncryptionSettings,
-			TypeName: "aws_glue_data_catalog_encryption_settings",
-			Name:     "Data Catalog Encryption Settings",
+			Factory:                 DataSourceDataCatalogEncryptionSettings,
+			TypeName:                "aws_glue_data_catalog_encryption_settings",
+			Name:                    "Data Catalog Encryption Settings",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceScript,
-			TypeName: "aws_glue_script",
-			Name:     "Script",
+			Factory:                 DataSourceScript,
+			TypeName:                "aws_glue_script",
+			Name:                    "Script",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -69,16 +75,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceCatalogTable,
-			TypeName: "aws_glue_catalog_table",
-			Name:     "Catalog Table",
+			Factory:                 ResourceCatalogTable,
+			TypeName:                "aws_glue_catalog_table",
+			Name:                    "Catalog Table",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceClassifier,
-			TypeName: "aws_glue_classifier",
-			Name:     "Classifier",
+			Factory:                 ResourceClassifier,
+			TypeName:                "aws_glue_classifier",
+			Name:                    "Classifier",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceConnection,
@@ -87,6 +96,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceCrawler,
@@ -95,11 +105,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceDataCatalogEncryptionSettings,
-			TypeName: "aws_glue_data_catalog_encryption_settings",
-			Name:     "Data Catalog Encryption Settings",
+			Factory:                 ResourceDataCatalogEncryptionSettings,
+			TypeName:                "aws_glue_data_catalog_encryption_settings",
+			Name:                    "Data Catalog Encryption Settings",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceDataQualityRuleset,
@@ -108,6 +120,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceDevEndpoint,
@@ -116,6 +129,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceJob,
@@ -124,6 +138,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceMLTransform,
@@ -132,16 +147,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePartition,
-			TypeName: "aws_glue_partition",
-			Name:     "Partition",
+			Factory:                 ResourcePartition,
+			TypeName:                "aws_glue_partition",
+			Name:                    "Partition",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourcePartitionIndex,
-			TypeName: "aws_glue_partition_index",
-			Name:     "Partition Index",
+			Factory:                 ResourcePartitionIndex,
+			TypeName:                "aws_glue_partition_index",
+			Name:                    "Partition Index",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceRegistry,
@@ -150,11 +168,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceResourcePolicy,
-			TypeName: "aws_glue_resource_policy",
-			Name:     "Resource Policy",
+			Factory:                 ResourceResourcePolicy,
+			TypeName:                "aws_glue_resource_policy",
+			Name:                    "Resource Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceSchema,
@@ -163,11 +183,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceSecurityConfiguration,
-			TypeName: "aws_glue_security_configuration",
-			Name:     "Security Configuration",
+			Factory:                 ResourceSecurityConfiguration,
+			TypeName:                "aws_glue_security_configuration",
+			Name:                    "Security Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceTrigger,
@@ -176,11 +198,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceUserDefinedFunction,
-			TypeName: "aws_glue_user_defined_function",
-			Name:     "User Defined Function",
+			Factory:                 ResourceUserDefinedFunction,
+			TypeName:                "aws_glue_user_defined_function",
+			Name:                    "User Defined Function",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceWorkflow,
@@ -189,6 +213,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

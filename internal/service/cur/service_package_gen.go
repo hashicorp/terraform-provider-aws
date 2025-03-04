@@ -33,6 +33,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "report_name",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -46,6 +47,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "report_name",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

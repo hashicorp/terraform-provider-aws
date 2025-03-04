@@ -26,39 +26,46 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceGeofenceCollection,
-			TypeName: "aws_location_geofence_collection",
-			Name:     "Geofence Collection",
+			Factory:                 DataSourceGeofenceCollection,
+			TypeName:                "aws_location_geofence_collection",
+			Name:                    "Geofence Collection",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceMap,
-			TypeName: "aws_location_map",
-			Name:     "Map",
+			Factory:                 DataSourceMap,
+			TypeName:                "aws_location_map",
+			Name:                    "Map",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourcePlaceIndex,
-			TypeName: "aws_location_place_index",
-			Name:     "Place Index",
+			Factory:                 DataSourcePlaceIndex,
+			TypeName:                "aws_location_place_index",
+			Name:                    "Place Index",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceRouteCalculator,
-			TypeName: "aws_location_route_calculator",
-			Name:     "Route Calculator",
+			Factory:                 DataSourceRouteCalculator,
+			TypeName:                "aws_location_route_calculator",
+			Name:                    "Route Calculator",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceTracker,
-			TypeName: "aws_location_tracker",
-			Name:     "Tracker",
+			Factory:                 DataSourceTracker,
+			TypeName:                "aws_location_tracker",
+			Name:                    "Tracker",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceTrackerAssociation,
-			TypeName: "aws_location_tracker_association",
-			Name:     "Tracker Association",
+			Factory:                 DataSourceTrackerAssociation,
+			TypeName:                "aws_location_tracker_association",
+			Name:                    "Tracker Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceTrackerAssociations,
-			TypeName: "aws_location_tracker_associations",
-			Name:     "Tracker Associations",
+			Factory:                 DataSourceTrackerAssociations,
+			TypeName:                "aws_location_tracker_associations",
+			Name:                    "Tracker Associations",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -72,6 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "collection_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceMap,
@@ -80,6 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "map_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourcePlaceIndex,
@@ -88,6 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "index_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceRouteCalculator,
@@ -96,6 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "calculator_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceTracker,
@@ -104,11 +115,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "tracker_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceTrackerAssociation,
-			TypeName: "aws_location_tracker_association",
-			Name:     "Tracker Association",
+			Factory:                 ResourceTrackerAssociation,
+			TypeName:                "aws_location_tracker_association",
+			Name:                    "Tracker Association",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

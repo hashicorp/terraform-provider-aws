@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newCallerIdentityDataSource,
-			TypeName: "aws_caller_identity",
-			Name:     "Caller Identity",
+			Factory:                 newCallerIdentityDataSource,
+			TypeName:                "aws_caller_identity",
+			Name:                    "Caller Identity",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

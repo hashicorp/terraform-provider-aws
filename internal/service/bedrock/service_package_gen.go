@@ -18,34 +18,40 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newCustomModelDataSource,
-			TypeName: "aws_bedrock_custom_model",
-			Name:     "Custom Model",
+			Factory:                 newCustomModelDataSource,
+			TypeName:                "aws_bedrock_custom_model",
+			Name:                    "Custom Model",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newCustomModelsDataSource,
-			TypeName: "aws_bedrock_custom_models",
-			Name:     "Custom Models",
+			Factory:                 newCustomModelsDataSource,
+			TypeName:                "aws_bedrock_custom_models",
+			Name:                    "Custom Models",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newFoundationModelDataSource,
-			TypeName: "aws_bedrock_foundation_model",
-			Name:     "Foundation Model",
+			Factory:                 newFoundationModelDataSource,
+			TypeName:                "aws_bedrock_foundation_model",
+			Name:                    "Foundation Model",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newFoundationModelsDataSource,
-			TypeName: "aws_bedrock_foundation_models",
-			Name:     "Foundation Models",
+			Factory:                 newFoundationModelsDataSource,
+			TypeName:                "aws_bedrock_foundation_models",
+			Name:                    "Foundation Models",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newInferenceProfileDataSource,
-			TypeName: "aws_bedrock_inference_profile",
-			Name:     "Inference Profile",
+			Factory:                 newInferenceProfileDataSource,
+			TypeName:                "aws_bedrock_inference_profile",
+			Name:                    "Inference Profile",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newInferenceProfilesDataSource,
-			TypeName: "aws_bedrock_inference_profiles",
-			Name:     "Inference Profiles",
+			Factory:                 newInferenceProfilesDataSource,
+			TypeName:                "aws_bedrock_inference_profiles",
+			Name:                    "Inference Profiles",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -59,6 +65,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newResourceGuardrail,
@@ -67,11 +74,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "guardrail_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newGuardrailVersionResource,
-			TypeName: "aws_bedrock_guardrail_version",
-			Name:     "Guardrail Version",
+			Factory:                 newGuardrailVersionResource,
+			TypeName:                "aws_bedrock_guardrail_version",
+			Name:                    "Guardrail Version",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newResourceInferenceProfile,
@@ -80,11 +89,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newModelInvocationLoggingConfigurationResource,
-			TypeName: "aws_bedrock_model_invocation_logging_configuration",
-			Name:     "Model Invocation Logging Configuration",
+			Factory:                 newModelInvocationLoggingConfigurationResource,
+			TypeName:                "aws_bedrock_model_invocation_logging_configuration",
+			Name:                    "Model Invocation Logging Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newProvisionedModelThroughputResource,
@@ -93,6 +104,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "provisioned_model_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

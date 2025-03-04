@@ -30,14 +30,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceFleet,
-			TypeName: "aws_worklink_fleet",
-			Name:     "Fleet",
+			Factory:                 resourceFleet,
+			TypeName:                "aws_worklink_fleet",
+			Name:                    "Fleet",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceWebsiteCertificateAuthorityAssociation,
-			TypeName: "aws_worklink_website_certificate_authority_association",
-			Name:     "Website Certificate Authority Association",
+			Factory:                 resourceWebsiteCertificateAuthorityAssociation,
+			TypeName:                "aws_worklink_website_certificate_authority_association",
+			Name:                    "Website Certificate Authority Association",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

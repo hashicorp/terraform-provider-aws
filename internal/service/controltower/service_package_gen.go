@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceControls,
-			TypeName: "aws_controltower_controls",
-			Name:     "Control",
+			Factory:                 dataSourceControls,
+			TypeName:                "aws_controltower_controls",
+			Name:                    "Control",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,9 +37,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceControl,
-			TypeName: "aws_controltower_control",
-			Name:     "Control",
+			Factory:                 resourceControl,
+			TypeName:                "aws_controltower_control",
+			Name:                    "Control",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceLandingZone,
@@ -47,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

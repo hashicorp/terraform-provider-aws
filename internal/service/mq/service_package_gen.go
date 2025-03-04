@@ -26,19 +26,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceBroker,
-			TypeName: "aws_mq_broker",
-			Name:     "Broker",
+			Factory:                 dataSourceBroker,
+			TypeName:                "aws_mq_broker",
+			Name:                    "Broker",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceBrokerEngineTypes,
-			TypeName: "aws_mq_broker_engine_types",
-			Name:     "Broker Engine Types",
+			Factory:                 dataSourceBrokerEngineTypes,
+			TypeName:                "aws_mq_broker_engine_types",
+			Name:                    "Broker Engine Types",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceBrokerInstanceTypeOfferings,
-			TypeName: "aws_mq_broker_instance_type_offerings",
-			Name:     "Broker Instance Type Offerings",
+			Factory:                 dataSourceBrokerInstanceTypeOfferings,
+			TypeName:                "aws_mq_broker_instance_type_offerings",
+			Name:                    "Broker Instance Type Offerings",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -52,6 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceConfiguration,
@@ -60,6 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

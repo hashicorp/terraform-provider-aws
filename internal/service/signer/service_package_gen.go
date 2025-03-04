@@ -26,14 +26,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceSigningJob,
-			TypeName: "aws_signer_signing_job",
-			Name:     "Signing Job",
+			Factory:                 DataSourceSigningJob,
+			TypeName:                "aws_signer_signing_job",
+			Name:                    "Signing Job",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceSigningProfile,
-			TypeName: "aws_signer_signing_profile",
-			Name:     "Signing Profile",
+			Factory:                 DataSourceSigningProfile,
+			TypeName:                "aws_signer_signing_profile",
+			Name:                    "Signing Profile",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -41,9 +43,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceSigningJob,
-			TypeName: "aws_signer_signing_job",
-			Name:     "Signing Job",
+			Factory:                 ResourceSigningJob,
+			TypeName:                "aws_signer_signing_job",
+			Name:                    "Signing Job",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceSigningProfile,
@@ -52,11 +55,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceSigningProfilePermission,
-			TypeName: "aws_signer_signing_profile_permission",
-			Name:     "Signing Profile Permission",
+			Factory:                 ResourceSigningProfilePermission,
+			TypeName:                "aws_signer_signing_profile_permission",
+			Name:                    "Signing Profile Permission",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -36,26 +36,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "graph_arn",
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceInvitationAccepter,
-			TypeName: "aws_detective_invitation_accepter",
-			Name:     "Invitation Accepter",
+			Factory:                 ResourceInvitationAccepter,
+			TypeName:                "aws_detective_invitation_accepter",
+			Name:                    "Invitation Accepter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceMember,
-			TypeName: "aws_detective_member",
-			Name:     "Member",
+			Factory:                 ResourceMember,
+			TypeName:                "aws_detective_member",
+			Name:                    "Member",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceOrganizationAdminAccount,
-			TypeName: "aws_detective_organization_admin_account",
-			Name:     "Organization Admin Account",
+			Factory:                 ResourceOrganizationAdminAccount,
+			TypeName:                "aws_detective_organization_admin_account",
+			Name:                    "Organization Admin Account",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
-			TypeName: "aws_detective_organization_configuration",
-			Name:     "Organization Configuration",
+			Factory:                 ResourceOrganizationConfiguration,
+			TypeName:                "aws_detective_organization_configuration",
+			Name:                    "Organization Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -26,10 +26,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceResourceShare,
-			TypeName: "aws_ram_resource_share",
-			Name:     "Resource Share",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceResourceShare,
+			TypeName:                "aws_ram_resource_share",
+			Name:                    "Resource Share",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -37,14 +38,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourcePrincipalAssociation,
-			TypeName: "aws_ram_principal_association",
-			Name:     "Principal Association",
+			Factory:                 resourcePrincipalAssociation,
+			TypeName:                "aws_ram_principal_association",
+			Name:                    "Principal Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceResourceAssociation,
-			TypeName: "aws_ram_resource_association",
-			Name:     "Resource Association",
+			Factory:                 resourceResourceAssociation,
+			TypeName:                "aws_ram_resource_association",
+			Name:                    "Resource Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceResourceShare,
@@ -53,16 +56,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceResourceShareAccepter,
-			TypeName: "aws_ram_resource_share_accepter",
-			Name:     "Resource Share Accepter",
+			Factory:                 resourceResourceShareAccepter,
+			TypeName:                "aws_ram_resource_share_accepter",
+			Name:                    "Resource Share Accepter",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSharingWithOrganization,
-			TypeName: "aws_ram_sharing_with_organization",
-			Name:     "Sharing With Organization",
+			Factory:                 resourceSharingWithOrganization,
+			TypeName:                "aws_ram_sharing_with_organization",
+			Name:                    "Sharing With Organization",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

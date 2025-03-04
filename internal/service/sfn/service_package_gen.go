@@ -26,24 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceActivity,
-			TypeName: "aws_sfn_activity",
-			Name:     "Activity",
+			Factory:                 dataSourceActivity,
+			TypeName:                "aws_sfn_activity",
+			Name:                    "Activity",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceAlias,
-			TypeName: "aws_sfn_alias",
-			Name:     "Alias",
+			Factory:                 dataSourceAlias,
+			TypeName:                "aws_sfn_alias",
+			Name:                    "Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceStateMachine,
-			TypeName: "aws_sfn_state_machine",
-			Name:     "State Machine",
+			Factory:                 dataSourceStateMachine,
+			TypeName:                "aws_sfn_state_machine",
+			Name:                    "State Machine",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceStateMachineVersions,
-			TypeName: "aws_sfn_state_machine_versions",
-			Name:     "State Machine Versions",
+			Factory:                 dataSourceStateMachineVersions,
+			TypeName:                "aws_sfn_state_machine_versions",
+			Name:                    "State Machine Versions",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -57,11 +61,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceAlias,
-			TypeName: "aws_sfn_alias",
-			Name:     "Alias",
+			Factory:                 resourceAlias,
+			TypeName:                "aws_sfn_alias",
+			Name:                    "Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceStateMachine,
@@ -70,6 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

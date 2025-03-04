@@ -30,9 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceScalingPlan,
-			TypeName: "aws_autoscalingplans_scaling_plan",
-			Name:     "Scaling Plan",
+			Factory:                 ResourceScalingPlan,
+			TypeName:                "aws_autoscalingplans_scaling_plan",
+			Name:                    "Scaling Plan",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

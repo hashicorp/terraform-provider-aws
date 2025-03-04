@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
 	return []*itypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralInvocation,
-			TypeName: "aws_lambda_invocation",
-			Name:     "Invocation",
+			Factory:                 newEphemeralInvocation,
+			TypeName:                "aws_lambda_invocation",
+			Name:                    "Invocation",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -32,14 +33,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceFunctionRecursionConfig,
-			TypeName: "aws_lambda_function_recursion_config",
-			Name:     "Function Recursion Config",
+			Factory:                 newResourceFunctionRecursionConfig,
+			TypeName:                "aws_lambda_function_recursion_config",
+			Name:                    "Function Recursion Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceRuntimeManagementConfig,
-			TypeName: "aws_lambda_runtime_management_config",
-			Name:     "Runtime Management Config",
+			Factory:                 newResourceRuntimeManagementConfig,
+			TypeName:                "aws_lambda_runtime_management_config",
+			Name:                    "Runtime Management Config",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,40 +50,47 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAlias,
-			TypeName: "aws_lambda_alias",
-			Name:     "Alias",
+			Factory:                 dataSourceAlias,
+			TypeName:                "aws_lambda_alias",
+			Name:                    "Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceCodeSigningConfig,
-			TypeName: "aws_lambda_code_signing_config",
-			Name:     "Code Signing Config",
+			Factory:                 dataSourceCodeSigningConfig,
+			TypeName:                "aws_lambda_code_signing_config",
+			Name:                    "Code Signing Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFunction,
-			TypeName: "aws_lambda_function",
-			Name:     "Function",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceFunction,
+			TypeName:                "aws_lambda_function",
+			Name:                    "Function",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFunctionURL,
-			TypeName: "aws_lambda_function_url",
-			Name:     "Function URL",
+			Factory:                 dataSourceFunctionURL,
+			TypeName:                "aws_lambda_function_url",
+			Name:                    "Function URL",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFunctions,
-			TypeName: "aws_lambda_functions",
-			Name:     "Functions",
+			Factory:                 dataSourceFunctions,
+			TypeName:                "aws_lambda_functions",
+			Name:                    "Functions",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceInvocation,
-			TypeName: "aws_lambda_invocation",
-			Name:     "Invocation",
+			Factory:                 dataSourceInvocation,
+			TypeName:                "aws_lambda_invocation",
+			Name:                    "Invocation",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceLayerVersion,
-			TypeName: "aws_lambda_layer_version",
-			Name:     "Layer Version",
+			Factory:                 dataSourceLayerVersion,
+			TypeName:                "aws_lambda_layer_version",
+			Name:                    "Layer Version",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -88,9 +98,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceAlias,
-			TypeName: "aws_lambda_alias",
-			Name:     "Alias",
+			Factory:                 resourceAlias,
+			TypeName:                "aws_lambda_alias",
+			Name:                    "Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCodeSigningConfig,
@@ -99,6 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceEventSourceMapping,
@@ -107,6 +119,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFunction,
@@ -115,41 +128,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceFunctionEventInvokeConfig,
-			TypeName: "aws_lambda_function_event_invoke_config",
-			Name:     "Function Event Invoke Config",
+			Factory:                 resourceFunctionEventInvokeConfig,
+			TypeName:                "aws_lambda_function_event_invoke_config",
+			Name:                    "Function Event Invoke Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceFunctionURL,
-			TypeName: "aws_lambda_function_url",
-			Name:     "Function URL",
+			Factory:                 resourceFunctionURL,
+			TypeName:                "aws_lambda_function_url",
+			Name:                    "Function URL",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceInvocation,
-			TypeName: "aws_lambda_invocation",
-			Name:     "Invocation",
+			Factory:                 resourceInvocation,
+			TypeName:                "aws_lambda_invocation",
+			Name:                    "Invocation",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceLayerVersion,
-			TypeName: "aws_lambda_layer_version",
-			Name:     "Layer Version",
+			Factory:                 resourceLayerVersion,
+			TypeName:                "aws_lambda_layer_version",
+			Name:                    "Layer Version",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceLayerVersionPermission,
-			TypeName: "aws_lambda_layer_version_permission",
-			Name:     "Layer Version Permission",
+			Factory:                 resourceLayerVersionPermission,
+			TypeName:                "aws_lambda_layer_version_permission",
+			Name:                    "Layer Version Permission",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePermission,
-			TypeName: "aws_lambda_permission",
-			Name:     "Permission",
+			Factory:                 resourcePermission,
+			TypeName:                "aws_lambda_permission",
+			Name:                    "Permission",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceProvisionedConcurrencyConfig,
-			TypeName: "aws_lambda_provisioned_concurrency_config",
-			Name:     "Provisioned Concurrency Config",
+			Factory:                 resourceProvisionedConcurrencyConfig,
+			TypeName:                "aws_lambda_provisioned_concurrency_config",
+			Name:                    "Provisioned Concurrency Config",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

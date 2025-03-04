@@ -26,9 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceProduct,
-			TypeName: "aws_pricing_product",
-			Name:     "Product",
+			Factory:                 dataSourceProduct,
+			TypeName:                "aws_pricing_product",
+			Name:                    "Product",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

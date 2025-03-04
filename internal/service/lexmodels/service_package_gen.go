@@ -26,24 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceBot,
-			TypeName: "aws_lex_bot",
-			Name:     "Bot",
+			Factory:                 dataSourceBot,
+			TypeName:                "aws_lex_bot",
+			Name:                    "Bot",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceBotAlias,
-			TypeName: "aws_lex_bot_alias",
-			Name:     "Bot Alias",
+			Factory:                 dataSourceBotAlias,
+			TypeName:                "aws_lex_bot_alias",
+			Name:                    "Bot Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceIntent,
-			TypeName: "aws_lex_intent",
-			Name:     "Intent",
+			Factory:                 dataSourceIntent,
+			TypeName:                "aws_lex_intent",
+			Name:                    "Intent",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSlotType,
-			TypeName: "aws_lex_slot_type",
-			Name:     "Slot Type",
+			Factory:                 dataSourceSlotType,
+			TypeName:                "aws_lex_slot_type",
+			Name:                    "Slot Type",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -51,24 +55,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceBot,
-			TypeName: "aws_lex_bot",
-			Name:     "Bot",
+			Factory:                 resourceBot,
+			TypeName:                "aws_lex_bot",
+			Name:                    "Bot",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceBotAlias,
-			TypeName: "aws_lex_bot_alias",
-			Name:     "Bot Alias",
+			Factory:                 resourceBotAlias,
+			TypeName:                "aws_lex_bot_alias",
+			Name:                    "Bot Alias",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceIntent,
-			TypeName: "aws_lex_intent",
-			Name:     "Intent",
+			Factory:                 resourceIntent,
+			TypeName:                "aws_lex_intent",
+			Name:                    "Intent",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSlotType,
-			TypeName: "aws_lex_slot_type",
-			Name:     "Slot Type",
+			Factory:                 resourceSlotType,
+			TypeName:                "aws_lex_slot_type",
+			Name:                    "Slot Type",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

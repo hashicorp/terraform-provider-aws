@@ -26,26 +26,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAPI,
-			TypeName: "aws_apigatewayv2_api",
-			Name:     "API",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceAPI,
+			TypeName:                "aws_apigatewayv2_api",
+			Name:                    "API",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceAPIs,
-			TypeName: "aws_apigatewayv2_apis",
-			Name:     "APIs",
+			Factory:                 dataSourceAPIs,
+			TypeName:                "aws_apigatewayv2_apis",
+			Name:                    "APIs",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceExport,
-			TypeName: "aws_apigatewayv2_export",
-			Name:     "Export",
+			Factory:                 dataSourceExport,
+			TypeName:                "aws_apigatewayv2_export",
+			Name:                    "Export",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceVPCLink,
-			TypeName: "aws_apigatewayv2_vpc_link",
-			Name:     "VPC Link",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceVPCLink,
+			TypeName:                "aws_apigatewayv2_vpc_link",
+			Name:                    "VPC Link",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -59,21 +63,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceAPIMapping,
-			TypeName: "aws_apigatewayv2_api_mapping",
-			Name:     "API Mapping",
+			Factory:                 resourceAPIMapping,
+			TypeName:                "aws_apigatewayv2_api_mapping",
+			Name:                    "API Mapping",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceAuthorizer,
-			TypeName: "aws_apigatewayv2_authorizer",
-			Name:     "Authorizer",
+			Factory:                 resourceAuthorizer,
+			TypeName:                "aws_apigatewayv2_authorizer",
+			Name:                    "Authorizer",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDeployment,
-			TypeName: "aws_apigatewayv2_deployment",
-			Name:     "Deployment",
+			Factory:                 resourceDeployment,
+			TypeName:                "aws_apigatewayv2_deployment",
+			Name:                    "Deployment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceDomainName,
@@ -82,31 +90,37 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceIntegration,
-			TypeName: "aws_apigatewayv2_integration",
-			Name:     "Integration",
+			Factory:                 resourceIntegration,
+			TypeName:                "aws_apigatewayv2_integration",
+			Name:                    "Integration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceIntegrationResponse,
-			TypeName: "aws_apigatewayv2_integration_response",
-			Name:     "Integration Response",
+			Factory:                 resourceIntegrationResponse,
+			TypeName:                "aws_apigatewayv2_integration_response",
+			Name:                    "Integration Response",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceModel,
-			TypeName: "aws_apigatewayv2_model",
-			Name:     "Model",
+			Factory:                 resourceModel,
+			TypeName:                "aws_apigatewayv2_model",
+			Name:                    "Model",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRoute,
-			TypeName: "aws_apigatewayv2_route",
-			Name:     "Route",
+			Factory:                 resourceRoute,
+			TypeName:                "aws_apigatewayv2_route",
+			Name:                    "Route",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRouteResponse,
-			TypeName: "aws_apigatewayv2_route_response",
-			Name:     "Route Response",
+			Factory:                 resourceRouteResponse,
+			TypeName:                "aws_apigatewayv2_route_response",
+			Name:                    "Route Response",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceStage,
@@ -115,6 +129,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceVPCLink,
@@ -123,6 +138,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

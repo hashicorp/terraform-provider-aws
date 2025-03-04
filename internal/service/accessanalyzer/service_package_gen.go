@@ -36,11 +36,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceArchiveRule,
-			TypeName: "aws_accessanalyzer_archive_rule",
-			Name:     "Archive Rule",
+			Factory:                 resourceArchiveRule,
+			TypeName:                "aws_accessanalyzer_archive_rule",
+			Name:                    "Archive Rule",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

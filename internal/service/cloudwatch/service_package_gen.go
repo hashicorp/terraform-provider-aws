@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceContributorManagedInsightRules,
-			TypeName: "aws_cloudwatch_contributor_managed_insight_rules",
-			Name:     "Contributor Managed Insight Rules",
+			Factory:                 newDataSourceContributorManagedInsightRules,
+			TypeName:                "aws_cloudwatch_contributor_managed_insight_rules",
+			Name:                    "Contributor Managed Insight Rules",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -34,6 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrResourceARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newResourceContributorManagedInsightRule,
@@ -42,6 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -59,11 +62,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDashboard,
-			TypeName: "aws_cloudwatch_dashboard",
-			Name:     "Dashboard",
+			Factory:                 resourceDashboard,
+			TypeName:                "aws_cloudwatch_dashboard",
+			Name:                    "Dashboard",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceMetricAlarm,
@@ -72,6 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceMetricStream,
@@ -80,6 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

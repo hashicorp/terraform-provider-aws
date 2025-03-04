@@ -26,26 +26,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAccessPoint,
-			TypeName: "aws_efs_access_point",
-			Name:     "Access Point",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceAccessPoint,
+			TypeName:                "aws_efs_access_point",
+			Name:                    "Access Point",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceAccessPoints,
-			TypeName: "aws_efs_access_points",
-			Name:     "Access Point",
+			Factory:                 dataSourceAccessPoints,
+			TypeName:                "aws_efs_access_points",
+			Name:                    "Access Point",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceFileSystem,
-			TypeName: "aws_efs_file_system",
-			Name:     "File System",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceFileSystem,
+			TypeName:                "aws_efs_file_system",
+			Name:                    "File System",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceMountTarget,
-			TypeName: "aws_efs_mount_target",
-			Name:     "Mount Target",
+			Factory:                 dataSourceMountTarget,
+			TypeName:                "aws_efs_mount_target",
+			Name:                    "Mount Target",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -59,11 +63,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceBackupPolicy,
-			TypeName: "aws_efs_backup_policy",
-			Name:     "Backup Policy",
+			Factory:                 resourceBackupPolicy,
+			TypeName:                "aws_efs_backup_policy",
+			Name:                    "Backup Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFileSystem,
@@ -72,21 +78,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceFileSystemPolicy,
-			TypeName: "aws_efs_file_system_policy",
-			Name:     "File System Policy",
+			Factory:                 resourceFileSystemPolicy,
+			TypeName:                "aws_efs_file_system_policy",
+			Name:                    "File System Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceMountTarget,
-			TypeName: "aws_efs_mount_target",
-			Name:     "Mount Target",
+			Factory:                 resourceMountTarget,
+			TypeName:                "aws_efs_mount_target",
+			Name:                    "Mount Target",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceReplicationConfiguration,
-			TypeName: "aws_efs_replication_configuration",
-			Name:     "Replication Configuration",
+			Factory:                 resourceReplicationConfiguration,
+			TypeName:                "aws_efs_replication_configuration",
+			Name:                    "Replication Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

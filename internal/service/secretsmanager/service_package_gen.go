@@ -18,14 +18,16 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
 	return []*itypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralRandomPassword,
-			TypeName: "aws_secretsmanager_random_password",
-			Name:     "Random Password",
+			Factory:                 newEphemeralRandomPassword,
+			TypeName:                "aws_secretsmanager_random_password",
+			Name:                    "Random Password",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newEphemeralSecretVersion,
-			TypeName: "aws_secretsmanager_secret_version",
-			Name:     "Secret Version",
+			Factory:                 newEphemeralSecretVersion,
+			TypeName:                "aws_secretsmanager_secret_version",
+			Name:                    "Secret Version",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -33,9 +35,10 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSecretVersions,
-			TypeName: "aws_secretsmanager_secret_versions",
-			Name:     "Secret Versions",
+			Factory:                 newDataSourceSecretVersions,
+			TypeName:                "aws_secretsmanager_secret_versions",
+			Name:                    "Secret Versions",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,9 +50,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceRandomPassword,
-			TypeName: "aws_secretsmanager_random_password",
-			Name:     "Random Password",
+			Factory:                 dataSourceRandomPassword,
+			TypeName:                "aws_secretsmanager_random_password",
+			Name:                    "Random Password",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceSecret,
@@ -58,21 +62,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSecretRotation,
-			TypeName: "aws_secretsmanager_secret_rotation",
-			Name:     "Secret Rotation",
+			Factory:                 dataSourceSecretRotation,
+			TypeName:                "aws_secretsmanager_secret_rotation",
+			Name:                    "Secret Rotation",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSecretVersion,
-			TypeName: "aws_secretsmanager_secret_version",
-			Name:     "Secret Version",
+			Factory:                 dataSourceSecretVersion,
+			TypeName:                "aws_secretsmanager_secret_version",
+			Name:                    "Secret Version",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSecrets,
-			TypeName: "aws_secretsmanager_secrets",
-			Name:     "Secrets",
+			Factory:                 dataSourceSecrets,
+			TypeName:                "aws_secretsmanager_secrets",
+			Name:                    "Secrets",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -86,21 +94,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSecretPolicy,
-			TypeName: "aws_secretsmanager_secret_policy",
-			Name:     "Secret Policy",
+			Factory:                 resourceSecretPolicy,
+			TypeName:                "aws_secretsmanager_secret_policy",
+			Name:                    "Secret Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSecretRotation,
-			TypeName: "aws_secretsmanager_secret_rotation",
-			Name:     "Secret Rotation",
+			Factory:                 resourceSecretRotation,
+			TypeName:                "aws_secretsmanager_secret_rotation",
+			Name:                    "Secret Rotation",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSecretVersion,
-			TypeName: "aws_secretsmanager_secret_version",
-			Name:     "Secret Version",
+			Factory:                 resourceSecretVersion,
+			TypeName:                "aws_secretsmanager_secret_version",
+			Name:                    "Secret Version",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

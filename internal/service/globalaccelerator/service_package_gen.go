@@ -19,9 +19,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newAcceleratorDataSource,
-			TypeName: "aws_globalaccelerator_accelerator",
-			Name:     "Accelerator",
+			Factory:                 newAcceleratorDataSource,
+			TypeName:                "aws_globalaccelerator_accelerator",
+			Name:                    "Accelerator",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -35,6 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,9 +44,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceCustomRoutingAccelerator,
-			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
-			Name:     "Custom Routing Accelerator",
+			Factory:                 dataSourceCustomRoutingAccelerator,
+			TypeName:                "aws_globalaccelerator_custom_routing_accelerator",
+			Name:                    "Custom Routing Accelerator",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -58,6 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceCustomRoutingAccelerator,
@@ -66,26 +70,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCustomRoutingEndpointGroup,
-			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
-			Name:     "Custom Routing Endpoint Group",
+			Factory:                 resourceCustomRoutingEndpointGroup,
+			TypeName:                "aws_globalaccelerator_custom_routing_endpoint_group",
+			Name:                    "Custom Routing Endpoint Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceCustomRoutingListener,
-			TypeName: "aws_globalaccelerator_custom_routing_listener",
-			Name:     "Custom Routing Listener",
+			Factory:                 resourceCustomRoutingListener,
+			TypeName:                "aws_globalaccelerator_custom_routing_listener",
+			Name:                    "Custom Routing Listener",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceEndpointGroup,
-			TypeName: "aws_globalaccelerator_endpoint_group",
-			Name:     "Endpoint Group",
+			Factory:                 resourceEndpointGroup,
+			TypeName:                "aws_globalaccelerator_endpoint_group",
+			Name:                    "Endpoint Group",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceListener,
-			TypeName: "aws_globalaccelerator_listener",
-			Name:     "Listener",
+			Factory:                 resourceListener,
+			TypeName:                "aws_globalaccelerator_listener",
+			Name:                    "Listener",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -32,11 +32,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrURL,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceQueues,
-			TypeName: "aws_sqs_queues",
-			Name:     "Queues",
+			Factory:                 dataSourceQueues,
+			TypeName:                "aws_sqs_queues",
+			Name:                    "Queues",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -50,21 +52,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceQueuePolicy,
-			TypeName: "aws_sqs_queue_policy",
-			Name:     "Queue Policy",
+			Factory:                 resourceQueuePolicy,
+			TypeName:                "aws_sqs_queue_policy",
+			Name:                    "Queue Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceQueueRedriveAllowPolicy,
-			TypeName: "aws_sqs_queue_redrive_allow_policy",
-			Name:     "Queue Redrive Allow Policy",
+			Factory:                 resourceQueueRedriveAllowPolicy,
+			TypeName:                "aws_sqs_queue_redrive_allow_policy",
+			Name:                    "Queue Redrive Allow Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceQueueRedrivePolicy,
-			TypeName: "aws_sqs_queue_redrive_policy",
-			Name:     "Queue Redrive Policy",
+			Factory:                 resourceQueueRedrivePolicy,
+			TypeName:                "aws_sqs_queue_redrive_policy",
+			Name:                    "Queue Redrive Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

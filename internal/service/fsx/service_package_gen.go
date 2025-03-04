@@ -26,30 +26,35 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceONTAPFileSystem,
-			TypeName: "aws_fsx_ontap_file_system",
-			Name:     "ONTAP File System",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceONTAPFileSystem,
+			TypeName:                "aws_fsx_ontap_file_system",
+			Name:                    "ONTAP File System",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceONTAPStorageVirtualMachine,
-			TypeName: "aws_fsx_ontap_storage_virtual_machine",
-			Name:     "ONTAP Storage Virtual Machine",
+			Factory:                 dataSourceONTAPStorageVirtualMachine,
+			TypeName:                "aws_fsx_ontap_storage_virtual_machine",
+			Name:                    "ONTAP Storage Virtual Machine",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceONTAPStorageVirtualMachines,
-			TypeName: "aws_fsx_ontap_storage_virtual_machines",
-			Name:     "ONTAP Storage Virtual Machines",
+			Factory:                 dataSourceONTAPStorageVirtualMachines,
+			TypeName:                "aws_fsx_ontap_storage_virtual_machines",
+			Name:                    "ONTAP Storage Virtual Machines",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceOpenzfsSnapshot,
-			TypeName: "aws_fsx_openzfs_snapshot",
-			Name:     "OpenZFS Snapshot",
+			Factory:                 dataSourceOpenzfsSnapshot,
+			TypeName:                "aws_fsx_openzfs_snapshot",
+			Name:                    "OpenZFS Snapshot",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceWindowsFileSystem,
-			TypeName: "aws_fsx_windows_file_system",
-			Name:     "Windows File System",
+			Factory:                 dataSourceWindowsFileSystem,
+			TypeName:                "aws_fsx_windows_file_system",
+			Name:                    "Windows File System",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -63,6 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceDataRepositoryAssociation,
@@ -71,6 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceFileCache,
@@ -79,6 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceLustreFileSystem,
@@ -87,6 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceONTAPFileSystem,
@@ -95,6 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceONTAPStorageVirtualMachine,
@@ -103,6 +113,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceONTAPVolume,
@@ -111,6 +122,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceOpenZFSFileSystem,
@@ -119,6 +131,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceOpenZFSSnapshot,
@@ -127,6 +140,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceOpenZFSVolume,
@@ -135,6 +149,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceWindowsFileSystem,
@@ -143,6 +158,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

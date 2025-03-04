@@ -36,11 +36,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceBackendEnvironment,
-			TypeName: "aws_amplify_backend_environment",
-			Name:     "Backend Environment",
+			Factory:                 resourceBackendEnvironment,
+			TypeName:                "aws_amplify_backend_environment",
+			Name:                    "Backend Environment",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceBranch,
@@ -49,16 +51,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceDomainAssociation,
-			TypeName: "aws_amplify_domain_association",
-			Name:     "Domain Association",
+			Factory:                 resourceDomainAssociation,
+			TypeName:                "aws_amplify_domain_association",
+			Name:                    "Domain Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceWebhook,
-			TypeName: "aws_amplify_webhook",
-			Name:     "Webhook",
+			Factory:                 resourceWebhook,
+			TypeName:                "aws_amplify_webhook",
+			Name:                    "Webhook",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

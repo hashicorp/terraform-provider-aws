@@ -26,14 +26,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceReplicationSet,
-			TypeName: "aws_ssmincidents_replication_set",
-			Name:     "Replication Set",
+			Factory:                 DataSourceReplicationSet,
+			TypeName:                "aws_ssmincidents_replication_set",
+			Name:                    "Replication Set",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceResponsePlan,
-			TypeName: "aws_ssmincidents_response_plan",
-			Name:     "Response Plan",
+			Factory:                 DataSourceResponsePlan,
+			TypeName:                "aws_ssmincidents_response_plan",
+			Name:                    "Response Plan",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -47,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceResponsePlan,
@@ -55,6 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

@@ -28,6 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -41,11 +42,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceConfigurationProfiles,
-			TypeName: "aws_appconfig_configuration_profiles",
-			Name:     "Configuration Profiles",
+			Factory:                 DataSourceConfigurationProfiles,
+			TypeName:                "aws_appconfig_configuration_profiles",
+			Name:                    "Configuration Profiles",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  DataSourceEnvironment,
@@ -54,11 +57,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceEnvironments,
-			TypeName: "aws_appconfig_environments",
-			Name:     "Environments",
+			Factory:                 DataSourceEnvironments,
+			TypeName:                "aws_appconfig_environments",
+			Name:                    "Environments",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -72,6 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceConfigurationProfile,
@@ -80,6 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceDeployment,
@@ -88,6 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceDeploymentStrategy,
@@ -96,6 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceExtension,
@@ -104,16 +113,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceExtensionAssociation,
-			TypeName: "aws_appconfig_extension_association",
-			Name:     "Extension Association",
+			Factory:                 ResourceExtensionAssociation,
+			TypeName:                "aws_appconfig_extension_association",
+			Name:                    "Extension Association",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceHostedConfigurationVersion,
-			TypeName: "aws_appconfig_hosted_configuration_version",
-			Name:     "Hosted Configuration Version",
+			Factory:                 ResourceHostedConfigurationVersion,
+			TypeName:                "aws_appconfig_hosted_configuration_version",
+			Name:                    "Hosted Configuration Version",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

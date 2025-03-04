@@ -18,14 +18,16 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newLifecyclePolicyDocumentDataSource,
-			TypeName: "aws_ecr_lifecycle_policy_document",
-			Name:     "Lifecycle Policy Document",
+			Factory:                 newLifecyclePolicyDocumentDataSource,
+			TypeName:                "aws_ecr_lifecycle_policy_document",
+			Name:                    "Lifecycle Policy Document",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newRepositoriesDataSource,
-			TypeName: "aws_ecr_repositories",
-			Name:     "Repositories",
+			Factory:                 newRepositoriesDataSource,
+			TypeName:                "aws_ecr_repositories",
+			Name:                    "Repositories",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -33,9 +35,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newAccountSettingResource,
-			TypeName: "aws_ecr_account_setting",
-			Name:     "Account Setting",
+			Factory:                 newAccountSettingResource,
+			TypeName:                "aws_ecr_account_setting",
+			Name:                    "Account Setting",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -43,19 +46,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAuthorizationToken,
-			TypeName: "aws_ecr_authorization_token",
-			Name:     "Authorization Token",
+			Factory:                 dataSourceAuthorizationToken,
+			TypeName:                "aws_ecr_authorization_token",
+			Name:                    "Authorization Token",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceImage,
-			TypeName: "aws_ecr_image",
-			Name:     "Image",
+			Factory:                 dataSourceImage,
+			TypeName:                "aws_ecr_image",
+			Name:                    "Image",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourcePullThroughCacheRule,
-			TypeName: "aws_ecr_pull_through_cache_rule",
-			Name:     "Pull Through Cache Rule",
+			Factory:                 dataSourcePullThroughCacheRule,
+			TypeName:                "aws_ecr_pull_through_cache_rule",
+			Name:                    "Pull Through Cache Rule",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  dataSourceRepository,
@@ -64,11 +70,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceRepositoryCreationTemplate,
-			TypeName: "aws_ecr_repository_creation_template",
-			Name:     "Repository Creation Template",
+			Factory:                 dataSourceRepositoryCreationTemplate,
+			TypeName:                "aws_ecr_repository_creation_template",
+			Name:                    "Repository Creation Template",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -76,29 +84,34 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceLifecyclePolicy,
-			TypeName: "aws_ecr_lifecycle_policy",
-			Name:     "Lifecycle Policy",
+			Factory:                 resourceLifecyclePolicy,
+			TypeName:                "aws_ecr_lifecycle_policy",
+			Name:                    "Lifecycle Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePullThroughCacheRule,
-			TypeName: "aws_ecr_pull_through_cache_rule",
-			Name:     "Pull Through Cache Rule",
+			Factory:                 resourcePullThroughCacheRule,
+			TypeName:                "aws_ecr_pull_through_cache_rule",
+			Name:                    "Pull Through Cache Rule",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRegistryPolicy,
-			TypeName: "aws_ecr_registry_policy",
-			Name:     "Registry Policy",
+			Factory:                 resourceRegistryPolicy,
+			TypeName:                "aws_ecr_registry_policy",
+			Name:                    "Registry Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRegistryScanningConfiguration,
-			TypeName: "aws_ecr_registry_scanning_configuration",
-			Name:     "Registry Scanning Configuration",
+			Factory:                 resourceRegistryScanningConfiguration,
+			TypeName:                "aws_ecr_registry_scanning_configuration",
+			Name:                    "Registry Scanning Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceReplicationConfiguration,
-			TypeName: "aws_ecr_replication_configuration",
-			Name:     "Replication Configuration",
+			Factory:                 resourceReplicationConfiguration,
+			TypeName:                "aws_ecr_replication_configuration",
+			Name:                    "Replication Configuration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceRepository,
@@ -107,16 +120,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRepositoryCreationTemplate,
-			TypeName: "aws_ecr_repository_creation_template",
-			Name:     "Repository Creation Template",
+			Factory:                 resourceRepositoryCreationTemplate,
+			TypeName:                "aws_ecr_repository_creation_template",
+			Name:                    "Repository Creation Template",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRepositoryPolicy,
-			TypeName: "aws_ecr_repository_policy",
-			Name:     "Repsitory Policy",
+			Factory:                 resourceRepositoryPolicy,
+			TypeName:                "aws_ecr_repository_policy",
+			Name:                    "Repsitory Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

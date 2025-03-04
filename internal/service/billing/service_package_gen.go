@@ -19,9 +19,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newServiceAccountDataSource,
-			TypeName: "aws_billing_service_account",
-			Name:     "Service Account",
+			Factory:                 newServiceAccountDataSource,
+			TypeName:                "aws_billing_service_account",
+			Name:                    "Service Account",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

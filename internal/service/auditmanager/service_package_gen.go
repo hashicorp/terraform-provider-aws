@@ -18,14 +18,16 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceControl,
-			TypeName: "aws_auditmanager_control",
-			Name:     "Control",
+			Factory:                 newDataSourceControl,
+			TypeName:                "aws_auditmanager_control",
+			Name:                    "Control",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newDataSourceFramework,
-			TypeName: "aws_auditmanager_framework",
-			Name:     "Framework",
+			Factory:                 newDataSourceFramework,
+			TypeName:                "aws_auditmanager_framework",
+			Name:                    "Framework",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -33,9 +35,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAccountRegistration,
-			TypeName: "aws_auditmanager_account_registration",
-			Name:     "Account Registration",
+			Factory:                 newResourceAccountRegistration,
+			TypeName:                "aws_auditmanager_account_registration",
+			Name:                    "Account Registration",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newResourceAssessment,
@@ -44,16 +47,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceAssessmentDelegation,
-			TypeName: "aws_auditmanager_assessment_delegation",
-			Name:     "Assessment Delegation",
+			Factory:                 newResourceAssessmentDelegation,
+			TypeName:                "aws_auditmanager_assessment_delegation",
+			Name:                    "Assessment Delegation",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceAssessmentReport,
-			TypeName: "aws_auditmanager_assessment_report",
-			Name:     "Assessment Report",
+			Factory:                 newResourceAssessmentReport,
+			TypeName:                "aws_auditmanager_assessment_report",
+			Name:                    "Assessment Report",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newResourceControl,
@@ -62,6 +68,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newResourceFramework,
@@ -70,16 +77,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceFrameworkShare,
-			TypeName: "aws_auditmanager_framework_share",
-			Name:     "Framework Share",
+			Factory:                 newResourceFrameworkShare,
+			TypeName:                "aws_auditmanager_framework_share",
+			Name:                    "Framework Share",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  newResourceOrganizationAdminAccountRegistration,
-			TypeName: "aws_auditmanager_organization_admin_account_registration",
-			Name:     "Organization Admin Account Registration",
+			Factory:                 newResourceOrganizationAdminAccountRegistration,
+			TypeName:                "aws_auditmanager_organization_admin_account_registration",
+			Name:                    "Organization Admin Account Registration",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

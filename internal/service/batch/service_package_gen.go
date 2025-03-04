@@ -18,10 +18,11 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newJobDefinitionDataSource,
-			TypeName: "aws_batch_job_definition",
-			Name:     "Job Definition",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 newJobDefinitionDataSource,
+			TypeName:                "aws_batch_job_definition",
+			Name:                    "Job Definition",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -35,6 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,22 +44,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceComputeEnvironment,
-			TypeName: "aws_batch_compute_environment",
-			Name:     "Compute Environment",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceComputeEnvironment,
+			TypeName:                "aws_batch_compute_environment",
+			Name:                    "Compute Environment",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceJobQueue,
-			TypeName: "aws_batch_job_queue",
-			Name:     "Job Queue",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceJobQueue,
+			TypeName:                "aws_batch_job_queue",
+			Name:                    "Job Queue",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceSchedulingPolicy,
-			TypeName: "aws_batch_scheduling_policy",
-			Name:     "Scheduling Policy",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceSchedulingPolicy,
+			TypeName:                "aws_batch_scheduling_policy",
+			Name:                    "Scheduling Policy",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -71,6 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceJobDefinition,
@@ -79,6 +85,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceSchedulingPolicy,
@@ -87,6 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

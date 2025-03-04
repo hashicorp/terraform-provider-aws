@@ -28,6 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newResourceGatewayResource,
@@ -36,6 +37,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  newServiceNetworkResourceAssociationResource,
@@ -44,6 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -51,31 +54,36 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAuthPolicy,
-			TypeName: "aws_vpclattice_auth_policy",
-			Name:     "Auth Policy",
+			Factory:                 DataSourceAuthPolicy,
+			TypeName:                "aws_vpclattice_auth_policy",
+			Name:                    "Auth Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceListener,
-			TypeName: "aws_vpclattice_listener",
-			Name:     "Listener",
+			Factory:                 DataSourceListener,
+			TypeName:                "aws_vpclattice_listener",
+			Name:                    "Listener",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  DataSourceResourcePolicy,
-			TypeName: "aws_vpclattice_resource_policy",
-			Name:     "Resource Policy",
+			Factory:                 DataSourceResourcePolicy,
+			TypeName:                "aws_vpclattice_resource_policy",
+			Name:                    "Resource Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceService,
-			TypeName: "aws_vpclattice_service",
-			Name:     "Service",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceService,
+			TypeName:                "aws_vpclattice_service",
+			Name:                    "Service",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  dataSourceServiceNetwork,
-			TypeName: "aws_vpclattice_service_network",
-			Name:     "Service Network",
-			Tags:     &itypes.ServicePackageResourceTags{},
+			Factory:                 dataSourceServiceNetwork,
+			TypeName:                "aws_vpclattice_service_network",
+			Name:                    "Service Network",
+			Tags:                    &itypes.ServicePackageResourceTags{},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -89,11 +97,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceAuthPolicy,
-			TypeName: "aws_vpclattice_auth_policy",
-			Name:     "Auth Policy",
+			Factory:                 ResourceAuthPolicy,
+			TypeName:                "aws_vpclattice_auth_policy",
+			Name:                    "Auth Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceListener,
@@ -102,6 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceListenerRule,
@@ -110,11 +121,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  ResourceResourcePolicy,
-			TypeName: "aws_vpclattice_resource_policy",
-			Name:     "Resource Policy",
+			Factory:                 ResourceResourcePolicy,
+			TypeName:                "aws_vpclattice_resource_policy",
+			Name:                    "Resource Policy",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceService,
@@ -123,6 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceServiceNetwork,
@@ -131,6 +145,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceServiceNetworkServiceAssociation,
@@ -139,6 +154,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceServiceNetworkVPCAssociation,
@@ -147,6 +163,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  ResourceTargetGroup,
@@ -155,11 +172,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceTargetGroupAttachment,
-			TypeName: "aws_vpclattice_target_group_attachment",
-			Name:     "Target Group Attachment",
+			Factory:                 resourceTargetGroupAttachment,
+			TypeName:                "aws_vpclattice_target_group_attachment",
+			Name:                    "Target Group Attachment",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

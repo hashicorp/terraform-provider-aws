@@ -22,9 +22,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceResourcePolicy,
-			TypeName: "aws_xray_resource_policy",
-			Name:     "Resource Policy",
+			Factory:                 newResourceResourcePolicy,
+			TypeName:                "aws_xray_resource_policy",
+			Name:                    "Resource Policy",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -36,9 +37,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceEncryptionConfig,
-			TypeName: "aws_xray_encryption_config",
-			Name:     "Encryption Config",
+			Factory:                 resourceEncryptionConfig,
+			TypeName:                "aws_xray_encryption_config",
+			Name:                    "Encryption Config",
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceGroup,
@@ -47,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
 			Factory:  resourceSamplingRule,
@@ -55,6 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

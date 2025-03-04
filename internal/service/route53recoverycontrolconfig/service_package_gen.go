@@ -31,24 +31,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  resourceCluster,
-			TypeName: "aws_route53recoverycontrolconfig_cluster",
-			Name:     "Cluster",
+			Factory:                 resourceCluster,
+			TypeName:                "aws_route53recoverycontrolconfig_cluster",
+			Name:                    "Cluster",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceControlPanel,
-			TypeName: "aws_route53recoverycontrolconfig_control_panel",
-			Name:     "Control Panel",
+			Factory:                 resourceControlPanel,
+			TypeName:                "aws_route53recoverycontrolconfig_control_panel",
+			Name:                    "Control Panel",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceRoutingControl,
-			TypeName: "aws_route53recoverycontrolconfig_routing_control",
-			Name:     "Routing Control",
+			Factory:                 resourceRoutingControl,
+			TypeName:                "aws_route53recoverycontrolconfig_routing_control",
+			Name:                    "Routing Control",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourceSafetyRule,
-			TypeName: "aws_route53recoverycontrolconfig_safety_rule",
-			Name:     "Safety Rule",
+			Factory:                 resourceSafetyRule,
+			TypeName:                "aws_route53recoverycontrolconfig_safety_rule",
+			Name:                    "Safety Rule",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }

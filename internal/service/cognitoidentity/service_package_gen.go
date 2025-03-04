@@ -18,9 +18,10 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
 	return []*itypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newOpenIDTokenForDeveloperIdentityEphemeralResource,
-			TypeName: "aws_cognito_identity_openid_token_for_developer_identity",
-			Name:     "Open ID Connect Token For Developer Identity",
+			Factory:                 newOpenIDTokenForDeveloperIdentityEphemeralResource,
+			TypeName:                "aws_cognito_identity_openid_token_for_developer_identity",
+			Name:                    "Open ID Connect Token For Developer Identity",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -42,6 +43,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
@@ -55,16 +57,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePoolProviderPrincipalTag,
-			TypeName: "aws_cognito_identity_pool_provider_principal_tag",
-			Name:     "Provider Principal Tags",
+			Factory:                 resourcePoolProviderPrincipalTag,
+			TypeName:                "aws_cognito_identity_pool_provider_principal_tag",
+			Name:                    "Provider Principal Tags",
+			IsRegionOverrideEnabled: false,
 		},
 		{
-			Factory:  resourcePoolRolesAttachment,
-			TypeName: "aws_cognito_identity_pool_roles_attachment",
-			Name:     "Pool Roles Association",
+			Factory:                 resourcePoolRolesAttachment,
+			TypeName:                "aws_cognito_identity_pool_roles_attachment",
+			Name:                    "Pool Roles Association",
+			IsRegionOverrideEnabled: false,
 		},
 	}
 }
