@@ -401,7 +401,7 @@ Container object to specify configuration for a node type.
 
 * `count` - (Optional) Number of nodes of a particular node type in the cluster.
 * `enabled` - (Required) Whether a particular node type is enabled.
-* `type` - (Optional) The instance type of a particular node type in the cluster. 
+* `type` - (Optional) The instance type of a particular node type in the cluster.
 
 #### cold_storage_options
 
