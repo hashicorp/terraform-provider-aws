@@ -9,7 +9,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -125,13 +124,7 @@ func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading WAF XSS Match Set (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "xssmatchset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, xssMatchSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, xssMatchSet.Name)
 	if err := d.Set("xss_match_tuples", flattenXSSMatchTuples(xssMatchSet.XssMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting xss_match_tuples: %s", err)
@@ -272,4 +265,9 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []awstypes.XssMatchSetUpdat
 		})
 	}
 	return updates
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func xssMatchSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "xssmatchset/"+id)
 }
