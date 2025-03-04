@@ -214,6 +214,78 @@ func resourcePipeline() *schema.Resource {
 								},
 							},
 						},
+						"before_entry": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"conditions": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"result": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"rules": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"rule_type_id": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"category": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"owner": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"provider": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"version": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"configuration": {
+																Type:     schema.TypeMap,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+															"input_artifacts": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+															"region": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
@@ -799,6 +871,10 @@ func expandStageDeclaration(tfMap map[string]interface{}) *types.StageDeclaratio
 		apiObject.Name = aws.String(v)
 	}
 
+	if v, ok := tfMap["before_entry"].([]interface{}); ok && len(v) > 0 {
+		apiObject.BeforeEntry = expandBeforeEntryDeclaration(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -1230,6 +1306,179 @@ func expandTriggerDeclarations(tfList []interface{}) []types.PipelineTriggerDecl
 	return apiObjects
 }
 
+func expandBeforeEntryConditionRuleTypeId(tfMap map[string]interface{}) *types.RuleTypeId {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.RuleTypeId{}
+
+	if v, ok := tfMap["category"].(string); ok && v != "" {
+		apiObject.Category = types.RuleCategory(*aws.String(v))
+	}
+
+	if v, ok := tfMap["owner"].(string); ok && v != "" {
+		apiObject.Owner = types.RuleOwner(*aws.String(v))
+	}
+
+	if v, ok := tfMap["provider"].(string); ok && v != "" {
+		apiObject.Provider = aws.String(v)
+	}
+
+	if v, ok := tfMap["version"].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBeforeEntryConditionRuleInputArtifacts(tfList []interface{}) []types.InputArtifact {
+	if len(tfList) == 0 {
+		return nil
+	}
+	var apiObjects []types.InputArtifact
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(string)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := types.InputArtifact{
+			Name: aws.String(tfMap),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
+func expandBeforeEntryConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.RuleDeclaration{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["rule_type_id"].([]interface{}); ok && len(v) > 0 {
+		apiObject.RuleTypeId = expandBeforeEntryConditionRuleTypeId(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["commands"].([]string); ok && len(v) > 0 {
+		apiObject.Commands = v
+	}
+
+	if v, ok := tfMap["configuration"].(map[string]interface{}); ok && v != nil {
+		apiObject.Configuration = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["input_artifacts"].([]interface{}); ok && len(v) > 0 {
+		apiObject.InputArtifacts = expandBeforeEntryConditionRuleInputArtifacts(v)
+	}
+
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["timeout_in_minutes"].(int); ok && v != 0 {
+		apiObject.TimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func expandBeforeEntryConditionRules(tfList []interface{}) []types.RuleDeclaration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.RuleDeclaration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandBeforeEntryConditionRule(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBeforeEntryCondition(tfMap map[string]interface{}) *types.Condition {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.Condition{}
+
+	if v, ok := tfMap["result"].(string); ok && v != "" {
+		apiObject.Result = types.Result(v)
+	}
+
+	if v, ok := tfMap["rules"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Rules = expandBeforeEntryConditionRules(v)
+	}
+
+	return apiObject
+}
+
+func expandBeforeEntryConditions(tfList []interface{}) []types.Condition {
+
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.Condition
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+		apiObject := expandBeforeEntryCondition(tfMap)
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBeforeEntryDeclaration(tfMap map[string]interface{}) *types.BeforeEntryConditions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BeforeEntryConditions{}
+
+	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Conditions = expandBeforeEntryConditions(v)
+	}
+
+	return apiObject
+}
+
 func flattenArtifactStore(apiObject *types.ArtifactStore) map[string]interface{} {
 	tfMap := map[string]interface{}{
 		names.AttrType: apiObject.Type,
@@ -1279,6 +1528,120 @@ func flattenEncryptionKey(apiObject *types.EncryptionKey) map[string]interface{}
 	return tfMap
 }
 
+func flattenBeforeEntryConditionRuleTypeId(apiObject *types.RuleTypeId) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.Category; v != "" {
+		tfMap["category"] = string(v)
+	}
+	if v := apiObject.Owner; v != "" {
+		tfMap["owner"] = string(v)
+	}
+
+	if v := apiObject.Provider; v != nil {
+		tfMap["provider"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Version; v != nil {
+		tfMap["version"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenBeforeEntryConditionRule(apiObjects types.RuleDeclaration) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObjects.Name; v != nil {
+		tfMap["name"] = aws.ToString(v)
+	}
+
+	if v := apiObjects.RuleTypeId; v != nil {
+		tfMap["rule_type_id"] = []interface{}{flattenBeforeEntryConditionRuleTypeId(v)}
+	}
+
+	if v := apiObjects.Commands; v != nil {
+		tfMap["commands"] = v
+	}
+
+	if v := apiObjects.Configuration; v != nil {
+		tfMap["configuration"] = v
+	}
+
+	if v := apiObjects.InputArtifacts; v != nil {
+		tfMap["input_artifacts"] = flattenInputArtifacts(v)
+	}
+
+	if v := apiObjects.Region; v != nil {
+		tfMap["region"] = aws.ToString(v)
+	}
+
+	if v := apiObjects.RoleArn; v != nil {
+		tfMap["role_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObjects.TimeoutInMinutes; v != nil {
+		tfMap["timeout_in_minutes"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func flattenBeforeEntryConditionRules(apiObjects []types.RuleDeclaration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenBeforeEntryConditionRule(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenBeforeEntryCondition(apiObject types.Condition) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Result; v != "" {
+		tfMap["result"] = string(v)
+	}
+
+	if v := apiObject.Rules; v != nil {
+		tfMap["rules"] = flattenBeforeEntryConditionRules(v)
+	}
+
+	return tfMap
+}
+
+func flattenBeforeEntryConditions(apiObjects []types.Condition) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenBeforeEntryCondition(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenBeforeEntryDeclaration(apiObject *types.BeforeEntryConditions) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Conditions; v != nil {
+		tfMap["conditions"] = flattenBeforeEntryConditions(v)
+	}
+
+	return tfMap
+}
+
 func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.StageDeclaration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
@@ -1288,6 +1651,10 @@ func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.Stag
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
+	}
+
+	if v := apiObject.BeforeEntry; v != nil {
+		tfMap["before_entry"] = []interface{}{flattenBeforeEntryDeclaration(v)}
 	}
 
 	return tfMap

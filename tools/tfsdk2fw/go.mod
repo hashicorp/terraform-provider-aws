@@ -20,14 +20,14 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.6 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.36.2 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.36.3 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.29.7 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.60 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.29 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.63 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.33 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.33 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.34 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.33 // indirect
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.37.1 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.29.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.24.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.29.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.39.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.28.6 // indirect
