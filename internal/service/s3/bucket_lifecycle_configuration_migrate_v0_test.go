@@ -2299,7 +2299,7 @@ func checkSchemaV0NoncurrentVersionExpiration_Days(days int64) knownvalue.Check 
 func checkSchemaV0NoncurrentVersionExpiration_VersionsAndDays(versions, days int64) knownvalue.Check {
 	return knownvalue.ListExact([]knownvalue.Check{
 		knownvalue.ObjectExact(map[string]knownvalue.Check{
-			"newer_noncurrent_versions": knownvalue.StringExact(strconv.FormatInt(int64(versions), 10)),
+			"newer_noncurrent_versions": knownvalue.StringExact(strconv.FormatInt(versions, 10)),
 			"noncurrent_days":           knownvalue.Int64Exact(days),
 		}),
 	})
