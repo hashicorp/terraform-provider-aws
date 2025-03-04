@@ -152,8 +152,8 @@ type resource{{ .Resource }} struct {
 func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			{{- if .IncludeComments }}
@@ -163,8 +163,8 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 			//
 			// Only include an "id" attribute if the AWS API has an "Id" field, such as "{{ .Resource }}Id"
 			{{- end }}
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				{{- if .IncludeComments }}
 				// TIP: ==== PLAN MODIFIERS ====
@@ -224,7 +224,7 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -562,7 +562,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 // https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 {{- end }}
 func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 {{ if .IncludeComments }}
