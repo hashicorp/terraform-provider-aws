@@ -50,6 +50,10 @@ func resourceRuleGroupNamespace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			}
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -105,6 +109,8 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
 	}
 
+	arn := aws.ToString(rgn.Arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("data", string(rgn.Data))
 	d.Set(names.AttrName, rgn.Name)
 	_, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(d.Id())
