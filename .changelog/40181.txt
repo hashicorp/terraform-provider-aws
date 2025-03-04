@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_opensearch_domain: Add support for dedicated coordinator nodes
+resource/aws_opensearch_domain: Add `cluster_config.node_options` configuration block in support of [dedicated coordinator nodes](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/Dedicated-coordinator-nodes.html)
 ```
