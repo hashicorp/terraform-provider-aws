@@ -3,11 +3,11 @@
 
 provider "null" {}
 
-resource "aws_prometheus_workspace" "demo" {
+resource "aws_prometheus_workspace" "test" {
 }
 
-resource "aws_prometheus_rule_group_namespace" "demo" {
-  name         = "rules"
+resource "aws_prometheus_rule_group_namespace" "test" {
+  name         = var.rName
   workspace_id = aws_prometheus_workspace.demo.id
 
   tags = {
