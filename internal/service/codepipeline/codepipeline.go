@@ -40,108 +40,101 @@ const (
 // @SDKResource("aws_codepipeline", name="Pipeline")
 // @Tags(identifierAttribute="arn")
 func resourcePipeline() *schema.Resource {
-	conditionsSchema := map[string]*schema.Schema{
-		"conditions": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"result": {
-						Type:             schema.TypeString,
-						Optional:         true,
-						ValidateDiagFunc: enum.Validate[types.Result](),
-					},
-					"rules": {
-						Type:     schema.TypeList,
-						MinItems: 1,
-						MaxItems: 5,
-						Required: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								names.AttrName: {
-									Type:         schema.TypeString,
-									Required:     true,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
-								},
-								"rule_type_id": {
-									Type:     schema.TypeList,
-									Required: true,
-									MaxItems: 1,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"category": {
-												Type:             schema.TypeString,
-												Required:         true,
-												ValidateDiagFunc: enum.Validate[types.RuleCategory](),
-											},
-											"owner": {
-												Type:             schema.TypeString,
-												Optional:         true,
-												ValidateDiagFunc: enum.Validate[types.RuleOwner](),
-											},
-											"provider": {
-												Type:     schema.TypeString,
-												Required: true,
-											},
-											"version": {
-												Type:     schema.TypeString,
-												Optional: true,
-												ValidateFunc: validation.All(
-													validation.StringLenBetween(1, 9),
-													validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
-												),
-											},
-										},
+	conditionsSchemaElem := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"result": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.Result](),
+			},
+			"rules": {
+				Type:     schema.TypeList,
+				MinItems: 1,
+				MaxItems: 5,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+						},
+						"rule_type_id": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"category": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.RuleCategory](),
 									},
-								},
-								"commands": {
-									Type:     schema.TypeList,
-									Optional: true,
-									MinItems: 1,
-									MaxItems: 50,
-									Elem: &schema.Schema{
-										Type: schema.TypeString,
+									"owner": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.RuleOwner](),
+									},
+									"provider": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"version": {
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1000),
+											validation.StringLenBetween(1, 9),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
 										),
 									},
-								},
-								"configuration": {
-									Type:     schema.TypeMap,
-									Optional: true,
-									Elem: &schema.Schema{
-										Type: schema.TypeString,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 10000),
-										),
-									},
-								},
-								"input_artifacts": {
-									Type:     schema.TypeList,
-									Optional: true,
-									Elem: &schema.Schema{
-										Type: schema.TypeString,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9_\-]+`), ""),
-											validation.StringLenBetween(1, 100),
-										),
-									},
-								},
-								names.AttrRegion: {
-									Type:     schema.TypeString,
-									Optional: true,
-								},
-								"role_arn": {
-									Type:         schema.TypeString,
-									Optional:     true,
-									ValidateFunc: verify.ValidARN,
-								},
-								"timeout_in_minutes": {
-									Type:         schema.TypeInt,
-									Optional:     true,
-									ValidateFunc: validation.IntBetween(5, 86400),
 								},
 							},
+						},
+						"commands": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 50,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 1000),
+								),
+							},
+						},
+						"configuration": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 10000),
+								),
+							},
+						},
+						"input_artifacts": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9_\-]+`), ""),
+									validation.StringLenBetween(1, 100),
+								),
+							},
+						},
+						names.AttrRegion: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"timeout_in_minutes": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(5, 86400),
 						},
 					},
 				},
@@ -328,7 +321,13 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
-								Schema: conditionsSchema,
+								Schema: map[string]*schema.Schema{
+									"conditions": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     conditionsSchemaElem,
+									},
+								},
 							},
 						},
 						"on_success": {
@@ -336,7 +335,13 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
-								Schema: conditionsSchema,
+								Schema: map[string]*schema.Schema{
+									"conditions": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     conditionsSchemaElem,
+									},
+								},
 							},
 						},
 						"on_failure": {
@@ -344,7 +349,33 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
-								Schema: conditionsSchema,
+								Schema: map[string]*schema.Schema{
+									"conditions": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     conditionsSchemaElem,
+									},
+									"result": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										ValidateDiagFunc: enum.Validate[types.Result](),
+									},
+									"retry_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"retry_mode": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.StageRetryMode](),
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 						names.AttrName: {
@@ -1458,8 +1489,8 @@ func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["timeout_in_minutes"].(int); ok && v != 0 {
-		apiObject.TimeoutInMinutes = aws.Int32(int32(v))
+	if v, ok := tfMap["timeout_in_minutes"].(int32); ok && v != 0 {
+		apiObject.TimeoutInMinutes = aws.Int32(v)
 	}
 
 	return apiObject
@@ -1562,6 +1593,20 @@ func expandOnSuccessDeclaration(tfMap map[string]interface{}) *types.SuccessCond
 	return apiObject
 }
 
+func expandRetryConfiguration(tfMap map[string]interface{}) *types.RetryConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.RetryConfiguration{}
+
+	if v, ok := tfMap["retry_mode"].(string); ok && v != "" {
+		apiObject.RetryMode = types.StageRetryMode(v)
+	}
+
+	return apiObject
+}
+
 func expandOnFailureDeclaration(tfMap map[string]interface{}) *types.FailureConditions {
 	if tfMap == nil {
 		return nil
@@ -1571,6 +1616,14 @@ func expandOnFailureDeclaration(tfMap map[string]interface{}) *types.FailureCond
 
 	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Conditions = expandConditions(v)
+	}
+
+	if v, ok := tfMap["result"].(string); ok && v != "" {
+		apiObject.Result = types.Result(v)
+	}
+
+	if v, ok := tfMap["retry_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RetryConfiguration = expandRetryConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -1749,11 +1802,29 @@ func flattenOnSuccessDeclaration(apiObject *types.SuccessConditions) map[string]
 	return tfMap
 }
 
+func flattenRetryConfiguration(apiObject *types.RetryConfiguration) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.RetryMode; v != "" {
+		tfMap["retry_mode"] = string(v)
+	}
+
+	return tfMap
+}
+
 func flattenOnFailureDeclaration(apiObject *types.FailureConditions) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
 		tfMap["conditions"] = flattenConditions(v)
+	}
+
+	if v := apiObject.Result; v != "" {
+		tfMap["result"] = string(v)
+	}
+
+	if v := apiObject.RetryConfiguration; v != nil {
+		tfMap["retry_configuration"] = []interface{}{flattenRetryConfiguration(v)}
 	}
 
 	return tfMap
