@@ -41,6 +41,10 @@ func resourceRuleGroupNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"data": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -50,17 +54,13 @@ func resourceRuleGroupNamespace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -69,13 +69,13 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	workspaceID := d.Get("workspace_id").(string)
 	name := d.Get(names.AttrName).(string)
+	workspaceID := d.Get("workspace_id").(string)
 	input := amp.CreateRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
 		Name:        aws.String(name),
-		WorkspaceId: aws.String(workspaceID),
 		Tags:        getTagsIn(ctx),
+		WorkspaceId: aws.String(workspaceID),
 	}
 
 	output, err := conn.CreateRuleGroupsNamespace(ctx, &input)
@@ -109,8 +109,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.ToString(rgn.Arn)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, rgn.Arn)
 	d.Set("data", string(rgn.Data))
 	d.Set(names.AttrName, rgn.Name)
 	_, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(d.Id())
