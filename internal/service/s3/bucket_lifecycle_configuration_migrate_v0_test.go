@@ -166,7 +166,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, "prefix/"),
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -192,7 +192,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, "prefix/"),
+				Config:                   testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
