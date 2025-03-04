@@ -41,6 +41,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/mediapackage/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -737,16 +738,7 @@ func resourceOriginEndpointCreate(ctx context.Context, d *schema.ResourceData, m
 	in := &mediapackage.CreateOriginEndpointInput{
 		ChannelId: aws.String(d.Get("channel_id").(string)),
 		Id:        aws.String(d.Get("id").(string)),
-		// TIP: Mandatory or fields that will always be present can be set when
-		// you create the Input structure. (Replace these with real fields.)
-		// OriginEndpointName: aws.String(d.Get("name").(string)),
-		// OriginEndpointType: aws.String(d.Get("type").(string)),
-
-		// TIP: Not all resources support tags and tags don't always make sense. If
-		// your resource doesn't need tags, you can remove the tags lines here and
-		// below. Many resources do include tags so this a reminder to include them
-		// where possible.
-		Tags: getTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("authorization"); ok {
 		in.Authorization = expandAuthorization(v.(map[string]interface{}))
@@ -804,14 +796,7 @@ func resourceOriginEndpointCreate(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionCreating, ResNameOriginEndpoint, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
-	// work.
 	d.SetId(aws.ToString(out.Id))
-
-	// TIP: -- 5. Use a waiter to wait for create to complete
-	if _, err := waitOriginEndpointCreated(ctx, conn, *out.ChannelId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionWaitingForCreation, ResNameOriginEndpoint, d.Id(), err)
-	}
 
 	// TIP: -- 6. Call the Read function in the Create return
 	return append(diags, resourceOriginEndpointRead(ctx, d, meta)...)
@@ -835,8 +820,7 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 
 	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	channelID := d.Get("channel_id").(string)
-	out, err := findOriginEndpointsByChannelID(ctx, conn, channelID)
+	out, err := findOriginEndpoint(ctx, conn, d.Get("id").(string), d.Get("channel_id").(string))
 
 	// TIP: -- 3. Set ID to empty where resource is not new and not found
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -847,20 +831,6 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionReading, ResNameOriginEndpoint, d.Id(), err)
-	}
-
-	var ep *types.OriginEndpoint
-
-	for _, o := range out {
-		if aws.ToString(o.Id) == d.Id() {
-			ep = &o
-		}
-	}
-
-	if ep == nil {
-		log.Printf("[WARN] MediaPackage OriginEndpoint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
 	}
 
 	// TIP: -- 4. Set the arguments and attributes
@@ -876,7 +846,7 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 	//    a JSON. AWS may return the JSON in a slightly different order but it
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
-	d.Set("arn", ep.Arn)
+	d.Set("arn", out.Arn)
 
 	// TIP: Setting a complex type.
 	// For more information, see:
@@ -884,43 +854,43 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
 
-	if err := d.Set("authorization", flattenAuthorization(ep.Authorization)); err != nil {
+	if err := d.Set("authorization", flattenAuthorization(out.Authorization)); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("cmaf_package", flattenCmafPackage(ep.CmafPackage)); err != nil {
+	if err := d.Set("cmaf_package", flattenCmafPackage(out.CmafPackage)); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("dash_package", flattenDashPackage(ep.DashPackage)); err != nil {
+	if err := d.Set("dash_package", flattenDashPackage(out.DashPackage)); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("description", ep.Description); err != nil {
+	if err := d.Set("description", out.Description); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("hls_package", flattenHlsPackage(ep.HlsPackage)); err != nil {
+	if err := d.Set("hls_package", flattenHlsPackage(out.HlsPackage)); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("mss_package", flattenMssPackage(ep.MssPackage)); err != nil {
+	if err := d.Set("mss_package", flattenMssPackage(out.MssPackage)); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("origination", ep.Origination); err != nil {
+	if err := d.Set("origination", out.Origination); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("start_over_window_seconds", ep.StartoverWindowSeconds); err != nil {
+	if err := d.Set("start_over_window_seconds", out.StartoverWindowSeconds); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("time_delay_seconds", ep.TimeDelaySeconds); err != nil {
+	if err := d.Set("time_delay_seconds", out.TimeDelaySeconds); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	if err := d.Set("whitelist", ep.Whitelist); err != nil {
+	if err := d.Set("whitelist", out.Whitelist); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
@@ -990,176 +960,37 @@ func resourceOriginEndpointUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if !update {
-		// TIP: If update doesn't do anything at all, which is rare, you can
-		// return diags. Otherwise, return a read call, as below.
 		return diags
 	}
 
-	// TIP: -- 3. Call the AWS modify/update function
 	log.Printf("[DEBUG] Updating MediaPackage OriginEndpoint (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateOriginEndpoint(ctx, in)
+	_, err := conn.UpdateOriginEndpoint(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionUpdating, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	// TIP: -- 4. Use a waiter to wait for update to complete
-	if _, err := waitOriginEndpointUpdated(ctx, conn, aws.ToString(out.ChannelId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionWaitingForUpdate, ResNameOriginEndpoint, d.Id(), err)
-	}
-
-	// TIP: -- 5. Call the Read function in the Update return
 	return append(diags, resourceOriginEndpointRead(ctx, d, meta)...)
 }
 
 func resourceOriginEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a delete input structure
-	// 3. Call the AWS delete function
-	// 4. Use a waiter to wait for delete to complete
-	// 5. Return diags
 
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
-	// TIP: -- 2. Populate a delete input structure
 	log.Printf("[INFO] Deleting MediaPackage OriginEndpoint %s", d.Id())
 
-	// TIP: -- 3. Call the AWS delete function
 	_, err := conn.DeleteOriginEndpoint(ctx, &mediapackage.DeleteOriginEndpointInput{
 		Id: aws.String(d.Id()),
 	})
 
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 	if err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionDeleting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
-	// TIP: -- 4. Use a waiter to wait for delete to complete
-	if _, err := waitOriginEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionWaitingForDeletion, ResNameOriginEndpoint, d.Id(), err)
-	}
-
-	// TIP: -- 5. Return diags
 	return diags
-}
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitOriginEndpointCreated(ctx context.Context, conn *mediapackage.Client, channelID string, timeout time.Duration) (*mediapackage.OriginEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusOriginEndpoint(ctx, conn, channelID),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*mediapackage.OriginEndpoint); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitOriginEndpointUpdated(ctx context.Context, conn *mediapackage.Client, channelID string, timeout time.Duration) (*mediapackage.OriginEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusOriginEndpoint(ctx, conn, channelID),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*mediapackage.OriginEndpoint); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitOriginEndpointDeleted(ctx context.Context, conn *mediapackage.Client, id string, timeout time.Duration) (*mediapackage.OriginEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusOriginEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*mediapackage.OriginEndpoint); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-func statusOriginEndpoint(ctx context.Context, conn *mediapackage.Client, channelID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findOriginEndpointsByChannelID(ctx, conn, channelID)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, aws.ToString(out.Status), nil
-	}
 }
 
 // TIP: ==== FINDERS ====
@@ -1167,21 +998,32 @@ func statusOriginEndpoint(ctx context.Context, conn *mediapackage.Client, channe
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findOriginEndpointsByChannelID(ctx context.Context, conn *mediapackage.Client, channelID string) ([]types.OriginEndpoint, error) {
+func findOriginEndpoint(ctx context.Context, conn *mediapackage.Client, id, channelID string) (*types.OriginEndpoint, error) {
 	in := &mediapackage.ListOriginEndpointsInput{
 		ChannelId: aws.String(channelID),
 	}
+
 	out, err := conn.ListOriginEndpoints(ctx, in)
 	if err != nil {
 		return nil, err
 	}
+
 	if len(out.OriginEndpoints) == 0 {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
 	}
-	return out.OriginEndpoints, nil
+
+	var ep *types.OriginEndpoint
+
+	for _, e := range out.OriginEndpoints {
+		if aws.ToString(e.Id) == id {
+			ep = &e
+		}
+	}
+
+	return ep, nil
 }
 
 func expandAuthorization(tfMap map[string]interface{}) *types.Authorization {
