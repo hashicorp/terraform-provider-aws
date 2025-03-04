@@ -834,7 +834,6 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
-
 	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -854,7 +853,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): %s", d.Id(), err)
 	}
-
 	dc := outDescribeDomainConfig.DomainConfig
 
 	if ds.AccessPolicies != nil && aws.ToString(ds.AccessPolicies) != "" {
@@ -1004,17 +1002,28 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("advanced_options") {
 			input.AdvancedOptions = flex.ExpandStringValueMap(d.Get("advanced_options").(map[string]interface{}))
 		}
-
 		if d.HasChange("advanced_security_options") {
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
+			if (d.Get("advanced_security_options.0.enabled")).(bool) {
+				diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+			}
 		}
 
 		if d.HasChange("auto_tune_options") {
 			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
+			if (d.Get("auto_tune_options.0.desired_state")).(string) == "DISABLED" {
+				diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+			}
 		}
-
 		if d.HasChange("cognito_options") {
 			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]interface{}))
+		}
+
+		if d.HasChange("cluster_config.0.dedicated_master_count") {
+			o, n := d.GetChange("cluster_config.0.dedicated_master_count")
+			if o.(int) > n.(int) && o.(int) >= 2 {
+				diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+			}
 		}
 
 		if d.HasChange("domain_endpoint_options") {
@@ -1035,7 +1044,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 			if d.HasChange("cluster_config") {
 				config := d.Get("cluster_config").([]interface{})
-
 				if len(config) == 1 {
 					m := config[0].(map[string]interface{})
 					input.ClusterConfig = expandClusterConfig(m)
@@ -1055,10 +1063,19 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					} else {
 						log.Printf("[WARN] %s", err)
 					}
+					if d.HasChange("cluster_config.0.multi_az_with_standby_enabled") {
+						diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+					}
 				}
 			}
 		}
 
+		if d.HasChange("ebs_options") {
+			o, n := d.GetChange("ebs_options.0.volume_size")
+			if o.(int) > n.(int) {
+				diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+			}
+		}
 		if d.HasChange("encrypt_at_rest") {
 			input.EncryptionAtRestOptions = nil
 			if v, ok := d.GetOk("encrypt_at_rest"); ok {
@@ -1066,7 +1083,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				if options[0] == nil {
 					return sdkdiag.AppendErrorf(diags, "at least one field is expected inside encrypt_at_rest")
 				}
-
 				s := options[0].(map[string]interface{})
 				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 			}
@@ -1074,13 +1090,15 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("log_publishing_options") {
 			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
+			if d.Get("log_publishing_options.0.enabled").(bool) {
+				diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+			}
 		}
 
 		if d.HasChange("node_to_node_encryption") {
 			input.NodeToNodeEncryptionOptions = nil
 			if v, ok := d.GetOk("node_to_node_encryption"); ok {
 				options := v.([]interface{})
-
 				s := options[0].(map[string]interface{})
 				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 			}
@@ -1106,6 +1124,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("software_update_options") {
 			input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(d.Get("software_update_options").([]interface{}))
+			diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
 		}
 
 		if d.HasChange("vpc_options") {
@@ -1131,7 +1150,13 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				DomainName:    aws.String(d.Get(names.AttrDomainName).(string)),
 				TargetVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			}
+			o, n := d.GetChange(names.AttrEngineVersion)
+			_, oldVersion, _ := parseEngineVersion(o.(string))
+			_, newVersion, _ := parseEngineVersion(n.(string))
 
+			if semver.GreaterThanOrEqual(newVersion, oldVersion) {
+				diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+			}
 			_, err := conn.UpgradeDomain(ctx, &upgradeInput)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: %s", d.Id(), err)
@@ -1141,8 +1166,14 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: waiting for completion: %s", d.Id(), err)
 			}
 		}
+		// All changes that can cause a blue/green deployment
+		if d.HasChanges("cluster_config.0.instance_type", "cluster_config.0.warm_enabled", "cluster_config.0.cold_storage_options.enabled",
+			"cluster_config.0.dedicated_master_enabled", "vpc_options.0.subnet_ids", "vpc_options.0.security_group_ids",
+			"cognito_options.0.enabled", "cognito_options.0.identity_pool_id", "cognito_options.0.user_pool_id",
+			"advanced_options", "log_publishing_options", "encrypt_at_rest", "node_to_node_encryption") {
+			diags = sdkdiag.AppendWarningf(diags, "One of the updated attribute may cause a blue/green deployment on the cluster")
+		}
 	}
-
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
@@ -1150,7 +1181,6 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 	domainName := d.Get(names.AttrDomainName).(string)
-
 	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
 	_, err := conn.DeleteDomain(ctx, &opensearch.DeleteDomainInput{
 		DomainName: aws.String(domainName),
