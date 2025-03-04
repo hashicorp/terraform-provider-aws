@@ -114,6 +114,11 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							Optional:           true,
 							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Use filter instead",
+							Validators: []validator.String{
+								warnExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("filter"),
+								),
+							},
 						},
 						names.AttrStatus: schema.StringAttribute{
 							Required: true,
