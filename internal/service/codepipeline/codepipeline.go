@@ -288,6 +288,22 @@ func resourcePipeline() *schema.Resource {
 								Schema: conditionsSchema,
 							},
 						},
+						"on_success": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: conditionsSchema,
+							},
+						},
+						"on_failure": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: conditionsSchema,
+							},
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
@@ -875,6 +891,14 @@ func expandStageDeclaration(tfMap map[string]interface{}) *types.StageDeclaratio
 
 	if v, ok := tfMap["before_entry"].([]interface{}); ok && len(v) > 0 {
 		apiObject.BeforeEntry = expandBeforeEntryDeclaration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["on_success"].([]interface{}); ok && len(v) > 0 {
+		apiObject.OnSuccess = expandOnSuccessDeclaration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["on_failure"].([]interface{}); ok && len(v) > 0 {
+		apiObject.OnFailure = expandOnFailureDeclaration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -1481,6 +1505,34 @@ func expandBeforeEntryDeclaration(tfMap map[string]interface{}) *types.BeforeEnt
 	return apiObject
 }
 
+func expandOnSuccessDeclaration(tfMap map[string]interface{}) *types.SuccessConditions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.SuccessConditions{}
+
+	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Conditions = expandConditions(v)
+	}
+
+	return apiObject
+}
+
+func expandOnFailureDeclaration(tfMap map[string]interface{}) *types.FailureConditions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.FailureConditions{}
+
+	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Conditions = expandConditions(v)
+	}
+
+	return apiObject
+}
+
 func flattenArtifactStore(apiObject *types.ArtifactStore) map[string]interface{} {
 	tfMap := map[string]interface{}{
 		names.AttrType: apiObject.Type,
@@ -1644,6 +1696,26 @@ func flattenBeforeEntryDeclaration(apiObject *types.BeforeEntryConditions) map[s
 	return tfMap
 }
 
+func flattenOnSuccessDeclaration(apiObject *types.SuccessConditions) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Conditions; v != nil {
+		tfMap["conditions"] = flattenConditions(v)
+	}
+
+	return tfMap
+}
+
+func flattenOnFailureDeclaration(apiObject *types.FailureConditions) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Conditions; v != nil {
+		tfMap["conditions"] = flattenConditions(v)
+	}
+
+	return tfMap
+}
+
 func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.StageDeclaration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
@@ -1657,6 +1729,14 @@ func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.Stag
 
 	if v := apiObject.BeforeEntry; v != nil {
 		tfMap["before_entry"] = []interface{}{flattenBeforeEntryDeclaration(v)}
+	}
+
+	if v := apiObject.OnSuccess; v != nil {
+		tfMap["on_success"] = []interface{}{flattenOnSuccessDeclaration(v)}
+	}
+
+	if v := apiObject.OnFailure; v != nil {
+		tfMap["on_failure"] = []interface{}{flattenOnFailureDeclaration(v)}
 	}
 
 	return tfMap
