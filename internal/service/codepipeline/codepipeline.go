@@ -1306,7 +1306,7 @@ func expandTriggerDeclarations(tfList []interface{}) []types.PipelineTriggerDecl
 	return apiObjects
 }
 
-func expandBeforeEntryConditionRuleTypeId(tfMap map[string]interface{}) *types.RuleTypeId {
+func expandConditionRuleTypeId(tfMap map[string]interface{}) *types.RuleTypeId {
 	if tfMap == nil {
 		return nil
 	}
@@ -1332,7 +1332,7 @@ func expandBeforeEntryConditionRuleTypeId(tfMap map[string]interface{}) *types.R
 	return apiObject
 }
 
-func expandBeforeEntryConditionRuleInputArtifacts(tfList []interface{}) []types.InputArtifact {
+func expandConditionRuleInputArtifacts(tfList []interface{}) []types.InputArtifact {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1354,7 +1354,7 @@ func expandBeforeEntryConditionRuleInputArtifacts(tfList []interface{}) []types.
 	return apiObjects
 }
 
-func expandBeforeEntryConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
+func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1366,7 +1366,7 @@ func expandBeforeEntryConditionRule(tfMap map[string]interface{}) *types.RuleDec
 	}
 
 	if v, ok := tfMap["rule_type_id"].([]interface{}); ok && len(v) > 0 {
-		apiObject.RuleTypeId = expandBeforeEntryConditionRuleTypeId(v[0].(map[string]interface{}))
+		apiObject.RuleTypeId = expandConditionRuleTypeId(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["commands"].([]string); ok && len(v) > 0 {
@@ -1378,7 +1378,7 @@ func expandBeforeEntryConditionRule(tfMap map[string]interface{}) *types.RuleDec
 	}
 
 	if v, ok := tfMap["input_artifacts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InputArtifacts = expandBeforeEntryConditionRuleInputArtifacts(v)
+		apiObject.InputArtifacts = expandConditionRuleInputArtifacts(v)
 	}
 
 	if v, ok := tfMap["region"].(string); ok && v != "" {
@@ -1396,7 +1396,7 @@ func expandBeforeEntryConditionRule(tfMap map[string]interface{}) *types.RuleDec
 	return apiObject
 }
 
-func expandBeforeEntryConditionRules(tfList []interface{}) []types.RuleDeclaration {
+func expandConditionRules(tfList []interface{}) []types.RuleDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1410,7 +1410,7 @@ func expandBeforeEntryConditionRules(tfList []interface{}) []types.RuleDeclarati
 			continue
 		}
 
-		apiObject := expandBeforeEntryConditionRule(tfMap)
+		apiObject := expandConditionRule(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -1422,7 +1422,7 @@ func expandBeforeEntryConditionRules(tfList []interface{}) []types.RuleDeclarati
 	return apiObjects
 }
 
-func expandBeforeEntryCondition(tfMap map[string]interface{}) *types.Condition {
+func expandCondition(tfMap map[string]interface{}) *types.Condition {
 	if tfMap == nil {
 		return nil
 	}
@@ -1434,13 +1434,13 @@ func expandBeforeEntryCondition(tfMap map[string]interface{}) *types.Condition {
 	}
 
 	if v, ok := tfMap["rules"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Rules = expandBeforeEntryConditionRules(v)
+		apiObject.Rules = expandConditionRules(v)
 	}
 
 	return apiObject
 }
 
-func expandBeforeEntryConditions(tfList []interface{}) []types.Condition {
+func expandConditions(tfList []interface{}) []types.Condition {
 
 	if len(tfList) == 0 {
 		return nil
@@ -1454,7 +1454,7 @@ func expandBeforeEntryConditions(tfList []interface{}) []types.Condition {
 		if !ok {
 			continue
 		}
-		apiObject := expandBeforeEntryCondition(tfMap)
+		apiObject := expandCondition(tfMap)
 		if apiObject == nil {
 			continue
 		}
@@ -1473,7 +1473,7 @@ func expandBeforeEntryDeclaration(tfMap map[string]interface{}) *types.BeforeEnt
 	apiObject := &types.BeforeEntryConditions{}
 
 	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Conditions = expandBeforeEntryConditions(v)
+		apiObject.Conditions = expandConditions(v)
 	}
 
 	return apiObject
@@ -1528,7 +1528,7 @@ func flattenEncryptionKey(apiObject *types.EncryptionKey) map[string]interface{}
 	return tfMap
 }
 
-func flattenBeforeEntryConditionRuleTypeId(apiObject *types.RuleTypeId) map[string]interface{} {
+func flattenConditionRuleTypeId(apiObject *types.RuleTypeId) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1552,7 +1552,7 @@ func flattenBeforeEntryConditionRuleTypeId(apiObject *types.RuleTypeId) map[stri
 	return tfMap
 }
 
-func flattenBeforeEntryConditionRule(apiObjects types.RuleDeclaration) map[string]interface{} {
+func flattenConditionRule(apiObjects types.RuleDeclaration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObjects.Name; v != nil {
@@ -1560,7 +1560,7 @@ func flattenBeforeEntryConditionRule(apiObjects types.RuleDeclaration) map[strin
 	}
 
 	if v := apiObjects.RuleTypeId; v != nil {
-		tfMap["rule_type_id"] = []interface{}{flattenBeforeEntryConditionRuleTypeId(v)}
+		tfMap["rule_type_id"] = []interface{}{flattenConditionRuleTypeId(v)}
 	}
 
 	if v := apiObjects.Commands; v != nil {
@@ -1590,7 +1590,7 @@ func flattenBeforeEntryConditionRule(apiObjects types.RuleDeclaration) map[strin
 	return tfMap
 }
 
-func flattenBeforeEntryConditionRules(apiObjects []types.RuleDeclaration) []interface{} {
+func flattenConditionRules(apiObjects []types.RuleDeclaration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1598,13 +1598,13 @@ func flattenBeforeEntryConditionRules(apiObjects []types.RuleDeclaration) []inte
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenBeforeEntryConditionRule(apiObject))
+		tfList = append(tfList, flattenConditionRule(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenBeforeEntryCondition(apiObject types.Condition) map[string]interface{} {
+func flattenCondition(apiObject types.Condition) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Result; v != "" {
@@ -1612,13 +1612,13 @@ func flattenBeforeEntryCondition(apiObject types.Condition) map[string]interface
 	}
 
 	if v := apiObject.Rules; v != nil {
-		tfMap["rules"] = flattenBeforeEntryConditionRules(v)
+		tfMap["rules"] = flattenConditionRules(v)
 	}
 
 	return tfMap
 }
 
-func flattenBeforeEntryConditions(apiObjects []types.Condition) []interface{} {
+func flattenConditions(apiObjects []types.Condition) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1626,7 +1626,7 @@ func flattenBeforeEntryConditions(apiObjects []types.Condition) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenBeforeEntryCondition(apiObject))
+		tfList = append(tfList, flattenCondition(apiObject))
 	}
 
 	return tfList
@@ -1636,7 +1636,7 @@ func flattenBeforeEntryDeclaration(apiObject *types.BeforeEntryConditions) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
-		tfMap["conditions"] = flattenBeforeEntryConditions(v)
+		tfMap["conditions"] = flattenConditions(v)
 	}
 
 	return tfMap
