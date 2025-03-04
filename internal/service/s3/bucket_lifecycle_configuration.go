@@ -194,6 +194,14 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
+										Validators: []validator.String{
+											warnExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
+												path.MatchRelative().AtParent().AtName("object_size_less_than"),
+												path.MatchRelative().AtParent().AtName("and"),
+												path.MatchRelative().AtParent().AtName("tag"),
+											),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
