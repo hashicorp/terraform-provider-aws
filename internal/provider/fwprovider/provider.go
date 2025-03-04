@@ -359,7 +359,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.RegionOverride && getAttribute != nil {
+					if v.IsRegionOverrideEnabled && getAttribute != nil {
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
 						if diags.HasError() {
 							return ctx, diags
@@ -448,7 +448,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.RegionOverride && getAttribute != nil {
+					if v.IsRegionOverrideEnabled && getAttribute != nil {
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
 						if diags.HasError() {
 							return ctx, diags
@@ -514,7 +514,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 						var diags diag.Diagnostics
 						var overrideRegion string
 
-						if v.RegionOverride && getAttribute != nil {
+						if v.IsRegionOverrideEnabled && getAttribute != nil {
 							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
 							if diags.HasError() {
 								return ctx, diags
