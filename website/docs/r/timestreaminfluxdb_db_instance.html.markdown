@@ -238,7 +238,7 @@ The following arguments are optional:
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Indicates whether log delivery to the S3 bucket is enabled.
 
-**Note**: Only three arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
+**Note:** Four arguments support in-place updates: `allocated_storage`, `db_parameter_group_identifier`, `log_delivery_configuration`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
 
 ## Attribute Reference
 
