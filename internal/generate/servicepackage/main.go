@@ -117,6 +117,7 @@ func main() {
 type ResourceDatum struct {
 	FactoryName             string
 	Name                    string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
+	RegionOverrideEnabled   bool
 	TransparentTagging      bool
 	TagsIdentifierAttribute string
 	TagsResourceType        string
