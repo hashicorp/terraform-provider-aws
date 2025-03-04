@@ -892,7 +892,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("and"), knownvalue.ListExact([]knownvalue.Check{})),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("object_size_greater_than")),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("object_size_less_than")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey(names.AttrPrefix), knownvalue.StringExact("")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey(names.AttrPrefix)),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("tag"), knownvalue.ListExact([]knownvalue.Check{})),
 
 						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("noncurrent_version_transition"),
