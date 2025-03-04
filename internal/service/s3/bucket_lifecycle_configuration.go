@@ -111,11 +111,8 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							},
 						},
 						names.AttrPrefix: schema.StringAttribute{
-							Optional: true,
-							Computed: true, // Because of Legacy value handling
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+							Optional:           true,
+							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Use filter instead",
 						},
 						names.AttrStatus: schema.StringAttribute{

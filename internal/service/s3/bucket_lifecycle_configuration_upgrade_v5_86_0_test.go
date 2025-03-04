@@ -883,7 +883,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 								names.AttrID:                    knownvalue.StringExact(rName),
 								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								// "noncurrent_version_transition":
-								names.AttrPrefix: knownvalue.StringExact(""),
+								// names.AttrPrefix:
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition":     checkTransitions(),
 							}),

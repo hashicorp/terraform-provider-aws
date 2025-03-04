@@ -119,7 +119,6 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
-								names.AttrPrefix:                    knownvalue.StringExact(""),
 								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition":                        checkTransitions(),
 							}),
@@ -129,6 +128,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 							checkExpiration_Days(365),
 							checkExpiration_DaysAfterMigration(365),
 						),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrPrefix)),
 						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter),
 							checkFilter_Prefix(""),
 							checkFilter_None(),
@@ -1306,7 +1306,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 								names.AttrID:                    knownvalue.StringExact(rName),
 								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								// "noncurrent_version_transition":
-								names.AttrPrefix: knownvalue.StringExact(""),
+								// names.AttrPrefix:
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition":     checkTransitions(),
 							}),
