@@ -6,7 +6,9 @@ package route53domains
 // Exports for use in tests only.
 var (
 	ResourceDelegationSignerRecord = newDelegationSignerRecordResource
+	ResourceDomain                 = newDomainResource
 	ResourceRegisteredDomain       = resourceRegisteredDomain
 
 	FindDNSSECKeyByTwoPartKey = findDNSSECKeyByTwoPartKey
+	FindDomainDetailByName    = findDomainDetailByName
 )

@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_user_defined_function")
+// @SDKResource("aws_glue_user_defined_function", name="User Defined Function")
 func ResourceUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserDefinedFunctionCreate,

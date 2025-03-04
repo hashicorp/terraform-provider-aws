@@ -20,7 +20,7 @@ resource "aws_oam_sink" "example" {
 }
 
 resource "aws_oam_sink_policy" "example" {
-  sink_identifier = aws_oam_sink.example.id
+  sink_identifier = aws_oam_sink.example.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -54,7 +54,6 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Sink.
-* `id` - ARN of the sink to attach this policy to.
 * `sink_id` - ID string that AWS generated as part of the sink ARN.
 
 ## Timeouts

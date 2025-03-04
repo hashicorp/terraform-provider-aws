@@ -164,7 +164,7 @@ func sweepSecurityConfigs(region string) error {
 			id := aws.ToString(sc.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Config: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityConfig, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -209,7 +209,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),
@@ -236,7 +236,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),
@@ -281,7 +281,7 @@ func sweepVPCEndpoints(region string) error {
 			id := aws.ToString(endpoint.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless VPC Endpoint: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCEndpointResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}

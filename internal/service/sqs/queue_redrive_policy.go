@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_sqs_queue_redrive_policy")
+// @SDKResource("aws_sqs_queue_redrive_policy", name="Queue Redrive Policy")
 func resourceQueueRedrivePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNameRedrivePolicy,

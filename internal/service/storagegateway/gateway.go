@@ -269,7 +269,6 @@ func resourceGateway() *schema.Resource {
 			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }

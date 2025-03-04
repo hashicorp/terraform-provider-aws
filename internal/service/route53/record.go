@@ -442,6 +442,12 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return sdkdiag.AppendErrorf(diags, "setting failover_routing_policy: %s", err)
 		}
 	}
+	// findResourceRecordSetByFourPartKey returns the FQDN in API-normalized form.
+	// For backwards compatibility, restore any '*' as the leftmost label in the domain name.
+	// \052 is the octal representation of '*'.
+	if v := aws.ToString(fqdn); strings.HasPrefix(v, `\052.`) {
+		fqdn = aws.String(`*.` + strings.TrimPrefix(v, `\052.`))
+	}
 	d.Set("fqdn", fqdn)
 	if geoLocation := record.GeoLocation; geoLocation != nil {
 		tfList := []interface{}{map[string]interface{}{

@@ -55,10 +55,6 @@ type resourceExport struct {
 	framework.WithImportByID
 }
 
-func (r *resourceExport) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bcmdataexports_export"
-}
-
 func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	dataQueryLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
@@ -379,10 +375,6 @@ func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest,
 		)
 		return
 	}
-}
-
-func (r *resourceExport) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {

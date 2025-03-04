@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -1292,7 +1293,7 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 
 func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NatGatewayAddressStatusUnassigning),
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusUnassigning),
 		Target:  []string{},
 		Refresh: statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
 		Timeout: timeout,
@@ -1677,12 +1678,12 @@ func waitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.Client, id str
 		if output.ActivityStatus == awstypes.ActivityStatusError {
 			var errs []error
 
-			input := &ec2.DescribeSpotFleetRequestHistoryInput{
+			input := ec2.DescribeSpotFleetRequestHistoryInput{
 				SpotFleetRequestId: aws.String(id),
 				StartTime:          aws.Time(time.UnixMilli(0)),
 			}
 
-			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, input); err == nil {
+			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, &input); err == nil {
 				for _, v := range output {
 					if eventType := v.EventType; eventType == awstypes.EventTypeError || eventType == awstypes.EventTypeInformation {
 						errs = append(errs, errors.New(aws.ToString(v.EventInformation.EventDescription)))
@@ -2771,7 +2772,7 @@ func waitVPCEndpointAccepted(ctx context.Context, conn *ec2.Client, vpcEndpointI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		if state, lastError := output.State, output.LastError; state == awstypes.StateFailed && lastError != nil {
+		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 
@@ -2794,7 +2795,7 @@ func waitVPCEndpointAvailable(ctx context.Context, conn *ec2.Client, vpcEndpoint
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		if state, lastError := output.State, output.LastError; state == awstypes.StateFailed && lastError != nil {
+		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 

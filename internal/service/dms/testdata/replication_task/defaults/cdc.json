@@ -110,7 +110,8 @@
     "TableErrorEscalationCount": 0,
     "FullLoadIgnoreConflicts": true,
     "DataErrorPolicy": "LOG_ERROR",
-    "TableErrorPolicy": "SUSPEND_TABLE"
+    "TableErrorPolicy": "SUSPEND_TABLE",
+    "DataMaskingErrorPolicy": "STOP_TASK"
   },
   "TTSettings": {
     "TTS3Settings": null,

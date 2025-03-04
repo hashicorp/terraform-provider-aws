@@ -43,9 +43,11 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "vocabulary_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
+					resource.TestCheckResourceAttr(resourceName, "vocabulary_name", rName),
 				),
 			},
 			{
@@ -84,7 +86,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
 			},
@@ -92,7 +94,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test2.txt"),
 				),
 			},

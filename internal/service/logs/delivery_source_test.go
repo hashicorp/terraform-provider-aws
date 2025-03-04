@@ -48,7 +48,7 @@ func testAccDeliverySource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliverySourceConfig_basic(rName),
+				Config: testAccDeliverySourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
 				),
@@ -101,7 +101,7 @@ func testAccDeliverySource_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliverySourceConfig_basic(rName),
+				Config: testAccDeliverySourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliverySource, resourceName),
@@ -137,7 +137,7 @@ func testAccDeliverySource_tags(t *testing.T) {
 		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliverySourceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDeliverySourceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
 				),
@@ -160,7 +160,7 @@ func testAccDeliverySource_tags(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccLogDeliverySourceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeliverySourceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
 				),
@@ -177,7 +177,7 @@ func testAccDeliverySource_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLogDeliverySourceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeliverySourceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
 				),
@@ -254,7 +254,57 @@ func testAccDeliverySourceImportStateIDFunc(n string) resource.ImportStateIdFunc
 	}
 }
 
-func testAccLogDeliverySourceConfig_base(rName string) string {
+func testAccDeliverySourceConfig_baseCloudFrontDistribution(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccDeliverySourceConfig_base(rName string) string {
 	foundationModel := "amazon.titan-embed-text-v1"
 
 	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, foundationModel), fmt.Sprintf(`
@@ -290,8 +340,8 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, foundationModel))
 }
 
-func testAccLogDeliverySourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_base(rName), fmt.Sprintf(`
+func testAccDeliverySourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery_source" "test" {
   name         = %[1]q
   log_type     = "APPLICATION_LOGS"
@@ -300,8 +350,8 @@ resource "aws_cloudwatch_log_delivery_source" "test" {
 `, rName))
 }
 
-func testAccLogDeliverySourceConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_base(rName), fmt.Sprintf(`
+func testAccDeliverySourceConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery_source" "test" {
   name         = %[1]q
   log_type     = "APPLICATION_LOGS"
@@ -314,8 +364,8 @@ resource "aws_cloudwatch_log_delivery_source" "test" {
 `, rName, tag1Key, tag1Value))
 }
 
-func testAccLogDeliverySourceConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_base(rName), fmt.Sprintf(`
+func testAccDeliverySourceConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery_source" "test" {
   name         = %[1]q
   log_type     = "APPLICATION_LOGS"

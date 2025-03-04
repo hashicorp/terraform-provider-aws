@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elastictranscoder_preset")
+// @SDKResource("aws_elastictranscoder_preset", name="Preset")
 func ResourcePreset() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePresetCreate,

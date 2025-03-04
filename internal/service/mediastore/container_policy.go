@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_media_store_container_policy")
+// @SDKResource("aws_media_store_container_policy", name="Container Policy")
 func ResourceContainerPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerPolicyPut,

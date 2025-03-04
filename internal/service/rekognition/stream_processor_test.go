@@ -44,8 +44,9 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamProcessorConfig_connectedHome(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "rekognition", "streamprocessor/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "data_sharing_preference.0.opt_in", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "output.0.s3_destination.0.bucket", s3BucketResourceName, names.AttrBucket),
@@ -54,7 +55,7 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "settings.0.connected_home.0.labels.*", "ALL"),
 					resource.TestCheckResourceAttrPair(resourceName, "input.0.kinesis_video_stream.0.arn", kinesisVideoStreamResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "notification_channel.0.sns_topic_arn", snsTopicResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "stream_processor_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "stream_processor_arn", resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -87,7 +88,7 @@ func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamProcessorConfig_connectedHome(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
 				),
@@ -116,7 +117,7 @@ func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_boundingBox()),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
@@ -128,7 +129,7 @@ func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 			},
 			{
 				Config: testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_polygons()),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor2),
 					testAccCheckStreamProcessorNotRecreated(&streamprocessor, &streamprocessor2),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
@@ -165,7 +166,7 @@ func TestAccRekognitionStreamProcessor_faceRecognition(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamProcessorConfig_faceRecognition(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -200,7 +201,7 @@ func TestAccRekognitionStreamProcessor_faceRecognition_boundingBox(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamProcessorConfig_faceRecognition(rName, testAccStreamProcessorConfig_boundingBox()),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
@@ -233,7 +234,7 @@ func TestAccRekognitionStreamProcessor_faceRecognition_polygon(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamProcessorConfig_faceRecognition(rName, testAccStreamProcessorConfig_polygons()),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "3"),
@@ -268,7 +269,7 @@ func TestAccRekognitionStreamProcessor_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamProcessorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -283,7 +284,7 @@ func TestAccRekognitionStreamProcessor_tags(t *testing.T) {
 			},
 			{
 				Config: testAccStreamProcessorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -292,7 +293,7 @@ func TestAccRekognitionStreamProcessor_tags(t *testing.T) {
 			},
 			{
 				Config: testAccStreamProcessorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),

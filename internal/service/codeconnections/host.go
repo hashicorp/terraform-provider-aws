@@ -32,8 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Host")
+// @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
@@ -53,10 +52,6 @@ type hostResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *hostResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeconnections_host"
 }
 
 func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -308,10 +303,6 @@ func (r *hostResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		)
 		return
 	}
-}
-
-func (r *hostResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *hostResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Resource Collection")
+// @FrameworkDataSource("aws_devopsguru_resource_collection", name="Resource Collection")
 func newDataSourceResourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceResourceCollection{}, nil
 }
@@ -28,10 +28,6 @@ const (
 
 type dataSourceResourceCollection struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceResourceCollection) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_devopsguru_resource_collection"
 }
 
 func (d *dataSourceResourceCollection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

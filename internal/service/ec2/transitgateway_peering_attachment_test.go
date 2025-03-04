@@ -43,6 +43,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "0"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),

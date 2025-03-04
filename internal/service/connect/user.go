@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceUser() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -345,10 +342,11 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Deleting Connect User: %s", d.Id())
-	_, err = conn.DeleteUser(ctx, &connect.DeleteUserInput{
+	input := connect.DeleteUserInput{
 		InstanceId: aws.String(instanceID),
 		UserId:     aws.String(userID),
-	})
+	}
+	_, err = conn.DeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

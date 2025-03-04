@@ -142,7 +142,7 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
+				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis, engineValkey}, false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -342,7 +342,6 @@ func resourceCluster() *schema.Resource {
 			clusterValidateNumCacheNodes,
 			clusterForceNewOnMemcachedNodeTypeChange,
 			clusterValidateMemcachedSnapshotIdentifier,
-			verify.SetTagsDiff,
 		),
 	}
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -234,6 +235,33 @@ func resourceConnection() *schema.Resource {
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(0, 512),
 				},
+				"invocation_connectivity_parameters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"resource_parameters": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource_association_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"resource_configuration_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -265,6 +293,10 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("invocation_connectivity_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.CreateConnection(ctx, input)
@@ -306,6 +338,13 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("authorization_type", output.AuthorizationType)
 	d.Set(names.AttrDescription, output.Description)
+	if output.InvocationConnectivityParameters != nil {
+		if err := d.Set("invocation_connectivity_parameters", []interface{}{flattenDescribeConnectionConnectivityParameters(output.InvocationConnectivityParameters)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting invocation_connectivity_parameters: %s", err)
+		}
+	} else {
+		d.Set("invocation_connectivity_parameters", nil)
+	}
 	d.Set(names.AttrName, output.Name)
 	d.Set("secret_arn", output.SecretArn)
 
@@ -330,6 +369,10 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("invocation_connectivity_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.UpdateConnection(ctx, input)
@@ -971,4 +1014,64 @@ func expandUpdateConnectionOAuthClientRequestParameters(tfList []interface{}) *t
 	}
 
 	return apiObject
+}
+
+func expandConnectivityResourceParameters(tfMap map[string]interface{}) *types.ConnectivityResourceParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ConnectivityResourceParameters{}
+
+	if v, ok := tfMap["resource_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ResourceParameters = expandConnectivityResourceConfigurationARN(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandConnectivityResourceConfigurationARN(tfMap map[string]interface{}) *types.ConnectivityResourceConfigurationArn {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ConnectivityResourceConfigurationArn{}
+
+	if v, ok := tfMap["resource_configuration_arn"].(string); ok && v != "" {
+		apiObject.ResourceConfigurationArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenDescribeConnectionConnectivityParameters(apiObject *types.DescribeConnectionConnectivityParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ResourceParameters; v != nil {
+		tfMap["resource_parameters"] = []interface{}{flattenDescribeConnectionResourceParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenDescribeConnectionResourceParameters(apiObject *types.DescribeConnectionResourceParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ResourceAssociationArn; v != nil {
+		tfMap["resource_association_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ResourceConfigurationArn; v != nil {
+		tfMap["resource_configuration_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
 }

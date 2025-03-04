@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kendra_experience")
+// @SDKResource("aws_kendra_experience", name="Experience")
 func ResourceExperience() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperienceCreate,

@@ -92,6 +92,7 @@ This resource supports the following arguments:
 
 - `name` - (Required) The name of the event data store.
 - `billing_mode` - (Optional) The billing mode for the event data store. The valid values are `EXTENDABLE_RETENTION_PRICING` and `FIXED_RETENTION_PRICING`. Defaults to `EXTENDABLE_RETENTION_PRICING`.
+- `suspend` - (Optional) Specifies whether to stop ingesting new events into the event data store. If set to `true`, ingestion is suspended while maintaining the ability to query existing events. If set to `false`, ingestion is active.
 - `advanced_event_selector` - (Optional) The advanced event selectors to use to select the events for the data store. For more information about how to use advanced event selectors, see [Log events by using advanced event selectors](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html#creating-data-event-selectors-advanced) in the CloudTrail User Guide.
 - `multi_region_enabled` - (Optional) Specifies whether the event data store includes events from all regions, or only from the region in which the event data store is created. Default: `true`.
 - `organization_enabled` - (Optional) Specifies whether an event data store collects events logged for an organization in AWS Organizations. Default: `false`.
@@ -152,4 +153,4 @@ Using `terraform import`, import event data stores using their `arn`. For exampl
 % terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f4bc0565488d90b66ae4b82d9b0723130fb534182f7ac4095a746f7571dd2922 -->
+<!-- cache-key: cdktf-0.20.8 input-e01aa175cb632c503cf9995e1aecfc59c9c01434c5b4a17cfc8d0bbe6226427b -->

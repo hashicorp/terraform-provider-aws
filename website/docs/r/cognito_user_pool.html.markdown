@@ -76,6 +76,7 @@ The following arguments are optional:
 * `deletion_protection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `device_configuration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
+* `email_mfa_configuration` -  (Optional) Configuration block for configuring email Multi-Factor Authentication (MFA); requires at least 2 `account_recovery_setting` entries; requires an `email_configuration` configuration block. [Detailed below](#email_mfa_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
 * `email_verification_subject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
 * `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
@@ -125,6 +126,11 @@ The following arguments are optional:
 * `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `reply_to_email_address` - (Optional) REPLY-TO email address.
 * `source_arn` - (Optional) ARN of the SES verified email identity to use. Required if `email_sending_account` is set to `DEVELOPER`.
+
+### email_mfa_configuration
+
+* `message` - (Optional) The template for the email messages that your user pool sends to users with codes for MFA and sign-in with email OTPs. The message must contain the {####} placeholder. In the message, Amazon Cognito replaces this placeholder with the code. If you don't provide this parameter, Amazon Cognito sends messages in the default format.
+* `subject` - (Optional) The subject of the email messages that your user pool sends to users with codes for MFA and email OTP sign-in.
 
 ### lambda_config
 

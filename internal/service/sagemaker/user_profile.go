@@ -922,8 +922,6 @@ func resourceUserProfile() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

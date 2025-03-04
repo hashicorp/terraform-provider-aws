@@ -56,6 +56,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "disconnect_on_session_timeout", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
@@ -547,6 +548,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfs
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description1"),
+					resource.TestCheckResourceAttr(resourceName, "disconnect_on_session_timeout", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "12"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", acctest.CtTrue),
@@ -564,6 +566,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfs
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description2"),
+					resource.TestCheckResourceAttr(resourceName, "disconnect_on_session_timeout", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "10"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", acctest.CtFalse),
@@ -1155,13 +1158,14 @@ func testAccClientVPNEndpointConfig_simpleAttributes(t *testing.T, rName string)
 		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test2"),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  client_cidr_block      = "10.0.0.0/16"
-  description            = "Description1"
-  server_certificate_arn = aws_acm_certificate.test1.arn
-  split_tunnel           = true
-  session_timeout_hours  = 12
-  transport_protocol     = "tcp"
-  vpn_port               = 1194
+  client_cidr_block             = "10.0.0.0/16"
+  description                   = "Description1"
+  disconnect_on_session_timeout = true
+  server_certificate_arn        = aws_acm_certificate.test1.arn
+  split_tunnel                  = true
+  session_timeout_hours         = 12
+  transport_protocol            = "tcp"
+  vpn_port                      = 1194
 
   authentication_options {
     type                       = "certificate-authentication"
@@ -1185,13 +1189,14 @@ func testAccClientVPNEndpointConfig_simpleAttributesUpdated(t *testing.T, rName 
 		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test2"),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  client_cidr_block      = "10.0.0.0/16"
-  description            = "Description2"
-  server_certificate_arn = aws_acm_certificate.test2.arn
-  split_tunnel           = false
-  session_timeout_hours  = 10
-  transport_protocol     = "tcp"
-  vpn_port               = 443
+  client_cidr_block             = "10.0.0.0/16"
+  description                   = "Description2"
+  disconnect_on_session_timeout = false
+  server_certificate_arn        = aws_acm_certificate.test2.arn
+  split_tunnel                  = false
+  session_timeout_hours         = 10
+  transport_protocol            = "tcp"
+  vpn_port                      = 443
 
   authentication_options {
     type                       = "certificate-authentication"

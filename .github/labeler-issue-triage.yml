@@ -99,6 +99,8 @@ service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
+service/billing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -335,6 +337,8 @@ service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
 service/internetmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
+service/invoicing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_invoicing_'
 service/iot:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_iot_'
 service/iot1clickdevices:

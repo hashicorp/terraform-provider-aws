@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_security_group")
+// @SDKDataSource("aws_security_group", name="Security Group")
 // @Tags
 // @Testing(tagsIdentifierAttribute="id")
 func dataSourceSecurityGroup() *schema.Resource {

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sns_topic_data_protection_policy")
+// @SDKResource("aws_sns_topic_data_protection_policy", name="Topic Data Protection Policy")
 func resourceTopicDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,

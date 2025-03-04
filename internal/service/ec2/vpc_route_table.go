@@ -163,8 +163,6 @@ func resourceRouteTable() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -375,9 +373,10 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting Route Table: %s", d.Id())
-	_, err = conn.DeleteRouteTable(ctx, &ec2.DeleteRouteTableInput{
+	input := ec2.DeleteRouteTableInput{
 		RouteTableId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteRouteTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return diags

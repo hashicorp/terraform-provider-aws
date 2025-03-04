@@ -27,6 +27,7 @@ Backup
 Batch
 Bedrock
 Bedrock Agents
+Billing
 CE (Cost Explorer)
 Chatbot
 Chime
@@ -110,6 +111,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
 End User Messaging SMS
@@ -134,6 +136,7 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Invoicing
 IoT Analytics
 IoT Core
 IoT Events

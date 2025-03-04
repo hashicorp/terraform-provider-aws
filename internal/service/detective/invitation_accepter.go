@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_detective_invitation_accepter")
+// @SDKResource("aws_detective_invitation_accepter", name="Invitation Accepter")
 func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInvitationAccepterCreate,
@@ -91,9 +91,10 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Invitation Accepter: %s", d.Id())
-	_, err := conn.DisassociateMembership(ctx, &detective.DisassociateMembershipInput{
+	input := detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateMembership(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

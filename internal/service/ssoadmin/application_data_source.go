@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Application")
+// @FrameworkDataSource("aws_ssoadmin_application", name="Application")
 func newDataSourceApplication(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplication{}, nil
 }
@@ -27,10 +27,6 @@ const (
 
 type dataSourceApplication struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceApplication) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_ssoadmin_application"
 }
 
 func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

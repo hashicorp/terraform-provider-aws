@@ -23,6 +23,7 @@ resource "aws_media_convert_queue" "test" {
 This resource supports the following arguments:
 
 * `name` - (Required) A unique identifier describing the queue
+* `concurrent_jobs` - (Optional) The maximum number of jobs your queue can process concurrently. For on-demand queues, the value you enter is constrained by your service quotas for Maximum concurrent jobs, per on-demand queue and Maximum concurrent jobs, per account. For reserved queues, specify the number of jobs you can process concurrently in your reservation plan instead.
 * `description` - (Optional) A description of the queue
 * `pricing_plan` - (Optional) Specifies whether the pricing plan for the queue is on-demand or reserved. Valid values are `ON_DEMAND` or `RESERVED`. Default to `ON_DEMAND`.
 * `reservation_plan_settings` - (Optional) A detail pricing plan of the  reserved queue. See below.

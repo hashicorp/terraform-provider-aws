@@ -26,7 +26,7 @@ func testAccPromptDataSource_name(t *testing.T) {
 			{
 				Config: testAccPromptDataSourceConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, datasourceName, names.AttrARN, "connect", "instance/{instance_id}/prompt/{prompt_id}"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "Beep.wav"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prompt_id"),

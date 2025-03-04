@@ -79,7 +79,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.PutGatewayResponseInput{
+	input := apigateway.PutGatewayResponseInput{
 		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 	}
@@ -96,7 +96,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 		input.StatusCode = aws.String(v.(string))
 	}
 
-	_, err := conn.PutGatewayResponse(ctx, input)
+	_, err := conn.PutGatewayResponse(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting API Gateway Gateway Response: %s", err)
@@ -138,10 +138,11 @@ func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
-	_, err := conn.DeleteGatewayResponse(ctx, &apigateway.DeleteGatewayResponseInput{
+	input := apigateway.DeleteGatewayResponseInput{
 		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
-	})
+	}
+	_, err := conn.DeleteGatewayResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -155,12 +156,12 @@ func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findGatewayResponseByTwoPartKey(ctx context.Context, conn *apigateway.Client, responseType, apiID string) (*apigateway.GetGatewayResponseOutput, error) {
-	input := &apigateway.GetGatewayResponseInput{
+	input := apigateway.GetGatewayResponseInput{
 		ResponseType: types.GatewayResponseType(responseType),
 		RestApiId:    aws.String(apiID),
 	}
 
-	output, err := conn.GetGatewayResponse(ctx, input)
+	output, err := conn.GetGatewayResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

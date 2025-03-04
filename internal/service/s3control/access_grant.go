@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grant")
+// @FrameworkResource("aws_s3control_access_grant", name="Access Grant")
 // @Tags
 func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantResource{}
@@ -43,10 +43,6 @@ func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, er
 type accessGrantResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *accessGrantResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grant"
 }
 
 func (r *accessGrantResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -311,10 +307,6 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *accessGrantResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {

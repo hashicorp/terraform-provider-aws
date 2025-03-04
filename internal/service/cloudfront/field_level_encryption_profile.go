@@ -196,10 +196,11 @@ func resourceFieldLevelEncryptionProfileDelete(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Profile: (%s)", d.Id())
-	_, err := conn.DeleteFieldLevelEncryptionProfile(ctx, &cloudfront.DeleteFieldLevelEncryptionProfileInput{
+	input := cloudfront.DeleteFieldLevelEncryptionProfileInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteFieldLevelEncryptionProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionProfile](err) {
 		return diags

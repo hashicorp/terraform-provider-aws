@@ -115,10 +115,11 @@ func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Rejecting VPC Endpoint Connection: %s", d.Id())
-	_, err = conn.RejectVpcEndpointConnections(ctx, &ec2.RejectVpcEndpointConnectionsInput{
+	input := ec2.RejectVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
 		VpcEndpointIds: []string{vpcEndpointID},
-	})
+	}
+	_, err = conn.RejectVpcEndpointConnections(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return diags

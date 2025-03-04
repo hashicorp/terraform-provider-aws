@@ -210,6 +210,31 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"email_mfa_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMessage: {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(6, 20000),
+								validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+							),
+						},
+						"subject": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+								`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+						},
+					},
+				},
+			},
 			"email_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -686,8 +711,6 @@ func resourceUserPool() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -845,6 +868,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{}))
 		}
 
+		if v := d.Get("email_mfa_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
+			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
+		}
+
 		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
 			input.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
 				SmsConfiguration: expandSMSConfigurationType(v),
@@ -958,11 +985,13 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
 	}
 
+	if err := d.Set("email_mfa_configuration", flattenEmailMFAConfigType(output.EmailMfaConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting email_mfa_configuration: %s", err)
+	}
 	d.Set("mfa_configuration", output.MfaConfiguration)
 	if err := d.Set("software_token_mfa_configuration", flattenSoftwareTokenMFAConfigType(output.SoftwareTokenMfaConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting software_token_mfa_configuration: %s", err)
 	}
-
 	if err := d.Set("web_authn_configuration", flattenWebAuthnConfigType(output.WebAuthnConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting web_authn_configuration: %s", err)
 	}
@@ -976,6 +1005,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	// MFA updates.
 	if d.HasChanges(
+		"email_mfa_configuration",
 		"mfa_configuration",
 		"sms_authentication_message",
 		"sms_configuration",
@@ -985,6 +1015,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		mfaConfiguration := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string))
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
 			MfaConfiguration:              mfaConfiguration,
+			EmailMfaConfiguration:         expandEmailMFAConfigType(d.Get("email_mfa_configuration").([]interface{})),
 			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
 			UserPoolId:                    aws.String(d.Id()),
 			WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]interface{})),
@@ -1236,9 +1267,10 @@ func resourceUserPoolDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool: %s", d.Id())
-	_, err := conn.DeleteUserPool(ctx, &cognitoidentityprovider.DeleteUserPoolInput{
+	input := cognitoidentityprovider.DeleteUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteUserPool(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -1311,6 +1343,25 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	}
 
 	return output, nil
+}
+
+func expandEmailMFAConfigType(tfList []interface{}) *awstypes.EmailMfaConfigType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.EmailMfaConfigType{}
+
+	if v, ok := tfMap[names.AttrMessage].(string); ok && v != "" {
+		apiObject.Message = aws.String(v)
+	}
+
+	if v, ok := tfMap["subject"].(string); ok && v != "" {
+		apiObject.Subject = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func expandSMSConfigurationType(tfList []interface{}) *awstypes.SmsConfigurationType {
@@ -1388,6 +1439,24 @@ func flattenSMSConfigurationType(apiObject *awstypes.SmsConfigurationType) []int
 
 	if v := apiObject.SnsRegion; v != nil {
 		tfMap["sns_region"] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenEmailMFAConfigType(apiObject *awstypes.EmailMfaConfigType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Message; v != nil {
+		tfMap[names.AttrMessage] = aws.ToString(v)
+	}
+
+	if v := apiObject.Subject; v != nil {
+		tfMap["subject"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

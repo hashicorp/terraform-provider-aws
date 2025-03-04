@@ -199,11 +199,12 @@ func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR Allocation: %s", d.Id())
-	_, err = conn.ReleaseIpamPoolAllocation(ctx, &ec2.ReleaseIpamPoolAllocationInput{
+	input := ec2.ReleaseIpamPoolAllocationInput{
 		Cidr:                 aws.String(d.Get("cidr").(string)),
 		IpamPoolAllocationId: aws.String(allocationID),
 		IpamPoolId:           aws.String(poolID),
-	})
+	}
+	_, err = conn.ReleaseIpamPoolAllocation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "No allocation found") {
 		return diags

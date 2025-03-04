@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3control_bucket_lifecycle_configuration")
+// @SDKResource("aws_s3control_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
 func resourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
