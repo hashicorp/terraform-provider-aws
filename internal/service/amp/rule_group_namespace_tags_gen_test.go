@@ -5,6 +5,7 @@ package amp_test
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +19,7 @@ import (
 
 func TestAccAMPRuleGroupNamespace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,7 +38,7 @@ func TestAccAMPRuleGroupNamespace_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -80,7 +82,7 @@ func TestAccAMPRuleGroupNamespace_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -128,7 +130,7 @@ func TestAccAMPRuleGroupNamespace_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -169,7 +171,7 @@ func TestAccAMPRuleGroupNamespace_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -199,6 +201,7 @@ func TestAccAMPRuleGroupNamespace_tags(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -217,7 +220,7 @@ func TestAccAMPRuleGroupNamespace_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -259,6 +262,7 @@ func TestAccAMPRuleGroupNamespace_tags_null(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -275,7 +279,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -315,6 +319,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyMap(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -331,7 +336,7 @@ func TestAccAMPRuleGroupNamespace_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -355,7 +360,7 @@ func TestAccAMPRuleGroupNamespace_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -395,6 +400,7 @@ func TestAccAMPRuleGroupNamespace_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -413,7 +419,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -453,7 +459,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -483,6 +489,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -501,7 +508,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -533,7 +540,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -579,7 +586,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -619,6 +626,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -637,7 +645,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -668,7 +676,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -707,6 +715,7 @@ func TestAccAMPRuleGroupNamespace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -726,7 +735,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -770,7 +779,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -816,7 +825,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -856,7 +865,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -887,6 +896,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -908,7 +918,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -962,7 +972,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1015,7 +1025,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1046,6 +1056,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nonOverlapping(t *testing.T) 
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1067,7 +1078,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1120,7 +1131,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1177,7 +1188,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1221,6 +1232,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1239,7 +1251,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToProviderOnly(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1272,7 +1284,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToProviderOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1310,6 +1322,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToProviderOnly(t *testi
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1329,7 +1342,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToResourceOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1357,7 +1370,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToResourceOnly(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1398,6 +1411,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_updateToResourceOnly(t *testi
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1419,7 +1433,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_emptyResourceTag(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1462,6 +1476,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_emptyResourceTag(t *testing.T
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1481,7 +1496,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1518,6 +1533,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1539,7 +1555,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nullOverlappingResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1579,6 +1595,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nullOverlappingResourceTag(t 
 
 func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1600,7 +1617,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nullNonOverlappingResourceTag
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1640,6 +1657,7 @@ func TestAccAMPRuleGroupNamespace_tags_DefaultTags_nullNonOverlappingResourceTag
 
 func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1656,7 +1674,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1694,6 +1712,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1712,7 +1731,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1744,7 +1763,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1790,6 +1809,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1808,7 +1828,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1838,7 +1858,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1876,6 +1896,7 @@ func TestAccAMPRuleGroupNamespace_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 
 func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1901,7 +1922,7 @@ func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1950,7 +1971,7 @@ func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1999,7 +2020,7 @@ func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2037,6 +2058,7 @@ func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 
 func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2060,7 +2082,7 @@ func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2123,7 +2145,7 @@ func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2186,7 +2208,7 @@ func TestAccAMPRuleGroupNamespace_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

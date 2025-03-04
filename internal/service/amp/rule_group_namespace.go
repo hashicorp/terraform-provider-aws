@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_prometheus_rule_group_namespace", name="Rule Group Namespace")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.RuleGroupsNamespaceDescription")
 func resourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,
