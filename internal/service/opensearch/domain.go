@@ -289,10 +289,6 @@ func resourceDomain() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"node_type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"node_config": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -314,6 +310,11 @@ func resourceDomain() *schema.Resource {
 												},
 											},
 										},
+									},
+									"node_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.NodeOptionsNodeType](),
 									},
 								},
 							},
@@ -1400,41 +1401,48 @@ func expandColdStorageOptions(l []interface{}) *awstypes.ColdStorageOptions {
 	return ColdStorageOptions
 }
 
-func expandNodeOptions(l []interface{}) []awstypes.NodeOption {
-	if len(l) == 0 {
+func expandNodeOptions(tfList []interface{}) []awstypes.NodeOption {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	NodeOptions := make([]awstypes.NodeOption, 0)
-	for _, no := range l {
-		m := no.(map[string]interface{})
-		nt := awstypes.NodeOptionsNodeType(m["node_type"].(string))
-		NodeOptions = append(NodeOptions, awstypes.NodeOption{
-			NodeType:   nt,
-			NodeConfig: expandNodeConfig(m["node_config"].([]interface{})),
-		})
+	apiObjects := make([]awstypes.NodeOption, 0)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.NodeOption{
+			NodeType: awstypes.NodeOptionsNodeType(tfMap["node_type"].(string)),
+		}
+
+		if v, ok := tfMap["node_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			apiObject.NodeConfig = expandNodeConfig(v[0].(map[string]interface{}))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return NodeOptions
+
+	return apiObjects
 }
 
-func expandNodeConfig(l []interface{}) *awstypes.NodeConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandNodeConfig(tfMap map[string]interface{}) *awstypes.NodeConfig {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &awstypes.NodeConfig{}
 
-	NodeConfig := &awstypes.NodeConfig{}
-
-	isEnabled := m["enabled"].(bool)
-	NodeConfig.Enabled = aws.Bool(isEnabled)
+	isEnabled := tfMap["enabled"].(bool)
+	apiObject.Enabled = aws.Bool(isEnabled)
 
 	if isEnabled {
-		NodeConfig.Count = aws.Int32(int32(m["count"].(int)))
-		NodeConfig.Type = awstypes.OpenSearchPartitionInstanceType(m["type"].(string))
+		apiObject.Count = aws.Int32(int32(tfMap["count"].(int)))
+		apiObject.Type = awstypes.OpenSearchPartitionInstanceType(tfMap["type"].(string))
 	}
 
-	return NodeConfig
+	return apiObject
 }
 
 func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
@@ -1505,37 +1513,37 @@ func flattenColdStorageOptions(coldStorageOptions *awstypes.ColdStorageOptions) 
 	return []interface{}{m}
 }
 
-func flattenNodeOptions(nodeOptions []awstypes.NodeOption) []interface{} {
-	if len(nodeOptions) == 0 {
+func flattenNodeOptions(apiObjects []awstypes.NodeOption) []interface{} {
+	if len(apiObjects) == 0 {
 		return []interface{}{}
 	}
 
-	var l []interface{}
+	var tfList []interface{}
 
-	for _, n := range nodeOptions {
-		m := map[string]interface{}{}
-		m["node_config"] = flattenNodeConfig(n.NodeConfig)
-		m["node_type"] = string(n.NodeType)
-		l = append(l, m)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+		tfMap["node_config"] = flattenNodeConfig(apiObject.NodeConfig)
+		tfMap["node_type"] = apiObject.NodeType
+		tfList = append(tfList, tfMap)
 	}
 
-	return l
+	return tfList
 }
 
-func flattenNodeConfig(nodeConfig *awstypes.NodeConfig) []interface{} {
-	m := map[string]interface{}{
-		"enabled": aws.ToBool(nodeConfig.Enabled),
+func flattenNodeConfig(apiObject *awstypes.NodeConfig) []interface{} {
+	tfMap := map[string]interface{}{
+		"enabled": aws.ToBool(apiObject.Enabled),
 	}
 
-	if nodeConfig.Count != nil {
-		m["count"] = aws.ToInt32(nodeConfig.Count)
+	if apiObject.Count != nil {
+		tfMap["count"] = aws.ToInt32(apiObject.Count)
 	}
 
-	if nodeConfig.Type != "" {
-		m["type"] = nodeConfig.Type
+	if apiObject.Type != "" {
+		tfMap["type"] = apiObject.Type
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 // advancedOptionsIgnoreDefault checks for defaults in the n map and, if

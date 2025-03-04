@@ -390,17 +390,17 @@ The following arguments are optional:
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zone_awareness_enabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
 
-#### node_option
+#### node_options
 
 Container object to specify configuration for a node type.
 
-* `node_config` - (Optional) Container to specify sizing of a node type.
-* `node_type` - (Optional) Type of node this configuration describes.
+* `node_config` - (Required) Container to specify sizing of a node type.
+* `node_type` - (Required) Type of node this configuration describes. Valid values: `coordinator`.
 
 #### node_config
 
 * `count` - (Optional) Number of nodes of a particular node type in the cluster.
-* `enabled` - (Optional) Whether a particular node type is enabled.
+* `enabled` - (Required) Whether a particular node type is enabled.
 * `type` - (Optional) The instance type of a particular node type in the cluster. 
 
 #### cold_storage_options
