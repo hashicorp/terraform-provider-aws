@@ -25,6 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_redshiftserverless_custom_domain_association",
 			Name:     "Custom Domain Association",
 		},
+		{
+			Factory: newResourceSnapshotCopyConfiguration,
+			Name:    "Snapshot Copy Configuration",
+		},
 	}
 }
 
