@@ -53,7 +53,7 @@ func resourceRuleGroupNamespace() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
-			}
+			},
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
