@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_feature_group"
 description: |-
-  Provides a SageMaker Feature Group resource.
+  Provides a SageMaker AI Feature Group resource.
 ---
 
 # Resource: aws_sagemaker_feature_group
 
-Provides a SageMaker Feature Group resource.
+Provides a SageMaker AI Feature Group resource.
 
 ## Example Usage
 
@@ -79,7 +79,7 @@ This resource supports the following arguments:
 
 #### Security Config
 
-* `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that SageMaker Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
+* `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that SageMaker AI Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
 
 #### TTl Duration
 

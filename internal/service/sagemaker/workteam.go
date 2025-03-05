@@ -211,7 +211,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}, ErrCodeValidationException)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Workteam (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Workteam (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -226,13 +226,13 @@ func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	workteam, err := findWorkteamByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Workteam (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Workteam (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workteam (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Workteam (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, workteam.WorkteamArn)
@@ -280,7 +280,7 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateWorkteam(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Workteam (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Workteam (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -291,7 +291,7 @@ func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Workteam: %s", d.Id())
 	_, err := conn.DeleteWorkteam(ctx, &sagemaker.DeleteWorkteamInput{
 		WorkteamName: aws.String(d.Id()),
 	})
@@ -301,7 +301,7 @@ func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Workteam (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Workteam (%s): %s", d.Id(), err)
 	}
 
 	return diags

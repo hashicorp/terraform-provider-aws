@@ -50,8 +50,9 @@ func resourceNotebookInstance() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"accelerator_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Deprecated: "accelerator_types is deprecated. Use instance_type instead.",
+				Type:       schema.TypeSet,
+				Optional:   true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: enum.Validate[awstypes.NotebookInstanceAcceleratorType](),
@@ -218,17 +219,17 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.VolumeSizeInGB = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Notebook Instance: %#v", input)
+	log.Printf("[DEBUG] Creating SageMaker AI Notebook Instance: %#v", input)
 	_, err := conn.CreateNotebookInstance(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Notebook Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Notebook Instance: %s", err)
 	}
 
 	d.SetId(name)
 
 	if err := waitNotebookInstanceInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Notebook Instance (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceNotebookInstanceRead(ctx, d, meta)...)
@@ -241,13 +242,13 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	notebookInstance, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Notebook Instance (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Notebook Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Notebook Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
 	d.Set("accelerator_types", flex.FlattenStringyValueSet[awstypes.NotebookInstanceAcceleratorType](notebookInstance.AcceleratorTypes))
@@ -340,29 +341,29 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		notebook, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 		}
 
 		previousStatus := notebook.NotebookInstanceStatus
 
 		if previousStatus != awstypes.NotebookInstanceStatusStopped {
 			if err := stopNotebookInstance(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 			}
 		}
 
 		if _, err := conn.UpdateNotebookInstance(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 		}
 
 		if err := waitNotebookInstanceStopped(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) to stop: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Notebook Instance (%s) to stop: %s", d.Id(), err)
 		}
 
 		// Restart if needed
 		if previousStatus == awstypes.NotebookInstanceStatusInService {
 			if err := startNotebookInstance(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -381,27 +382,27 @@ func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Notebook Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
 	switch notebook.NotebookInstanceStatus {
 	case awstypes.NotebookInstanceStatusInService:
 		if err := stopNotebookInstance(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "stopping SageMaker Notebook Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "stopping SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting SageMaker Notebook Instance: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Notebook Instance: %s", d.Id())
 	_, err = conn.DeleteNotebookInstance(ctx, &sagemaker.DeleteNotebookInstanceInput{
 		NotebookInstanceName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Notebook Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitNotebookInstanceDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Notebook Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

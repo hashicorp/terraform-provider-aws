@@ -90,11 +90,11 @@ func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta
 		UiTemplate:      expandHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker HumanTaskUi: %#v", input)
+	log.Printf("[DEBUG] Creating SageMaker AI HumanTaskUi: %#v", input)
 	_, err := conn.CreateHumanTaskUi(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker HumanTaskUi (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI HumanTaskUi (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -109,13 +109,13 @@ func resourceHumanTaskUIRead(ctx context.Context, d *schema.ResourceData, meta i
 	humanTaskUi, err := findHumanTaskUIByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker HumanTaskUi (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI HumanTaskUi (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker HumanTaskUi (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI HumanTaskUi (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, humanTaskUi.HumanTaskUiArn)
@@ -140,7 +140,7 @@ func resourceHumanTaskUIDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker HumanTaskUi: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI HumanTaskUi: %s", d.Id())
 	_, err := conn.DeleteHumanTaskUi(ctx, &sagemaker.DeleteHumanTaskUiInput{
 		HumanTaskUiName: aws.String(d.Id()),
 	})
@@ -150,7 +150,7 @@ func resourceHumanTaskUIDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker HumanTaskUi (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI HumanTaskUi (%s): %s", d.Id(), err)
 	}
 
 	return diags

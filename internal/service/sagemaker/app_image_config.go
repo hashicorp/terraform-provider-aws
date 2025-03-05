@@ -264,7 +264,7 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 
 	_, err := conn.CreateAppImageConfig(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker App Image Config %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI App Image Config %s: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -280,12 +280,12 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker App Image Config (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI App Image Config (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker App Image Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI App Image Config (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.ToString(image.AppImageConfigArn)
@@ -334,10 +334,10 @@ func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 			}
 		}
 
-		log.Printf("[DEBUG] SageMaker App Image Config update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker AI App Image Config update config: %#v", *input)
 		_, err := conn.UpdateAppImageConfig(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker App Image Config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI App Image Config: %s", err)
 		}
 	}
 
@@ -356,7 +356,7 @@ func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, m
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker App Image Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI App Image Config (%s): %s", d.Id(), err)
 	}
 
 	return diags
