@@ -13,3 +13,11 @@ resource/aws_route53_traffic_policy: Add `arn` attribute
 ```release-note:enhancement
 resource/aws_route53_traffic_policy_instance: Add `arn` attribute
 ```
+
+```release-note:enhancement
+resource/aws_cloudfront_cache_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_cache_policy: Add `arn` attribute
+```
