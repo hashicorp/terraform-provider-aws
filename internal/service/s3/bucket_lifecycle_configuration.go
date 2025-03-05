@@ -442,15 +442,9 @@ func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, reque
 
 	expectedBucketOwner := data.ExpectedBucketOwner.ValueString()
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	rules, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, input.LifecycleConfiguration.Rules, createTimeout)
+	output, err := waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, input.LifecycleConfiguration.Rules, createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket (%s) Lifecycle Configuration", bucket), fmt.Sprintf("While waiting: %s", err.Error()))
-		return
-	}
-
-	output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
 		return
 	}
 
@@ -564,15 +558,9 @@ func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, reque
 
 	expectedBucketOwner := new.ExpectedBucketOwner.ValueString()
 	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	rules, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, input.LifecycleConfiguration.Rules, updateTimeout)
+	output, err := waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, input.LifecycleConfiguration.Rules, updateTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), fmt.Sprintf("While waiting: %s", err.Error()))
-		return
-	}
-
-	output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
 		return
 	}
 
@@ -707,7 +695,7 @@ func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, ex
 	}
 }
 
-func waitLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []awstypes.LifecycleRule, timeout time.Duration) ([]awstypes.LifecycleRule, error) { //nolint:unparam
+func waitLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Target:                    []string{strconv.FormatBool(true)},
 		Refresh:                   statusLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules),
@@ -719,7 +707,7 @@ func waitLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expe
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]awstypes.LifecycleRule); ok {
+	if output, ok := outputRaw.(*s3.GetBucketLifecycleConfigurationOutput); ok {
 		return output, err
 	}
 
