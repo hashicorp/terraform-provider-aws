@@ -1116,6 +1116,8 @@ func TestAccCodePipeline_conditions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.5.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.result", "FAIL"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.commands.0", "exit 0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.input_artifacts.0", "test"),
+					resource.TestCheckResourceAttrPair(resourceName, "stage.5.before_entry.0.condition.0.rule.0.region", "data.aws_region.current", "name"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.name", "CheckByCommandsRule"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.rule_type_id.0.category", "Rule"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.rule_type_id.0.owner", "AWS"),
@@ -1189,6 +1191,8 @@ func TestAccCodePipeline_conditions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.5.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.result", "FAIL"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.commands.0", "exit 1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.input_artifacts.0", "test"),
+					resource.TestCheckResourceAttrPair(resourceName, "stage.5.before_entry.0.condition.0.rule.0.region", "data.aws_region.current", "name"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.name", "CheckByCommandsRule"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.rule_type_id.0.category", "Rule"),
 					resource.TestCheckResourceAttr(resourceName, "stage.5.before_entry.0.condition.0.rule.0.rule_type_id.0.owner", "AWS"),
@@ -3067,6 +3071,8 @@ resource "aws_codepipeline" "test" {
         rule {
           configuration = {}
           commands = ["exit 0"]
+          input_artifacts = ["test"]
+          region = data.aws_region.current.name
           role_arn = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
           rule_type_id {
@@ -3085,6 +3091,7 @@ resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "GitHub"
 }
+data "aws_region" "current" {}
 `, rName))
 }
 
@@ -3321,6 +3328,8 @@ resource "aws_codepipeline" "test" {
         rule {
           configuration = {}
           commands = ["exit 1"]
+          input_artifacts = ["test"]
+          region = data.aws_region.current.name
           role_arn = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
           rule_type_id {
@@ -3339,5 +3348,6 @@ resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "GitHub"
 }
+data "aws_region" "current" {}
 `, rName))
 }
