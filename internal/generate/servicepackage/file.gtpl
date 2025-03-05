@@ -31,6 +31,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 			TypeName:                "{{ $key }}",
 			Name:                    "{{ $value.Name }}",
 			Region: &itypes.ServicePackageResourceRegion {
+				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 			},
 		},
@@ -57,6 +58,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			},
 			{{- end }}
 			Region: &itypes.ServicePackageResourceRegion {
+				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 			},
 		},
@@ -82,6 +84,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			},
 			{{- end }}
 			Region: &itypes.ServicePackageResourceRegion {
+				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 			},
 		},
@@ -107,6 +110,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 			{{- end }}
 			Region: &itypes.ServicePackageResourceRegion {
+				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 			},
 		},
@@ -132,6 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			{{- end }}
 			Region: &itypes.ServicePackageResourceRegion {
+				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 			},
 		},
