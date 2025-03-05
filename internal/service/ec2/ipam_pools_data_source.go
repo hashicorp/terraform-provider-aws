@@ -19,6 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_vpc_ipam_pools", name="IPAM Pools")
+// @Region(global=true)
 func dataSourceIPAMPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,

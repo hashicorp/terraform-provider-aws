@@ -27,6 +27,7 @@ import (
 )
 
 // @SDKResource("aws_vpc_ipam", name="IPAM")
+// @Region(global=true)
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceIPAM() *schema.Resource {

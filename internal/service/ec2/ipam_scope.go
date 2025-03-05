@@ -24,6 +24,7 @@ import (
 )
 
 // @SDKResource("aws_vpc_ipam_scope", name="IPAM Scope")
+// @Region(global=true)
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceIPAMScope() *schema.Resource {

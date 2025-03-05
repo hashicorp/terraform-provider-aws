@@ -21,6 +21,7 @@ import (
 )
 
 // @SDKResource("aws_vpc_ipam_preview_next_cidr, name="IPAM Preview Next CIDR")
+// @Region(global=true)
 func resourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPreviewNextCIDRCreate,
